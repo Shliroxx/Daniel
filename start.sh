@@ -18,8 +18,17 @@ if [ ! -f .env ]; then
   cp .env.example .env
   echo
   echo "!! Es gibt noch keine .env — ich habe .env.example kopiert."
-  echo "   Trage jetzt deinen ANTHROPIC_API_KEY in .env ein und starte neu."
+  echo "   Schau sie kurz durch (Vault-Pfad, ggf. WhatsApp) und starte neu."
   exit 1
+fi
+
+if ! command -v claude >/dev/null 2>&1; then
+  echo
+  echo "!! Claude Code wurde nicht gefunden."
+  echo "   Installiere es mit:  npm install -g @anthropic-ai/claude-code"
+  echo "   und melde dich danach einmal mit  claude  an."
+  echo "   Alternativ setze JARVIS_BACKEND=api in der .env."
+  echo
 fi
 
 echo "[3/3] Starte Jarvis ..."

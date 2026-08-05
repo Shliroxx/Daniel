@@ -1,72 +1,58 @@
-"""Aufgabenliste — damit Jarvis Dinge fuer dich erledigen und nachhalten kann."""
+"""Aufgabenliste — als Checkboxen im Obsidian-Vault."""
 
 from __future__ import annotations
 
-import datetime as dt
 from typing import Any
 
-from ..config import config
-from . import store
+from .. import memory
 from .registry import Tool
-
-TASKS_FILE = config.data_dir / "tasks.json"
-
-
-def _load() -> list[dict[str, Any]]:
-    return store.load(TASKS_FILE, [])
-
-
-def _save(tasks: list[dict[str, Any]]) -> None:
-    store.save(TASKS_FILE, tasks)
 
 
 def add_task(payload: dict[str, Any]) -> str:
     title = str(payload.get("title", "")).strip()
     if not title:
         return "Kein Aufgabentext angegeben."
-
-    tasks = _load()
-    task = {
-        "id": (max((t["id"] for t in tasks), default=0) + 1),
-        "titel": title,
-        "notiz": str(payload.get("note", "")).strip() or None,
-        "faellig": str(payload.get("due", "")).strip() or None,
-        "prioritaet": str(payload.get("priority", "normal")),
-        "erledigt": False,
-        "erstellt": dt.datetime.now().isoformat(timespec="seconds"),
-    }
-    tasks.append(task)
-    _save(tasks)
-    return f"Aufgabe #{task['id']} angelegt: {title}"
+    task = memory.add_task(
+        title,
+        notiz=str(payload.get("note", "")),
+        faellig=str(payload.get("due", "")),
+        prioritaet=str(payload.get("priority", "normal")),
+    )
+    return f"Aufgabe #{task.id} angelegt: {task.titel}"
 
 
 def list_tasks(payload: dict[str, Any]) -> dict[str, Any]:
     include_done = bool(payload.get("include_done", False))
-    tasks = _load()
-    visible = tasks if include_done else [t for t in tasks if not t.get("erledigt")]
-    return {"offen": sum(1 for t in tasks if not t.get("erledigt")), "aufgaben": visible}
+    tasks = memory.read_tasks()
+    visible = tasks if include_done else [t for t in tasks if not t.erledigt]
+    return {
+        "offen": sum(1 for t in tasks if not t.erledigt),
+        "aufgaben": [t.to_dict() for t in visible],
+        "quelle": str(memory.tasks_file()),
+    }
 
 
 def complete_task(payload: dict[str, Any]) -> str:
-    task_id = payload.get("id")
-    tasks = _load()
-    for task in tasks:
-        if task["id"] == task_id:
-            task["erledigt"] = True
-            task["erledigt_am"] = dt.datetime.now().isoformat(timespec="seconds")
-            _save(tasks)
-            return f"Aufgabe #{task_id} als erledigt markiert: {task['titel']}"
-    return f"Keine Aufgabe mit der Nummer {task_id} gefunden."
+    task = memory.set_task_done(int(payload.get("id", 0)), True)
+    if task is None:
+        return f"Keine Aufgabe mit der Nummer {payload.get('id')} gefunden."
+    return f"Aufgabe #{task.id} abgehakt: {task.titel}"
+
+
+def reopen_task(payload: dict[str, Any]) -> str:
+    task = memory.set_task_done(int(payload.get("id", 0)), False)
+    if task is None:
+        return f"Keine Aufgabe mit der Nummer {payload.get('id')} gefunden."
+    return f"Aufgabe #{task.id} wieder geoeffnet: {task.titel}"
 
 
 def delete_task(payload: dict[str, Any]) -> str:
-    task_id = payload.get("id")
-    tasks = _load()
-    remaining = [t for t in tasks if t["id"] != task_id]
-    if len(remaining) == len(tasks):
-        return f"Keine Aufgabe mit der Nummer {task_id} gefunden."
-    _save(remaining)
-    return f"Aufgabe #{task_id} geloescht."
+    task_id = int(payload.get("id", 0))
+    return (
+        f"Aufgabe #{task_id} geloescht."
+        if memory.delete_task(task_id)
+        else f"Keine Aufgabe mit der Nummer {task_id} gefunden."
+    )
 
 
 def get_tools() -> list[Tool]:
@@ -97,13 +83,23 @@ def get_tools() -> list[Tool]:
         ),
         Tool(
             name="complete_task",
-            description="Markiert eine Aufgabe als erledigt.",
+            description="Hakt eine Aufgabe ab.",
             input_schema={
                 "type": "object",
                 "properties": {"id": {"type": "integer"}},
                 "required": ["id"],
             },
             handler=complete_task,
+        ),
+        Tool(
+            name="reopen_task",
+            description="Macht das Abhaken einer Aufgabe rueckgaengig.",
+            input_schema={
+                "type": "object",
+                "properties": {"id": {"type": "integer"}},
+                "required": ["id"],
+            },
+            handler=reopen_task,
         ),
         Tool(
             name="delete_task",

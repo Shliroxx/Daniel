@@ -15,11 +15,23 @@ if not exist ".venv" (
 
 if not exist ".env" (
     echo.
-    echo !! Es gibt noch keine .env — kopiere .env.example nach .env
-    echo    und trage deinen ANTHROPIC_API_KEY ein.
+    echo !! Es gibt noch keine .env — ich habe .env.example kopiert.
+    echo    Schau sie kurz durch: Vault-Pfad, und falls du die API statt
+    echo    deines Claude-Abos nutzen willst, JARVIS_BACKEND=api plus Key.
     echo.
     copy .env.example .env >nul
     notepad .env
+)
+
+REM Claude Code pruefen (Standard-Backend)
+where claude >nul 2>nul
+if errorlevel 1 (
+    echo.
+    echo !! Claude Code wurde nicht gefunden.
+    echo    Installiere es mit:  npm install -g @anthropic-ai/claude-code
+    echo    und melde dich danach einmal mit  claude  an.
+    echo    Alternativ setze JARVIS_BACKEND=api in der .env.
+    echo.
 )
 
 echo [3/3] Starte Jarvis...

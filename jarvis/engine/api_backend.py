@@ -1,82 +1,45 @@
-"""Das Gehirn: Claude-Agentenschleife mit Werkzeugen, Gedaechtnis und Streaming."""
+"""Backend "api": denkt ueber die Anthropic-API mit eigenem Key (kostet pro Token)."""
 
 from __future__ import annotations
 
 import asyncio
-import datetime as dt
 import logging
-import platform
-from collections.abc import Awaitable, Callable
 from typing import Any
 
 from anthropic import AsyncAnthropic
 
-from .config import config
-from .tools import build_registry
-from .tools.memory import load_memory_context
+from ..config import config
+from ..memory import load_memory_context
+from ..tools import build_registry
+from .base import Emit, Engine
 
-log = logging.getLogger("jarvis.brain")
-
-Emit = Callable[[dict[str, Any]], Awaitable[None]]
+log = logging.getLogger("jarvis.engine.api")
 
 MAX_TOOL_ROUNDS = 12
 HISTORY_TURNS = 40  # letzte N Nachrichten behalten
 
-SYSTEM_PROMPT = """Du bist JARVIS — der persoenliche KI-Assistent von {user}.
 
-Wie du sprichst:
-- Deutsch, geduzt, direkt und ruhig. Trocken-humorvoll, nie unterwuerfig.
-- Deine Antworten werden vorgelesen. Schreib also so, wie man spricht: kurze Saetze,
-  keine Aufzaehlungszeichen, keine Markdown-Formatierung, keine Emojis, keine URLs
-  zum Vorlesen. Zahlen und Einheiten ausschreiben, wenn sie sonst holprig klingen.
-- Standardlaenge: ein bis drei Saetze. Nur ausfuehrlich, wenn ausdruecklich gewuenscht
-  oder die Sache es wirklich braucht.
-- Kein Vorgeplaenkel ("Gerne!", "Klar, ich schaue mal nach") — sag direkt das Ergebnis.
-
-Wie du arbeitest:
-- Du hast echten Zugriff auf diesen Rechner: Programme starten, Lautstaerke, Screenshots,
-  Systeminfos, Dateien im Arbeitsverzeichnis, To-do-Liste, Websuche.
-- Wenn eine Aufgabe mit einem Werkzeug loesbar ist, mach es einfach — frag nicht vorher um
-  Erlaubnis. Bei Dingen, die schwer rueckgaengig zu machen sind (Dateien ueberschreiben,
-  Shell-Befehle), frag kurz nach.
-- Erfinde nichts. Wenn ein Werkzeug fehlschlaegt, sag klar was nicht ging.
-- Beim Brainstormen bist du ein Sparringspartner: eigene Meinung, Gegenvorschlaege,
-  nachfragen wenn die Richtung unklar ist. Keine Listen von zwanzig Optionen — zwei oder
-  drei gute, mit Begruendung.
-- Merke dir Wichtiges ueber den Nutzer mit dem Werkzeug 'remember', aber nur wenn es
-  spaeter wirklich hilft.
-
-Kontext:
-- System: {system}
-- Arbeitsverzeichnis: {workspace}
-- Aktuelle Zeit beim Start dieser Sitzung: {now}
-{memory}"""
-
-
-class Brain:
-    """Haelt den Gespraechsverlauf und fuehrt die Werkzeugschleife aus."""
+class ApiEngine(Engine):
+    """Haelt den Gespraechsverlauf und fuehrt die Werkzeugschleife selbst aus."""
 
     def __init__(self, user_name: str = "Daniel") -> None:
+        super().__init__(user_name)
         if not config.api_key:
             raise RuntimeError(
                 "ANTHROPIC_API_KEY fehlt. Kopiere .env.example nach .env und trage deinen Key ein."
             )
         self.client = AsyncAnthropic(api_key=config.api_key)
         self.registry = build_registry()
-        self.user_name = user_name
         self.messages: list[dict[str, Any]] = []
         self._lock = asyncio.Lock()
 
     # -- System-Prompt -----------------------------------------------------
+    @property
+    def label(self) -> str:
+        return f"Anthropic API ({config.model})"
+
     def system_prompt(self) -> list[dict[str, Any]]:
-        memory = load_memory_context()
-        text = SYSTEM_PROMPT.format(
-            user=self.user_name,
-            system=f"{platform.system()} {platform.release()}",
-            workspace=config.workspace,
-            now=dt.datetime.now().strftime("%A, %d.%m.%Y %H:%M"),
-            memory=f"\n\n{memory}" if memory else "",
-        )
+        text = self.persona(load_memory_context())
         # Der Prompt ist ueber die Sitzung stabil -> caching spart Tokens und Zeit.
         return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
 

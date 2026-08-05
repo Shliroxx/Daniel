@@ -17,3 +17,7 @@ voices/
 Thumbs.db
 .idea/
 .vscode/
+
+# Nacht-Auftraege und Logs
+logs/
+auftraege*.md

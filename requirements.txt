@@ -1,4 +1,5 @@
 # --- Kern ---
+# anthropic wird nur fuer JARVIS_BACKEND=api gebraucht
 anthropic>=0.69.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0

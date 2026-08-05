@@ -1,77 +1,59 @@
-"""Langzeitgedaechtnis — Fakten, die Jarvis ueber Sitzungen hinweg behalten soll."""
+"""Werkzeuge fuer Langzeitgedaechtnis und Vault-Zugriff."""
 
 from __future__ import annotations
 
-import datetime as dt
 from typing import Any
 
+from .. import memory
 from ..config import config
-from . import store
 from .registry import Tool
-
-MEMORY_FILE = config.data_dir / "memory.json"
-MAX_FACTS = 300
-
-
-def _load() -> list[dict[str, Any]]:
-    return store.load(MEMORY_FILE, [])
 
 
 def remember(payload: dict[str, Any]) -> str:
     fact = str(payload.get("fact", "")).strip()
     if not fact:
         return "Nichts zum Merken angegeben."
-
-    facts = _load()
-    if any(f["text"].lower() == fact.lower() for f in facts):
-        return "Das weiss ich bereits."
-
-    facts.append(
-        {
-            "text": fact,
-            "kategorie": str(payload.get("category", "allgemein")),
-            "notiert": dt.datetime.now().isoformat(timespec="seconds"),
-        }
-    )
-    store.save(MEMORY_FILE, facts[-MAX_FACTS:])
-    return f"Gemerkt: {fact}"
+    added = memory.add_fact(fact, str(payload.get("category", "allgemein")))
+    return f"Gemerkt: {fact}" if added else "Das weiss ich bereits."
 
 
 def recall(payload: dict[str, Any]) -> dict[str, Any]:
     query = str(payload.get("query", "")).strip().lower()
-    facts = _load()
+    facts = memory.read_facts()
     if query:
-        facts = [f for f in facts if query in f["text"].lower() or query in f.get("kategorie", "").lower()]
-    return {"anzahl": len(facts), "fakten": facts[-50:]}
+        facts = [f for f in facts if query in f.text.lower() or query in f.kategorie.lower()]
+    return {
+        "anzahl": len(facts),
+        "fakten": [{"text": f.text, "kategorie": f.kategorie} for f in facts[-50:]],
+        "quelle": str(memory.facts_file()),
+    }
 
 
 def forget(payload: dict[str, Any]) -> str:
-    query = str(payload.get("query", "")).strip().lower()
-    if not query:
-        return "Bitte angeben, was vergessen werden soll."
-    facts = _load()
-    remaining = [f for f in facts if query not in f["text"].lower()]
-    removed = len(facts) - len(remaining)
-    store.save(MEMORY_FILE, remaining)
+    removed = memory.remove_facts(str(payload.get("query", "")))
     return f"{removed} Eintrag(e) geloescht." if removed else "Nichts Passendes gefunden."
 
 
-def load_memory_context(limit: int = 60) -> str:
-    """Wird beim Start in den System-Prompt gehaengt."""
-    facts = _load()[-limit:]
-    if not facts:
-        return ""
-    lines = "\n".join(f"- {f['text']}" for f in facts)
-    return f"Was du ueber den Nutzer bereits weisst:\n{lines}"
+def search_notes(payload: dict[str, Any]) -> dict[str, Any]:
+    if not config.uses_vault:
+        return {"fehler": "Kein Obsidian-Vault konfiguriert (JARVIS_VAULT in der .env)."}
+    query = str(payload.get("query", ""))
+    hits = memory.search_vault(query, limit=int(payload.get("limit", 20)))
+    return {"treffer": len(hits), "notizen": hits}
+
+
+def read_note(payload: dict[str, Any]) -> str:
+    return memory.read_note(str(payload.get("path", "")))
 
 
 def get_tools() -> list[Tool]:
-    return [
+    tools = [
         Tool(
             name="remember",
             description=(
                 "Merkt sich dauerhaft eine Information ueber den Nutzer (Vorlieben, Namen, "
-                "Gewohnheiten, laufende Projekte). Nur nutzen, wenn es spaeter wirklich nuetzlich ist."
+                "Gewohnheiten, laufende Projekte). Nur nutzen, wenn es spaeter wirklich "
+                "nuetzlich ist. Landet als Zeile in der Gedaechtnis-Notiz."
             ),
             input_schema={
                 "type": "object",
@@ -103,3 +85,35 @@ def get_tools() -> list[Tool]:
             handler=forget,
         ),
     ]
+
+    if config.vault_enabled:
+        tools += [
+            Tool(
+                name="search_notes",
+                description=(
+                    "Durchsucht alle Notizen im Obsidian-Vault nach einem Begriff und liefert "
+                    "Fundstellen mit Pfad. Nutze das, bevor du eine Frage zum Wissen des "
+                    "Nutzers aus dem Bauch beantwortest."
+                ),
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"},
+                        "limit": {"type": "integer", "description": "max. Treffer, Standard 20"},
+                    },
+                    "required": ["query"],
+                },
+                handler=search_notes,
+            ),
+            Tool(
+                name="read_note",
+                description="Liest eine Notiz aus dem Obsidian-Vault (Pfad relativ zum Vault).",
+                input_schema={
+                    "type": "object",
+                    "properties": {"path": {"type": "string"}},
+                    "required": ["path"],
+                },
+                handler=read_note,
+            ),
+        ]
+    return tools

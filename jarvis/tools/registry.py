@@ -60,7 +60,12 @@ class ToolRegistry:
         return json.dumps(result, ensure_ascii=False, default=str), False
 
 
-def build_registry() -> ToolRegistry:
+def build_registry(include_server_tools: bool = True) -> ToolRegistry:
+    """Baut das Werkzeug-Register.
+
+    `include_server_tools` steuert die serverseitigen Anthropic-Werkzeuge (Websuche).
+    Beim CLI-Backend bleiben sie aus — Claude Code bringt eigene Web-Werkzeuge mit.
+    """
     from . import files, memory, system, tasks
 
     registry = ToolRegistry()
@@ -68,7 +73,8 @@ def build_registry() -> ToolRegistry:
         for tool in module.get_tools():
             registry.add(tool)
 
-    # Websuche + Seitenabruf laufen serverseitig bei Anthropic — kein eigener Key noetig.
-    registry.add_server_tool({"type": "web_search_20260209", "name": "web_search", "max_uses": 8})
-    registry.add_server_tool({"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 5})
+    if include_server_tools:
+        # Laufen serverseitig bei Anthropic — kein eigener Suchmaschinen-Key noetig.
+        registry.add_server_tool({"type": "web_search_20260209", "name": "web_search", "max_uses": 8})
+        registry.add_server_tool({"type": "web_fetch_20260209", "name": "web_fetch", "max_uses": 5})
     return registry
