@@ -372,6 +372,26 @@
       "Zieh daraus Konsequenzen fuer die Empfehlung: wiederholt zu heiss heisst weniger",
       "Kohle oder mehr Abstand, wiederholt zu wenig Geschmack heisst lockerer und",
       "niedriger bauen, fruehes Kratzen heisst zu dicht oder zu nah am HMD."
+    ],
+    "massstab": [
+      "Groessenbezug: Der Nutzer hat den Innendurchmesser der Tabakmulde angegeben.",
+      "Nimm ihn als Massstab — miss Entfernungen im Bild im Verhaeltnis dazu, statt sie",
+      "frei zu schaetzen. Beispiel: ist die Mulde im Bild 400 Pixel breit und der",
+      "Durchmesser 80 mm, entsprechen 5 Bildpixel etwa 1 mm.",
+      "Fuellhoehen, die du so herleitest, duerfen \"estimated\" sein statt \"unknown\".",
+      "Ohne Angabe bleibt die Millimeterzahl eine grobe Schaetzung — sag das dann auch."
+    ],
+    "mehrere_bilder": [
+      "Du bekommst mehrere Bilder desselben Kopfes aus verschiedenen Winkeln.",
+      "Sie zeigen dieselbe Sache, nicht mehrere Koepfe. Nutze sie, um Verdecktes zu",
+      "klaeren: was auf einem Bild hinter dem Rand liegt, ist auf dem naechsten sichtbar.",
+      "Widersprechen sich zwei Bilder, entscheide dich fuer das schaerfere und senk die",
+      "Sicherheit. Die AR-Markierungen beziehen sich immer auf das ERSTE Bild."
+    ],
+    "gegenprobe": [
+      "Hinweis zur Einordnung: Dieselbe Aufnahme wird unabhaengig von einem zweiten",
+      "Modell beurteilt. Weichen die Urteile stark ab, gilt die Analyse als unsicher.",
+      "Bewerte deshalb so, wie du es begruenden kannst — nicht so, wie es gefallen koennte."
     ]
   },
   "plausibilitaet": {
@@ -385,7 +405,9 @@
     "kappe_oeffnung_verdeckt": 30,
     "bildqualitaet_min": 45,
     "konsens_bilder": 5,
-    "konsens_spanne": 12
+    "konsens_spanne": 12,
+    "gegenprobe_spanne": 15,
+    "gegenprobe_sicherheit": 45
   },
   "sprachbefehle": {
     "weiter": [
@@ -455,6 +477,126 @@
       "wie viele punkte",
       "note",
       "wie stehe ich"
+    ]
+  },
+  "koepfe": {
+    "hinweis": "Innendurchmesser der Tabakmulde in Millimetern. Dient als Groessenbezug, damit das Modell Entfernungen im Bild ausrechnen statt schaetzen muss. Eigene Koepfe einfach ergaenzen.",
+    "liste": [
+      {
+        "name": "Oblako Phunnel M",
+        "durchmesser_mm": 78,
+        "art": "phunnel"
+      },
+      {
+        "name": "Oblako Phunnel L",
+        "durchmesser_mm": 88,
+        "art": "phunnel"
+      },
+      {
+        "name": "Oblako Glaze M",
+        "durchmesser_mm": 78,
+        "art": "phunnel"
+      },
+      {
+        "name": "Kaya Phunnel",
+        "durchmesser_mm": 75,
+        "art": "phunnel"
+      },
+      {
+        "name": "Werkbund Phunnel",
+        "durchmesser_mm": 80,
+        "art": "phunnel"
+      },
+      {
+        "name": "Alpaca Predator",
+        "durchmesser_mm": 82,
+        "art": "phunnel"
+      },
+      {
+        "name": "Conceptic Design Phunnel",
+        "durchmesser_mm": 80,
+        "art": "phunnel"
+      },
+      {
+        "name": "Vyro Rocket",
+        "durchmesser_mm": 76,
+        "art": "phunnel"
+      },
+      {
+        "name": "Killerkopf klein",
+        "durchmesser_mm": 68,
+        "art": "killer"
+      },
+      {
+        "name": "Killerkopf gross",
+        "durchmesser_mm": 80,
+        "art": "killer"
+      },
+      {
+        "name": "Steinkopf",
+        "durchmesser_mm": 75,
+        "art": "steinkopf"
+      },
+      {
+        "name": "Vortex",
+        "durchmesser_mm": 78,
+        "art": "vortex"
+      }
+    ]
+  },
+  "kontingent": {
+    "hinweis": "Richtwerte fuer die kostenlosen Kontingente. Nur zur Anzeige und Warnung — die App zaehlt selbst mit, der Anbieter entscheidet.",
+    "warnung_ab": 0.8,
+    "tageslimit": {
+      "gemini": 200,
+      "openrouter": 50,
+      "server": 0
+    }
+  },
+  "lernregeln": {
+    "hinweis": "Aus wiederholtem Feedback abgeleitete Anpassungen. Greift erst ab 'ab_sessions' passenden Rueckmeldungen, damit ein einzelner Ausrutscher nichts verstellt.",
+    "ab_sessions": 3,
+    "regeln": [
+      {
+        "id": "zu_heiss",
+        "feld": "hitze",
+        "ab_wert": 4,
+        "richtung": "hoch",
+        "titel": "Es wird dir regelmaessig zu heiss",
+        "anweisung": "Empfiehl eine Kohle weniger als ueblich und mindestens 1 mm mehr Abstand zum HMD. Bewerte Hitzemanagement strenger."
+      },
+      {
+        "id": "zu_kalt",
+        "feld": "hitze",
+        "ab_wert": 2,
+        "richtung": "runter",
+        "titel": "Es laeuft dir regelmaessig zu kalt",
+        "anweisung": "Empfiehl eine Kohle mehr und etwas weniger Abstand zum HMD."
+      },
+      {
+        "id": "kratzt",
+        "feld": "kratzen",
+        "ab_wert": 4,
+        "richtung": "hoch",
+        "titel": "Deine Koepfe kratzen oft",
+        "anweisung": "Empfiehl lockerer und 1 mm tiefer zu bauen. Bewerte Dichte ueber 65 und geringen Randabstand deutlich strenger."
+      },
+      {
+        "id": "wenig_geschmack",
+        "feld": "geschmack",
+        "ab_wert": 2,
+        "richtung": "runter",
+        "titel": "Der Geschmack ist dir oft zu schwach",
+        "anweisung": "Empfiehl lockerer zu bauen und die Hitze zurueckzunehmen; achte besonders auf Verdichtung und Hohlraeume."
+      },
+      {
+        "id": "wenig_rauch",
+        "feld": "rauch",
+        "ab_wert": 2,
+        "richtung": "runter",
+        "titel": "Die Rauchmenge ist dir oft zu gering",
+        "anweisung": "Empfiehl die Flaeche besser auszunutzen, etwas hoeher zu bauen (1 bis 2 mm unter Rand) und eher mehr Hitze."
+      }
     ]
   }
 }

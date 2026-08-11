@@ -58,6 +58,9 @@ jobs:
       - name: Engine testen
         run: node tests/test_engine.mjs
 
+      - name: Steuerlogik testen
+        run: node tests/test_steuerung.mjs
+
       - uses: actions/configure-pages@v5
         with:
           # Pages einschalten, falls es noch aus ist — spart den Gang in die

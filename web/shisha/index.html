@@ -44,7 +44,13 @@
     <details class="angaben">
       <summary>Angaben zum Aufbau <small>(macht die Analyse deutlich genauer)</small></summary>
       <div class="angaben-gitter">
-        <label>Kopfmodell<input id="fKopf" type="text" placeholder="z. B. Oblako Phunnel M" /></label>
+        <label>Kopfmodell
+          <input id="fKopf" type="text" list="kopfliste" placeholder="z. B. Oblako Phunnel M" />
+          <datalist id="kopfliste"></datalist>
+        </label>
+        <label>Innendurchmesser in mm <small>Maßstab für genaue Millimeter</small>
+          <input id="fDurchmesser" type="number" inputmode="numeric" min="40" max="140" placeholder="z. B. 78" />
+        </label>
         <label>Tabakmarke<input id="fMarke" type="text" placeholder="z. B. Adalya" /></label>
         <label>Sorte<input id="fSorte" type="text" placeholder="z. B. Love 66" /></label>
         <label>HMD<input id="fHmd" type="text" placeholder="z. B. Kaloud Lotus / Folie" /></label>
@@ -57,9 +63,14 @@
       <input id="fSprache" type="checkbox" checked />
       <span>Sprachsteuerung beim Start einschalten</span>
     </label>
+    <label class="schalter">
+      <input id="fWinkel" type="checkbox" checked />
+      <span>Endurteil aus drei Blickwinkeln</span>
+    </label>
 
     <button id="losButton" class="gross" disabled>Kamera starten</button>
     <button id="zugangButton" class="flach">Modell und Zugang</button>
+    <button id="historieButton" class="flach">Meine bisherigen Köpfe</button>
     <p id="startFehler" class="fehler"></p>
     <p class="fuss" id="startInfo">Regelwerk wird geladen …</p>
   </div>
@@ -74,6 +85,7 @@
     <span class="marke" id="lage">bereit</span>
     <span class="marke score" id="liveScore" hidden>–</span>
     <span class="marke hoert" id="hoerMarke" hidden>hört zu</span>
+    <span class="marke" id="kontingent" hidden>0/0</span>
   </div>
 </header>
 
@@ -95,6 +107,12 @@
     <button id="menueButton" class="rund" title="Hauptmenü">☰</button>
   </div>
 </footer>
+
+<!-- Ansage waehrend der Mehrfachaufnahme ------------------------------- -->
+<div id="aufnahme" class="aufnahme" hidden>
+  <div class="aufnahme-punkt"></div>
+  <span id="aufnahmeText">Bild 1 von 3</span>
+</div>
 
 <!-- Pause: Kamera steht ------------------------------------------------ -->
 <section id="pause" class="blende pause" hidden>
@@ -164,6 +182,29 @@
       </label>
     </div>
 
+    <h3>Gegenprobe</h3>
+    <p class="hinweis-text">
+      Beim Endurteil zusätzlich ein zweites Modell fragen. Weichen die Urteile
+      auseinander, ist die Bewertung ehrlich gesagt unsicher — das siehst du dann
+      im Report. Kostet die doppelte Anfrage.
+    </p>
+    <label class="langfeld">Zweites Modell
+      <select id="fGegenprobe">
+        <option value="aus">aus</option>
+        <option value="gemini">Google Gemini</option>
+        <option value="openrouter">OpenRouter</option>
+        <option value="server">eigener Rechner</option>
+      </select>
+    </label>
+
+    <label class="schalter">
+      <input id="fSparmodus" type="checkbox" checked />
+      <span>Sparmodus: bei unverändertem Bild nicht neu anfragen</span>
+    </label>
+
+    <h3>Aus deinen Sessions gelernt</h3>
+    <div id="lernregeln"></div>
+
     <h3>Sprachbefehle</h3>
     <p class="hinweis-text">
       Mit dem Mikrofon-Symbol schaltest du das Zuhören an. Erkannt werden unter
@@ -199,6 +240,8 @@
     </div>
 
     <div class="frage" id="reportFrage" hidden></div>
+    <div class="gegenprobe" id="gegenprobe" hidden></div>
+    <div class="vergleich" id="vergleich" hidden></div>
 
     <h3>Befund</h3>
     <p class="befund" id="befund"></p>
@@ -221,8 +264,28 @@
 
     <div class="blatt-knoepfe">
       <button id="zurueckButton" class="klein">Weiter bauen</button>
+      <button id="nachmessenButton" class="klein">Nachmessen</button>
+      <button id="teilenButton" class="klein">Teilen</button>
+    </div>
+    <div class="blatt-knoepfe">
       <button id="feedbackButton" class="klein">Session bewerten</button>
       <button id="nochmalButton" class="haupt">Neuer Kopf</button>
+    </div>
+  </div>
+</section>
+
+<!-- Historie ------------------------------------------------------------ -->
+<section id="historie" class="blatt" hidden>
+  <div class="blatt-inner">
+    <h2>Meine bisherigen Köpfe</h2>
+    <p class="unterzeile">Bleibt auf diesem Gerät. Die gestrichelte Linie ist die 85er-Marke.</p>
+
+    <canvas id="kurve" class="kurve"></canvas>
+    <ul class="historie-liste" id="historieListe"></ul>
+
+    <div class="blatt-knoepfe">
+      <button id="historieLeeren" class="klein">Alles löschen</button>
+      <button id="historieZu" class="haupt">Zurück</button>
     </div>
   </div>
 </section>
@@ -253,6 +316,7 @@
   </div>
 </section>
 
+<script src="steuerung.js"></script>
 <script src="engine.js"></script>
 <script src="ar.js"></script>
 </body>

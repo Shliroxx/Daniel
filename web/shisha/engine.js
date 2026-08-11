@@ -42,6 +42,10 @@ const Engine = (() => {
     openrouter_key: '',
     openrouter_modell: 'meta-llama/llama-4-maverick:free',
     server_url: '',
+    // Zweiter Anbieter fuer die Gegenprobe beim Endurteil. 'aus' = keine.
+    gegenprobe: 'aus',
+    // Bei kaum veraendertem Bild keine neue Anfrage stellen.
+    sparmodus: true,
   };
 
   function einstellungen() {
@@ -101,7 +105,12 @@ const Engine = (() => {
     return kurz || `Fehler ${status}`;
   }
 
-  async function ueberGemini(blob, prompt, e) {
+  async function ueberGemini(blobs, prompt, e) {
+    const bilder = [];
+    for (const blob of blobs) {
+      bilder.push({ inline_data: { mime_type: 'image/jpeg', data: await base64(blob) } });
+    }
+
     const antwort = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(e.gemini_modell)}:generateContent`,
       {
@@ -111,10 +120,7 @@ const Engine = (() => {
           system_instruction: { parts: [{ text: prompt }] },
           contents: [{
             role: 'user',
-            parts: [
-              { inline_data: { mime_type: 'image/jpeg', data: await base64(blob) } },
-              { text: AUFTRAG },
-            ],
+            parts: [...bilder, { text: AUFTRAG }],
           }],
           // temperature 0, damit dasselbe Bild moeglichst dasselbe Ergebnis gibt.
           generationConfig: { temperature: 0, responseMimeType: 'application/json', maxOutputTokens: 2600 },
@@ -135,7 +141,12 @@ const Engine = (() => {
     return text;
   }
 
-  async function ueberOpenRouter(blob, prompt, e) {
+  async function ueberOpenRouter(blobs, prompt, e) {
+    const bilder = [];
+    for (const blob of blobs) {
+      bilder.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${await base64(blob)}` } });
+    }
+
     const antwort = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${e.openrouter_key}` },
@@ -148,10 +159,7 @@ const Engine = (() => {
           { role: 'system', content: prompt },
           {
             role: 'user',
-            content: [
-              { type: 'text', text: AUFTRAG },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${await base64(blob)}` } },
-            ],
+            content: [{ type: 'text', text: AUFTRAG }, ...bilder],
           },
         ],
       }),
@@ -167,10 +175,10 @@ const Engine = (() => {
     return text;
   }
 
-  async function ueberServer(blob, prompt, e) {
+  async function ueberServer(blobs, prompt, e) {
     const basis = (e.server_url || location.origin).replace(/\/+$/, '');
     const daten = new FormData();
-    daten.append('bild', blob, 'kopf.jpg');
+    blobs.forEach((blob, index) => daten.append('bild', blob, `kopf${index + 1}.jpg`));
     daten.append('prompt', prompt);
 
     const antwort = await fetch(`${basis}/api/shisha/proxy`, { method: 'POST', body: daten });
@@ -182,23 +190,101 @@ const Engine = (() => {
     return inhalt.text;
   }
 
-  async function modellFragen(blob, prompt) {
+  /** Fragt ein Modell. `bilder` ist ein Blob oder eine Liste davon. */
+  async function modellFragen(bilder, prompt, anbieterWahl) {
     const e = einstellungen();
+    const anbieter = anbieterWahl || e.anbieter;
+    const blobs = Array.isArray(bilder) ? bilder : [bilder];
+
     try {
-      if (e.anbieter === 'gemini') {
+      verbrauchZaehlen(anbieter);
+      if (anbieter === 'gemini') {
         if (!e.gemini_key) throw new AnalyseFehler('Kein Gemini-Schluessel hinterlegt.');
-        return await ueberGemini(blob, prompt, e);
+        return await ueberGemini(blobs, prompt, e);
       }
-      if (e.anbieter === 'openrouter') {
+      if (anbieter === 'openrouter') {
         if (!e.openrouter_key) throw new AnalyseFehler('Kein OpenRouter-Schluessel hinterlegt.');
-        return await ueberOpenRouter(blob, prompt, e);
+        return await ueberOpenRouter(blobs, prompt, e);
       }
-      return await ueberServer(blob, prompt, e);
+      return await ueberServer(blobs, prompt, e);
     } catch (fehler) {
       if (fehler instanceof AnalyseFehler) throw fehler;
       // fetch wirft bei fehlendem Netz einen nackten TypeError.
       throw new AnalyseFehler(navigator.onLine ? `Verbindung gescheitert: ${fehler.message}` : 'Kein Netz.');
     }
+  }
+
+  // ------------------------------------------------------------------------
+  // Kontingent
+  // ------------------------------------------------------------------------
+
+  /* Zaehlt die Anfragen pro Tag und Anbieter mit.
+   *
+   * Der Anbieter entscheidet, wann Schluss ist — die App weiss es nicht. Aber
+   * mitzaehlen reicht, um vorher zu warnen statt mitten im Bauen ueberrascht zu
+   * werden. Der Zaehler steht auf diesem Geraet und faengt jeden Tag neu an.
+   */
+  function heute() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function verbrauchLaden() {
+    try {
+      const daten = JSON.parse(localStorage.getItem('shisha.verbrauch') || '{}');
+      return daten.tag === heute() ? daten : { tag: heute(), anbieter: {} };
+    } catch (_) {
+      return { tag: heute(), anbieter: {} };
+    }
+  }
+
+  function verbrauchZaehlen(anbieter) {
+    const daten = verbrauchLaden();
+    daten.anbieter[anbieter] = (daten.anbieter[anbieter] || 0) + 1;
+    localStorage.setItem('shisha.verbrauch', JSON.stringify(daten));
+    return daten;
+  }
+
+  function verbrauch(anbieterWahl) {
+    const anbieter = anbieterWahl || einstellungen().anbieter;
+    const daten = verbrauchLaden();
+    const anzahl = daten.anbieter[anbieter] || 0;
+    const limit = (spec.kontingent.tageslimit || {})[anbieter] || 0;
+    const anteil = limit ? anzahl / limit : 0;
+    return {
+      anbieter,
+      anzahl,
+      limit,
+      anteil: Math.round(anteil * 100) / 100,
+      // Ohne bekanntes Limit gibt es auch nichts zu warnen.
+      warnung: Boolean(limit) && anteil >= spec.kontingent.warnung_ab,
+      erschoepft: Boolean(limit) && anzahl >= limit,
+    };
+  }
+
+  // ------------------------------------------------------------------------
+  // Kopfdatenbank und Massstab
+  // ------------------------------------------------------------------------
+
+  /** Sucht einen Kopf in der Liste — grosszuegig, damit Tippfehler nicht stoeren. */
+  function kopfSuchen(name) {
+    const gesucht = String(name || '').toLowerCase().trim();
+    if (!gesucht) return null;
+    const liste = (spec.koepfe && spec.koepfe.liste) || [];
+    return liste.find((kopf) => kopf.name.toLowerCase() === gesucht)
+      || liste.find((kopf) => gesucht.includes(kopf.name.toLowerCase()))
+      || liste.find((kopf) => kopf.name.toLowerCase().includes(gesucht))
+      || null;
+  }
+
+  /** Durchmesser aus eigener Angabe oder aus der Kopfliste. */
+  function durchmesserBestimmen(kontext) {
+    const eigen = Number(kontext.durchmesser_mm);
+    if (Number.isFinite(eigen) && eigen >= 40 && eigen <= 140) {
+      return { mm: Math.round(eigen), quelle: 'angegeben' };
+    }
+    const treffer = kopfSuchen(kontext.kopf_modell);
+    if (treffer) return { mm: treffer.durchmesser_mm, quelle: `aus der Liste (${treffer.name})` };
+    return null;
   }
 
   // ------------------------------------------------------------------------
@@ -221,6 +307,11 @@ const Engine = (() => {
     ];
     felder.forEach(([name, wert]) => { if (wert) zeilenListe.push(`- ${name}: ${wert}`); });
 
+    const massstab = durchmesserBestimmen(kontext);
+    if (massstab) {
+      zeilenListe.push(`- Innendurchmesser der Tabakmulde: ${massstab.mm} mm (${massstab.quelle})`);
+    }
+
     const offen = fehlendeAngaben(kontext);
     if (offen.length) zeilenListe.push(`- Nicht angegeben: ${offen.join(', ')}`);
     return zeilenListe.join('\n');
@@ -235,7 +326,7 @@ const Engine = (() => {
     return offen;
   }
 
-  function promptBauen({ modus, kontext, phase, verlauf, lernen }) {
+  function promptBauen({ modus, kontext, phase, verlauf, lernen, bilder = 1, gegenprobe = false }) {
     const w = spec.wissen;
     const p = spec.prompt;
     const teile = [
@@ -248,6 +339,10 @@ const Engine = (() => {
       zeilen(p.bewertung),
       zeilen(p.marker),
     ];
+
+    if (durchmesserBestimmen(kontext)) teile.push(zeilen(p.massstab));
+    if (bilder > 1) teile.push(zeilen(p.mehrere_bilder));
+    if (gegenprobe) teile.push(zeilen(p.gegenprobe));
 
     if (modus === 'live') {
       const info = spec.phasen.find((ph) => ph.key === phase) || spec.phasen[0];
@@ -695,6 +790,28 @@ const Engine = (() => {
     };
   }
 
+  /* Leitet aus wiederholtem Feedback verbindliche Anpassungen ab.
+   *
+   * Der reine Verlaufstext im Prompt war eine Andeutung — ob das Modell die
+   * richtige Konsequenz zieht, blieb Zufall. Hier wird daraus eine benannte
+   * Regel: sie greift erst ab mehreren gleichlautenden Rueckmeldungen, steht
+   * als Anweisung im Prompt und ist in der App nachlesbar.
+   */
+  function lernregeln() {
+    const sessions = profilLaden().sessions;
+    const einstellung = spec.lernregeln;
+    if (!einstellung || sessions.length < einstellung.ab_sessions) return [];
+
+    return einstellung.regeln.map((regel) => {
+      const passend = sessions.filter((session) => {
+        const wert = session[regel.feld];
+        if (wert === undefined || wert === null || wert === '') return false;
+        return regel.richtung === 'hoch' ? wert >= regel.ab_wert : wert <= regel.ab_wert;
+      });
+      return { ...regel, treffer: passend.length };
+    }).filter((regel) => regel.treffer >= einstellung.ab_sessions);
+  }
+
   function lernkontext() {
     const sessions = profilLaden().sessions.slice(-6);
     if (!sessions.length) return '';
@@ -709,8 +826,155 @@ const Engine = (() => {
       return teile.length ? `- ${teile.join(', ')}` : '';
     }).filter(Boolean);
 
-    if (!zeilenListe.length) return '';
-    return `${zeilenListe.join('\n')}\n${zeilen(spec.prompt.lernen)}`;
+    const regeln = lernregeln();
+    const regeltext = regeln.length
+      ? '\n\nDaraus abgeleitete Vorgaben — halte dich daran:\n'
+        + regeln.map((r) => `- ${r.titel} (${r.treffer} Sessions): ${r.anweisung}`).join('\n')
+      : '';
+
+    if (!zeilenListe.length) return regeltext.trim();
+    return `${zeilenListe.join('\n')}\n${zeilen(spec.prompt.lernen)}${regeltext}`;
+  }
+
+  // ------------------------------------------------------------------------
+  // Gegenprobe mit einem zweiten Modell
+  // ------------------------------------------------------------------------
+
+  function gegenprobeAnbieter() {
+    const e = einstellungen();
+    if (!e.gegenprobe || e.gegenprobe === 'aus' || e.gegenprobe === e.anbieter) return null;
+    if (e.gegenprobe === 'gemini' && !e.gemini_key) return null;
+    if (e.gegenprobe === 'openrouter' && !e.openrouter_key) return null;
+    return e.gegenprobe;
+  }
+
+  /* Fragt dasselbe Bild ein zweites Mal, bei einem anderen Anbieter.
+   *
+   * Weichen die Urteile weit auseinander, ist die Sache nicht so klar, wie eine
+   * einzelne Zahl aussieht — dann wird die Sicherheit heruntergesetzt. Das ist
+   * eine gemessene Konfidenz statt einer behaupteten. Scheitert die Gegenprobe,
+   * bleibt das Hauptergebnis unangetastet; sie ist ein Extra, kein Muss.
+   */
+  async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis) {
+    try {
+      const rohtext = await modellFragen(blobs, prompt, anbieter);
+      const zweit = normalisiere(jsonAusText(rohtext), false);
+      if (zweit.gesamtscore === null || ergebnis.gesamtscore === null) {
+        return { anbieter, score: zweit.gesamtscore, abweichung: null, einig: false };
+      }
+
+      const abweichung = Math.abs(zweit.gesamtscore - ergebnis.gesamtscore);
+      const einig = abweichung <= spec.plausibilitaet.gegenprobe_spanne;
+      if (!einig) {
+        ergebnis.confidence.gesamt = Math.min(
+          ergebnis.confidence.gesamt, spec.plausibilitaet.gegenprobe_sicherheit
+        );
+      }
+      return {
+        anbieter,
+        score: zweit.gesamtscore,
+        abweichung,
+        einig,
+        // Die deutlichsten Unterschiede — da lohnt der genaue Blick.
+        strittig: Object.keys(spec.gewichte)
+          .map((key) => ({ key, name: spec.kategorien[key], differenz: Math.abs(zweit.scores[key] - ergebnis.scores[key]) }))
+          .filter((k) => k.differenz >= 20)
+          .sort((a, b) => b.differenz - a.differenz)
+          .slice(0, 3),
+      };
+    } catch (fehler) {
+      return { anbieter, fehler: fehler.message };
+    }
+  }
+
+  // ------------------------------------------------------------------------
+  // Vergleich zweier Analysen
+  // ------------------------------------------------------------------------
+
+  /* Stellt zwei Vollanalysen gegenueber.
+   *
+   * Damit wird aus dem Versprechen "nach Optimierung 91" etwas Nachpruefbares:
+   * hat die Korrektur wirklich gewirkt, und lag die Prognose richtig?
+   */
+  function vergleiche(vorher, nachher) {
+    if (!vorher || !nachher) return null;
+
+    const kategorien = Object.keys(spec.gewichte).map((key) => {
+      const von = vorher.scores[key];
+      const auf = nachher.scores[key];
+      return { key, name: spec.kategorien[key] || key, von, auf, delta: auf - von };
+    });
+
+    const vonGesamt = vorher.gesamtscore;
+    const aufGesamt = nachher.gesamtscore;
+    const versprochen = (vorher.prognose || {}).score_nach_optimierung;
+
+    return {
+      von: vonGesamt,
+      auf: aufGesamt,
+      delta: (aufGesamt === null || vonGesamt === null) ? null : aufGesamt - vonGesamt,
+      kategorien,
+      besser: kategorien.filter((k) => k.delta > 2),
+      schlechter: kategorien.filter((k) => k.delta < -2),
+      versprochen,
+      // Wie nah die Prognose an der Wirklichkeit lag — kleiner ist besser.
+      prognose_abweichung: (versprochen && aufGesamt !== null) ? Math.abs(versprochen - aufGesamt) : null,
+    };
+  }
+
+  // ------------------------------------------------------------------------
+  // Historie — vergangene Koepfe auf diesem Geraet
+  // ------------------------------------------------------------------------
+
+  /* Abgelegt wird in IndexedDB, weil ein Vorschaubild in localStorage nicht
+   * hineinpasst. Bleibt auf dem Geraet und geht an keinen Server.
+   */
+  const HISTORIE_DB = 'shisha-historie';
+  const HISTORIE_LADEN = 'koepfe';
+
+  function datenbank() {
+    return new Promise((fertig, fehler) => {
+      if (typeof indexedDB === 'undefined') {
+        fehler(new Error('Dieser Browser speichert keine Historie.'));
+        return;
+      }
+      const anfrage = indexedDB.open(HISTORIE_DB, 1);
+      anfrage.onupgradeneeded = () => {
+        const db = anfrage.result;
+        if (!db.objectStoreNames.contains(HISTORIE_LADEN)) {
+          db.createObjectStore(HISTORIE_LADEN, { keyPath: 'zeit' });
+        }
+      };
+      anfrage.onsuccess = () => fertig(anfrage.result);
+      anfrage.onerror = () => fehler(anfrage.error || new Error('Historie nicht verfuegbar'));
+    });
+  }
+
+  function historieSchreiben(eintrag) {
+    return datenbank().then((db) => new Promise((fertig, fehler) => {
+      const t = db.transaction(HISTORIE_LADEN, 'readwrite');
+      t.objectStore(HISTORIE_LADEN).put(eintrag);
+      t.oncomplete = () => fertig(eintrag);
+      t.onerror = () => fehler(t.error);
+    }));
+  }
+
+  function historieLesen(anzahl = 30) {
+    return datenbank().then((db) => new Promise((fertig, fehler) => {
+      const t = db.transaction(HISTORIE_LADEN, 'readonly');
+      const anfrage = t.objectStore(HISTORIE_LADEN).getAll();
+      anfrage.onsuccess = () => fertig(anfrage.result.sort((a, b) => b.zeit - a.zeit).slice(0, anzahl));
+      anfrage.onerror = () => fehler(anfrage.error);
+    }));
+  }
+
+  function historieLeeren() {
+    return datenbank().then((db) => new Promise((fertig, fehler) => {
+      const t = db.transaction(HISTORIE_LADEN, 'readwrite');
+      t.objectStore(HISTORIE_LADEN).clear();
+      t.oncomplete = () => fertig(true);
+      t.onerror = () => fehler(t.error);
+    }));
   }
 
   // ------------------------------------------------------------------------
@@ -724,7 +988,7 @@ const Engine = (() => {
   class Sitzung {
     constructor(kontext) {
       this.kontext = { ziel: 'balanced', kopf_modell: '', tabak_marke: '', tabak_sorte: '',
-                       hmd: '', kohlen: '', notiz: '', ...(kontext || {}) };
+                       hmd: '', kohlen: '', notiz: '', durchmesser_mm: '', ...(kontext || {}) };
       this.phase = spec.phasen[0].key;
       this.verlauf = [];
       this.letzte = null;
@@ -866,25 +1130,40 @@ const Engine = (() => {
       return zeilenListe.join('\n');
     }
 
-    /** Bild analysieren lassen und das Ergebnis einsortieren. */
-    async analysieren(blob, modus = 'live') {
+    /** Bild oder Bilderreihe analysieren lassen und das Ergebnis einsortieren. */
+    async analysieren(bilder, modus = 'live') {
+      const blobs = Array.isArray(bilder) ? bilder : [bilder];
+      const zweiter = modus === 'voll' ? gegenprobeAnbieter() : null;
+
       const prompt = promptBauen({
         modus,
         kontext: this.kontext,
         phase: this.phase,
         verlauf: this.verlaufstext(modus === 'live' ? 4 : 8),
         lernen: lernkontext(),
+        bilder: blobs.length,
+        gegenprobe: Boolean(zweiter),
       });
 
       const begonnen = performance.now();
-      const rohtext = await modellFragen(blob, prompt);
+      const rohtext = await modellFragen(blobs, prompt);
       const ergebnis = normalisiere(jsonAusText(rohtext), modus === 'live');
       ergebnis.dauer = Math.round(performance.now() - begonnen) / 1000;
+      ergebnis.bilder = blobs.length;
 
       if (modus === 'live') return this.aufnehmen(ergebnis);
 
+      if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis);
+
       ergebnis.phase = this.phase;
       ergebnis.kontext = { ...this.kontext };
+
+      // Eine zweite Vollanalyse ist ein Nachmessen: die erste bleibt als Vergleich.
+      if (this.analyse) {
+        this.analyse_vorher = this.analyse;
+        ergebnis.vergleich = vergleiche(this.analyse_vorher, ergebnis);
+      }
+
       this.analyse = ergebnis;
       this.letzte = ergebnis;
       return ergebnis;
@@ -935,7 +1214,12 @@ const Engine = (() => {
     stufe,
     Sitzung,
     AnalyseFehler,
-    profil: { laden: profilLaden, merken: feedbackMerken, treffsicherheit, lernkontext, erlebteNote },
+    kopfSuchen,
+    durchmesserBestimmen,
+    verbrauch,
+    vergleiche,
+    profil: { laden: profilLaden, merken: feedbackMerken, treffsicherheit, lernkontext, erlebteNote, lernregeln },
+    historie: { speichern: historieSchreiben, laden: historieLesen, leeren: historieLeeren },
   };
 })();
 

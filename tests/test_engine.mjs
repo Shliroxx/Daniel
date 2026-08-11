@@ -26,17 +26,26 @@ globalThis.performance = globalThis.performance || { now: () => Date.now() };
 globalThis.location = { origin: 'https://beispiel.test' };
 
 let letzteAnfrage = null;
+let anfragen = [];
 let antwortText = '';
+let antwortReihe = [];   // wird der Reihe nach abgearbeitet, sonst antwortText
 
-globalThis.fetch = async (url, optionen = {}) => {
+const standardFetch = async (url, optionen = {}) => {
   if (String(url).endsWith('spec.json')) {
     return { ok: true, json: async () => JSON.parse(readFileSync(join(webDir, 'spec.json'), 'utf8')) };
   }
   letzteAnfrage = { url: String(url), optionen };
-  // Antwort so verpacken, wie Gemini sie liefert.
-  const umschlag = { candidates: [{ content: { parts: [{ text: antwortText }] } }] };
+  anfragen.push(letzteAnfrage);
+
+  const text = antwortReihe.length ? antwortReihe.shift() : antwortText;
+  // Jeder Anbieter verpackt seine Antwort anders — hier beide Formen.
+  const umschlag = String(url).includes('openrouter')
+    ? { choices: [{ message: { content: text } }] }
+    : { candidates: [{ content: { parts: [{ text }] } }] };
   return { ok: true, status: 200, text: async () => JSON.stringify(umschlag) };
 };
+
+globalThis.fetch = standardFetch;
 
 const Engine = (await import(join(webDir, 'engine.js'))).default
   || (await import('node:module')).createRequire(import.meta.url)(join(webDir, 'engine.js'));
@@ -251,6 +260,8 @@ await assert.rejects(sitzung.analysieren(new Blob(['x']), 'live'), /Freikontinge
 globalThis.fetch = async () => ({ ok: false, status: 401, text: async () => 'bad key' });
 await assert.rejects(sitzung.analysieren(new Blob(['x']), 'live'), /Schluessel/);
 
+globalThis.fetch = standardFetch;   // nach den Fehlertests wieder normal antworten
+
 // --- Lernspeicher -----------------------------------------------------------
 Engine.profil.merken({ ziel: 'geschmack', score: 80, geschmack: 2, rauch: 4, kratzen: 4, hitze: 5, dauer_min: 45 });
 const treffer = Engine.profil.treffsicherheit();
@@ -307,5 +318,169 @@ assert.equal(Engine.befehlErkennen('wie viele punkte habe ich'), 'status');
 assert.equal(Engine.befehlErkennen(''), null);
 assert.equal(Engine.befehlErkennen('das wetter ist schön'), null,
              'Alltagssatz darf keinen Befehl ausloesen');
+
+// --- (1) Maßstab -------------------------------------------------------------
+assert.equal(Engine.kopfSuchen('Oblako Phunnel M').durchmesser_mm, 78);
+assert.equal(Engine.kopfSuchen('oblako phunnel m').durchmesser_mm, 78, 'Gross- und Kleinschreibung egal');
+assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').durchmesser_mm, 78, 'Zusaetze stoeren nicht');
+assert.equal(Engine.kopfSuchen('Fantasiekopf 9000'), null);
+assert.equal(Engine.kopfSuchen(''), null);
+
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).mm, 82);
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).quelle, 'angegeben');
+assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel' }).mm, 75, 'faellt auf die Liste zurueck');
+assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'unbekannt' }), null);
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }), null, 'unsinnige Werte werden verworfen');
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 500 }), null);
+
+const mitMassstab = Engine.promptBauen({
+  modus: 'voll', kontext: { ziel: 'balanced', kopf_modell: 'Oblako Phunnel M' }, verlauf: '', lernen: '',
+});
+assert.ok(mitMassstab.includes('78 mm'), 'Durchmesser steht im Prompt');
+assert.ok(mitMassstab.includes('Groessenbezug'), 'Massstab-Anleitung steht im Prompt');
+
+const ohneMassstab = Engine.promptBauen({
+  modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '',
+});
+assert.ok(!ohneMassstab.includes('Groessenbezug'), 'ohne Angabe kein Massstab-Block');
+
+// --- (3) Mehrere Bilder -------------------------------------------------------
+const mehrere = Engine.promptBauen({
+  modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '', bilder: 3,
+});
+assert.ok(mehrere.includes('mehrere Bilder desselben Kopfes'));
+assert.ok(mehrere.includes('ERSTE Bild'), 'Marker beziehen sich auf das erste Bild');
+
+antwortText = JSON.stringify(ANTWORT);
+anfragen = [];
+const dreiBilder = new Engine.Sitzung({ ziel: 'balanced' });
+await dreiBilder.analysieren([new Blob(['a']), new Blob(['b']), new Blob(['c'])], 'voll');
+const geschickt = JSON.parse(anfragen[0].optionen.body).contents[0].parts;
+assert.equal(geschickt.filter((t) => t.inline_data).length, 3, 'alle drei Bilder gehen mit');
+assert.equal(dreiBilder.analyse.bilder, 3);
+
+// --- (4) Lernregeln -----------------------------------------------------------
+speicher.delete('shisha.profil');
+assert.deepEqual(Engine.profil.lernregeln(), [], 'ohne Sessions keine Regeln');
+
+Engine.profil.merken({ hitze: 5, geschmack: 3, score: 70 });
+Engine.profil.merken({ hitze: 4, geschmack: 3, score: 70 });
+assert.deepEqual(Engine.profil.lernregeln(), [], 'zwei Rueckmeldungen reichen nicht');
+
+Engine.profil.merken({ hitze: 5, geschmack: 3, score: 70 });
+const regeln = Engine.profil.lernregeln();
+assert.equal(regeln.length, 1, `genau eine Regel erwartet, waren: ${regeln.map((r) => r.id)}`);
+assert.equal(regeln[0].id, 'zu_heiss');
+assert.equal(regeln[0].treffer, 3);
+assert.ok(Engine.profil.lernkontext().includes('Kohle weniger'), 'die Regel steht im Prompt');
+assert.ok(Engine.profil.lernkontext().includes('halte dich daran'), 'und zwar als Vorgabe');
+
+// Gegenprobe: ein anderes Feld loest die Regel nicht aus
+speicher.delete('shisha.profil');
+[1, 2, 3].forEach(() => Engine.profil.merken({ geschmack: 5, rauch: 5, score: 90 }));
+assert.deepEqual(Engine.profil.lernregeln().map((r) => r.id), [], 'gute Sessions erzeugen keine Korrekturregel');
+
+// --- (5) Vorher/Nachher --------------------------------------------------------
+const vorher = Engine.normalisiere({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  scores: { tabak_verteilung: 60, fuellhoehe: 60, airflow: 60, hitzemanagement: 60,
+            kopfgeometrie: 60, tabak_kompatibilitaet: 60, zielerreichung: 60 },
+  prognose: { ...ANTWORT.prognose, score_nach_optimierung: 85 },
+}, false);
+const nachher = Engine.normalisiere({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  scores: { tabak_verteilung: 90, fuellhoehe: 60, airflow: 55, hitzemanagement: 80,
+            kopfgeometrie: 60, tabak_kompatibilitaet: 60, zielerreichung: 60 },
+}, false);
+
+const v = Engine.vergleiche(vorher, nachher);
+assert.equal(v.von, 60);
+// 90*.20 + 60*.15 + 55*.15 + 80*.20 + 60*.10 + 60*.10 + 60*.10 = 69.25 -> 69
+assert.equal(v.auf, 69);
+assert.equal(v.delta, 9);
+assert.deepEqual(v.besser.map((k) => k.key), ['tabak_verteilung', 'hitzemanagement']);
+assert.deepEqual(v.schlechter.map((k) => k.key), ['airflow'], 'auch Verschlechterungen werden benannt');
+assert.equal(v.versprochen, 85);
+assert.equal(v.prognose_abweichung, 16, 'die Prognose war 16 Punkte zu optimistisch');
+assert.equal(Engine.vergleiche(null, nachher), null);
+
+// Zweite Vollanalyse in derselben Sitzung ist ein Nachmessen
+antwortText = JSON.stringify(ANTWORT);
+const nachmessen = new Engine.Sitzung({ ziel: 'balanced' });
+await nachmessen.analysieren(new Blob(['x']), 'voll');
+const zweiteRunde = await nachmessen.analysieren(new Blob(['x']), 'voll');
+assert.ok(zweiteRunde.vergleich, 'die zweite Vollanalyse vergleicht mit der ersten');
+assert.equal(zweiteRunde.vergleich.delta, 0, 'gleiche Antwort, gleiche Note');
+
+// --- (7) Kontingent ------------------------------------------------------------
+speicher.delete('shisha.verbrauch');
+assert.equal(Engine.verbrauch('gemini').anzahl, 0);
+assert.equal(Engine.verbrauch('gemini').limit, 200);
+
+const vorZaehler = Engine.verbrauch('gemini').anzahl;
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live');
+assert.equal(Engine.verbrauch('gemini').anzahl, vorZaehler + 1, 'jede Anfrage wird gezaehlt');
+
+speicher.set('shisha.verbrauch', JSON.stringify({
+  tag: new Date().toISOString().slice(0, 10), anbieter: { gemini: 199 },
+}));
+assert.equal(Engine.verbrauch('gemini').warnung, true, 'kurz vor dem Limit wird gewarnt');
+assert.equal(Engine.verbrauch('gemini').erschoepft, false);
+speicher.set('shisha.verbrauch', JSON.stringify({
+  tag: new Date().toISOString().slice(0, 10), anbieter: { gemini: 200 },
+}));
+assert.equal(Engine.verbrauch('gemini').erschoepft, true);
+
+// Ohne bekanntes Limit gibt es nichts zu warnen
+assert.equal(Engine.verbrauch('server').limit, 0);
+assert.equal(Engine.verbrauch('server').warnung, false);
+
+// Ein alter Zaehlerstand von gestern gilt nicht mehr
+speicher.set('shisha.verbrauch', JSON.stringify({ tag: '2000-01-01', anbieter: { gemini: 999 } }));
+assert.equal(Engine.verbrauch('gemini').anzahl, 0, 'der Zaehler faengt jeden Tag neu an');
+
+// --- (9) Gegenprobe -------------------------------------------------------------
+const einigeAntwort = JSON.stringify({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+});
+const abweichendeAntwort = JSON.stringify({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  scores: { tabak_verteilung: 20, fuellhoehe: 20, airflow: 20, hitzemanagement: 20,
+            kopfgeometrie: 20, tabak_kompatibilitaet: 20, zielerreichung: 20 },
+});
+
+Engine.einstellungenSpeichern({ anbieter: 'gemini', gegenprobe: 'openrouter', openrouter_key: 'zweit-key' });
+
+// Einig: beide sagen dasselbe
+antwortReihe = [einigeAntwort, einigeAntwort];
+anfragen = [];
+const einig = await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'voll');
+assert.equal(anfragen.length, 2, 'zwei Anbieter werden gefragt');
+assert.ok(anfragen[1].url.includes('openrouter'), 'der zweite ist ein anderer Anbieter');
+assert.equal(einig.gegenprobe.einig, true);
+assert.equal(einig.gegenprobe.abweichung, 0);
+
+// Uneinig: die Sicherheit wird heruntergesetzt
+antwortReihe = [einigeAntwort, abweichendeAntwort];
+const uneinig = await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'voll');
+assert.equal(uneinig.gegenprobe.einig, false);
+assert.ok(uneinig.gegenprobe.abweichung > 15);
+assert.ok(uneinig.confidence.gesamt <= 45, 'uneinige Modelle heissen niedrige Sicherheit');
+assert.ok(uneinig.gegenprobe.strittig.length > 0, 'die strittigen Kategorien werden benannt');
+
+// Ohne zweiten Anbieter passiert nichts
+Engine.einstellungenSpeichern({ gegenprobe: 'aus' });
+antwortReihe = [];
+antwortText = einigeAntwort;
+anfragen = [];
+const ohne = await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'voll');
+assert.equal(anfragen.length, 1);
+assert.equal(ohne.gegenprobe, undefined);
+
+// Derselbe Anbieter waere keine Gegenprobe
+Engine.einstellungenSpeichern({ anbieter: 'gemini', gegenprobe: 'gemini' });
+anfragen = [];
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'voll');
+assert.equal(anfragen.length, 1, 'gegen sich selbst pruefen bringt nichts');
 
 console.log('ALLE TESTS BESTANDEN');

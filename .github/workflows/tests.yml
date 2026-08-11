@@ -20,6 +20,9 @@ jobs:
       - name: Analyse-Engine testen
         run: node tests/test_engine.mjs
 
+      - name: Steuerlogik testen
+        run: node tests/test_steuerung.mjs
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

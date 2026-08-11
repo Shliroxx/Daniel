@@ -5,7 +5,7 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v3';
+const CACHE = 'hookah-analyzer-v4';
 
 const DATEIEN = [
   './',
@@ -13,6 +13,7 @@ const DATEIEN = [
   './ar.css',
   './ar.js',
   './engine.js',
+  './steuerung.js',
   './spec.json',
   './icon.svg',
   './manifest.webmanifest',
