@@ -1,13 +1,16 @@
-/* Hookah Analyzer — Kamera, AR-Overlay, Live-Analyse und Report.
+/* Hookah Analyzer — Kamera, AR-Overlay und Bedienung.
+ *
+ * Diese Datei kuemmert sich nur um das, was man sieht und anfasst. Das Denken
+ * steckt in engine.js: Prompt bauen, Modell fragen, Antwort geradeziehen, Note
+ * rechnen. Ein eigener Server ist dafuer nicht noetig.
  *
  * Ablauf: Livebild zeigen, warten bis das Handy ruhig und scharf ist, dann ein
- * Einzelbild an den Server schicken. Waehrend die Analyse laeuft, zeichnet das
- * Overlay das letzte Ergebnis weiter — so ruckelt nichts.
+ * Einzelbild analysieren lassen. Waehrend das laeuft, zeichnet das Overlay das
+ * letzte Ergebnis weiter — so ruckelt nichts.
  *
- * Die Marker kommen als normalisierte Bildkoordinaten (0 bis 1) zurueck und
- * werden hier auf den sichtbaren Bildausschnitt umgerechnet. Das Video liegt mit
- * object-fit: cover im Bild, also wird links/rechts oder oben/unten beschnitten —
- * genau das rechnet bildAufBildschirm() heraus.
+ * Die Marker kommen als normalisierte Bildkoordinaten (0 bis 1). Das Video liegt
+ * mit object-fit: cover im Rahmen, wird also beschnitten — bildAufBildschirm()
+ * rechnet das heraus.
  */
 
 'use strict';
@@ -25,33 +28,13 @@ const MARKER_FARBE = {
 };
 
 const MARKER_SYMBOL = {
-  remove: '−',
-  loosen: '≋',
-  distribute: '↔',
-  ok: '✓',
-  fill_height: '⎯',
-  hmd: '◎',
-  coal: '●',
-};
-
-const KATEGORIE_NAMEN = {
-  tabak_verteilung: 'Tabakverteilung',
-  fuellhoehe: 'Fuellhoehe',
-  airflow: 'Airflow',
-  hitzemanagement: 'Hitzemanagement',
-  kopfgeometrie: 'Kopfgeometrie',
-  tabak_kompatibilitaet: 'Kompatibilitaet',
-  zielerreichung: 'Zielerreichung',
+  remove: '−', loosen: '≋', distribute: '↔', ok: '✓',
+  fill_height: '⎯', hmd: '◎', coal: '●',
 };
 
 const KONF_NAMEN = {
-  gesamt: 'Gesamt',
-  kopf_erkennung: 'Kopf',
-  tabak_analyse: 'Tabak',
-  fuellhoehe: 'Fuellhoehe',
-  airflow: 'Airflow',
-  hitzemanagement: 'Hitze',
-  optimierung: 'Optimierung',
+  gesamt: 'Gesamt', kopf_erkennung: 'Kopf', tabak_analyse: 'Tabak', fuellhoehe: 'Fuellhoehe',
+  airflow: 'Airflow', hitzemanagement: 'Hitze', optimierung: 'Optimierung',
 };
 
 const PFEIL = { hoch: '↑', gleich: '→', runter: '↓' };
@@ -68,8 +51,6 @@ const zustand = {
   busy: false,
   ton: true,
   analyse: null,
-  phasen: [],
-  phase: null,
   puls: 0,
   wakeLock: null,
   feedback: {},
@@ -90,7 +71,7 @@ mini.height = 48;
 const miniCtx = mini.getContext('2d', { willReadFrequently: true });
 let letzteMini = null;
 
-// Vollbild fuer den Upload.
+// Vollbild fuer die Analyse.
 const shot = document.createElement('canvas');
 const shotCtx = shot.getContext('2d');
 
@@ -102,11 +83,7 @@ async function kameraStarten() {
     );
   }
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: { ideal: 'environment' },
-      width: { ideal: 1920 },
-      height: { ideal: 1080 },
-    },
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     audio: false,
   });
   video.srcObject = stream;
@@ -161,11 +138,7 @@ function bildGuete() {
     }
   }
 
-  return {
-    bewegung,
-    schaerfe: kanten / (mini.width * mini.height),
-    helligkeit: summe / grau.length,
-  };
+  return { bewegung, schaerfe: kanten / (mini.width * mini.height), helligkeit: summe / grau.length };
 }
 
 function guetePruefen() {
@@ -194,16 +167,6 @@ function bildAufnehmen(maxKante) {
   return new Promise((fertig) => shot.toBlob(fertig, 'image/jpeg', 0.78));
 }
 
-async function senden(pfad, blob, extra = {}) {
-  const daten = new FormData();
-  daten.append('bild', blob, 'kopf.jpg');
-  const frage = new URLSearchParams({ id: zustand.sitzung || '', ...extra });
-  const antwort = await fetch(`${pfad}?${frage}`, { method: 'POST', body: daten });
-  const inhalt = await antwort.json().catch(() => ({ ok: false, fehler: 'Antwort unlesbar' }));
-  if (!antwort.ok || !inhalt.ok) throw new Error(inhalt.fehler || `Server: ${antwort.status}`);
-  return inhalt;
-}
-
 async function schleife() {
   while (zustand.laeuft) {
     if (zustand.busy || !guetePruefen()) {
@@ -214,13 +177,13 @@ async function schleife() {
     zustand.busy = true;
     setzeLage('analysiere', 'denkt');
     try {
-      const blob = await bildAufnehmen(1024);
-      const inhalt = await senden('/api/shisha/live', blob, { phase: zustand.phase || '' });
-      zustand.sitzung = inhalt.sitzung_id;
-      liveUebernehmen(inhalt.analyse);
+      // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
+      const blob = await bildAufnehmen(896);
+      liveUebernehmen(await zustand.sitzung.analysieren(blob, 'live'));
     } catch (fehler) {
       setzeLage(kurz(fehler.message), 'fehler');
-      await schlafen(2500);
+      $('coach').textContent = fehler.message;
+      await schlafen(3000);
     } finally {
       zustand.busy = false;
     }
@@ -237,7 +200,6 @@ const kurz = (text) => (text || 'Fehler').slice(0, 44);
 
 function liveUebernehmen(analyse) {
   zustand.analyse = analyse;
-  zustand.phase = analyse.phase || zustand.phase;
 
   const ok = analyse.analysis_status === 'ok';
   $('coach').textContent = analyse.coach_satz || (ok ? 'Weiter so.' : 'Kopf ins Bild holen.');
@@ -269,15 +231,15 @@ function liveUebernehmen(analyse) {
 
   const kopf = analyse.kopf || {};
   $('kopfInfo').textContent = ok
-    ? [kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt'),
-       quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ')
+    ? [kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt'), quellenKuerzel(kopf.quelle)]
+        .filter(Boolean).join(' · ')
     : (analyse.analysis_status === 'insufficient_image' ? 'Bild zu schlecht' : 'kein Kopf im Bild');
 
   const scoreFeld = $('liveScore');
   scoreFeld.hidden = analyse.gesamtscore === null;
   if (analyse.gesamtscore !== null) scoreFeld.textContent = `${analyse.gesamtscore}/100`;
 
-  $('fortschritt').style.width = `${Math.round((analyse.fortschritt || 0) * 100)}%`;
+  $('fortschritt').style.width = `${Math.round(analyse.fortschritt * 100)}%`;
   phasenZeichnen();
   setzeLage(ok ? 'live' : 'suche Kopf', ok ? '' : 'warn');
 
@@ -294,12 +256,9 @@ function messwerteZeigen(analyse) {
   const tabak = analyse.tabak || {};
   const werte = [];
   if (tabak.fuellhoehe_mm !== null) {
-    const hoehe = tabak.fuellhoehe_mm;
-    werte.push([
-      'Hoehe',
-      hoehe < 0 ? `${Math.abs(hoehe)} mm ueber Rand` : `${hoehe} mm unter Rand`,
-      tabak.fuellhoehe_quelle,
-    ]);
+    werte.push(['Hoehe', tabak.fuellhoehe_mm < 0
+      ? `${Math.abs(tabak.fuellhoehe_mm)} mm ueber Rand`
+      : `${tabak.fuellhoehe_mm} mm unter Rand`, tabak.fuellhoehe_quelle]);
   }
   if (tabak.dichte) werte.push(['Dichte', `${tabak.dichte}/100`, tabak.quelle]);
   if (tabak.gleichmaessigkeit) werte.push(['Gleichmass', `${tabak.gleichmaessigkeit}/100`, null]);
@@ -311,7 +270,7 @@ function messwerteZeigen(analyse) {
   werte.forEach(([name, wert, quelle]) => {
     const feld = document.createElement('span');
     feld.className = 'messwert';
-    feld.innerHTML = `${name} <b>${wert}</b>${quelle ? ` ${quellenKuerzel(quelle)}` : ''}`;
+    feld.innerHTML = `${escape(name)} <b>${escape(String(wert))}</b>${quelle ? ` ${quellenKuerzel(quelle)}` : ''}`;
     box.appendChild(feld);
   });
 }
@@ -331,16 +290,21 @@ function setzeLage(text, art) {
 
 function phasenZeichnen() {
   const box = $('phasen');
+  const phasen = Engine.spec.phasen;
   box.innerHTML = '';
-  const aktuell = zustand.phasen.findIndex((p) => p.key === zustand.phase);
-  zustand.phasen.forEach((phase, index) => {
+  const aktuell = phasen.findIndex((p) => p.key === zustand.sitzung.phase);
+  phasen.forEach((phase, index) => {
     const knopf = document.createElement('button');
     knopf.className = 'phase';
     if (index === aktuell) knopf.classList.add('aktiv');
     else if (aktuell >= 0 && index < aktuell) knopf.classList.add('erledigt');
     knopf.textContent = phase.name;
     knopf.title = phase.ziel;
-    knopf.onclick = () => phaseSetzen(phase.key);
+    knopf.onclick = () => {
+      zustand.sitzung.phaseSetzen(phase.key);
+      $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
+      phasenZeichnen();
+    };
     box.appendChild(knopf);
   });
   const aktives = box.querySelector('.aktiv');
@@ -369,9 +333,7 @@ function bildAufBildschirm(nx, ny) {
   const vw = video.videoWidth || cw;
   const vh = video.videoHeight || ch;
   const skala = Math.max(cw / vw, ch / vh);
-  const versatzX = (cw - vw * skala) / 2;
-  const versatzY = (ch - vh * skala) / 2;
-  return { x: versatzX + nx * vw * skala, y: versatzY + ny * vh * skala, skala, vw, vh };
+  return { x: (cw - vw * skala) / 2 + nx * vw * skala, y: (ch - vh * skala) / 2 + ny * vh * skala };
 }
 
 function zeichnen() {
@@ -389,17 +351,14 @@ function zeichnen() {
   zeichneSucher(breite / 2, hoehe * 0.44, Math.min(breite, hoehe) * 0.32, ok);
 
   if (!ok) {
-    zeichneMitteltext(
-      breite / 2,
-      hoehe * 0.44 + Math.min(breite, hoehe) * 0.32 + 34,
+    zeichneMitteltext(breite / 2, hoehe * 0.44 + Math.min(breite, hoehe) * 0.32 + 34,
       analyse && analyse.analysis_status === 'insufficient_image'
         ? 'Naeher ran, ruhiger halten, mehr Licht'
-        : 'Kopf von oben ins Bild holen'
-    );
+        : 'Kopf von oben ins Bild holen');
     return;
   }
 
-  (analyse.ar_marker || []).forEach((marker) => zeichneMarker(marker));
+  (analyse.ar_marker || []).forEach(zeichneMarker);
   if (analyse.gesamtscore !== null) zeichneScore(breite - 18, hoehe * 0.44, analyse.gesamtscore);
 }
 
@@ -445,15 +404,12 @@ function zeichneMarker(marker) {
     ctx.moveTo(oben.x, y);
     ctx.lineTo(unten.x, y);
     ctx.stroke();
-    ctx.setLineDash([]);
     ctx.restore();
     zeichneEtikett(oben.x + breite / 2, y - 14, marker, farbe);
     return;
   }
 
   const auffaellig = marker.typ !== 'ok';
-  const radius = Math.min(14, breite / 3, hoehe / 3);
-
   ctx.strokeStyle = farbe;
   ctx.lineWidth = auffaellig ? 2.5 : 2;
   ctx.globalAlpha = auffaellig ? 0.95 : 0.7;
@@ -463,7 +419,7 @@ function zeichneMarker(marker) {
     ctx.setLineDash([9, 6]);
     ctx.lineDashOffset = -zustand.puls * 10;
   }
-  rundesRechteck(oben.x, oben.y, breite, hoehe, radius);
+  rundesRechteck(oben.x, oben.y, breite, hoehe, Math.min(14, breite / 3, hoehe / 3));
   ctx.stroke();
 
   ctx.setLineDash([]);
@@ -487,12 +443,12 @@ function rundesRechteck(x, y, breite, hoehe, radius) {
 }
 
 function zeichneEtikett(x, y, marker, farbe) {
-  const text = `${MARKER_SYMBOL[marker.typ] || ''} ${marker.label || ''}`.trim();
-  if (!text) return;
+  const beschriftung = `${MARKER_SYMBOL[marker.typ] || ''} ${marker.label || ''}`.trim();
+  if (!beschriftung) return;
 
   ctx.save();
   ctx.font = '600 13px -apple-system, system-ui, sans-serif';
-  const breite = ctx.measureText(text).width + 16;
+  const breite = ctx.measureText(beschriftung).width + 16;
   const hoehe = 22;
   const links = Math.max(6, Math.min(x - breite / 2, overlay.clientWidth - breite - 6));
   const oben = Math.max(6, y - hoehe);
@@ -507,13 +463,13 @@ function zeichneEtikett(x, y, marker, farbe) {
   ctx.fillStyle = farbe;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(text, links + breite / 2, oben + hoehe / 2 + 0.5);
+  ctx.fillText(beschriftung, links + breite / 2, oben + hoehe / 2 + 0.5);
   ctx.restore();
 }
 
 function zeichneScore(x, y, score) {
   const radius = 26;
-  const farbe = score >= 85 ? '#57e39a' : score >= 70 ? '#5fe3ff' : score >= 50 ? '#ffb454' : '#ff6b7d';
+  const farbe = noteFarbe(score);
 
   ctx.save();
   ctx.translate(x - radius, y);
@@ -537,16 +493,19 @@ function zeichneScore(x, y, score) {
   ctx.restore();
 }
 
-function zeichneMitteltext(x, y, text) {
+function zeichneMitteltext(x, y, beschriftung) {
   ctx.save();
   ctx.fillStyle = 'rgba(220, 238, 246, 0.85)';
   ctx.font = '500 14px -apple-system, system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
   ctx.shadowBlur = 6;
-  ctx.fillText(text, x, y);
+  ctx.fillText(beschriftung, x, y);
   ctx.restore();
 }
+
+const noteFarbe = (score) =>
+  score >= 85 ? '#57e39a' : score >= 70 ? '#5fe3ff' : score >= 50 ? '#ffb454' : '#ff6b7d';
 
 // --------------------------------------------------------------------------
 // Sprachausgabe
@@ -587,32 +546,71 @@ function vibriere(muster) {
 }
 
 // --------------------------------------------------------------------------
-// Sitzung und Kontext
+// Einstellungen
+// --------------------------------------------------------------------------
+
+function einstellungenFuellen() {
+  const e = Engine.einstellungen();
+  [...$('anbieterwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.anbieter === e.anbieter));
+  $('fGeminiKey').value = e.gemini_key;
+  $('fGeminiModell').value = e.gemini_modell;
+  $('fOrKey').value = e.openrouter_key;
+  $('fOrModell').value = e.openrouter_modell;
+  $('fServerUrl').value = e.server_url;
+  anbieterUmschalten(e.anbieter);
+}
+
+function anbieterUmschalten(anbieter) {
+  ['gemini', 'openrouter', 'server'].forEach((name) => {
+    $(`block-${name}`).hidden = name !== anbieter;
+  });
+}
+
+function einstellungenSpeichern() {
+  const gewaehlt = document.querySelector('#anbieterwahl .aktiv');
+  Engine.einstellungenSpeichern({
+    anbieter: gewaehlt ? gewaehlt.dataset.anbieter : 'gemini',
+    gemini_key: $('fGeminiKey').value.trim(),
+    gemini_modell: $('fGeminiModell').value.trim() || 'gemini-2.5-flash',
+    openrouter_key: $('fOrKey').value.trim(),
+    openrouter_modell: $('fOrModell').value.trim(),
+    server_url: $('fServerUrl').value.trim(),
+  });
+  $('einstellungen').hidden = true;
+  startBereitschaft();
+}
+
+function startBereitschaft() {
+  const ok = Engine.bereit();
+  $('losButton').disabled = !ok;
+  $('startInfo').textContent = ok
+    ? `Analyse über ${Engine.anbieterName()}`
+    : 'Noch kein Zugang eingerichtet — tipp auf „Modell und Zugang".';
+  const werte = Engine.profil.treffsicherheit();
+  if (werte.sessions) {
+    $('startInfo').textContent += ` · ${werte.sessions} Session(s) gelernt`;
+  }
+}
+
+// --------------------------------------------------------------------------
+// Sitzung
 // --------------------------------------------------------------------------
 
 function kontextLesen() {
   const gewaehlt = document.querySelector('#zielwahl .aktiv');
   return {
     ziel: gewaehlt ? gewaehlt.dataset.ziel : 'balanced',
-    kopf_modell: $('fKopf').value,
-    tabak_marke: $('fMarke').value,
-    tabak_sorte: $('fSorte').value,
-    hmd: $('fHmd').value,
-    kohlen: $('fKohlen').value,
-    notiz: $('fNotiz').value,
+    kopf_modell: $('fKopf').value.trim(),
+    tabak_marke: $('fMarke').value.trim(),
+    tabak_sorte: $('fSorte').value.trim(),
+    hmd: $('fHmd').value.trim(),
+    kohlen: $('fKohlen').value.trim(),
+    notiz: $('fNotiz').value.trim(),
   };
 }
 
-async function sitzungStarten() {
-  const antwort = await fetch('/api/shisha/sitzung', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: zustand.sitzung, kontext: kontextLesen() }),
-  });
-  const inhalt = await antwort.json();
-  zustand.sitzung = inhalt.sitzung.id;
-  zustand.phasen = inhalt.sitzung.phasen;
-  zustand.phase = inhalt.sitzung.phase;
+function sitzungStarten() {
+  zustand.sitzung = new Engine.Sitzung(kontextLesen());
   zustand.analyse = null;
   $('fortschritt').style.width = '0%';
   $('coach').textContent = 'Halt die Kamera von oben ueber den Kopf.';
@@ -621,19 +619,25 @@ async function sitzungStarten() {
   $('messwerte').innerHTML = '';
   $('rueckfrage').hidden = true;
   $('liveScore').hidden = true;
+  // Angaben merken, damit man sie beim naechsten Mal nicht neu tippt.
+  localStorage.setItem('shisha.kontext', JSON.stringify(zustand.sitzung.kontext));
   phasenZeichnen();
 }
 
-async function phaseSetzen(key, weiter = false) {
-  const antwort = await fetch('/api/shisha/phase', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: zustand.sitzung, phase: key, weiter }),
-  });
-  const inhalt = await antwort.json();
-  zustand.phase = inhalt.sitzung.phase;
-  $('fortschritt').style.width = `${Math.round(inhalt.sitzung.fortschritt * 100)}%`;
-  phasenZeichnen();
+function kontextWiederherstellen() {
+  let gespeichert = {};
+  try {
+    gespeichert = JSON.parse(localStorage.getItem('shisha.kontext') || '{}');
+  } catch (_) { /* dann eben leer */ }
+
+  $('fKopf').value = gespeichert.kopf_modell || '';
+  $('fMarke').value = gespeichert.tabak_marke || '';
+  $('fSorte').value = gespeichert.tabak_sorte || '';
+  $('fHmd').value = gespeichert.hmd || '';
+  $('fKohlen').value = gespeichert.kohlen || '';
+  if (gespeichert.ziel) {
+    [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -646,9 +650,9 @@ async function vollanalyse() {
   $('analyseButton').disabled = true;
   setzeLage('Vollanalyse', 'denkt');
   try {
-    const blob = await bildAufnehmen(1280);
-    const inhalt = await senden('/api/shisha/analyse', blob);
-    reportZeigen(inhalt.analyse);
+    const blob = await bildAufnehmen(1152);
+    reportZeigen(await zustand.sitzung.analysieren(blob, 'voll'));
+    setzeLage('live', '');
   } catch (fehler) {
     setzeLage(kurz(fehler.message), 'fehler');
     $('coach').textContent = `Analyse fehlgeschlagen: ${fehler.message}`;
@@ -660,8 +664,7 @@ async function vollanalyse() {
 
 function reportZeigen(analyse) {
   const score = analyse.gesamtscore;
-  const farbe = score === null ? '#7d95a3'
-    : score >= 85 ? '#57e39a' : score >= 70 ? '#5fe3ff' : score >= 50 ? '#ffb454' : '#ff6b7d';
+  const farbe = score === null ? '#7d95a3' : noteFarbe(score);
 
   $('noteZahl').textContent = score === null ? '–' : score;
   $('noteZahl').style.color = farbe;
@@ -697,21 +700,18 @@ function reportZeigen(analyse) {
   frage.hidden = !analyse.rueckfrage;
   frage.textContent = analyse.rueckfrage || '';
 
-  // Kategorien
   const kategorien = $('kategorien');
   kategorien.innerHTML = '';
   Object.entries(analyse.scores || {}).forEach(([key, wert]) => {
     const zeile = document.createElement('div');
     zeile.className = 'kat';
-    const balkenFarbe = wert >= 80 ? '#57e39a' : wert >= 60 ? '#5fe3ff' : wert >= 40 ? '#ffb454' : '#ff6b7d';
     zeile.innerHTML =
-      `<span class="kat-name">${KATEGORIE_NAMEN[key] || key}</span>` +
-      `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${balkenFarbe}"></span></span>` +
+      `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>` +
+      `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
       `<span class="kat-zahl">${wert}</span>`;
     kategorien.appendChild(zeile);
   });
 
-  // Probleme
   const probleme = $('problemliste');
   probleme.innerHTML = '';
   (analyse.probleme || []).forEach((problem) => {
@@ -727,7 +727,6 @@ function reportZeigen(analyse) {
     probleme.innerHTML = '<li class="low"><div class="problem-titel">🟢 Keine Probleme erkannt</div></li>';
   }
 
-  // Optimierungsplan
   const plan = $('planliste');
   plan.innerHTML = '';
   (analyse.optimierungen || []).forEach((schritt) => {
@@ -738,11 +737,8 @@ function reportZeigen(analyse) {
       (schritt.wirkung ? `<span class="plan-wirkung">→ ${escape(schritt.wirkung)}</span>` : '');
     plan.appendChild(zeile);
   });
-  if (!(analyse.optimierungen || []).length) {
-    plan.innerHTML = '<li>Nichts mehr zu tun — Kohle drauf.</li>';
-  }
+  if (!(analyse.optimierungen || []).length) plan.innerHTML = '<li>Nichts mehr zu tun — Kohle drauf.</li>';
 
-  // Erwartetes Ergebnis
   const erwartung = $('erwartung');
   erwartung.innerHTML = '';
   [['Geschmack', prognose.geschmack], ['Rauch', prognose.rauch],
@@ -758,7 +754,6 @@ function reportZeigen(analyse) {
       erwartung.appendChild(feld);
     });
 
-  // Sicherheiten
   const konfidenz = $('konfidenz');
   konfidenz.innerHTML = '';
   Object.entries(analyse.confidence || {}).forEach(([key, wert]) => {
@@ -770,14 +765,15 @@ function reportZeigen(analyse) {
 
   $('report').hidden = false;
   $('report').scrollTop = 0;
-  if (score !== null) sprich(`${score} von 100, ${analyse.stufe_text}. ${analyse.coach_satz || ''}`);
-  else sprich(analyse.coach_satz || 'Das Bild reicht fuer eine Bewertung nicht aus.');
+  sprich(score !== null
+    ? `${score} von 100, ${analyse.stufe_text}. ${analyse.coach_satz || ''}`
+    : analyse.coach_satz || 'Das Bild reicht fuer eine Bewertung nicht aus.');
   vibriere([40, 80, 40]);
 }
 
 function escape(text) {
   const feld = document.createElement('div');
-  feld.textContent = text || '';
+  feld.textContent = text === null || text === undefined ? '' : text;
   return feld.innerHTML;
 }
 
@@ -800,39 +796,45 @@ function skalenBauen() {
   });
 }
 
-async function feedbackSenden() {
-  const daten = {
-    id: zustand.sitzung,
-    ...zustand.feedback,
-    dauer_min: $('fDauer').value,
-    notiz: $('fFeedbackNotiz').value,
-  };
-  try {
-    const antwort = await fetch('/api/shisha/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(daten),
-    });
-    const inhalt = await antwort.json();
-    if (!inhalt.ok) throw new Error(inhalt.fehler || 'Speichern fehlgeschlagen');
-    treffsicherheitZeigen(inhalt.treffsicherheit);
-    $('feedback').hidden = true;
-    zustand.feedback = {};
-    document.querySelectorAll('.skala-knoepfe button').forEach((k) => k.classList.remove('aktiv'));
-  } catch (fehler) {
-    $('treffsicherheit').textContent = fehler.message;
+function feedbackSpeichern() {
+  const eintrag = { ...zustand.feedback };
+  const dauer = parseInt($('fDauer').value, 10);
+  if (Number.isFinite(dauer)) eintrag.dauer_min = Math.max(0, Math.min(600, dauer));
+  const notiz = $('fFeedbackNotiz').value.trim();
+  if (notiz) eintrag.notiz = notiz.slice(0, 300);
+
+  if (!Object.keys(eintrag).length) {
+    $('treffsicherheit').textContent = 'Noch nichts ausgewaehlt.';
+    return;
   }
+
+  const sitzung = zustand.sitzung;
+  if (sitzung) {
+    eintrag.ziel = sitzung.kontext.ziel;
+    eintrag.kopf_modell = sitzung.kontext.kopf_modell;
+    eintrag.tabak = `${sitzung.kontext.tabak_marke} ${sitzung.kontext.tabak_sorte}`.trim();
+    if (sitzung.analyse && sitzung.analyse.gesamtscore !== null) {
+      eintrag.score = sitzung.analyse.gesamtscore;
+    }
+  }
+
+  Engine.profil.merken(eintrag);
+  treffsicherheitZeigen();
+  $('feedback').hidden = true;
+  zustand.feedback = {};
+  $('fDauer').value = '';
+  $('fFeedbackNotiz').value = '';
+  document.querySelectorAll('.skala-knoepfe button').forEach((k) => k.classList.remove('aktiv'));
 }
 
-function treffsicherheitZeigen(werte) {
-  if (!werte || !werte.sessions) {
+function treffsicherheitZeigen() {
+  const werte = Engine.profil.treffsicherheit();
+  if (!werte.sessions) {
     $('treffsicherheit').textContent = 'Noch keine gespeicherten Sessions.';
     return;
   }
   const teile = [`${werte.sessions} Session(s) gespeichert`];
-  if (werte.genauigkeit !== undefined && werte.genauigkeit !== null) {
-    teile.push(`Vorhersagegenauigkeit ${werte.genauigkeit}%`);
-  }
+  if (werte.genauigkeit !== null) teile.push(`Vorhersagegenauigkeit ${werte.genauigkeit}%`);
   $('treffsicherheit').textContent = teile.join(' · ');
 }
 
@@ -846,6 +848,21 @@ $('zielwahl').addEventListener('click', (ereignis) => {
   [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k === knopf));
 });
 
+$('anbieterwahl').addEventListener('click', (ereignis) => {
+  const knopf = ereignis.target.closest('[data-anbieter]');
+  if (!knopf) return;
+  [...$('anbieterwahl').children].forEach((k) => k.classList.toggle('aktiv', k === knopf));
+  anbieterUmschalten(knopf.dataset.anbieter);
+});
+
+$('zugangButton').addEventListener('click', () => {
+  einstellungenFuellen();
+  $('einstellungen').hidden = false;
+});
+
+$('zugangSpeichern').addEventListener('click', einstellungenSpeichern);
+$('zugangAbbruch').addEventListener('click', () => { $('einstellungen').hidden = true; });
+
 $('losButton').addEventListener('click', async () => {
   const knopf = $('losButton');
   knopf.disabled = true;
@@ -854,7 +871,7 @@ $('losButton').addEventListener('click', async () => {
   try {
     tonFreischalten();
     await kameraStarten();
-    await sitzungStarten();
+    sitzungStarten();
     overlayAnpassen();
     bildschirmWachhalten();
 
@@ -867,6 +884,7 @@ $('losButton').addEventListener('click', async () => {
   } catch (fehler) {
     $('startFehler').textContent = fehler.message;
     knopf.disabled = false;
+  } finally {
     knopf.textContent = 'Kamera starten';
   }
 });
@@ -878,37 +896,67 @@ $('tonButton').addEventListener('click', () => {
   if (!zustand.ton && window.speechSynthesis) speechSynthesis.cancel();
 });
 
-$('weiterButton').addEventListener('click', () => phaseSetzen('', true));
+$('weiterButton').addEventListener('click', () => {
+  zustand.sitzung.weiter();
+  $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
+  phasenZeichnen();
+});
+
 $('analyseButton').addEventListener('click', vollanalyse);
 
-$('neuButton').addEventListener('click', async () => {
-  if (!confirm('Neuen Kopf anfangen?')) return;
-  await sitzungStarten();
+$('neuButton').addEventListener('click', () => {
+  if (confirm('Neuen Kopf anfangen?')) sitzungStarten();
 });
 
 $('zurueckButton').addEventListener('click', () => { $('report').hidden = true; });
 
-$('nochmalButton').addEventListener('click', async () => {
+$('nochmalButton').addEventListener('click', () => {
   $('report').hidden = true;
-  await sitzungStarten();
+  sitzungStarten();
 });
 
-$('feedbackButton').addEventListener('click', () => { $('feedback').hidden = false; });
-$('feedbackAbbruch').addEventListener('click', () => { $('feedback').hidden = true; });
-$('feedbackSenden').addEventListener('click', feedbackSenden);
+$('feedbackButton').addEventListener('click', () => {
+  treffsicherheitZeigen();
+  $('feedback').hidden = false;
+});
 
-// Startbildschirm mit dem Serverzustand fuellen.
-fetch('/api/shisha/status')
-  .then((antwort) => antwort.json())
-  .then((status) => {
-    zustand.phasen = status.phasen || [];
-    $('startInfo').textContent = status.bereit
-      ? `Analyse: ${status.denkapparat}`
-      : `Analyse nicht bereit: ${status.fehler || 'unbekannt'}`;
-    treffsicherheitZeigen(status.treffsicherheit);
-  })
-  .catch(() => { $('startInfo').textContent = 'Server nicht erreichbar.'; });
+$('feedbackAbbruch').addEventListener('click', () => { $('feedback').hidden = true; });
+$('feedbackSenden').addEventListener('click', feedbackSpeichern);
+
+// --------------------------------------------------------------------------
+// Start
+// --------------------------------------------------------------------------
 
 skalenBauen();
 overlayAnpassen();
 requestAnimationFrame(zeichnen);
+
+Engine.specLaden()
+  .then(() => {
+    zielwahlFuellen();
+    kontextWiederherstellen();
+    startBereitschaft();
+  })
+  .catch((fehler) => {
+    $('startFehler').textContent = `Regelwerk konnte nicht geladen werden: ${fehler.message}`;
+  });
+
+function zielwahlFuellen() {
+  const box = $('zielwahl');
+  box.innerHTML = '';
+  Object.entries(Engine.spec.ziele).forEach(([key, ziel], index) => {
+    const knopf = document.createElement('button');
+    knopf.className = `chip${index === 0 ? ' aktiv' : ''}`;
+    knopf.dataset.ziel = key;
+    knopf.textContent = ziel.name.replace('Maximaler ', '').replace('Ausgewogen', 'ausgewogen');
+    knopf.title = ziel.prioritaet;
+    box.appendChild(knopf);
+  });
+}
+
+// Die App als Ganzes offline verfuegbar halten.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* geht auch ohne */ });
+  });
+}

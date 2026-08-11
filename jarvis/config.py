@@ -104,8 +104,6 @@ class Config:
     # Kantenlaenge, auf die Kamerabilder vor der Analyse geschrumpft werden.
     shisha_max_kante: int = field(default_factory=lambda: _int("SHISHA_MAX_KANTE", 768))
     shisha_qualitaet: int = field(default_factory=lambda: _int("SHISHA_QUALITAET", 80))
-    # So viele Analysen bleiben als Kontext fuer die naechste Bildbewertung erhalten.
-    shisha_verlauf: int = field(default_factory=lambda: _int("SHISHA_VERLAUF", 12))
 
     # --- Dateien / Rechte -------------------------------------------------
     workspace: Path = field(default_factory=lambda: _path("JARVIS_WORKSPACE", ROOT / "workspace"))

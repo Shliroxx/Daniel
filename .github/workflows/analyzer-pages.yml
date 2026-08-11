@@ -1,0 +1,52 @@
+# Veroeffentlicht den Hookah-Analyzer als Webseite auf GitHub Pages.
+#
+# Damit hat die App eine feste Adresse und laeuft auf dem Handy, ohne dass der
+# PC an sein muss. Einmalig einschalten: Repository -> Settings -> Pages ->
+# Source: "GitHub Actions".
+#
+# Der Ordner web/shisha wird unveraendert veroeffentlicht — es gibt keinen
+# Bauschritt und keine Abhaengigkeiten.
+
+name: Analyzer veroeffentlichen
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'web/shisha/**'
+      - '.github/workflows/analyzer-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Nur eine Veroeffentlichung gleichzeitig, laufende nicht abbrechen.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  veroeffentlichen:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regelwerk pruefen
+        run: node -e "JSON.parse(require('fs').readFileSync('web/shisha/spec.json','utf8'))"
+
+      - name: Engine testen
+        run: node tests/test_engine.mjs
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/shisha
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

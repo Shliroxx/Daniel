@@ -8,9 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Analyzer" />
-  <link rel="manifest" href="/shisha/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/shisha/static/icon.svg" />
-  <link rel="stylesheet" href="/shisha/static/ar.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="ar.css" />
 </head>
 <body>
 
@@ -38,12 +38,7 @@
 
     <div class="feld">
       <span class="feld-titel">Ziel der Session</span>
-      <div class="chips" id="zielwahl">
-        <button class="chip aktiv" data-ziel="balanced">ausgewogen</button>
-        <button class="chip" data-ziel="geschmack">Geschmack</button>
-        <button class="chip" data-ziel="rauch">Rauch</button>
-        <button class="chip" data-ziel="lange_session">lange Session</button>
-      </div>
+      <div class="chips" id="zielwahl"></div>
     </div>
 
     <details class="angaben">
@@ -58,9 +53,10 @@
       </div>
     </details>
 
-    <button id="losButton" class="gross">Kamera starten</button>
+    <button id="losButton" class="gross" disabled>Kamera starten</button>
+    <button id="zugangButton" class="flach">Modell und Zugang</button>
     <p id="startFehler" class="fehler"></p>
-    <p class="fuss" id="startInfo">Analyse laeuft ueber deinen Rechner.</p>
+    <p class="fuss" id="startInfo">Regelwerk wird geladen …</p>
   </div>
 </section>
 
@@ -91,6 +87,67 @@
     <button id="neuButton" class="rund" title="Neu anfangen">↺</button>
   </div>
 </footer>
+
+<!-- Modell und Zugang ------------------------------------------------- -->
+<section id="einstellungen" class="blatt" hidden>
+  <div class="blatt-inner schmal">
+    <h2>Modell und Zugang</h2>
+    <p class="unterzeile">
+      Die Bilder gehen direkt von diesem Gerät zum Modell. Der Schlüssel bleibt
+      hier gespeichert und wird nirgends sonst hingeschickt.
+    </p>
+
+    <div class="feld">
+      <span class="feld-titel">Anbieter</span>
+      <div class="chips" id="anbieterwahl">
+        <button class="chip aktiv" data-anbieter="gemini">Google Gemini</button>
+        <button class="chip" data-anbieter="openrouter">OpenRouter</button>
+        <button class="chip" data-anbieter="server">eigener Rechner</button>
+      </div>
+    </div>
+
+    <div id="block-gemini" class="anbieter-block">
+      <p class="hinweis-text">
+        Kostenloses Freikontingent. Schlüssel holen auf
+        <b>aistudio.google.com</b> → „Get API key“. Kreditkarte nicht nötig.
+      </p>
+      <label class="langfeld">API-Schlüssel
+        <input id="fGeminiKey" type="password" autocomplete="off" placeholder="AIza…" />
+      </label>
+      <label class="langfeld">Modell
+        <input id="fGeminiModell" type="text" autocomplete="off" placeholder="gemini-2.5-flash" />
+      </label>
+    </div>
+
+    <div id="block-openrouter" class="anbieter-block" hidden>
+      <p class="hinweis-text">
+        Sammelstelle für viele Modelle, darunter kostenlose mit <b>:free</b> am Ende.
+        Schlüssel holen auf <b>openrouter.ai</b> → Keys.
+      </p>
+      <label class="langfeld">API-Schlüssel
+        <input id="fOrKey" type="password" autocomplete="off" placeholder="sk-or-…" />
+      </label>
+      <label class="langfeld">Modell
+        <input id="fOrModell" type="text" autocomplete="off" placeholder="…:free" />
+      </label>
+    </div>
+
+    <div id="block-server" class="anbieter-block" hidden>
+      <p class="hinweis-text">
+        Läuft über Jarvis auf deinem PC und damit über dein Claude-Abo — dafür muss
+        der Rechner an sein. Leer lassen, wenn die App vom PC selbst kommt.
+      </p>
+      <label class="langfeld">Adresse
+        <input id="fServerUrl" type="text" autocomplete="off" placeholder="https://192.168.1.42:8443" />
+      </label>
+    </div>
+
+    <div class="blatt-knoepfe">
+      <button id="zugangAbbruch" class="klein">Abbrechen</button>
+      <button id="zugangSpeichern" class="haupt">Speichern</button>
+    </div>
+  </div>
+</section>
 
 <!-- Vollanalyse --------------------------------------------------------- -->
 <section id="report" class="blatt" hidden>
@@ -161,6 +218,7 @@
   </div>
 </section>
 
-<script src="/shisha/static/ar.js"></script>
+<script src="engine.js"></script>
+<script src="ar.js"></script>
 </body>
 </html>

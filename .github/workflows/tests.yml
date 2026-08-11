@@ -1,0 +1,34 @@
+# Prueft bei jedem Push, dass Analyzer und Jarvis-Code in Ordnung sind.
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Analyse-Engine testen
+        run: node tests/test_engine.mjs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Abhaengigkeiten fuer den Servertest
+        run: pip install fastapi "uvicorn[standard]" python-dotenv python-multipart pillow httpx cryptography
+
+      - name: Python-Code uebersetzen
+        run: python -m compileall -q jarvis shisha tests
+
+      - name: Rueckweg testen
+        run: python tests/test_shisha.py

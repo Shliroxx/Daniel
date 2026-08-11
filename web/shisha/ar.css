@@ -472,3 +472,31 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 
 .skala-knoepfe button.aktiv { background: var(--cyan); color: #04141c; border-color: var(--cyan); font-weight: 700; }
 .langfeld { margin: 14px 0; }
+
+/* ---------- Zugang / Einstellungen ---------- */
+.flach {
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.anbieter-block[hidden] { display: none; }
+
+.hinweis-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  background: rgba(10, 22, 34, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 0 0 14px;
+}
+
+.hinweis-text b { color: var(--text); font-weight: 600; }
+input[type="password"] { -webkit-text-security: disc; }

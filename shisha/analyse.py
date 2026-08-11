@@ -1,4 +1,7 @@
-"""Bildanalyse — schickt ein Kamerabild an Claude und liest strukturiertes JSON zurueck.
+"""Bild und Prompt an Claude schicken und den Antworttext zurueckgeben.
+
+Diese Datei versteht nichts von Shisha-Koepfen — sie transportiert nur. Was
+gefragt wird und wie die Antwort ausgewertet wird, steckt in der App auf dem Handy.
 
 Zwei Wege, genau wie beim Rest von Jarvis:
 - "cli": ueber `claude -p` und damit ueber dein Claude-Abo. Das Bild wird kurz auf
@@ -16,7 +19,6 @@ import logging
 import shutil
 import time
 from pathlib import Path
-from typing import Any
 
 from jarvis.config import config
 
@@ -65,66 +67,12 @@ def verkleinern(bild: bytes, max_kante: int, qualitaet: int = 80) -> bytes:
 
 
 # --------------------------------------------------------------------------
-# JSON aus einer Modellantwort schaelen
-# --------------------------------------------------------------------------
-
-
-def json_aus_text(text: str) -> dict[str, Any]:
-    """Holt das erste vollstaendige JSON-Objekt aus einer Antwort."""
-    text = (text or "").strip()
-    if not text:
-        raise AnalyseFehler("leere Antwort")
-
-    if text.startswith("```"):
-        text = text.split("```")[1] if text.count("```") >= 2 else text.lstrip("`")
-        if text.lstrip().startswith("json"):
-            text = text.lstrip()[4:]
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
-
-    # Fallback: die Klammern von Hand zaehlen, damit Text drumherum nicht stoert.
-    start = text.find("{")
-    if start < 0:
-        raise AnalyseFehler(f"kein JSON in der Antwort: {text[:160]}")
-
-    tiefe = 0
-    in_string = False
-    escaped = False
-    for index in range(start, len(text)):
-        zeichen = text[index]
-        if in_string:
-            if escaped:
-                escaped = False
-            elif zeichen == "\\":
-                escaped = True
-            elif zeichen == '"':
-                in_string = False
-            continue
-        if zeichen == '"':
-            in_string = True
-        elif zeichen == "{":
-            tiefe += 1
-        elif zeichen == "}":
-            tiefe -= 1
-            if tiefe == 0:
-                try:
-                    return json.loads(text[start : index + 1])
-                except json.JSONDecodeError as exc:
-                    raise AnalyseFehler(f"JSON unlesbar: {exc}") from exc
-
-    raise AnalyseFehler("JSON unvollstaendig")
-
-
-# --------------------------------------------------------------------------
 # Backends
 # --------------------------------------------------------------------------
 
 
 class Analysator:
-    """Nimmt Bild plus Prompt und liefert das geparste Ergebnis."""
+    """Nimmt Bild plus Prompt und liefert die Antwort des Modells als Text."""
 
     def __init__(self, backend: str | None = None) -> None:
         self.backend = (backend or config.shisha_backend).lower()
@@ -152,25 +100,22 @@ class Analysator:
             return f"Anthropic API ({config.shisha_model})"
         return f"claude -p ({config.shisha_cli_model})"
 
-    async def analysiere(self, bild: bytes, prompt: str) -> dict[str, Any]:
-        """Ein Bild, ein Prompt, ein Ergebnis. Wirft AnalyseFehler bei Problemen."""
+    async def rohtext(self, bild: bytes, prompt: str) -> str:
+        """Ein Bild, ein Prompt, die Antwort als Text. Wirft AnalyseFehler bei Problemen."""
         klein = await asyncio.to_thread(
             verkleinern, bild, config.shisha_max_kante, config.shisha_qualitaet
         )
         begonnen = time.monotonic()
 
-        # Nur eine Analyse gleichzeitig — sonst ueberholen sich die Hinweise
-        # gegenseitig und das Overlay flackert.
+        # Nur eine Anfrage gleichzeitig — sonst ueberholen sich die Antworten.
         async with self._lock:
             if self.backend == "api":
-                rohtext = await self._ueber_api(klein, prompt)
+                antwort = await self._ueber_api(klein, prompt)
             else:
-                rohtext = await self._ueber_cli(klein, prompt)
+                antwort = await self._ueber_cli(klein, prompt)
 
-        ergebnis = json_aus_text(rohtext)
-        ergebnis["_dauer"] = round(time.monotonic() - begonnen, 2)
-        ergebnis["_bytes"] = len(klein)
-        return ergebnis
+        log.info("Analyse fertig in %.1fs (%d KB)", time.monotonic() - begonnen, len(klein) // 1024)
+        return antwort
 
     # -- API ---------------------------------------------------------------
     async def _ueber_api(self, bild: bytes, prompt: str) -> str:
@@ -198,7 +143,7 @@ class Analysator:
             antwort = await asyncio.wait_for(
                 self._client.messages.create(
                     model=config.shisha_model,
-                    max_tokens=1400,
+                    max_tokens=2600,
                     system=[{"type": "text", "text": prompt, "cache_control": {"type": "ephemeral"}}],
                     messages=[nachricht],
                 ),
