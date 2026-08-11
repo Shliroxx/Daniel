@@ -53,6 +53,11 @@
       </div>
     </details>
 
+    <label class="schalter">
+      <input id="fSprache" type="checkbox" checked />
+      <span>Sprachsteuerung beim Start einschalten</span>
+    </label>
+
     <button id="losButton" class="gross" disabled>Kamera starten</button>
     <button id="zugangButton" class="flach">Modell und Zugang</button>
     <p id="startFehler" class="fehler"></p>
@@ -68,6 +73,7 @@
     <span class="marke" id="kopfInfo">Kopf wird gesucht</span>
     <span class="marke" id="lage">bereit</span>
     <span class="marke score" id="liveScore" hidden>–</span>
+    <span class="marke hoert" id="hoerMarke" hidden>hört zu</span>
   </div>
 </header>
 
@@ -82,11 +88,27 @@
   </div>
   <div class="knopfreihe">
     <button id="tonButton" class="rund" title="Sprachausgabe">🔊</button>
+    <button id="hoerButton" class="rund aus" title="Sprachsteuerung" hidden>🎤</button>
     <button id="weiterButton" class="klein">Phase weiter</button>
     <button id="analyseButton" class="haupt">Vollanalyse</button>
     <button id="neuButton" class="rund" title="Neu anfangen">↺</button>
+    <button id="menueButton" class="rund" title="Hauptmenü">☰</button>
   </div>
 </footer>
+
+<!-- Pause: Kamera steht ------------------------------------------------ -->
+<section id="pause" class="blende pause" hidden>
+  <div class="blende-inner">
+    <div class="pause-symbol">⏸</div>
+    <h2>Angehalten</h2>
+    <p class="unterzeile" id="pauseGrund">Die Kamera steht.</p>
+
+    <button id="weiterKamera" class="gross">Kamera fortsetzen</button>
+    <button id="pauseMenue" class="flach">Zurück ins Hauptmenü</button>
+    <p id="pauseFehler" class="fehler"></p>
+    <p class="fuss">Der Bauverlauf bleibt erhalten — du machst da weiter, wo du warst.</p>
+  </div>
+</section>
 
 <!-- Modell und Zugang ------------------------------------------------- -->
 <section id="einstellungen" class="blatt" hidden>
@@ -142,6 +164,15 @@
       </label>
     </div>
 
+    <h3>Sprachbefehle</h3>
+    <p class="hinweis-text">
+      Mit dem Mikrofon-Symbol schaltest du das Zuhören an. Erkannt werden unter
+      anderem: <b>weiter</b>, <b>zurück</b>, <b>bewerten</b>, <b>neuer Kopf</b>,
+      <b>pause</b>, <b>weitermachen</b>, <b>menü</b>, <b>wiederhole</b>,
+      <b>status</b>, <b>ton aus</b>. Die vollständige Liste steht in
+      <code>spec.json</code> und lässt sich dort erweitern.
+    </p>
+
     <div class="blatt-knoepfe">
       <button id="zugangAbbruch" class="klein">Abbrechen</button>
       <button id="zugangSpeichern" class="haupt">Speichern</button>
@@ -169,8 +200,12 @@
 
     <div class="frage" id="reportFrage" hidden></div>
 
+    <h3>Befund</h3>
+    <p class="befund" id="befund"></p>
+
     <h3>Bewertung</h3>
     <div class="kategorien" id="kategorien"></div>
+    <div class="kappungen" id="kappungen"></div>
 
     <h3>Erkannte Probleme</h3>
     <ul class="problemliste" id="problemliste"></ul>

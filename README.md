@@ -310,6 +310,8 @@ dein Claude-Abo laufen lassen willst.
 - **Lernen aus Sessions**: Nach dem Rauchen sagst du, wie es lief (Geschmack,
   Rauch, Kratzen, Hitze, Dauer). Das fließt in die nächsten Empfehlungen ein, und
   die App zeigt, wie treffsicher ihre Vorhersagen bisher waren.
+- **Sprachsteuerung**: Beim Bauen sind beide Hände voll — sag einfach „weiter",
+  „bewerten" oder „pause".
 
 ### Welches Modell — und was es kostet
 
@@ -327,6 +329,43 @@ Anbieter. Er landet nie in diesem Projekt und nirgendwo sonst.
 Bei kostenlosen Modellen ist ein **Limit pro Minute und pro Tag** normal. Wenn es
 greift, steht in der App „Freikontingent gerade erschöpft" — dann kurz warten.
 Bilder gehen auf 896 Pixel Kantenlänge verkleinert raus, das schont das Kontingent.
+
+### Freihändig per Sprache
+
+Mit dem Mikrofon-Symbol schaltest du das Zuhören ein. Erkannt werden:
+
+| Sagst du | Passiert |
+|---|---|
+| „weiter" / „nächste Phase" | eine Bauphase vor |
+| „zurück" | eine Bauphase zurück |
+| „bewerten" / „Analyse" | Vollanalyse starten |
+| „neuer Kopf" / „von vorne" | Sitzung zurücksetzen |
+| „pause" / „stopp" | Kamera anhalten |
+| „weitermachen" / „Kamera an" | aus der Pause zurück |
+| „menü" | zurück ins Hauptmenü |
+| „wiederhole" | letzten Hinweis nochmal sagen |
+| „status" | aktuelle Note vorlesen |
+| „ton aus" / „ton an" | Sprachausgabe schalten |
+
+Während die App selbst spricht, hört sie nicht zu — sonst würde sie ihre eigenen
+Hinweise als Befehle verstehen. Die Wortlisten stehen in `spec.json` und lassen
+sich dort erweitern, ohne Code anzufassen.
+
+Safari braucht dafür einmalig die Mikrofon-Freigabe. Kann der Browser keine
+Spracherkennung, erscheint das Symbol gar nicht erst.
+
+### Wenn die Kamera stehenbleibt
+
+iOS gibt die Kamera frei, sobald die App länger im Hintergrund war — das Livebild
+friert dann ein. Die App merkt das auf drei Wegen: die Kameraspur meldet ihr Ende,
+das Bild bleibt zu lange stehen, oder die App kommt aus dem Hintergrund zurück.
+
+Dann erscheint eine Pausenblende mit zwei Knöpfen: **Kamera fortsetzen** oder
+**Zurück ins Hauptmenü**. Der Bauverlauf bleibt erhalten, du machst da weiter, wo
+du warst. Kommst du zurück und die Kamera läuft noch, geht es ohne Nachfrage
+weiter. Beides geht auch per Zuruf.
+
+Im Hintergrund analysiert die App nicht weiter — das spart Freikontingent und Akku.
 
 ### Wie bewertet wird
 
@@ -348,6 +387,28 @@ reproduzierbar dieselbe Note bekommt, egal welcher Anbieter antwortet. Ebenso wi
 nachgeprüft: unbekannte Aktionen werden ersetzt, Markierungen außerhalb des Bildes
 fliegen raus, eine Prognose darf nie schlechter sein als der Ist-Stand, und ohne
 erkennbaren Kopf gibt es gar keine Note statt einer erfundenen.
+
+**Widersprüche werden gekappt.** Modelle neigen dazu, ein kritisches Problem zu
+melden und die betroffene Kategorie trotzdem mit 80 zu bewerten. Wer sagt „der
+Tabak berührt das HMD", darf das Hitzemanagement nicht gut nennen. Solche Fälle
+setzt die App herunter — und schreibt im Report dazu, warum:
+
+```
+Fuellhoehe: 70 → 40, weil Tabak beruehrt den Rand
+```
+
+Die Obergrenzen stehen in `spec.json` unter `plausibilitaet`.
+
+**Erst sehen, dann urteilen.** Das Modell füllt zuerst ein Feld `befund` aus —
+was es tatsächlich im Bild sieht, ohne Wertung — und bewertet erst danach. Der
+Befund steht im Report, du kannst also nachlesen, worauf die Note beruht.
+
+**Ein Bild ist kein Urteil.** Ein Einzelbild schwankt: eine Spiegelung, ein
+anderer Winkel, und die Zahl liegt fünf Punkte daneben. Angezeigt wird deshalb
+der Median der letzten fünf brauchbaren Bilder, mit Trendpfeil. Bilder, die zu
+unscharf, zu dunkel oder zu unsicher sind, gelten als **vorläufig** und zählen
+für den Konsens nicht mit. Schwankt der Wert noch, wird die Zahl gelb statt
+cyan.
 
 Jede Angabe ist als **gesehen**, **geschätzt** oder **unsicher** gekennzeichnet.
 Die Tabakmenge in Gramm ist aus einem Foto nicht bestimmbar — sie wird deshalb nie

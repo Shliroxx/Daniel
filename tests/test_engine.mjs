@@ -91,15 +91,54 @@ assert.equal(Engine.jsonAusText('```json\n{"a": 1}\n```').a, 1);
 assert.equal(Engine.jsonAusText('Hier bitte: {"a": {"b": 2}} — fertig.').a.b, 2);
 assert.throws(() => Engine.jsonAusText('gar kein json'), /kein JSON/);
 
-// --- Deterministische Note --------------------------------------------------
-// 60*.20 + 70*.15 + 65*.15 + 55*.20 + 85*.10 + 75*.10 + 60*.10 = 64.75 -> 65
+// --- Plausibilitaet: Widersprueche werden gekappt ---------------------------
+// Das Modell meldet ein kritisches Problem in "fuellhoehe" UND randkontakt,
+// bewertet die Kategorie aber mit 70. Beides zieht die Zahl herunter: der
+// strengere Wert (Randkontakt, 40) gewinnt.
 const a = Engine.normalisiere(ANTWORT, true);
-assert.equal(a.gesamtscore, 65, `Note falsch: ${a.gesamtscore}`);
+assert.equal(a.scores.fuellhoehe, 40, `Fuellhoehe nicht gekappt: ${a.scores.fuellhoehe}`);
+assert.ok(a.kappungen.some((k) => k.grund.includes('Rand')), 'Kappung nicht begruendet');
+assert.ok(a.kappungen.every((k) => k.auf < k.von), 'Kappung muss nach unten gehen');
+
+// 60*.20 + 40*.15 + 65*.15 + 55*.20 + 85*.10 + 75*.10 + 60*.10 = 60.75 -> 61
+assert.equal(a.gesamtscore, 61, `Note falsch: ${a.gesamtscore}`);
 assert.equal(a.stufe, 'acceptable');
 assert.equal(a.stufe_text, 'brauchbar');
 
 // dieselbe Eingabe muss dieselbe Note ergeben
-assert.equal(Engine.normalisiere(ANTWORT, true).gesamtscore, 65);
+assert.equal(Engine.normalisiere(ANTWORT, true).gesamtscore, 61);
+
+// Ohne Widerspruch bleibt die Bewertung des Modells stehen
+const sauberesUrteil = Engine.normalisiere({
+  ...ANTWORT, probleme: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+}, true);
+assert.equal(sauberesUrteil.scores.fuellhoehe, 70);
+assert.deepEqual(sauberesUrteil.kappungen, []);
+assert.equal(sauberesUrteil.gesamtscore, 65);
+
+// HMD beruehrt den Tabak -> Hitzemanagement kann nicht gut sein
+const heiss = Engine.normalisiere({
+  ...ANTWORT, probleme: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+  hmd: { ...ANTWORT.hmd, erkannt: true, kontakt_tabak: true },
+  scores: { ...ANTWORT.scores, hitzemanagement: 90 },
+}, true);
+assert.equal(heiss.scores.hitzemanagement, 30, 'HMD-Kontakt nicht gekappt');
+
+// Verdeckte Oeffnung -> Airflow kann nicht gut sein
+const dicht = Engine.normalisiere({
+  ...ANTWORT, probleme: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+  airflow: { zentrale_oeffnung_frei: false, blockade_risiko: 'high', confidence: 70 },
+  scores: { ...ANTWORT.scores, airflow: 95 },
+}, true);
+assert.equal(dicht.scores.airflow, 30, 'verdeckte Oeffnung nicht gekappt');
+
+// --- Befund wird uebernommen -------------------------------------------------
+assert.equal(Engine.normalisiere({ ...ANTWORT, befund: 'Phunnel, halbvoll, links Klumpen.' }, true).befund,
+             'Phunnel, halbvoll, links Klumpen.');
 
 // --- Geradeziehen -----------------------------------------------------------
 assert.equal(a.probleme.length, 2, 'live: hoechstens zwei Probleme');
@@ -109,7 +148,7 @@ assert.deepEqual(a.optimierungen.map((o) => o.schritt), [1, 2, 3]);
 assert.equal(a.optimierungen[0].aktion, 'remove_tobacco');
 assert.equal(a.optimierungen[2].aktion, 'redistribute_tobacco', 'erfundene Aktion ersetzt');
 assert.equal(a.optimierungen[2].aktion_text, 'neu verteilen');
-assert.equal(a.prognose.score_nach_optimierung, 65, 'Prognose nie unter Ist-Stand');
+assert.equal(a.prognose.score_nach_optimierung, 61, 'Prognose nie unter Ist-Stand');
 assert.equal(a.confidence.gesamt, 66, 'Gesamtsicherheit aus den anderen gemittelt');
 assert.equal(a.tabak.menge_gramm, 'ca. 14-17 g');
 assert.equal(a.kohle.anzahl, null, 'nicht sichtbare Kohle hat keine Anzahl');
@@ -135,6 +174,23 @@ assert.deepEqual(muell.probleme, []);
 assert.deepEqual(muell.ar_marker, []);
 assert.equal(muell.tabak.fuellhoehe_mm, null);
 
+// --- Duenne Bilder gelten als vorlaeufig -------------------------------------
+assert.equal(a.vorlaeufig, false, 'gutes Bild ist nicht vorlaeufig');
+
+const duenn = Engine.normalisiere({
+  ...ANTWORT,
+  bildqualitaet: { schaerfe: 20, licht: 30, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true);
+assert.equal(duenn.vorlaeufig, true, 'unscharfes Bild muss vorlaeufig sein');
+assert.equal(duenn.gesamtscore, 61, 'vorlaeufig heisst nicht: keine Note');
+
+const unsicher = Engine.normalisiere({
+  ...ANTWORT,
+  confidence: { gesamt: 25, kopf_erkennung: 25, tabak_analyse: 25, fuellhoehe: 25,
+                airflow: 25, hitzemanagement: 25, optimierung: 25 },
+}, true);
+assert.equal(unsicher.vorlaeufig, true, 'niedrige Sicherheit muss vorlaeufig sein');
+
 // --- Prompt -----------------------------------------------------------------
 const prompt = Engine.promptBauen({
   modus: 'live',
@@ -159,8 +215,10 @@ assert.ok(Engine.bereit());
 
 const sitzung = new Engine.Sitzung({ ziel: 'geschmack', kopf_modell: 'Oblako Phunnel M' });
 const eins = await sitzung.analysieren(new Blob(['x'], { type: 'image/jpeg' }), 'live');
-assert.equal(eins.gesamtscore, 65);
+assert.equal(eins.gesamtscore, 61);
 assert.equal(eins.sprechen, true);
+assert.ok(eins.konsens, 'jede Analyse traegt den Konsens mit sich');
+assert.equal(eins.konsens.score, 61, 'ein Bild ist sein eigener Konsens');
 assert.ok(letzteAnfrage.url.includes('generativelanguage.googleapis.com'));
 assert.equal(JSON.parse(letzteAnfrage.optionen.body).generationConfig.temperature, 0);
 assert.equal(letzteAnfrage.optionen.headers['x-goog-api-key'], 'test-key');
@@ -204,5 +262,50 @@ assert.ok(Engine.profil.lernkontext().includes('zu heiss'), 'Konsequenz-Hinweis 
 
 // gute Session -> hohe erlebte Note
 assert.ok(Engine.profil.erlebteNote({ geschmack: 5, rauch: 5, kratzen: 1, hitze: 3 }) === 100);
+
+// --- Konsens ueber mehrere Bilder --------------------------------------------
+const reihe = new Engine.Sitzung({ ziel: 'balanced' });
+[60, 64, 62].forEach((wert) => {
+  reihe.aufnehmen(Engine.normalisiere({
+    ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+    scores: { tabak_verteilung: wert, fuellhoehe: wert, airflow: wert, hitzemanagement: wert,
+              kopfgeometrie: wert, tabak_kompatibilitaet: wert, zielerreichung: wert },
+  }, true));
+});
+const konsens = reihe.konsens();
+assert.equal(konsens.score, 62, `Median falsch: ${konsens.score}`);
+assert.equal(konsens.bilder, 3);
+assert.equal(konsens.stabil, true, 'enge Werte muessen stabil heissen');
+assert.equal(konsens.trend, 2, 'Trend von 60 auf 62');
+
+// Ein Ausreisser darf den Median nicht kippen
+reihe.aufnehmen(Engine.normalisiere({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  scores: { tabak_verteilung: 5, fuellhoehe: 5, airflow: 5, hitzemanagement: 5,
+            kopfgeometrie: 5, tabak_kompatibilitaet: 5, zielerreichung: 5 },
+}, true));
+assert.ok(reihe.konsens().score >= 33, 'Median darf nicht auf den Ausreisser springen');
+assert.equal(reihe.konsens().stabil, false, 'grosse Spanne ist nicht stabil');
+
+// Vorlaeufige Bilder zaehlen nicht mit
+const nurDuenn = new Engine.Sitzung({ ziel: 'balanced' });
+nurDuenn.aufnehmen(Engine.normalisiere({
+  ...ANTWORT,
+  bildqualitaet: { schaerfe: 10, licht: 10, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true));
+assert.equal(nurDuenn.konsens(), null, 'aus vorlaeufigen Bildern kein Konsens');
+
+// --- Sprachbefehle -----------------------------------------------------------
+assert.equal(Engine.befehlErkennen('weiter'), 'weiter');
+assert.equal(Engine.befehlErkennen('okay dann mal weiter bitte'), 'weiter');
+assert.equal(Engine.befehlErkennen('bewerten'), 'analyse');
+assert.equal(Engine.befehlErkennen('zurück zur vorherigen phase'), 'zurueck');
+assert.equal(Engine.befehlErkennen('mach mal pause'), 'pause');
+assert.equal(Engine.befehlErkennen('kamera an'), 'start');
+assert.equal(Engine.befehlErkennen('bring mich ins hauptmenü'), 'menue');
+assert.equal(Engine.befehlErkennen('wie viele punkte habe ich'), 'status');
+assert.equal(Engine.befehlErkennen(''), null);
+assert.equal(Engine.befehlErkennen('das wetter ist schön'), null,
+             'Alltagssatz darf keinen Befehl ausloesen');
 
 console.log('ALLE TESTS BESTANDEN');

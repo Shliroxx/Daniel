@@ -1,17 +1,15 @@
 {
   "version": 2,
   "hinweis": "Einzige Quelle fuer Bewertungsregeln, Wissen und Prompts. Wird von der App im Browser geladen — hier aendern reicht, es gibt keine zweite Kopie.",
-
   "gewichte": {
-    "tabak_verteilung": 0.20,
+    "tabak_verteilung": 0.2,
     "fuellhoehe": 0.15,
     "airflow": 0.15,
-    "hitzemanagement": 0.20,
-    "kopfgeometrie": 0.10,
-    "tabak_kompatibilitaet": 0.10,
-    "zielerreichung": 0.10
+    "hitzemanagement": 0.2,
+    "kopfgeometrie": 0.1,
+    "tabak_kompatibilitaet": 0.1,
+    "zielerreichung": 0.1
   },
-
   "kategorien": {
     "tabak_verteilung": "Tabakverteilung",
     "fuellhoehe": "Fuellhoehe",
@@ -21,16 +19,38 @@
     "tabak_kompatibilitaet": "Kompatibilitaet",
     "zielerreichung": "Zielerreichung"
   },
-
   "stufen": [
-    { "ab": 90, "key": "excellent", "text": "hervorragend" },
-    { "ab": 80, "key": "very_good", "text": "sehr gut" },
-    { "ab": 70, "key": "good", "text": "gut" },
-    { "ab": 60, "key": "acceptable", "text": "brauchbar" },
-    { "ab": 40, "key": "needs_improvement", "text": "verbesserungswuerdig" },
-    { "ab": 0, "key": "poor", "text": "schlecht" }
+    {
+      "ab": 90,
+      "key": "excellent",
+      "text": "hervorragend"
+    },
+    {
+      "ab": 80,
+      "key": "very_good",
+      "text": "sehr gut"
+    },
+    {
+      "ab": 70,
+      "key": "good",
+      "text": "gut"
+    },
+    {
+      "ab": 60,
+      "key": "acceptable",
+      "text": "brauchbar"
+    },
+    {
+      "ab": 40,
+      "key": "needs_improvement",
+      "text": "verbesserungswuerdig"
+    },
+    {
+      "ab": 0,
+      "key": "poor",
+      "text": "schlecht"
+    }
   ],
-
   "ziele": {
     "balanced": {
       "name": "Ausgewogen",
@@ -53,7 +73,6 @@
       "bau": "Etwas dichter und tiefer, grosser Abstand zum HMD, Kohle am Rand, lieber weniger Hitze und dafuer laenger."
     }
   },
-
   "phasen": [
     {
       "key": "kopf",
@@ -92,14 +111,45 @@
       "achte_auf": "Kohle komplett durchgegluht, Anzahl, Verteilung, Abstand zueinander und zum Rand, keine Kohle mittig ueber dem Kamin."
     }
   ],
-
-  "quellen": ["observed", "estimated", "unknown"],
-  "schweregrade": ["critical", "high", "medium", "low"],
-  "schwere_symbol": { "critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢" },
-  "analyse_status": ["ok", "insufficient_image", "no_head_detected"],
-  "kopfarten": ["phunnel", "killer", "vortex", "steinkopf", "turbine", "unbekannt"],
-  "marker_typen": ["remove", "loosen", "distribute", "ok", "fill_height", "hmd", "coal"],
-
+  "quellen": [
+    "observed",
+    "estimated",
+    "unknown"
+  ],
+  "schweregrade": [
+    "critical",
+    "high",
+    "medium",
+    "low"
+  ],
+  "schwere_symbol": {
+    "critical": "🔴",
+    "high": "🟠",
+    "medium": "🟡",
+    "low": "🟢"
+  },
+  "analyse_status": [
+    "ok",
+    "insufficient_image",
+    "no_head_detected"
+  ],
+  "kopfarten": [
+    "phunnel",
+    "killer",
+    "vortex",
+    "steinkopf",
+    "turbine",
+    "unbekannt"
+  ],
+  "marker_typen": [
+    "remove",
+    "loosen",
+    "distribute",
+    "ok",
+    "fill_height",
+    "hmd",
+    "coal"
+  ],
   "aktionen": {
     "remove_tobacco": "Tabak entfernen",
     "add_tobacco": "Tabak nachlegen",
@@ -113,7 +163,6 @@
     "reduce_heat": "Hitze reduzieren",
     "increase_heat": "Hitze erhoehen"
   },
-
   "feedback_felder": {
     "geschmack": "Geschmack",
     "rauch": "Rauch",
@@ -122,7 +171,6 @@
     "dauer_min": "Dauer in Minuten",
     "notiz": "Anmerkung"
   },
-
   "wissen": {
     "kopftypen": [
       "- Phunnel: ein erhoehter Kamin in der Mitte, kein Loch im Boden. Molasse bleibt",
@@ -170,7 +218,6 @@
       "- Kohle mittig ueber dem Kamin -> Kern verbrennt zuerst."
     ]
   },
-
   "prompt": {
     "rolle": [
       "Du bist die Vision- und Analyse-Engine eines professionellen Hookah-Head-Analyzers:",
@@ -221,7 +268,15 @@
       "- zielerreichung: passt der Aufbau zum Ziel des Nutzers",
       "Den Gesamtscore berechnet die App selbst aus diesen Werten — gib ihn nicht an.",
       "Bewerte reproduzierbar: gleiches Bild und gleiche Angaben ergeben gleiche Zahlen.",
-      "Keine Gefaelligkeitsnoten."
+      "Keine Gefaelligkeitsnoten.",
+      "",
+      "Massstab fuer die Zahlen — halte dich daran, sonst sind die Noten wertlos:",
+      "  90 bis 100: so wuerde es ein erfahrener Bauer selbst machen, nichts zu verbessern",
+      "  75 bis 89:  gut, kleine Feinheiten offen",
+      "  60 bis 74:  laeuft, aber mit spuerbarem Nachteil (Aroma, Zug oder Dauer)",
+      "  40 bis 59:  funktioniert schlecht, sollte korrigiert werden",
+      "  unter 40:   so nicht rauchbar, neu bauen",
+      "Die Mitte ist nicht 80. Ein durchschnittlicher Kopf liegt bei 65 bis 75."
     ],
     "marker": [
       "AR-Markierungen: nur dort, wo sich die Position wirklich aus dem Bild ableiten",
@@ -236,6 +291,7 @@
       "",
       "{",
       "  \"analysis_status\": \"ok|insufficient_image|no_head_detected\",",
+      "  \"befund\": \"Was du im Bild tatsaechlich siehst, ein bis drei Saetze, noch ohne Wertung.\",",
       "  \"bildqualitaet\": {\"schaerfe\": 0, \"licht\": 0, \"perspektive\": \"oben|schraeg|seitlich|unklar\",",
       "                    \"kopf_vollstaendig\": true, \"hinweis\": \"kurz, nur wenn etwas stoert\"},",
       "  \"kopf\": {\"art\": \"phunnel|killer|vortex|steinkopf|turbine|unbekannt\", \"modell\": null,",
@@ -290,7 +346,14 @@
       "- \"confidence\": Prozentwerte 0 bis 100.",
       "- \"rueckfrage\": null, wenn die Angaben reichen. Sonst genau EINE Frage nach der",
       "  wichtigsten fehlenden Angabe (Reihenfolge: Kopfmodell, Tabak, HMD, Kohlen, Ziel).",
-      "- \"coach_satz\": gesprochenes Deutsch, geduzt, ohne Aufzaehlung und ohne Emojis."
+      "- \"coach_satz\": gesprochenes Deutsch, geduzt, ohne Aufzaehlung und ohne Emojis.",
+      "- \"befund\" fuellst du ZUERST aus, bevor du bewertest: erst hinsehen und",
+      "  beschreiben, dann urteilen. Reine Beobachtung, keine Empfehlung.",
+      "- Widerspruchsfrei bleiben: was du als kritisches Problem meldest, darf in der",
+      "  betroffenen Kategorie keine hohe Punktzahl bekommen. Beruehrt der Tabak Rand",
+      "  oder HMD, ist die Fuellhoehe nicht \"gut\". Ist die zentrale Oeffnung verdeckt,",
+      "  ist der Airflow nicht \"gut\". Die App rechnet solche Widersprueche sonst selbst",
+      "  herunter, und dann passt deine Begruendung nicht mehr zur Note."
     ],
     "live_kurz": [
       "Das laeuft waehrend des Bauens im Sekundentakt — halt es kurz:",
@@ -309,6 +372,89 @@
       "Zieh daraus Konsequenzen fuer die Empfehlung: wiederholt zu heiss heisst weniger",
       "Kohle oder mehr Abstand, wiederholt zu wenig Geschmack heisst lockerer und",
       "niedriger bauen, fruehes Kratzen heisst zu dicht oder zu nah am HMD."
+    ]
+  },
+  "plausibilitaet": {
+    "hinweis": "Obergrenzen, mit denen die App Widersprueche in der Modellantwort auffaengt. Wer ein kritisches Problem meldet, darf die betroffene Kategorie nicht gleichzeitig hoch bewerten.",
+    "kappe_kritisch": 45,
+    "kappe_hoch": 65,
+    "kappe_randkontakt": 40,
+    "kappe_ueber_rand": 55,
+    "kappe_hmd_kontakt": 30,
+    "kappe_airflow_hoch": 45,
+    "kappe_oeffnung_verdeckt": 30,
+    "bildqualitaet_min": 45,
+    "konsens_bilder": 5,
+    "konsens_spanne": 12
+  },
+  "sprachbefehle": {
+    "weiter": [
+      "weiter",
+      "nächste phase",
+      "naechste phase",
+      "nächster schritt"
+    ],
+    "zurueck": [
+      "zurück",
+      "zurueck",
+      "vorherige phase",
+      "eine zurück"
+    ],
+    "analyse": [
+      "analyse",
+      "bewerten",
+      "bewertung",
+      "vollanalyse",
+      "wie ist er"
+    ],
+    "neu": [
+      "neuer kopf",
+      "von vorne",
+      "neu anfangen",
+      "zurücksetzen"
+    ],
+    "pause": [
+      "pause",
+      "stopp",
+      "anhalten",
+      "warte"
+    ],
+    "start": [
+      "weitermachen",
+      "fortsetzen",
+      "los",
+      "start",
+      "kamera an"
+    ],
+    "menue": [
+      "menü",
+      "menue",
+      "hauptmenü",
+      "hauptmenue",
+      "einstellungen"
+    ],
+    "ruhe": [
+      "ruhe",
+      "sei still",
+      "ton aus",
+      "leise"
+    ],
+    "sprich": [
+      "sprich",
+      "ton an",
+      "rede"
+    ],
+    "wiederhole": [
+      "wiederhole",
+      "nochmal",
+      "was war das",
+      "wie bitte"
+    ],
+    "status": [
+      "status",
+      "wie viele punkte",
+      "note",
+      "wie stehe ich"
     ]
   }
 }
