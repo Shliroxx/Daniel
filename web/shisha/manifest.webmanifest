@@ -1,0 +1,19 @@
+{
+  "name": "Hookah Analyzer",
+  "short_name": "Analyzer",
+  "description": "AR-Kameracoach fuer den perfekten Shisha-Kopf",
+  "start_url": "/shisha",
+  "scope": "/shisha",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04080d",
+  "theme_color": "#04080d",
+  "icons": [
+    {
+      "src": "/shisha/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -31,6 +31,7 @@ statt über bezahlte API-Tokens.
 | **Web** | Websuche und Seitenabruf |
 | **Nachts** | Arbeitet eine Auftragsliste ab, während du schläfst — mit Wiederholung bei erschöpftem Kontingent |
 | **Brainstorming** | Sparringspartner mit eigener Meinung, kein Ja-Sager |
+| **Shisha-Analyzer** | AR-Kameracoach fürs iPhone: bewertet den Kopf live, markiert im Bild was weg muss und was fehlt |
 
 ---
 
@@ -267,6 +268,121 @@ Jarvis hat echten Zugriff auf deinen Rechner. Deshalb:
 
 ---
 
+## Shisha-Analyzer — der AR-Kopfbauer fürs iPhone
+
+Ein Kamera-Coach, der dir beim Kopfbauen über die Schulter schaut. Er läuft im
+Browser deines iPhones als App vom Homescreen — kein App Store, kein Xcode.
+
+```
+iPhone-Kamera  ──▶  Bild ruhig & scharf?  ──▶  Claude Vision  ──▶  JSON
+                            │                                        │
+                            └── AR-Overlay, Sprachausgabe, Note ◀─────┘
+```
+
+### Was er macht
+
+- **Live-Coaching** während des Bauens: ein gesprochener Satz plus die nächsten
+  Handgriffe, phasenweise von „Kopf prüfen" bis „Kohle auflegen".
+- **AR-Markierungen** direkt im Kamerabild: Rot heißt hier Tabak weg, Gelb
+  auflockern, Blau ist die empfohlene Füllhöhe, Grün passt schon.
+- **Vollanalyse** auf Knopfdruck: Note von 0 bis 100, sieben Einzelkategorien,
+  erkannte Probleme nach Schweregrad, nummerierter Optimierungsplan und eine
+  Schätzung, wie gut der Kopf nach der Korrektur wird.
+- **Lernen aus Sessions**: Nach dem Rauchen sagst du, wie es lief (Geschmack,
+  Rauch, Kratzen, Hitze, Dauer). Das fließt in die nächsten Empfehlungen ein und
+  die App zeigt, wie treffsicher ihre Vorhersagen bisher waren.
+
+### Wie bewertet wird
+
+Die Note ist keine Bauchentscheidung des Modells — der Server rechnet sie fest
+aus sieben gewichteten Kategorien:
+
+| Kategorie | Gewicht | Was zählt |
+|---|---|---|
+| Tabakverteilung | 20 % | Gleichmäßigkeit, Dichte, Klumpen, Lücken |
+| Hitzemanagement | 20 % | HMD- und Kohleposition, Kontakt, Hotspots |
+| Füllhöhe | 15 % | Höhe, Abstand zum HMD, Über-/Unterfüllung |
+| Airflow | 15 % | freie Luftwege, zentrale Öffnung, Blockaden |
+| Kopfgeometrie | 10 % | passt der Aufbau zur Kopfform |
+| Tabakkompatibilität | 10 % | passt die Packweise zur Tabakart |
+| Zielerreichung | 10 % | passt der Aufbau zu deinem Ziel |
+
+Das Modell darf die Gesamtnote nicht selbst setzen — damit dasselbe Bild
+reproduzierbar dieselbe Note bekommt. Ebenso wird nachgeprüft: unbekannte
+Aktionen werden ersetzt, Markierungen außerhalb des Bildes fliegen raus, und eine
+Prognose darf nie schlechter sein als der aktuelle Stand.
+
+Jede Angabe ist als **gesehen**, **geschätzt** oder **unsicher** gekennzeichnet.
+Die Tabakmenge in Gramm ist aus einem Foto grundsätzlich nicht bestimmbar — sie
+wird deshalb nie als Tatsache behauptet.
+
+### Ziele und Angaben
+
+Vor dem Start wählst du ein Ziel: **ausgewogen**, **Geschmack**, **Rauch** oder
+**lange Session**. Danach wird bewertet. Wenn du Kopfmodell, Tabak, HMD und
+Kohlenanzahl angibst, wird die Analyse deutlich genauer — fehlt etwas Wichtiges,
+fragt die App gezielt nach einer einzigen Angabe.
+
+### Am iPhone einrichten
+
+Safari gibt die Kamera nur über HTTPS frei. Deshalb stellt der Analyzer sich
+selbst ein Zertifikat aus.
+
+1. Auf dem Rechner starten:
+   ```
+   ./start-shisha.sh        # Windows: start-shisha.bat
+   ```
+   Im Terminal steht dann eine Adresse wie `https://192.168.1.42:8443/shisha`.
+2. Diese Adresse am iPhone in Safari öffnen — gleiches WLAN vorausgesetzt.
+3. Safari warnt einmal vor dem selbst ausgestellten Zertifikat:
+   **Details → Diese Website besuchen → Besuchen**.
+4. Teilen-Symbol → **Zum Home-Bildschirm**. Ab dann startet sie wie eine App,
+   im Vollbild und ohne Safari-Leisten.
+5. Beim ersten Start Kamera und Ton erlauben.
+
+Läuft Jarvis ohnehin schon, ist der Analyzer auch unter
+`http://<rechner>:8765/shisha` erreichbar — aber nur über `localhost` gibt Safari
+dort die Kamera frei. Für das iPhone im WLAN nimmst du `start-shisha.sh` mit
+HTTPS, oder du schickst den Jarvis-Port durch einen `cloudflared`-Tunnel (siehe
+WhatsApp-Abschnitt) und öffnest die `https`-Adresse mit `/shisha` dahinter.
+
+### Bedienung
+
+| Element | Bedeutung |
+|---|---|
+| Leiste oben | Bauphasen — antippen springt direkt dahin |
+| Zahl oben rechts | aktuelle Note, sobald ein Kopf erkannt ist |
+| Kreis im Bild | Zielbereich; halte den Kopf von oben hinein |
+| Kästen im Bild | AR-Markierungen mit Handlungsanweisung |
+| 🔊 | Sprachausgabe an/aus |
+| Phase weiter | nächste Bauphase erzwingen |
+| Vollanalyse | ausführlichen Report mit Optimierungsplan erzeugen |
+| ↺ | neuen Kopf anfangen |
+
+Analysiert wird nur, wenn das Bild ruhig, scharf und hell genug ist — sonst steht
+oben rechts „halt still", „unscharf" oder „zu dunkel" und es wird nichts
+verschickt. Das spart Rechenzeit und verhindert Fehlurteile aus verwackelten
+Bildern.
+
+### Kosten und Tempo
+
+Mit `SHISHA_BACKEND=cli` läuft die Analyse über dein Claude-Abo statt über
+bezahlte Tokens — dafür dauert ein Bild einige Sekunden. Wer es flüssiger will,
+setzt `SHISHA_BACKEND=api` und einen `ANTHROPIC_API_KEY`; dann kostet jedes
+analysierte Bild ein paar Tokens. Bilder werden vorher auf 768 Pixel Kantenlänge
+geschrumpft, damit es bezahlbar bleibt.
+
+### Prüfen, ob alles stimmt
+
+```
+python tests/test_shisha.py
+```
+
+Der Test spielt eine komplette Sitzung mit einer absichtlich fehlerhaften
+Modellantwort durch und prüft, dass der Server sie geradezieht.
+
+---
+
 ## Struktur
 
 ```
@@ -286,7 +402,16 @@ jarvis/
   channels/
     whatsapp.py        Meta Cloud API
   tools/               PC-Steuerung, Dateien, Aufgaben, Gedächtnis
+shisha/
+  wissen.py            Fachwissen, Bewertungsregeln, Prompts
+  analyse.py           Bildanalyse über claude -p oder die API
+  sitzung.py           Sitzungszustand, Normalisierung, Score-Berechnung
+  profil.py            Lernspeicher aus Session-Rückmeldungen
+  server.py            API und Auslieferung der Kamera-Oberfläche
+  zertifikat.py        Selbst ausgestelltes HTTPS-Zertifikat fürs Handy
 web/                   Das HUD
+web/shisha/            Die Kamera-App (PWA fürs iPhone)
+tests/                 End-zu-End-Test des Analyzers
 templates/             Vorlagen für Nacht-Aufträge
 ```
 
@@ -315,3 +440,19 @@ Mit NVIDIA-Karte: `JARVIS_WHISPER_DEVICE=cuda`.
 
 **„Er hört sich selbst zu"** — Passiert bei Lautsprechern ohne Echounterdrückung.
 Kopfhörer benutzen, oder `JARVIS_SPEAK_LOCALLY=false`.
+
+**„Kamera startet nicht am iPhone"** — Die Seite muss über `https://` laufen.
+Über `http://` mit IP-Adresse verweigert Safari den Kamerazugriff grundsätzlich.
+`start-shisha.sh` benutzen und die Zertifikatswarnung einmal bestätigen.
+
+**„Zertifikat wird nicht akzeptiert"** — Fehlt das Paket `cryptography`? Dann
+`pip install cryptography`. Alternativ `SHISHA_TLS=false` setzen und den Port
+durch einen `cloudflared`-Tunnel schicken — der bringt ein echtes Zertifikat mit.
+
+**„Die Analyse dauert ewig"** — Mit `SHISHA_BACKEND=cli` sind einige Sekunden pro
+Bild normal. Schneller wird es mit `SHISHA_BACKEND=api` und einem API-Key, oder
+mit `SHISHA_CLI_MODEL=haiku`.
+
+**„Er sieht keinen Kopf"** — Von schräg oben in den Kopf halten, sodass die ganze
+Tabakfläche im Bild ist, und für Licht sorgen. Steht oben „Bild zu schlecht",
+liegt es an Schärfe oder Beleuchtung, nicht am Kopf.

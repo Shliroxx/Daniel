@@ -245,6 +245,8 @@ async def lifespan(app: FastAPI):
         log.warning("Vault '%s' nicht gefunden — nutze lokale Dateien.", config.vault)
 
     log.info("HUD erreichbar unter http://localhost:%s", config.port)
+    if config.shisha_enabled:
+        log.info("Shisha-Coach unter http://localhost:%s/shisha", config.port)
     yield
     jarvis.stop_microphone()
 
@@ -253,6 +255,21 @@ app = FastAPI(title="Jarvis", lifespan=lifespan)
 
 if WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
+
+# Shisha-Coach als eigener Bereich unter /shisha — laeuft unabhaengig vom Rest.
+if config.shisha_enabled:
+    try:
+        from shisha.server import WEB_DIR as SHISHA_WEB_DIR, router as shisha_router
+
+        if SHISHA_WEB_DIR.exists():
+            app.mount(
+                "/shisha/static",
+                StaticFiles(directory=str(SHISHA_WEB_DIR)),
+                name="shisha-static",
+            )
+        app.include_router(shisha_router)
+    except Exception as exc:  # der Coach darf Jarvis nicht mit runterreissen
+        log.warning("Shisha-Coach nicht geladen: %s", exc)
 
 
 # --------------------------------------------------------------------------

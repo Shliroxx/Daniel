@@ -93,6 +93,20 @@ class Config:
     whatsapp_voice_reply: bool = field(default_factory=lambda: _bool("WHATSAPP_VOICE_REPLY", False))
     whatsapp_api_version: str = field(default_factory=lambda: os.getenv("WHATSAPP_API_VERSION", "v21.0"))
 
+    # --- Shisha-Coach (AR-Kamera) ----------------------------------------
+    shisha_enabled: bool = field(default_factory=lambda: _bool("SHISHA_ENABLED", True))
+    # Leer = dasselbe Backend wie Jarvis ("cli" ueber das Abo, "api" ueber den Key).
+    shisha_backend_raw: str = field(default_factory=lambda: os.getenv("SHISHA_BACKEND", "").lower())
+    shisha_model: str = field(default_factory=lambda: os.getenv("SHISHA_MODEL", "claude-sonnet-5"))
+    shisha_cli_model: str = field(default_factory=lambda: os.getenv("SHISHA_CLI_MODEL", "sonnet"))
+    shisha_port: int = field(default_factory=lambda: _int("SHISHA_PORT", 8443))
+    shisha_tls: bool = field(default_factory=lambda: _bool("SHISHA_TLS", True))
+    # Kantenlaenge, auf die Kamerabilder vor der Analyse geschrumpft werden.
+    shisha_max_kante: int = field(default_factory=lambda: _int("SHISHA_MAX_KANTE", 768))
+    shisha_qualitaet: int = field(default_factory=lambda: _int("SHISHA_QUALITAET", 80))
+    # So viele Analysen bleiben als Kontext fuer die naechste Bildbewertung erhalten.
+    shisha_verlauf: int = field(default_factory=lambda: _int("SHISHA_VERLAUF", 12))
+
     # --- Dateien / Rechte -------------------------------------------------
     workspace: Path = field(default_factory=lambda: _path("JARVIS_WORKSPACE", ROOT / "workspace"))
     allow_shell: bool = field(default_factory=lambda: _bool("JARVIS_ALLOW_SHELL", False))
@@ -104,6 +118,17 @@ class Config:
     def __post_init__(self) -> None:
         for directory in (self.workspace, self.data_dir, self.voices_dir, self.log_dir):
             directory.mkdir(parents=True, exist_ok=True)
+
+    # -- Abgeleitete Werte -------------------------------------------------
+    @property
+    def shisha_backend(self) -> str:
+        """Backend fuer die Bildanalyse — faellt auf das Jarvis-Backend zurueck."""
+        return self.shisha_backend_raw or self.backend
+
+    @property
+    def certs_dir(self) -> Path:
+        """Hier liegt das selbst ausgestellte HTTPS-Zertifikat fuers Handy."""
+        return self.data_dir / "certs"
 
     # -- Abgeleitete Pfade -------------------------------------------------
     @property
