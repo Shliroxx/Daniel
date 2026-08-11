@@ -41,6 +41,11 @@ concurrency:
 jobs:
   veroeffentlichen:
     runs-on: ubuntu-latest
+    # Es gibt nur eine veroeffentlichte Seite. Von Hand aus einem Feature-Branch
+    # gestartet wuerde dieser Lauf also ungeprueften Stand live schalten — und
+    # sich mit der Veroeffentlichung des Standard-Branch um dieselbe Seite
+    # streiten. Deshalb laeuft er nur auf dem Standard-Branch.
+    if: github.ref_name == github.event.repository.default_branch
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
