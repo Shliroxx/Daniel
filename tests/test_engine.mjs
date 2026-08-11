@@ -329,9 +329,18 @@ assert.equal(Engine.kopfSuchen(''), null);
 assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).mm, 82);
 assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).quelle, 'angegeben');
 assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel' }).mm, 75, 'faellt auf die Liste zurueck');
-assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'unbekannt' }), null);
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }), null, 'unsinnige Werte werden verworfen');
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 500 }), null);
+
+// Eigene Angabe schlaegt den Standardkopf.
+assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel', durchmesser_mm: 90 }).mm, 90);
+
+// Unsinnige Werte werden verworfen — dann greift der Standardkopf.
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }).mm, 78);
+assert.match(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }).quelle, /angenommen/);
+assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 500 }).mm, 78);
+
+// Ohne jede Angabe steht immer noch der Standardkopf zur Verfuegung.
+assert.equal(Engine.durchmesserBestimmen({}).mm, 78);
+assert.match(Engine.durchmesserBestimmen({}).quelle, /angenommen \(Oblako Phunnel M\)/);
 
 const mitMassstab = Engine.promptBauen({
   modus: 'voll', kontext: { ziel: 'balanced', kopf_modell: 'Oblako Phunnel M' }, verlauf: '', lernen: '',
@@ -339,10 +348,59 @@ const mitMassstab = Engine.promptBauen({
 assert.ok(mitMassstab.includes('78 mm'), 'Durchmesser steht im Prompt');
 assert.ok(mitMassstab.includes('Groessenbezug'), 'Massstab-Anleitung steht im Prompt');
 
-const ohneMassstab = Engine.promptBauen({
-  modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '',
-});
-assert.ok(!ohneMassstab.includes('Groessenbezug'), 'ohne Angabe kein Massstab-Block');
+// --- Kopf erkennen, auch leer und von der Seite -------------------------------
+const erkennung = Engine.promptBauen({ modus: 'live', phase: 'kopf', kontext: {}, verlauf: '', lernen: '' });
+assert.ok(erkennung.includes('von der Seite'), 'Seitenansicht ist beschrieben');
+assert.ok(erkennung.includes('LEERER Kopf ist ein gueltiger Kopf'), 'leerer Kopf ist gueltig');
+assert.ok(erkennung.includes('no_head_detected'), 'wann abgebrochen wird, steht drin');
+assert.ok(!erkennung.includes('In der Regel schaust du von schraeg oben'),
+          'der alte Ein-Winkel-Satz ist raus');
+
+// --- Standardkopf --------------------------------------------------------------
+assert.equal(Engine.standardKopf().name, 'Oblako Phunnel M');
+assert.equal(Engine.angenommenerKopf({}).herkunft, 'standard');
+assert.equal(Engine.angenommenerKopf({ kopf_modell: 'Kaya Phunnel' }).herkunft, 'angegeben');
+assert.equal(Engine.angenommenerKopf({ kopf_modell: 'Kaya Phunnel' }).durchmesser_mm, 75);
+
+// Ein unbekannter, frei eingetippter Kopf gilt trotzdem als Angabe des Nutzers.
+const frei = Engine.angenommenerKopf({ kopf_modell: 'Opa seine Selbstbau-Schale' });
+assert.equal(frei.herkunft, 'angegeben');
+assert.equal(frei.name, 'Opa seine Selbstbau-Schale');
+assert.equal(frei.durchmesser_mm, null, 'ohne Massangabe kein erfundener Durchmesser');
+
+// Eigener Standardkopf schlaegt den aus spec.json
+Engine.einstellungenSpeichern({ standardkopf: 'Vyro Rocket' });
+assert.equal(Engine.standardKopf().name, 'Vyro Rocket');
+assert.equal(Engine.durchmesserBestimmen({}).mm, 76);
+Engine.einstellungenSpeichern({ standardkopf: '' });
+
+// --- Nicht erkannter Kopf wird angenommen, nicht erfunden ----------------------
+const unerkannt = Engine.normalisiere(
+  { ...ANTWORT, kopf: { art: 'unbekannt', modell: null, quelle: 'unknown', confidence: 10 } },
+  true,
+  { kopf_modell: '' }
+);
+assert.equal(unerkannt.kopf.art, 'phunnel', 'faellt auf den Standardkopf zurueck');
+assert.equal(unerkannt.kopf.modell, 'Oblako Phunnel M');
+assert.equal(unerkannt.kopf.angenommen, true, 'und ist als Annahme gekennzeichnet');
+assert.equal(unerkannt.kopf.quelle, 'angegeben', 'nie als "observed" ausgeben');
+assert.equal(unerkannt.kopf.confidence, 10, 'eine Annahme erhoeht die Sicherheit nicht');
+
+// Was der Nutzer gesagt hat, schlaegt den Standardkopf
+const gesagt = Engine.normalisiere(
+  { ...ANTWORT, kopf: { art: 'unbekannt', modell: null, quelle: 'unknown', confidence: 10 } },
+  true,
+  { kopf_modell: 'Killerkopf gross' }
+);
+assert.equal(gesagt.kopf.art, 'killer');
+assert.equal(gesagt.kopf.modell, 'Killerkopf gross');
+
+// Erkennt das Modell den Kopf selbst, bleibt es dabei
+const erkannt = Engine.normalisiere(ANTWORT, true, { kopf_modell: 'Killerkopf gross' });
+assert.equal(erkannt.kopf.art, 'phunnel', 'eine echte Erkennung wird nicht ueberschrieben');
+assert.equal(erkannt.kopf.modell, 'Oblako M');
+assert.equal(erkannt.kopf.angenommen, false);
+assert.equal(erkannt.kopf.quelle, 'observed');
 
 // --- (3) Mehrere Bilder -------------------------------------------------------
 const mehrere = Engine.promptBauen({

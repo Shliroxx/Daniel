@@ -441,8 +441,7 @@ function liveUebernehmen(analyse) {
 
   const kopf = analyse.kopf || {};
   $('kopfInfo').textContent = ok
-    ? [kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt'), quellenKuerzel(kopf.quelle)]
-        .filter(Boolean).join(' · ')
+    ? kopfBeschriftung(kopf)
     : (analyse.analysis_status === 'insufficient_image' ? 'Bild zu schlecht' : 'kein Kopf im Bild');
 
   // Angezeigt wird der Konsens ueber mehrere Bilder, nicht der Einzelwert —
@@ -508,9 +507,20 @@ function messwerteZeigen(analyse) {
 
 function quellenKuerzel(quelle) {
   if (quelle === 'observed') return 'gesehen';
-  if (quelle === 'estimated') return 'geschaetzt';
+  if (quelle === 'estimated') return 'geschätzt';
   if (quelle === 'unknown') return 'unsicher';
+  if (quelle === 'angegeben') return 'angenommen';
   return '';
+}
+
+/* Wie der Kopf benannt wird — und ob er erkannt oder nur angenommen ist.
+ * Das muss auseinanderzuhalten sein, sonst haelt man eine Annahme fuer ein
+ * Messergebnis.
+ */
+function kopfBeschriftung(kopf) {
+  if (!kopf) return '';
+  const name = kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt');
+  return kopf.angenommen ? `${name} · angenommen` : [name, quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ');
 }
 
 function setzeLage(text, art) {
@@ -981,6 +991,8 @@ function einstellungenFuellen() {
   $('fServerUrl').value = e.server_url;
   $('fGegenprobe').value = e.gegenprobe;
   $('fSparmodus').checked = e.sparmodus;
+  $('fStandardkopf').value = e.standardkopf;
+  $('fStandardkopf').placeholder = (Engine.spec.koepfe || {}).standard || '';
   anbieterUmschalten(e.anbieter);
   lernregelnZeigen();
 }
@@ -1002,6 +1014,7 @@ function einstellungenSpeichern() {
     server_url: $('fServerUrl').value.trim(),
     gegenprobe: $('fGegenprobe').value,
     sparmodus: $('fSparmodus').checked,
+    standardkopf: $('fStandardkopf').value.trim(),
   });
   $('einstellungen').hidden = true;
   startBereitschaft();
@@ -1431,7 +1444,7 @@ function reportZeigen(analyse) {
   const kopf = analyse.kopf || {};
   const tabak = analyse.tabak || {};
   const teile = [];
-  if (kopf.modell || kopf.art !== 'unbekannt') teile.push(kopf.modell || kopf.art);
+  if (kopf.modell || kopf.art !== 'unbekannt') teile.push(kopfBeschriftung(kopf));
   if (tabak.fuellhoehe_mm !== null) {
     teile.push(tabak.fuellhoehe_mm < 0
       ? `${Math.abs(tabak.fuellhoehe_mm)} mm ueber Rand`

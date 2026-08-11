@@ -398,8 +398,29 @@ dann im Verhältnis dazu aus statt frei zu schätzen.
 
 Gängige Köpfe stehen in `spec.json`; tippst du „Oblako Phunnel M", wird der Wert
 vorgeschlagen. Deinen eigenen Kopf einmal ausmessen genügt, danach merkt die App
-ihn sich. Ohne Angabe funktioniert alles weiter — die Millimeterzahlen bleiben
-dann eben grob, und das Modell sagt das auch.
+ihn sich.
+
+### Wenn der Kopf nicht erkannt wird
+
+Aus manchen Winkeln lässt sich ein Kopf nicht zuordnen — leer und von der Seite
+erst recht nicht. Dann greift dein **Standardkopf** (voreingestellt Oblako
+Phunnel M, änderbar unter *Modell und Zugang*). Die App schreibt in dem Fall
+**angenommen** dazu:
+
+```
+Oblako Phunnel M · angenommen
+```
+
+Das ist bewusst sichtbar: eine Annahme ist keine Erkennung, und die Sicherheit
+des Modells steigt dadurch nicht. Was du selbst angegeben hast, schlägt den
+Standardkopf; was das Modell wirklich erkennt, schlägt beides.
+
+Ein **leerer Kopf ist ein gültiger Kopf** — in der Phase „Kopf prüfen" ist er
+das ja immer. Früher hat das Modell dort gern „kein Kopf im Bild" gemeldet, weil
+im Prompt nur von einem Blickwinkel und von sichtbarem Tabak die Rede war. Beides
+ist korrigiert: die Erkennung ist jetzt für Aufsicht, Schrägsicht und Seitenansicht
+beschrieben, und abgebrochen wird nur, wenn wirklich nichts Kopfartiges im Bild
+ist.
 
 ### Endurteil aus drei Blickwinkeln
 
