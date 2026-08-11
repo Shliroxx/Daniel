@@ -47,13 +47,16 @@ const PAUSE_MS = 900;          // Verschnaufpause zwischen zwei Analysen
 
 const zustand = {
   sitzung: null,
-  laeuft: false,
+  laeuft: false,        // Analyseschleife arbeitet
+  pausiert: false,      // Kamera steht, Pausenblende ist offen
   busy: false,
   ton: true,
+  hoeren: false,        // Sprachsteuerung an
   analyse: null,
   puls: 0,
   wakeLock: null,
   feedback: {},
+  blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
 };
 
 // --------------------------------------------------------------------------
@@ -75,6 +78,8 @@ let letzteMini = null;
 const shot = document.createElement('canvas');
 const shotCtx = shot.getContext('2d');
 
+let strom = null;
+
 async function kameraStarten() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
@@ -82,12 +87,85 @@ async function kameraStarten() {
       'geladen wird — ruf sie ueber https://… auf.'
     );
   }
-  const stream = await navigator.mediaDevices.getUserMedia({
+
+  kameraStoppen();
+  strom = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     audio: false,
   });
-  video.srcObject = stream;
+
+  // iOS gibt die Kamera frei, sobald die App laenger im Hintergrund war. Dann
+  // endet die Spur und das Livebild friert ein — davon wollen wir erfahren.
+  strom.getVideoTracks().forEach((spur) => {
+    spur.addEventListener('ended', () => pausieren('Die Kamera wurde vom System freigegeben.'));
+  });
+
+  video.srcObject = strom;
+  letzteMini = null;
   await video.play();
+}
+
+function kameraStoppen() {
+  if (!strom) return;
+  strom.getTracks().forEach((spur) => spur.stop());
+  strom = null;
+}
+
+/** Liefert die Kamera gerade ein brauchbares Livebild? */
+function kameraLaeuft() {
+  if (!strom || !video.videoWidth) return false;
+  return strom.getVideoTracks().some((spur) => spur.readyState === 'live');
+}
+
+// -- Pause und Wiederaufnahme ----------------------------------------------
+
+function pausieren(grund) {
+  if (zustand.pausiert) return;
+  zustand.laeuft = false;
+  zustand.pausiert = true;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  $('pauseGrund').textContent = grund || 'Die Kamera steht.';
+  $('pauseFehler').textContent = '';
+  $('pause').hidden = false;
+  // Der Ton bleibt an: so kann man die Pause auch per Sprache beenden.
+}
+
+async function fortsetzen() {
+  const knopf = $('weiterKamera');
+  knopf.disabled = true;
+  knopf.textContent = 'Kamera startet …';
+  try {
+    await kameraStarten();
+    await bildschirmWachhalten();
+    zustand.blindSeit = 0;
+    zustand.pausiert = false;
+    zustand.laeuft = true;
+    $('pause').hidden = true;
+    setzeLage('live', '');
+    schleife();
+  } catch (fehler) {
+    $('pauseFehler').textContent = `Kamera laesst sich nicht starten: ${fehler.message}`;
+  } finally {
+    knopf.disabled = false;
+    knopf.textContent = 'Kamera fortsetzen';
+  }
+}
+
+function zumHauptmenue() {
+  zustand.laeuft = false;
+  zustand.pausiert = false;
+  zustand.analyse = null;
+  kameraStoppen();
+  hoerenAus();
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  $('pause').hidden = true;
+  $('report').hidden = true;
+  $('feedback').hidden = true;
+  $('oben').hidden = true;
+  $('unten').hidden = true;
+  $('start').hidden = false;
+  $('losButton').textContent = 'Kamera starten';
+  startBereitschaft();
 }
 
 async function bildschirmWachhalten() {
@@ -98,10 +176,39 @@ async function bildschirmWachhalten() {
   }
 }
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && zustand.laeuft && !zustand.wakeLock) {
-    bildschirmWachhalten();
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') {
+    // Im Hintergrund analysieren wir nicht weiter — das spart Kontingent und
+    // Akku, und iOS friert die Kamera ohnehin ein.
+    if (zustand.laeuft) {
+      zustand.laeuft = false;
+      zustand.pausiert = false;   // noch keine Blende: vielleicht kommt er gleich zurueck
+    }
+    return;
   }
+
+  if (!zustand.wakeLock) bildschirmWachhalten();
+  if (zustand.pausiert || !$('start').hidden) return;
+  if (!zustand.sitzung) return;
+
+  // Zurueck aus dem Hintergrund: laeuft die Kamera noch, geht es einfach weiter.
+  if (kameraLaeuft()) {
+    try {
+      await video.play();
+    } catch (_) { /* dann uebernimmt die Blende unten */ }
+  }
+
+  if (kameraLaeuft() && !video.paused) {
+    if (!zustand.laeuft) {
+      zustand.laeuft = true;
+      zustand.blindSeit = 0;
+      setzeLage('live', '');
+      schleife();
+    }
+    return;
+  }
+
+  pausieren('Die App war im Hintergrund — die Kamera wurde angehalten.');
 });
 
 // --------------------------------------------------------------------------
@@ -167,8 +274,23 @@ function bildAufnehmen(maxKante) {
   return new Promise((fertig) => shot.toBlob(fertig, 'image/jpeg', 0.78));
 }
 
+// Liefert die Kamera so lange kein Bild, ist sie eingefroren statt nur verwackelt.
+const BLIND_GRENZE_MS = 4000;
+
 async function schleife() {
   while (zustand.laeuft) {
+    if (!kameraLaeuft() || video.paused) {
+      // Erst ab ein paar Sekunden meckern — kurze Aussetzer kommen vor.
+      if (!zustand.blindSeit) zustand.blindSeit = Date.now();
+      if (Date.now() - zustand.blindSeit > BLIND_GRENZE_MS) {
+        pausieren('Das Livebild ist eingefroren.');
+        return;
+      }
+      await schlafen(300);
+      continue;
+    }
+    zustand.blindSeit = 0;
+
     if (zustand.busy || !guetePruefen()) {
       await schlafen(220);
       continue;
@@ -235,9 +357,23 @@ function liveUebernehmen(analyse) {
         .filter(Boolean).join(' · ')
     : (analyse.analysis_status === 'insufficient_image' ? 'Bild zu schlecht' : 'kein Kopf im Bild');
 
+  // Angezeigt wird der Konsens ueber mehrere Bilder, nicht der Einzelwert —
+  // sonst springt die Zahl bei jedem Frame.
   const scoreFeld = $('liveScore');
-  scoreFeld.hidden = analyse.gesamtscore === null;
-  if (analyse.gesamtscore !== null) scoreFeld.textContent = `${analyse.gesamtscore}/100`;
+  const konsens = analyse.konsens;
+  scoreFeld.hidden = !konsens && analyse.gesamtscore === null;
+  if (konsens) {
+    const pfeil = konsens.trend > 4 ? ' ↑' : konsens.trend < -4 ? ' ↓' : '';
+    scoreFeld.textContent = `${konsens.score}/100${pfeil}`;
+    scoreFeld.classList.toggle('unsicher', !konsens.stabil);
+    scoreFeld.title = konsens.stabil
+      ? `stabil ueber ${konsens.bilder} Bilder`
+      : `schwankt noch (${konsens.bilder} Bilder, Spanne ${konsens.spanne})`;
+  } else if (analyse.gesamtscore !== null) {
+    scoreFeld.textContent = `${analyse.gesamtscore}/100`;
+    scoreFeld.classList.add('unsicher');
+    scoreFeld.title = 'Einzelbild, noch kein Konsens';
+  }
 
   $('fortschritt').style.width = `${Math.round(analyse.fortschritt * 100)}%`;
   phasenZeichnen();
@@ -273,6 +409,13 @@ function messwerteZeigen(analyse) {
     feld.innerHTML = `${escape(name)} <b>${escape(String(wert))}</b>${quelle ? ` ${quellenKuerzel(quelle)}` : ''}`;
     box.appendChild(feld);
   });
+
+  if (analyse.vorlaeufig) {
+    const feld = document.createElement('span');
+    feld.className = 'messwert vorlaeufig';
+    feld.textContent = 'vorläufig — Bild zu dünn für ein Urteil';
+    box.appendChild(feld);
+  }
 }
 
 function quellenKuerzel(quelle) {
@@ -507,6 +650,177 @@ function zeichneMitteltext(x, y, beschriftung) {
 const noteFarbe = (score) =>
   score >= 85 ? '#57e39a' : score >= 70 ? '#5fe3ff' : score >= 50 ? '#ffb454' : '#ff6b7d';
 
+
+// --------------------------------------------------------------------------
+// Sprachsteuerung
+// --------------------------------------------------------------------------
+
+/* Freihaendig bedienen — beim Kopfbauen sind beide Haende voll.
+ *
+ * Die Erkennung laeuft in Safari ueber webkitSpeechRecognition. Sie hoert
+ * bewusst nur auf kurze Befehle aus spec.json, nicht auf Fliesstext, und wird
+ * waehrend der eigenen Sprachausgabe angehalten — sonst hoert sie sich selbst
+ * zu und loest ihre eigenen Hinweise als Befehle aus.
+ */
+
+const Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
+let hoerer = null;
+let hoererPause = false;   // waehrend die App selbst spricht
+
+function spracheMoeglich() {
+  return Boolean(Erkennung);
+}
+
+function hoererBauen() {
+  const h = new Erkennung();
+  h.lang = 'de-DE';
+  h.continuous = true;
+  h.interimResults = false;
+  h.maxAlternatives = 2;
+
+  h.onresult = (ereignis) => {
+    if (hoererPause) return;
+    for (let i = ereignis.resultIndex; i < ereignis.results.length; i++) {
+      const ergebnis = ereignis.results[i];
+      if (!ergebnis.isFinal) continue;
+      // Alle Alternativen durchprobieren — die erste ist nicht immer die beste.
+      for (let a = 0; a < ergebnis.length; a++) {
+        const befehl = Engine.befehlErkennen(ergebnis[a].transcript);
+        if (befehl) {
+          befehlAusfuehren(befehl, ergebnis[a].transcript);
+          return;
+        }
+      }
+    }
+  };
+
+  h.onerror = (ereignis) => {
+    // "no-speech" und "aborted" sind Alltag, kein Grund zur Meldung.
+    if (ereignis.error === 'not-allowed' || ereignis.error === 'service-not-allowed') {
+      hoerenAus();
+      setzeLage('Mikrofon verweigert', 'fehler');
+    }
+  };
+
+  // Safari beendet die Erkennung nach kurzer Stille von selbst — neu starten.
+  h.onend = () => {
+    if (!zustand.hoeren) return;
+    try {
+      h.start();
+    } catch (_) { /* laeuft schon */ }
+  };
+
+  return h;
+}
+
+function hoerenAn() {
+  if (!spracheMoeglich() || zustand.hoeren) return;
+  hoerer = hoerer || hoererBauen();
+  try {
+    hoerer.start();
+    zustand.hoeren = true;
+    hoerenAnzeigen();
+    sprich('Ich höre.');
+  } catch (fehler) {
+    setzeLage('Sprache nicht verfügbar', 'warn');
+  }
+}
+
+function hoerenAus() {
+  zustand.hoeren = false;
+  if (hoerer) {
+    try {
+      hoerer.stop();
+    } catch (_) { /* war schon aus */ }
+  }
+  hoerenAnzeigen();
+}
+
+function hoerenAnzeigen() {
+  const knopf = $('hoerButton');
+  if (!knopf) return;
+  knopf.textContent = zustand.hoeren ? '🎙️' : '🎤';
+  knopf.classList.toggle('aus', !zustand.hoeren);
+  knopf.classList.toggle('an', zustand.hoeren);
+  $('hoerMarke').hidden = !zustand.hoeren;
+}
+
+function befehlAusfuehren(befehl, gesagt) {
+  vibriere(20);
+  $('hoerMarke').textContent = `„${(gesagt || '').trim().slice(0, 24)}"`;
+
+  switch (befehl) {
+    case 'weiter':
+      zustand.sitzung.weiter();
+      fortschrittZeichnen();
+      sprich(`Phase ${zustand.sitzung.phaseInfo.name}.`);
+      break;
+    case 'zurueck': {
+      const phasen = Engine.spec.phasen;
+      const index = phasen.findIndex((p) => p.key === zustand.sitzung.phase);
+      zustand.sitzung.phaseSetzen(phasen[Math.max(0, index - 1)].key);
+      fortschrittZeichnen();
+      sprich(`Zurück zu ${zustand.sitzung.phaseInfo.name}.`);
+      break;
+    }
+    case 'analyse':
+      sprich('Ich schaue mir den Kopf genau an.');
+      vollanalyse();
+      break;
+    case 'neu':
+      sitzungStarten();
+      sprich('Neuer Kopf.');
+      break;
+    case 'pause':
+      pausieren('Auf Zuruf angehalten.');
+      break;
+    case 'start':
+      if (zustand.pausiert) fortsetzen();
+      break;
+    case 'menue':
+      zumHauptmenue();
+      break;
+    case 'ruhe':
+      zustand.ton = false;
+      tonAnzeigen();
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      break;
+    case 'sprich':
+      zustand.ton = true;
+      tonAnzeigen();
+      sprich('Ton ist an.');
+      break;
+    case 'wiederhole':
+      if (zustand.analyse && zustand.analyse.coach_satz) {
+        // Sperre umgehen: hier ist die Wiederholung ausdruecklich gewollt.
+        const satz = zustand.analyse.coach_satz;
+        if (zustand.sitzung) zustand.sitzung.gesagt.delete(satz.trim().toLowerCase());
+        sprich(satz);
+      } else {
+        sprich('Ich habe noch nichts gesagt.');
+      }
+      break;
+    case 'status': {
+      const konsens = zustand.analyse && zustand.analyse.konsens;
+      if (konsens) sprich(`${konsens.score} von 100, ${konsens.stufe_text}.`);
+      else sprich('Noch keine Bewertung.');
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+function fortschrittZeichnen() {
+  $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
+  phasenZeichnen();
+}
+
+function tonAnzeigen() {
+  $('tonButton').textContent = zustand.ton ? '🔊' : '🔇';
+  $('tonButton').classList.toggle('aus', !zustand.ton);
+}
+
 // --------------------------------------------------------------------------
 // Sprachausgabe
 // --------------------------------------------------------------------------
@@ -530,6 +844,13 @@ function sprich(text) {
   spruch.lang = 'de-DE';
   spruch.rate = 1.08;
   if (stimme) spruch.voice = stimme;
+
+  // Waehrend die App spricht, hoert sie nicht zu — sonst nimmt sie ihre eigenen
+  // Hinweise als Befehle entgegen.
+  spruch.onstart = () => { hoererPause = true; };
+  spruch.onend = () => { hoererPause = false; };
+  spruch.onerror = () => { hoererPause = false; };
+
   speechSynthesis.speak(spruch);
 }
 
@@ -700,6 +1021,9 @@ function reportZeigen(analyse) {
   frage.hidden = !analyse.rueckfrage;
   frage.textContent = analyse.rueckfrage || '';
 
+  // Was das Modell gesehen hat, bevor es geurteilt hat.
+  $('befund').textContent = analyse.befund || 'kein Befund geliefert';
+
   const kategorien = $('kategorien');
   kategorien.innerHTML = '';
   Object.entries(analyse.scores || {}).forEach(([key, wert]) => {
@@ -710,6 +1034,18 @@ function reportZeigen(analyse) {
       `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
       `<span class="kat-zahl">${wert}</span>`;
     kategorien.appendChild(zeile);
+  });
+
+  // Wo die App die Bewertung des Modells heruntergesetzt hat, und warum.
+  const kappungen = $('kappungen');
+  kappungen.innerHTML = '';
+  (analyse.kappungen || []).forEach((kappung) => {
+    const zeile = document.createElement('div');
+    zeile.className = 'kappung';
+    zeile.textContent =
+      `${Engine.spec.kategorien[kappung.kategorie] || kappung.kategorie}: `
+      + `${kappung.von} → ${kappung.auf}, weil ${kappung.grund}`;
+    kappungen.appendChild(zeile);
   });
 
   const probleme = $('problemliste');
@@ -879,8 +1215,13 @@ $('losButton').addEventListener('click', async () => {
     $('oben').hidden = false;
     $('unten').hidden = false;
     zustand.laeuft = true;
+    zustand.blindSeit = 0;
     setzeLage('live', '');
     schleife();
+
+    // Sprachsteuerung nur anbieten, wenn der Browser sie kann.
+    $('hoerButton').hidden = !spracheMoeglich();
+    if (spracheMoeglich() && $('fSprache').checked) hoerenAn();
   } catch (fehler) {
     $('startFehler').textContent = fehler.message;
     knopf.disabled = false;
@@ -891,15 +1232,24 @@ $('losButton').addEventListener('click', async () => {
 
 $('tonButton').addEventListener('click', () => {
   zustand.ton = !zustand.ton;
-  $('tonButton').textContent = zustand.ton ? '🔊' : '🔇';
-  $('tonButton').classList.toggle('aus', !zustand.ton);
+  tonAnzeigen();
   if (!zustand.ton && window.speechSynthesis) speechSynthesis.cancel();
+});
+
+$('hoerButton').addEventListener('click', () => {
+  if (zustand.hoeren) hoerenAus();
+  else hoerenAn();
+});
+
+$('weiterKamera').addEventListener('click', fortsetzen);
+$('pauseMenue').addEventListener('click', zumHauptmenue);
+$('menueButton').addEventListener('click', () => {
+  if (confirm('Zurück ins Hauptmenü? Die laufende Sitzung wird beendet.')) zumHauptmenue();
 });
 
 $('weiterButton').addEventListener('click', () => {
   zustand.sitzung.weiter();
-  $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
-  phasenZeichnen();
+  fortschrittZeichnen();
 });
 
 $('analyseButton').addEventListener('click', vollanalyse);

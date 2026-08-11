@@ -364,26 +364,39 @@ const Engine = (() => {
   function normalisiere(roh, live) {
     const status = wahl(roh.analysis_status, spec.analyse_status, 'ok');
 
+    // Erst die Beobachtungen, dann die Bewertung — in der Reihenfolge braucht die
+    // Plausibilitaetspruefung sie auch.
+    const bild = bildqualitaet(objekt(roh.bildqualitaet));
+    const tabak = tabakDaten(objekt(roh.tabak));
+    const luft = airflowDaten(objekt(roh.airflow));
+    const haube = hmdDaten(objekt(roh.hmd));
+    const gemeldet = probleme(liste(roh.probleme), live);
+
     const rohScores = objekt(roh.scores);
     const scores = {};
     Object.keys(spec.gewichte).forEach((feld) => { scores[feld] = Math.round(zahl(rohScores[feld], 0, 100)); });
+
+    // Widersprueche geradeziehen, bevor gerechnet wird.
+    const kappungen = plausibilitaetAnwenden(scores, { tabak, airflow: luft, hmd: haube, probleme: gemeldet });
 
     const gesamt = gesamtscore(scores);
     const stufeInfo = stufe(gesamt);
 
     const ergebnis = {
       analysis_status: status,
-      bildqualitaet: bildqualitaet(objekt(roh.bildqualitaet)),
+      befund: text(roh.befund, 400),
+      bildqualitaet: bild,
       kopf: kopfDaten(objekt(roh.kopf)),
-      tabak: tabakDaten(objekt(roh.tabak)),
-      airflow: airflowDaten(objekt(roh.airflow)),
-      hmd: hmdDaten(objekt(roh.hmd)),
+      tabak,
+      airflow: luft,
+      hmd: haube,
       kohle: kohleDaten(objekt(roh.kohle)),
       scores,
+      kappungen,
       gesamtscore: gesamt,
       stufe: stufeInfo.key,
       stufe_text: stufeInfo.text,
-      probleme: probleme(liste(roh.probleme), live),
+      probleme: gemeldet,
       optimierungen: optimierungen(liste(roh.optimierungen), live),
       ar_marker: marker(liste(roh.ar_marker), live),
       prognose: prognose(objekt(roh.prognose), gesamt),
@@ -392,6 +405,14 @@ const Engine = (() => {
       coach_satz: text(roh.coach_satz, 200),
     };
 
+    // Bei duennem Bild oder wackliger Sicherheit ist die Note ein Anhaltspunkt,
+    // kein Urteil — sie wird gezeigt, aber nicht in den Konsens aufgenommen.
+    ergebnis.vorlaeufig = status === 'ok' && (
+      Math.min(bild.schaerfe, bild.licht) < spec.plausibilitaet.bildqualitaet_min
+      || bild.kopf_vollstaendig === false
+      || ergebnis.confidence.gesamt < 40
+    );
+
     // Ohne erkennbaren Kopf ist eine Note bedeutungslos — dann lieber keine.
     if (status !== 'ok') {
       ergebnis.gesamtscore = null;
@@ -399,6 +420,52 @@ const Engine = (() => {
       ergebnis.stufe_text = null;
     }
     return ergebnis;
+  }
+
+  /* Zieht Widersprueche zwischen Beobachtung und Bewertung gerade.
+   *
+   * Modelle neigen dazu, ein kritisches Problem zu melden und die betroffene
+   * Kategorie trotzdem mit 80 zu bewerten. Wer sagt "der Tabak beruehrt das HMD",
+   * darf das Hitzemanagement nicht gut nennen. Die Obergrenzen stehen in
+   * spec.json und werden hier angewendet — sichtbar, damit im Report steht,
+   * warum eine Zahl kleiner ausfaellt als vom Modell gemeldet.
+   */
+  function plausibilitaetAnwenden(scores, daten) {
+    const grenzen = spec.plausibilitaet;
+    const kappungen = [];
+
+    const kappen = (kategorie, hoechstens, grund) => {
+      if (!(kategorie in scores) || scores[kategorie] <= hoechstens) return;
+      kappungen.push({ kategorie, von: scores[kategorie], auf: hoechstens, grund });
+      scores[kategorie] = hoechstens;
+    };
+
+    daten.probleme.forEach((problem) => {
+      if (problem.severity === 'critical') {
+        kappen(problem.kategorie, grenzen.kappe_kritisch, `kritisch gemeldet: ${problem.titel}`);
+      } else if (problem.severity === 'high') {
+        kappen(problem.kategorie, grenzen.kappe_hoch, `schwerwiegend gemeldet: ${problem.titel}`);
+      }
+    });
+
+    if (daten.tabak.randkontakt) {
+      kappen('fuellhoehe', grenzen.kappe_randkontakt, 'Tabak beruehrt den Rand');
+    }
+    // Ueber den Rand gebaut ist nur mit HMD sinnvoll, sonst brennt es an der Folie an.
+    if (daten.tabak.ueber_rand && !daten.hmd.erkannt) {
+      kappen('fuellhoehe', grenzen.kappe_ueber_rand, 'Tabak steht ueber dem Rand, ohne HMD');
+    }
+    if (daten.hmd.kontakt_tabak === true) {
+      kappen('hitzemanagement', grenzen.kappe_hmd_kontakt, 'Tabak beruehrt das HMD');
+    }
+    if (daten.airflow.blockade_risiko === 'high') {
+      kappen('airflow', grenzen.kappe_airflow_hoch, 'hohes Blockaderisiko');
+    }
+    if (daten.airflow.zentrale_oeffnung_frei === false) {
+      kappen('airflow', grenzen.kappe_oeffnung_verdeckt, 'zentrale Oeffnung verdeckt');
+    }
+
+    return kappungen;
   }
 
   const bildqualitaet = (roh) => ({
@@ -714,7 +781,45 @@ const Engine = (() => {
       this.letzte = eintrag;
       this.verlauf.push(eintrag);
       if (this.verlauf.length > 12) this.verlauf = this.verlauf.slice(-12);
+
+      // Erst nach dem Einsortieren, damit das eigene Ergebnis mitzaehlt.
+      eintrag.konsens = this.konsens();
       return eintrag;
+    }
+
+    /* Urteil ueber mehrere Bilder statt ueber eines.
+     *
+     * Ein Einzelbild schwankt: eine Spiegelung, ein anderer Winkel, und das
+     * Modell liegt fuenf Punkte daneben. Der Median der letzten Bilder ist
+     * belastbarer und springt nicht bei jedem Frame. Bilder, die als vorlaeufig
+     * markiert sind (unscharf, dunkel, unsicher), zaehlen nicht mit.
+     */
+    konsens() {
+      const fenster = spec.plausibilitaet.konsens_bilder;
+      const werte = this.verlauf
+        .filter((e) => e.analysis_status === 'ok' && !e.vorlaeufig && e.gesamtscore !== null)
+        .slice(-fenster)
+        .map((e) => e.gesamtscore);
+
+      if (!werte.length) return null;
+
+      const sortiert = [...werte].sort((a, b) => a - b);
+      const mitte = Math.floor(sortiert.length / 2);
+      const median = sortiert.length % 2
+        ? sortiert[mitte]
+        : Math.round((sortiert[mitte - 1] + sortiert[mitte]) / 2);
+      const spanne = sortiert[sortiert.length - 1] - sortiert[0];
+
+      return {
+        score: median,
+        stufe_text: stufe(median).text,
+        bilder: werte.length,
+        spanne,
+        // Wenig Streuung heisst: das Urteil traegt.
+        stabil: werte.length >= 3 && spanne <= spec.plausibilitaet.konsens_spanne,
+        // Positiv = es wird besser.
+        trend: werte.length >= 2 ? werte[werte.length - 1] - werte[0] : 0,
+      };
     }
 
     phaseErledigt(ergebnis) {
@@ -747,6 +852,9 @@ const Engine = (() => {
         if (eintrag.tabak.dichte) teile.push(`Dichte ${eintrag.tabak.dichte}`);
         const probleme = eintrag.probleme.map((p) => p.titel);
         if (probleme.length) teile.push(`Probleme: ${probleme.join(', ')}`);
+        if (eintrag.kappungen && eintrag.kappungen.length) {
+          teile.push(`von der App heruntergestuft: ${eintrag.kappungen.map((k) => k.grund).join(', ')}`);
+        }
         if (eintrag.coach_satz) teile.push(`gesagt: "${eintrag.coach_satz}"`);
         zeilenListe.push(`- ${teile.join('; ')}`);
       });
@@ -784,9 +892,36 @@ const Engine = (() => {
   }
 
   // ------------------------------------------------------------------------
+  // Sprachbefehle
+  // ------------------------------------------------------------------------
+
+  /* Ordnet gesprochenen Text einem Befehl zu.
+   *
+   * Die Spracherkennung liefert selten exakt das erwartete Wort — sie hoert
+   * "weiter machen bitte" statt "weiter". Deshalb wird auf Enthaltensein
+   * geprueft und der laengste Treffer gewinnt, damit "kamera an" nicht von "an"
+   * geschlagen wird.
+   */
+  function befehlErkennen(gesagt) {
+    const text = String(gesagt || '').toLowerCase().trim();
+    if (!text) return null;
+
+    let treffer = null;
+    Object.entries(spec.sprachbefehle || {}).forEach(([befehl, woerter]) => {
+      woerter.forEach((wort) => {
+        if (text.includes(wort) && (!treffer || wort.length > treffer.wort.length)) {
+          treffer = { befehl, wort };
+        }
+      });
+    });
+    return treffer ? treffer.befehl : null;
+  }
+
+  // ------------------------------------------------------------------------
 
   return {
     specLaden,
+    befehlErkennen,
     get spec() { return spec; },
     einstellungen,
     einstellungenSpeichern,
