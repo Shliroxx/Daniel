@@ -1,17 +1,26 @@
 # Veroeffentlicht den Hookah-Analyzer als Webseite auf GitHub Pages.
 #
 # Damit hat die App eine feste Adresse und laeuft auf dem Handy, ohne dass der
-# PC an sein muss. Einmalig einschalten: Repository -> Settings -> Pages ->
-# Source: "GitHub Actions".
+# PC an sein muss.
 #
-# Der Ordner web/shisha wird unveraendert veroeffentlicht — es gibt keinen
-# Bauschritt und keine Abhaengigkeiten.
+# Einmalig einschalten: Repository -> Settings -> Pages -> Source: "GitHub Actions".
+# Achtung: fuer private Repositories braucht GitHub Pages einen bezahlten Tarif.
+# Ohne den nimmst du Cloudflare Pages — Anleitung steht in der README.
+#
+# Der Ordner web/shisha wird unveraendert veroeffentlicht: kein Bauschritt,
+# keine Abhaengigkeiten.
 
 name: Analyzer veroeffentlichen
 
 on:
   push:
-    branches: [main, master]
+    # Standard-Branch dieses Projekts plus die ueblichen Namen, falls er sich
+    # mal aendert. Zusaetzlich laesst er sich in der Actions-Oberflaeche von
+    # Hand starten.
+    branches:
+      - 'claude/jarvis-ki-tiktok-z4ew8c'
+      - main
+      - master
     paths:
       - 'web/shisha/**'
       - '.github/workflows/analyzer-pages.yml'

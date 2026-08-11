@@ -374,9 +374,15 @@ kostenlos und dauerhaft:
    speichern.
 5. **Kamera starten** — Zugriff erlauben. Fertig.
 
-> Bei einem privaten Repository braucht GitHub Pages einen bezahlten Tarif. Dann
-> tut es **Cloudflare Pages** oder **Netlify** genauso: kostenloses Konto, Repo
-> verbinden, als Ausgabeordner `web/shisha` angeben, kein Build-Befehl.
+> GitHub Pages setzt voraus, dass das Repository **öffentlich** ist — für private
+> Repos braucht es einen bezahlten Tarif. Soll das Repo privat bleiben, tut es
+> **Cloudflare Pages** oder **Netlify** genauso: kostenloses Konto, Repo verbinden,
+> als Ausgabeordner `web/shisha` angeben, kein Build-Befehl.
+>
+> Öffentlich heißt: der Code ist lesbar, nicht deine Zugänge. Die `.env` ist von
+> `.gitignore` ausgeschlossen und war nie im Repository. Auch die veröffentlichte
+> App enthält keinen Schlüssel — den trägt jeder Nutzer auf seinem eigenen Gerät
+> ein, sonst tut sie nichts.
 
 Ab dann läuft die App auch unterwegs — Mobilfunk reicht, der Rechner kann aus sein.
 Der Rahmen der App liegt im Cache, sie startet also auch ohne Netz; für die Analyse
