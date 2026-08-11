@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Hookah Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#04080d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Analyzer" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="ar.css" />
+</head>
+<body>
+
+<!-- Livebild und AR-Overlay ------------------------------------------- -->
+<div class="buehne">
+  <video id="kamera" playsinline muted autoplay></video>
+  <canvas id="overlay"></canvas>
+  <div class="vignette"></div>
+</div>
+
+<!-- Startbildschirm ---------------------------------------------------- -->
+<section id="start" class="blende">
+  <div class="blende-inner">
+    <svg class="mark" viewBox="0 0 512 512" aria-hidden="true">
+      <circle cx="256" cy="256" r="150" fill="none" stroke="#2b8fae" stroke-width="6"/>
+      <circle cx="256" cy="256" r="112" fill="none" stroke="#5fe3ff" stroke-width="4" stroke-dasharray="14 10"/>
+      <circle cx="256" cy="256" r="74" fill="none" stroke="#5fe3ff" stroke-width="6"/>
+      <circle cx="256" cy="256" r="30" fill="#5fe3ff"/>
+    </svg>
+    <h1>Hookah Analyzer</h1>
+    <p class="unterzeile">
+      Kamera von oben auf den Kopf. Ich sage dir laufend, was zu tun ist —
+      und bewerte am Ende nach sieben Kriterien.
+    </p>
+
+    <div class="feld">
+      <span class="feld-titel">Ziel der Session</span>
+      <div class="chips" id="zielwahl"></div>
+    </div>
+
+    <details class="angaben">
+      <summary>Angaben zum Aufbau <small>(macht die Analyse deutlich genauer)</small></summary>
+      <div class="angaben-gitter">
+        <label>Kopfmodell<input id="fKopf" type="text" placeholder="z. B. Oblako Phunnel M" /></label>
+        <label>Tabakmarke<input id="fMarke" type="text" placeholder="z. B. Adalya" /></label>
+        <label>Sorte<input id="fSorte" type="text" placeholder="z. B. Love 66" /></label>
+        <label>HMD<input id="fHmd" type="text" placeholder="z. B. Kaloud Lotus / Folie" /></label>
+        <label>Kohlen<input id="fKohlen" type="text" placeholder="z. B. 3 × 26er" /></label>
+        <label>Anmerkung<input id="fNotiz" type="text" placeholder="z. B. Tabak sehr feucht" /></label>
+      </div>
+    </details>
+
+    <button id="losButton" class="gross" disabled>Kamera starten</button>
+    <button id="zugangButton" class="flach">Modell und Zugang</button>
+    <p id="startFehler" class="fehler"></p>
+    <p class="fuss" id="startInfo">Regelwerk wird geladen …</p>
+  </div>
+</section>
+
+<!-- Kopfzeile ----------------------------------------------------------- -->
+<header class="oben" id="oben" hidden>
+  <div class="phasen" id="phasen"></div>
+  <div class="balken"><div class="balken-fuell" id="fortschritt"></div></div>
+  <div class="oben-zeile">
+    <span class="marke" id="kopfInfo">Kopf wird gesucht</span>
+    <span class="marke" id="lage">bereit</span>
+    <span class="marke score" id="liveScore" hidden>–</span>
+  </div>
+</header>
+
+<!-- Fusszeile ----------------------------------------------------------- -->
+<footer class="unten" id="unten" hidden>
+  <div class="karte">
+    <div class="coach" id="coach">Halt die Kamera von oben ueber den Kopf.</div>
+    <ol class="schritte" id="schritte"></ol>
+    <div class="probleme" id="probleme"></div>
+    <div class="frage" id="rueckfrage" hidden></div>
+    <div class="messwerte" id="messwerte"></div>
+  </div>
+  <div class="knopfreihe">
+    <button id="tonButton" class="rund" title="Sprachausgabe">🔊</button>
+    <button id="weiterButton" class="klein">Phase weiter</button>
+    <button id="analyseButton" class="haupt">Vollanalyse</button>
+    <button id="neuButton" class="rund" title="Neu anfangen">↺</button>
+  </div>
+</footer>
+
+<!-- Modell und Zugang ------------------------------------------------- -->
+<section id="einstellungen" class="blatt" hidden>
+  <div class="blatt-inner schmal">
+    <h2>Modell und Zugang</h2>
+    <p class="unterzeile">
+      Die Bilder gehen direkt von diesem Gerät zum Modell. Der Schlüssel bleibt
+      hier gespeichert und wird nirgends sonst hingeschickt.
+    </p>
+
+    <div class="feld">
+      <span class="feld-titel">Anbieter</span>
+      <div class="chips" id="anbieterwahl">
+        <button class="chip aktiv" data-anbieter="gemini">Google Gemini</button>
+        <button class="chip" data-anbieter="openrouter">OpenRouter</button>
+        <button class="chip" data-anbieter="server">eigener Rechner</button>
+      </div>
+    </div>
+
+    <div id="block-gemini" class="anbieter-block">
+      <p class="hinweis-text">
+        Kostenloses Freikontingent. Schlüssel holen auf
+        <b>aistudio.google.com</b> → „Get API key“. Kreditkarte nicht nötig.
+      </p>
+      <label class="langfeld">API-Schlüssel
+        <input id="fGeminiKey" type="password" autocomplete="off" placeholder="AIza…" />
+      </label>
+      <label class="langfeld">Modell
+        <input id="fGeminiModell" type="text" autocomplete="off" placeholder="gemini-2.5-flash" />
+      </label>
+    </div>
+
+    <div id="block-openrouter" class="anbieter-block" hidden>
+      <p class="hinweis-text">
+        Sammelstelle für viele Modelle, darunter kostenlose mit <b>:free</b> am Ende.
+        Schlüssel holen auf <b>openrouter.ai</b> → Keys.
+      </p>
+      <label class="langfeld">API-Schlüssel
+        <input id="fOrKey" type="password" autocomplete="off" placeholder="sk-or-…" />
+      </label>
+      <label class="langfeld">Modell
+        <input id="fOrModell" type="text" autocomplete="off" placeholder="…:free" />
+      </label>
+    </div>
+
+    <div id="block-server" class="anbieter-block" hidden>
+      <p class="hinweis-text">
+        Läuft über Jarvis auf deinem PC und damit über dein Claude-Abo — dafür muss
+        der Rechner an sein. Leer lassen, wenn die App vom PC selbst kommt.
+      </p>
+      <label class="langfeld">Adresse
+        <input id="fServerUrl" type="text" autocomplete="off" placeholder="https://192.168.1.42:8443" />
+      </label>
+    </div>
+
+    <div class="blatt-knoepfe">
+      <button id="zugangAbbruch" class="klein">Abbrechen</button>
+      <button id="zugangSpeichern" class="haupt">Speichern</button>
+    </div>
+  </div>
+</section>
+
+<!-- Vollanalyse --------------------------------------------------------- -->
+<section id="report" class="blatt" hidden>
+  <div class="blatt-inner">
+    <div class="report-kopf">
+      <div class="note-ring">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" class="note-bg" />
+          <circle cx="60" cy="60" r="52" class="note-wert" id="noteKreis" />
+        </svg>
+        <div class="note-zahl"><span id="noteZahl">–</span><small>von 100</small></div>
+      </div>
+      <div class="report-kopf-text">
+        <h2 id="stufeText">Analyse</h2>
+        <p id="erkanntes"></p>
+        <p class="prognose-zeile" id="prognoseZeile"></p>
+      </div>
+    </div>
+
+    <div class="frage" id="reportFrage" hidden></div>
+
+    <h3>Bewertung</h3>
+    <div class="kategorien" id="kategorien"></div>
+
+    <h3>Erkannte Probleme</h3>
+    <ul class="problemliste" id="problemliste"></ul>
+
+    <h3>So verbesserst du den Kopf</h3>
+    <ol class="planliste" id="planliste"></ol>
+
+    <h3>Erwartetes Ergebnis</h3>
+    <div class="erwartung" id="erwartung"></div>
+
+    <h3>Analyse-Sicherheit</h3>
+    <div class="konfidenz" id="konfidenz"></div>
+
+    <div class="blatt-knoepfe">
+      <button id="zurueckButton" class="klein">Weiter bauen</button>
+      <button id="feedbackButton" class="klein">Session bewerten</button>
+      <button id="nochmalButton" class="haupt">Neuer Kopf</button>
+    </div>
+  </div>
+</section>
+
+<!-- Session-Feedback ---------------------------------------------------- -->
+<section id="feedback" class="blatt" hidden>
+  <div class="blatt-inner schmal">
+    <h2>Wie war die Session?</h2>
+    <p class="unterzeile">Damit lernt die naechste Empfehlung dazu.</p>
+
+    <div class="skala" data-feld="geschmack"><span>Geschmack</span><div class="skala-knoepfe"></div></div>
+    <div class="skala" data-feld="rauch"><span>Rauch</span><div class="skala-knoepfe"></div></div>
+    <div class="skala" data-feld="kratzen"><span>Kratzen</span><div class="skala-knoepfe"></div></div>
+    <div class="skala" data-feld="hitze"><span>Hitze</span><div class="skala-knoepfe"></div></div>
+
+    <label class="langfeld">Dauer in Minuten
+      <input id="fDauer" type="number" inputmode="numeric" min="0" max="600" placeholder="z. B. 75" />
+    </label>
+    <label class="langfeld">Anmerkung
+      <input id="fFeedbackNotiz" type="text" placeholder="z. B. hat nach 40 Minuten gekratzt" />
+    </label>
+
+    <p class="fuss" id="treffsicherheit"></p>
+    <div class="blatt-knoepfe">
+      <button id="feedbackAbbruch" class="klein">Abbrechen</button>
+      <button id="feedbackSenden" class="haupt">Speichern</button>
+    </div>
+  </div>
+</section>
+
+<script src="engine.js"></script>
+<script src="ar.js"></script>
+</body>
+</html>

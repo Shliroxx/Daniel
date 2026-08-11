@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import logging
+import os
 from collections import OrderedDict
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -220,6 +221,11 @@ async def _preload(name: str, loader) -> None:
 async def lifespan(app: FastAPI):
     jarvis.loop = asyncio.get_running_loop()
 
+    # Prozessnummer ablegen — daran erkennt die Verknuepfung "Jarvis beenden",
+    # welchen Prozess sie beenden soll, und der Starter sieht, ob er schon laeuft.
+    pid_datei = config.data_dir / "jarvis.pid"
+    pid_datei.write_text(str(os.getpid()), encoding="utf-8")
+
     # Modelle im Hintergrund vorladen, damit die erste Frage nicht haengt.
     # Fehlt ein Sprachpaket, laeuft Jarvis trotzdem — nur eben ohne Stimme.
     asyncio.create_task(_preload("Whisper", stt.get_model))
@@ -245,14 +251,35 @@ async def lifespan(app: FastAPI):
         log.warning("Vault '%s' nicht gefunden — nutze lokale Dateien.", config.vault)
 
     log.info("HUD erreichbar unter http://localhost:%s", config.port)
-    yield
-    jarvis.stop_microphone()
+    if config.shisha_enabled:
+        log.info("Shisha-Coach unter http://localhost:%s/shisha", config.port)
+    try:
+        yield
+    finally:
+        jarvis.stop_microphone()
+        pid_datei.unlink(missing_ok=True)
 
 
 app = FastAPI(title="Jarvis", lifespan=lifespan)
 
 if WEB_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(WEB_DIR)), name="static")
+
+# Hookah-Analyzer unter /shisha — laeuft unabhaengig vom Rest.
+if config.shisha_enabled:
+    try:
+        from shisha.server import WEB_DIR as SHISHA_WEB_DIR, router as shisha_router
+
+        app.include_router(shisha_router)
+        if SHISHA_WEB_DIR.exists():
+            # Nach dem Router einhaengen, damit /shisha die Oberflaeche bleibt.
+            app.mount(
+                "/shisha",
+                StaticFiles(directory=str(SHISHA_WEB_DIR), html=True),
+                name="shisha-web",
+            )
+    except Exception as exc:  # der Analyzer darf Jarvis nicht mit runterreissen
+        log.warning("Hookah-Analyzer nicht geladen: %s", exc)
 
 
 # --------------------------------------------------------------------------

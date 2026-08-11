@@ -31,6 +31,7 @@ statt über bezahlte API-Tokens.
 | **Web** | Websuche und Seitenabruf |
 | **Nachts** | Arbeitet eine Auftragsliste ab, während du schläfst — mit Wiederholung bei erschöpftem Kontingent |
 | **Brainstorming** | Sparringspartner mit eigener Meinung, kein Ja-Sager |
+| **Hookah Analyzer** | Eigene Kamera-App fürs iPhone: bewertet den Kopf live, markiert im Bild was weg muss und was fehlt — läuft ohne PC |
 
 ---
 
@@ -51,12 +52,26 @@ statt über bezahlte API-Tokens.
 > Kein Claude-Abo? Setz in der `.env` `JARVIS_BACKEND=api` und trag einen
 > `ANTHROPIC_API_KEY` ein. Dann läuft alles über die API und kostet pro Token.
 
-### 2. Starten
+### 2. Einrichten — einmalig
 
-Doppelklick auf **`start.bat`** (Windows) bzw. `./start.sh` (macOS/Linux).
+Doppelklick auf **`Jarvis einrichten.bat`** (Windows).
 
-Beim ersten Mal wird alles installiert und eine `.env` angelegt. Schau kurz rein —
-vor allem `JARVIS_VAULT` sollte auf deinen Obsidian-Ordner zeigen.
+Das installiert alles, legt die `.env` an und packt zwei Symbole auf den Desktop:
+**Jarvis** und **Jarvis beenden**. Auf Wunsch startet er künftig automatisch beim
+Anmelden. Schau danach kurz in die `.env` — vor allem `JARVIS_VAULT` sollte auf
+deinen Obsidian-Ordner zeigen.
+
+Auf macOS/Linux: einmal `./start.sh`. Danach lässt sich `scripts/jarvis.command`
+ins Dock legen.
+
+### 3. Starten
+
+Doppelklick auf das **Jarvis**-Symbol auf dem Desktop. Kein Konsolenfenster, kein
+Server von Hand — der Dienst läuft im Hintergrund und das HUD geht im Browser auf.
+Läuft er schon, holt das Symbol nur das HUD nach vorn.
+
+Zum Beenden das Symbol **Jarvis beenden**. Wer lieber im Terminal arbeitet,
+benutzt weiterhin `start.bat` bzw. `./start.sh`.
 
 Beim ersten Start lädt Jarvis Whisper, das Wake-Word-Modell und die deutsche
 Piper-Stimme herunter (einmalig, ca. 1 GB).
@@ -267,6 +282,153 @@ Jarvis hat echten Zugriff auf deinen Rechner. Deshalb:
 
 ---
 
+## Hookah Analyzer — der AR-Kopfbauer fürs iPhone
+
+Ein Kamera-Coach, der dir beim Kopfbauen über die Schulter schaut. Er liegt als
+App auf deinem Homescreen und läuft **ohne deinen PC** — die Analyse geht direkt
+vom Handy an ein Bildmodell.
+
+```
+iPhone-Kamera ─▶ ruhig & scharf? ─▶ Bildmodell (frei wählbar) ─▶ JSON
+                       │                                          │
+                       └──── AR-Overlay, Sprache, Note ◀──────────┘
+```
+
+Das Gehirn steckt in der App selbst: Prompt bauen, Antwort prüfen, Note rechnen —
+alles im Browser. Der Rechner wird nur gebraucht, wenn du die Analyse bewusst über
+dein Claude-Abo laufen lassen willst.
+
+### Was er macht
+
+- **Live-Coaching** während des Bauens: ein gesprochener Satz plus die nächsten
+  Handgriffe, phasenweise von „Kopf prüfen" bis „Kohle auflegen".
+- **AR-Markierungen** direkt im Kamerabild: Rot heißt hier Tabak weg, Gelb
+  auflockern, Blau ist die empfohlene Füllhöhe, Grün passt schon.
+- **Vollanalyse** auf Knopfdruck: Note von 0 bis 100, sieben Einzelkategorien,
+  Probleme nach Schweregrad, nummerierter Optimierungsplan und eine Schätzung,
+  wie gut der Kopf nach der Korrektur wird.
+- **Lernen aus Sessions**: Nach dem Rauchen sagst du, wie es lief (Geschmack,
+  Rauch, Kratzen, Hitze, Dauer). Das fließt in die nächsten Empfehlungen ein, und
+  die App zeigt, wie treffsicher ihre Vorhersagen bisher waren.
+
+### Welches Modell — und was es kostet
+
+In der App unter **Modell und Zugang**:
+
+| Anbieter | Kosten | Anmerkung |
+|---|---|---|
+| **Google Gemini** | kostenloses Freikontingent | Schlüssel auf `aistudio.google.com` → „Get API key". Keine Kreditkarte. Empfehlung. |
+| **OpenRouter** | kostenlose Modelle mit `:free` | Schlüssel auf `openrouter.ai`. Auswahl wechselt öfter — Modellname ist frei eintippbar. |
+| **eigener Rechner** | dein Claude-Abo | Beste Qualität, aber der PC muss laufen. |
+
+Der Schlüssel bleibt auf dem Handy (`localStorage`) und geht nur an den gewählten
+Anbieter. Er landet nie in diesem Projekt und nirgendwo sonst.
+
+Bei kostenlosen Modellen ist ein **Limit pro Minute und pro Tag** normal. Wenn es
+greift, steht in der App „Freikontingent gerade erschöpft" — dann kurz warten.
+Bilder gehen auf 896 Pixel Kantenlänge verkleinert raus, das schont das Kontingent.
+
+### Wie bewertet wird
+
+Die Note ist keine Bauchentscheidung des Modells — die App rechnet sie fest aus
+sieben gewichteten Kategorien:
+
+| Kategorie | Gewicht | Was zählt |
+|---|---|---|
+| Tabakverteilung | 20 % | Gleichmäßigkeit, Dichte, Klumpen, Lücken |
+| Hitzemanagement | 20 % | HMD- und Kohleposition, Kontakt, Hotspots |
+| Füllhöhe | 15 % | Höhe, Abstand zum HMD, Über-/Unterfüllung |
+| Airflow | 15 % | freie Luftwege, zentrale Öffnung, Blockaden |
+| Kopfgeometrie | 10 % | passt der Aufbau zur Kopfform |
+| Tabakkompatibilität | 10 % | passt die Packweise zur Tabakart |
+| Zielerreichung | 10 % | passt der Aufbau zu deinem Ziel |
+
+Das Modell darf die Gesamtnote nicht selbst setzen — damit dasselbe Bild
+reproduzierbar dieselbe Note bekommt, egal welcher Anbieter antwortet. Ebenso wird
+nachgeprüft: unbekannte Aktionen werden ersetzt, Markierungen außerhalb des Bildes
+fliegen raus, eine Prognose darf nie schlechter sein als der Ist-Stand, und ohne
+erkennbaren Kopf gibt es gar keine Note statt einer erfundenen.
+
+Jede Angabe ist als **gesehen**, **geschätzt** oder **unsicher** gekennzeichnet.
+Die Tabakmenge in Gramm ist aus einem Foto nicht bestimmbar — sie wird deshalb nie
+als Tatsache behauptet.
+
+### Ziele und Angaben
+
+Vor dem Start wählst du ein Ziel: **ausgewogen**, **Geschmack**, **Rauch** oder
+**lange Session**. Danach wird bewertet. Wenn du Kopfmodell, Tabak, HMD und
+Kohlenanzahl angibst, wird die Analyse deutlich genauer — fehlt etwas Wichtiges,
+fragt die App gezielt nach einer einzigen Angabe. Die Angaben merkt sie sich.
+
+### Aufs iPhone bringen
+
+Die App braucht eine feste Adresse mit HTTPS. Der einfachste Weg ist GitHub Pages,
+kostenlos und dauerhaft:
+
+1. Im Repository: **Settings → Pages → Source: GitHub Actions**.
+2. Auf `main` pushen. Der Workflow `.github/workflows/analyzer-pages.yml`
+   veröffentlicht den Ordner `web/shisha`. Die Adresse steht danach unter Settings
+   → Pages, in der Form `https://<name>.github.io/<repo>/`.
+3. Adresse am iPhone in Safari öffnen → **Teilen → Zum Home-Bildschirm**.
+4. App öffnen → **Modell und Zugang** → Anbieter wählen, Schlüssel einfügen,
+   speichern.
+5. **Kamera starten** — Zugriff erlauben. Fertig.
+
+> GitHub Pages setzt voraus, dass das Repository **öffentlich** ist — für private
+> Repos braucht es einen bezahlten Tarif. Soll das Repo privat bleiben, tut es
+> **Cloudflare Pages** oder **Netlify** genauso: kostenloses Konto, Repo verbinden,
+> als Ausgabeordner `web/shisha` angeben, kein Build-Befehl.
+>
+> Öffentlich heißt: der Code ist lesbar, nicht deine Zugänge. Die `.env` ist von
+> `.gitignore` ausgeschlossen und war nie im Repository. Auch die veröffentlichte
+> App enthält keinen Schlüssel — den trägt jeder Nutzer auf seinem eigenen Gerät
+> ein, sonst tut sie nichts.
+
+Ab dann läuft die App auch unterwegs — Mobilfunk reicht, der Rechner kann aus sein.
+Der Rahmen der App liegt im Cache, sie startet also auch ohne Netz; für die Analyse
+selbst braucht sie natürlich Verbindung.
+
+**Ohne Hoster, nur im Heimnetz:** `start-shisha.bat` bzw. `./start-shisha.sh` auf
+dem Rechner starten und die angezeigte `https://…`-Adresse am iPhone öffnen. Safari
+warnt einmal wegen des selbst ausgestellten Zertifikats — **Details → Diese Website
+besuchen**. Der Rechner muss dabei laufen.
+
+### Bedienung
+
+| Element | Bedeutung |
+|---|---|
+| Leiste oben | Bauphasen — antippen springt direkt dahin |
+| Zahl oben rechts | aktuelle Note, sobald ein Kopf erkannt ist |
+| Kreis im Bild | Zielbereich; halte den Kopf von oben hinein |
+| Kästen im Bild | AR-Markierungen mit Handlungsanweisung |
+| 🔊 | Sprachausgabe an/aus |
+| Phase weiter | nächste Bauphase erzwingen |
+| Vollanalyse | ausführlichen Report mit Optimierungsplan erzeugen |
+| ↺ | neuen Kopf anfangen |
+
+Analysiert wird nur, wenn das Bild ruhig, scharf und hell genug ist — sonst steht
+oben „halt still", „unscharf" oder „zu dunkel" und es wird nichts verschickt. Das
+spart Kontingent und verhindert Fehlurteile aus verwackelten Bildern.
+
+### Regeln ändern
+
+Alles Fachliche steht in **`web/shisha/spec.json`**: Gewichte, Bauphasen,
+Zielprofile, das Wissen über Kopftypen und Tabakphysik, die Prompts. Eine
+Textdatei, eine einzige Quelle — Python und App lesen dieselbe. Ändern, pushen,
+fertig.
+
+### Prüfen, ob alles stimmt
+
+```
+node tests/test_engine.mjs     # Bewertungslogik der App
+python tests/test_shisha.py    # Rückweg über den eigenen Rechner
+```
+
+Beide füttern absichtlich fehlerhafte Modellantworten ein und prüfen, dass sie
+geradegezogen werden.
+
+---
+
 ## Struktur
 
 ```
@@ -286,7 +448,18 @@ jarvis/
   channels/
     whatsapp.py        Meta Cloud API
   tools/               PC-Steuerung, Dateien, Aufgaben, Gedächtnis
+shisha/                Optionaler Rückweg über den PC (Claude-Abo)
+  analyse.py           Bild und Prompt an claude -p oder die API
+  server.py            Proxy und Auslieferung der App
+  zertifikat.py        Selbst ausgestelltes HTTPS-Zertifikat fürs Heimnetz
 web/                   Das HUD
+web/shisha/            Die Kamera-App fürs iPhone
+  spec.json            Regelwerk: Gewichte, Wissen, Prompts (einzige Quelle)
+  engine.js            Prompt bauen, Modell fragen, Antwort prüfen, Note rechnen
+  ar.js                Kamera, AR-Overlay, Bedienung
+  sw.js                hält die App offline startbereit
+scripts/               Startskripte und Desktop-Verknüpfungen
+tests/                 Tests für Engine und Rückweg
 templates/             Vorlagen für Nacht-Aufträge
 ```
 
@@ -315,3 +488,24 @@ Mit NVIDIA-Karte: `JARVIS_WHISPER_DEVICE=cuda`.
 
 **„Er hört sich selbst zu"** — Passiert bei Lautsprechern ohne Echounterdrückung.
 Kopfhörer benutzen, oder `JARVIS_SPEAK_LOCALLY=false`.
+
+**„Kamera startet nicht am iPhone"** — Die Seite muss über `https://` laufen. Über
+`http://` mit IP-Adresse verweigert Safari den Kamerazugriff grundsätzlich.
+
+**„Freikontingent gerade erschöpft"** — Das Limit des kostenlosen Modells greift.
+Kurz warten, oder in den Einstellungen einen anderen Anbieter wählen.
+
+**„Modell nicht gefunden"** — Der Modellname stimmt nicht mehr. Kostenlose Modelle
+werden bei OpenRouter regelmäßig ausgetauscht; auf der Anbieterseite nachsehen und
+den Namen in den Einstellungen korrigieren.
+
+**„Schlüssel wird abgelehnt"** — Schlüssel abgelaufen oder falsch kopiert. Beim
+Einfügen auf Leerzeichen am Anfang und Ende achten.
+
+**„Zertifikat wird nicht akzeptiert"** (nur im Heimnetz-Betrieb) — Fehlt das Paket
+`cryptography`? Dann `pip install cryptography`. Oder gleich über GitHub Pages
+gehen, das bringt ein echtes Zertifikat mit.
+
+**„Er sieht keinen Kopf"** — Von schräg oben in den Kopf halten, sodass die ganze
+Tabakfläche im Bild ist, und für Licht sorgen. Steht oben „Bild zu schlecht",
+liegt es an Schärfe oder Beleuchtung, nicht am Kopf.
