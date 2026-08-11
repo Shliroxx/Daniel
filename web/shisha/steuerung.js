@@ -1,0 +1,172 @@
+/* Steuerlogik — die Entscheidungen, ohne Kamera und ohne Oberflaeche.
+ *
+ * Hier steht, WANN etwas passieren soll: wann ein Bild taugt, wann die Kamera
+ * als eingefroren gilt, was ein Sprachbefehl ausloest, wie weit Marker
+ * mitwandern. Das WIE — Video anfassen, zeichnen, Knoepfe schalten — bleibt in
+ * ar.js.
+ *
+ * Der Grund fuer die Trennung: genau diese Entscheidungen haben in der Praxis
+ * Aerger gemacht (eingefrorene Kamera, Pause zur falschen Zeit), und genau sie
+ * liessen sich vorher nicht testen, weil sie mitten im Kamera-Code steckten.
+ * Als reine Funktionen sind sie in tests/test_steuerung.mjs abgedeckt.
+ */
+
+'use strict';
+
+const Steuerung = (() => {
+
+  // Standardgrenzen. ar.js reicht bei Bedarf eigene herein.
+  const GRENZEN = {
+    ruhe: 7.0,          // mittlere Pixelaenderung zwischen zwei Miniaturen
+    schaerfe: 6.0,      // Kantenstaerke in der Miniatur
+    helligkeit: 34,     // darunter ist es zu dunkel
+    blindMs: 4000,      // so lange darf das Bild stehen, bevor wir pausieren
+    sparUnterschied: 1.2, // darunter gilt das Bild als unveraendert
+    verblassenMs: 6000, // nach dieser Zeit ist ein Marker ganz verblasst
+  };
+
+  /* Taugt dieses Bild fuer eine Analyse?
+   *
+   * Reihenfolge mit Absicht: zu dunkel ist die Ursache, unscharf oft nur die
+   * Folge. Wer zuerst "unscharf" liest, macht mehr Licht nicht an.
+   */
+  function bildBewerten(guete, grenzen = GRENZEN) {
+    if (!guete) return { ok: false, problem: 'kein Bild' };
+    if (guete.helligkeit < grenzen.helligkeit) return { ok: false, problem: 'zu dunkel' };
+    if (guete.bewegung > grenzen.ruhe) return { ok: false, problem: 'halt still' };
+    if (guete.schaerfe < grenzen.schaerfe) return { ok: false, problem: 'unscharf' };
+    return { ok: true, problem: '' };
+  }
+
+  /* Was soll die Analyseschleife als naechstes tun?
+   *
+   * `blindSeit` ist der Zeitpunkt, seit dem kein Bild mehr kommt (0 = laeuft).
+   * Kurze Aussetzer sind normal, deshalb wird erst nach `blindMs` pausiert.
+   */
+  function kameraLage(lage, grenzen = GRENZEN) {
+    const { spurLebt, videoLaeuft, blindSeit = 0, jetzt = Date.now() } = lage;
+
+    if (spurLebt && videoLaeuft) {
+      return { aktion: 'analysieren', blindSeit: 0, grund: '' };
+    }
+
+    const seit = blindSeit || jetzt;
+    if (jetzt - seit > grenzen.blindMs) {
+      return {
+        aktion: 'pausieren',
+        blindSeit: seit,
+        grund: spurLebt ? 'Das Livebild ist eingefroren.' : 'Die Kamera wurde vom System freigegeben.',
+      };
+    }
+    return { aktion: 'warten', blindSeit: seit, grund: '' };
+  }
+
+  /* Was passiert, wenn die App aus dem Hintergrund zurueckkommt?
+   *
+   * Laeuft die Kamera noch, geht es ohne Nachfrage weiter — alles andere waere
+   * eine unnoetige Huerde. Nur wenn sie wirklich weg ist, kommt die Blende.
+   */
+  function rueckkehrPlan(lage) {
+    const { spurLebt, videoLaeuft, pausiert, imHauptmenue, sitzungDa } = lage;
+    if (pausiert || imHauptmenue || !sitzungDa) return { aktion: 'nichts', grund: '' };
+    if (spurLebt && videoLaeuft) return { aktion: 'weiter', grund: '' };
+    return { aktion: 'pausieren', grund: 'Die App war im Hintergrund — die Kamera wurde angehalten.' };
+  }
+
+  /* Lohnt sich fuer dieses Bild ueberhaupt eine Anfrage?
+   *
+   * Im Sparmodus wird nichts verschickt, solange sich seit der letzten Analyse
+   * praktisch nichts geaendert hat. Ein Kopf, der unveraendert vor der Kamera
+   * liegt, bekommt sonst zehnmal dieselbe Bewertung — auf Kosten des
+   * Freikontingents.
+   */
+  function lohntAnalyse(unterschied, sparmodus, grenzen = GRENZEN) {
+    if (!sparmodus) return { lohnt: true, grund: '' };
+    if (unterschied === null || unterschied === undefined) return { lohnt: true, grund: '' };
+    if (unterschied < grenzen.sparUnterschied) {
+      return { lohnt: false, grund: 'unverändert' };
+    }
+    return { lohnt: true, grund: '' };
+  }
+
+  /* Verschiebt einen Marker um die Bildbewegung seit seiner Analyse.
+   *
+   * Die Marker beziehen sich auf das Bild, das analysiert wurde. Bewegt sich
+   * das Handy danach, zeigen sie sonst neben den Kopf. `versatz` ist die
+   * Verschiebung in normalisierten Bildkoordinaten.
+   */
+  function markerVerschieben(marker, versatz) {
+    if (!versatz || (!versatz.x && !versatz.y)) return marker;
+    const klemmen = (wert, breite) => Math.max(0, Math.min(wert, 1 - breite));
+    return {
+      ...marker,
+      x: klemmen(marker.x + versatz.x, marker.w),
+      y: klemmen(marker.y + versatz.y, marker.h),
+    };
+  }
+
+  /* Wie kraeftig wird ein Marker noch gezeichnet?
+   *
+   * Frische Marker sind voll da, aeltere verblassen — so ist auf einen Blick
+   * klar, ob die Markierung noch zum aktuellen Bild passt oder schon steht.
+   */
+  function alterFaktor(alterMs, grenzen = GRENZEN) {
+    if (!(alterMs > 0)) return 1;
+    const rest = 1 - alterMs / grenzen.verblassenMs;
+    return Math.max(0.25, Math.min(1, rest));
+  }
+
+  /* Was loest ein erkannter Sprachbefehl aus?
+   *
+   * Gibt nur die Absicht zurueck; ausgefuehrt wird sie in ar.js. So laesst sich
+   * pruefen, dass "pause" nicht mitten im Hauptmenue etwas anhaelt und
+   * "weitermachen" nur greift, wenn wirklich pausiert ist.
+   */
+  function befehlPlan(befehl, lage = {}) {
+    const { pausiert = false, imHauptmenue = false, laeuft = false } = lage;
+
+    if (imHauptmenue) {
+      // Im Hauptmenue steuert man nichts, was eine laufende Sitzung braucht.
+      return befehl === 'start'
+        ? { aktion: 'kamera_starten' }
+        : { aktion: 'nichts', grund: 'im Hauptmenü' };
+    }
+
+    if (pausiert) {
+      if (befehl === 'start') return { aktion: 'fortsetzen' };
+      if (befehl === 'menue') return { aktion: 'hauptmenue' };
+      return { aktion: 'nichts', grund: 'pausiert' };
+    }
+
+    switch (befehl) {
+      case 'weiter': return { aktion: 'phase_vor', sprich: true };
+      case 'zurueck': return { aktion: 'phase_zurueck', sprich: true };
+      case 'analyse': return laeuft
+        ? { aktion: 'vollanalyse', sprich: true }
+        : { aktion: 'nichts', grund: 'Kamera steht' };
+      case 'neu': return { aktion: 'neue_sitzung', sprich: true };
+      case 'pause': return { aktion: 'pausieren' };
+      case 'menue': return { aktion: 'hauptmenue' };
+      case 'ruhe': return { aktion: 'ton_aus' };
+      case 'sprich': return { aktion: 'ton_an', sprich: true };
+      case 'wiederhole': return { aktion: 'wiederholen' };
+      case 'status': return { aktion: 'status_sagen' };
+      case 'start': return { aktion: 'nichts', grund: 'läuft bereits' };
+      default: return { aktion: 'nichts', grund: 'unbekannt' };
+    }
+  }
+
+  return {
+    GRENZEN,
+    bildBewerten,
+    kameraLage,
+    rueckkehrPlan,
+    lohntAnalyse,
+    markerVerschieben,
+    alterFaktor,
+    befehlPlan,
+  };
+})();
+
+// Fuer den Test unter Node — im Browser gibt es kein module.
+if (typeof module !== 'undefined' && module.exports) module.exports = Steuerung;

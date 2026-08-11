@@ -39,10 +39,7 @@ const KONF_NAMEN = {
 
 const PFEIL = { hoch: '↑', gleich: '→', runter: '↓' };
 
-// Ab diesen Werten gilt das Bild als brauchbar.
-const RUHE_SCHWELLE = 7.0;     // mittlere Pixelaenderung zwischen zwei Miniaturen
-const SCHAERFE_SCHWELLE = 6.0; // Kantenstaerke in der Miniatur
-const HELL_MIN = 34;           // darunter ist es zu dunkel
+// Die Schwellen fuer Ruhe, Schaerfe und Helligkeit stehen in steuerung.js.
 const PAUSE_MS = 900;          // Verschnaufpause zwischen zwei Analysen
 
 const zustand = {
@@ -57,6 +54,10 @@ const zustand = {
   wakeLock: null,
   feedback: {},
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
+  // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
+  versatz: { x: 0, y: 0 },
+  markerZeit: 0,        // wann die aktuellen Marker entstanden sind
+  aufnahmen: [],        // gesammelte Bilder der Mehrfachaufnahme
 };
 
 // --------------------------------------------------------------------------
@@ -73,6 +74,57 @@ mini.width = 64;
 mini.height = 48;
 const miniCtx = mini.getContext('2d', { willReadFrequently: true });
 let letzteMini = null;
+let analyseMini = null;   // die Miniatur des zuletzt analysierten Bildes
+
+/* Schaetzt, wie weit sich das Bild seit dem letzten Frame verschoben hat.
+ *
+ * Simple Suche ueber ein kleines Fenster: die Verschiebung mit der geringsten
+ * Abweichung gewinnt. Auf 64x48 Pixeln kostet das nichts und reicht voellig,
+ * um die AR-Marker mitwandern zu lassen, solange das Handy nur geschwenkt wird.
+ * Bei Drehung oder Abstandsaenderung stimmt es nicht mehr — deshalb verblassen
+ * die Marker zusaetzlich mit der Zeit.
+ */
+const SUCHWEITE = 5;
+
+function versatzSchaetzen(jetzt, vorher) {
+  if (!vorher) return { x: 0, y: 0 };
+
+  let bestesX = 0;
+  let bestesY = 0;
+  let bestes = Infinity;
+
+  for (let dy = -SUCHWEITE; dy <= SUCHWEITE; dy++) {
+    for (let dx = -SUCHWEITE; dx <= SUCHWEITE; dx++) {
+      let summe = 0;
+      let anzahl = 0;
+      // Nur den Bereich vergleichen, den beide Bilder abdecken.
+      for (let y = SUCHWEITE; y < mini.height - SUCHWEITE; y += 2) {
+        const zeileJetzt = y * mini.width;
+        const zeileVorher = (y - dy) * mini.width;
+        for (let x = SUCHWEITE; x < mini.width - SUCHWEITE; x += 2) {
+          summe += Math.abs(jetzt[zeileJetzt + x] - vorher[zeileVorher + x - dx]);
+          anzahl++;
+        }
+      }
+      const mittel = summe / anzahl;
+      if (mittel < bestes) {
+        bestes = mittel;
+        bestesX = dx;
+        bestesY = dy;
+      }
+    }
+  }
+
+  return { x: bestesX / mini.width, y: bestesY / mini.height };
+}
+
+/** Mittlere Abweichung zweier Miniaturen — fuer den Sparmodus. */
+function unterschied(a, b) {
+  if (!a || !b) return null;
+  let summe = 0;
+  for (let i = 0; i < a.length; i++) summe += Math.abs(a[i] - b[i]);
+  return summe / a.length;
+}
 
 // Vollbild fuer die Analyse.
 const shot = document.createElement('canvas');
@@ -188,27 +240,30 @@ document.addEventListener('visibilitychange', async () => {
   }
 
   if (!zustand.wakeLock) bildschirmWachhalten();
-  if (zustand.pausiert || !$('start').hidden) return;
-  if (!zustand.sitzung) return;
 
   // Zurueck aus dem Hintergrund: laeuft die Kamera noch, geht es einfach weiter.
   if (kameraLaeuft()) {
     try {
       await video.play();
-    } catch (_) { /* dann uebernimmt die Blende unten */ }
+    } catch (_) { /* dann entscheidet der Plan unten auf pausieren */ }
   }
 
-  if (kameraLaeuft() && !video.paused) {
-    if (!zustand.laeuft) {
-      zustand.laeuft = true;
-      zustand.blindSeit = 0;
-      setzeLage('live', '');
-      schleife();
-    }
-    return;
-  }
+  const plan = Steuerung.rueckkehrPlan({
+    spurLebt: kameraLaeuft(),
+    videoLaeuft: !video.paused,
+    pausiert: zustand.pausiert,
+    imHauptmenue: !$('start').hidden,
+    sitzungDa: Boolean(zustand.sitzung),
+  });
 
-  pausieren('Die App war im Hintergrund — die Kamera wurde angehalten.');
+  if (plan.aktion === 'weiter' && !zustand.laeuft) {
+    zustand.laeuft = true;
+    zustand.blindSeit = 0;
+    setzeLage('live', '');
+    schleife();
+  } else if (plan.aktion === 'pausieren') {
+    pausieren(plan.grund);
+  }
 });
 
 // --------------------------------------------------------------------------
@@ -228,13 +283,17 @@ function bildGuete() {
     summe += wert;
   }
 
-  let bewegung = 999;
-  if (letzteMini) {
-    let diff = 0;
-    for (let p = 0; p < grau.length; p++) diff += Math.abs(grau[p] - letzteMini[p]);
-    bewegung = diff / grau.length;
+  const bewegung = letzteMini === null ? 999 : unterschied(grau, letzteMini);
+
+  // Verschiebung nur schaetzen, wenn sich ueberhaupt etwas bewegt hat.
+  if (letzteMini && bewegung > 0.6) {
+    const schub = versatzSchaetzen(grau, letzteMini);
+    zustand.versatz.x += schub.x;
+    zustand.versatz.y += schub.y;
   }
+
   letzteMini = grau;
+  zustand.letzteGrau = grau;
 
   let kanten = 0;
   for (let y = 1; y < mini.height - 1; y++) {
@@ -248,15 +307,15 @@ function bildGuete() {
   return { bewegung, schaerfe: kanten / (mini.width * mini.height), helligkeit: summe / grau.length };
 }
 
+/** Wie stark hat sich das Bild seit der letzten Analyse veraendert? */
+function veraenderungSeitAnalyse() {
+  return unterschied(zustand.letzteGrau, analyseMini);
+}
+
 function guetePruefen() {
-  const guete = bildGuete();
-  if (!guete) return false;
-  let problem = '';
-  if (guete.helligkeit < HELL_MIN) problem = 'zu dunkel';
-  else if (guete.bewegung > RUHE_SCHWELLE) problem = 'halt still';
-  else if (guete.schaerfe < SCHAERFE_SCHWELLE) problem = 'unscharf';
-  if (problem) {
-    setzeLage(problem, 'warn');
+  const urteil = Steuerung.bildBewerten(bildGuete());
+  if (!urteil.ok) {
+    if (urteil.problem !== 'kein Bild') setzeLage(urteil.problem, 'warn');
     return false;
   }
   return true;
@@ -274,25 +333,34 @@ function bildAufnehmen(maxKante) {
   return new Promise((fertig) => shot.toBlob(fertig, 'image/jpeg', 0.78));
 }
 
-// Liefert die Kamera so lange kein Bild, ist sie eingefroren statt nur verwackelt.
-const BLIND_GRENZE_MS = 4000;
-
 async function schleife() {
   while (zustand.laeuft) {
-    if (!kameraLaeuft() || video.paused) {
-      // Erst ab ein paar Sekunden meckern — kurze Aussetzer kommen vor.
-      if (!zustand.blindSeit) zustand.blindSeit = Date.now();
-      if (Date.now() - zustand.blindSeit > BLIND_GRENZE_MS) {
-        pausieren('Das Livebild ist eingefroren.');
-        return;
-      }
+    const lage = Steuerung.kameraLage({
+      spurLebt: kameraLaeuft(),
+      videoLaeuft: !video.paused,
+      blindSeit: zustand.blindSeit,
+    });
+    zustand.blindSeit = lage.blindSeit;
+
+    if (lage.aktion === 'pausieren') {
+      pausieren(lage.grund);
+      return;
+    }
+    if (lage.aktion === 'warten') {
       await schlafen(300);
       continue;
     }
-    zustand.blindSeit = 0;
 
     if (zustand.busy || !guetePruefen()) {
       await schlafen(220);
+      continue;
+    }
+
+    // Unveraendertes Bild kostet sonst Kontingent fuer dieselbe Antwort.
+    const sparen = Steuerung.lohntAnalyse(veraenderungSeitAnalyse(), Engine.einstellungen().sparmodus);
+    if (!sparen.lohnt) {
+      setzeLage(sparen.grund, '');
+      await schlafen(600);
       continue;
     }
 
@@ -301,6 +369,8 @@ async function schleife() {
     try {
       // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
       const blob = await bildAufnehmen(896);
+      analyseMini = zustand.letzteGrau;
+      zustand.versatz = { x: 0, y: 0 };
       liveUebernehmen(await zustand.sitzung.analysieren(blob, 'live'));
     } catch (fehler) {
       setzeLage(kurz(fehler.message), 'fehler');
@@ -308,9 +378,26 @@ async function schleife() {
       await schlafen(3000);
     } finally {
       zustand.busy = false;
+      kontingentZeigen();
     }
     await schlafen(PAUSE_MS);
   }
+}
+
+/** Zeigt an, wie viele Anfragen das heutige Freikontingent schon gekostet hat. */
+function kontingentZeigen() {
+  const werte = Engine.verbrauch();
+  const feld = $('kontingent');
+  if (!werte.limit) {
+    feld.hidden = true;
+    return;
+  }
+  feld.hidden = false;
+  feld.textContent = `${werte.anzahl}/${werte.limit}`;
+  feld.className = `marke${werte.erschoepft ? ' fehler' : werte.warnung ? ' warn' : ''}`;
+  feld.title = werte.erschoepft
+    ? 'Tageskontingent aufgebraucht — morgen wieder, oder Anbieter wechseln.'
+    : `heute verbrauchte Anfragen bei ${werte.anbieter}`;
 }
 
 const schlafen = (ms) => new Promise((fertig) => setTimeout(fertig, ms));
@@ -322,6 +409,7 @@ const kurz = (text) => (text || 'Fehler').slice(0, 44);
 
 function liveUebernehmen(analyse) {
   zustand.analyse = analyse;
+  zustand.markerZeit = Date.now();
 
   const ok = analyse.analysis_status === 'ok';
   $('coach').textContent = analyse.coach_satz || (ok ? 'Weiter so.' : 'Kopf ins Bild holen.');
@@ -501,7 +589,11 @@ function zeichnen() {
     return;
   }
 
-  (analyse.ar_marker || []).forEach(zeichneMarker);
+  // Marker wandern mit der Bildbewegung mit und verblassen mit dem Alter.
+  const staerke = Steuerung.alterFaktor(Date.now() - zustand.markerZeit);
+  (analyse.ar_marker || []).forEach((marker) => {
+    zeichneMarker(Steuerung.markerVerschieben(marker, zustand.versatz), staerke);
+  });
   if (analyse.gesamtscore !== null) zeichneScore(breite - 18, hoehe * 0.44, analyse.gesamtscore);
 }
 
@@ -527,7 +619,7 @@ function zeichneSucher(mx, my, radius, aktiv) {
   ctx.restore();
 }
 
-function zeichneMarker(marker) {
+function zeichneMarker(marker, staerke = 1) {
   const farbe = MARKER_FARBE[marker.typ] || MARKER_FARBE.distribute;
   const oben = bildAufBildschirm(marker.x, marker.y);
   const unten = bildAufBildschirm(marker.x + marker.w, marker.y + marker.h);
@@ -548,14 +640,14 @@ function zeichneMarker(marker) {
     ctx.lineTo(unten.x, y);
     ctx.stroke();
     ctx.restore();
-    zeichneEtikett(oben.x + breite / 2, y - 14, marker, farbe);
+    zeichneEtikett(oben.x + breite / 2, y - 14, marker, farbe, staerke);
     return;
   }
 
   const auffaellig = marker.typ !== 'ok';
   ctx.strokeStyle = farbe;
   ctx.lineWidth = auffaellig ? 2.5 : 2;
-  ctx.globalAlpha = auffaellig ? 0.95 : 0.7;
+  ctx.globalAlpha = (auffaellig ? 0.95 : 0.7) * staerke;
   if (auffaellig) {
     ctx.shadowColor = farbe;
     ctx.shadowBlur = 14;
@@ -571,7 +663,7 @@ function zeichneMarker(marker) {
   ctx.fill();
   ctx.restore();
 
-  zeichneEtikett(oben.x + breite / 2, oben.y - 12, marker, farbe);
+  zeichneEtikett(oben.x + breite / 2, oben.y - 12, marker, farbe, staerke);
 }
 
 function rundesRechteck(x, y, breite, hoehe, radius) {
@@ -585,11 +677,12 @@ function rundesRechteck(x, y, breite, hoehe, radius) {
   ctx.closePath();
 }
 
-function zeichneEtikett(x, y, marker, farbe) {
+function zeichneEtikett(x, y, marker, farbe, staerke = 1) {
   const beschriftung = `${MARKER_SYMBOL[marker.typ] || ''} ${marker.label || ''}`.trim();
   if (!beschriftung) return;
 
   ctx.save();
+  ctx.globalAlpha = staerke;
   ctx.font = '600 13px -apple-system, system-ui, sans-serif';
   const breite = ctx.measureText(beschriftung).width + 16;
   const hoehe = 22;
@@ -746,16 +839,23 @@ function hoerenAnzeigen() {
 }
 
 function befehlAusfuehren(befehl, gesagt) {
+  const plan = Steuerung.befehlPlan(befehl, {
+    laeuft: zustand.laeuft,
+    pausiert: zustand.pausiert,
+    imHauptmenue: !$('start').hidden,
+  });
+
+  if (plan.aktion === 'nichts') return;
   vibriere(20);
   $('hoerMarke').textContent = `„${(gesagt || '').trim().slice(0, 24)}"`;
 
-  switch (befehl) {
-    case 'weiter':
+  switch (plan.aktion) {
+    case 'phase_vor':
       zustand.sitzung.weiter();
       fortschrittZeichnen();
       sprich(`Phase ${zustand.sitzung.phaseInfo.name}.`);
       break;
-    case 'zurueck': {
+    case 'phase_zurueck': {
       const phasen = Engine.spec.phasen;
       const index = phasen.findIndex((p) => p.key === zustand.sitzung.phase);
       zustand.sitzung.phaseSetzen(phasen[Math.max(0, index - 1)].key);
@@ -763,34 +863,35 @@ function befehlAusfuehren(befehl, gesagt) {
       sprich(`Zurück zu ${zustand.sitzung.phaseInfo.name}.`);
       break;
     }
-    case 'analyse':
+    case 'vollanalyse':
       sprich('Ich schaue mir den Kopf genau an.');
       vollanalyse();
       break;
-    case 'neu':
+    case 'neue_sitzung':
       sitzungStarten();
       sprich('Neuer Kopf.');
       break;
-    case 'pause':
+    case 'pausieren':
       pausieren('Auf Zuruf angehalten.');
       break;
-    case 'start':
-      if (zustand.pausiert) fortsetzen();
+    case 'fortsetzen':
+    case 'kamera_starten':
+      fortsetzen();
       break;
-    case 'menue':
+    case 'hauptmenue':
       zumHauptmenue();
       break;
-    case 'ruhe':
+    case 'ton_aus':
       zustand.ton = false;
       tonAnzeigen();
       if (window.speechSynthesis) speechSynthesis.cancel();
       break;
-    case 'sprich':
+    case 'ton_an':
       zustand.ton = true;
       tonAnzeigen();
       sprich('Ton ist an.');
       break;
-    case 'wiederhole':
+    case 'wiederholen':
       if (zustand.analyse && zustand.analyse.coach_satz) {
         // Sperre umgehen: hier ist die Wiederholung ausdruecklich gewollt.
         const satz = zustand.analyse.coach_satz;
@@ -800,7 +901,7 @@ function befehlAusfuehren(befehl, gesagt) {
         sprich('Ich habe noch nichts gesagt.');
       }
       break;
-    case 'status': {
+    case 'status_sagen': {
       const konsens = zustand.analyse && zustand.analyse.konsens;
       if (konsens) sprich(`${konsens.score} von 100, ${konsens.stufe_text}.`);
       else sprich('Noch keine Bewertung.');
@@ -878,7 +979,10 @@ function einstellungenFuellen() {
   $('fOrKey').value = e.openrouter_key;
   $('fOrModell').value = e.openrouter_modell;
   $('fServerUrl').value = e.server_url;
+  $('fGegenprobe').value = e.gegenprobe;
+  $('fSparmodus').checked = e.sparmodus;
   anbieterUmschalten(e.anbieter);
+  lernregelnZeigen();
 }
 
 function anbieterUmschalten(anbieter) {
@@ -896,9 +1000,32 @@ function einstellungenSpeichern() {
     openrouter_key: $('fOrKey').value.trim(),
     openrouter_modell: $('fOrModell').value.trim(),
     server_url: $('fServerUrl').value.trim(),
+    gegenprobe: $('fGegenprobe').value,
+    sparmodus: $('fSparmodus').checked,
   });
   $('einstellungen').hidden = true;
   startBereitschaft();
+}
+
+/** Zeigt, was die App aus deinen Rueckmeldungen abgeleitet hat. */
+function lernregelnZeigen() {
+  const box = $('lernregeln');
+  const regeln = Engine.profil.lernregeln();
+  box.innerHTML = '';
+
+  if (!regeln.length) {
+    box.innerHTML = '<p class="hinweis-text">Noch nichts abgeleitet — dafür braucht es mindestens '
+      + `${Engine.spec.lernregeln.ab_sessions} gleichlautende Rückmeldungen nach dem Rauchen.</p>`;
+    return;
+  }
+
+  regeln.forEach((regel) => {
+    const zeile = document.createElement('div');
+    zeile.className = 'lernregel';
+    zeile.innerHTML = `<b>${escape(regel.titel)}</b> <small>${regel.treffer} Sessions</small>`
+      + `<span>${escape(regel.anweisung)}</span>`;
+    box.appendChild(zeile);
+  });
 }
 
 function startBereitschaft() {
@@ -927,7 +1054,21 @@ function kontextLesen() {
     hmd: $('fHmd').value.trim(),
     kohlen: $('fKohlen').value.trim(),
     notiz: $('fNotiz').value.trim(),
+    durchmesser_mm: $('fDurchmesser').value.trim(),
   };
+}
+
+/* Traegt den Durchmesser nach, sobald ein bekannter Kopf eingetippt wird.
+ *
+ * Der Maßstab ist die wichtigste Einzelangabe fuer verlaessliche Millimeter —
+ * aber niemand misst freiwillig nach. Steht der Kopf in der Liste, geht es ohne.
+ */
+function durchmesserVorschlagen() {
+  const treffer = Engine.kopfSuchen($('fKopf').value);
+  if (treffer && !$('fDurchmesser').value.trim()) {
+    $('fDurchmesser').value = String(treffer.durchmesser_mm);
+    $('fDurchmesser').classList.add('vorgeschlagen');
+  }
 }
 
 function sitzungStarten() {
@@ -956,6 +1097,7 @@ function kontextWiederherstellen() {
   $('fSorte').value = gespeichert.tabak_sorte || '';
   $('fHmd').value = gespeichert.hmd || '';
   $('fKohlen').value = gespeichert.kohlen || '';
+  $('fDurchmesser').value = gespeichert.durchmesser_mm || '';
   if (gespeichert.ziel) {
     [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
   }
@@ -965,22 +1107,313 @@ function kontextWiederherstellen() {
 // Vollanalyse
 // --------------------------------------------------------------------------
 
+/* Sammelt Bilder fuer das Endurteil.
+ *
+ * Aus einem Winkel bleibt die hintere Randkante verdeckt — genau dort entsteht
+ * Randanbrand. Deshalb auf Wunsch drei Aufnahmen, zwischen denen der Nutzer den
+ * Kopf dreht. Gewartet wird jeweils, bis das Bild ruhig und scharf ist.
+ */
+const WINKEL_ANSAGE = [
+  'Halt drauf.',
+  'Jetzt den Kopf um ein Drittel drehen.',
+  'Und noch einmal drehen.',
+];
+
+async function warteAufRuhigesBild(hoechstensMs = 8000) {
+  const bis = Date.now() + hoechstensMs;
+  while (Date.now() < bis) {
+    if (kameraLaeuft() && !video.paused && guetePruefen()) return true;
+    await schlafen(180);
+  }
+  return false;   // nach Ablauf nehmen wir das Bild trotzdem
+}
+
+async function bilderSammeln(anzahl) {
+  const bilder = [];
+  for (let nummer = 1; nummer <= anzahl; nummer++) {
+    if (anzahl > 1) {
+      $('aufnahme').hidden = false;
+      $('aufnahmeText').textContent = `Bild ${nummer} von ${anzahl} — ${WINKEL_ANSAGE[nummer - 1] || 'Halt drauf.'}`;
+      sprich(WINKEL_ANSAGE[nummer - 1] || 'Halt drauf.');
+      // Kurz Zeit zum Drehen, bevor wir auf Ruhe warten.
+      if (nummer > 1) await schlafen(1800);
+    }
+    await warteAufRuhigesBild();
+    bilder.push(await bildAufnehmen(1152));
+    vibriere(25);
+  }
+  $('aufnahme').hidden = true;
+  return bilder;
+}
+
 async function vollanalyse() {
   if (zustand.busy) return;
   zustand.busy = true;
   $('analyseButton').disabled = true;
   setzeLage('Vollanalyse', 'denkt');
+
   try {
-    const blob = await bildAufnehmen(1152);
-    reportZeigen(await zustand.sitzung.analysieren(blob, 'voll'));
+    const anzahl = $('fWinkel').checked ? 3 : 1;
+    const bilder = await bilderSammeln(anzahl);
+    setzeLage('bewerte', 'denkt');
+
+    const analyse = await zustand.sitzung.analysieren(bilder, 'voll');
+    reportZeigen(analyse);
+    historieMerken(analyse, bilder[0]);
     setzeLage('live', '');
   } catch (fehler) {
+    $('aufnahme').hidden = true;
     setzeLage(kurz(fehler.message), 'fehler');
     $('coach').textContent = `Analyse fehlgeschlagen: ${fehler.message}`;
   } finally {
     zustand.busy = false;
     $('analyseButton').disabled = false;
+    kontingentZeigen();
   }
+}
+
+// --------------------------------------------------------------------------
+// Historie
+// --------------------------------------------------------------------------
+
+/** Legt das Ergebnis samt kleinem Vorschaubild auf diesem Geraet ab. */
+async function historieMerken(analyse, bild) {
+  try {
+    const eintrag = {
+      zeit: Date.now(),
+      score: analyse.gesamtscore,
+      stufe_text: analyse.stufe_text,
+      scores: analyse.scores,
+      kontext: analyse.kontext,
+      kopf: (analyse.kopf || {}).modell || (analyse.kopf || {}).art || '',
+      vorschau: bild ? await vorschauBauen(bild) : null,
+    };
+    await Engine.historie.speichern(eintrag);
+  } catch (_) {
+    /* ohne Historie laeuft die App genauso — kein Grund zu stoeren */
+  }
+}
+
+/** Schrumpft das Bild auf Daumennagelgroesse, damit die Ablage klein bleibt. */
+function vorschauBauen(blob) {
+  return new Promise((fertig) => {
+    const bild = new Image();
+    const url = URL.createObjectURL(blob);
+    bild.onload = () => {
+      const flaeche = document.createElement('canvas');
+      const kante = 160;
+      const faktor = kante / Math.max(bild.width, bild.height);
+      flaeche.width = Math.round(bild.width * faktor);
+      flaeche.height = Math.round(bild.height * faktor);
+      flaeche.getContext('2d').drawImage(bild, 0, 0, flaeche.width, flaeche.height);
+      URL.revokeObjectURL(url);
+      fertig(flaeche.toDataURL('image/jpeg', 0.6));
+    };
+    bild.onerror = () => { URL.revokeObjectURL(url); fertig(null); };
+    bild.src = url;
+  });
+}
+
+async function historieZeigen() {
+  const liste = $('historieListe');
+  liste.innerHTML = '<li class="leer">wird geladen …</li>';
+  $('historie').hidden = false;
+
+  let eintraege = [];
+  try {
+    eintraege = await Engine.historie.laden(30);
+  } catch (fehler) {
+    liste.innerHTML = `<li class="leer">${escape(fehler.message)}</li>`;
+    return;
+  }
+
+  kurveZeichnen(eintraege);
+
+  if (!eintraege.length) {
+    liste.innerHTML = '<li class="leer">Noch keine bewerteten Köpfe.</li>';
+    return;
+  }
+
+  liste.innerHTML = '';
+  eintraege.forEach((eintrag) => {
+    const zeile = document.createElement('li');
+    const datum = new Date(eintrag.zeit).toLocaleString('de-DE',
+      { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    zeile.innerHTML =
+      (eintrag.vorschau ? `<img src="${eintrag.vorschau}" alt="" />` : '<span class="kein-bild">–</span>')
+      + `<span class="historie-text"><b>${eintrag.score === null ? '–' : eintrag.score}/100</b>`
+      + ` ${escape(eintrag.stufe_text || '')}<small>${datum}`
+      + `${eintrag.kopf ? ' · ' + escape(eintrag.kopf) : ''}</small></span>`;
+    liste.appendChild(zeile);
+  });
+}
+
+/* Zeichnet den Notenverlauf als schlichte Linie.
+ *
+ * Alt links, neu rechts — so liest sich Fortschritt in der gewohnten Richtung.
+ */
+function kurveZeichnen(eintraege) {
+  const flaeche = $('kurve');
+  const zeichner = flaeche.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  flaeche.width = flaeche.clientWidth * dpr;
+  flaeche.height = flaeche.clientHeight * dpr;
+  zeichner.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const breite = flaeche.clientWidth;
+  const hoehe = flaeche.clientHeight;
+  zeichner.clearRect(0, 0, breite, hoehe);
+
+  const werte = eintraege.filter((e) => typeof e.score === 'number').map((e) => e.score).reverse();
+  if (werte.length < 2) {
+    zeichner.fillStyle = 'rgba(125, 149, 163, 0.8)';
+    zeichner.font = '13px -apple-system, system-ui, sans-serif';
+    zeichner.textAlign = 'center';
+    zeichner.fillText('Ab zwei Köpfen zeigt sich hier dein Verlauf.', breite / 2, hoehe / 2);
+    return;
+  }
+
+  const rand = 14;
+  const x = (i) => rand + (i / (werte.length - 1)) * (breite - rand * 2);
+  const y = (wert) => hoehe - rand - (wert / 100) * (hoehe - rand * 2);
+
+  // Zielmarke bei 85 — ab da ist ein Kopf richtig gut.
+  zeichner.strokeStyle = 'rgba(87, 227, 154, 0.28)';
+  zeichner.setLineDash([5, 5]);
+  zeichner.beginPath();
+  zeichner.moveTo(rand, y(85));
+  zeichner.lineTo(breite - rand, y(85));
+  zeichner.stroke();
+  zeichner.setLineDash([]);
+
+  zeichner.strokeStyle = '#5fe3ff';
+  zeichner.lineWidth = 2;
+  zeichner.lineJoin = 'round';
+  zeichner.beginPath();
+  werte.forEach((wert, i) => (i ? zeichner.lineTo(x(i), y(wert)) : zeichner.moveTo(x(i), y(wert))));
+  zeichner.stroke();
+
+  werte.forEach((wert, i) => {
+    zeichner.fillStyle = noteFarbe(wert);
+    zeichner.beginPath();
+    zeichner.arc(x(i), y(wert), 3.5, 0, Math.PI * 2);
+    zeichner.fill();
+  });
+}
+
+// --------------------------------------------------------------------------
+// Report als Bild teilen
+// --------------------------------------------------------------------------
+
+/* Malt den Report auf eine Leinwand und schiebt ihn ins Teilen-Menue.
+ *
+ * Bewusst von Hand gezeichnet statt aus dem HTML geschnitten: so passt das Bild
+ * ins Hochformat und enthaelt nur, was auch ohne die App verstaendlich ist.
+ */
+async function reportTeilen() {
+  const analyse = zustand.sitzung && zustand.sitzung.analyse;
+  if (!analyse) return;
+
+  const flaeche = document.createElement('canvas');
+  flaeche.width = 1080;
+  flaeche.height = 1350;
+  const z = flaeche.getContext('2d');
+
+  z.fillStyle = '#04080d';
+  z.fillRect(0, 0, flaeche.width, flaeche.height);
+
+  const score = analyse.gesamtscore;
+  const farbe = score === null ? '#7d95a3' : noteFarbe(score);
+
+  // Notenring
+  const mx = flaeche.width / 2;
+  const my = 320;
+  z.lineWidth = 26;
+  z.strokeStyle = 'rgba(255,255,255,0.09)';
+  z.beginPath();
+  z.arc(mx, my, 150, 0, Math.PI * 2);
+  z.stroke();
+  z.strokeStyle = farbe;
+  z.lineCap = 'round';
+  z.beginPath();
+  z.arc(mx, my, 150, -Math.PI / 2, -Math.PI / 2 + ((score || 0) / 100) * Math.PI * 2);
+  z.stroke();
+
+  z.fillStyle = farbe;
+  z.textAlign = 'center';
+  z.font = '700 96px -apple-system, system-ui, sans-serif';
+  z.fillText(score === null ? '–' : String(score), mx, my + 26);
+  z.font = '500 26px -apple-system, system-ui, sans-serif';
+  z.fillStyle = '#7d95a3';
+  z.fillText('von 100', mx, my + 70);
+
+  z.fillStyle = '#dceef6';
+  z.font = '600 44px -apple-system, system-ui, sans-serif';
+  z.fillText(analyse.stufe_text || 'nicht bewertbar', mx, my + 150);
+
+  // Kategorien als Balken
+  let y = my + 240;
+  z.textAlign = 'left';
+  Object.entries(analyse.scores || {}).forEach(([key, wert]) => {
+    z.fillStyle = '#7d95a3';
+    z.font = '500 28px -apple-system, system-ui, sans-serif';
+    z.fillText(Engine.spec.kategorien[key] || key, 90, y);
+
+    z.fillStyle = 'rgba(255,255,255,0.09)';
+    z.fillRect(480, y - 20, 440, 14);
+    z.fillStyle = noteFarbe(wert);
+    z.fillRect(480, y - 20, 440 * (wert / 100), 14);
+
+    z.fillStyle = '#dceef6';
+    z.textAlign = 'right';
+    z.fillText(String(wert), 990, y);
+    z.textAlign = 'left';
+    y += 56;
+  });
+
+  // Wichtigste Probleme
+  y += 24;
+  z.fillStyle = '#7d95a3';
+  z.font = '500 24px -apple-system, system-ui, sans-serif';
+  z.fillText('ERKANNTE PROBLEME', 90, y);
+  y += 46;
+  (analyse.probleme || []).slice(0, 4).forEach((problem) => {
+    z.fillStyle = problem.severity === 'critical' || problem.severity === 'high' ? '#ff6b7d'
+      : problem.severity === 'medium' ? '#ffb454' : '#57e39a';
+    z.font = '600 30px -apple-system, system-ui, sans-serif';
+    z.fillText(`• ${problem.titel}`.slice(0, 44), 90, y);
+    y += 46;
+  });
+  if (!(analyse.probleme || []).length) {
+    z.fillStyle = '#57e39a';
+    z.font = '600 30px -apple-system, system-ui, sans-serif';
+    z.fillText('• keine', 90, y);
+  }
+
+  z.fillStyle = '#2b8fae';
+  z.font = '500 24px -apple-system, system-ui, sans-serif';
+  z.textAlign = 'center';
+  z.fillText('Hookah Analyzer', mx, flaeche.height - 60);
+
+  const blob = await new Promise((fertig) => flaeche.toBlob(fertig, 'image/png'));
+  const datei = new File([blob], 'kopf-bewertung.png', { type: 'image/png' });
+
+  // Teilen geht nicht ueberall — dann eben herunterladen.
+  if (navigator.canShare && navigator.canShare({ files: [datei] })) {
+    try {
+      await navigator.share({ files: [datei], title: 'Meine Kopf-Bewertung' });
+      return;
+    } catch (_) {
+      return;   // abgebrochen ist kein Fehler
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const verweis = document.createElement('a');
+  verweis.href = url;
+  verweis.download = 'kopf-bewertung.png';
+  verweis.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 function reportZeigen(analyse) {
@@ -1099,12 +1532,61 @@ function reportZeigen(analyse) {
     konfidenz.appendChild(feld);
   });
 
+  gegenprobeZeigen(analyse.gegenprobe);
+  vergleichZeigen(analyse.vergleich);
+
   $('report').hidden = false;
   $('report').scrollTop = 0;
   sprich(score !== null
     ? `${score} von 100, ${analyse.stufe_text}. ${analyse.coach_satz || ''}`
     : analyse.coach_satz || 'Das Bild reicht fuer eine Bewertung nicht aus.');
   vibriere([40, 80, 40]);
+}
+
+/** Was das zweite Modell gesagt hat — und ob die beiden sich einig sind. */
+function gegenprobeZeigen(gegenprobe) {
+  const block = $('gegenprobe');
+  block.hidden = !gegenprobe;
+  if (!gegenprobe) return;
+
+  if (gegenprobe.fehler) {
+    block.className = 'gegenprobe warn';
+    block.textContent = `Gegenprobe nicht möglich: ${gegenprobe.fehler}`;
+    return;
+  }
+
+  block.className = `gegenprobe ${gegenprobe.einig ? 'einig' : 'uneinig'}`;
+  const strittig = (gegenprobe.strittig || []).map((k) => k.name).join(', ');
+  block.innerHTML = gegenprobe.einig
+    ? `<b>Zweites Modell: ${gegenprobe.score}/100</b> — die beiden sind sich einig `
+      + `(${gegenprobe.abweichung} Punkte auseinander).`
+    : `<b>Zweites Modell: ${gegenprobe.score}/100</b> — ${gegenprobe.abweichung} Punkte Unterschied. `
+      + `Die Bewertung ist unsicher${strittig ? `, strittig ist vor allem: ${escape(strittig)}` : ''}.`;
+}
+
+/** Gegenüberstellung von vorher und nachher, nach einer Korrektur. */
+function vergleichZeigen(vergleich) {
+  const block = $('vergleich');
+  block.hidden = !vergleich;
+  if (!vergleich) return;
+
+  const pfeil = (delta) => (delta > 0 ? `+${delta}` : String(delta));
+  const zeilen = vergleich.kategorien
+    .filter((k) => k.delta !== 0)
+    .sort((a, b) => b.delta - a.delta)
+    .map((k) => `<div class="vergleich-zeile ${k.delta > 0 ? 'besser' : 'schlechter'}">`
+      + `<span>${escape(k.name)}</span><b>${k.von} → ${k.auf} (${pfeil(k.delta)})</b></div>`)
+    .join('');
+
+  const kopf = vergleich.delta === null
+    ? 'Der neue Kopf ließ sich nicht bewerten.'
+    : `<b>${vergleich.von} → ${vergleich.auf}</b> (${pfeil(vergleich.delta)} Punkte)`;
+
+  const prognose = vergleich.prognose_abweichung === null ? ''
+    : `<div class="vergleich-fuss">Vorhergesagt waren ${vergleich.versprochen} — `
+      + `${vergleich.prognose_abweichung <= 5 ? 'gut getroffen' : `${vergleich.prognose_abweichung} Punkte daneben`}.</div>`;
+
+  block.innerHTML = `<div class="vergleich-kopf">${kopf}</div>${zeilen || '<div class="vergleich-zeile">nichts hat sich verändert</div>'}${prognose}`;
 }
 
 function escape(text) {
@@ -1222,6 +1704,7 @@ $('losButton').addEventListener('click', async () => {
     // Sprachsteuerung nur anbieten, wenn der Browser sie kann.
     $('hoerButton').hidden = !spracheMoeglich();
     if (spracheMoeglich() && $('fSprache').checked) hoerenAn();
+    kontingentZeigen();
   } catch (fehler) {
     $('startFehler').textContent = fehler.message;
     knopf.disabled = false;
@@ -1270,6 +1753,29 @@ $('feedbackButton').addEventListener('click', () => {
   $('feedback').hidden = false;
 });
 
+$('nachmessenButton').addEventListener('click', () => {
+  $('report').hidden = true;
+  sprich('Zeig mir den Kopf noch einmal.');
+  vollanalyse();
+});
+
+$('teilenButton').addEventListener('click', reportTeilen);
+$('historieButton').addEventListener('click', historieZeigen);
+$('historieZu').addEventListener('click', () => { $('historie').hidden = true; });
+
+$('historieLeeren').addEventListener('click', async () => {
+  if (!confirm('Die gesamte Historie löschen?')) return;
+  try {
+    await Engine.historie.leeren();
+    historieZeigen();
+  } catch (fehler) {
+    $('historieListe').innerHTML = `<li class="leer">${escape(fehler.message)}</li>`;
+  }
+});
+
+$('fKopf').addEventListener('change', durchmesserVorschlagen);
+$('fKopf').addEventListener('blur', durchmesserVorschlagen);
+
 $('feedbackAbbruch').addEventListener('click', () => { $('feedback').hidden = true; });
 $('feedbackSenden').addEventListener('click', feedbackSpeichern);
 
@@ -1284,12 +1790,25 @@ requestAnimationFrame(zeichnen);
 Engine.specLaden()
   .then(() => {
     zielwahlFuellen();
+    kopflisteFuellen();
     kontextWiederherstellen();
     startBereitschaft();
   })
   .catch((fehler) => {
     $('startFehler').textContent = `Regelwerk konnte nicht geladen werden: ${fehler.message}`;
   });
+
+/** Fuellt die Vorschlagsliste fuer das Kopfmodell aus spec.json. */
+function kopflisteFuellen() {
+  const liste = $('kopfliste');
+  liste.innerHTML = '';
+  ((Engine.spec.koepfe || {}).liste || []).forEach((kopf) => {
+    const eintrag = document.createElement('option');
+    eintrag.value = kopf.name;
+    eintrag.label = `${kopf.durchmesser_mm} mm`;
+    liste.appendChild(eintrag);
+  });
+}
 
 function zielwahlFuellen() {
   const box = $('zielwahl');

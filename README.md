@@ -312,6 +312,9 @@ dein Claude-Abo laufen lassen willst.
   die App zeigt, wie treffsicher ihre Vorhersagen bisher waren.
 - **Sprachsteuerung**: Beim Bauen sind beide Hände voll — sag einfach „weiter",
   „bewerten" oder „pause".
+- **Historie**: Jeder bewertete Kopf bleibt mit Vorschaubild auf dem Gerät, mit
+  Notenverlauf über die Zeit.
+- **Teilen**: Der Report lässt sich als Bild verschicken.
 
 ### Welches Modell — und was es kostet
 
@@ -329,6 +332,25 @@ Anbieter. Er landet nie in diesem Projekt und nirgendwo sonst.
 Bei kostenlosen Modellen ist ein **Limit pro Minute und pro Tag** normal. Wenn es
 greift, steht in der App „Freikontingent gerade erschöpft" — dann kurz warten.
 Bilder gehen auf 896 Pixel Kantenlänge verkleinert raus, das schont das Kontingent.
+
+### Kontingent im Blick
+
+Oben rechts steht, wie viele Anfragen der heutige Tag schon gekostet hat. Wird es
+knapp, färbt sich die Zahl. Der **Sparmodus** verhindert außerdem, dass ein
+unverändert vor der Kamera liegender Kopf zehnmal dieselbe Bewertung bekommt —
+analysiert wird nur, wenn sich im Bild etwas getan hat.
+
+### Was die App aus deinen Sessions lernt
+
+Sagst du dreimal, dass es zu heiß war, wird daraus eine benannte Regel:
+
+> **Es wird dir regelmäßig zu heiß** (3 Sessions)
+> Empfiehl eine Kohle weniger als üblich und mindestens 1 mm mehr Abstand zum HMD.
+
+Die Regel steht als Vorgabe im Prompt und ist unter *Modell und Zugang*
+nachlesbar — kein stiller Automatismus, sondern etwas, das du sehen und
+nachvollziehen kannst. Welche Regeln es gibt und ab wie vielen Rückmeldungen sie
+greifen, steht in `spec.json`.
 
 ### Freihändig per Sprache
 
@@ -366,6 +388,46 @@ du warst. Kommst du zurück und die Kamera läuft noch, geht es ohne Nachfrage
 weiter. Beides geht auch per Zuruf.
 
 Im Hintergrund analysiert die App nicht weiter — das spart Freikontingent und Akku.
+
+### Maßstab: warum der Kopfdurchmesser zählt
+
+Millimeter aus einem Foto zu schätzen ist Raterei, solange nichts im Bild eine
+bekannte Größe hat. Deshalb kannst du den **Innendurchmesser der Tabakmulde**
+angeben — die App gibt ihn dem Modell als Maßstab mit, das rechnet Entfernungen
+dann im Verhältnis dazu aus statt frei zu schätzen.
+
+Gängige Köpfe stehen in `spec.json`; tippst du „Oblako Phunnel M", wird der Wert
+vorgeschlagen. Deinen eigenen Kopf einmal ausmessen genügt, danach merkt die App
+ihn sich. Ohne Angabe funktioniert alles weiter — die Millimeterzahlen bleiben
+dann eben grob, und das Modell sagt das auch.
+
+### Endurteil aus drei Blickwinkeln
+
+Von schräg oben bleibt die hintere Randkante verdeckt — genau dort entsteht
+Randanbrand. Für die Vollanalyse führt dich die App deshalb durch drei Aufnahmen
+(„Bild 1 von 3 … jetzt drehen"), die gemeinsam an das Modell gehen. Abschaltbar
+auf dem Startbildschirm, dann reicht ein Bild.
+
+### Nachmessen
+
+Nach der Korrektur ein Tipp auf **Nachmessen**: die App bewertet neu und stellt
+gegenüber, was sich geändert hat — pro Kategorie, mit Verschlechterungen. Dazu
+der Abgleich mit der eigenen Prognose:
+
+```
+72 → 84 (+12)
+Tabakverteilung   61 → 88 (+27)
+Airflow           70 → 63 (−7)
+Vorhergesagt waren 86 — gut getroffen.
+```
+
+### Gegenprobe mit einem zweiten Modell
+
+Optional wird dasselbe Bild von einem zweiten Anbieter beurteilt. Liegen die
+Urteile weit auseinander, ist die Sache nicht so klar, wie eine einzelne Zahl
+aussieht — dann setzt die App die Sicherheit herunter und benennt die strittigen
+Kategorien. Das ist eine gemessene Konfidenz statt einer behaupteten. Kostet die
+doppelte Anfrage, deshalb standardmäßig aus.
 
 ### Wie bewertet wird
 
@@ -484,12 +546,15 @@ fertig.
 ### Prüfen, ob alles stimmt
 
 ```
-node tests/test_engine.mjs     # Bewertungslogik der App
+node tests/test_engine.mjs     # Bewertungslogik, Maßstab, Lernregeln, Gegenprobe
+node tests/test_steuerung.mjs  # Kamera-Lage, Pause, Sprachbefehle, Marker
 python tests/test_shisha.py    # Rückweg über den eigenen Rechner
 ```
 
-Beide füttern absichtlich fehlerhafte Modellantworten ein und prüfen, dass sie
-geradegezogen werden.
+Die Tests füttern absichtlich fehlerhafte Modellantworten ein und prüfen, dass sie
+geradegezogen werden. `steuerung.js` enthält bewusst nur Entscheidungen ohne
+Kamera und ohne Oberfläche — genau die Stellen, die in der Praxis Ärger gemacht
+haben, sind dadurch überhaupt erst testbar.
 
 ---
 
@@ -518,8 +583,9 @@ shisha/                Optionaler Rückweg über den PC (Claude-Abo)
   zertifikat.py        Selbst ausgestelltes HTTPS-Zertifikat fürs Heimnetz
 web/                   Das HUD
 web/shisha/            Die Kamera-App fürs iPhone
-  spec.json            Regelwerk: Gewichte, Wissen, Prompts (einzige Quelle)
+  spec.json            Regelwerk: Gewichte, Wissen, Prompts, Köpfe (einzige Quelle)
   engine.js            Prompt bauen, Modell fragen, Antwort prüfen, Note rechnen
+  steuerung.js         Entscheidungen ohne Kamera und Oberfläche (testbar)
   ar.js                Kamera, AR-Overlay, Bedienung
   sw.js                hält die App offline startbereit
 scripts/               Startskripte und Desktop-Verknüpfungen
