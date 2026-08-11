@@ -77,8 +77,8 @@
     {
       "key": "kopf",
       "name": "Kopf pruefen",
-      "ziel": "Leerer, sauberer, trockener Kopf — von oben im Bild.",
-      "achte_auf": "Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur."
+      "ziel": "Leerer, sauberer, trockener Kopf — aus jedem Winkel in Ordnung.",
+      "achte_auf": "Der Kopf ist hier absichtlich LEER — das ist kein Fehler und kein Grund, die Analyse abzubrechen. Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. Tabakwerte bleiben in dieser Phase leer."
     },
     {
       "key": "tabak",
@@ -114,7 +114,8 @@
   "quellen": [
     "observed",
     "estimated",
-    "unknown"
+    "unknown",
+    "angegeben"
   ],
   "schweregrade": [
     "critical",
@@ -244,17 +245,20 @@
       "Ist der Kopf nicht sicher identifizierbar, setz das Modell auf null statt zu raten.",
       "",
       "Bildqualitaet zuerst pruefen: Schaerfe, Licht, Perspektive, ist der ganze Kopf",
-      "sichtbar, ist der Tabak sichtbar, verdecken HMD oder Kohle die Flaeche, Kamerawinkel.",
-      "Erlaubt die Bildqualitaet keine zuverlaessige Analyse, setz analysis_status auf",
+      "sichtbar, verdecken HMD oder Kohle die Flaeche, Kamerawinkel. Ob Tabak drin ist,",
+      "gehoert NICHT dazu — ein leerer Kopf ist in Ordnung.\nErlaubt die Bildqualitaet keine zuverlaessige Analyse, setz analysis_status auf",
       "\"insufficient_image\" und die Sicherheiten entsprechend niedrig. Ist gar kein Kopf",
       "im Bild, setz \"no_head_detected\". Lieber ehrlich unvollstaendig als erfunden."
     ],
     "sicht": [
       "So liest du das Bild:",
-      "- In der Regel schaust du von schraeg oben in den Kopf.",
+      "- Der Blickwinkel wechselt: von oben, von schraeg oben, von der Seite. Du",
+      "  beurteilst, was aus diesem Winkel sichtbar ist, und nicht mehr.",
       "- Dichte auf einer Skala: 0 extrem locker, 25 locker, 50 mittel, 75 dicht,",
       "  100 extrem dicht.",
       "- Fuellhoehe in Millimetern unter der Oberkante des Kopfes. Negativ = ueber Rand.",
+      "- Von der Seite ist die Fuellhoehe oft besser zu sehen als von oben, von oben",
+      "  dafuer die Verteilung. Sag im Befund dazu, aus welchem Winkel du schaust.",
       "- Beurteile nur, was du wirklich siehst. Verdecktes bleibt unbekannt."
     ],
     "bewertung": [
@@ -392,6 +396,36 @@
       "Hinweis zur Einordnung: Dieselbe Aufnahme wird unabhaengig von einem zweiten",
       "Modell beurteilt. Weichen die Urteile stark ab, gilt die Analyse als unsicher.",
       "Bewerte deshalb so, wie du es begruenden kannst — nicht so, wie es gefallen koennte."
+    ],
+    "erkennung": [
+      "Kopf erkennen — hier wird oft zu schnell aufgegeben:",
+      "",
+      "Ein Shisha-Kopf ist eine kleine Schale aus Ton, Glas oder Stein, meist 7 bis 9 cm",
+      "breit, mit einem Loch oder erhoehten Kamin in der Mitte und einem Schaftansatz",
+      "unten. Du erkennst ihn aus JEDEM Blickwinkel:",
+      "- von oben: runde Oeffnung, in der Mitte der Kamin oder die Zugloecher",
+      "- von schraeg oben: ovale Oeffnung, Innenwand und Kaminspitze sichtbar",
+      "- von der Seite: kegelige oder bauchige Silhouette, unten der Schaftansatz,",
+      "  oben der Rand; der Kamin ragt beim Phunnel innen erkennbar hoch",
+      "- schraeg von unten oder liegend: trotzdem ein Kopf",
+      "",
+      "WICHTIG: Ein LEERER Kopf ist ein gueltiger Kopf. In der Phase 'Kopf pruefen' ist",
+      "er absichtlich leer. Setz dann die Tabakwerte auf unknown beziehungsweise 0 und",
+      "analysis_status trotzdem auf \"ok\" — beurteile, was da ist: Sauberkeit, Zustand,",
+      "freie Loecher, Feuchtigkeit. Fehlender Tabak ist kein fehlender Kopf.",
+      "",
+      "\"no_head_detected\" nimmst du nur, wenn im Bild wirklich nichts ist, das ein Kopf",
+      "sein koennte — eine Wand, eine Hand, ein Tisch. Im Zweifel lieber \"ok\" mit",
+      "niedriger Sicherheit als abbrechen.",
+      "",
+      "Kannst du die Kopfart nicht sicher bestimmen, ist das kein Grund abzubrechen:",
+      "nimm die Angabe des Nutzers, setz die Quelle auf \"angegeben\" und arbeite weiter."
+    ],
+    "kopf_angegeben": [
+      "Der Nutzer hat gesagt, welchen Kopf er benutzt. Nimm das als gegeben — du musst",
+      "den Typ nicht selbst erkennen und sollst ihn nicht anzweifeln, solange das Bild",
+      "nicht klar etwas anderes zeigt. Trag ihn in \"kopf\" ein und setz \"quelle\" auf",
+      "\"angegeben\". Widerspricht das Bild der Angabe eindeutig, sag das im Befund."
     ]
   },
   "plausibilitaet": {
@@ -480,7 +514,7 @@
     ]
   },
   "koepfe": {
-    "hinweis": "Innendurchmesser der Tabakmulde in Millimetern. Dient als Groessenbezug, damit das Modell Entfernungen im Bild ausrechnen statt schaetzen muss. Eigene Koepfe einfach ergaenzen.",
+    "hinweis": "Innendurchmesser der Tabakmulde in Millimetern. Dient als Groessenbezug, damit das Modell Entfernungen im Bild ausrechnen statt schaetzen muss. Eigene Koepfe einfach ergaenzen. 'standard' ist der Kopf, von dem die App ausgeht, wenn nichts angegeben und nichts erkannt wurde — in der App aenderbar.",
     "liste": [
       {
         "name": "Oblako Phunnel M",
@@ -542,7 +576,8 @@
         "durchmesser_mm": 78,
         "art": "vortex"
       }
-    ]
+    ],
+    "standard": "Oblako Phunnel M"
   },
   "kontingent": {
     "hinweis": "Richtwerte fuer die kostenlosen Kontingente. Nur zur Anzeige und Warnung — die App zaehlt selbst mit, der Anbieter entscheidet.",

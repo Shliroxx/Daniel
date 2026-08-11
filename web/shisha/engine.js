@@ -46,6 +46,9 @@ const Engine = (() => {
     gegenprobe: 'aus',
     // Bei kaum veraendertem Bild keine neue Anfrage stellen.
     sparmodus: true,
+    // Kopf, von dem die App ausgeht, wenn nichts angegeben und nichts erkannt
+    // wurde. Leer = der Standard aus spec.json.
+    standardkopf: '',
   };
 
   function einstellungen() {
@@ -276,6 +279,33 @@ const Engine = (() => {
       || null;
   }
 
+  /* Der Kopf, von dem wir ausgehen, wenn nichts Besseres bekannt ist.
+   *
+   * In der Praxis benutzt man meist immer denselben Kopf. Das Modell kann ihn
+   * aber nicht aus jedem Winkel identifizieren — schon gar nicht, wenn er leer
+   * ist. Statt dann "unbekannt" zu melden und die halbe Bewertung wegzuwerfen,
+   * nimmt die App diesen Kopf an und schreibt ausdruecklich dazu, dass er
+   * angenommen und nicht erkannt ist.
+   */
+  function standardKopf() {
+    const eigener = einstellungen().standardkopf;
+    return kopfSuchen(eigener) || kopfSuchen((spec.koepfe || {}).standard) || null;
+  }
+
+  /* Welcher Kopf gilt — und woher wissen wir das?
+   * Reihenfolge: was der Nutzer gesagt hat, sonst sein Standardkopf.
+   */
+  function angenommenerKopf(kontext) {
+    const gesagt = kopfSuchen((kontext || {}).kopf_modell);
+    if (gesagt) return { ...gesagt, herkunft: 'angegeben' };
+
+    const frei = String((kontext || {}).kopf_modell || '').trim();
+    if (frei) return { name: frei, durchmesser_mm: null, art: null, herkunft: 'angegeben' };
+
+    const standard = standardKopf();
+    return standard ? { ...standard, herkunft: 'standard' } : null;
+  }
+
   /** Durchmesser aus eigener Angabe oder aus der Kopfliste. */
   function durchmesserBestimmen(kontext) {
     const eigen = Number(kontext.durchmesser_mm);
@@ -284,6 +314,10 @@ const Engine = (() => {
     }
     const treffer = kopfSuchen(kontext.kopf_modell);
     if (treffer) return { mm: treffer.durchmesser_mm, quelle: `aus der Liste (${treffer.name})` };
+
+    // Nichts angegeben: der Standardkopf ist immer noch besser als gar kein Massstab.
+    const standard = standardKopf();
+    if (standard) return { mm: standard.durchmesser_mm, quelle: `angenommen (${standard.name})` };
     return null;
   }
 
@@ -306,6 +340,14 @@ const Engine = (() => {
       ['Anmerkung', kontext.notiz],
     ];
     felder.forEach(([name, wert]) => { if (wert) zeilenListe.push(`- ${name}: ${wert}`); });
+
+    const kopf = angenommenerKopf(kontext);
+    if (kopf && kopf.herkunft === 'standard') {
+      zeilenListe.push(
+        `- Kein Kopf angegeben. Der Nutzer baut ueblicherweise auf einem ${kopf.name}`
+        + `${kopf.art ? ` (${kopf.art})` : ''} — geh davon aus, wenn du nichts anderes erkennst.`
+      );
+    }
 
     const massstab = durchmesserBestimmen(kontext);
     if (massstab) {
@@ -334,12 +376,14 @@ const Engine = (() => {
       `Kopftypen:\n${zeilen(w.kopftypen)}\n\nTabakphysik:\n${zeilen(w.tabakphysik)}\n\n` +
       `Mengen und Hoehen:\n${zeilen(w.mengen)}\n\nTypische Fehler:\n${zeilen(w.fehler)}`,
       zeilen(p.wahrheit),
+      zeilen(p.erkennung),
       zeilen(p.sicht),
       `Angaben des Nutzers:\n${kontextText(kontext)}`,
       zeilen(p.bewertung),
       zeilen(p.marker),
     ];
 
+    if (angenommenerKopf(kontext)) teile.push(zeilen(p.kopf_angegeben));
     if (durchmesserBestimmen(kontext)) teile.push(zeilen(p.massstab));
     if (bilder > 1) teile.push(zeilen(p.mehrere_bilder));
     if (gegenprobe) teile.push(zeilen(p.gegenprobe));
@@ -456,12 +500,13 @@ const Engine = (() => {
     return treffer;
   }
 
-  function normalisiere(roh, live) {
+  function normalisiere(roh, live, kontext) {
     const status = wahl(roh.analysis_status, spec.analyse_status, 'ok');
 
     // Erst die Beobachtungen, dann die Bewertung — in der Reihenfolge braucht die
     // Plausibilitaetspruefung sie auch.
     const bild = bildqualitaet(objekt(roh.bildqualitaet));
+    const kopf = kopfDaten(objekt(roh.kopf), kontext);
     const tabak = tabakDaten(objekt(roh.tabak));
     const luft = airflowDaten(objekt(roh.airflow));
     const haube = hmdDaten(objekt(roh.hmd));
@@ -481,7 +526,7 @@ const Engine = (() => {
       analysis_status: status,
       befund: text(roh.befund, 400),
       bildqualitaet: bild,
-      kopf: kopfDaten(objekt(roh.kopf)),
+      kopf,
       tabak,
       airflow: luft,
       hmd: haube,
@@ -571,14 +616,40 @@ const Engine = (() => {
     hinweis: text(roh.hinweis, 140),
   });
 
-  const kopfDaten = (roh) => ({
-    art: wahl(roh.art, spec.kopfarten, 'unbekannt'),
-    modell: textOderNull(roh.modell, 60),
-    geometrie: text(roh.geometrie, 140),
-    zentrale_oeffnung_sichtbar: boolOderNull(roh.zentrale_oeffnung_sichtbar),
-    quelle: wahl(roh.quelle, spec.quellen, 'unknown'),
-    confidence: Math.round(zahl(roh.confidence, 0, 100)),
-  });
+  /* Der Kopf — und was gilt, wenn das Modell ihn nicht identifizieren kann.
+   *
+   * Ein Kopf laesst sich aus manchen Winkeln schlicht nicht zuordnen, leer schon
+   * gar nicht. "unbekannt" waere dann formal richtig, aber unbrauchbar: die
+   * Kopfgeometrie kann nicht bewertet und kein Massstab angesetzt werden. Also
+   * greift, was der Nutzer angegeben hat — und sonst sein Standardkopf. Die
+   * Quelle sagt ausdruecklich "angegeben", damit das nie als Erkennung durchgeht.
+   */
+  function kopfDaten(roh, kontext) {
+    const daten = {
+      art: wahl(roh.art, spec.kopfarten, 'unbekannt'),
+      modell: textOderNull(roh.modell, 60),
+      geometrie: text(roh.geometrie, 140),
+      zentrale_oeffnung_sichtbar: boolOderNull(roh.zentrale_oeffnung_sichtbar),
+      quelle: wahl(roh.quelle, spec.quellen, 'unknown'),
+      confidence: Math.round(zahl(roh.confidence, 0, 100)),
+      angenommen: false,
+    };
+
+    if (daten.art !== 'unbekannt') return daten;
+
+    const ersatz = angenommenerKopf(kontext);
+    if (!ersatz) return daten;
+
+    return {
+      ...daten,
+      art: ersatz.art || daten.art,
+      modell: daten.modell || ersatz.name || null,
+      quelle: 'angegeben',
+      angenommen: true,
+      // Die Sicherheit gehoert dem Modell — eine Annahme erhoeht sie nicht.
+      herkunft: ersatz.herkunft,
+    };
+  }
 
   const tabakDaten = (roh) => ({
     // Negative Werte heissen: Tabak steht ueber dem Rand.
@@ -855,10 +926,10 @@ const Engine = (() => {
    * eine gemessene Konfidenz statt einer behaupteten. Scheitert die Gegenprobe,
    * bleibt das Hauptergebnis unangetastet; sie ist ein Extra, kein Muss.
    */
-  async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis) {
+  async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis, kontext) {
     try {
       const rohtext = await modellFragen(blobs, prompt, anbieter);
-      const zweit = normalisiere(jsonAusText(rohtext), false);
+      const zweit = normalisiere(jsonAusText(rohtext), false, kontext);
       if (zweit.gesamtscore === null || ergebnis.gesamtscore === null) {
         return { anbieter, score: zweit.gesamtscore, abweichung: null, einig: false };
       }
@@ -1147,13 +1218,13 @@ const Engine = (() => {
 
       const begonnen = performance.now();
       const rohtext = await modellFragen(blobs, prompt);
-      const ergebnis = normalisiere(jsonAusText(rohtext), modus === 'live');
+      const ergebnis = normalisiere(jsonAusText(rohtext), modus === 'live', this.kontext);
       ergebnis.dauer = Math.round(performance.now() - begonnen) / 1000;
       ergebnis.bilder = blobs.length;
 
       if (modus === 'live') return this.aufnehmen(ergebnis);
 
-      if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis);
+      if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis, this.kontext);
 
       ergebnis.phase = this.phase;
       ergebnis.kontext = { ...this.kontext };
@@ -1215,6 +1286,8 @@ const Engine = (() => {
     Sitzung,
     AnalyseFehler,
     kopfSuchen,
+    standardKopf,
+    angenommenerKopf,
     durchmesserBestimmen,
     verbrauch,
     vergleiche,
