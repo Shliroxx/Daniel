@@ -3,7 +3,9 @@
 # Damit hat die App eine feste Adresse und laeuft auf dem Handy, ohne dass der
 # PC an sein muss.
 #
-# Einmalig einschalten: Repository -> Settings -> Pages -> Source: "GitHub Actions".
+# Pages schaltet der Workflow selbst ein (enablement: true) — es ist also nichts
+# von Hand zu klicken. Nur wenn das fehlschlaegt: Repository -> Settings -> Pages
+# -> Source: "GitHub Actions".
 # Achtung: fuer private Repositories braucht GitHub Pages einen bezahlten Tarif.
 # Ohne den nimmst du Cloudflare Pages — Anleitung steht in der README.
 #
@@ -52,6 +54,10 @@ jobs:
         run: node tests/test_engine.mjs
 
       - uses: actions/configure-pages@v5
+        with:
+          # Pages einschalten, falls es noch aus ist — spart den Gang in die
+          # Einstellungen und macht den ersten Lauf selbsttragend.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

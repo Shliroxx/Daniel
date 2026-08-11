@@ -365,14 +365,17 @@ fragt die App gezielt nach einer einzigen Angabe. Die Angaben merkt sie sich.
 Die App braucht eine feste Adresse mit HTTPS. Der einfachste Weg ist GitHub Pages,
 kostenlos und dauerhaft:
 
-1. Im Repository: **Settings → Pages → Source: GitHub Actions**.
-2. Auf `main` pushen. Der Workflow `.github/workflows/analyzer-pages.yml`
-   veröffentlicht den Ordner `web/shisha`. Die Adresse steht danach unter Settings
-   → Pages, in der Form `https://<name>.github.io/<repo>/`.
-3. Adresse am iPhone in Safari öffnen → **Teilen → Zum Home-Bildschirm**.
-4. App öffnen → **Modell und Zugang** → Anbieter wählen, Schlüssel einfügen,
+1. Auf den Standard-Branch pushen. Der Workflow
+   `.github/workflows/analyzer-pages.yml` schaltet Pages ein und veröffentlicht
+   den Ordner `web/shisha`. Die Adresse steht danach unter **Settings → Pages**,
+   in der Form `https://<name>.github.io/<repo>/`.
+2. Adresse am iPhone in Safari öffnen → **Teilen → Zum Home-Bildschirm**.
+3. App öffnen → **Modell und Zugang** → Anbieter wählen, Schlüssel einfügen,
    speichern.
-5. **Kamera starten** — Zugriff erlauben. Fertig.
+4. **Kamera starten** — Zugriff erlauben. Fertig.
+
+Klappt das Einschalten nicht automatisch, einmal von Hand: **Settings → Pages →
+Source: GitHub Actions**, dann den Workflow unter *Actions* neu starten.
 
 > GitHub Pages setzt voraus, dass das Repository **öffentlich** ist — für private
 > Repos braucht es einen bezahlten Tarif. Soll das Repo privat bleiben, tut es
