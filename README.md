@@ -569,6 +569,7 @@ fertig.
 ```
 node tests/test_engine.mjs     # Bewertungslogik, Maßstab, Lernregeln, Gegenprobe
 node tests/test_steuerung.mjs  # Kamera-Lage, Pause, Sprachbefehle, Marker
+node tests/test_durchlauf.mjs  # kompletter Durchgang durch die App (~1 Minute)
 python tests/test_shisha.py    # Rückweg über den eigenen Rechner
 ```
 
@@ -576,6 +577,18 @@ Die Tests füttern absichtlich fehlerhafte Modellantworten ein und prüfen, dass
 geradegezogen werden. `steuerung.js` enthält bewusst nur Entscheidungen ohne
 Kamera und ohne Oberfläche — genau die Stellen, die in der Praxis Ärger gemacht
 haben, sind dadurch überhaupt erst testbar.
+
+**Der Durchgang** ist der interessanteste davon: er lädt die drei Skripte in einen
+nachgebauten Browser (`tests/dom-ersatz.mjs`) und bedient die App wie ein Mensch —
+Zugang einrichten, Kamera starten, Livebetrieb, Vollanalyse aus drei Winkeln,
+Report, Nachmessen, Teilen, Feedback, Pause, Sprachbefehle, Hauptmenü. Danach die
+Störfälle: Müll-Antwort, Kontingent erschöpft, kein Kopf im Bild, tote Kamera,
+Wechsel in den Hintergrund.
+
+Gefunden hat er damit zwei Fehler, die alle anderen Tests durchgelassen haben:
+zwei parallel laufende Analyseschleifen nach einem Hintergrundwechsel (doppelter
+Kontingentverbrauch) und eine Vollanalyse, die bei toter Kamera eine halbe Minute
+ins Leere lief.
 
 ---
 
