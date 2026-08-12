@@ -1,0 +1,426 @@
+/* Ein kompletter Durchgang durch die App — als wuerde jemand sie bedienen.
+ *
+ * Die uebrigen Tests pruefen Engine und Steuerlogik. ar.js dagegen — Kamera,
+ * Overlay, Knoepfe, Bildschirme — wurde nie ausgefuehrt, und genau dort sassen
+ * die Fehler, die im Alltag auffallen. Dieser Test laedt die drei Skripte in
+ * einem nachgebauten Browser (tests/dom-ersatz.mjs) und spielt eine Sitzung
+ * durch: Zugang einrichten, Kamera starten, Livebetrieb, Vollanalyse aus drei
+ * Winkeln, Report, Nachmessen, Teilen, Feedback, Pause, Sprache, Hauptmenue —
+ * und danach die Stoerfaelle.
+ *
+ * Gefunden hat er damit unter anderem: zwei parallel laufende Analyseschleifen
+ * nach einem Wechsel in den Hintergrund (doppelter Kontingentverbrauch) und
+ * eine Vollanalyse, die bei toter Kamera 30 Sekunden lang ins Leere lief.
+ *
+ * Ausfuehren:  node tests/test_durchlauf.mjs      (dauert etwa eine Minute)
+ */
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { baueUmgebung } from './dom-ersatz.mjs';
+
+const webDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'web', 'shisha');
+
+const ANTWORT = {
+  analysis_status: 'ok',
+  befund: 'Phunnel von schraeg oben, etwa zu zwei Dritteln gefuellt.',
+  bildqualitaet: { schaerfe: 80, licht: 70, perspektive: 'schraeg', kopf_vollstaendig: true, hinweis: '' },
+  kopf: { art: 'phunnel', modell: 'Oblako Phunnel M', geometrie: 'mittel', zentrale_oeffnung_sichtbar: true, quelle: 'observed', confidence: 85 },
+  tabak: { fuellhoehe_mm: 2, fuellhoehe_quelle: 'estimated', dichte: 55, gleichmaessigkeit: 70,
+           klumpen: false, luecken: false, randkontakt: false, ueber_rand: false,
+           menge_gramm: 'ca. 15 g', quelle: 'estimated', confidence: 72 },
+  airflow: { zentrale_oeffnung_frei: true, blockade_risiko: 'low', notiz: '', confidence: 70 },
+  hmd: { erkannt: false, modell: null, zentriert: null, abstand_mm: null, kontakt_tabak: null, confidence: 20 },
+  kohle: { status: 'not_visible', anzahl: null, position: '', hotspot_risiko: 'unknown', confidence: 10 },
+  scores: { tabak_verteilung: 72, fuellhoehe: 75, airflow: 78, hitzemanagement: 65,
+            kopfgeometrie: 80, tabak_kompatibilitaet: 75, zielerreichung: 70 },
+  probleme: [{ id: 'leichte_unruhe', severity: 'medium', kategorie: 'tabak_verteilung',
+               titel: 'Bei 9 Uhr etwas hoeher', beschreibung: 'Links liegt mehr Tabak.',
+               confidence: 65, aktion: 'redistribute_tobacco' }],
+  optimierungen: [{ schritt: 1, aktion: 'redistribute_tobacco', bereich: '9 Uhr',
+                    text: 'Zieh bei 9 Uhr etwas Tabak zur Mitte.', wirkung: 'gleichmaessige Hitze' }],
+  ar_marker: [{ typ: 'distribute', x: 0.3, y: 0.35, w: 0.2, h: 0.18, label: 'verteilen', aktion: 'redistribute_tobacco' },
+              { typ: 'fill_height', x: 0.25, y: 0.6, w: 0.5, h: 0.04, label: 'Zielhoehe', aktion: 'add_tobacco' }],
+  prognose: { score_nach_optimierung: 84, geschmack: 'hoch', rauch: 'gleich', dauer: 'gleich',
+              hitzerisiko: 'runter', verbesserung: { tabak_verteilung: 88, hitzemanagement: 75, airflow: 80 } },
+  confidence: { gesamt: 72, kopf_erkennung: 85, tabak_analyse: 72, fuellhoehe: 65, airflow: 70, hitzemanagement: 60, optimierung: 70 },
+  rueckfrage: null,
+  coach_satz: 'Zieh bei neun Uhr etwas Tabak zur Mitte.',
+};
+
+// Steuerbare Antwort: Text, Fehlerstatus, Verzoegerung.
+const antwortPlan = { text: (_url) => JSON.stringify(ANTWORT), status: 200, verzoegerung: 0 };
+const { global, elemente, protokoll, dokument, spur, bildAendern } = baueUmgebung(webDir, {
+  antwort: (url) => ({ text: antwortPlan.text(url), status: antwortPlan.status, verzoegerung: antwortPlan.verzoegerung }),
+});
+
+const kontext = vm.createContext(global);
+const schritte = [];
+const probleme = [];
+
+function pruefe(name, bedingung, zusatz = '') {
+  schritte.push(`${bedingung ? '  ok  ' : ' FEHL '} ${name}${zusatz ? ` — ${zusatz}` : ''}`);
+  if (!bedingung) probleme.push(name + (zusatz ? ` — ${zusatz}` : ''));
+}
+
+const warte = (ms) => new Promise((f) => setTimeout(f, ms));
+const $ = (id) => elemente.get(id);
+
+// --- Laden ------------------------------------------------------------------
+// Wie im Browser: klassische Skripte teilen sich einen Scope, deshalb alle drei
+// in einem Rutsch. Der Anhang reicht heraus, was der Test anfassen muss.
+const quelle = ['steuerung.js', 'engine.js', 'ar.js']
+  .map((datei) => readFileSync(`${webDir}/${datei}`, 'utf8'))
+  .join('\n;\n')
+  + '\n; globalThis.__Engine = Engine; globalThis.__Steuerung = Steuerung; globalThis.__zustand = zustand;';
+
+try {
+  vm.runInContext(quelle, kontext, { filename: 'app.js' });
+  pruefe('App laedt ohne Absturz', true);
+} catch (fehler) {
+  pruefe('App laedt ohne Absturz', false, `${fehler.message}\n${(fehler.stack || '').split('\n')[1] || ''}`);
+  console.log(schritte.join('\n'));
+  process.exit(1);
+}
+
+await warte(60);   // specLaden().then(...) durchlassen
+pruefe('Regelwerk geladen', Boolean(kontext.__Engine.spec), $('startInfo').textContent);
+pruefe('Zielwahl gefuellt', $('zielwahl').children.length === 4, `${$('zielwahl').children.length} Ziele`);
+pruefe('Kopfliste gefuellt', $('kopfliste').children.length > 5, `${$('kopfliste').children.length} Koepfe`);
+pruefe('Start ohne Schluessel gesperrt', $('losButton').disabled === true);
+
+// --- Zugang einrichten -------------------------------------------------------
+$('zugangButton').klick();
+$('fGeminiKey').value = 'test-key';
+$('zugangSpeichern').klick();
+pruefe('Start nach Schluessel frei', $('losButton').disabled === false, $('startInfo').textContent);
+pruefe('Standardkopf im Feld', $('fStandardkopf').placeholder === 'Oblako Phunnel M');
+
+// --- Angaben eintragen -------------------------------------------------------
+$('fKopf').value = 'Oblako Phunnel M';
+(($('fKopf').horcher.change) || []).forEach((fn) => fn({ target: $('fKopf') }));
+pruefe('Durchmesser vorgeschlagen', $('fDurchmesser').value === '78', `war "${$('fDurchmesser').value}"`);
+
+// --- Kamera starten ----------------------------------------------------------
+$('losButton').klick();
+await warte(80);
+pruefe('Startbildschirm weg', $('start').hidden === true);
+pruefe('Bedienleisten sichtbar', $('oben').hidden === false && $('unten').hidden === false);
+
+// --- Livebetrieb -------------------------------------------------------------
+await warte(1400);
+pruefe('Livebild wird analysiert', protokoll.anfragen.length >= 1, `${protokoll.anfragen.length} Anfragen`);
+pruefe('Coach spricht', $('coach').textContent.length > 5, `"${$('coach').textContent}"`);
+pruefe('Kopf benannt', $('kopfInfo').textContent.includes('Oblako'), `"${$('kopfInfo').textContent}"`);
+pruefe('Note angezeigt', $('liveScore').textContent.includes('/100'), `"${$('liveScore').textContent}"`);
+pruefe('Handgriff gelistet', $('schritte').children.length === 1);
+pruefe('Problem gelistet', $('probleme').children.length === 1);
+pruefe('Messwerte da', $('messwerte').children.length >= 2, `${$('messwerte').children.length} Werte`);
+pruefe('Kontingent gezaehlt', $('kontingent').textContent.startsWith('1/') || $('kontingent').textContent.startsWith('2/'),
+       `"${$('kontingent').textContent}"`);
+pruefe('Gesprochen', protokoll.gesprochen.some((s) => s.includes('neun Uhr')), protokoll.gesprochen.join(' | ').slice(0, 60));
+
+// --- Sparmodus ---------------------------------------------------------------
+const vorSparen = protokoll.anfragen.length;
+await warte(1500);
+pruefe('Sparmodus greift bei gleichem Bild', protokoll.anfragen.length === vorSparen,
+       `${protokoll.anfragen.length - vorSparen} zusaetzliche Anfragen`);
+
+bildAendern();
+await warte(1500);
+pruefe('Nach Bildaenderung wieder Analyse', protokoll.anfragen.length > vorSparen,
+       `${protokoll.anfragen.length - vorSparen} neue Anfragen`);
+
+// --- Phase weiter ------------------------------------------------------------
+const phaseVorher = kontext.__zustand.sitzung.phase;
+$('weiterButton').klick();
+pruefe('Phase gewechselt', kontext.__zustand.sitzung.phase !== phaseVorher,
+       `${phaseVorher} -> ${kontext.__zustand.sitzung.phase}`);
+pruefe('Phasenleiste neu gezeichnet', $('phasen').children.length === 6);
+
+console.log(schritte.join('\n'));
+console.log(probleme.length ? `\n${probleme.length} PROBLEM(E)` : '\nTeil 1 sauber');
+kontext.__zustand.laeuft = false;
+
+// ===========================================================================
+// Teil 2 — Vollanalyse, Report, Nachmessen, Teilen, Historie, Pause, Sprache
+// ===========================================================================
+kontext.__zustand.laeuft = true;
+const teil2 = [];
+function pruefe2(name, bedingung, zusatz = '') {
+  teil2.push(`${bedingung ? '  ok  ' : ' FEHL '} ${name}${zusatz ? ` — ${zusatz}` : ''}`);
+  if (!bedingung) probleme.push(name + (zusatz ? ` — ${zusatz}` : ''));
+}
+
+// --- Vollanalyse aus drei Winkeln -------------------------------------------
+const vorVoll = protokoll.anfragen.length;
+$('fWinkel').checked = true;
+$('analyseButton').klick();
+await warte(9000);
+
+pruefe2('Aufnahme-Ansage wieder zu', $('aufnahme').hidden === true);
+pruefe2('Drei Winkel angesagt',
+        protokoll.gesprochen.filter((s) => s.includes('drehen')).length === 2,
+        protokoll.gesprochen.slice(-4).join(' | ').slice(0, 70));
+const vollAnfrage = protokoll.anfragen[protokoll.anfragen.length - 1];
+const teile = JSON.parse(vollAnfrage.optionen.body).contents[0].parts;
+pruefe2('Drei Bilder verschickt', teile.filter((t) => t.inline_data).length === 3,
+        `${teile.filter((t) => t.inline_data).length} Bilder`);
+pruefe2('Genau eine Anfrage fuer die Vollanalyse', protokoll.anfragen.length === vorVoll + 1);
+
+// --- Report -------------------------------------------------------------------
+pruefe2('Report offen', $('report').hidden === false);
+pruefe2('Note im Report', String($('noteZahl').textContent) === '73', `"${$('noteZahl').textContent}"`);
+pruefe2('Stufe benannt', $('stufeText').textContent === 'gut', `"${$('stufeText').textContent}"`);
+pruefe2('Befund gezeigt', $('befund').textContent.includes('Phunnel'));
+pruefe2('Sieben Kategorien', $('kategorien').children.length === 7, `${$('kategorien').children.length}`);
+pruefe2('Optimierungsplan', $('planliste').children.length === 1);
+pruefe2('Erwartung gefuellt', $('erwartung').children.length === 4);
+pruefe2('Sicherheiten gefuellt', $('konfidenz').children.length === 7);
+pruefe2('Erkanntes benannt', $('erkanntes').textContent.includes('Oblako'), `"${$('erkanntes').textContent}"`);
+pruefe2('Prognose-Zeile', $('prognoseZeile').textContent.includes('84'), `"${$('prognoseZeile').textContent}"`);
+pruefe2('Keine Gegenprobe wenn aus', $('gegenprobe').hidden === true);
+pruefe2('Kein Vergleich beim ersten Mal', $('vergleich').hidden === true);
+
+// --- Teilen ---------------------------------------------------------------------
+$('teilenButton').klick();
+await warte(200);
+pruefe2('Report geteilt', protokoll.geteilt.length === 1, protokoll.geteilt.join());
+
+// --- Nachmessen -------------------------------------------------------------------
+ANTWORT.scores = { tabak_verteilung: 88, fuellhoehe: 80, airflow: 80, hitzemanagement: 78,
+                   kopfgeometrie: 80, tabak_kompatibilitaet: 80, zielerreichung: 82 };
+ANTWORT.probleme = [];
+$('nachmessenButton').klick();
+await warte(9000);
+
+pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '81', `"${$('noteZahl').textContent}"`);
+pruefe2('Vergleich sichtbar', $('vergleich').hidden === false);
+pruefe2('Vergleich zeigt Delta', $('vergleich').innerHTML.includes('73 → 81'), $('vergleich').innerHTML.slice(0, 60));
+pruefe2('Prognose bewertet', $('vergleich').innerHTML.includes('Vorhergesagt'),
+        $('vergleich').innerHTML.slice(-90));
+
+// --- Session-Feedback ----------------------------------------------------------
+$('feedbackButton').klick();
+pruefe2('Feedback offen', $('feedback').hidden === false);
+kontext.__zustand.feedback = { geschmack: 2, rauch: 3, kratzen: 5, hitze: 5 };
+$('fDauer').value = '50';
+$('feedbackSenden').klick();
+pruefe2('Feedback gespeichert', kontext.__Engine.profil.laden().sessions.length === 1);
+pruefe2('Feedback traegt die Note', kontext.__Engine.profil.laden().sessions[0].score === 81,
+        String(kontext.__Engine.profil.laden().sessions[0].score));
+pruefe2('Feedback-Blatt zu', $('feedback').hidden === true);
+
+// Drei gleichlautende Rueckmeldungen -> Regel
+kontext.__Engine.profil.merken({ hitze: 5, kratzen: 5, score: 80 });
+kontext.__Engine.profil.merken({ hitze: 4, kratzen: 4, score: 80 });
+const regeln = kontext.__Engine.profil.lernregeln();
+pruefe2('Lernregeln abgeleitet', regeln.length === 2, regeln.map((r) => r.id).join(', '));
+$('zugangButton').klick();
+pruefe2('Regeln in den Einstellungen', $('lernregeln').children.length === 2);
+$('zugangAbbruch').klick();
+
+// --- Pause und Wiederaufnahme ----------------------------------------------------
+$('report').hidden = true;
+kontext.__zustand.laeuft = true;
+$("kamera").paused = true;
+await warte(5200);
+pruefe2('Eingefrorenes Bild fuehrt zur Pause', $('pause').hidden === false, $('pauseGrund').textContent);
+pruefe2('Schleife gestoppt', kontext.__zustand.laeuft === false);
+
+$("kamera").paused = false;
+$('weiterKamera').klick();
+await warte(400);
+pruefe2('Kamera fortgesetzt', $('pause').hidden === true && kontext.__zustand.laeuft === true);
+
+// --- Sprachbefehle ----------------------------------------------------------------
+const vorPhase = kontext.__zustand.sitzung.phase;
+kontext.befehlAusfuehren('weiter', 'weiter bitte');
+pruefe2('Sprachbefehl weiter', kontext.__zustand.sitzung.phase !== vorPhase,
+        `${vorPhase} -> ${kontext.__zustand.sitzung.phase}`);
+kontext.befehlAusfuehren('pause', 'pause');
+pruefe2('Sprachbefehl pause', $('pause').hidden === false);
+kontext.befehlAusfuehren('weiter', 'weiter');
+pruefe2('In der Pause keine Phasenaenderung', $('pause').hidden === false);
+kontext.befehlAusfuehren('start', 'weitermachen');
+await warte(300);
+pruefe2('Sprachbefehl weitermachen', $('pause').hidden === true);
+
+// --- Historie -----------------------------------------------------------------------
+$('historieButton').klick();
+await warte(300);
+pruefe2('Historie oeffnet', $('historie').hidden === false);
+pruefe2('Historie meldet fehlende Ablage im Klartext',
+        $('historieListe').innerHTML.includes('speichert keine Historie'),
+        $('historieListe').innerHTML.slice(0, 80));
+$('historieZu').klick();
+
+// --- Hauptmenue ----------------------------------------------------------------------
+$('menueButton').klick();
+pruefe2('Zurueck im Hauptmenue', $('start').hidden === false && $('oben').hidden === true);
+pruefe2('Schleife beendet', kontext.__zustand.laeuft === false);
+pruefe2('Start bleibt bedienbar', $('losButton').disabled === false);
+
+console.log(teil2.join('\n'));
+
+
+
+// ===========================================================================
+// Teil 3 — Stoerfaelle, Abbrueche, Nebenlaeufigkeit
+// ===========================================================================
+const zeilen = [];
+function p3(name, ok, zusatz = '') {
+  zeilen.push(`${ok ? '  ok  ' : ' FEHL '} ${name}${zusatz ? ` — ${zusatz}` : ''}`);
+  if (!ok) probleme.push(`[Stoerfall] ${name}${zusatz ? ` — ${zusatz}` : ''}`);
+}
+const z = kontext.__zustand;
+
+// Sitzung wieder starten
+$('losButton').klick();
+await warte(200);
+kontext.__Engine.einstellungenSpeichern({ sparmodus: false });
+
+// --- 1. Modell antwortet Muell ------------------------------------------------
+antwortPlan.text = () => 'Tut mir leid, ich kann das Bild nicht sehen.';
+bildAendern();
+await warte(1800);
+p3('Muell-Antwort wird abgefangen', z.laeuft === true, 'Schleife laeuft weiter');
+p3('Muell-Antwort wird erklaert', $('coach').textContent.includes('JSON'), `"${$('coach').textContent}"`);
+
+// --- 2. Kontingent erschoepft (429) -------------------------------------------
+antwortPlan.text = () => '';
+antwortPlan.status = 429;
+bildAendern();
+await warte(4200);
+p3('429 im Klartext', $('coach').textContent.includes('Freikontingent'), `"${$('coach').textContent}"`);
+p3('Schleife ueberlebt 429', z.laeuft === true);
+
+// --- 3. Kein Kopf im Bild -------------------------------------------------------
+antwortPlan.status = 200;
+antwortPlan.text = () => JSON.stringify({ analysis_status: 'no_head_detected', coach_satz: 'Kopf ins Bild halten.' });
+bildAendern();
+// Nach einem Fehler schlaeft die Schleife 3 s — so lange muss der Test warten.
+await warte(5000);
+p3('Ohne Kopf keine Note', $('liveScore').hidden === true || !String($('liveScore').textContent).includes('/'),
+   `"${$('liveScore').textContent}" hidden=${$('liveScore').hidden}`);
+p3('Ohne Kopf klare Ansage', $('kopfInfo').textContent === 'kein Kopf im Bild', `"${$('kopfInfo').textContent}"`);
+p3('Messwerte geleert', $('messwerte').children.length === 0);
+
+// --- 4. Bild zu schlecht ----------------------------------------------------------
+antwortPlan.text = () => JSON.stringify({ analysis_status: 'insufficient_image', coach_satz: 'Mehr Licht.' });
+bildAendern();
+await warte(2500);
+p3('Schlechtes Bild wird benannt', $('kopfInfo').textContent === 'Bild zu schlecht', `"${$('kopfInfo').textContent}"`);
+
+// --- 5. Gegenprobe ------------------------------------------------------------------
+antwortPlan.text = (url) => JSON.stringify(String(url).includes('openrouter')
+  ? { ...ANTWORT, scores: Object.fromEntries(Object.keys(ANTWORT.scores).map((k) => [k, 25])) }
+  : ANTWORT);
+kontext.__Engine.einstellungenSpeichern({ gegenprobe: 'openrouter', openrouter_key: 'zweit' });
+// Livebetrieb anhalten, damit nur die Vollanalyse zaehlt.
+z.laeuft = false;
+await warte(1600);
+const vorGegen = protokoll.anfragen.length;
+$('fWinkel').checked = false;
+$('analyseButton').klick();
+await warte(3000);
+p3('Gegenprobe fragt zweimal', protokoll.anfragen.length === vorGegen + 2,
+   `${protokoll.anfragen.length - vorGegen} Anfragen`);
+p3('Uneinigkeit wird gezeigt', $('gegenprobe').hidden === false && $('gegenprobe').innerHTML.includes('unsicher'),
+   $('gegenprobe').innerHTML.slice(0, 70));
+const konfText = $('konfidenz').children.map((k) => k.innerHTML).join(' ');
+p3('Sicherheit heruntergesetzt', konfText.includes('Gesamt <b>45%</b>'), konfText.slice(0, 60));
+kontext.__Engine.einstellungenSpeichern({ gegenprobe: 'aus' });
+$('zurueckButton').klick();
+z.laeuft = true;
+kontext.__zustand.blindSeit = 0;
+
+// --- 6. Vollanalyse, wenn das Bild nie ruhig wird -------------------------------------
+antwortPlan.text = () => JSON.stringify(ANTWORT);
+// Kamera tot: die Spur ist beendet, nicht nur das Video angehalten
+spur.readyState = 'ended';
+$('kamera').paused = true;
+$('fWinkel').checked = true;
+z.laeuft = false;
+await warte(600);
+const begonnen = Date.now();
+$('analyseButton').klick();
+await warte(3000);
+const gedauert = Math.round((Date.now() - begonnen) / 1000);
+p3('Tote Kamera bricht schnell ab statt zu mahlen', gedauert < 10,
+   `${gedauert} s bis zur Meldung`);
+p3('Abbruch wird erklaert', $('coach').textContent.includes('Kamera') || $('coach').textContent.includes('fehlgeschlagen'),
+   `"${$('coach').textContent}"`);
+p3('Analyse-Knopf wieder frei', $('analyseButton').disabled === false);
+p3('Ansage wieder zu', $('aufnahme').hidden === true);
+spur.readyState = 'live';
+$('kamera').paused = false;
+z.laeuft = true;
+kontext.__zustand.blindSeit = 0;
+
+// --- 7. Hauptmenue waehrend laufender Analyse -------------------------------------------
+antwortPlan.verzoegerung = 1500;
+bildAendern();
+await warte(400);
+$('menueButton').klick();
+await warte(2500);
+p3('Kein Report ueber dem Hauptmenue', $('report').hidden === true && $('start').hidden === false,
+   `report=${$('report').hidden} start=${$('start').hidden}`);
+p3('Keine Schleife im Hauptmenue', z.laeuft === false);
+
+// --- 8. App im Hintergrund und zurueck ----------------------------------------------------
+antwortPlan.verzoegerung = 0;
+$('losButton').klick();
+await warte(300);
+
+const messe = async (ms) => {
+  const vorher = protokoll.anfragen.length;
+  await warte(ms);
+  return protokoll.anfragen.length - vorher;
+};
+const takt = async () => {
+  // Bild dauernd aendern, damit jede Runde analysiert wird.
+  const uhr = setInterval(bildAendern, 100);
+  const anzahl = await messe(4000);
+  clearInterval(uhr);
+  return anzahl;
+};
+
+const taktVorher = await takt();
+
+// Wechsel in den Hintergrund und zurueck — waehrend eine Anfrage laeuft
+antwortPlan.verzoegerung = 900;
+bildAendern();
+await warte(300);
+dokument.visibilityState = 'hidden';
+(dokument._horcher.visibilitychange || []).forEach((fn) => fn());
+await warte(200);
+dokument.visibilityState = 'visible';
+for (const fn of dokument._horcher.visibilitychange || []) await fn();
+await warte(1500);
+antwortPlan.verzoegerung = 0;
+
+const taktNachher = await takt();
+
+// Abstaende zwischen den Anfragen: bei nur einer Schleife liegen mindestens
+// PAUSE_MS (900 ms) plus Pruefzyklus dazwischen.
+const zeiten = protokoll.anfragen.slice(-taktNachher).map((a) => a.zeit);
+const abstaende = zeiten.slice(1).map((t, i) => t - zeiten[i]);
+const kleinster = abstaende.length ? Math.min(...abstaende) : 9999;
+
+p3('Kein doppelter Analysetakt nach Hintergrund',
+   taktNachher <= taktVorher + 1,
+   `vorher ${taktVorher}, nachher ${taktNachher} Anfragen in 4 s`);
+p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
+   `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`);
+
+z.laeuft = false;
+console.log(zeilen.join('\n'));
+
+if (probleme.length) {
+  console.error(`\n${probleme.length} BEFUND(E):\n- ${probleme.join('\n- ')}`);
+  process.exit(1);
+}
+console.log('\nALLE TESTS BESTANDEN');
+process.exit(0);

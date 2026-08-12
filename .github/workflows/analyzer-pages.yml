@@ -61,6 +61,10 @@ jobs:
       - name: Steuerlogik testen
         run: node tests/test_steuerung.mjs
 
+      - name: Kompletten Durchgang durchspielen
+        run: node tests/test_durchlauf.mjs
+        timeout-minutes: 4
+
       - uses: actions/configure-pages@v5
         with:
           # Pages einschalten, falls es noch aus ist — spart den Gang in die

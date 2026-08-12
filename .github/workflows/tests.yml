@@ -23,6 +23,10 @@ jobs:
       - name: Steuerlogik testen
         run: node tests/test_steuerung.mjs
 
+      - name: Kompletten Durchgang durchspielen
+        run: node tests/test_durchlauf.mjs
+        timeout-minutes: 4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

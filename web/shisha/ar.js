@@ -54,6 +54,7 @@ const zustand = {
   wakeLock: null,
   feedback: {},
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
+  lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
   // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
   versatz: { x: 0, y: 0 },
   markerZeit: 0,        // wann die aktuellen Marker entstanden sind
@@ -333,8 +334,20 @@ function bildAufnehmen(maxKante) {
   return new Promise((fertig) => shot.toBlob(fertig, 'image/jpeg', 0.78));
 }
 
+/* Die Analyseschleife — und zwar genau eine davon.
+ *
+ * Wechselt die App in den Hintergrund, wird `laeuft` auf false gesetzt; die
+ * Schleife haengt aber womoeglich gerade in einer laufenden Anfrage fest und
+ * merkt das erst danach. Kommt der Nutzer in der Zwischenzeit zurueck, startet
+ * eine zweite Schleife — und die alte laeuft weiter, weil `laeuft` wieder true
+ * ist. Ergebnis: doppelt so viele Anfragen und doppelter Kontingentverbrauch.
+ * Deshalb bekommt jeder Durchgang eine Nummer; nur die juengste arbeitet.
+ */
 async function schleife() {
-  while (zustand.laeuft) {
+  const meiner = ++zustand.lauf;
+  const meineRunde = () => zustand.laeuft && zustand.lauf === meiner;
+
+  while (meineRunde()) {
     const lage = Steuerung.kameraLage({
       spurLebt: kameraLaeuft(),
       videoLaeuft: !video.paused,
@@ -371,7 +384,10 @@ async function schleife() {
       const blob = await bildAufnehmen(896);
       analyseMini = zustand.letzteGrau;
       zustand.versatz = { x: 0, y: 0 };
-      liveUebernehmen(await zustand.sitzung.analysieren(blob, 'live'));
+      const ergebnis = await zustand.sitzung.analysieren(blob, 'live');
+      // Waehrend der Anfrage kann eine neue Runde begonnen haben — dann ist
+      // dieses Ergebnis veraltet und darf das neuere nicht ueberschreiben.
+      if (meineRunde()) liveUebernehmen(ergebnis);
     } catch (fehler) {
       setzeLage(kurz(fehler.message), 'fehler');
       $('coach').textContent = fehler.message;
@@ -1132,13 +1148,22 @@ const WINKEL_ANSAGE = [
   'Und noch einmal drehen.',
 ];
 
+/* Wartet auf ein brauchbares Bild.
+ *
+ * Liefert true, sobald es ruhig und scharf ist. Wird es das nicht, nehmen wir
+ * das Bild nach Ablauf trotzdem — ein leicht wackliges Bild ist besser als gar
+ * keins. Steht die Kamera dagegen ganz still, hat Warten keinen Zweck: dann
+ * bricht die Aufnahme sofort ab, statt drei Mal acht Sekunden zu mahlen und am
+ * Ende drei eingefrorene Bilder zu verschicken.
+ */
 async function warteAufRuhigesBild(hoechstensMs = 8000) {
   const bis = Date.now() + hoechstensMs;
   while (Date.now() < bis) {
-    if (kameraLaeuft() && !video.paused && guetePruefen()) return true;
+    if (!kameraLaeuft()) throw new Error('Die Kamera liefert gerade kein Bild.');
+    if (!video.paused && guetePruefen()) return true;
     await schlafen(180);
   }
-  return false;   // nach Ablauf nehmen wir das Bild trotzdem
+  return false;
 }
 
 async function bilderSammeln(anzahl) {
