@@ -402,6 +402,34 @@ assert.equal(erkannt.kopf.modell, 'Oblako M');
 assert.equal(erkannt.kopf.angenommen, false);
 assert.equal(erkannt.kopf.quelle, 'observed');
 
+// --- Ratlosigkeit wird nicht vorgelesen ---------------------------------------
+// Am Geraet kam "Oblako M nicht erkannt" aus dem Lautsprecher. Das ist keine
+// Hilfe: welcher Kopf es ist, hat der Nutzer gesagt.
+const klage = Engine.normalisiere(
+  { ...ANTWORT, coach_satz: 'Oblako M nicht erkannt.' },
+  true,
+  { kopf_modell: 'Oblako Phunnel M' }
+);
+assert.equal(klage.coach_satz, klage.optimierungen[0].text, 'stattdessen der naechste Handgriff');
+
+// Ohne Handgriff und ohne Problem bleibt ein Satz uebrig, der weiterhilft
+const klageLeer = Engine.normalisiere(
+  { ...ANTWORT, probleme: [], optimierungen: [], coach_satz: 'Kopfmodell kann ich nicht bestimmen.' },
+  true, {}
+);
+assert.ok(!/nicht bestimmen/.test(klageLeer.coach_satz));
+assert.ok(klageLeer.coach_satz.length > 10);
+
+// Ist wirklich kein Kopf im Bild, wird gesagt, was zu tun ist
+const klageOhneKopf = Engine.normalisiere(
+  { ...ANTWORT, analysis_status: 'no_head_detected', coach_satz: 'Ich kann keinen Kopf erkennen.' },
+  true, {}
+);
+assert.ok(/ins Bild/.test(klageOhneKopf.coach_satz));
+
+// Ein normaler Satz bleibt unangetastet
+assert.equal(Engine.normalisiere(ANTWORT, true, {}).coach_satz, ANTWORT.coach_satz);
+
 // --- (3) Mehrere Bilder -------------------------------------------------------
 const mehrere = Engine.promptBauen({
   modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '', bilder: 3,

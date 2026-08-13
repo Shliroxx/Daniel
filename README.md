@@ -340,6 +340,19 @@ knapp, färbt sich die Zahl. Der **Sparmodus** verhindert außerdem, dass ein
 unverändert vor der Kamera liegender Kopf zehnmal dieselbe Bewertung bekommt —
 analysiert wird nur, wenn sich im Bild etwas getan hat.
 
+### Wenn es „ewig scannt"
+
+Aus der Hand gehalten ist ein Bild selten ganz ruhig. Die App wartet deshalb kurz
+auf eine brauchbare Aufnahme — was gerade fehlt, steht oben als „halt still",
+„unscharf" oder „zu dunkel", mit Sekundenzähler. Nach 5 Sekunden misst sie
+nachsichtiger, nach 12 Sekunden schickt sie das Bild so, wie es ist. Nur
+stockdunkel bringt wirklich nichts.
+
+Live wird Gemini außerdem **ohne Nachdenkzeit** gefragt (`thinkingBudget: 0`).
+Sonst verbringt das Modell Sekunden mit einer Gedankenkette, deren Tokens vom
+Antwortbudget abgehen — im schlimmsten Fall kommt gar nichts zurück. Für die
+Vollanalyse auf Knopfdruck darf es denken, da zählt Gründlichkeit.
+
 ### Was die App aus deinen Sessions lernt
 
 Sagst du dreimal, dass es zu heiß war, wird daraus eine benannte Regel:

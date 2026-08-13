@@ -108,12 +108,26 @@ const Engine = (() => {
     return kurz || `Fehler ${status}`;
   }
 
-  async function ueberGemini(blobs, prompt, e) {
+  /* Wie viel darf das Modell vor der Antwort nachdenken?
+   *
+   * Gemini 2.5 denkt von sich aus lange nach, und die Denk-Tokens zaehlen gegen
+   * maxOutputTokens. In der Livevorschau hiess das: zehn Sekunden warten und am
+   * Ende eine abgeschnittene, also leere Antwort. Live wird deshalb ohne Denken
+   * gefragt — das Urteil kommt aus dem Bild, nicht aus einer Gedankenkette. Fuer
+   * die Vollanalyse darf es dauern, da ist Gruendlichkeit wichtiger als Tempo.
+   */
+  function denkbudget(modell, modus) {
+    if (!/2\.5/.test(modell || '')) return null;   // aeltere Modelle kennen das Feld nicht
+    return modus === 'live' ? 0 : 1024;
+  }
+
+  async function ueberGemini(blobs, prompt, e, modus) {
     const bilder = [];
     for (const blob of blobs) {
       bilder.push({ inline_data: { mime_type: 'image/jpeg', data: await base64(blob) } });
     }
 
+    const budget = denkbudget(e.gemini_modell, modus);
     const antwort = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(e.gemini_modell)}:generateContent`,
       {
@@ -126,7 +140,12 @@ const Engine = (() => {
             parts: [...bilder, { text: AUFTRAG }],
           }],
           // temperature 0, damit dasselbe Bild moeglichst dasselbe Ergebnis gibt.
-          generationConfig: { temperature: 0, responseMimeType: 'application/json', maxOutputTokens: 2600 },
+          generationConfig: {
+            temperature: 0,
+            responseMimeType: 'application/json',
+            maxOutputTokens: modus === 'live' ? 2200 : 4096,
+            ...(budget === null ? {} : { thinkingConfig: { thinkingBudget: budget } }),
+          },
         }),
       }
     );
@@ -139,6 +158,9 @@ const Engine = (() => {
     const text = (teile.parts || []).map((p) => p.text || '').join('');
     if (!text) {
       const grund = ((daten.candidates || [])[0] || {}).finishReason || 'leere Antwort';
+      if (grund === 'MAX_TOKENS') {
+        throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.');
+      }
       throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`);
     }
     return text;
@@ -194,7 +216,7 @@ const Engine = (() => {
   }
 
   /** Fragt ein Modell. `bilder` ist ein Blob oder eine Liste davon. */
-  async function modellFragen(bilder, prompt, anbieterWahl) {
+  async function modellFragen(bilder, prompt, anbieterWahl, modus = 'live') {
     const e = einstellungen();
     const anbieter = anbieterWahl || e.anbieter;
     const blobs = Array.isArray(bilder) ? bilder : [bilder];
@@ -203,7 +225,7 @@ const Engine = (() => {
       verbrauchZaehlen(anbieter);
       if (anbieter === 'gemini') {
         if (!e.gemini_key) throw new AnalyseFehler('Kein Gemini-Schluessel hinterlegt.');
-        return await ueberGemini(blobs, prompt, e);
+        return await ueberGemini(blobs, prompt, e, modus);
       }
       if (anbieter === 'openrouter') {
         if (!e.openrouter_key) throw new AnalyseFehler('Kein OpenRouter-Schluessel hinterlegt.');
@@ -545,6 +567,8 @@ const Engine = (() => {
       coach_satz: text(roh.coach_satz, 200),
     };
 
+    ergebnis.coach_satz = coachSatzPruefen(ergebnis.coach_satz, ergebnis);
+
     // Bei duennem Bild oder wackliger Sicherheit ist die Note ein Anhaltspunkt,
     // kein Urteil — sie wird gezeigt, aber nicht in den Konsens aufgenommen.
     ergebnis.vorlaeufig = status === 'ok' && (
@@ -560,6 +584,34 @@ const Engine = (() => {
       ergebnis.stufe_text = null;
     }
     return ergebnis;
+  }
+
+  /* Faengt den einen Satz ab, der nichts bringt: "Kopf nicht erkannt".
+   *
+   * Am Geraet kam genau das heraus — minutenlang gescannt und dann gesprochen
+   * "Oblako M nicht erkannt". Das ist keine Hilfe: welcher Kopf es ist, hat der
+   * Nutzer in den Einstellungen gesagt, die App nimmt ihn ohnehin an. Meldet das
+   * Modell trotzdem seine Ratlosigkeit, wird sie durch den naechsten Handgriff
+   * ersetzt — und wenn es keinen gibt, durch eine Ansage, die weiterhilft.
+   */
+  const STAMM = '(erkenn|erkann|identifizier|bestimm|ermittel|feststell|sehen|zuordn)';
+  const KLAGEN = [
+    new RegExp(`(nicht|kaum|schwer|nur teilweise)\\s+(sicher\\s+)?(zu\\s+)?${STAMM}`, 'i'),
+    new RegExp(`kein(en|e|er)?\\s+([\\wäöüß]+\\s+){0,2}${STAMM}`, 'i'),
+    // "Kopfart unbekannt" — auch das sagt nichts darueber, was zu tun ist.
+    /(kopf|modell|marke|typ)[^.]{0,24}(unklar|unbekannt)/i,
+  ];
+
+  function coachSatzPruefen(satz, ergebnis) {
+    if (!satz || !KLAGEN.some((muster) => muster.test(satz))) return satz;
+    if (ergebnis.analysis_status !== 'ok') {
+      return 'Halt den Kopf mittig ins Bild, etwa eine Handbreit entfernt.';
+    }
+    const naechster = (ergebnis.optimierungen[0] || {}).text;
+    if (naechster) return naechster;
+    const dringend = (ergebnis.probleme[0] || {}).titel;
+    if (dringend) return dringend;
+    return 'Sieht soweit gut aus — halt kurz still, dann schau ich genauer hin.';
   }
 
   /* Zieht Widersprueche zwischen Beobachtung und Bewertung gerade.
@@ -928,7 +980,7 @@ const Engine = (() => {
    */
   async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis, kontext) {
     try {
-      const rohtext = await modellFragen(blobs, prompt, anbieter);
+      const rohtext = await modellFragen(blobs, prompt, anbieter, 'voll');
       const zweit = normalisiere(jsonAusText(rohtext), false, kontext);
       if (zweit.gesamtscore === null || ergebnis.gesamtscore === null) {
         return { anbieter, score: zweit.gesamtscore, abweichung: null, einig: false };
@@ -1217,7 +1269,7 @@ const Engine = (() => {
       });
 
       const begonnen = performance.now();
-      const rohtext = await modellFragen(blobs, prompt);
+      const rohtext = await modellFragen(blobs, prompt, null, modus);
       const ergebnis = normalisiere(jsonAusText(rohtext), modus === 'live', this.kontext);
       ergebnis.dauer = Math.round(performance.now() - begonnen) / 1000;
       ergebnis.bilder = blobs.length;

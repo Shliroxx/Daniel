@@ -23,19 +23,47 @@ const Steuerung = (() => {
     blindMs: 4000,      // so lange darf das Bild stehen, bevor wir pausieren
     sparUnterschied: 1.2, // darunter gilt das Bild als unveraendert
     verblassenMs: 6000, // nach dieser Zeit ist ein Marker ganz verblasst
+    geduldMs: 5000,     // so lange wird auf ein sauberes Bild gewartet
+    notfallMs: 12000,   // danach wird geschickt, was da ist
+    nachsicht: { ruhe: 16, schaerfe: 3.4, helligkeit: 22 }, // dazwischen reicht weniger
   };
+
+  /* Die Grenzen, die gerade gelten.
+   *
+   * Aus der Hand gehalten ist ein Bild selten ganz ruhig und selten ganz scharf.
+   * Wer streng bleibt, wartet ewig und schickt nie etwas los — genau das war am
+   * Geraet zu sehen: langes Scannen ohne Ergebnis. Nach `geduldMs` ohne Analyse
+   * wird deshalb nachsichtiger gemessen. Lieber ein etwas weicheres Bild
+   * beurteilen und die Note als vorlaeufig kennzeichnen als gar nichts sagen.
+   */
+  function geltendeGrenzen(wartetMs, grenzen = GRENZEN) {
+    if (!(wartetMs > grenzen.geduldMs)) return { grenzen, nachsichtig: false };
+    if (!(wartetMs > grenzen.notfallMs)) {
+      return { grenzen: { ...grenzen, ...grenzen.nachsicht }, nachsichtig: true };
+    }
+    // Nach zwoelf Sekunden ohne jedes Ergebnis ist Schweigen die schlechteste
+    // Antwort. Dann geht das Bild raus, wie es ist — nur stockdunkel bringt
+    // wirklich nichts, das bleibt die einzige Huerde.
+    return {
+      grenzen: { ...grenzen, ruhe: Infinity, schaerfe: 0, helligkeit: grenzen.nachsicht.helligkeit },
+      nachsichtig: true,
+    };
+  }
 
   /* Taugt dieses Bild fuer eine Analyse?
    *
    * Reihenfolge mit Absicht: zu dunkel ist die Ursache, unscharf oft nur die
    * Folge. Wer zuerst "unscharf" liest, macht mehr Licht nicht an.
    */
-  function bildBewerten(guete, grenzen = GRENZEN) {
-    if (!guete) return { ok: false, problem: 'kein Bild' };
-    if (guete.helligkeit < grenzen.helligkeit) return { ok: false, problem: 'zu dunkel' };
-    if (guete.bewegung > grenzen.ruhe) return { ok: false, problem: 'halt still' };
-    if (guete.schaerfe < grenzen.schaerfe) return { ok: false, problem: 'unscharf' };
-    return { ok: true, problem: '' };
+  function bildBewerten(guete, grenzen = GRENZEN, wartetMs = 0) {
+    if (!guete) return { ok: false, problem: 'kein Bild', nachsichtig: false };
+    const g = geltendeGrenzen(wartetMs, grenzen);
+    const schlecht = (problem) => ({ ok: false, problem, nachsichtig: g.nachsichtig });
+
+    if (guete.helligkeit < g.grenzen.helligkeit) return schlecht('zu dunkel');
+    if (guete.bewegung > g.grenzen.ruhe) return schlecht('halt still');
+    if (guete.schaerfe < g.grenzen.schaerfe) return schlecht('unscharf');
+    return { ok: true, problem: '', nachsichtig: g.nachsichtig };
   }
 
   /* Was soll die Analyseschleife als naechstes tun?
@@ -158,6 +186,7 @@ const Steuerung = (() => {
 
   return {
     GRENZEN,
+    geltendeGrenzen,
     bildBewerten,
     kameraLage,
     rueckkehrPlan,

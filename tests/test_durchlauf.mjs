@@ -51,7 +51,7 @@ const ANTWORT = {
 
 // Steuerbare Antwort: Text, Fehlerstatus, Verzoegerung.
 const antwortPlan = { text: (_url) => JSON.stringify(ANTWORT), status: 200, verzoegerung: 0 };
-const { global, elemente, protokoll, dokument, spur, bildAendern } = baueUmgebung(webDir, {
+const { global, elemente, protokoll, dokument, spur, bildAendern, wackeln } = baueUmgebung(webDir, {
   antwort: (url) => ({ text: antwortPlan.text(url), status: antwortPlan.status, verzoegerung: antwortPlan.verzoegerung }),
 });
 
@@ -120,6 +120,13 @@ pruefe('Messwerte da', $('messwerte').children.length >= 2, `${$('messwerte').ch
 pruefe('Kontingent gezaehlt', $('kontingent').textContent.startsWith('1/') || $('kontingent').textContent.startsWith('2/'),
        `"${$('kontingent').textContent}"`);
 pruefe('Gesprochen', protokoll.gesprochen.some((s) => s.includes('neun Uhr')), protokoll.gesprochen.join(' | ').slice(0, 60));
+
+// Live darf das Modell nicht erst gruebeln — sonst dauert jede Runde ewig und
+// die Antwort wird vom Denken aufgefressen (finishReason MAX_TOKENS).
+const ersteAnfrage = JSON.parse(protokoll.anfragen[0].optionen.body);
+pruefe('Live ohne Denkzeit gefragt',
+       ersteAnfrage.generationConfig.thinkingConfig.thinkingBudget === 0,
+       JSON.stringify(ersteAnfrage.generationConfig.thinkingConfig));
 
 // --- Sparmodus ---------------------------------------------------------------
 const vorSparen = protokoll.anfragen.length;
@@ -414,6 +421,28 @@ p3('Kein doppelter Analysetakt nach Hintergrund',
    `vorher ${taktVorher}, nachher ${taktNachher} Anfragen in 4 s`);
 p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
    `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`);
+
+// --- 9. Zittrige Hand: es darf nicht ewig gescannt werden ---------------------------------
+// Am Geraet gemeldet: "braucht erstmal lange zum Scannen". Aus der Hand ist ein
+// Bild nie ganz ruhig — bleibt die Pruefung streng, geht nie etwas raus.
+wackeln(true);
+await warte(400);
+const vorWackeln = protokoll.anfragen.length;
+await warte(2500);
+p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln,
+   `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s`);
+p3('Wartegrund steht in der Anzeige', /halt still|unscharf/.test($('lage').textContent),
+   `"${$('lage').textContent}"`);
+
+// Der Sekundenzaehler erscheint erst ab drei Sekunden Wartezeit, und die zaehlt
+// ab der letzten Analyse — nicht ab hier. Deshalb mit Abstand pruefen.
+await warte(2000);
+p3('Wartezeit wird mitgezaehlt', /·\s*\d+s/.test($('lage').textContent), `"${$('lage').textContent}"`);
+
+await warte(11000);
+p3('Nach Geduldsfrist wird trotzdem analysiert', protokoll.anfragen.length > vorWackeln,
+   `${protokoll.anfragen.length - vorWackeln} Anfragen nach 14 s`);
+wackeln(false);
 
 z.laeuft = false;
 console.log(zeilen.join('\n'));
