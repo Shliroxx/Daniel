@@ -73,6 +73,14 @@ h1 {
 .unterzeile { color: var(--muted); line-height: 1.55; margin: 0 0 22px; font-size: 14px; }
 .fuss { color: var(--muted); font-size: 12px; margin-top: 16px; line-height: 1.5; }
 
+/* Kein Alarm, aber auch nicht zu uebersehen — fuer Hinweise, die man einmal
+   gelesen haben sollte, bevor man einen Schluessel eintraegt. */
+.unterzeile.warnung {
+  color: var(--amber);
+  border-left: 2px solid var(--amber);
+  padding-left: 12px;
+}
+
 .feld { margin-bottom: 18px; }
 
 .feld-titel {

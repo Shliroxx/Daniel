@@ -42,6 +42,8 @@ const Engine = (() => {
     openrouter_key: '',
     openrouter_modell: 'meta-llama/llama-4-maverick:free',
     server_url: '',
+    // Losungswort des eigenen Rechners — er zeigt es beim Start an.
+    server_token: '',
     // Zweiter Anbieter fuer die Gegenprobe beim Endurteil. 'aus' = keine.
     gegenprobe: 'aus',
     // Bei kaum veraendertem Bild keine neue Anfrage stellen.
@@ -69,7 +71,9 @@ const Engine = (() => {
     const e = einstellungen();
     if (e.anbieter === 'gemini') return Boolean(e.gemini_key);
     if (e.anbieter === 'openrouter') return Boolean(e.openrouter_key);
-    if (e.anbieter === 'server') return Boolean(e.server_url || location.origin);
+    // Ohne Adresse liefe jede Anfrage gegen die eigene Seite und kaeme als 404
+    // zurueck — eine Fehlermeldung, die vom Problem wegfuehrt.
+    if (e.anbieter === 'server') return Boolean(e.server_url && e.server_token);
     return false;
   }
 
@@ -206,9 +210,18 @@ const Engine = (() => {
     blobs.forEach((blob, index) => daten.append('bild', blob, `kopf${index + 1}.jpg`));
     daten.append('prompt', prompt);
 
-    const antwort = await fetch(`${basis}/api/shisha/proxy`, { method: 'POST', body: daten });
+    const antwort = await fetch(`${basis}/api/shisha/proxy`, {
+      method: 'POST',
+      // Das Losungswort steht im eigenen Kopf — dadurch fragt der Browser erst
+      // vorab an, statt die Anfrage einfach abzuschicken.
+      headers: { 'X-Shisha-Token': e.server_token || '' },
+      body: daten,
+    });
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) {
+      if (antwort.status === 401) throw new AnalyseFehler('Losungswort stimmt nicht — steht in der Startzeile des Rechners.');
+      throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    }
 
     const inhalt = JSON.parse(rohtext);
     if (!inhalt.ok) throw new AnalyseFehler(inhalt.fehler || 'Rechner meldet einen Fehler.');

@@ -1020,6 +1020,7 @@ function einstellungenFuellen() {
   $('fOrKey').value = e.openrouter_key;
   $('fOrModell').value = e.openrouter_modell;
   $('fServerUrl').value = e.server_url;
+  $('fServerToken').value = e.server_token;
   $('fGegenprobe').value = e.gegenprobe;
   $('fSparmodus').checked = e.sparmodus;
   $('fStandardkopf').value = e.standardkopf;
@@ -1043,6 +1044,7 @@ function einstellungenSpeichern() {
     openrouter_key: $('fOrKey').value.trim(),
     openrouter_modell: $('fOrModell').value.trim(),
     server_url: $('fServerUrl').value.trim(),
+    server_token: $('fServerToken').value.trim(),
     gegenprobe: $('fGegenprobe').value,
     sparmodus: $('fSparmodus').checked,
     standardkopf: $('fStandardkopf').value.trim(),

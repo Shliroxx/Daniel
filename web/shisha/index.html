@@ -3,7 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <title>Hookah Analyzer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- Der Schluessel liegt im localStorage dieses Geraets. Faenge: kein fremdes
+       Skript darf laufen (script-src 'self'), nichts wird von aussen nachgeladen,
+       und Formulare koennen nirgendwohin abschicken. connect-src bleibt bei
+       https: offen, weil der eigene Rechner jede beliebige Adresse im Heimnetz
+       haben kann — der eigentliche Schutz ist script-src. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
   <meta name="theme-color" content="#04080d" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -136,6 +142,12 @@
       Die Bilder gehen direkt von diesem Gerät zum Modell. Der Schlüssel bleibt
       hier gespeichert und wird nirgends sonst hingeschickt.
     </p>
+    <p class="unterzeile warnung">
+      Der Speicher gehört zur Webadresse, nicht zu dieser Seite allein — andere
+      Seiten unter derselben Adresse könnten den Schlüssel lesen. Beschränke ihn
+      deshalb beim Anbieter: bei Google unter <b>API key → Website restrictions</b>
+      auf diese Adresse, bei OpenRouter über ein Guthabenlimit pro Schlüssel.
+    </p>
 
     <div class="feld">
       <span class="feld-titel">Anbieter</span>
@@ -175,11 +187,19 @@
     <div id="block-server" class="anbieter-block" hidden>
       <p class="hinweis-text">
         Läuft über Jarvis auf deinem PC und damit über dein Claude-Abo — dafür muss
-        der Rechner an sein. Leer lassen, wenn die App vom PC selbst kommt.
+        der Rechner an sein. Adresse und Losungswort zeigt der PC beim Start an.
       </p>
       <label class="langfeld">Adresse
         <input id="fServerUrl" type="text" autocomplete="off" placeholder="https://192.168.1.42:8443" />
       </label>
+      <label class="langfeld">Losungswort
+        <input id="fServerToken" type="text" autocomplete="off" placeholder="steht in der Startzeile des PCs" />
+      </label>
+      <p class="hinweis-text">
+        Ohne Losungswort nimmt der PC nichts an. Das muss so sein: der Proxy lässt
+        Claude auf deinem Rechner arbeiten, und ohne Schranke könnte jede
+        beliebige Webseite ihn ansprechen, solange er läuft.
+      </p>
     </div>
 
     <h3>Mein Standardkopf</h3>
