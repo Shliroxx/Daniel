@@ -433,6 +433,10 @@ p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln
    `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s`);
 p3('Wartegrund steht in der Anzeige', /halt still|unscharf/.test($('lage').textContent),
    `"${$('lage').textContent}"`);
+
+// Der Sekundenzaehler erscheint erst ab drei Sekunden Wartezeit, und die zaehlt
+// ab der letzten Analyse — nicht ab hier. Deshalb mit Abstand pruefen.
+await warte(2000);
 p3('Wartezeit wird mitgezaehlt', /·\s*\d+s/.test($('lage').textContent), `"${$('lage').textContent}"`);
 
 await warte(11000);
