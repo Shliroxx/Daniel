@@ -1183,7 +1183,7 @@ function kontextLesen() {
     hmd: $('fHmd').value.trim(),
     kohlen: $('fKohlen').value.trim(),
     notiz: $('fNotiz').value.trim(),
-    durchmesser_mm: $('fDurchmesser').value.trim(),
+    aussendurchmesser_mm: $('fDurchmesser').value.trim(),
   };
 }
 
@@ -1195,7 +1195,7 @@ function kontextLesen() {
 function durchmesserVorschlagen() {
   const treffer = Engine.kopfSuchen($('fKopf').value);
   if (treffer && !$('fDurchmesser').value.trim()) {
-    $('fDurchmesser').value = String(treffer.durchmesser_mm);
+    $('fDurchmesser').value = String(treffer.aussendurchmesser_mm);
     $('fDurchmesser').classList.add('vorgeschlagen');
   }
 }
@@ -1230,7 +1230,7 @@ function kontextWiederherstellen() {
   $('fSorte').value = gespeichert.tabak_sorte || '';
   $('fHmd').value = gespeichert.hmd || '';
   $('fKohlen').value = gespeichert.kohlen || '';
-  $('fDurchmesser').value = gespeichert.durchmesser_mm || '';
+  $('fDurchmesser').value = gespeichert.aussendurchmesser_mm || '';
   if (gespeichert.ziel) {
     [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
   }
@@ -1623,9 +1623,22 @@ function reportZeigen(analyse) {
 
   const kategorien = $('kategorien');
   kategorien.innerHTML = '';
+  const ausgenommen = analyse.nicht_bewertbar || [];
   Object.entries(analyse.scores || {}).forEach(([key, wert]) => {
     const zeile = document.createElement('div');
     zeile.className = 'kat';
+    // In fruehen Bauphasen gibt es manche Kategorien noch gar nicht. Sie stehen
+    // trotzdem da, aber ohne Zahl — eine 0 waere hier eine Behauptung.
+    if (ausgenommen.includes(key)) {
+      zeile.classList.add('kat-offen');
+      zeile.innerHTML =
+        `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>`
+        + '<span class="kat-leiste"></span>'
+        + '<span class="kat-zahl">–</span>';
+      zeile.title = 'in dieser Phase noch nicht beurteilbar — zaehlt nicht zur Note';
+      kategorien.appendChild(zeile);
+      return;
+    }
     zeile.innerHTML =
       `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>` +
       `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
@@ -1970,7 +1983,7 @@ function kopflisteFuellen() {
   ((Engine.spec.koepfe || {}).liste || []).forEach((kopf) => {
     const eintrag = document.createElement('option');
     eintrag.value = kopf.name;
-    eintrag.label = `${kopf.durchmesser_mm} mm`;
+    eintrag.label = `${kopf.aussendurchmesser_mm} mm`;
     liste.appendChild(eintrag);
   });
 }

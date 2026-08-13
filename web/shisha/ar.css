@@ -377,6 +377,8 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 
 .kategorien { display: grid; gap: 8px; }
 .kat { display: grid; grid-template-columns: 118px 1fr 34px; align-items: center; gap: 9px; font-size: 13px; }
+/* Kategorien, die es in dieser Bauphase noch nicht gibt — sichtbar, aber ohne Zahl. */
+.kat-offen { opacity: 0.45; }
 .kat-name { color: var(--muted); }
 .kat-leiste { height: 6px; background: rgba(255, 255, 255, 0.09); border-radius: 3px; overflow: hidden; }
 .kat-fuell { height: 100%; border-radius: 3px; transition: width 0.7s ease; }

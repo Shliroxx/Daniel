@@ -78,37 +78,54 @@
       "key": "kopf",
       "name": "Kopf pruefen",
       "ziel": "Leerer, sauberer, trockener Kopf — aus jedem Winkel in Ordnung.",
-      "achte_auf": "Der Kopf ist hier absichtlich LEER — das ist kein Fehler und kein Grund, die Analyse abzubrechen. Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. Tabakwerte bleiben in dieser Phase leer."
+      "achte_auf": "Der Kopf ist hier absichtlich LEER — das ist kein Fehler und kein Grund, die Analyse abzubrechen. Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. Tabakwerte bleiben in dieser Phase leer — die zugehoerigen Kategorien laesst du auf null, sie zaehlen hier nicht zur Note.",
+      "noch_nicht_bewertbar": [
+        "tabak_verteilung",
+        "fuellhoehe",
+        "airflow",
+        "tabak_kompatibilitaet",
+        "zielerreichung"
+      ]
     },
     {
       "key": "tabak",
       "name": "Tabak vorbereiten",
       "ziel": "Aufgelockert, entrippt, ueberschuessige Molasse abgetropft.",
-      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt."
+      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt.",
+      "noch_nicht_bewertbar": [
+        "tabak_verteilung",
+        "fuellhoehe",
+        "airflow",
+        "zielerreichung"
+      ]
     },
     {
       "key": "einstreuen",
       "name": "Einstreuen",
       "ziel": "Locker und gleichmaessig einstreuen statt stopfen.",
-      "achte_auf": "Verteilung ueber die ganze Flaeche, Fuellhoehe, ungewollte Verdichtung, Tabak der in Kamin oder Zugloecher faellt, Hohlraeume."
+      "achte_auf": "Verteilung ueber die ganze Flaeche, Fuellhoehe, ungewollte Verdichtung, Tabak der in Kamin oder Zugloecher faellt, Hohlraeume.",
+      "noch_nicht_bewertbar": []
     },
     {
       "key": "glattziehen",
       "name": "Glattziehen und Rand",
       "ziel": "Ebene Oberflaeche, freier Rand, freie zentrale Oeffnung.",
-      "achte_auf": "Hoehenunterschiede, Tabak am Rand, Randabstand in Millimetern, freier Kamin, Airflow-Blockaden."
+      "achte_auf": "Hoehenunterschiede, Tabak am Rand, Randabstand in Millimetern, freier Kamin, Airflow-Blockaden.",
+      "noch_nicht_bewertbar": []
     },
     {
       "key": "aufsatz",
       "name": "Folie oder HMD",
       "ziel": "Folie straff und gelocht oder HMD sauber und zentriert aufgesetzt.",
-      "achte_auf": "Folie straff, Lochmuster gleichmaessig; beim HMD Sitz, Zentrierung, Abstand zum Tabak und ob der Boden den Tabak beruehrt."
+      "achte_auf": "Folie straff, Lochmuster gleichmaessig; beim HMD Sitz, Zentrierung, Abstand zum Tabak und ob der Boden den Tabak beruehrt.",
+      "noch_nicht_bewertbar": []
     },
     {
       "key": "kohle",
       "name": "Kohle auflegen",
       "ziel": "Durchgegluehte Kohle richtig verteilt.",
-      "achte_auf": "Kohle komplett durchgegluht, Anzahl, Verteilung, Abstand zueinander und zum Rand, keine Kohle mittig ueber dem Kamin."
+      "achte_auf": "Kohle komplett durchgegluht, Anzahl, Verteilung, Abstand zueinander und zum Rand, keine Kohle mittig ueber dem Kamin.",
+      "noch_nicht_bewertbar": []
     }
   ],
   "quellen": [
@@ -178,8 +195,10 @@
       "  in der Schale. Tabak bis knapp unter die Kaminoberkante, Kamin bleibt frei.",
       "- Killer- / Trichterkopf: mehrere Loecher im Trichterboden, braucht etwas weniger",
       "  Tabak, Loecher duerfen nicht zugestopft werden, Molasse laeuft durch.",
-      "- Vortex: erhoehter Kamin mit seitlichen Schlitzen — Schlitze muessen frei bleiben.",
-      "- Steinkopf: saugt Feuchtigkeit, vertraegt mehr Hitze und etwas mehr Tabak.",
+      "- Vortex: erhoehter Mittelkegel, die Zugloecher sitzen seitlich an seinem Fuss —",
+      "  sie duerfen nicht zugestopft werden.",
+      "- Steinkopf: saugt Molasse auf, speichert Hitze lange und reagiert traege auf",
+      "  Kohlekorrekturen — eher zurueckhaltend heizen und frueh gegensteuern.",
       "- Turbinen- / Rauchsaeulenkopf: flache Schale, sehr locker bauen.",
       "Grosse Koepfe brauchen mehr Hitze und vertragen mehr Kohle, kleine Koepfe",
       "ueberhitzen schnell."
@@ -200,6 +219,9 @@
       "Richtwerte, locker eingestreut: kleiner Kopf 8 bis 12 g, mittlerer Phunnel",
       "12 bis 18 g, grosser Kopf 18 bis 25 g. Die exakte Gramm-Menge ist aus einem Foto",
       "NICHT bestimmbar — hoechstens die relative Fuellhoehe.",
+      "Bezug fuer die Fuellhoehe ist IMMER die Oberkante des aeusseren Kopfrandes, nie",
+      "die Kaminoberkante — beim Phunnel sind das zwei verschiedene Hoehen. Wie weit der",
+      "Tabak den Kamin ueberragt, gehoert als Text in \"kopf.geometrie\".",
       "Fuellhoehe wird in Millimetern unter dem Rand angegeben: 0 mm = randbuendig,",
       "2 bis 3 mm ist der uebliche Zielbereich, negative Werte heissen: Tabak steht ueber",
       "den Rand. Ueber Rand ist nur mit HMD und hitzefestem Tabak sinnvoll.",
@@ -300,7 +322,7 @@
       "                    \"kopf_vollstaendig\": true, \"hinweis\": \"kurz, nur wenn etwas stoert\"},",
       "  \"kopf\": {\"art\": \"phunnel|killer|vortex|steinkopf|turbine|unbekannt\", \"modell\": null,",
       "           \"geometrie\": \"kurz\", \"zentrale_oeffnung_sichtbar\": true,",
-      "           \"quelle\": \"observed|estimated|unknown\", \"confidence\": 0},",
+      "           \"quelle\": \"observed|estimated|unknown|angegeben\", \"confidence\": 0},",
       "  \"tabak\": {\"fuellhoehe_mm\": 0.0, \"fuellhoehe_quelle\": \"observed|estimated|unknown\",",
       "            \"dichte\": 0, \"gleichmaessigkeit\": 0, \"klumpen\": false, \"luecken\": false,",
       "            \"randkontakt\": false, \"ueber_rand\": false, \"menge_gramm\": null,",
@@ -378,12 +400,17 @@
       "niedriger bauen, fruehes Kratzen heisst zu dicht oder zu nah am HMD."
     ],
     "massstab": [
-      "Groessenbezug: Der Nutzer hat den Innendurchmesser der Tabakmulde angegeben.",
-      "Nimm ihn als Massstab — miss Entfernungen im Bild im Verhaeltnis dazu, statt sie",
-      "frei zu schaetzen. Beispiel: ist die Mulde im Bild 400 Pixel breit und der",
-      "Durchmesser 80 mm, entsprechen 5 Bildpixel etwa 1 mm.",
-      "Fuellhoehen, die du so herleitest, duerfen \"estimated\" sein statt \"unknown\".",
-      "Ohne Angabe bleibt die Millimeterzahl eine grobe Schaetzung — sag das dann auch."
+      "Groessenbezug: Oben steht der AUSSENdurchmesser des Kopfes am oberen Rand —",
+      "nicht der Durchmesser der Tabakmulde. Die Mulde ist deutlich kleiner, weil Rand",
+      "und Wandstaerke abgehen; verwechselst du beides, kommen alle Millimeter rund ein",
+      "Fuenftel zu klein heraus.",
+      "So rechnest du: miss im Bild die Breite des Kopfes von Aussenkante zu Aussenkante",
+      "und setz sie mit dem angegebenen Wert gleich. Ist der Kopf im Bild 400 Pixel breit",
+      "und aussen 80 mm, entsprechen 5 Bildpixel etwa 1 mm. Alles andere — Muldenbreite,",
+      "Fuellhoehe, HMD-Abstand — misst du in diesem Massstab im Bild aus.",
+      "Steht bei der Angabe \"angegeben\" oder \"aus der Liste\", duerfen die so",
+      "hergeleiteten Millimeter \"estimated\" sein. Steht dort \"angenommen\", ist der",
+      "Bezug selbst geraten — dann bleibt die Millimeterzahl \"unknown\", und du sagst es."
     ],
     "mehrere_bilder": [
       "Du bekommst mehrere Bilder desselben Kopfes aus verschiedenen Winkeln.",
@@ -421,6 +448,14 @@
       "Kannst du die Kopfart nicht sicher bestimmen, ist das kein Grund abzubrechen:",
       "nimm die Angabe des Nutzers, setz die Quelle auf \"angegeben\" und arbeite weiter."
     ],
+    "kopf_standard": [
+      "Der Nutzer hat KEINEN Kopf angegeben. Oben steht, worauf er ueblicherweise",
+      "baut — das ist eine Vermutung, keine Angabe. Erkenne die Kopfart trotzdem",
+      "selbst und melde, was du siehst. Nur wenn du sie wirklich nicht bestimmen",
+      "kannst, nimm den genannten Kopf an und setz \"quelle\" auf \"angegeben\".",
+      "Sag im \"coach_satz\" nie, dass du den Kopf nicht erkennst — der Satz gehoert",
+      "immer dem naechsten Handgriff."
+    ],
     "kopf_angegeben": [
       "Der Nutzer hat gesagt, welchen Kopf er benutzt. Nimm das als gegeben — du musst",
       "den Typ nicht selbst erkennen und sollst ihn nicht anzweifeln, solange das Bild",
@@ -440,6 +475,9 @@
     "kappe_hmd_kontakt": 30,
     "kappe_airflow_hoch": 45,
     "kappe_oeffnung_verdeckt": 30,
+    "kappe_hotspot_hoch": 40,
+    "kappe_kohle_nicht_durch": 35,
+    "kappe_gesamt_kritisch": 55,
     "bildqualitaet_min": 45,
     "konsens_bilder": 5,
     "konsens_spanne": 12,
@@ -517,66 +555,66 @@
     ]
   },
   "koepfe": {
-    "hinweis": "Innendurchmesser der Tabakmulde in Millimetern. Dient als Groessenbezug, damit das Modell Entfernungen im Bild ausrechnen statt schaetzen muss. Eigene Koepfe einfach ergaenzen. 'standard' ist der Kopf, von dem die App ausgeht, wenn nichts angegeben und nichts erkannt wurde — in der App aenderbar.",
+    "hinweis": "AUSSENdurchmesser des Kopfes am oberen Rand, in Millimetern — nicht die Tabakmulde, die ist deutlich kleiner. Dient als Groessenbezug, damit das Modell Entfernungen im Bild ausrechnen statt schaetzen muss. Eigene Koepfe einfach ergaenzen. 'standard' ist der Kopf, von dem die App ausgeht, wenn nichts angegeben und nichts erkannt wurde — in der App aenderbar.",
     "liste": [
       {
         "name": "Oblako Phunnel M",
-        "durchmesser_mm": 78,
+        "aussendurchmesser_mm": 78,
         "art": "phunnel"
       },
       {
         "name": "Oblako Phunnel L",
-        "durchmesser_mm": 88,
+        "aussendurchmesser_mm": 88,
         "art": "phunnel"
       },
       {
         "name": "Oblako Glaze M",
-        "durchmesser_mm": 78,
+        "aussendurchmesser_mm": 78,
         "art": "phunnel"
       },
       {
         "name": "Kaya Phunnel",
-        "durchmesser_mm": 75,
+        "aussendurchmesser_mm": 75,
         "art": "phunnel"
       },
       {
         "name": "Werkbund Phunnel",
-        "durchmesser_mm": 80,
+        "aussendurchmesser_mm": 80,
         "art": "phunnel"
       },
       {
         "name": "Alpaca Predator",
-        "durchmesser_mm": 82,
+        "aussendurchmesser_mm": 82,
         "art": "phunnel"
       },
       {
         "name": "Conceptic Design Phunnel",
-        "durchmesser_mm": 80,
+        "aussendurchmesser_mm": 80,
         "art": "phunnel"
       },
       {
         "name": "Vyro Rocket",
-        "durchmesser_mm": 76,
+        "aussendurchmesser_mm": 76,
         "art": "phunnel"
       },
       {
         "name": "Killerkopf klein",
-        "durchmesser_mm": 68,
+        "aussendurchmesser_mm": 68,
         "art": "killer"
       },
       {
         "name": "Killerkopf gross",
-        "durchmesser_mm": 80,
+        "aussendurchmesser_mm": 80,
         "art": "killer"
       },
       {
         "name": "Steinkopf",
-        "durchmesser_mm": 75,
+        "aussendurchmesser_mm": 75,
         "art": "steinkopf"
       },
       {
         "name": "Vortex",
-        "durchmesser_mm": 78,
+        "aussendurchmesser_mm": 78,
         "art": "vortex"
       }
     ],

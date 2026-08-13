@@ -405,9 +405,15 @@ Im Hintergrund analysiert die App nicht weiter — das spart Freikontingent und 
 ### Maßstab: warum der Kopfdurchmesser zählt
 
 Millimeter aus einem Foto zu schätzen ist Raterei, solange nichts im Bild eine
-bekannte Größe hat. Deshalb kannst du den **Innendurchmesser der Tabakmulde**
-angeben — die App gibt ihn dem Modell als Maßstab mit, das rechnet Entfernungen
-dann im Verhältnis dazu aus statt frei zu schätzen.
+bekannte Größe hat. Deshalb kannst du den **Außendurchmesser des Kopfes** angeben
+— quer über den oberen Rand gemessen. Die App gibt ihn dem Modell als Maßstab
+mit, das rechnet Entfernungen dann im Verhältnis dazu aus statt frei zu schätzen.
+
+Wichtig ist, dass Maß und Beschriftung zusammenpassen: bis Version 2 stand dort
+„Innendurchmesser der Tabakmulde", die hinterlegten Werte waren aber die
+Außenmaße der Köpfe. Dadurch kamen alle abgeleiteten Millimeter — Füllhöhe,
+HMD-Abstand — systematisch rund ein Fünftel zu klein heraus. Jetzt heißt das
+Feld, was drinsteht, und das Modell misst die Mulde selbst im Bild aus.
 
 Gängige Köpfe stehen in `spec.json`; tippst du „Oblako Phunnel M", wird der Wert
 vorgeschlagen. Deinen eigenen Kopf einmal ausmessen genügt, danach merkt die App
