@@ -425,7 +425,10 @@
       "Der Nutzer hat gesagt, welchen Kopf er benutzt. Nimm das als gegeben — du musst",
       "den Typ nicht selbst erkennen und sollst ihn nicht anzweifeln, solange das Bild",
       "nicht klar etwas anderes zeigt. Trag ihn in \"kopf\" ein und setz \"quelle\" auf",
-      "\"angegeben\". Widerspricht das Bild der Angabe eindeutig, sag das im Befund."
+      "\"angegeben\". Widerspricht das Bild der Angabe eindeutig, sag das im Befund.",
+      "Sag im \"coach_satz\" NIE, dass du den Kopf oder das Modell nicht erkennst — der",
+      "Nutzer weiss, welchen Kopf er benutzt, und hoert diesen Satz gesprochen. Der Satz",
+      "gehoert immer dem naechsten Handgriff."
     ]
   },
   "plausibilitaet": {

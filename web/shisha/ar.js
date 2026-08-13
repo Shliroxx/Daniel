@@ -55,6 +55,7 @@ const zustand = {
   feedback: {},
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
   lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
+  wartetSeit: 0,        // seit wann wartet die Schleife auf ein brauchbares Bild
   // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
   versatz: { x: 0, y: 0 },
   markerZeit: 0,        // wann die aktuellen Marker entstanden sind
@@ -176,6 +177,7 @@ function pausieren(grund) {
   if (zustand.pausiert) return;
   zustand.laeuft = false;
   zustand.pausiert = true;
+  zustand.wartetSeit = 0;
   if (window.speechSynthesis) speechSynthesis.cancel();
   $('pauseGrund').textContent = grund || 'Die Kamera steht.';
   $('pauseFehler').textContent = '';
@@ -313,13 +315,21 @@ function veraenderungSeitAnalyse() {
   return unterschied(zustand.letzteGrau, analyseMini);
 }
 
-function guetePruefen() {
-  const urteil = Steuerung.bildBewerten(bildGuete());
+/* Taugt das aktuelle Bild? `wartetMs` ist die Zeit ohne Analyse.
+ *
+ * Die Sekundenzahl steht mit in der Anzeige, damit man sieht, dass die App
+ * nicht haengt, sondern wartet — und ab wann sie es trotzdem versucht.
+ */
+function guetePruefen(wartetMs = 0) {
+  const urteil = Steuerung.bildBewerten(bildGuete(), Steuerung.GRENZEN, wartetMs);
   if (!urteil.ok) {
-    if (urteil.problem !== 'kein Bild') setzeLage(urteil.problem, 'warn');
+    if (urteil.problem !== 'kein Bild') {
+      const sekunden = Math.floor(wartetMs / 1000);
+      setzeLage(sekunden >= 3 ? `${urteil.problem} · ${sekunden}s` : urteil.problem, 'warn');
+    }
     return false;
   }
-  return true;
+  return urteil;
 }
 
 // --------------------------------------------------------------------------
@@ -364,7 +374,11 @@ async function schleife() {
       continue;
     }
 
-    if (zustand.busy || !guetePruefen()) {
+    if (!zustand.wartetSeit) zustand.wartetSeit = Date.now();
+    const wartetMs = Date.now() - zustand.wartetSeit;
+
+    const urteil = zustand.busy ? false : guetePruefen(wartetMs);
+    if (!urteil) {
       await schlafen(220);
       continue;
     }
@@ -378,7 +392,8 @@ async function schleife() {
     }
 
     zustand.busy = true;
-    setzeLage('analysiere', 'denkt');
+    zustand.wartetSeit = 0;
+    setzeLage(urteil.nachsichtig ? 'analysiere (unruhig)' : 'analysiere', 'denkt');
     try {
       // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
       const blob = await bildAufnehmen(896);
@@ -1157,10 +1172,11 @@ const WINKEL_ANSAGE = [
  * Ende drei eingefrorene Bilder zu verschicken.
  */
 async function warteAufRuhigesBild(hoechstensMs = 8000) {
-  const bis = Date.now() + hoechstensMs;
+  const start = Date.now();
+  const bis = start + hoechstensMs;
   while (Date.now() < bis) {
     if (!kameraLaeuft()) throw new Error('Die Kamera liefert gerade kein Bild.');
-    if (!video.paused && guetePruefen()) return true;
+    if (!video.paused && guetePruefen(Date.now() - start)) return true;
     await schlafen(180);
   }
   return false;

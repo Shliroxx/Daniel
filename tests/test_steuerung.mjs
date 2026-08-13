@@ -24,6 +24,25 @@ assert.equal(Steuerung.bildBewerten({ ...gut, bewegung: 30 }).problem, 'halt sti
 assert.equal(Steuerung.bildBewerten({ ...gut, schaerfe: 2 }).problem, 'unscharf');
 assert.equal(Steuerung.bildBewerten(null).ok, false);
 
+// Geduld: ein wackliges Bild wird nach fuenf Sekunden trotzdem genommen —
+// sonst wartet die App ewig und schickt nie etwas los.
+const wacklig = { helligkeit: 60, bewegung: 12, schaerfe: 4.5 };
+assert.equal(Steuerung.bildBewerten(wacklig).ok, false, 'am Anfang bleibt es streng');
+assert.equal(Steuerung.bildBewerten(wacklig, Steuerung.GRENZEN, 6000).ok, true, 'nach 6 s reicht es');
+assert.equal(Steuerung.bildBewerten(wacklig, Steuerung.GRENZEN, 6000).nachsichtig, true);
+assert.equal(Steuerung.bildBewerten(gut).nachsichtig, false, 'ein gutes Bild braucht keine Nachsicht');
+
+// Und nach zwoelf Sekunden geht auch ein wildes Bild raus — Schweigen hilft nicht.
+const wild = { helligkeit: 60, bewegung: 120, schaerfe: 1 };
+assert.equal(Steuerung.bildBewerten(wild, Steuerung.GRENZEN, 6000).ok, false, 'nach 6 s noch nicht');
+assert.equal(Steuerung.bildBewerten(wild, Steuerung.GRENZEN, 13000).ok, true, 'nach 13 s trotzdem');
+
+// Ganz aus geht die Pruefung aber nie: stockdunkel bleibt stockdunkel.
+assert.equal(
+  Steuerung.bildBewerten({ helligkeit: 8, bewegung: 1, schaerfe: 9 }, Steuerung.GRENZEN, 60000).problem,
+  'zu dunkel'
+);
+
 // --- Kameralage --------------------------------------------------------------
 const laeuft = { spurLebt: true, videoLaeuft: true };
 assert.equal(Steuerung.kameraLage(laeuft).aktion, 'analysieren');

@@ -63,6 +63,7 @@ export function baueUmgebung(webDir, { antwort }) {
 
   // --- Leinwand ---------------------------------------------------------
   let bildMuster = 0;
+  let wackelt = false;   // simuliert eine zittrige Hand: jedes Bild sieht anders aus
   function neuerKontext(flaeche) {
     const nichts = () => {};
     return {
@@ -73,6 +74,7 @@ export function baueUmgebung(webDir, { antwort }) {
       drawImage: nichts,
       measureText: (t) => ({ width: t.length * 7 }),
       getImageData: (x, y, b, h) => {
+        if (wackelt) bildMuster++;
         // Schachbrett mit genug Kanten und Helligkeit, damit das Bild taugt.
         const daten = new Uint8ClampedArray(b * h * 4);
         for (let i = 0, p = 0; p < b * h; p++, i += 4) {
@@ -206,5 +208,9 @@ export function baueUmgebung(webDir, { antwort }) {
   global.atob = atob;
   global.btoa = btoa;
 
-  return { global, elemente, protokoll, dokument, spur, bildAendern: () => { bildMuster++; } };
+  return {
+    global, elemente, protokoll, dokument, spur,
+    bildAendern: () => { bildMuster++; },
+    wackeln: (an) => { wackelt = Boolean(an); },
+  };
 }
