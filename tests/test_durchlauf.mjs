@@ -287,6 +287,11 @@ const z = kontext.__zustand;
 $('losButton').klick();
 await warte(200);
 kontext.__Engine.einstellungenSpeichern({ sparmodus: false });
+// Die echte Kontingentpause dauert 30 s — fuer den Test verkuerzt, sonst
+// stuende der Durchlauf eine halbe Minute still. Die echten Werte bleiben zum
+// Vergleich erhalten.
+const RUHE_ECHT = { ...kontext.__Steuerung.GRENZEN };
+kontext.__Steuerung.GRENZEN.kontingentRuheMs = 1200;
 
 // --- 1. Modell antwortet Muell ------------------------------------------------
 antwortPlan.text = () => 'Tut mir leid, ich kann das Bild nicht sehen.';
@@ -302,6 +307,11 @@ bildAendern();
 await warte(4200);
 p3('429 im Klartext', $('coach').textContent.includes('Freikontingent'), `"${$('coach').textContent}"`);
 p3('Schleife ueberlebt 429', z.laeuft === true);
+// Nach 429 wird laenger gewartet als nach einer gewoehnlichen Stoerung — sonst
+// laeuft der Zaehler ins Leere weiter, waehrend beim Anbieter nichts durchgeht.
+p3('Kontingentpause ist laenger als die Stoerungspause',
+   kontext.__Steuerung.fehlerRuhe(429, RUHE_ECHT) > kontext.__Steuerung.fehlerRuhe(500, RUHE_ECHT));
+p3('Kein Hammern bei abgelehntem Schluessel', kontext.__Steuerung.fehlerRuhe(401) === null);
 
 // --- 3. Kein Kopf im Bild -------------------------------------------------------
 antwortPlan.status = 200;
@@ -426,7 +436,10 @@ p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
 // Am Geraet gemeldet: "braucht erstmal lange zum Scannen". Aus der Hand ist ein
 // Bild nie ganz ruhig — bleibt die Pruefung streng, geht nie etwas raus.
 wackeln(true);
-await warte(400);
+// Eine schon laufende Anfrage erst auslaufen lassen — sonst zaehlt der Test
+// sie mit und misst nicht, was er messen will.
+while (z.busy) await warte(100);
+await warte(300);
 const vorWackeln = protokoll.anfragen.length;
 await warte(2500);
 p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln,

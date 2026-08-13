@@ -23,6 +23,8 @@ const Steuerung = (() => {
     blindMs: 4000,      // so lange darf das Bild stehen, bevor wir pausieren
     sparUnterschied: 1.2, // darunter gilt das Bild als unveraendert
     verblassenMs: 6000, // nach dieser Zeit ist ein Marker ganz verblasst
+    fehlerRuheMs: 3000,     // Pause nach einer Stoerung
+    kontingentRuheMs: 30000, // Pause, wenn das Freikontingent erschoepft ist
     geduldMs: 5000,     // so lange wird auf ein sauberes Bild gewartet
     notfallMs: 12000,   // danach wird geschickt, was da ist
     nachsicht: { ruhe: 16, schaerfe: 3.4, helligkeit: 22 }, // dazwischen reicht weniger
@@ -117,6 +119,20 @@ const Steuerung = (() => {
     return { lohnt: true, grund: '' };
   }
 
+  /* Wie lange wird nach einem Fehler gewartet? `null` heisst: gar nicht mehr.
+   *
+   * Nicht jeder Fehler heisst "gleich nochmal". Ein abgelehnter Schluessel wird
+   * beim zwanzigsten Versuch auch nicht besser — da hilft nur anhalten und es
+   * sagen. Ein erschoepftes Kontingent braucht Zeit, keine Wiederholungen;
+   * vorher lief die Schleife alle vier Sekunden weiter ins Leere. Alles andere
+   * ist eine Stoerung und darf es bald wieder versuchen.
+   */
+  function fehlerRuhe(status, grenzen = GRENZEN) {
+    if (status === 401 || status === 403) return null;
+    if (status === 429) return grenzen.kontingentRuheMs;
+    return grenzen.fehlerRuheMs;
+  }
+
   /* Verschiebt einen Marker um die Bildbewegung seit seiner Analyse.
    *
    * Die Marker beziehen sich auf das Bild, das analysiert wurde. Bewegt sich
@@ -191,6 +207,7 @@ const Steuerung = (() => {
     kameraLage,
     rueckkehrPlan,
     lohntAnalyse,
+    fehlerRuhe,
     markerVerschieben,
     alterFaktor,
     befehlPlan,

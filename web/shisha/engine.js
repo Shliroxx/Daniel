@@ -53,6 +53,29 @@ const Engine = (() => {
     standardkopf: '',
   };
 
+  /* Merken, ohne dass ein voller Speicher die App kippt.
+   *
+   * Im privaten Modus von Safari und bei vollem Geraet wirft setItem. Vorher
+   * flog dieser Fehler bis in den Startknopf: die Kamera lief schon, aber der
+   * Startbildschirm blieb stehen und meldete etwas ueber Quota. Wer nicht
+   * speichern kann, soll trotzdem analysieren koennen — nur eben ohne Merken.
+   */
+  let speicherWarnung = '';
+
+  function merken(schluessel, wert) {
+    try {
+      localStorage.setItem(schluessel, wert);
+      return true;
+    } catch (_) {
+      speicherWarnung = 'Dieses Geraet speichert gerade nichts — Einstellungen gelten nur bis zum Schliessen.';
+      return false;
+    }
+  }
+
+  function speicherHinweis() {
+    return speicherWarnung;
+  }
+
   function einstellungen() {
     try {
       return { ...STANDARD_EINSTELLUNGEN, ...JSON.parse(localStorage.getItem('shisha.einstellungen') || '{}') };
@@ -63,7 +86,7 @@ const Engine = (() => {
 
   function einstellungenSpeichern(werte) {
     const neu = { ...einstellungen(), ...werte };
-    localStorage.setItem('shisha.einstellungen', JSON.stringify(neu));
+    merken('shisha.einstellungen', JSON.stringify(neu));
     return neu;
   }
 
@@ -88,7 +111,21 @@ const Engine = (() => {
   // Anbieter
   // ------------------------------------------------------------------------
 
-  class AnalyseFehler extends Error {}
+  /* Fehler mit Beipackzettel.
+   *
+   * `status` ist die HTTP-Antwort des Anbieters, soweit es eine gab — daran
+   * entscheidet die App, ob sie es gleich noch einmal versucht (Stoerung),
+   * laenger wartet (Kontingent) oder ganz aufhoert (falscher Schluessel).
+   * `gezaehlt` heisst: die Anfrage ist beim Anbieter angekommen und hat sein
+   * Kontingent gekostet, auch wenn am Ende nichts Brauchbares kam.
+   */
+  class AnalyseFehler extends Error {
+    constructor(nachricht, dazu = {}) {
+      super(nachricht);
+      this.status = dazu.status || 0;
+      this.gezaehlt = Boolean(dazu.gezaehlt);
+    }
+  }
 
   const AUFTRAG = 'Analysiere dieses Bild nach den Vorgaben und antworte nur mit dem JSON.';
 
@@ -155,7 +192,7 @@ const Engine = (() => {
     );
 
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
     const daten = JSON.parse(rohtext);
     const teile = ((daten.candidates || [])[0] || {}).content || {};
@@ -163,9 +200,9 @@ const Engine = (() => {
     if (!text) {
       const grund = ((daten.candidates || [])[0] || {}).finishReason || 'leere Antwort';
       if (grund === 'MAX_TOKENS') {
-        throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.');
+        throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.', { gezaehlt: true });
       }
-      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`);
+      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`, { gezaehlt: true });
     }
     return text;
   }
@@ -195,12 +232,12 @@ const Engine = (() => {
     });
 
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
     const daten = JSON.parse(rohtext);
     if (daten.error) throw new AnalyseFehler(String(daten.error.message || daten.error).slice(0, 140));
     const text = (((daten.choices || [])[0] || {}).message || {}).content;
-    if (!text) throw new AnalyseFehler('Modell hat nichts geliefert.');
+    if (!text) throw new AnalyseFehler('Modell hat nichts geliefert.', { gezaehlt: true });
     return text;
   }
 
@@ -220,7 +257,7 @@ const Engine = (() => {
     const rohtext = await antwort.text();
     if (!antwort.ok) {
       if (antwort.status === 401) throw new AnalyseFehler('Losungswort stimmt nicht — steht in der Startzeile des Rechners.');
-      throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+      throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
     }
 
     const inhalt = JSON.parse(rohtext);
@@ -235,18 +272,27 @@ const Engine = (() => {
     const blobs = Array.isArray(bilder) ? bilder : [bilder];
 
     try {
-      verbrauchZaehlen(anbieter);
+      let text;
       if (anbieter === 'gemini') {
         if (!e.gemini_key) throw new AnalyseFehler('Kein Gemini-Schluessel hinterlegt.');
-        return await ueberGemini(blobs, prompt, e, modus);
-      }
-      if (anbieter === 'openrouter') {
+        text = await ueberGemini(blobs, prompt, e, modus);
+      } else if (anbieter === 'openrouter') {
         if (!e.openrouter_key) throw new AnalyseFehler('Kein OpenRouter-Schluessel hinterlegt.');
-        return await ueberOpenRouter(blobs, prompt, e);
+        text = await ueberOpenRouter(blobs, prompt, e);
+      } else {
+        text = await ueberServer(blobs, prompt, e);
       }
-      return await ueberServer(blobs, prompt, e);
+      // Erst jetzt zaehlen: gezaehlt wird, was den Anbieter erreicht hat. Vorher
+      // erhoehte jeder Netzabbruch, jede 429 und sogar ein fehlender Schluessel
+      // den Tageszaehler — bei erschoepftem Kontingent lief er im Sekundentakt
+      // hoch, obwohl nichts durchging, und die Anzeige war wertlos.
+      verbrauchZaehlen(anbieter);
+      return text;
     } catch (fehler) {
-      if (fehler instanceof AnalyseFehler) throw fehler;
+      if (fehler instanceof AnalyseFehler) {
+        if (fehler.gezaehlt) verbrauchZaehlen(anbieter);
+        throw fehler;
+      }
       // fetch wirft bei fehlendem Netz einen nackten TypeError.
       throw new AnalyseFehler(navigator.onLine ? `Verbindung gescheitert: ${fehler.message}` : 'Kein Netz.');
     }
@@ -278,7 +324,7 @@ const Engine = (() => {
   function verbrauchZaehlen(anbieter) {
     const daten = verbrauchLaden();
     daten.anbieter[anbieter] = (daten.anbieter[anbieter] || 0) + 1;
-    localStorage.setItem('shisha.verbrauch', JSON.stringify(daten));
+    merken('shisha.verbrauch', JSON.stringify(daten));
     return daten;
   }
 
@@ -892,7 +938,7 @@ const Engine = (() => {
     const daten = profilLaden();
     daten.sessions.push({ ...eintrag, zeit: Date.now() });
     daten.sessions = daten.sessions.slice(-MAX_SESSIONS);
-    localStorage.setItem('shisha.profil', JSON.stringify(daten));
+    merken('shisha.profil', JSON.stringify(daten));
     return daten;
   }
 
@@ -1266,8 +1312,16 @@ const Engine = (() => {
       return zeilenListe.join('\n');
     }
 
-    /** Bild oder Bilderreihe analysieren lassen und das Ergebnis einsortieren. */
-    async analysieren(bilder, modus = 'live') {
+    /* Bild oder Bilderreihe analysieren lassen.
+     *
+     * `einsortieren = false` gibt das Ergebnis nur zurueck, ohne es in Verlauf,
+     * Phase und Konsens aufzunehmen. Das braucht die Liveschleife: waehrend
+     * einer laufenden Anfrage kann die App im Hintergrund gewesen und der Nutzer
+     * laengst woanders sein. Frueher sortierte sich so eine veraltete Antwort
+     * trotzdem ein und schaltete im Stillen die Bauphase weiter — sichtbar wurde
+     * das erst beim naechsten Ergebnis, ohne erkennbaren Grund.
+     */
+    async analysieren(bilder, modus = 'live', einsortieren = true) {
       const blobs = Array.isArray(bilder) ? bilder : [bilder];
       const zweiter = modus === 'voll' ? gegenprobeAnbieter() : null;
 
@@ -1287,7 +1341,7 @@ const Engine = (() => {
       ergebnis.dauer = Math.round(performance.now() - begonnen) / 1000;
       ergebnis.bilder = blobs.length;
 
-      if (modus === 'live') return this.aufnehmen(ergebnis);
+      if (modus === 'live') return einsortieren ? this.aufnehmen(ergebnis) : ergebnis;
 
       if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis, this.kontext);
 
@@ -1340,6 +1394,7 @@ const Engine = (() => {
     get spec() { return spec; },
     einstellungen,
     einstellungenSpeichern,
+    speicherHinweis,
     bereit,
     anbieterName,
     fehlendeAngaben,

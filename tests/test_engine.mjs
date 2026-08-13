@@ -498,6 +498,21 @@ const zweiteRunde = await nachmessen.analysieren(new Blob(['x']), 'voll');
 assert.ok(zweiteRunde.vergleich, 'die zweite Vollanalyse vergleicht mit der ersten');
 assert.equal(zweiteRunde.vergleich.delta, 0, 'gleiche Antwort, gleiche Note');
 
+// --- Veraltete Antwort veraendert die Sitzung nicht ----------------------------
+// Waehrend einer laufenden Anfrage kann die App im Hintergrund gewesen sein.
+// Sortiert sich so eine Antwort trotzdem ein, springt im Stillen die Bauphase
+// weiter — sichtbar wird das erst beim naechsten Ergebnis, ohne erkennbaren Grund.
+const stillstand = new Engine.Sitzung({ ziel: 'balanced' });
+const vorPhase = stillstand.phase;
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+assert.equal(stillstand.verlauf.length, 0, 'nichts einsortiert');
+assert.equal(stillstand.phase, vorPhase, 'und die Phase steht noch');
+const eingereiht = stillstand.aufnehmen(await stillstand.analysieren(new Blob(['x']), 'live', false));
+assert.equal(stillstand.verlauf.length, 1, 'per Hand geht es weiter wie bisher');
+assert.ok(eingereiht.konsens !== undefined || eingereiht.gesamtscore !== null);
+
 // --- (7) Kontingent ------------------------------------------------------------
 speicher.delete('shisha.verbrauch');
 assert.equal(Engine.verbrauch('gemini').anzahl, 0);
@@ -506,6 +521,29 @@ assert.equal(Engine.verbrauch('gemini').limit, 200);
 const vorZaehler = Engine.verbrauch('gemini').anzahl;
 await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live');
 assert.equal(Engine.verbrauch('gemini').anzahl, vorZaehler + 1, 'jede Anfrage wird gezaehlt');
+
+// Was nie beim Anbieter ankam, kostet auch kein Kontingent. Vorher zaehlte
+// jede 429, jede 401 und jeder Netzabbruch mit — bei erschoepftem Kontingent
+// lief der Zaehler im Sekundentakt hoch, obwohl nichts durchging.
+speicher.delete('shisha.verbrauch');
+globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => 'quota' });
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live').catch(() => {});
+assert.equal(Engine.verbrauch('gemini').anzahl, 0, '429 kostet kein Kontingent');
+
+globalThis.fetch = async () => { throw new TypeError('kein netz'); };
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live').catch(() => {});
+assert.equal(Engine.verbrauch('gemini').anzahl, 0, 'Netzabbruch kostet kein Kontingent');
+
+// Eine Antwort, die durchkam und nur leer war, kostet dagegen sehr wohl.
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [] } }] }),
+});
+const abgeschnitten = await new Engine.Sitzung({ ziel: 'balanced' })
+  .analysieren(new Blob(['x']), 'live').catch((f) => f);
+assert.match(abgeschnitten.message, /abgeschnitten/);
+assert.equal(Engine.verbrauch('gemini').anzahl, 1, 'angekommen ist angekommen');
+globalThis.fetch = standardFetch;
 
 speicher.set('shisha.verbrauch', JSON.stringify({
   tag: new Date().toISOString().slice(0, 10), anbieter: { gemini: 199 },
