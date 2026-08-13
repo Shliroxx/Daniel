@@ -440,6 +440,10 @@ wackeln(true);
 // sie mit und misst nicht, was er messen will.
 while (z.busy) await warte(100);
 await warte(300);
+// Die Geduldsuhr laeuft ab der letzten Analyse. Fuer die Messung wird sie hier
+// auf jetzt gestellt, sonst haengt das Ergebnis daran, wie lange die Abschnitte
+// davor gedauert haben.
+z.wartetSeit = Date.now();
 const vorWackeln = protokoll.anfragen.length;
 await warte(2500);
 p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln,
