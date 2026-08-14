@@ -14,6 +14,9 @@ voices/
 *.onnx.json
 *.wav
 
+# Oertliche Werkzeug-Einstellungen — gehoeren niemandem sonst
+.claude/settings.local.json
+
 .DS_Store
 Thumbs.db
 .idea/

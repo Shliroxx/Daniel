@@ -109,7 +109,14 @@ def _abgelaufen(cert_pfad: Path) -> bool:
         from cryptography import x509
 
         zertifikat = x509.load_pem_x509_certificate(cert_pfad.read_bytes())
-        return zertifikat.not_valid_after_utc <= dt.datetime.now(dt.timezone.utc)
-    except Exception:
-        # Unlesbar oder Paket fehlt — dann lieber neu ausstellen.
+        # not_valid_after_utc gibt es erst ab cryptography 42.
+        ende = getattr(zertifikat, "not_valid_after_utc", None)
+        if ende is None:
+            ende = zertifikat.not_valid_after.replace(tzinfo=dt.timezone.utc)
+        return ende <= dt.datetime.now(dt.timezone.utc)
+    except (ImportError, ValueError, OSError) as exc:
+        # Unlesbar oder Paket fehlt — dann lieber neu ausstellen. Aber sagen,
+        # warum: sonst stellt der Server bei jedem Start still ein neues aus,
+        # und Safari verlangt jedes Mal erneut das Vertrauen.
+        log.warning("Zertifikat nicht lesbar (%s) — es wird neu ausgestellt.", exc)
         return True

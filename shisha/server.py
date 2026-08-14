@@ -13,10 +13,12 @@ Zwei Betriebsarten:
 from __future__ import annotations
 
 import logging
+import os
+import secrets
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, Form, Response, UploadFile
+from fastapi import APIRouter, FastAPI, File, Form, Header, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -30,6 +32,24 @@ WEB_DIR = Path(__file__).resolve().parent.parent / "web" / "shisha"
 
 MAX_BILD = 8 * 1024 * 1024      # groesstes Bild, das wir annehmen
 MAX_PROMPT = 60_000             # laengster Prompt, den wir durchreichen
+MAX_BILDER = 5                  # mehr Winkel schickt die App nicht
+
+
+def _token_besorgen() -> str:
+    """Das Losungswort, ohne das der Proxy nichts tut.
+
+    Der Proxy laesst Claude Code auf diesem Rechner arbeiten. Ohne Schranke
+    koennte jede Webseite, die im Browser offen ist, ihn ansprechen — fuer ein
+    Formular mit Datei braucht der Browser keine Vorabfrage, und die Antwort
+    waere wegen der Freigabe unten auch noch lesbar. Das Losungswort steht in
+    der .env oder wird beim Start gewuerfelt und in der Startzeile angezeigt;
+    in der App wird es einmal neben der Serveradresse eingetragen.
+    """
+    aus_umgebung = os.getenv("SHISHA_TOKEN", "").strip()
+    return aus_umgebung or secrets.token_urlsafe(18)
+
+
+TOKEN = _token_besorgen()
 
 
 class Rueckweg:
@@ -54,11 +74,15 @@ def _freigeben(antwort: Response) -> Response:
 
     Die App liegt in der Regel auf einer festen Webadresse, dieser Rechner steht
     im Heimnetz — fuer den Browser sind das zwei verschiedene Herkuenfte. Ohne
-    diese Kopfzeilen blockt er die Anfrage. Betroffen ist nur der Proxy; er nimmt
-    ohnehin nichts entgegen, was er nicht sofort wieder vergisst.
+    diese Kopfzeilen blockt er die Anfrage.
+
+    Die Freigabe ist bewusst weit; die Schranke ist das Losungswort im Kopf
+    X-Shisha-Token. Wer es nicht hat, kommt auch von einer erlaubten Herkunft
+    nicht durch — und weil es ein eigener Kopf ist, muss der Browser vorher
+    fragen, statt die Anfrage einfach abzuschicken.
     """
     antwort.headers["Access-Control-Allow-Origin"] = "*"
-    antwort.headers["Access-Control-Allow-Headers"] = "*"
+    antwort.headers["Access-Control-Allow-Headers"] = "content-type, x-shisha-token"
     antwort.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
     antwort.headers["Access-Control-Max-Age"] = "86400"
     return antwort
@@ -98,27 +122,53 @@ async def status() -> dict[str, Any]:
     }
 
 
+async def _bilddaten(datei: UploadFile) -> bytes | None:
+    """Liest ein Bild — und hoert bei der Obergrenze auf zu lesen.
+
+    Erst lesen und dann die Groesse pruefen hiesse: ein absichtlich riesiger
+    Upload liegt vorher komplett im Speicher.
+    """
+    daten = await datei.read(MAX_BILD + 1)
+    return daten if len(daten) <= MAX_BILD else None
+
+
 @router.post("/api/shisha/proxy")
-async def proxy(bild: UploadFile | None = None, prompt: str = Form("")) -> JSONResponse:
+async def proxy(
+    bild: list[UploadFile] = File(default=[]),
+    prompt: str = Form(""),
+    x_shisha_token: str = Header(default=""),
+) -> JSONResponse:
     """Bild und Prompt an Claude weiterreichen und den Rohtext zurueckgeben.
 
     Bewusst dumm: der Server bewertet nichts und kennt die Regeln nicht. Die
     stehen in web/shisha/spec.json und werden von der App angewendet — so gibt es
     nur eine Stelle, an der die Bewertungslogik lebt.
     """
+    # Zuerst das Losungswort — vor allem anderen, auch vor dem Lesen der Daten.
+    if not secrets.compare_digest(x_shisha_token, TOKEN):
+        return _freigeben(JSONResponse(
+            {"ok": False, "fehler": "Losungswort fehlt oder stimmt nicht"}, status_code=401,
+        ))
+
     if rueckweg.analysator is None:
         return _freigeben(JSONResponse(
             {"ok": False, "fehler": rueckweg.startfehler or "Analyse nicht bereit"},
             status_code=503,
         ))
 
-    if bild is None:
+    if not bild:
         return _freigeben(JSONResponse({"ok": False, "fehler": "kein Bild mitgeschickt"}, status_code=400))
-    daten = await bild.read()
-    if not daten:
-        return _freigeben(JSONResponse({"ok": False, "fehler": "leeres Bild"}, status_code=400))
-    if len(daten) > MAX_BILD:
-        return _freigeben(JSONResponse({"ok": False, "fehler": "Bild zu gross"}, status_code=400))
+    if len(bild) > MAX_BILDER:
+        return _freigeben(JSONResponse({"ok": False, "fehler": "zu viele Bilder"}, status_code=400))
+
+    daten: list[bytes] = []
+    for datei in bild:
+        einzeln = await _bilddaten(datei)
+        if einzeln is None:
+            return _freigeben(JSONResponse({"ok": False, "fehler": "Bild zu gross"}, status_code=400))
+        if not einzeln:
+            return _freigeben(JSONResponse({"ok": False, "fehler": "leeres Bild"}, status_code=400))
+        daten.append(einzeln)
 
     prompt = (prompt or "").strip()
     if not prompt:
@@ -183,6 +233,10 @@ def main() -> None:
 
     for adresse in _lokale_adressen():
         log.info("Am iPhone oeffnen: %s://%s:%s/shisha", schema, adresse, config.shisha_port)
+
+    log.info("Losungswort fuer die App (Feld neben der Serveradresse): %s", TOKEN)
+    if not os.getenv("SHISHA_TOKEN", "").strip():
+        log.info("Bleibt es dasselbe: SHISHA_TOKEN in die .env eintragen.")
 
     uvicorn.run(create_app(), host=config.host, port=config.shisha_port, log_level="warning", **kwargs)
 

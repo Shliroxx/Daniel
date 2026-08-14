@@ -42,6 +42,8 @@ const Engine = (() => {
     openrouter_key: '',
     openrouter_modell: 'meta-llama/llama-4-maverick:free',
     server_url: '',
+    // Losungswort des eigenen Rechners — er zeigt es beim Start an.
+    server_token: '',
     // Zweiter Anbieter fuer die Gegenprobe beim Endurteil. 'aus' = keine.
     gegenprobe: 'aus',
     // Bei kaum veraendertem Bild keine neue Anfrage stellen.
@@ -50,6 +52,29 @@ const Engine = (() => {
     // wurde. Leer = der Standard aus spec.json.
     standardkopf: '',
   };
+
+  /* Merken, ohne dass ein voller Speicher die App kippt.
+   *
+   * Im privaten Modus von Safari und bei vollem Geraet wirft setItem. Vorher
+   * flog dieser Fehler bis in den Startknopf: die Kamera lief schon, aber der
+   * Startbildschirm blieb stehen und meldete etwas ueber Quota. Wer nicht
+   * speichern kann, soll trotzdem analysieren koennen — nur eben ohne Merken.
+   */
+  let speicherWarnung = '';
+
+  function merken(schluessel, wert) {
+    try {
+      localStorage.setItem(schluessel, wert);
+      return true;
+    } catch (_) {
+      speicherWarnung = 'Dieses Geraet speichert gerade nichts — Einstellungen gelten nur bis zum Schliessen.';
+      return false;
+    }
+  }
+
+  function speicherHinweis() {
+    return speicherWarnung;
+  }
 
   function einstellungen() {
     try {
@@ -61,7 +86,7 @@ const Engine = (() => {
 
   function einstellungenSpeichern(werte) {
     const neu = { ...einstellungen(), ...werte };
-    localStorage.setItem('shisha.einstellungen', JSON.stringify(neu));
+    merken('shisha.einstellungen', JSON.stringify(neu));
     return neu;
   }
 
@@ -69,7 +94,9 @@ const Engine = (() => {
     const e = einstellungen();
     if (e.anbieter === 'gemini') return Boolean(e.gemini_key);
     if (e.anbieter === 'openrouter') return Boolean(e.openrouter_key);
-    if (e.anbieter === 'server') return Boolean(e.server_url || location.origin);
+    // Ohne Adresse liefe jede Anfrage gegen die eigene Seite und kaeme als 404
+    // zurueck — eine Fehlermeldung, die vom Problem wegfuehrt.
+    if (e.anbieter === 'server') return Boolean(e.server_url && e.server_token);
     return false;
   }
 
@@ -84,7 +111,21 @@ const Engine = (() => {
   // Anbieter
   // ------------------------------------------------------------------------
 
-  class AnalyseFehler extends Error {}
+  /* Fehler mit Beipackzettel.
+   *
+   * `status` ist die HTTP-Antwort des Anbieters, soweit es eine gab — daran
+   * entscheidet die App, ob sie es gleich noch einmal versucht (Stoerung),
+   * laenger wartet (Kontingent) oder ganz aufhoert (falscher Schluessel).
+   * `gezaehlt` heisst: die Anfrage ist beim Anbieter angekommen und hat sein
+   * Kontingent gekostet, auch wenn am Ende nichts Brauchbares kam.
+   */
+  class AnalyseFehler extends Error {
+    constructor(nachricht, dazu = {}) {
+      super(nachricht);
+      this.status = dazu.status || 0;
+      this.gezaehlt = Boolean(dazu.gezaehlt);
+    }
+  }
 
   const AUFTRAG = 'Analysiere dieses Bild nach den Vorgaben und antworte nur mit dem JSON.';
 
@@ -151,7 +192,7 @@ const Engine = (() => {
     );
 
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
     const daten = JSON.parse(rohtext);
     const teile = ((daten.candidates || [])[0] || {}).content || {};
@@ -159,9 +200,9 @@ const Engine = (() => {
     if (!text) {
       const grund = ((daten.candidates || [])[0] || {}).finishReason || 'leere Antwort';
       if (grund === 'MAX_TOKENS') {
-        throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.');
+        throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.', { gezaehlt: true });
       }
-      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`);
+      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`, { gezaehlt: true });
     }
     return text;
   }
@@ -191,12 +232,12 @@ const Engine = (() => {
     });
 
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
     const daten = JSON.parse(rohtext);
     if (daten.error) throw new AnalyseFehler(String(daten.error.message || daten.error).slice(0, 140));
     const text = (((daten.choices || [])[0] || {}).message || {}).content;
-    if (!text) throw new AnalyseFehler('Modell hat nichts geliefert.');
+    if (!text) throw new AnalyseFehler('Modell hat nichts geliefert.', { gezaehlt: true });
     return text;
   }
 
@@ -206,9 +247,18 @@ const Engine = (() => {
     blobs.forEach((blob, index) => daten.append('bild', blob, `kopf${index + 1}.jpg`));
     daten.append('prompt', prompt);
 
-    const antwort = await fetch(`${basis}/api/shisha/proxy`, { method: 'POST', body: daten });
+    const antwort = await fetch(`${basis}/api/shisha/proxy`, {
+      method: 'POST',
+      // Das Losungswort steht im eigenen Kopf — dadurch fragt der Browser erst
+      // vorab an, statt die Anfrage einfach abzuschicken.
+      headers: { 'X-Shisha-Token': e.server_token || '' },
+      body: daten,
+    });
     const rohtext = await antwort.text();
-    if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext));
+    if (!antwort.ok) {
+      if (antwort.status === 401) throw new AnalyseFehler('Losungswort stimmt nicht — steht in der Startzeile des Rechners.');
+      throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
+    }
 
     const inhalt = JSON.parse(rohtext);
     if (!inhalt.ok) throw new AnalyseFehler(inhalt.fehler || 'Rechner meldet einen Fehler.');
@@ -222,18 +272,27 @@ const Engine = (() => {
     const blobs = Array.isArray(bilder) ? bilder : [bilder];
 
     try {
-      verbrauchZaehlen(anbieter);
+      let text;
       if (anbieter === 'gemini') {
         if (!e.gemini_key) throw new AnalyseFehler('Kein Gemini-Schluessel hinterlegt.');
-        return await ueberGemini(blobs, prompt, e, modus);
-      }
-      if (anbieter === 'openrouter') {
+        text = await ueberGemini(blobs, prompt, e, modus);
+      } else if (anbieter === 'openrouter') {
         if (!e.openrouter_key) throw new AnalyseFehler('Kein OpenRouter-Schluessel hinterlegt.');
-        return await ueberOpenRouter(blobs, prompt, e);
+        text = await ueberOpenRouter(blobs, prompt, e);
+      } else {
+        text = await ueberServer(blobs, prompt, e);
       }
-      return await ueberServer(blobs, prompt, e);
+      // Erst jetzt zaehlen: gezaehlt wird, was den Anbieter erreicht hat. Vorher
+      // erhoehte jeder Netzabbruch, jede 429 und sogar ein fehlender Schluessel
+      // den Tageszaehler — bei erschoepftem Kontingent lief er im Sekundentakt
+      // hoch, obwohl nichts durchging, und die Anzeige war wertlos.
+      verbrauchZaehlen(anbieter);
+      return text;
     } catch (fehler) {
-      if (fehler instanceof AnalyseFehler) throw fehler;
+      if (fehler instanceof AnalyseFehler) {
+        if (fehler.gezaehlt) verbrauchZaehlen(anbieter);
+        throw fehler;
+      }
       // fetch wirft bei fehlendem Netz einen nackten TypeError.
       throw new AnalyseFehler(navigator.onLine ? `Verbindung gescheitert: ${fehler.message}` : 'Kein Netz.');
     }
@@ -265,7 +324,7 @@ const Engine = (() => {
   function verbrauchZaehlen(anbieter) {
     const daten = verbrauchLaden();
     daten.anbieter[anbieter] = (daten.anbieter[anbieter] || 0) + 1;
-    localStorage.setItem('shisha.verbrauch', JSON.stringify(daten));
+    merken('shisha.verbrauch', JSON.stringify(daten));
     return daten;
   }
 
@@ -291,14 +350,31 @@ const Engine = (() => {
   // ------------------------------------------------------------------------
 
   /** Sucht einen Kopf in der Liste — grosszuegig, damit Tippfehler nicht stoeren. */
+  /* Kopf aus der Liste heraussuchen.
+   *
+   * Passt die Eingabe auf mehrere Eintraege ("Killerkopf" trifft klein und
+   * gross), wird nichts zurueckgegeben statt still der erste — der Unterschied
+   * sind 68 gegen 80 Millimeter, also 15 Prozent Massstabsfehler ohne jeden
+   * Hinweis. Dann greift sichtbar der Standardkopf.
+   */
   function kopfSuchen(name) {
     const gesucht = String(name || '').toLowerCase().trim();
     if (!gesucht) return null;
     const liste = (spec.koepfe && spec.koepfe.liste) || [];
-    return liste.find((kopf) => kopf.name.toLowerCase() === gesucht)
-      || liste.find((kopf) => gesucht.includes(kopf.name.toLowerCase()))
-      || liste.find((kopf) => kopf.name.toLowerCase().includes(gesucht))
-      || null;
+
+    const genau = liste.find((kopf) => kopf.name.toLowerCase() === gesucht);
+    if (genau) return genau;
+
+    const enthalten = liste.filter((kopf) => gesucht.includes(kopf.name.toLowerCase()));
+    if (enthalten.length === 1) return enthalten[0];
+    if (enthalten.length > 1) {
+      // "mein Oblako Phunnel M von 2023" trifft auch "Oblako Phunnel" — der
+      // laengste Treffer ist der genaueste.
+      return enthalten.sort((a, b) => b.name.length - a.name.length)[0];
+    }
+
+    const teiltreffer = liste.filter((kopf) => kopf.name.toLowerCase().includes(gesucht));
+    return teiltreffer.length === 1 ? teiltreffer[0] : null;
   }
 
   /* Der Kopf, von dem wir ausgehen, wenn nichts Besseres bekannt ist.
@@ -322,24 +398,31 @@ const Engine = (() => {
     if (gesagt) return { ...gesagt, herkunft: 'angegeben' };
 
     const frei = String((kontext || {}).kopf_modell || '').trim();
-    if (frei) return { name: frei, durchmesser_mm: null, art: null, herkunft: 'angegeben' };
+    if (frei) return { name: frei, aussendurchmesser_mm: null, art: null, herkunft: 'angegeben' };
 
     const standard = standardKopf();
     return standard ? { ...standard, herkunft: 'standard' } : null;
   }
 
-  /** Durchmesser aus eigener Angabe oder aus der Kopfliste. */
+  /* Groessenbezug: der Aussendurchmesser des Kopfes am Rand.
+   *
+   * Frueher hiess das Feld "Innendurchmesser der Tabakmulde" — die Werte waren
+   * aber die Aussenmasse, die man von den Herstellern kennt. Das Modell rechnete
+   * damit die Bildskala aus und lag systematisch rund ein Fuenftel daneben, bei
+   * jeder Fuellhoehe und jedem HMD-Abstand. Jetzt heisst das Feld, was drinsteht,
+   * und der Prompt sagt, dass die Mulde im Bild selbst auszumessen ist.
+   */
   function durchmesserBestimmen(kontext) {
-    const eigen = Number(kontext.durchmesser_mm);
+    const eigen = Number(kontext.aussendurchmesser_mm);
     if (Number.isFinite(eigen) && eigen >= 40 && eigen <= 140) {
       return { mm: Math.round(eigen), quelle: 'angegeben' };
     }
     const treffer = kopfSuchen(kontext.kopf_modell);
-    if (treffer) return { mm: treffer.durchmesser_mm, quelle: `aus der Liste (${treffer.name})` };
+    if (treffer) return { mm: treffer.aussendurchmesser_mm, quelle: `aus der Liste (${treffer.name})` };
 
     // Nichts angegeben: der Standardkopf ist immer noch besser als gar kein Massstab.
     const standard = standardKopf();
-    if (standard) return { mm: standard.durchmesser_mm, quelle: `angenommen (${standard.name})` };
+    if (standard) return { mm: standard.aussendurchmesser_mm, quelle: `angenommen (${standard.name})` };
     return null;
   }
 
@@ -373,7 +456,7 @@ const Engine = (() => {
 
     const massstab = durchmesserBestimmen(kontext);
     if (massstab) {
-      zeilenListe.push(`- Innendurchmesser der Tabakmulde: ${massstab.mm} mm (${massstab.quelle})`);
+      zeilenListe.push(`- Aussendurchmesser des Kopfes am Rand: ${massstab.mm} mm (${massstab.quelle})`);
     }
 
     const offen = fehlendeAngaben(kontext);
@@ -405,7 +488,15 @@ const Engine = (() => {
       zeilen(p.marker),
     ];
 
-    if (angenommenerKopf(kontext)) teile.push(zeilen(p.kopf_angegeben));
+    // Zwei verschiedene Lagen, zwei verschiedene Anweisungen. Frueher stand hier
+    // nur eine — und weil der Standardkopf immer greift, bekam das Modell auch
+    // ohne jede Angabe zu lesen, der Nutzer habe den Kopf genannt und es solle
+    // ihn nicht anzweifeln. Die Annahme frass damit die Erkennung, die sie nur
+    // absichern sollte.
+    const angenommen = angenommenerKopf(kontext);
+    if (angenommen) {
+      teile.push(zeilen(angenommen.herkunft === 'angegeben' ? p.kopf_angegeben : p.kopf_standard));
+    }
     if (durchmesserBestimmen(kontext)) teile.push(zeilen(p.massstab));
     if (bilder > 1) teile.push(zeilen(p.mehrere_bilder));
     if (gegenprobe) teile.push(zeilen(p.gegenprobe));
@@ -416,8 +507,12 @@ const Engine = (() => {
         `Der Nutzer baut gerade. Phase laut App: ${info.name}\n` +
         `Ziel dieser Phase: ${info.ziel}\n` +
         `Achte besonders auf: ${info.achte_auf}\n` +
-        'Bewerte trotzdem alle Kategorien — was in dieser Phase noch nicht beurteilbar\n' +
-        'ist, bekommt eine niedrige Sicherheit statt einer erfundenen Zahl.'
+        (info.noch_nicht_bewertbar && info.noch_nicht_bewertbar.length
+          ? `Diese Kategorien gibt es in dieser Phase noch gar nicht: ${info.noch_nicht_bewertbar.join(', ')}.\n`
+            + 'Setz sie auf null statt auf eine Zahl — die App rechnet die Note ohne sie.\n'
+          : '') +
+        'Die uebrigen Kategorien bewertest du normal; was du nicht sicher siehst,\n' +
+        'bekommt eine niedrige Sicherheit statt einer erfundenen Zahl.'
       );
     } else {
       teile.push(zeilen(p.voll));
@@ -509,12 +604,25 @@ const Engine = (() => {
   const objekt = (wert) => (wert && typeof wert === 'object' && !Array.isArray(wert) ? wert : {});
   const liste = (wert) => (Array.isArray(wert) ? wert : []);
 
-  function gesamtscore(scores) {
+  /* Die Gesamtnote aus den Kategorien — ueber die, die es schon gibt.
+   *
+   * In der Phase "Kopf pruefen" ist der Kopf absichtlich leer. Eine Note fuer
+   * Tabakverteilung und Fuellhoehe kann es da nicht geben; das Modell musste
+   * frueher trotzdem Zahlen liefern (zusammen 35 Prozent Gewicht) und lieferte
+   * entweder erfundene 80er oder strafte den fehlenden Tabak ab. Jetzt zaehlen
+   * nur die Kategorien, die in dieser Phase existieren — ihre Gewichte werden
+   * auf 100 Prozent hochgerechnet, damit die Note vergleichbar bleibt.
+   */
+  function gesamtscore(scores, ausgenommen = []) {
     let summe = 0;
+    let gewichtSumme = 0;
     Object.entries(spec.gewichte).forEach(([kategorie, gewicht]) => {
+      if (ausgenommen.includes(kategorie)) return;
       summe += (Number(scores[kategorie]) || 0) * gewicht;
+      gewichtSumme += gewicht;
     });
-    return Math.round(Math.max(0, Math.min(100, summe)));
+    if (gewichtSumme <= 0) return 0;
+    return Math.round(Math.max(0, Math.min(100, summe / gewichtSumme)));
   }
 
   function stufe(score) {
@@ -522,7 +630,7 @@ const Engine = (() => {
     return treffer;
   }
 
-  function normalisiere(roh, live, kontext) {
+  function normalisiere(roh, live, kontext, phase) {
     const status = wahl(roh.analysis_status, spec.analyse_status, 'ok');
 
     // Erst die Beobachtungen, dann die Bewertung — in der Reihenfolge braucht die
@@ -532,16 +640,40 @@ const Engine = (() => {
     const tabak = tabakDaten(objekt(roh.tabak));
     const luft = airflowDaten(objekt(roh.airflow));
     const haube = hmdDaten(objekt(roh.hmd));
-    const gemeldet = probleme(liste(roh.probleme), live);
+    const glut = kohleDaten(objekt(roh.kohle));
+    // Erst kappen, dann kuerzen: im Livebetrieb bleiben nur zwei Probleme in der
+    // Anzeige stehen. Wurde vorher gekuerzt, kappte das dritte kritische Problem
+    // gar nichts mehr.
+    const alleProbleme = probleme(liste(roh.probleme), false);
 
     const rohScores = objekt(roh.scores);
     const scores = {};
     Object.keys(spec.gewichte).forEach((feld) => { scores[feld] = Math.round(zahl(rohScores[feld], 0, 100)); });
 
     // Widersprueche geradeziehen, bevor gerechnet wird.
-    const kappungen = plausibilitaetAnwenden(scores, { tabak, airflow: luft, hmd: haube, probleme: gemeldet });
+    const kappungen = plausibilitaetAnwenden(
+      scores, { tabak, airflow: luft, hmd: haube, kohle: glut, probleme: alleProbleme }
+    );
+    const gemeldet = live ? alleProbleme.slice(0, 2) : alleProbleme;
 
-    const gesamt = gesamtscore(scores);
+    // Ein kritischer Befund zieht auch die Gesamtnote. Sonst kam heraus:
+    // "Tabak beruehrt das HMD" — und daneben 78 von 100, also "gut". Eine
+    // Kategorie herunterzustufen reicht nicht, wenn die uebrigen sechs die Zahl
+    // wieder hochziehen.
+    const kritisch = kappungen.some((k) => k.schwer);
+    // In fruehen Bauphasen gibt es manche Kategorien schlicht noch nicht.
+    const phaseInfo = spec.phasen.find((p) => p.key === phase);
+    const nochNicht = (phaseInfo && phaseInfo.noch_nicht_bewertbar) || [];
+    const roheNote = gesamtscore(scores, nochNicht);
+    const gesamt = kritisch
+      ? Math.min(roheNote, spec.plausibilitaet.kappe_gesamt_kritisch)
+      : roheNote;
+    if (gesamt < roheNote) {
+      kappungen.push({
+        kategorie: 'gesamt', von: roheNote, auf: gesamt,
+        grund: 'kritischer Befund — kein guter Kopf mit einem kritischen Fehler',
+      });
+    }
     const stufeInfo = stufe(gesamt);
 
     const ergebnis = {
@@ -552,8 +684,9 @@ const Engine = (() => {
       tabak,
       airflow: luft,
       hmd: haube,
-      kohle: kohleDaten(objekt(roh.kohle)),
+      kohle: glut,
       scores,
+      nicht_bewertbar: nochNicht,
       kappungen,
       gesamtscore: gesamt,
       stufe: stufeInfo.key,
@@ -626,15 +759,20 @@ const Engine = (() => {
     const grenzen = spec.plausibilitaet;
     const kappungen = [];
 
-    const kappen = (kategorie, hoechstens, grund) => {
+    /* `schwer` heisst: das ist kein Schoenheitsfehler, sondern etwas, das den
+     * Kopf im Ergebnis verdirbt — Tabak am HMD, verdeckte Oeffnung, nicht
+     * durchgegluehte Kohle. Solche Befunde deckeln spaeter auch die Gesamtnote.
+     */
+    const kappen = (kategorie, hoechstens, grund, schwer = false) => {
       if (!(kategorie in scores) || scores[kategorie] <= hoechstens) return;
-      kappungen.push({ kategorie, von: scores[kategorie], auf: hoechstens, grund });
+      kappungen.push({ kategorie, von: scores[kategorie], auf: hoechstens, grund, schwer });
       scores[kategorie] = hoechstens;
     };
 
     daten.probleme.forEach((problem) => {
+      if (problem.kategorie_geraten) return;
       if (problem.severity === 'critical') {
-        kappen(problem.kategorie, grenzen.kappe_kritisch, `kritisch gemeldet: ${problem.titel}`);
+        kappen(problem.kategorie, grenzen.kappe_kritisch, `kritisch gemeldet: ${problem.titel}`, true);
       } else if (problem.severity === 'high') {
         kappen(problem.kategorie, grenzen.kappe_hoch, `schwerwiegend gemeldet: ${problem.titel}`);
       }
@@ -645,16 +783,24 @@ const Engine = (() => {
     }
     // Ueber den Rand gebaut ist nur mit HMD sinnvoll, sonst brennt es an der Folie an.
     if (daten.tabak.ueber_rand && !daten.hmd.erkannt) {
-      kappen('fuellhoehe', grenzen.kappe_ueber_rand, 'Tabak steht ueber dem Rand, ohne HMD');
+      kappen('fuellhoehe', grenzen.kappe_ueber_rand, 'Tabak steht ueber dem Rand, ohne HMD', true);
     }
     if (daten.hmd.kontakt_tabak === true) {
-      kappen('hitzemanagement', grenzen.kappe_hmd_kontakt, 'Tabak beruehrt das HMD');
+      kappen('hitzemanagement', grenzen.kappe_hmd_kontakt, 'Tabak beruehrt das HMD', true);
     }
     if (daten.airflow.blockade_risiko === 'high') {
       kappen('airflow', grenzen.kappe_airflow_hoch, 'hohes Blockaderisiko');
     }
     if (daten.airflow.zentrale_oeffnung_frei === false) {
-      kappen('airflow', grenzen.kappe_oeffnung_verdeckt, 'zentrale Oeffnung verdeckt');
+      kappen('airflow', grenzen.kappe_oeffnung_verdeckt, 'zentrale Oeffnung verdeckt', true);
+    }
+    // Die ganze Phase "Kohle auflegen" war bisher ungeschuetzt: ein gemeldeter
+    // Hotspot konnte neben einer glatten 90 im Hitzemanagement stehen.
+    if (daten.kohle.hotspot_risiko === 'high') {
+      kappen('hitzemanagement', grenzen.kappe_hotspot_hoch, 'hohes Hotspot-Risiko bei der Kohle');
+    }
+    if (daten.kohle.durchgegluht === false) {
+      kappen('hitzemanagement', grenzen.kappe_kohle_nicht_durch, 'Kohle nicht durchgegluht', true);
     }
 
     return kappungen;
@@ -742,6 +888,7 @@ const Engine = (() => {
       anzahl: status === 'not_visible' ? null : zahlOderNull(roh.anzahl, 0, 12),
       position: text(roh.position, 120),
       hotspot_risiko: wahl(roh.hotspot_risiko, ['low', 'medium', 'high', 'unknown'], 'unknown'),
+      durchgegluht: roh.durchgegluht === true ? true : (roh.durchgegluht === false ? false : null),
       confidence: Math.round(zahl(roh.confidence, 0, 100)),
     };
   }
@@ -761,6 +908,11 @@ const Engine = (() => {
         severity,
         symbol: spec.schwere_symbol[severity],
         kategorie: wahl(eintrag.kategorie, kategorien, 'tabak_verteilung'),
+        // Nennt das Modell eine Kategorie, die es nicht gibt ("kohle"), faellt
+        // oben der Standard heraus. Zum Anzeigen taugt der; zum Herunterstufen
+        // nicht — sonst wird die Tabakverteilung fuer ein Kohleproblem
+        // halbiert und das Hitzemanagement bleibt unangetastet.
+        kategorie_geraten: !kategorien.includes(eintrag.kategorie),
         titel,
         beschreibung: text(eintrag.beschreibung, 300),
         confidence: Math.round(zahl(eintrag.confidence, 0, 100)),
@@ -853,8 +1005,12 @@ const Engine = (() => {
                     'hitzemanagement', 'optimierung'];
     const werte = {};
     felder.forEach((feld) => { werte[feld] = Math.round(zahl(roh[feld], 0, 100)); });
-    if (!werte.gesamt) {
-      const andere = felder.filter((f) => f !== 'gesamt').map((f) => werte[f]).filter(Boolean);
+    // Nur ein FEHLENDER Gesamtwert wird ersetzt. Meldet das Modell ehrlich 0 —
+    // "ich bin mir gar nicht sicher" —, wurde die Unsicherheit vorher
+    // weggerechnet, und das Ergebnis galt nicht mehr als vorlaeufig. Nullen der
+    // Teilwerte gehoeren aus demselben Grund in den Mittelwert.
+    if (roh.gesamt === undefined || roh.gesamt === null || roh.gesamt === '') {
+      const andere = felder.filter((f) => f !== 'gesamt').map((f) => werte[f]).filter(Number.isFinite);
       werte.gesamt = andere.length ? Math.round(andere.reduce((a, b) => a + b, 0) / andere.length) : 0;
     }
     return werte;
@@ -879,7 +1035,7 @@ const Engine = (() => {
     const daten = profilLaden();
     daten.sessions.push({ ...eintrag, zeit: Date.now() });
     daten.sessions = daten.sessions.slice(-MAX_SESSIONS);
-    localStorage.setItem('shisha.profil', JSON.stringify(daten));
+    merken('shisha.profil', JSON.stringify(daten));
     return daten;
   }
 
@@ -978,10 +1134,10 @@ const Engine = (() => {
    * eine gemessene Konfidenz statt einer behaupteten. Scheitert die Gegenprobe,
    * bleibt das Hauptergebnis unangetastet; sie ist ein Extra, kein Muss.
    */
-  async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis, kontext) {
+  async function gegenprobeEinholen(blobs, prompt, anbieter, ergebnis, kontext, phase) {
     try {
       const rohtext = await modellFragen(blobs, prompt, anbieter, 'voll');
-      const zweit = normalisiere(jsonAusText(rohtext), false, kontext);
+      const zweit = normalisiere(jsonAusText(rohtext), false, kontext, phase);
       if (zweit.gesamtscore === null || ergebnis.gesamtscore === null) {
         return { anbieter, score: zweit.gesamtscore, abweichung: null, einig: false };
       }
@@ -1073,20 +1229,64 @@ const Engine = (() => {
     });
   }
 
+  // Jeder Eintrag traegt ein Vorschaubild von ein paar Kilobyte. Ohne Grenze
+  // waechst die Ablage unbegrenzt, und Safari raeumt IndexedDB bei Platznot
+  // unangekuendigt komplett weg — dann ist alles fort statt nur das Aelteste.
+  const HISTORIE_MAX = 200;
+
   function historieSchreiben(eintrag) {
     return datenbank().then((db) => new Promise((fertig, fehler) => {
       const t = db.transaction(HISTORIE_LADEN, 'readwrite');
-      t.objectStore(HISTORIE_LADEN).put(eintrag);
+      const laden = t.objectStore(HISTORIE_LADEN);
+      laden.put(eintrag);
+
+      // Ueberzaehlige vom aeltesten Ende her wegnehmen. Der Schluessel ist die
+      // Zeit, also laeuft der Cursor vorwaerts von alt nach neu.
+      laden.count().onsuccess = (e) => {
+        let zuviel = e.target.result - HISTORIE_MAX;
+        if (zuviel <= 0) return;
+        laden.openCursor().onsuccess = (c) => {
+          const zeiger = c.target.result;
+          if (!zeiger || zuviel <= 0) return;
+          zeiger.delete();
+          zuviel--;
+          zeiger.continue();
+        };
+      };
+
       t.oncomplete = () => fertig(eintrag);
       t.onerror = () => fehler(t.error);
     }));
   }
 
+  /* Die letzten Eintraege — rueckwaerts per Cursor, nicht alles auf einmal.
+   *
+   * getAll() holte bisher jeden Eintrag samt Vorschaubild in den Speicher, nur
+   * um danach dreissig davon zu behalten.
+   */
   function historieLesen(anzahl = 30) {
     return datenbank().then((db) => new Promise((fertig, fehler) => {
       const t = db.transaction(HISTORIE_LADEN, 'readonly');
-      const anfrage = t.objectStore(HISTORIE_LADEN).getAll();
-      anfrage.onsuccess = () => fertig(anfrage.result.sort((a, b) => b.zeit - a.zeit).slice(0, anzahl));
+      const laden = t.objectStore(HISTORIE_LADEN);
+      const gesammelt = [];
+
+      // Aeltere Browser kennen den rueckwaerts laufenden Cursor nicht.
+      let anfrage;
+      try {
+        anfrage = laden.openCursor(null, 'prev');
+      } catch (_) {
+        anfrage = laden.getAll();
+        anfrage.onsuccess = () => fertig(anfrage.result.sort((a, b) => b.zeit - a.zeit).slice(0, anzahl));
+        anfrage.onerror = () => fehler(anfrage.error);
+        return;
+      }
+
+      anfrage.onsuccess = (e) => {
+        const zeiger = e.target.result;
+        if (!zeiger || gesammelt.length >= anzahl) return fertig(gesammelt);
+        gesammelt.push(zeiger.value);
+        zeiger.continue();
+      };
       anfrage.onerror = () => fehler(anfrage.error);
     }));
   }
@@ -1111,7 +1311,7 @@ const Engine = (() => {
   class Sitzung {
     constructor(kontext) {
       this.kontext = { ziel: 'balanced', kopf_modell: '', tabak_marke: '', tabak_sorte: '',
-                       hmd: '', kohlen: '', notiz: '', durchmesser_mm: '', ...(kontext || {}) };
+                       hmd: '', kohlen: '', notiz: '', aussendurchmesser_mm: '', ...(kontext || {}) };
       this.phase = spec.phasen[0].key;
       this.verlauf = [];
       this.letzte = null;
@@ -1212,6 +1412,9 @@ const Engine = (() => {
     phaseErledigt(ergebnis) {
       if (ergebnis.analysis_status !== 'ok') return false;
       if (ergebnis.probleme.some((p) => p.severity === 'critical' || p.severity === 'high')) return false;
+      // Was die App heruntergestuft hat, ist kein erledigter Bauschritt — auch
+      // dann nicht, wenn das Modell selbst kein Problem gemeldet hat.
+      if (ergebnis.kappungen.length) return false;
       return Boolean(ergebnis.gesamtscore >= PHASE_FERTIG_SCORE && ergebnis.confidence.gesamt >= 50);
     }
 
@@ -1253,8 +1456,16 @@ const Engine = (() => {
       return zeilenListe.join('\n');
     }
 
-    /** Bild oder Bilderreihe analysieren lassen und das Ergebnis einsortieren. */
-    async analysieren(bilder, modus = 'live') {
+    /* Bild oder Bilderreihe analysieren lassen.
+     *
+     * `einsortieren = false` gibt das Ergebnis nur zurueck, ohne es in Verlauf,
+     * Phase und Konsens aufzunehmen. Das braucht die Liveschleife: waehrend
+     * einer laufenden Anfrage kann die App im Hintergrund gewesen und der Nutzer
+     * laengst woanders sein. Frueher sortierte sich so eine veraltete Antwort
+     * trotzdem ein und schaltete im Stillen die Bauphase weiter — sichtbar wurde
+     * das erst beim naechsten Ergebnis, ohne erkennbaren Grund.
+     */
+    async analysieren(bilder, modus = 'live', einsortieren = true) {
       const blobs = Array.isArray(bilder) ? bilder : [bilder];
       const zweiter = modus === 'voll' ? gegenprobeAnbieter() : null;
 
@@ -1270,13 +1481,18 @@ const Engine = (() => {
 
       const begonnen = performance.now();
       const rohtext = await modellFragen(blobs, prompt, null, modus);
-      const ergebnis = normalisiere(jsonAusText(rohtext), modus === 'live', this.kontext);
+      // Die Phase gilt nur fuer die Livevorschau. Die Vollanalyse beurteilt den
+      // fertigen Kopf — da zaehlen alle Kategorien, egal welcher Knopf gerade
+      // leuchtet.
+      const ergebnis = normalisiere(
+        jsonAusText(rohtext), modus === 'live', this.kontext, modus === 'live' ? this.phase : null
+      );
       ergebnis.dauer = Math.round(performance.now() - begonnen) / 1000;
       ergebnis.bilder = blobs.length;
 
-      if (modus === 'live') return this.aufnehmen(ergebnis);
+      if (modus === 'live') return einsortieren ? this.aufnehmen(ergebnis) : ergebnis;
 
-      if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis, this.kontext);
+      if (zweiter) ergebnis.gegenprobe = await gegenprobeEinholen(blobs, prompt, zweiter, ergebnis, this.kontext, null);
 
       ergebnis.phase = this.phase;
       ergebnis.kontext = { ...this.kontext };
@@ -1327,6 +1543,7 @@ const Engine = (() => {
     get spec() { return spec; },
     einstellungen,
     einstellungenSpeichern,
+    speicherHinweis,
     bereit,
     anbieterName,
     fehlendeAngaben,

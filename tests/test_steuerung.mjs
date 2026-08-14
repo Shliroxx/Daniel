@@ -43,6 +43,16 @@ assert.equal(
   'zu dunkel'
 );
 
+// --- Pause nach einem Fehler ---------------------------------------------------
+// Ein abgelehnter Schluessel wird beim zwanzigsten Versuch nicht besser.
+assert.equal(Steuerung.fehlerRuhe(401), null);
+assert.equal(Steuerung.fehlerRuhe(403), null);
+// Erschoepftes Kontingent braucht Zeit, keine Wiederholungen.
+assert.ok(Steuerung.fehlerRuhe(429) >= 20000);
+// Eine Stoerung beim Anbieter darf es bald wieder versuchen.
+assert.ok(Steuerung.fehlerRuhe(500) <= 5000 && Steuerung.fehlerRuhe(500) > 0);
+assert.equal(Steuerung.fehlerRuhe(0), Steuerung.fehlerRuhe(500), 'Netzabbruch zaehlt als Stoerung');
+
 // --- Kameralage --------------------------------------------------------------
 const laeuft = { spurLebt: true, videoLaeuft: true };
 assert.equal(Steuerung.kameraLage(laeuft).aktion, 'analysieren');

@@ -89,7 +89,8 @@ const ANTWORT = {
   ],
   prognose: { score_nach_optimierung: 40, geschmack: 'hoch', rauch: 'gleich', dauer: 'hoch',
               hitzerisiko: 'runter', verbesserung: { tabak_verteilung: 88, hitzemanagement: 80, airflow: 85 } },
-  confidence: { gesamt: 0, kopf_erkennung: 88, tabak_analyse: 71, fuellhoehe: 60, airflow: 65,
+  // gesamt fehlt absichtlich — die App mittelt dann die uebrigen
+  confidence: { kopf_erkennung: 88, tabak_analyse: 71, fuellhoehe: 60, airflow: 65,
                 hitzemanagement: 40, optimierung: 70 },
   rueckfrage: null,
   coach_satz: 'Nimm bei drei Uhr etwas Tabak weg.',
@@ -109,13 +110,17 @@ assert.equal(a.scores.fuellhoehe, 40, `Fuellhoehe nicht gekappt: ${a.scores.fuel
 assert.ok(a.kappungen.some((k) => k.grund.includes('Rand')), 'Kappung nicht begruendet');
 assert.ok(a.kappungen.every((k) => k.auf < k.von), 'Kappung muss nach unten gehen');
 
-// 60*.20 + 40*.15 + 65*.15 + 55*.20 + 85*.10 + 75*.10 + 60*.10 = 60.75 -> 61
-assert.equal(a.gesamtscore, 61, `Note falsch: ${a.gesamtscore}`);
-assert.equal(a.stufe, 'acceptable');
-assert.equal(a.stufe_text, 'brauchbar');
+// 60*.20 + 40*.15 + 65*.15 + 55*.20 + 85*.10 + 75*.10 + 60*.10 = 60.75 -> 61.
+// Gemeldet ist aber ein KRITISCHES Problem (Tabak am Rand) — dann ist auch die
+// Gesamtnote gedeckelt. Eine Kategorie herunterzustufen reicht nicht, wenn die
+// uebrigen sechs die Zahl wieder hochziehen: sonst stuende neben "Tabak
+// beruehrt das HMD" eine glatte Zwei.
+assert.equal(a.gesamtscore, 55, `Note falsch: ${a.gesamtscore}`);
+assert.equal(a.stufe, 'needs_improvement');
+assert.ok(a.kappungen.some((k) => k.kategorie === 'gesamt'), 'die Deckelung steht im Report');
 
 // dieselbe Eingabe muss dieselbe Note ergeben
-assert.equal(Engine.normalisiere(ANTWORT, true).gesamtscore, 61);
+assert.equal(Engine.normalisiere(ANTWORT, true).gesamtscore, 55);
 
 // Ohne Widerspruch bleibt die Bewertung des Modells stehen
 const sauberesUrteil = Engine.normalisiere({
@@ -157,8 +162,22 @@ assert.deepEqual(a.optimierungen.map((o) => o.schritt), [1, 2, 3]);
 assert.equal(a.optimierungen[0].aktion, 'remove_tobacco');
 assert.equal(a.optimierungen[2].aktion, 'redistribute_tobacco', 'erfundene Aktion ersetzt');
 assert.equal(a.optimierungen[2].aktion_text, 'neu verteilen');
-assert.equal(a.prognose.score_nach_optimierung, 61, 'Prognose nie unter Ist-Stand');
+assert.equal(a.prognose.score_nach_optimierung, 55, 'Prognose nie unter Ist-Stand');
 assert.equal(a.confidence.gesamt, 66, 'Gesamtsicherheit aus den anderen gemittelt');
+
+// Eine ehrliche Null bleibt aber stehen: wer sagt "ich bin mir gar nicht sicher",
+// darf sich das nicht wegrechnen lassen — sonst gilt das Ergebnis nicht als vorlaeufig.
+const ehrlich = Engine.normalisiere({ ...ANTWORT, confidence: { ...ANTWORT.confidence, gesamt: 0 } }, true);
+assert.equal(ehrlich.confidence.gesamt, 0);
+assert.equal(ehrlich.vorlaeufig, true);
+
+// Und eine Null bei einem Teilwert zaehlt im Mittel mit
+const mitNull = Engine.normalisiere({
+  ...ANTWORT,
+  confidence: { kopf_erkennung: 100, tabak_analyse: 0, fuellhoehe: 0, airflow: 0,
+                hitzemanagement: 0, optimierung: 0 },
+}, true);
+assert.ok(mitNull.confidence.gesamt < 30, `Nullen duerfen nicht herausfallen: ${mitNull.confidence.gesamt}`);
 assert.equal(a.tabak.menge_gramm, 'ca. 14-17 g');
 assert.equal(a.kohle.anzahl, null, 'nicht sichtbare Kohle hat keine Anzahl');
 
@@ -191,7 +210,7 @@ const duenn = Engine.normalisiere({
   bildqualitaet: { schaerfe: 20, licht: 30, perspektive: 'unklar', kopf_vollstaendig: true },
 }, true);
 assert.equal(duenn.vorlaeufig, true, 'unscharfes Bild muss vorlaeufig sein');
-assert.equal(duenn.gesamtscore, 61, 'vorlaeufig heisst nicht: keine Note');
+assert.equal(duenn.gesamtscore, 55, 'vorlaeufig heisst nicht: keine Note');
 
 const unsicher = Engine.normalisiere({
   ...ANTWORT,
@@ -224,10 +243,10 @@ assert.ok(Engine.bereit());
 
 const sitzung = new Engine.Sitzung({ ziel: 'geschmack', kopf_modell: 'Oblako Phunnel M' });
 const eins = await sitzung.analysieren(new Blob(['x'], { type: 'image/jpeg' }), 'live');
-assert.equal(eins.gesamtscore, 61);
+assert.equal(eins.gesamtscore, 55);
 assert.equal(eins.sprechen, true);
 assert.ok(eins.konsens, 'jede Analyse traegt den Konsens mit sich');
-assert.equal(eins.konsens.score, 61, 'ein Bild ist sein eigener Konsens');
+assert.equal(eins.konsens.score, 55, 'ein Bild ist sein eigener Konsens');
 assert.ok(letzteAnfrage.url.includes('generativelanguage.googleapis.com'));
 assert.equal(JSON.parse(letzteAnfrage.optionen.body).generationConfig.temperature, 0);
 assert.equal(letzteAnfrage.optionen.headers['x-goog-api-key'], 'test-key');
@@ -243,6 +262,10 @@ assert.equal(sitzung.phase, 'tabak');
 // Phasenwechsel erst bei sauberen Bildern
 const sauber = {
   ...ANTWORT, probleme: [], coach_satz: 'Passt so.',
+  // wirklich sauber: kein Randkontakt, freier Airflow — sonst stuft die App ab,
+  // und abgestuft ist kein erledigter Bauschritt
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
   scores: { tabak_verteilung: 90, fuellhoehe: 90, airflow: 90, hitzemanagement: 90,
             kopfgeometrie: 90, tabak_kompatibilitaet: 90, zielerreichung: 90 },
   confidence: { gesamt: 80, kopf_erkennung: 80, tabak_analyse: 80, fuellhoehe: 80,
@@ -320,23 +343,23 @@ assert.equal(Engine.befehlErkennen('das wetter ist schön'), null,
              'Alltagssatz darf keinen Befehl ausloesen');
 
 // --- (1) Maßstab -------------------------------------------------------------
-assert.equal(Engine.kopfSuchen('Oblako Phunnel M').durchmesser_mm, 78);
-assert.equal(Engine.kopfSuchen('oblako phunnel m').durchmesser_mm, 78, 'Gross- und Kleinschreibung egal');
-assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').durchmesser_mm, 78, 'Zusaetze stoeren nicht');
+assert.equal(Engine.kopfSuchen('Oblako Phunnel M').aussendurchmesser_mm, 78);
+assert.equal(Engine.kopfSuchen('oblako phunnel m').aussendurchmesser_mm, 78, 'Gross- und Kleinschreibung egal');
+assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').aussendurchmesser_mm, 78, 'Zusaetze stoeren nicht');
 assert.equal(Engine.kopfSuchen('Fantasiekopf 9000'), null);
 assert.equal(Engine.kopfSuchen(''), null);
 
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).mm, 82);
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 82 }).quelle, 'angegeben');
+assert.equal(Engine.durchmesserBestimmen({ aussendurchmesser_mm: 82 }).mm, 82);
+assert.equal(Engine.durchmesserBestimmen({ aussendurchmesser_mm: 82 }).quelle, 'angegeben');
 assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel' }).mm, 75, 'faellt auf die Liste zurueck');
 
 // Eigene Angabe schlaegt den Standardkopf.
-assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel', durchmesser_mm: 90 }).mm, 90);
+assert.equal(Engine.durchmesserBestimmen({ kopf_modell: 'Kaya Phunnel', aussendurchmesser_mm: 90 }).mm, 90);
 
 // Unsinnige Werte werden verworfen — dann greift der Standardkopf.
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }).mm, 78);
-assert.match(Engine.durchmesserBestimmen({ durchmesser_mm: 5 }).quelle, /angenommen/);
-assert.equal(Engine.durchmesserBestimmen({ durchmesser_mm: 500 }).mm, 78);
+assert.equal(Engine.durchmesserBestimmen({ aussendurchmesser_mm: 5 }).mm, 78);
+assert.match(Engine.durchmesserBestimmen({ aussendurchmesser_mm: 5 }).quelle, /angenommen/);
+assert.equal(Engine.durchmesserBestimmen({ aussendurchmesser_mm: 500 }).mm, 78);
 
 // Ohne jede Angabe steht immer noch der Standardkopf zur Verfuegung.
 assert.equal(Engine.durchmesserBestimmen({}).mm, 78);
@@ -360,13 +383,13 @@ assert.ok(!erkennung.includes('In der Regel schaust du von schraeg oben'),
 assert.equal(Engine.standardKopf().name, 'Oblako Phunnel M');
 assert.equal(Engine.angenommenerKopf({}).herkunft, 'standard');
 assert.equal(Engine.angenommenerKopf({ kopf_modell: 'Kaya Phunnel' }).herkunft, 'angegeben');
-assert.equal(Engine.angenommenerKopf({ kopf_modell: 'Kaya Phunnel' }).durchmesser_mm, 75);
+assert.equal(Engine.angenommenerKopf({ kopf_modell: 'Kaya Phunnel' }).aussendurchmesser_mm, 75);
 
 // Ein unbekannter, frei eingetippter Kopf gilt trotzdem als Angabe des Nutzers.
 const frei = Engine.angenommenerKopf({ kopf_modell: 'Opa seine Selbstbau-Schale' });
 assert.equal(frei.herkunft, 'angegeben');
 assert.equal(frei.name, 'Opa seine Selbstbau-Schale');
-assert.equal(frei.durchmesser_mm, null, 'ohne Massangabe kein erfundener Durchmesser');
+assert.equal(frei.aussendurchmesser_mm, null, 'ohne Massangabe kein erfundener Durchmesser');
 
 // Eigener Standardkopf schlaegt den aus spec.json
 Engine.einstellungenSpeichern({ standardkopf: 'Vyro Rocket' });
@@ -429,6 +452,108 @@ assert.ok(/ins Bild/.test(klageOhneKopf.coach_satz));
 
 // Ein normaler Satz bleibt unangetastet
 assert.equal(Engine.normalisiere(ANTWORT, true, {}).coach_satz, ANTWORT.coach_satz);
+
+// --- Mehrdeutige Kopfnamen werden nicht stillschweigend geraten -----------------
+// "Killerkopf" passt auf klein (68 mm) und gross (80 mm) — 15 Prozent
+// Massstabsfehler, wenn einfach der erste gewinnt. Dann lieber der Standardkopf.
+assert.equal(Engine.kopfSuchen('Killerkopf'), null, 'mehrdeutig heisst kein Treffer');
+assert.equal(Engine.kopfSuchen('Killerkopf klein').aussendurchmesser_mm, 68, 'eindeutig geht weiter');
+assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').aussendurchmesser_mm, 78,
+             'Zusaetze stoeren nicht — der laengste Treffer gewinnt');
+
+// --- Leerer Kopf: keine erfundenen Tabaknoten -----------------------------------
+// In der Phase "Kopf pruefen" ist der Kopf absichtlich leer. Frueher musste das
+// Modell trotzdem Tabakverteilung und Fuellhoehe benoten — zusammen 35 Prozent
+// Gewicht — und lieferte entweder erfundene Zahlen oder strafte den fehlenden
+// Tabak ab.
+const leererKopf = {
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+  scores: { tabak_verteilung: 0, fuellhoehe: 0, airflow: 0, hitzemanagement: 80,
+            kopfgeometrie: 90, tabak_kompatibilitaet: 0, zielerreichung: 0 },
+};
+const inPhaseKopf = Engine.normalisiere(leererKopf, false, {}, 'kopf');
+// 80*.20 + 90*.10 = 25, Gewichtssumme .30 -> 83
+assert.equal(inPhaseKopf.gesamtscore, 83, `leerer Kopf falsch benotet: ${inPhaseKopf.gesamtscore}`);
+assert.deepEqual(inPhaseKopf.nicht_bewertbar.sort(),
+  ['airflow', 'fuellhoehe', 'tabak_kompatibilitaet', 'tabak_verteilung', 'zielerreichung']);
+
+// Dieselbe Antwort spaeter im Bau ist ein schlechter Kopf — da zaehlt alles.
+const spaeter = Engine.normalisiere(leererKopf, false, {}, 'glattziehen');
+assert.equal(spaeter.gesamtscore, 25);
+assert.deepEqual(spaeter.nicht_bewertbar, []);
+
+// Ohne Phasenangabe bleibt es beim alten Verhalten: alle Kategorien zaehlen.
+assert.equal(Engine.normalisiere(leererKopf, false, {}).gesamtscore, 25);
+
+// Der Prompt sagt dem Modell auch, welche Kategorien gerade null bleiben duerfen
+const phasenPrompt = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, phase: 'kopf', verlauf: '', lernen: '',
+});
+assert.ok(phasenPrompt.includes('gibt es in dieser Phase noch gar nicht'));
+assert.ok(phasenPrompt.includes('tabak_verteilung'));
+
+// --- Angabe und Annahme sind zweierlei -----------------------------------------
+// Der Standardkopf greift immer. Frueher bekam das Modell deshalb auch ohne
+// jede Angabe zu lesen, der Nutzer habe den Kopf genannt und es solle ihn nicht
+// anzweifeln — die Annahme frass die Erkennung, die sie absichern sollte.
+const ohneAngabe = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '',
+});
+assert.ok(ohneAngabe.includes('KEINEN Kopf angegeben'), 'Vermutung wird als Vermutung benannt');
+assert.ok(!ohneAngabe.includes('Der Nutzer hat gesagt, welchen Kopf'), 'und nicht als Angabe');
+assert.ok(ohneAngabe.includes('Erkenne die Kopfart trotzdem'), 'erkannt wird weiter selbst');
+
+const mitAngabe = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced', kopf_modell: 'Oblako Phunnel M' }, verlauf: '', lernen: '',
+});
+assert.ok(mitAngabe.includes('Der Nutzer hat gesagt, welchen Kopf'));
+assert.ok(!mitAngabe.includes('KEINEN Kopf angegeben'));
+
+// --- Kohle wird nicht mehr uebersehen -------------------------------------------
+// Die ganze Phase "Kohle auflegen" war ungeschuetzt: ein gemeldeter Hotspot
+// konnte neben einer glatten 90 im Hitzemanagement stehen.
+const hotspot = Engine.normalisiere({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  kohle: { status: 'visible', anzahl: 3, hotspot_risiko: 'high', confidence: 70 },
+  scores: { ...ANTWORT.scores, hitzemanagement: 90 },
+}, false);
+assert.equal(hotspot.scores.hitzemanagement, 40, 'Hotspot nicht gekappt');
+
+const kalt = Engine.normalisiere({
+  ...ANTWORT, probleme: [], tabak: { ...ANTWORT.tabak, randkontakt: false },
+  kohle: { status: 'visible', anzahl: 3, durchgegluht: false, confidence: 70 },
+  scores: { ...ANTWORT.scores, hitzemanagement: 90 },
+}, false);
+assert.equal(kalt.scores.hitzemanagement, 35, 'nicht durchgegluehte Kohle nicht gekappt');
+assert.ok(kalt.gesamtscore <= 55, 'und die Gesamtnote wird mitgezogen');
+
+// --- Eine geratene Kategorie kappt nichts ----------------------------------------
+// "kohle" ist kein gueltiger Kategorieschluessel. Der Standard taugt zum
+// Anzeigen, nicht zum Herunterstufen: sonst wird die Tabakverteilung fuer ein
+// Kohleproblem halbiert und das Hitzemanagement bleibt bei 90.
+const falscheKategorie = Engine.normalisiere({
+  ...ANTWORT, tabak: { ...ANTWORT.tabak, randkontakt: false },
+  probleme: [{ id: 'x', severity: 'critical', kategorie: 'kohle', titel: 'Kohle mittig',
+               beschreibung: 'ueber dem Kamin', confidence: 80, aktion: 'reposition_coals' }],
+}, false);
+assert.equal(falscheKategorie.scores.tabak_verteilung, 60, 'nicht fuer ein Kohleproblem gekappt');
+assert.ok(falscheKategorie.probleme[0].titel === 'Kohle mittig', 'angezeigt wird es trotzdem');
+
+// --- Live wird gekappt, bevor gekuerzt wird ---------------------------------------
+// Die Anzeige zeigt live nur zwei Probleme. Wurde vorher gekuerzt, kappte das
+// dritte kritische Problem gar nichts mehr.
+const dreiKritische = Engine.normalisiere({
+  ...ANTWORT, tabak: { ...ANTWORT.tabak, randkontakt: false },
+  probleme: [
+    { id: 'a', severity: 'critical', kategorie: 'fuellhoehe', titel: 'A', confidence: 90, aktion: 'remove_tobacco' },
+    { id: 'b', severity: 'critical', kategorie: 'airflow', titel: 'B', confidence: 80, aktion: 'loosen_tobacco' },
+    { id: 'c', severity: 'critical', kategorie: 'kopfgeometrie', titel: 'C', confidence: 70, aktion: 'remove_tobacco' },
+  ],
+}, true);
+assert.equal(dreiKritische.probleme.length, 2, 'live bleiben zwei stehen');
+assert.equal(dreiKritische.scores.kopfgeometrie, 45, 'das dritte kappt trotzdem');
 
 // --- (3) Mehrere Bilder -------------------------------------------------------
 const mehrere = Engine.promptBauen({
@@ -498,6 +623,21 @@ const zweiteRunde = await nachmessen.analysieren(new Blob(['x']), 'voll');
 assert.ok(zweiteRunde.vergleich, 'die zweite Vollanalyse vergleicht mit der ersten');
 assert.equal(zweiteRunde.vergleich.delta, 0, 'gleiche Antwort, gleiche Note');
 
+// --- Veraltete Antwort veraendert die Sitzung nicht ----------------------------
+// Waehrend einer laufenden Anfrage kann die App im Hintergrund gewesen sein.
+// Sortiert sich so eine Antwort trotzdem ein, springt im Stillen die Bauphase
+// weiter — sichtbar wird das erst beim naechsten Ergebnis, ohne erkennbaren Grund.
+const stillstand = new Engine.Sitzung({ ziel: 'balanced' });
+const vorPhase = stillstand.phase;
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+await stillstand.analysieren(new Blob(['x']), 'live', false);
+assert.equal(stillstand.verlauf.length, 0, 'nichts einsortiert');
+assert.equal(stillstand.phase, vorPhase, 'und die Phase steht noch');
+const eingereiht = stillstand.aufnehmen(await stillstand.analysieren(new Blob(['x']), 'live', false));
+assert.equal(stillstand.verlauf.length, 1, 'per Hand geht es weiter wie bisher');
+assert.ok(eingereiht.konsens !== undefined || eingereiht.gesamtscore !== null);
+
 // --- (7) Kontingent ------------------------------------------------------------
 speicher.delete('shisha.verbrauch');
 assert.equal(Engine.verbrauch('gemini').anzahl, 0);
@@ -506,6 +646,29 @@ assert.equal(Engine.verbrauch('gemini').limit, 200);
 const vorZaehler = Engine.verbrauch('gemini').anzahl;
 await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live');
 assert.equal(Engine.verbrauch('gemini').anzahl, vorZaehler + 1, 'jede Anfrage wird gezaehlt');
+
+// Was nie beim Anbieter ankam, kostet auch kein Kontingent. Vorher zaehlte
+// jede 429, jede 401 und jeder Netzabbruch mit — bei erschoepftem Kontingent
+// lief der Zaehler im Sekundentakt hoch, obwohl nichts durchging.
+speicher.delete('shisha.verbrauch');
+globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => 'quota' });
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live').catch(() => {});
+assert.equal(Engine.verbrauch('gemini').anzahl, 0, '429 kostet kein Kontingent');
+
+globalThis.fetch = async () => { throw new TypeError('kein netz'); };
+await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live').catch(() => {});
+assert.equal(Engine.verbrauch('gemini').anzahl, 0, 'Netzabbruch kostet kein Kontingent');
+
+// Eine Antwort, die durchkam und nur leer war, kostet dagegen sehr wohl.
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [] } }] }),
+});
+const abgeschnitten = await new Engine.Sitzung({ ziel: 'balanced' })
+  .analysieren(new Blob(['x']), 'live').catch((f) => f);
+assert.match(abgeschnitten.message, /abgeschnitten/);
+assert.equal(Engine.verbrauch('gemini').anzahl, 1, 'angekommen ist angekommen');
+globalThis.fetch = standardFetch;
 
 speicher.set('shisha.verbrauch', JSON.stringify({
   tag: new Date().toISOString().slice(0, 10), anbieter: { gemini: 199 },

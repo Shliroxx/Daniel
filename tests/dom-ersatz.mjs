@@ -76,11 +76,18 @@ export function baueUmgebung(webDir, { antwort }) {
       getImageData: (x, y, b, h) => {
         if (wackelt) bildMuster++;
         // Schachbrett mit genug Kanten und Helligkeit, damit das Bild taugt.
+        //
+        // Beim Wackeln wird das Muster verschoben, nicht invertiert: eine reine
+        // Invertierung hat die Periode zwei, und zwei Abtastungen dazwischen
+        // ergaben wieder dasselbe Bild — dann sah ein wild wackelndes Bild fuer
+        // die Guetepruefung voellig ruhig aus. Der Schritt 7 gegen die Periode 4
+        // wiederholt sich so schnell nicht.
+        const schub = wackelt ? (bildMuster * 7) % 13 : bildMuster;
         const daten = new Uint8ClampedArray(b * h * 4);
         for (let i = 0, p = 0; p < b * h; p++, i += 4) {
-          const zx = p % b;
+          const zx = (p % b) + schub;
           const zy = Math.floor(p / b);
-          const hell = ((zx >> 1) + (zy >> 1) + bildMuster) % 2 ? 210 : 60;
+          const hell = ((zx >> 1) + (zy >> 1)) % 2 ? 210 : 60;
           daten[i] = daten[i + 1] = daten[i + 2] = hell;
           daten[i + 3] = 255;
         }

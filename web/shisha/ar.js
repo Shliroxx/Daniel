@@ -77,6 +77,7 @@ mini.height = 48;
 const miniCtx = mini.getContext('2d', { willReadFrequently: true });
 let letzteMini = null;
 let analyseMini = null;   // die Miniatur des zuletzt analysierten Bildes
+let letzteAbtastung = 0;  // wann zuletzt eine Miniatur genommen wurde
 
 /* Schaetzt, wie weit sich das Bild seit dem letzten Frame verschoben hat.
  *
@@ -163,6 +164,11 @@ function kameraStoppen() {
   if (!strom) return;
   strom.getTracks().forEach((spur) => spur.stop());
   strom = null;
+  // Sonst haengt der letzte Frame im Video und blitzt beim naechsten Start auf,
+  // und die Miniaturen der alten Sitzung verfaelschen den ersten Vergleich.
+  video.srcObject = null;
+  letzteMini = null;
+  analyseMini = null;
 }
 
 /** Liefert die Kamera gerade ein brauchbares Livebild? */
@@ -179,6 +185,11 @@ function pausieren(grund) {
   zustand.pausiert = true;
   zustand.wartetSeit = 0;
   if (window.speechSynthesis) speechSynthesis.cancel();
+  // Angehalten heisst angehalten: sonst laeuft die Kamera weiter, das
+  // Aufnahmelicht bleibt an und der Akku zieht, waehrend die App behauptet,
+  // sie stehe. fortsetzen() startet sie ohnehin komplett neu.
+  kameraStoppen();
+  bildschirmFreigeben();
   $('pauseGrund').textContent = grund || 'Die Kamera steht.';
   $('pauseFehler').textContent = '';
   $('pause').hidden = false;
@@ -210,7 +221,9 @@ function zumHauptmenue() {
   zustand.laeuft = false;
   zustand.pausiert = false;
   zustand.analyse = null;
+  zustand.lauf++;          // laufende Antworten gehoeren nicht mehr hierher
   kameraStoppen();
+  bildschirmFreigeben();
   hoerenAus();
   if (window.speechSynthesis) speechSynthesis.cancel();
   $('pause').hidden = true;
@@ -223,12 +236,33 @@ function zumHauptmenue() {
   startBereitschaft();
 }
 
+/* Bildschirm wachhalten — und merken, wenn das System die Sperre zurueckholt.
+ *
+ * iOS gibt die Sperre frei, sobald die Seite in den Hintergrund geht. Das
+ * Sentinel-Objekt bleibt dabei bestehen, ist also weiter wahr — wer nur darauf
+ * prueft, fordert nie wieder an. Folge: einmal kurz aus der App heraus, und ab
+ * da geht der Bildschirm mitten im Bauen aus.
+ */
 async function bildschirmWachhalten() {
   try {
-    if ('wakeLock' in navigator) zustand.wakeLock = await navigator.wakeLock.request('screen');
+    if (!('wakeLock' in navigator)) return;
+    const sperre = await navigator.wakeLock.request('screen');
+    zustand.wakeLock = sperre;
+    sperre.addEventListener('release', () => {
+      if (zustand.wakeLock === sperre) zustand.wakeLock = null;
+    });
   } catch (_) {
     /* nicht schlimm — dann geht das Display eben irgendwann aus */
   }
+}
+
+/** Sperre zurueckgeben — im Menue und in der Pause braucht sie niemand. */
+async function bildschirmFreigeben() {
+  const sperre = zustand.wakeLock;
+  zustand.wakeLock = null;
+  try {
+    if (sperre) await sperre.release();
+  } catch (_) { /* schon weg */ }
 }
 
 document.addEventListener('visibilitychange', async () => {
@@ -387,32 +421,56 @@ async function schleife() {
     const sparen = Steuerung.lohntAnalyse(veraenderungSeitAnalyse(), Engine.einstellungen().sparmodus);
     if (!sparen.lohnt) {
       setzeLage(sparen.grund, '');
+      // Hier wird nicht auf ein brauchbares Bild gewartet — das Bild ist in
+      // Ordnung, es hat sich nur nichts getan. Die Geduldsuhr gehoert also
+      // zurueckgesetzt, sonst gilt der naechste Wackler nach einer ruhigen
+      // Minute sofort als Notfall und geht ungeprueft raus.
+      zustand.wartetSeit = 0;
       await schlafen(600);
       continue;
     }
 
     zustand.busy = true;
     zustand.wartetSeit = 0;
+    let ruhe = PAUSE_MS;
+    let stolperstein = '';
     setzeLage(urteil.nachsichtig ? 'analysiere (unruhig)' : 'analysiere', 'denkt');
     try {
       // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
       const blob = await bildAufnehmen(896);
       analyseMini = zustand.letzteGrau;
       zustand.versatz = { x: 0, y: 0 };
-      const ergebnis = await zustand.sitzung.analysieren(blob, 'live');
+      const ergebnis = await zustand.sitzung.analysieren(blob, 'live', false);
       // Waehrend der Anfrage kann eine neue Runde begonnen haben — dann ist
-      // dieses Ergebnis veraltet und darf das neuere nicht ueberschreiben.
-      if (meineRunde()) liveUebernehmen(ergebnis);
+      // dieses Ergebnis veraltet. Es wird dann weder angezeigt noch einsortiert:
+      // sonst schoebe es sich in Verlauf und Konsens und koennte sogar die
+      // Bauphase weiterschalten, ohne dass etwas davon zu sehen waere.
+      if (meineRunde()) liveUebernehmen(zustand.sitzung.aufnehmen(ergebnis));
     } catch (fehler) {
       setzeLage(kurz(fehler.message), 'fehler');
       $('coach').textContent = fehler.message;
-      await schlafen(3000);
+      ruhe = Steuerung.fehlerRuhe(fehler.status || 0);
+      stolperstein = fehler.message;
     } finally {
+      // Vor der Wartezeit freigeben, nicht danach: sonst blockiert eine lange
+      // Kontingentpause den Knopf fuer die Vollanalyse gleich mit.
       zustand.busy = false;
       kontingentZeigen();
     }
-    await schlafen(PAUSE_MS);
+
+    if (ruhe === null) {
+      pausieren(stolperstein);
+      return;
+    }
+    await schlafen(ruhe);
   }
+}
+
+/** Wartet, bis keine Anfrage mehr laeuft — hoechstens aber so lange. */
+async function warteAufFrei(hoechstensMs) {
+  const bis = Date.now() + hoechstensMs;
+  while (zustand.busy && Date.now() < bis) await schlafen(120);
+  return !zustand.busy;
 }
 
 /** Zeigt an, wie viele Anfragen das heutige Freikontingent schon gekostet hat. */
@@ -574,8 +632,8 @@ function phasenZeichnen() {
     knopf.title = phase.ziel;
     knopf.onclick = () => {
       zustand.sitzung.phaseSetzen(phase.key);
-      $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
-      phasenZeichnen();
+      fortschrittZeichnen();
+      neuBeurteilen();
     };
     box.appendChild(knopf);
   });
@@ -611,6 +669,18 @@ function bildAufBildschirm(nx, ny) {
 function zeichnen() {
   requestAnimationFrame(zeichnen);
   if (!zustand.laeuft) return;
+
+  // Bildbewegung mitschreiben, unabhaengig von der Analyseschleife.
+  //
+  // Frueher passierte das nur in der Guetepruefung — und die kommt waehrend
+  // einer laufenden Anfrage gar nicht dran. Genau in diesen zwei bis vier
+  // Sekunden bewegt sich das Handy aber. Die Marker klebten dann an den
+  // Koordinaten des analysierten Bildes, und der naechste Vergleich lief ueber
+  // eine Luecke von Sekunden ins Leere. Zehnmal pro Sekunde reicht dafuer.
+  if (zustand.busy && Date.now() - letzteAbtastung > 100) {
+    letzteAbtastung = Date.now();
+    bildGuete();
+  }
 
   const breite = overlay.clientWidth;
   const hoehe = overlay.clientHeight;
@@ -894,6 +964,7 @@ function befehlAusfuehren(befehl, gesagt) {
     case 'phase_vor':
       zustand.sitzung.weiter();
       fortschrittZeichnen();
+      neuBeurteilen();
       sprich(`Phase ${zustand.sitzung.phaseInfo.name}.`);
       break;
     case 'phase_zurueck': {
@@ -901,6 +972,7 @@ function befehlAusfuehren(befehl, gesagt) {
       const index = phasen.findIndex((p) => p.key === zustand.sitzung.phase);
       zustand.sitzung.phaseSetzen(phasen[Math.max(0, index - 1)].key);
       fortschrittZeichnen();
+      neuBeurteilen();
       sprich(`Zurück zu ${zustand.sitzung.phaseInfo.name}.`);
       break;
     }
@@ -956,6 +1028,17 @@ function befehlAusfuehren(befehl, gesagt) {
 function fortschrittZeichnen() {
   $('fortschritt').style.width = `${Math.round(zustand.sitzung.fortschritt() * 100)}%`;
   phasenZeichnen();
+}
+
+/* Naechstes Bild auf jeden Fall wieder analysieren.
+ *
+ * Der Sparmodus vergleicht nur Pixel. Wechselt der Nutzer die Bauphase, aendert
+ * sich aber der Prompt, nicht das Bild — der Kopf liegt ja unveraendert da.
+ * Ohne diesen Anstoss steht dann "unveraendert" auf dem Schirm, bis jemand das
+ * Handy bewegt, und der Coach redet weiter ueber die alte Phase.
+ */
+function neuBeurteilen() {
+  analyseMini = null;
 }
 
 function tonAnzeigen() {
@@ -1020,6 +1103,7 @@ function einstellungenFuellen() {
   $('fOrKey').value = e.openrouter_key;
   $('fOrModell').value = e.openrouter_modell;
   $('fServerUrl').value = e.server_url;
+  $('fServerToken').value = e.server_token;
   $('fGegenprobe').value = e.gegenprobe;
   $('fSparmodus').checked = e.sparmodus;
   $('fStandardkopf').value = e.standardkopf;
@@ -1043,6 +1127,7 @@ function einstellungenSpeichern() {
     openrouter_key: $('fOrKey').value.trim(),
     openrouter_modell: $('fOrModell').value.trim(),
     server_url: $('fServerUrl').value.trim(),
+    server_token: $('fServerToken').value.trim(),
     gegenprobe: $('fGegenprobe').value,
     sparmodus: $('fSparmodus').checked,
     standardkopf: $('fStandardkopf').value.trim(),
@@ -1098,7 +1183,7 @@ function kontextLesen() {
     hmd: $('fHmd').value.trim(),
     kohlen: $('fKohlen').value.trim(),
     notiz: $('fNotiz').value.trim(),
-    durchmesser_mm: $('fDurchmesser').value.trim(),
+    aussendurchmesser_mm: $('fDurchmesser').value.trim(),
   };
 }
 
@@ -1110,7 +1195,7 @@ function kontextLesen() {
 function durchmesserVorschlagen() {
   const treffer = Engine.kopfSuchen($('fKopf').value);
   if (treffer && !$('fDurchmesser').value.trim()) {
-    $('fDurchmesser').value = String(treffer.durchmesser_mm);
+    $('fDurchmesser').value = String(treffer.aussendurchmesser_mm);
     $('fDurchmesser').classList.add('vorgeschlagen');
   }
 }
@@ -1125,8 +1210,12 @@ function sitzungStarten() {
   $('messwerte').innerHTML = '';
   $('rueckfrage').hidden = true;
   $('liveScore').hidden = true;
-  // Angaben merken, damit man sie beim naechsten Mal nicht neu tippt.
-  localStorage.setItem('shisha.kontext', JSON.stringify(zustand.sitzung.kontext));
+  // Angaben merken, damit man sie beim naechsten Mal nicht neu tippt. Klappt das
+  // nicht (privater Modus, volles Geraet), ist das kein Grund, den Start
+  // abzubrechen — deshalb hier kein ungeschuetztes setItem mehr.
+  try {
+    localStorage.setItem('shisha.kontext', JSON.stringify(zustand.sitzung.kontext));
+  } catch (_) { /* dann eben nicht gemerkt */ }
   phasenZeichnen();
 }
 
@@ -1141,7 +1230,7 @@ function kontextWiederherstellen() {
   $('fSorte').value = gespeichert.tabak_sorte || '';
   $('fHmd').value = gespeichert.hmd || '';
   $('fKohlen').value = gespeichert.kohlen || '';
-  $('fDurchmesser').value = gespeichert.durchmesser_mm || '';
+  $('fDurchmesser').value = gespeichert.aussendurchmesser_mm || '';
   if (gespeichert.ziel) {
     [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
   }
@@ -1201,8 +1290,17 @@ async function bilderSammeln(anzahl) {
 }
 
 async function vollanalyse() {
-  if (zustand.busy) return;
+  if (zustand.busy) {
+    // Frueher kam hier ein stilles return: der Knopf wirkte kaputt, wenn gerade
+    // eine Liverunde lief — nach einem Netzfehler bis zu drei Sekunden lang.
+    setzeLage('gleich', 'denkt');
+    zustand.lauf++;          // die laufende Liverunde ist damit entwertet
+    await warteAufFrei(4000);
+    if (zustand.busy) return;
+  }
   zustand.busy = true;
+  const meineSitzung = zustand.sitzung;
+  const meiner = ++zustand.lauf;
   $('analyseButton').disabled = true;
   setzeLage('Vollanalyse', 'denkt');
 
@@ -1211,7 +1309,12 @@ async function vollanalyse() {
     const bilder = await bilderSammeln(anzahl);
     setzeLage('bewerte', 'denkt');
 
-    const analyse = await zustand.sitzung.analysieren(bilder, 'voll');
+    const analyse = await meineSitzung.analysieren(bilder, 'voll');
+    // Waehrend der Anfrage kann der Nutzer laengst im Hauptmenue sein oder eine
+    // neue Sitzung begonnen haben. Dann draengt sich der Report nicht mehr ueber
+    // den Bildschirm und landet auch nicht in der Historie einer Sitzung, die es
+    // nicht mehr gibt.
+    if (zustand.lauf !== meiner || zustand.sitzung !== meineSitzung) return;
     reportZeigen(analyse);
     historieMerken(analyse, bilder[0]);
     setzeLage('live', '');
@@ -1223,6 +1326,13 @@ async function vollanalyse() {
     zustand.busy = false;
     $('analyseButton').disabled = false;
     kontingentZeigen();
+    // Das eben aufgenommene Bild ist der neue Bezugspunkt fuer den Sparmodus.
+    // Ohne das haelt die Liveschleife den Kopf fuer veraendert und schickt
+    // sofort nach dem Report noch eine Anfrage hinterher.
+    if (zustand.letzteGrau) analyseMini = zustand.letzteGrau;
+    // Die Rundennummer oben hat die Liveschleife beendet — hier laeuft sie
+    // wieder an, sonst steht die Vorschau nach dem Report still.
+    if (zustand.laeuft && !zustand.pausiert && zustand.sitzung === meineSitzung) schleife();
   }
 }
 
@@ -1513,9 +1623,22 @@ function reportZeigen(analyse) {
 
   const kategorien = $('kategorien');
   kategorien.innerHTML = '';
+  const ausgenommen = analyse.nicht_bewertbar || [];
   Object.entries(analyse.scores || {}).forEach(([key, wert]) => {
     const zeile = document.createElement('div');
     zeile.className = 'kat';
+    // In fruehen Bauphasen gibt es manche Kategorien noch gar nicht. Sie stehen
+    // trotzdem da, aber ohne Zahl — eine 0 waere hier eine Behauptung.
+    if (ausgenommen.includes(key)) {
+      zeile.classList.add('kat-offen');
+      zeile.innerHTML =
+        `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>`
+        + '<span class="kat-leiste"></span>'
+        + '<span class="kat-zahl">–</span>';
+      zeile.title = 'in dieser Phase noch nicht beurteilbar — zaehlt nicht zur Note';
+      kategorien.appendChild(zeile);
+      return;
+    }
     zeile.innerHTML =
       `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>` +
       `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
@@ -1787,6 +1910,7 @@ $('menueButton').addEventListener('click', () => {
 $('weiterButton').addEventListener('click', () => {
   zustand.sitzung.weiter();
   fortschrittZeichnen();
+  neuBeurteilen();
 });
 
 $('analyseButton').addEventListener('click', vollanalyse);
@@ -1859,7 +1983,7 @@ function kopflisteFuellen() {
   ((Engine.spec.koepfe || {}).liste || []).forEach((kopf) => {
     const eintrag = document.createElement('option');
     eintrag.value = kopf.name;
-    eintrag.label = `${kopf.durchmesser_mm} mm`;
+    eintrag.label = `${kopf.aussendurchmesser_mm} mm`;
     liste.appendChild(eintrag);
   });
 }

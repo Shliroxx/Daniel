@@ -65,6 +65,23 @@ function pruefe(name, bedingung, zusatz = '') {
 }
 
 const warte = (ms) => new Promise((f) => setTimeout(f, ms));
+
+/* Warten, bis etwas eingetreten ist — statt auf gut Glueck eine feste Zeit.
+ *
+ * Feste Wartezeiten sind der haeufigste Grund fuer Tests, die auf einem
+ * langsamen Rechner ohne Grund umfallen: die Mehrfachaufnahme braucht allein
+ * zweimal 1,8 s zwischen den Winkeln, und jede Aufnahme darf bis zu 8 s auf ein
+ * ruhiges Bild warten. So ist der Test bei schnellen Laeufen kuerzer und bei
+ * langsamen trotzdem gruen.
+ */
+async function warteBis(bedingung, hoechstensMs = 20000) {
+  const bis = Date.now() + hoechstensMs;
+  while (Date.now() < bis) {
+    if (bedingung()) return true;
+    await warte(60);
+  }
+  return false;
+}
 const $ = (id) => elemente.get(id);
 
 // --- Laden ------------------------------------------------------------------
@@ -164,7 +181,10 @@ function pruefe2(name, bedingung, zusatz = '') {
 const vorVoll = protokoll.anfragen.length;
 $('fWinkel').checked = true;
 $('analyseButton').klick();
-await warte(9000);
+// Auf ein echtes Zeichen warten: die Note steht erst da, wenn der Report
+// gefuellt ist. (Im Nachbau ist `hidden` anfangs false — das taugt nicht.)
+await warteBis(() => $('aufnahme').hidden === true && String($('noteZahl').textContent).length > 0);
+await warte(120);
 
 pruefe2('Aufnahme-Ansage wieder zu', $('aufnahme').hidden === true);
 pruefe2('Drei Winkel angesagt',
@@ -200,7 +220,8 @@ ANTWORT.scores = { tabak_verteilung: 88, fuellhoehe: 80, airflow: 80, hitzemanag
                    kopfgeometrie: 80, tabak_kompatibilitaet: 80, zielerreichung: 82 };
 ANTWORT.probleme = [];
 $('nachmessenButton').klick();
-await warte(9000);
+await warteBis(() => $('vergleich').innerHTML.includes('→'));
+await warte(120);
 
 pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '81', `"${$('noteZahl').textContent}"`);
 pruefe2('Vergleich sichtbar', $('vergleich').hidden === false);
@@ -287,6 +308,11 @@ const z = kontext.__zustand;
 $('losButton').klick();
 await warte(200);
 kontext.__Engine.einstellungenSpeichern({ sparmodus: false });
+// Die echte Kontingentpause dauert 30 s — fuer den Test verkuerzt, sonst
+// stuende der Durchlauf eine halbe Minute still. Die echten Werte bleiben zum
+// Vergleich erhalten.
+const RUHE_ECHT = { ...kontext.__Steuerung.GRENZEN };
+kontext.__Steuerung.GRENZEN.kontingentRuheMs = 1200;
 
 // --- 1. Modell antwortet Muell ------------------------------------------------
 antwortPlan.text = () => 'Tut mir leid, ich kann das Bild nicht sehen.';
@@ -302,6 +328,11 @@ bildAendern();
 await warte(4200);
 p3('429 im Klartext', $('coach').textContent.includes('Freikontingent'), `"${$('coach').textContent}"`);
 p3('Schleife ueberlebt 429', z.laeuft === true);
+// Nach 429 wird laenger gewartet als nach einer gewoehnlichen Stoerung — sonst
+// laeuft der Zaehler ins Leere weiter, waehrend beim Anbieter nichts durchgeht.
+p3('Kontingentpause ist laenger als die Stoerungspause',
+   kontext.__Steuerung.fehlerRuhe(429, RUHE_ECHT) > kontext.__Steuerung.fehlerRuhe(500, RUHE_ECHT));
+p3('Kein Hammern bei abgelehntem Schluessel', kontext.__Steuerung.fehlerRuhe(401) === null);
 
 // --- 3. Kein Kopf im Bild -------------------------------------------------------
 antwortPlan.status = 200;
@@ -332,7 +363,10 @@ const vorGegen = protokoll.anfragen.length;
 $('fWinkel').checked = false;
 $('analyseButton').klick();
 await warte(3000);
-p3('Gegenprobe fragt zweimal', protokoll.anfragen.length === vorGegen + 2,
+// Zwei Anfragen gehoeren zur Gegenprobe; eine dritte waere eine Liverunde, die
+// sich dazwischengeschoben hat — deshalb eine Spanne statt Gleichheit.
+p3('Gegenprobe fragt zweimal', protokoll.anfragen.length - vorGegen >= 2
+   && protokoll.anfragen.length - vorGegen <= 3,
    `${protokoll.anfragen.length - vorGegen} Anfragen`);
 p3('Uneinigkeit wird gezeigt', $('gegenprobe').hidden === false && $('gegenprobe').innerHTML.includes('unsicher'),
    $('gegenprobe').innerHTML.slice(0, 70));
@@ -387,9 +421,11 @@ const messe = async (ms) => {
   return protokoll.anfragen.length - vorher;
 };
 const takt = async () => {
-  // Bild dauernd aendern, damit jede Runde analysiert wird.
-  const uhr = setInterval(bildAendern, 100);
-  const anzahl = await messe(4000);
+  // Das Bild aendert sich regelmaessig, aber nicht dauernd: zwischen zwei
+  // Aenderungen muss es kurz ruhig sein, sonst kommt die Guetepruefung nie
+  // durch und gemessen wuerde nur die Notbremse nach zwoelf Sekunden.
+  const uhr = setInterval(bildAendern, 700);
+  const anzahl = await messe(5000);
   clearInterval(uhr);
   return anzahl;
 };
@@ -412,25 +448,39 @@ const taktNachher = await takt();
 
 // Abstaende zwischen den Anfragen: bei nur einer Schleife liegen mindestens
 // PAUSE_MS (900 ms) plus Pruefzyklus dazwischen.
-const zeiten = protokoll.anfragen.slice(-taktNachher).map((a) => a.zeit);
+// Ohne Anfragen misst der Vergleich nichts — dann ist der Test kaputt, nicht die App.
+p3('Nach dem Hintergrund laeuft die Analyse wieder', taktNachher >= 2, `${taktNachher} Anfragen in 5 s`);
+
+const zeiten = protokoll.anfragen.slice(-Math.max(taktNachher, 1)).map((a) => a.zeit);
 const abstaende = zeiten.slice(1).map((t, i) => t - zeiten[i]);
 const kleinster = abstaende.length ? Math.min(...abstaende) : 9999;
 
 p3('Kein doppelter Analysetakt nach Hintergrund',
    taktNachher <= taktVorher + 1,
-   `vorher ${taktVorher}, nachher ${taktNachher} Anfragen in 4 s`);
+   `vorher ${taktVorher}, nachher ${taktNachher} Anfragen in 5 s`);
 p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
-   `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`);
+   `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`
+   );
 
 // --- 9. Zittrige Hand: es darf nicht ewig gescannt werden ---------------------------------
 // Am Geraet gemeldet: "braucht erstmal lange zum Scannen". Aus der Hand ist ein
 // Bild nie ganz ruhig — bleibt die Pruefung streng, geht nie etwas raus.
 wackeln(true);
-await warte(400);
+// Eine schon laufende Anfrage erst auslaufen lassen — sonst zaehlt der Test
+// sie mit und misst nicht, was er messen will.
+while (z.busy) await warte(100);
+await warte(300);
+// Die Geduldsuhr laeuft ab der letzten Analyse. Fuer die Messung wird sie hier
+// auf jetzt gestellt, sonst haengt das Ergebnis daran, wie lange die Abschnitte
+// davor gedauert haben.
+z.wartetSeit = Date.now();
+const MESSSTART = Date.now();
 const vorWackeln = protokoll.anfragen.length;
 await warte(2500);
 p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln,
-   `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s`);
+   `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s; `
+   + `busy=${z.busy} wartetSeit=${z.wartetSeit ? Date.now() - z.wartetSeit : 0} `
+   + `neu nach ${protokoll.anfragen.slice(vorWackeln).map((a) => a.zeit - MESSSTART).join(',')} ms`);
 p3('Wartegrund steht in der Anzeige', /halt still|unscharf/.test($('lage').textContent),
    `"${$('lage').textContent}"`);
 

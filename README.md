@@ -324,10 +324,21 @@ In der App unter **Modell und Zugang**:
 |---|---|---|
 | **Google Gemini** | kostenloses Freikontingent | Schlüssel auf `aistudio.google.com` → „Get API key". Keine Kreditkarte. Empfehlung. |
 | **OpenRouter** | kostenlose Modelle mit `:free` | Schlüssel auf `openrouter.ai`. Auswahl wechselt öfter — Modellname ist frei eintippbar. |
-| **eigener Rechner** | dein Claude-Abo | Beste Qualität, aber der PC muss laufen. |
+| **eigener Rechner** | dein Claude-Abo | Beste Qualität, aber der PC muss laufen. Adresse **und Losungswort** eintragen — beides zeigt der PC beim Start an. |
 
 Der Schlüssel bleibt auf dem Handy (`localStorage`) und geht nur an den gewählten
 Anbieter. Er landet nie in diesem Projekt und nirgendwo sonst.
+
+> **Beschränke den Schlüssel trotzdem beim Anbieter.** Der Speicher gehört zur
+> Webadresse, nicht zu dieser einen Seite: alles, was unter derselben Adresse
+> liegt, kann ihn lesen. Bei Google geht das unter *API key → Website
+> restrictions*, bei OpenRouter über ein Guthabenlimit pro Schlüssel.
+
+**Der Rückweg über den eigenen PC braucht ein Losungswort.** Der Proxy lässt
+Claude Code auf deinem Rechner arbeiten — ohne Schranke könnte jede beliebige
+Webseite, die du im Browser offen hast, ihn ansprechen, solange er läuft. Beim
+Start zeigt er ein Wort an, das du einmal in der App einträgst; für ein festes
+Wort `SHISHA_TOKEN` in die `.env` schreiben.
 
 Bei kostenlosen Modellen ist ein **Limit pro Minute und pro Tag** normal. Wenn es
 greift, steht in der App „Freikontingent gerade erschöpft" — dann kurz warten.
@@ -405,9 +416,15 @@ Im Hintergrund analysiert die App nicht weiter — das spart Freikontingent und 
 ### Maßstab: warum der Kopfdurchmesser zählt
 
 Millimeter aus einem Foto zu schätzen ist Raterei, solange nichts im Bild eine
-bekannte Größe hat. Deshalb kannst du den **Innendurchmesser der Tabakmulde**
-angeben — die App gibt ihn dem Modell als Maßstab mit, das rechnet Entfernungen
-dann im Verhältnis dazu aus statt frei zu schätzen.
+bekannte Größe hat. Deshalb kannst du den **Außendurchmesser des Kopfes** angeben
+— quer über den oberen Rand gemessen. Die App gibt ihn dem Modell als Maßstab
+mit, das rechnet Entfernungen dann im Verhältnis dazu aus statt frei zu schätzen.
+
+Wichtig ist, dass Maß und Beschriftung zusammenpassen: bis Version 2 stand dort
+„Innendurchmesser der Tabakmulde", die hinterlegten Werte waren aber die
+Außenmaße der Köpfe. Dadurch kamen alle abgeleiteten Millimeter — Füllhöhe,
+HMD-Abstand — systematisch rund ein Fünftel zu klein heraus. Jetzt heißt das
+Feld, was drinsteht, und das Modell misst die Mulde selbst im Bild aus.
 
 Gängige Köpfe stehen in `spec.json`; tippst du „Oblako Phunnel M", wird der Wert
 vorgeschlagen. Deinen eigenen Kopf einmal ausmessen genügt, danach merkt die App
@@ -568,14 +585,17 @@ besuchen**. Der Rechner muss dabei laufen.
 
 Analysiert wird nur, wenn das Bild ruhig, scharf und hell genug ist — sonst steht
 oben „halt still", „unscharf" oder „zu dunkel" und es wird nichts verschickt. Das
-spart Kontingent und verhindert Fehlurteile aus verwackelten Bildern.
+spart Kontingent und verhindert Fehlurteile aus verwackelten Bildern. Wartet die
+App zu lange, wird sie nachsichtiger und schickt am Ende trotzdem (siehe „Wenn es
+ewig scannt").
 
 ### Regeln ändern
 
 Alles Fachliche steht in **`web/shisha/spec.json`**: Gewichte, Bauphasen,
 Zielprofile, das Wissen über Kopftypen und Tabakphysik, die Prompts. Eine
-Textdatei, eine einzige Quelle — Python und App lesen dieselbe. Ändern, pushen,
-fertig.
+Textdatei, eine einzige Quelle — gelesen wird sie von der App im Browser. Die
+Python-Seite kennt die Regeln nicht und braucht sie auch nicht: sie reicht Bild
+und Prompt nur weiter. Ändern, pushen, fertig.
 
 ### Prüfen, ob alles stimmt
 
@@ -583,7 +603,7 @@ fertig.
 node tests/test_engine.mjs     # Bewertungslogik, Maßstab, Lernregeln, Gegenprobe
 node tests/test_steuerung.mjs  # Kamera-Lage, Pause, Sprachbefehle, Marker
 node tests/test_durchlauf.mjs  # kompletter Durchgang durch die App (~1 Minute)
-python tests/test_shisha.py    # Rückweg über den eigenen Rechner
+python tests/test_shisha.py    # Proxy auf dem PC: Losungswort, Grenzen, CLI-Aufruf
 ```
 
 Die Tests füttern absichtlich fehlerhafte Modellantworten ein und prüfen, dass sie

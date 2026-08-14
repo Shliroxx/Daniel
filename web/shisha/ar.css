@@ -73,6 +73,14 @@ h1 {
 .unterzeile { color: var(--muted); line-height: 1.55; margin: 0 0 22px; font-size: 14px; }
 .fuss { color: var(--muted); font-size: 12px; margin-top: 16px; line-height: 1.5; }
 
+/* Kein Alarm, aber auch nicht zu uebersehen — fuer Hinweise, die man einmal
+   gelesen haben sollte, bevor man einen Schluessel eintraegt. */
+.unterzeile.warnung {
+  color: var(--amber);
+  border-left: 2px solid var(--amber);
+  padding-left: 12px;
+}
+
 .feld { margin-bottom: 18px; }
 
 .feld-titel {
@@ -119,13 +127,15 @@ h1 {
   color: var(--muted);
 }
 
-input[type="text"], input[type="number"] {
+input[type="text"], input[type="number"], input[type="password"] {
   padding: 11px 12px;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: rgba(4, 10, 16, 0.8);
   color: var(--text);
-  font-size: 15px;
+  /* Nicht unter 16px: Safari zoomt sonst beim Antippen in das Feld hinein und
+     kommt nicht von allein wieder heraus. */
+  font-size: 16px;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -369,6 +379,8 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 
 .kategorien { display: grid; gap: 8px; }
 .kat { display: grid; grid-template-columns: 118px 1fr 34px; align-items: center; gap: 9px; font-size: 13px; }
+/* Kategorien, die es in dieser Bauphase noch nicht gibt — sichtbar, aber ohne Zahl. */
+.kat-offen { opacity: 0.45; }
 .kat-name { color: var(--muted); }
 .kat-leiste { height: 6px; background: rgba(255, 255, 255, 0.09); border-radius: 3px; overflow: hidden; }
 .kat-fuell { height: 100%; border-radius: 3px; transition: width 0.7s ease; }
@@ -714,7 +726,7 @@ select {
   border: 1px solid var(--line);
   background: rgba(4, 10, 16, 0.8);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;   /* darunter zoomt Safari beim Antippen hinein */
   letter-spacing: normal;
   text-transform: none;
 }
