@@ -1229,20 +1229,64 @@ const Engine = (() => {
     });
   }
 
+  // Jeder Eintrag traegt ein Vorschaubild von ein paar Kilobyte. Ohne Grenze
+  // waechst die Ablage unbegrenzt, und Safari raeumt IndexedDB bei Platznot
+  // unangekuendigt komplett weg — dann ist alles fort statt nur das Aelteste.
+  const HISTORIE_MAX = 200;
+
   function historieSchreiben(eintrag) {
     return datenbank().then((db) => new Promise((fertig, fehler) => {
       const t = db.transaction(HISTORIE_LADEN, 'readwrite');
-      t.objectStore(HISTORIE_LADEN).put(eintrag);
+      const laden = t.objectStore(HISTORIE_LADEN);
+      laden.put(eintrag);
+
+      // Ueberzaehlige vom aeltesten Ende her wegnehmen. Der Schluessel ist die
+      // Zeit, also laeuft der Cursor vorwaerts von alt nach neu.
+      laden.count().onsuccess = (e) => {
+        let zuviel = e.target.result - HISTORIE_MAX;
+        if (zuviel <= 0) return;
+        laden.openCursor().onsuccess = (c) => {
+          const zeiger = c.target.result;
+          if (!zeiger || zuviel <= 0) return;
+          zeiger.delete();
+          zuviel--;
+          zeiger.continue();
+        };
+      };
+
       t.oncomplete = () => fertig(eintrag);
       t.onerror = () => fehler(t.error);
     }));
   }
 
+  /* Die letzten Eintraege — rueckwaerts per Cursor, nicht alles auf einmal.
+   *
+   * getAll() holte bisher jeden Eintrag samt Vorschaubild in den Speicher, nur
+   * um danach dreissig davon zu behalten.
+   */
   function historieLesen(anzahl = 30) {
     return datenbank().then((db) => new Promise((fertig, fehler) => {
       const t = db.transaction(HISTORIE_LADEN, 'readonly');
-      const anfrage = t.objectStore(HISTORIE_LADEN).getAll();
-      anfrage.onsuccess = () => fertig(anfrage.result.sort((a, b) => b.zeit - a.zeit).slice(0, anzahl));
+      const laden = t.objectStore(HISTORIE_LADEN);
+      const gesammelt = [];
+
+      // Aeltere Browser kennen den rueckwaerts laufenden Cursor nicht.
+      let anfrage;
+      try {
+        anfrage = laden.openCursor(null, 'prev');
+      } catch (_) {
+        anfrage = laden.getAll();
+        anfrage.onsuccess = () => fertig(anfrage.result.sort((a, b) => b.zeit - a.zeit).slice(0, anzahl));
+        anfrage.onerror = () => fehler(anfrage.error);
+        return;
+      }
+
+      anfrage.onsuccess = (e) => {
+        const zeiger = e.target.result;
+        if (!zeiger || gesammelt.length >= anzahl) return fertig(gesammelt);
+        gesammelt.push(zeiger.value);
+        zeiger.continue();
+      };
       anfrage.onerror = () => fehler(anfrage.error);
     }));
   }

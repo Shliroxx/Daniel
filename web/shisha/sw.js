@@ -5,7 +5,7 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v7';
+const CACHE = 'hookah-analyzer-v8';
 
 const DATEIEN = [
   './',
@@ -16,13 +16,23 @@ const DATEIEN = [
   './steuerung.js',
   './spec.json',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
   './manifest.webmanifest',
 ];
+
+// So lange darf das Netz brauchen, bevor aus dem Cache geliefert wird. Im
+// schlechten Mobilfunk ist "verbunden, aber nichts kommt durch" der Normalfall —
+// ohne Frist haengt der Start dann am weissen Bild, obwohl alles da waere.
+const NETZ_FRIST_MS = 2500;
 
 self.addEventListener('install', (ereignis) => {
   ereignis.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll(DATEIEN))
+      // Einzeln statt addAll: sonst ist eine fehlende Datei genug, damit die
+      // Installation scheitert und es gar keinen Offline-Betrieb gibt — still,
+      // ohne jedes Anzeichen.
+      .then((cache) => Promise.all(DATEIEN.map((datei) => cache.add(datei).catch(() => {}))))
       .then(() => self.skipWaiting())
   );
 });
@@ -35,6 +45,17 @@ self.addEventListener('activate', (ereignis) => {
   );
 });
 
+/** Netz mit Frist — laeuft sie ab, gilt die Anfrage als gescheitert. */
+function mitFrist(anfrage) {
+  return new Promise((fertig, scheitern) => {
+    const uhr = setTimeout(() => scheitern(new Error('zu langsam')), NETZ_FRIST_MS);
+    fetch(anfrage).then(
+      (antwort) => { clearTimeout(uhr); fertig(antwort); },
+      (fehler) => { clearTimeout(uhr); scheitern(fehler); }
+    );
+  });
+}
+
 self.addEventListener('fetch', (ereignis) => {
   const anfrage = ereignis.request;
 
@@ -43,7 +64,7 @@ self.addEventListener('fetch', (ereignis) => {
 
   ereignis.respondWith(
     // Erst das Netz versuchen, damit Aenderungen sofort ankommen; sonst Cache.
-    fetch(anfrage)
+    mitFrist(anfrage)
       .then((antwort) => {
         if (antwort.ok) {
           const kopie = antwort.clone();
@@ -51,6 +72,13 @@ self.addEventListener('fetch', (ereignis) => {
         }
         return antwort;
       })
-      .catch(() => caches.match(anfrage).then((treffer) => treffer || caches.match('./index.html')))
+      .catch(() => caches.match(anfrage).then((treffer) => {
+        if (treffer) return treffer;
+        // Nur beim Seitenaufruf ist die Startseite eine sinnvolle Antwort. Fuer
+        // alles andere waere sie eine Luege: spec.json bekaeme HTML geliefert
+        // und meldete einen JSON-Fehler statt "kein Netz".
+        if (anfrage.mode === 'navigate') return caches.match('./index.html');
+        return new Response('', { status: 504, statusText: 'kein Netz' });
+      }))
   );
 });

@@ -7,6 +7,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Schnell aufeinanderfolgende Pushes sollen sich abloesen, nicht stapeln.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pruefen:
     runs-on: ubuntu-latest

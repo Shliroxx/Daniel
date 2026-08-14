@@ -127,13 +127,15 @@ h1 {
   color: var(--muted);
 }
 
-input[type="text"], input[type="number"] {
+input[type="text"], input[type="number"], input[type="password"] {
   padding: 11px 12px;
   border-radius: 10px;
   border: 1px solid var(--line);
   background: rgba(4, 10, 16, 0.8);
   color: var(--text);
-  font-size: 15px;
+  /* Nicht unter 16px: Safari zoomt sonst beim Antippen in das Feld hinein und
+     kommt nicht von allein wieder heraus. */
+  font-size: 16px;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -724,7 +726,7 @@ select {
   border: 1px solid var(--line);
   background: rgba(4, 10, 16, 0.8);
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;   /* darunter zoomt Safari beim Antippen hinein */
   letter-spacing: normal;
   text-transform: none;
 }
