@@ -1,0 +1,13 @@
+/* SANTIQ Display & SANTIQ Text — self-hosted from the uploaded brand font
+   packages (SIL OFL 1.1). Static cuts: laden überall, auch wo woff2-variations
+   nicht unterstützt wird. Variable Dateien optional weiter unten. */
+
+@font-face{font-family:'SANTIQ Display';src:url('../fonts/SANTIQDisplay-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SANTIQ Display';src:url('../fonts/SANTIQDisplay-Italic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:'SANTIQ Display';src:url('../fonts/SANTIQDisplay-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SANTIQ Display';src:url('../fonts/SANTIQDisplay-BoldItalic.woff2') format('woff2');font-weight:700;font-style:italic;font-display:swap}
+
+@font-face{font-family:'SANTIQ Text';src:url('../fonts/SANTIQText-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'SANTIQ Text';src:url('../fonts/SANTIQText-Italic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:'SANTIQ Text';src:url('../fonts/SANTIQText-Bold.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'SANTIQ Text';src:url('../fonts/SANTIQText-BoldItalic.woff2') format('woff2');font-weight:700;font-style:italic;font-display:swap}

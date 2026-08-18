@@ -1,0 +1,24 @@
+:root{
+--font-serif-display:'SANTIQ Display','Bodoni Moda','Didot',Georgia,'Times New Roman',serif;
+--font-sans-text:'SANTIQ Text',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+
+/* Fluide Mittelterme separat: keine Kommaliste mit "+" mehr in den Größentoken */
+--fluid-body:calc(1.1rem + .3vw);
+--fluid-lede:calc(1.1rem + .95vw);
+--fluid-h4:calc(1.1rem + .35vw);
+--fluid-h3:calc(1.15rem + .8vw);
+--fluid-h2:calc(1.3rem + 2.7vw);
+--fluid-h1:calc(1.25rem + 5.5vw);
+--fluid-giant:calc(.85rem + 9vw);
+
+--text-micro:.86rem;--text-small:1.02rem;
+--text-body-size:clamp(1.18rem,var(--fluid-body),1.32rem);
+--text-lede:clamp(1.32rem,var(--fluid-lede),1.9rem);
+--text-h4:clamp(1.2rem,var(--fluid-h4),1.42rem);
+--text-h3:clamp(1.4rem,var(--fluid-h3),1.9rem);
+--text-h2:clamp(2.1rem,var(--fluid-h2),3.7rem);
+--text-h1:clamp(2.8rem,var(--fluid-h1),6.7rem);
+--text-giant:clamp(3.5rem,var(--fluid-giant),10.6rem);
+--tracking-wide:.2em;
+--leading-body:1.62;--leading-tight:.98;--leading-snug:1.2;
+}
