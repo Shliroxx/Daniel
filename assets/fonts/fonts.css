@@ -1,0 +1,12 @@
+/* SANTIQ Brand Fonts — beide Familien, ein Import.
+   In tokens/fonts.css einsetzen bzw. diesen Block dort einfügen.
+   Pfade an die Asset-Struktur des Design-Systems anpassen. */
+
+@import url("./santiq-display/santiq-display.css");
+@import url("./santiq-text/santiq-text.css");
+
+:root {
+  --font-display: "SANTIQ Display", Didot, Georgia, "Times New Roman", serif;
+  --font-text: "SANTIQ Text", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

@@ -1,0 +1,53 @@
+/* SANTIQ Text — self-hosted webfont (SIL Open Font License 1.1)
+   Derived from Source Sans 3. See OFL.txt for the full license.
+   Pfade ggf. an die eigene Asset-Struktur anpassen. */
+
+/* --- Variable (empfohlen: 2 Dateien, Gewichte 200–900) --- */
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-Variable.woff2") format("woff2-variations"),
+       url("./SANTIQText-Variable.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-ItalicVariable.woff2") format("woff2-variations"),
+       url("./SANTIQText-ItalicVariable.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* --- Statische Schnitte (Fallback für Tools ohne Variable-Support) ---
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-Regular.woff2") format("woff2"),
+       url("./SANTIQText-Regular.woff") format("woff");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-Italic.woff2") format("woff2"),
+       url("./SANTIQText-Italic.woff") format("woff");
+  font-weight: 400; font-style: italic; font-display: swap;
+}
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-Bold.woff2") format("woff2"),
+       url("./SANTIQText-Bold.woff") format("woff");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "SANTIQ Text";
+  src: url("./SANTIQText-BoldItalic.woff2") format("woff2"),
+       url("./SANTIQText-BoldItalic.woff") format("woff");
+  font-weight: 700; font-style: italic; font-display: swap;
+}
+--- */
+
+:root {
+  --font-text: "SANTIQ Text", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

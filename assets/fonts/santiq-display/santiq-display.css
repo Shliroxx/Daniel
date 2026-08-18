@@ -1,0 +1,44 @@
+/* SANTIQ Display — self-hosted webfont (SIL Open Font License 1.1)
+   Didone-Serif, hoher Strichkontrast, optische Größe 48 pt (Display).
+   Derived from Bodoni Moda. Siehe OFL.txt. */
+
+@font-face {
+  font-family: "SANTIQ Display";
+  src: url("./SANTIQDisplay-Variable.woff2") format("woff2-variations"),
+       url("./SANTIQDisplay-Variable.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SANTIQ Display";
+  src: url("./SANTIQDisplay-ItalicVariable.woff2") format("woff2-variations"),
+       url("./SANTIQDisplay-ItalicVariable.woff2") format("woff2");
+  font-weight: 400 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Statische Schnitte (Fallback für Tools ohne Variable-Support)
+@font-face { font-family:"SANTIQ Display";
+  src:url("./SANTIQDisplay-Regular.woff2") format("woff2"),
+      url("./SANTIQDisplay-Regular.woff") format("woff");
+  font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"SANTIQ Display";
+  src:url("./SANTIQDisplay-Italic.woff2") format("woff2"),
+      url("./SANTIQDisplay-Italic.woff") format("woff");
+  font-weight:400; font-style:italic; font-display:swap; }
+@font-face { font-family:"SANTIQ Display";
+  src:url("./SANTIQDisplay-Bold.woff2") format("woff2"),
+      url("./SANTIQDisplay-Bold.woff") format("woff");
+  font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:"SANTIQ Display";
+  src:url("./SANTIQDisplay-BoldItalic.woff2") format("woff2"),
+      url("./SANTIQDisplay-BoldItalic.woff") format("woff");
+  font-weight:700; font-style:italic; font-display:swap; }
+*/
+
+:root {
+  --font-display: "SANTIQ Display", "Bodoni Moda", "Didot", "Playfair Display",
+                  Georgia, "Times New Roman", serif;
+}
