@@ -757,8 +757,13 @@ canvas.wheel{display:block;width:100%;height:auto;border-radius:50%;box-shadow:0
   </div>
   <div class="panel">
     <h2>Notgroschen</h2>
-    <div class="muted">Wenn du unter 50 Chips fällst, kannst du einmalig 250 Chips als Starthilfe erhalten.</div>
-    <div class="row" style="margin-top:10px"><button class="btn green" id="bailoutBtn">STARTHILFE ANFORDERN</button></div>
+    <div class="muted">Sobald du auf 0 Chips fällst, bekommst du <b>automatisch</b> 250 Chips —
+      so oft wie nötig, du kannst also nie feststecken. Unter 50 Chips kannst du sie zusätzlich
+      jederzeit selbst anfordern.</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn green" id="bailoutBtn">STARTHILFE ANFORDERN</button>
+      <span class="muted" id="bailoutCount"></span>
+    </div>
   </div>
 </section>
 
@@ -804,6 +809,8 @@ var HISTORY_MAX = 100;
 var START_CHIPS = 1000;
 var JACKPOT_SEED = 100000;
 var JACKPOT_RATE = 0.01;   // 1 % jedes Einsatzes wandert in den Jackpot
+var BAILOUT_AMOUNT = 250;      // Höhe der Starthilfe
+var BAILOUT_THRESHOLD = 50;    // darunter ist die Starthilfe manuell abrufbar
 
 /* Spiele-Katalog – steuert das Dashboard */
 var GAMES = [
@@ -850,7 +857,8 @@ function defaultState() {
     xp: 0,
     level: 1,
     jackpot: JACKPOT_SEED,
-    bailoutUsed: false,
+    bailoutUsed: false,   // Altfeld aus v1, bleibt für alte Spielstände erhalten
+    bailoutCount: 0,
     bets: {},                       // zuletzt benutzter Einsatz je Spiel
     stats: {
       gamesPlayed:0, wins:0, losses:0, pushes:0,
@@ -1193,6 +1201,7 @@ function takeBet(gameId, amount) {
   state.bets[gameId] = amount;
   /* Gleitender Durchschnittseinsatz – Basis für die Bonus-Höhe */
   state.bonus.avgBet = state.bonus.avgBet * 0.95 + amount * 0.05;
+  roundOpen = true;
   Sound.play('chip');
   updateTopbar();
   save();
@@ -1204,6 +1213,7 @@ function refund(amount) {
   amount = Math.max(0, Math.floor(amount));
   state.chips += amount;
   state.stats.totalWagered = Math.max(0, state.stats.totalWagered - amount);
+  roundOpen = false;
   updateTopbar(); save();
 }
 
@@ -1271,6 +1281,7 @@ function settleRound(opts) {
   }
 
   maybeTriggerBonus();
+  roundOpen = false;            // ab hier darf die Starthilfe wieder greifen
   updateTopbar();
   checkAchievements();
   save();
@@ -1300,6 +1311,41 @@ function winJackpot(game) {
         [{ label:'GENIAL!', cls:'primary' }]);
   updateTopbar(); checkAchievements(); save();
   return amount;
+}
+
+/* ---------------------------------------------------------- Starthilfe */
+/* Die Starthilfe löst sich automatisch aus, sobald der Spieler auf 0 Chips
+   fällt – unbegrenzt, damit eine Runde nie in einer Sackgasse endet.
+   Unterhalb von BAILOUT_THRESHOLD kann sie zusätzlich manuell abgerufen
+   werden. `granting` verhindert eine Rekursion über updateTopbar(). */
+var granting = false;
+/* Solange ein Einsatz gesetzt und noch nicht abgerechnet ist, greift die
+   automatische Starthilfe nicht – sonst bekäme ein All-in schon beim
+   Abbuchen des Einsatzes Chips zurück, statt erst nach dem Ergebnis. */
+var roundOpen = false;
+
+function grantBailout(auto) {
+  if (granting) return false;
+  granting = true;
+  state.chips += BAILOUT_AMOUNT;
+  state.bailoutCount++;
+  addHistory({ game:'bailout', label:auto ? 'Starthilfe (automatisch)' : 'Starthilfe',
+               bet:0, payout:BAILOUT_AMOUNT, net:BAILOUT_AMOUNT, mult:0, result:'win' });
+  Sound.play('coin');
+  particles(16, ['#25d07a', '#ffc94d']);
+  toast('🛟 Starthilfe', '+' + fmt(BAILOUT_AMOUNT) + ' Chips' +
+        (auto ? ' – du warst bei 0.' : ''), 'win');
+  granting = false;
+  updateTopbar();
+  if ($('#view-daily').classList.contains('active')) renderDaily();
+  save();
+  return true;
+}
+
+/* Wird nach jeder Chip-Änderung aus updateTopbar() aufgerufen. */
+function maybeAutoBailout() {
+  if (granting || roundOpen || state.chips > 0) return;
+  grantBailout(true);
 }
 
 /* ------------------------------------------------------------------ Verlauf */
@@ -1473,15 +1519,11 @@ function claimDaily() {
   updateTopbar(); renderDaily(); checkAchievements(); save(true);
 }
 function requestBailout() {
-  if (state.chips >= 50) { toast('Nicht nötig', 'Du hast noch genug Chips.', 'info'); return; }
-  if (state.bailoutUsed && !dailyAvailable()) {
-    toast('Bereits genutzt', 'Die Starthilfe gibt es einmal pro Tag.', 'lose'); return;
+  if (state.chips >= BAILOUT_THRESHOLD) {
+    toast('Nicht nötig', 'Die Starthilfe gibt es unter ' + fmt(BAILOUT_THRESHOLD) + ' Chips.', 'info');
+    return;
   }
-  state.bailoutUsed = true;
-  state.chips += 250;
-  addHistory({ game:'bailout', label:'Starthilfe', bet:0, payout:250, net:250, mult:0, result:'win' });
-  toast('Starthilfe', '+250 Chips', 'win');
-  Sound.play('coin'); updateTopbar(); save(true);
+  grantBailout(false);
 }
 
 /* ======================================================================
@@ -1489,6 +1531,7 @@ function requestBailout() {
    ====================================================================== */
 function updateTopbar() {
   if (state.chips < 0) state.chips = 0;
+  maybeAutoBailout();          // greift, sobald der Vorrat auf 0 fällt
   $('#chipAmount').textContent = fmt(state.chips);
   $('#jackpotAmount').textContent = fmt(state.jackpot);
   var sj = $('#slotJackpot'); if (sj) sj.textContent = fmt(state.jackpot);
@@ -1693,7 +1736,10 @@ function renderDaily() {
     : 'Heute bereits abgeholt · Serie: ' + state.dailyReward.streak + ' · Nächster Bonus: ' + fmt(DAILY_REWARDS[nextDailyIndexAfterClaim()]) + ' Chips';
   $('#dailyClaim').disabled = !avail;
   $('#dailyClaim').textContent = avail ? 'BONUS ABHOLEN' : 'BEREITS ABGEHOLT';
-  $('#bailoutBtn').disabled = state.chips >= 50;
+  $('#bailoutBtn').disabled = state.chips >= BAILOUT_THRESHOLD;
+  $('#bailoutCount').textContent = state.bailoutCount
+    ? 'Bisher ' + fmt(state.bailoutCount) + '× in Anspruch genommen.'
+    : 'Bisher nicht gebraucht.';
   updateDailyCountdown();
 }
 function nextDailyIndexAfterClaim() {
@@ -1724,6 +1770,7 @@ function showView(id) {
   $$('.view').forEach(function (v) { v.classList.remove('active'); });
   target.classList.add('active');
   currentView = id;
+  roundOpen = false;            // kein Spiel mehr im Vordergrund -> nicht blockieren
   window.scrollTo({ top:0, behavior: animOn() ? 'smooth' : 'auto' });
   if (viewHooks[id] && viewHooks[id].enter) {
     try { viewHooks[id].enter(); } catch (e) { console.error(e); }
