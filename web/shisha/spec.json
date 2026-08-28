@@ -82,9 +82,9 @@
       "noch_nicht_bewertbar": [
         "tabak_verteilung",
         "fuellhoehe",
-        "airflow",
         "tabak_kompatibilitaet",
-        "zielerreichung"
+        "zielerreichung",
+        "hitzemanagement"
       ]
     },
     {
@@ -96,7 +96,8 @@
         "tabak_verteilung",
         "fuellhoehe",
         "airflow",
-        "zielerreichung"
+        "zielerreichung",
+        "hitzemanagement"
       ]
     },
     {
@@ -104,14 +105,18 @@
       "name": "Einstreuen",
       "ziel": "Locker und gleichmaessig einstreuen statt stopfen.",
       "achte_auf": "Verteilung ueber die ganze Flaeche, Fuellhoehe, ungewollte Verdichtung, Tabak der in Kamin oder Zugloecher faellt, Hohlraeume.",
-      "noch_nicht_bewertbar": []
+      "noch_nicht_bewertbar": [
+        "hitzemanagement"
+      ]
     },
     {
       "key": "glattziehen",
       "name": "Glattziehen und Rand",
       "ziel": "Ebene Oberflaeche, freier Rand, freie zentrale Oeffnung.",
       "achte_auf": "Hoehenunterschiede, Tabak am Rand, Randabstand in Millimetern, freier Kamin, Airflow-Blockaden.",
-      "noch_nicht_bewertbar": []
+      "noch_nicht_bewertbar": [
+        "hitzemanagement"
+      ]
     },
     {
       "key": "aufsatz",
@@ -192,7 +197,7 @@
   "wissen": {
     "kopftypen": [
       "- Phunnel: ein erhoehter Kamin in der Mitte, kein Loch im Boden. Molasse bleibt",
-      "  in der Schale. Tabak bis knapp unter die Kaminoberkante, Kamin bleibt frei.",
+      "  in der Schale. Tabak bis 2 bis 3 mm unter den aeusseren Kopfrand; er darf den Kamin dabei ueberragen, dessen Oeffnung bleibt aber frei.",
       "- Killer- / Trichterkopf: mehrere Loecher im Trichterboden, braucht etwas weniger",
       "  Tabak, Loecher duerfen nicht zugestopft werden, Molasse laeuft durch.",
       "- Vortex: erhoehter Mittelkegel, die Zugloecher sitzen seitlich an seinem Fuss —",
@@ -226,7 +231,9 @@
       "2 bis 3 mm ist der uebliche Zielbereich, negative Werte heissen: Tabak steht ueber",
       "den Rand. Ueber Rand ist nur mit HMD und hitzefestem Tabak sinnvoll.",
       "Kohle: drei bis vier 26er Wuerfel bei Folie, zwei bis drei bei HMD, am Rand",
-      "verteilt, nie mittig ueber dem Kamin, Abstand zueinander halten."
+      "verteilt, nie mittig ueber dem Kamin, Abstand zueinander halten.",
+      "HMD-Abstand zum Tabak: 2 bis 5 mm, je nach Ziel und Tabak. Unter 2 mm brennt der",
+      "Tabak oben an, ueber 5 mm kommt zu wenig Hitze an."
     ],
     "fehler": [
       "- Tabak beruehrt HMD oder Folie -> brennt an, wird bitter (kritisch).",
@@ -369,7 +376,7 @@
       "- \"optimierungen\": nummerierte Anleitung, hoechstens sechs Schritte. Keine schwammigen",
       "  Saetze wie \"besser verteilen\". Stattdessen: \"Nimm bei 3 Uhr eine Prise Tabak weg und",
       "  ziehe die Oberflaeche auf etwa 2 mm unter dem Rand glatt.\"",
-      "- \"prognose.score_nach_optimierung\": realistisch, nie ueber 100, nie unter dem Ist-Wert.",
+      "- \"prognose.score_nach_optimierung\": der gewichtete Schnitt deiner sieben Kategoriewerte, wie du ihn nach Umsetzung deiner Schritte erwartest. Nie ueber 100. Kannst du ihn nicht abschaetzen, setz 0 — die App rechnet dann selbst.",
       "- \"confidence\": Prozentwerte 0 bis 100.",
       "- \"rueckfrage\": null, wenn die Angaben reichen. Sonst genau EINE Frage nach der",
       "  wichtigsten fehlenden Angabe (Reihenfolge: Kopfmodell, Tabak, HMD, Kohlen, Ziel).",
@@ -428,7 +435,7 @@
     "erkennung": [
       "Kopf erkennen — hier wird oft zu schnell aufgegeben:",
       "",
-      "Ein Shisha-Kopf ist eine kleine Schale aus Ton, Glas oder Stein, meist 7 bis 9 cm",
+      "Ein Shisha-Kopf ist eine kleine Schale aus Ton, Glas oder Stein, meist 6,5 bis 9 cm",
       "breit, mit einem Loch oder erhoehten Kamin in der Mitte und einem Schaftansatz",
       "unten. Du erkennst ihn aus JEDEM Blickwinkel:",
       "- von oben: runde Oeffnung, in der Mitte der Kamin oder die Zugloecher",
@@ -706,15 +713,17 @@
     "remove_tobacco": {
       "titel": "Tabak wegnehmen",
       "schritte": [
-        "Nimm mit der Pinzette oder zwei Fingern von der genannten Stelle etwas ab — eine Prise, nicht eine Handvoll.",
-        "Arbeite von der Kopfmitte nach aussen, damit die Oberflaeche nicht schief wird.",
-        "Zieh danach mit dem Finger oder einem Zahnstocher einmal flach drueber."
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
+        "Nimm mit der Pinzette oder zwei Fingern nur an der genannten Stelle etwas ab — eine Prise, nicht eine Handvoll.",
+        "Zieh dabei von aussen zur Mitte, damit nichts ueber die Randkante faellt. In der Mitte sitzt beim Phunnel der Kamin — der bleibt frei.",
+        "Zieh danach mit dem Finger oder einem Zahnstocher einmal flach drueber und klopf Kruemel aus dem Kamin."
       ],
-      "ziel": "Der Tabak endet 2 bis 3 mm unter dem Rand und beruehrt die Wand nirgends."
+      "ziel": "Der Tabak endet auf der im Hinweis genannten Hoehe (ueblich 2 bis 3 mm unter der Randoberkante), liegt eben, und nichts liegt auf der Randkante oder darueber."
     },
     "add_tobacco": {
       "titel": "Tabak nachlegen",
       "schritte": [
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
         "Zupf den Tabak vorher auseinander, leg ihn nicht am Stueck hinein.",
         "Streu ihn ueber die Luecke, statt ihn hineinzudruecken.",
         "Nur so viel, dass die Mulde gleichmaessig gefuellt ist — nachlegen geht leichter als wegnehmen."
@@ -724,52 +733,58 @@
     "loosen_tobacco": {
       "titel": "Auflockern",
       "schritte": [
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
         "Fahr mit einem Zahnstocher oder einer Gabel senkrecht in den Tabak und heb ihn leicht an.",
-        "Nicht ruehren — das verdichtet ihn wieder.",
-        "Vier bis fuenf Stiche pro Klumpen reichen."
+        "Nicht ruehren — das zerreisst den Schnitt und befoerdert Kruemel in Kamin und Zugloecher.",
+        "Vier bis fuenf Stiche pro Klumpen reichen.",
+        "Danach den Randabstand neu pruefen: aufgelockerter Tabak steht hoeher als vorher. Steht er zu hoch, nimm eine Prise ab."
       ],
       "ziel": "Der Tabak sieht flauschig aus, man sieht Zwischenraeume. Luft muss durchziehen koennen."
     },
     "redistribute_tobacco": {
       "titel": "Neu verteilen",
       "schritte": [
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
         "Zieh mit dem Zahnstocher vom hohen Bereich zum niedrigen — nicht drueckend, sondern schiebend.",
         "Dreh den Kopf dabei, damit du von allen Seiten draufschaust.",
         "Zum Schluss einmal rundum den Rand freiraeumen."
       ],
-      "ziel": "Von oben betrachtet ueberall dieselbe Hoehe, kein Berg und kein Tal."
+      "ziel": "Von oben ueberall dieselbe Verteilung, von der Seite ueberall dieselbe Hoehe — kein Berg und kein Tal."
     },
     "flatten_surface": {
       "titel": "Glattziehen",
       "schritte": [
-        "Leg einen Finger flach auf und dreh den Kopf einmal ganz herum — nicht druecken.",
-        "Bleib dabei von der Kaminoeffnung weg.",
-        "Reste am Rand mit dem Zahnstocher nach innen holen."
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
+        "Hol zuerst Reste von der Randkante mit dem Zahnstocher nach innen.",
+        "Tippe die Oberflaeche mit der flachen Seite des Zahnstochers nur an — nicht streichen und nicht druecken, sonst verdichtest du den Schnitt.",
+        "Kamin und Zugloecher freihalten und den Rand noch einmal kontrollieren."
       ],
       "ziel": "Ebene Oberflaeche, freier Rand, freie Oeffnung in der Mitte."
     },
     "increase_hmd_distance": {
       "titel": "Mehr Abstand zum HMD",
       "schritte": [
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
         "Nimm rundum eine Lage Tabak ab, statt nur in der Mitte zu druecken.",
         "Setz das HMD danach neu auf und schau von der Seite drauf.",
         "Beruehrt es immer noch, nimm lieber noch eine Prise ab als das HMD schief zu setzen."
       ],
-      "ziel": "Zwischen Tabak und HMD-Boden bleibt sichtbar Luft — 2 bis 3 mm reichen."
+      "ziel": "Zwischen Tabak und HMD-Boden bleibt sichtbar Luft — im ueblichen Bereich von 2 bis 5 mm, beim Ziel 'maximaler Geschmack' eher am oberen Ende."
     },
     "decrease_hmd_distance": {
       "titel": "Weniger Abstand zum HMD",
       "schritte": [
+        "Liegt schon Kohle oder ein HMD auf: mit der Zange herunter auf den Kohleteller, dann erst an den Kopf — Kopf und HMD sind so heiss wie die Kohle.",
         "Leg gleichmaessig etwas Tabak nach, statt den vorhandenen hochzudruecken.",
         "Locker bleiben — nachlegen darf die Packung nicht verdichten.",
         "HMD aufsetzen und von der Seite pruefen."
       ],
-      "ziel": "Der Abstand ist klein genug, dass die Hitze ankommt, aber der Tabak beruehrt nichts."
+      "ziel": "Von der Seite ist zwischen Tabak und HMD-Boden nur noch ein schmaler Lichtspalt zu sehen, etwa 2 mm — und der Tabak beruehrt nichts."
     },
     "reposition_hmd": {
       "titel": "HMD neu setzen",
       "schritte": [
-        "HMD abnehmen, Kopfrand kurz saeubern.",
+        "HMD mit der Zange am Griff anheben — nie mit der Hand, es ist so heiss wie die Kohle darin.",
         "Gerade und mittig aufsetzen, bis es rundum aufliegt.",
         "Von der Seite pruefen, ob es kippelt."
       ],
@@ -787,20 +802,20 @@
     "reduce_heat": {
       "titel": "Hitze zuruecknehmen",
       "schritte": [
-        "Eine Kohle herunternehmen oder alle ein Stueck weiter nach aussen legen.",
-        "Bei Folie: Kopf kurz von der Kohle nehmen statt Loecher zu vergroessern.",
+        "Nimm mit der Zange eine Kohle herunter und leg sie auf den Kohleteller — den Kopf selbst nicht anfassen.",
+        "Reicht das nicht, ruecke die uebrigen Kohlen weiter nach aussen an den Rand.",
         "Zwei Minuten warten, bevor du neu beurteilst — Hitze reagiert traege."
       ],
-      "ziel": "Der Rauch wird wieder voll statt kratzig."
+      "ziel": "Weniger Glut ueber dem Kopf: eine Kohle weniger oder alle sichtbar weiter aussen am Rand, keine ueber der Mitte."
     },
     "increase_heat": {
       "titel": "Mehr Hitze",
       "schritte": [
-        "Eine Kohle dazulegen oder die vorhandenen naeher zusammenruecken.",
-        "Vorher pruefen, ob die Kohle wirklich durchgegluht ist — grau, nicht schwarz.",
+        "Leg mit der Zange eine weitere Kohle dazu — sie muss durchgegluht sein, also grau, nicht schwarz.",
+        "Oder ruecke die vorhandenen etwas weiter nach innen, ohne sie zusammenzuschieben: der Abstand zwischen den Kohlen bleibt, und keine liegt ueber der Mitte.",
         "Zwei Minuten warten, bevor du neu beurteilst."
       ],
-      "ziel": "Der Kopf zieht wieder an, ohne dass es kratzt."
+      "ziel": "Eine Kohle mehr oder enger am Tabak — aber mit sichtbarem Abstand zwischen den Kohlen und nichts ueber der Mitte."
     }
   },
   "packmethoden": {
@@ -811,17 +826,17 @@
         "name": "Locker (fluffy)",
         "beschreibung": "Tabak nur eingestreut, nicht gedrueckt. Viel Luft dazwischen.",
         "erwartete_dichte": [
-          25,
-          55
+          15,
+          40
         ]
       },
       {
         "key": "gemischt",
-        "name": "Gemischt",
+        "name": "Gemischt (semi-dense)",
         "beschreibung": "Eingestreut und leicht angedrueckt, Oberflaeche geglaettet.",
         "erwartete_dichte": [
-          45,
-          70
+          40,
+          65
         ]
       },
       {

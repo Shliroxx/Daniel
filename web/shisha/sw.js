@@ -5,7 +5,7 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v10';
+const CACHE = 'hookah-analyzer-v11';
 
 const DATEIEN = [
   './',

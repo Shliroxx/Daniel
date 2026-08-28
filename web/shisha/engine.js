@@ -640,7 +640,9 @@ const Engine = (() => {
       summe += (Number(scores[kategorie]) || 0) * gewicht;
       gewichtSumme += gewicht;
     });
-    if (gewichtSumme <= 0) return 0;
+    // Bleibt nichts uebrig, gibt es auch keine Note — eine 0 waere hier eine
+    // Behauptung ueber etwas, das niemand gesehen hat.
+    if (gewichtSumme <= 0) return null;
     return Math.round(Math.max(0, Math.min(100, summe / gewichtSumme)));
   }
 
@@ -660,19 +662,27 @@ const Engine = (() => {
    * Jetzt entscheidet das Bild. Ausgelassen wird eine Kategorie nur, wenn die
    * beobachtete Phase das hergibt UND im Bild wirklich kein Tabak liegt.
    */
-  function nichtBewertbar(appPhase, roh, tabak) {
+  function nichtBewertbar(appPhase, roh, tabak, haube, glut, enthalten = []) {
     const gesehen = wahl(roh.beobachtete_phase, spec.phasen.map((p) => p.key), '');
     // Die Beobachtung schlaegt die Vermutung der App.
     const massgeblich = gesehen || appPhase;
     const phaseInfo = spec.phasen.find((p) => p.key === massgeblich);
     const offen = (phaseInfo && phaseInfo.noch_nicht_bewertbar) || [];
-    if (!offen.length) return [];
 
-    // Liegt sichtbar Tabak im Kopf, wird er bewertet — egal, welche Phase
-    // jemand mitzaehlt.
+    // Nicht die Phase entscheidet, sondern der Nachweis im Bild — und zwar je
+    // Kategorie einzeln. Liegt Tabak im Kopf, werden die Tabakkategorien
+    // bewertet, auch wenn die App noch bei "Kopf pruefen" steht. Das
+    // Hitzemanagement dagegen braucht HMD oder Kohle im Bild; ohne beides gibt
+    // es dazu schlicht nichts zu sehen, egal wie viel Tabak drin liegt.
     const tabakDa = tabak.fuellhoehe_mm !== null || tabak.dichte > 0
       || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand;
-    return tabakDa ? [] : offen;
+    const hitzeDa = haube.erkannt === true || glut.status === 'visible';
+
+    const ausPhase = offen.filter((kategorie) => (
+      kategorie === 'hitzemanagement' ? !hitzeDa : !tabakDa
+    ));
+    // Die Enthaltungen des Modells gelten immer: es hat hingeschaut, die App nicht.
+    return [...new Set([...ausPhase, ...enthalten])];
   }
 
   function normalisiere(roh, live, kontext, phase) {
@@ -691,9 +701,27 @@ const Engine = (() => {
     // gar nichts mehr.
     const alleProbleme = probleme(liste(roh.probleme), false);
 
+    /* null ist keine Null.
+     *
+     * Der Prompt sagt dem Modell: "Kategorien, die du im Bild nicht
+     * wiederfindest, laesst du auf null." Beim Einlesen wurde daraus aber eine
+     * 0 — und die ging mit vollem Gewicht in die Note. Ergebnis: ein makelloser
+     * leerer Kopf bekam 32 von 100 und die Stufe "schlecht", waehrend die Ampel
+     * daneben auf Gruen stand. Wer eine Kategorie nicht bewerten kann, enthaelt
+     * sich; enthalten heisst nicht "null Punkte".
+     */
     const rohScores = objekt(roh.scores);
     const scores = {};
-    Object.keys(spec.gewichte).forEach((feld) => { scores[feld] = Math.round(zahl(rohScores[feld], 0, 100)); });
+    const enthalten = [];
+    Object.keys(spec.gewichte).forEach((feld) => {
+      const wert = rohScores[feld];
+      if (wert === null || wert === undefined || wert === '') {
+        scores[feld] = null;
+        enthalten.push(feld);
+        return;
+      }
+      scores[feld] = Math.round(zahl(wert, 0, 100));
+    });
 
     // Widersprueche geradeziehen, bevor gerechnet wird.
     const kappungen = plausibilitaetAnwenden(
@@ -708,18 +736,18 @@ const Engine = (() => {
     const kritisch = kappungen.some((k) => k.schwer);
     // In fruehen Bauphasen gibt es manche Kategorien schlicht noch nicht — aber
     // nur, wenn sie wirklich nicht da sind.
-    const nochNicht = nichtBewertbar(phase, roh, tabak);
+    const nochNicht = nichtBewertbar(phase, roh, tabak, haube, glut, enthalten);
     const roheNote = gesamtscore(scores, nochNicht);
-    const gesamt = kritisch
+    const gesamt = (roheNote !== null && kritisch)
       ? Math.min(roheNote, spec.plausibilitaet.kappe_gesamt_kritisch)
       : roheNote;
-    if (gesamt < roheNote) {
+    if (roheNote !== null && gesamt < roheNote) {
       kappungen.push({
         kategorie: 'gesamt', von: roheNote, auf: gesamt,
         grund: 'kritischer Befund — kein guter Kopf mit einem kritischen Fehler',
       });
     }
-    const stufeInfo = stufe(gesamt);
+    const stufeInfo = gesamt === null ? null : stufe(gesamt);
 
     const ergebnis = {
       analysis_status: status,
@@ -735,8 +763,8 @@ const Engine = (() => {
       nicht_bewertbar: nochNicht,
       kappungen,
       gesamtscore: gesamt,
-      stufe: stufeInfo.key,
-      stufe_text: stufeInfo.text,
+      stufe: stufeInfo ? stufeInfo.key : null,
+      stufe_text: stufeInfo ? stufeInfo.text : null,
       probleme: gemeldet,
       optimierungen: optimierungen(liste(roh.optimierungen), live),
       ar_marker: marker(liste(roh.ar_marker), live),
@@ -800,6 +828,13 @@ const Engine = (() => {
 
     if (ergebnis.probleme.length) {
       return { stand: 'gelb', text: ergebnis.probleme[0].titel, was_tun: '' };
+    }
+
+    // Gruen und eine schlechte Note nebeneinander ist ein Widerspruch auf
+    // demselben Bildschirm — dann lieber gelb und ehrlich.
+    const brauchbar = spec.stufen.find((s) => s.key === 'acceptable');
+    if (ergebnis.gesamtscore !== null && brauchbar && ergebnis.gesamtscore < brauchbar.ab) {
+      return { stand: 'gelb', text: `Note ${ergebnis.gesamtscore} — da geht mehr`, was_tun: '' };
     }
     return { stand: 'gruen', text: 'Sieht gut aus', was_tun: '' };
   }

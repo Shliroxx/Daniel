@@ -507,21 +507,14 @@ function liveUebernehmen(analyse) {
   ampelZeigen(analyse.ampel);
   behobenZeigen(analyse.behoben);
 
-  const schritte = $('schritte');
-  schritte.innerHTML = '';
-  analyse.optimierungen.forEach((eintrag) => {
-    const zeile = document.createElement('li');
-    zeile.textContent = eintrag.text;
-    schritte.appendChild(zeile);
-  });
-
   problemeZeigen(analyse.probleme);
 
   const frage = $('rueckfrage');
   frage.hidden = !analyse.rueckfrage;
   frage.textContent = analyse.rueckfrage || '';
 
-  messwerteZeigen(analyse);
+  // Messwerte stehen im Report, nicht in der Livekarte: beim Bauen liest sie
+  // niemand, und jede Zeile hier kostet Sicht auf den Kopf.
 
   const kopf = analyse.kopf || {};
   $('kopfInfo').textContent = ok
@@ -609,23 +602,50 @@ function behobenZeigen(behoben) {
  */
 function problemeZeigen(liste) {
   const kasten = $('probleme');
-  kasten.innerHTML = '';
-  (liste || []).forEach((problem) => {
+  const neu = liste || [];
+
+  /* Nur austauschen, was sich geaendert hat.
+   *
+   * Vorher wurde die Liste bei jedem Ergebnis komplett neu gebaut — im
+   * Sekundentakt. Wer gerade den Daumen ueber "Zeig mir wie" hatte, tippte
+   * dann auf ein anderes Problem oder ins Leere, und merkte es erst an der
+   * falschen Anleitung.
+   */
+  const vorhanden = new Map([...kasten.children].map((z) => [z.dataset.id, z]));
+  const gebraucht = new Set(neu.map((p) => p.id));
+
+  vorhanden.forEach((zeile, id) => {
+    if (!gebraucht.has(id)) kasten.removeChild(zeile);
+  });
+
+  neu.forEach((problem) => {
+    const alt = vorhanden.get(problem.id);
+    if (alt) {
+      // Dieselbe Sache, nur vielleicht anders formuliert.
+      alt.className = `problem ${problem.severity}`;
+      alt.dataset.symbol = problem.symbol;
+      alt.children[0].textContent = problem.titel;
+      alt.onclick = () => anleitungZeigen(problem);
+      return;
+    }
+
     const zeile = document.createElement('div');
     zeile.className = `problem ${problem.severity}`;
     zeile.dataset.symbol = problem.symbol;
+    zeile.dataset.id = problem.id;
 
     const titel = document.createElement('span');
     titel.className = 'problem-zeile';
     titel.textContent = problem.titel;
     zeile.appendChild(titel);
 
-    const knopf = document.createElement('button');
-    knopf.className = 'problem-knopf';
-    knopf.textContent = 'Zeig mir wie';
-    knopf.onclick = () => anleitungZeigen(problem);
-    zeile.appendChild(knopf);
+    const pfeil = document.createElement('span');
+    pfeil.className = 'problem-knopf';
+    pfeil.textContent = 'Zeig mir wie ›';
+    zeile.appendChild(pfeil);
 
+    // Die ganze Zeile ist das Ziel, nicht nur der kleine Text daneben.
+    zeile.onclick = () => anleitungZeigen(problem);
     kasten.appendChild(zeile);
   });
 }
@@ -640,6 +660,11 @@ let offenesProblem = null;
 
 function anleitungZeigen(problem) {
   offenesProblem = problem;
+  // Solange man liest, zeigt das Handy irgendwohin. Ohne Pause redet die App
+  // dazwischen ("Kein Kopf im Bild"), vibriert und verbraucht Kontingent — an
+  // genau der Stelle, an der man Ruhe zum Lesen braucht.
+  zustand.lauf++;
+  if (window.speechSynthesis) speechSynthesis.cancel();
   const anleitung = (Engine.spec.anleitungen || {})[problem.aktion];
 
   $('anleitungMarke').textContent = problem.symbol;
@@ -666,17 +691,38 @@ function anleitungZeigen(problem) {
 }
 
 function anleitungSchliessen(neuPruefen) {
+  const behandelt = offenesProblem;
   $('anleitung').hidden = true;
   offenesProblem = null;
-  if (!neuPruefen) return;
-  // Sofort neu beurteilen, statt auf eine zufaellige Bildaenderung zu warten.
-  neuBeurteilen();
-  zustand.wartetSeit = 0;
-  setzeLage('pruefe nach', 'denkt');
+
+  if (neuPruefen) {
+    // Sofort neu beurteilen, statt auf eine zufaellige Bildaenderung zu warten.
+    neuBeurteilen();
+    zustand.wartetSeit = 0;
+    setzeLage('pruefe nach', 'denkt');
+    // Rueckmeldung dort, wo der Daumen ist: die Anzeige oben liest in dem
+    // Moment niemand, und bis zum naechsten Ergebnis vergeht ueber eine Sekunde.
+    $('coach').textContent = behandelt
+      ? `Schau ich mir an: ${behandelt.titel}`
+      : 'Ich schau nochmal …';
+    problemAusgrauen(behandelt);
+    vibriere(20);
+  }
+
+  // Die Schleife lief waehrend des Lesens nicht — hier geht sie wieder an.
+  if (zustand.laeuft && !zustand.pausiert) schleife();
+}
+
+/** Das gerade behandelte Problem verblasst, bis das neue Urteil da ist. */
+function problemAusgrauen(problem) {
+  if (!problem) return;
+  [...$('probleme').children].forEach((zeile) => {
+    if (zeile.dataset.id === problem.id) zeile.classList.add('wird-geprueft');
+  });
 }
 
 function messwerteZeigen(analyse) {
-  const box = $('messwerte');
+  const box = $('messwerteReport');
   box.innerHTML = '';
   if (analyse.analysis_status !== 'ok') return;
 
@@ -1326,9 +1372,9 @@ function sitzungStarten() {
   zustand.analyse = null;
   $('fortschritt').style.width = '0%';
   $('coach').textContent = 'Halt die Kamera von oben ueber den Kopf.';
-  $('schritte').innerHTML = '';
   $('probleme').innerHTML = '';
-  $('messwerte').innerHTML = '';
+  $('ampel').hidden = true;
+  $('behoben').hidden = true;
   $('rueckfrage').hidden = true;
   $('liveScore').hidden = true;
   // Angaben merken, damit man sie beim naechsten Mal nicht neu tippt. Klappt das
@@ -1729,6 +1775,7 @@ function reportZeigen(analyse) {
     teile.push(`${analyse.kohle.anzahl} Kohlen`);
   }
   $('erkanntes').textContent = teile.join(' · ') || 'nichts sicher erkennbar';
+  messwerteZeigen(analyse);
 
   const prognose = analyse.prognose || {};
   $('prognoseZeile').textContent =
