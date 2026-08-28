@@ -115,9 +115,11 @@ pruefe('Start nach Schluessel frei', $('losButton').disabled === false, $('start
 pruefe('Standardkopf im Feld', $('fStandardkopf').placeholder === 'Oblako Phunnel M');
 
 // --- Angaben eintragen -------------------------------------------------------
+$('fPack').value = 'locker';
 $('fKopf').value = 'Oblako Phunnel M';
 (($('fKopf').horcher.change) || []).forEach((fn) => fn({ target: $('fKopf') }));
 pruefe('Durchmesser vorgeschlagen', $('fDurchmesser').value === '78', `war "${$('fDurchmesser').value}"`);
+pruefe('Packmethoden zur Auswahl', $('fPack').children.length === 3, `${$('fPack').children.length} Eintraege`);
 
 // --- Kamera starten ----------------------------------------------------------
 $('losButton').klick();
@@ -144,6 +146,55 @@ const ersteAnfrage = JSON.parse(protokoll.anfragen[0].optionen.body);
 pruefe('Live ohne Denkzeit gefragt',
        ersteAnfrage.generationConfig.thinkingConfig.thinkingBudget === 0,
        JSON.stringify(ersteAnfrage.generationConfig.thinkingConfig));
+
+// --- Die Schleife: Problem -> Anleitung -> korrigieren -> Bestaetigung ----------
+// Das ist der Kern der App. Vorher stand ein Problem nur als Text da: keine
+// Ursache, kein Handgriff, kein Weg zurueck vor die Kamera, keine Bestaetigung.
+pruefe('Ampel zeigt einen Zustand', $('ampel').hidden === false, $('ampelText').textContent);
+pruefe('Ampel ist gelb bei einem mittleren Problem',
+       $('ampel').className.includes('gelb'), $('ampel').className);
+pruefe('Problem ist anklickbar',
+       $('probleme').children.length === 1 && $('probleme').children[0].children.length === 2,
+       `${$('probleme').children.length} Probleme`);
+
+const problemKnopf = $('probleme').children[0].children[1];
+pruefe('Knopf heisst "Zeig mir wie"', problemKnopf.textContent === 'Zeig mir wie');
+
+problemKnopf.klick();
+pruefe('Anleitung geht auf', $('anleitung').hidden === false);
+pruefe('Anleitung nennt das Problem', $('anleitungTitel').textContent === 'Bei 9 Uhr etwas hoeher',
+       `"${$('anleitungTitel').textContent}"`);
+pruefe('Anleitung nennt die Ursache', $('anleitungGrund').textContent.includes('Links liegt mehr'),
+       `"${$('anleitungGrund').textContent}"`);
+pruefe('Anleitung hat Handgriffe', $('anleitungSchritte').children.length >= 2,
+       `${$('anleitungSchritte').children.length} Schritte`);
+pruefe('Anleitung hat ein Zielbild', $('anleitungZiel').textContent.length > 15,
+       `"${$('anleitungZiel').textContent}"`);
+
+// "Erledigt" schliesst das Blatt und prueft sofort neu, statt zu warten
+$('anleitungPruefen').klick();
+pruefe('Anleitung wieder zu', $('anleitung').hidden === true);
+pruefe('Es wird sofort nachgeprueft', $('lage').textContent === 'pruefe nach',
+       `"${$('lage').textContent}"`);
+
+// Jetzt ist das Problem behoben — die App muss das bestaetigen
+const ohneProblem = { ...ANTWORT, probleme: [], optimierungen: [],
+                      coach_satz: 'Sieht jetzt gleichmaessig aus.' };
+antwortPlan.text = () => JSON.stringify(ohneProblem);
+bildAendern();
+await warteBis(() => $('behoben').hidden === false, 6000);
+pruefe('Verbesserung wird bestaetigt', $('behoben').hidden === false, $('behoben').textContent);
+pruefe('Und zwar mit dem Namen des Problems',
+       $('behoben').textContent.includes('Bei 9 Uhr'), `"${$('behoben').textContent}"`);
+pruefe('Bestaetigung wird auch gesagt',
+       protokoll.gesprochen.some((t) => t.startsWith('Besser')),
+       protokoll.gesprochen.slice(-3).join(' | ').slice(0, 60));
+pruefe('Ampel jetzt gruen', $('ampel').className.includes('gruen'), $('ampel').className);
+pruefe('Keine Probleme mehr gelistet', $('probleme').children.length === 0);
+
+antwortPlan.text = () => JSON.stringify(ANTWORT);
+bildAendern();
+await warteBis(() => $('probleme').children.length > 0, 6000);
 
 // --- Sparmodus ---------------------------------------------------------------
 const vorSparen = protokoll.anfragen.length;

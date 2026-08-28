@@ -555,6 +555,102 @@ const dreiKritische = Engine.normalisiere({
 assert.equal(dreiKritische.probleme.length, 2, 'live bleiben zwei stehen');
 assert.equal(dreiKritische.scores.kopfgeometrie, 45, 'das dritte kappt trotzdem');
 
+// --- Staerkeres Modell fuers Endurteil -------------------------------------------
+// Live zaehlt Tempo, beim Endurteil Genauigkeit. Ohne Eintrag bleibt es bei einem.
+Engine.einstellungenSpeichern({ gemini_modell: 'gemini-2.5-flash', gemini_modell_voll: 'gemini-2.5-pro' });
+const zweiModelle = new Engine.Sitzung({ ziel: 'balanced' });
+await zweiModelle.analysieren(new Blob(['x']), 'live');
+assert.match(letzteAnfrage.url, /gemini-2\.5-flash/, 'live das schnelle');
+await zweiModelle.analysieren(new Blob(['x']), 'voll');
+assert.match(letzteAnfrage.url, /gemini-2\.5-pro/, 'Endurteil das genauere');
+Engine.einstellungenSpeichern({ gemini_modell_voll: '' });
+await zweiModelle.analysieren(new Blob(['x']), 'voll');
+assert.match(letzteAnfrage.url, /gemini-2\.5-flash/, 'ohne Eintrag bleibt es bei einem Modell');
+
+// --- Ampel: vier Zustaende, einer davon ehrlich ---------------------------------
+// Beim Bauen hilft "gruen, gelb, rot" mehr als eine Zahl. Der vierte Zustand ist
+// der wichtigste: was nicht beurteilbar ist, wird nicht beurteilt.
+const sauberOhneProblem = {
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+};
+assert.equal(Engine.normalisiere(sauberOhneProblem, true).ampel.stand, 'gruen');
+assert.equal(Engine.normalisiere(ANTWORT, true).ampel.stand, 'rot', 'kritisches Problem ist rot');
+
+const nurMittel = Engine.normalisiere({
+  ...sauberOhneProblem,
+  probleme: [{ id: 'x', severity: 'medium', kategorie: 'tabak_verteilung', titel: 'Links hoeher',
+               beschreibung: 'y', confidence: 60, aktion: 'redistribute_tobacco' }],
+}, true);
+assert.equal(nurMittel.ampel.stand, 'gelb');
+assert.equal(nurMittel.ampel.text, 'Links hoeher', 'die Ampel nennt das Problem beim Namen');
+
+// Kein Kopf, schlechtes Bild, wackliges Urteil: alles "unsicher" — mit Anweisung.
+const ohneKopf = Engine.normalisiere({ ...ANTWORT, analysis_status: 'no_head_detected' }, true);
+assert.equal(ohneKopf.ampel.stand, 'unsicher');
+assert.ok(ohneKopf.ampel.was_tun.length > 10, 'und sagt, was zu tun ist');
+
+const schlechtesBild = Engine.normalisiere({
+  ...ANTWORT, analysis_status: 'insufficient_image',
+  bildqualitaet: { schaerfe: 60, licht: 10, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true);
+assert.equal(schlechtesBild.ampel.stand, 'unsicher');
+assert.match(schlechtesBild.ampel.was_tun, /dunkel/i, 'nennt den tatsaechlichen Grund');
+
+const wackligeSicherheit = Engine.normalisiere({
+  ...sauberOhneProblem,
+  confidence: { gesamt: 20, kopf_erkennung: 20, tabak_analyse: 20, fuellhoehe: 20,
+                airflow: 20, hitzemanagement: 20, optimierung: 20 },
+}, true);
+assert.equal(wackligeSicherheit.ampel.stand, 'unsicher', 'niedrige Sicherheit heisst kein gruen');
+
+// --- Behobene Probleme: die Schleife schliesst sich -----------------------------
+// Ohne diese Rueckmeldung bleibt die App bei "hier ist ein Problem" stehen — man
+// korrigiert, und niemand sagt einem, ob es geholfen hat.
+const loop = new Engine.Sitzung({ ziel: 'balanced' });
+const mitProblem = loop.aufnehmen(Engine.normalisiere(ANTWORT, true), false);
+assert.deepEqual(mitProblem.behoben, [], 'beim ersten Bild gibt es nichts zu bestaetigen');
+
+const danach = loop.aufnehmen(Engine.normalisiere(sauberOhneProblem, true), false);
+assert.equal(danach.behoben.length, 2, `behoben: ${JSON.stringify(danach.behoben)}`);
+assert.ok(danach.behoben.some((b) => b.titel === 'Tabak am Rand'));
+
+// Ein verwackeltes Bild darf nichts bestaetigen — da fehlt nur der Nachweis.
+const wackelSitzung = new Engine.Sitzung({ ziel: 'balanced' });
+wackelSitzung.aufnehmen(Engine.normalisiere(ANTWORT, true), false);
+const unscharf = wackelSitzung.aufnehmen(Engine.normalisiere({
+  ...sauberOhneProblem,
+  bildqualitaet: { schaerfe: 15, licht: 20, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true), false);
+assert.deepEqual(unscharf.behoben, [], 'aus einem duennen Bild folgt keine Bestaetigung');
+
+// --- Packmethode aendert die Bewertung der Dichte --------------------------------
+// Dieselbe Aufnahme heisst bei "locker" Fehler und bei "dicht" Absicht.
+assert.equal(Engine.packmethode({}), null);
+assert.equal(Engine.packmethode({ packmethode: 'dicht' }).name, 'Dicht (dense pack)');
+
+const mitPack = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced', packmethode: 'locker' }, verlauf: '', lernen: '',
+});
+assert.ok(mitPack.includes('Packmethode laut Nutzer'), 'die Angabe steht im Prompt');
+assert.ok(mitPack.includes('Erwartete Dichte'), 'mit dem erwarteten Bereich');
+assert.ok(mitPack.includes('gewollte Ergebnis'), 'und der Anweisung, dagegen zu pruefen');
+
+const ohnePack = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '',
+});
+assert.ok(!ohnePack.includes('Packmethode laut Nutzer'), 'ohne Angabe wird nichts behauptet');
+
+// --- Zu jeder Aktion gibt es eine Anleitung ---------------------------------------
+// Ein gemeldetes Problem ohne Handgriff ist nur eine Feststellung.
+Object.keys(Engine.spec.aktionen).forEach((aktion) => {
+  const anleitung = Engine.spec.anleitungen[aktion];
+  assert.ok(anleitung, `keine Anleitung fuer ${aktion}`);
+  assert.ok(anleitung.schritte.length >= 2, `zu duenne Anleitung fuer ${aktion}`);
+  assert.ok(anleitung.ziel && anleitung.ziel.length > 15, `kein Zielbild fuer ${aktion}`);
+});
+
 // --- (3) Mehrere Bilder -------------------------------------------------------
 const mehrere = Engine.promptBauen({
   modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '', bilder: 3,

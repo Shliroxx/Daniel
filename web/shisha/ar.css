@@ -228,6 +228,38 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   overflow-y: auto;
 }
 
+/* ---------- Ampel: der Zustand auf einen Blick ---------- */
+.ampel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.ampel-punkt { font-size: 17px; flex: 0 0 auto; }
+.ampel-text { flex: 1; min-width: 0; }
+.ampel.gruen { border-color: rgba(87, 227, 154, 0.5); background: rgba(87, 227, 154, 0.09); color: var(--gruen); }
+.ampel.gelb { border-color: rgba(255, 180, 84, 0.5); background: rgba(255, 180, 84, 0.09); color: var(--amber); }
+.ampel.rot { border-color: rgba(255, 107, 125, 0.5); background: rgba(255, 107, 125, 0.1); color: var(--rose); }
+/* Unsicher ist bewusst farblos: hier wird nichts behauptet. */
+.ampel.unsicher { border-style: dashed; color: var(--muted); }
+
+/* Bestaetigung, dass eine Korrektur gewirkt hat. */
+.behoben {
+  margin-bottom: 10px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  background: rgba(87, 227, 154, 0.14);
+  color: var(--gruen);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .coach { font-size: 18px; line-height: 1.35; font-weight: 600; }
 .coach.gut { color: var(--gruen); }
 
@@ -266,6 +298,21 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 }
 
 .problem::before { content: attr(data-symbol); position: absolute; left: 0; }
+
+/* Jedes Problem ist ein Auftrag, kein Aushang — deshalb ein Knopf daneben. */
+.problem { display: flex; align-items: baseline; gap: 8px; }
+.problem-zeile { flex: 1; min-width: 0; }
+
+.problem-knopf {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(10, 22, 34, 0.8);
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 600;
+}
 .problem.critical, .problem.high { color: var(--rose); }
 .problem.medium { color: var(--amber); }
 
@@ -718,6 +765,30 @@ code {
 .historie-text b { color: var(--cyan); font-size: 16px; }
 .historie-text small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .historie-liste .leer { justify-content: center; color: var(--muted); font-size: 14px; }
+
+/* ---------- Anleitungsblatt ---------- */
+.anleitung-kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.anleitung-marke { font-size: 24px; }
+.anleitung-kopf h2 { margin: 0; font-size: 21px; }
+
+.ziel-kasten {
+  margin: 18px 0 22px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(87, 227, 154, 0.35);
+  background: rgba(87, 227, 154, 0.08);
+}
+
+.ziel-marke {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gruen);
+  margin-bottom: 6px;
+}
+
+.ziel-kasten p { margin: 0; font-size: 14px; line-height: 1.5; }
 
 /* ---------- Kleinkram ---------- */
 select {

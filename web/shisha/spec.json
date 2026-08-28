@@ -464,6 +464,13 @@
       "Sag im \"coach_satz\" NIE, dass du den Kopf oder das Modell nicht erkennst — der",
       "Nutzer weiss, welchen Kopf er benutzt, und hoert diesen Satz gesprochen. Der Satz",
       "gehoert immer dem naechsten Handgriff."
+    ],
+    "packmethode": [
+      "Der Nutzer hat gesagt, wie er gepackt hat. Beurteile die beobachtete Dichte GEGEN",
+      "diese Absicht, nicht gegen einen allgemeinen Idealwert: eine feste Packung ist bei",
+      "'dicht' das gewollte Ergebnis und bei 'locker' ein Fehler.",
+      "Weicht das Bild klar von der Angabe ab, sag es im Befund und melde es als Problem —",
+      "aber erfinde keine Abweichung, nur weil eine Zahl knapp ausserhalb liegt."
     ]
   },
   "plausibilitaet": {
@@ -672,6 +679,140 @@
         "richtung": "runter",
         "titel": "Die Rauchmenge ist dir oft zu gering",
         "anweisung": "Empfiehl die Flaeche besser auszunutzen, etwas hoeher zu bauen (1 bis 2 mm unter Rand) und eher mehr Hitze."
+      }
+    ]
+  },
+  "anleitungen": {
+    "hinweis": "Zu jeder Aktion aus 'aktionen': wie man sie ausfuehrt und woran man merkt, dass es passt. Wird in der App unter 'Zeig mir wie' angezeigt, damit ein gemeldetes Problem nicht als blosse Feststellung stehen bleibt.",
+    "remove_tobacco": {
+      "titel": "Tabak wegnehmen",
+      "schritte": [
+        "Nimm mit der Pinzette oder zwei Fingern von der genannten Stelle etwas ab — eine Prise, nicht eine Handvoll.",
+        "Arbeite von der Kopfmitte nach aussen, damit die Oberflaeche nicht schief wird.",
+        "Zieh danach mit dem Finger oder einem Zahnstocher einmal flach drueber."
+      ],
+      "ziel": "Der Tabak endet 2 bis 3 mm unter dem Rand und beruehrt die Wand nirgends."
+    },
+    "add_tobacco": {
+      "titel": "Tabak nachlegen",
+      "schritte": [
+        "Zupf den Tabak vorher auseinander, leg ihn nicht am Stueck hinein.",
+        "Streu ihn ueber die Luecke, statt ihn hineinzudruecken.",
+        "Nur so viel, dass die Mulde gleichmaessig gefuellt ist — nachlegen geht leichter als wegnehmen."
+      ],
+      "ziel": "Keine sichtbaren Loecher mehr, Hoehe ueberall gleich."
+    },
+    "loosen_tobacco": {
+      "titel": "Auflockern",
+      "schritte": [
+        "Fahr mit einem Zahnstocher oder einer Gabel senkrecht in den Tabak und heb ihn leicht an.",
+        "Nicht ruehren — das verdichtet ihn wieder.",
+        "Vier bis fuenf Stiche pro Klumpen reichen."
+      ],
+      "ziel": "Der Tabak sieht flauschig aus, man sieht Zwischenraeume. Luft muss durchziehen koennen."
+    },
+    "redistribute_tobacco": {
+      "titel": "Neu verteilen",
+      "schritte": [
+        "Zieh mit dem Zahnstocher vom hohen Bereich zum niedrigen — nicht drueckend, sondern schiebend.",
+        "Dreh den Kopf dabei, damit du von allen Seiten draufschaust.",
+        "Zum Schluss einmal rundum den Rand freiraeumen."
+      ],
+      "ziel": "Von oben betrachtet ueberall dieselbe Hoehe, kein Berg und kein Tal."
+    },
+    "flatten_surface": {
+      "titel": "Glattziehen",
+      "schritte": [
+        "Leg einen Finger flach auf und dreh den Kopf einmal ganz herum — nicht druecken.",
+        "Bleib dabei von der Kaminoeffnung weg.",
+        "Reste am Rand mit dem Zahnstocher nach innen holen."
+      ],
+      "ziel": "Ebene Oberflaeche, freier Rand, freie Oeffnung in der Mitte."
+    },
+    "increase_hmd_distance": {
+      "titel": "Mehr Abstand zum HMD",
+      "schritte": [
+        "Nimm rundum eine Lage Tabak ab, statt nur in der Mitte zu druecken.",
+        "Setz das HMD danach neu auf und schau von der Seite drauf.",
+        "Beruehrt es immer noch, nimm lieber noch eine Prise ab als das HMD schief zu setzen."
+      ],
+      "ziel": "Zwischen Tabak und HMD-Boden bleibt sichtbar Luft — 2 bis 3 mm reichen."
+    },
+    "decrease_hmd_distance": {
+      "titel": "Weniger Abstand zum HMD",
+      "schritte": [
+        "Leg gleichmaessig etwas Tabak nach, statt den vorhandenen hochzudruecken.",
+        "Locker bleiben — nachlegen darf die Packung nicht verdichten.",
+        "HMD aufsetzen und von der Seite pruefen."
+      ],
+      "ziel": "Der Abstand ist klein genug, dass die Hitze ankommt, aber der Tabak beruehrt nichts."
+    },
+    "reposition_hmd": {
+      "titel": "HMD neu setzen",
+      "schritte": [
+        "HMD abnehmen, Kopfrand kurz saeubern.",
+        "Gerade und mittig aufsetzen, bis es rundum aufliegt.",
+        "Von der Seite pruefen, ob es kippelt."
+      ],
+      "ziel": "Das HMD sitzt zentriert und waagerecht, ohne Spalt an einer Seite."
+    },
+    "reposition_coals": {
+      "titel": "Kohle umlegen",
+      "schritte": [
+        "Kohle mit der Zange anfassen, nicht schieben.",
+        "Leg sie an den Rand, nicht ueber die Mitte — dort sitzt der Kamin.",
+        "Gleichmaessiger Abstand zwischen den Kohlen."
+      ],
+      "ziel": "Die Kohlen liegen aussen verteilt, die Mitte bleibt frei."
+    },
+    "reduce_heat": {
+      "titel": "Hitze zuruecknehmen",
+      "schritte": [
+        "Eine Kohle herunternehmen oder alle ein Stueck weiter nach aussen legen.",
+        "Bei Folie: Kopf kurz von der Kohle nehmen statt Loecher zu vergroessern.",
+        "Zwei Minuten warten, bevor du neu beurteilst — Hitze reagiert traege."
+      ],
+      "ziel": "Der Rauch wird wieder voll statt kratzig."
+    },
+    "increase_heat": {
+      "titel": "Mehr Hitze",
+      "schritte": [
+        "Eine Kohle dazulegen oder die vorhandenen naeher zusammenruecken.",
+        "Vorher pruefen, ob die Kohle wirklich durchgegluht ist — grau, nicht schwarz.",
+        "Zwei Minuten warten, bevor du neu beurteilst."
+      ],
+      "ziel": "Der Kopf zieht wieder an, ohne dass es kratzt."
+    }
+  },
+  "packmethoden": {
+    "hinweis": "Wie der Nutzer eingestreut hat. Ohne diese Angabe kann das Modell nur raten, ob eine dichte Packung Absicht oder Fehler ist — dieselbe Aufnahme bedeutet bei 'locker' einen Fehler und bei 'dicht' das gewollte Ergebnis.",
+    "liste": [
+      {
+        "key": "locker",
+        "name": "Locker (fluffy)",
+        "beschreibung": "Tabak nur eingestreut, nicht gedrueckt. Viel Luft dazwischen.",
+        "erwartete_dichte": [
+          25,
+          55
+        ]
+      },
+      {
+        "key": "gemischt",
+        "name": "Gemischt",
+        "beschreibung": "Eingestreut und leicht angedrueckt, Oberflaeche geglaettet.",
+        "erwartete_dichte": [
+          45,
+          70
+        ]
+      },
+      {
+        "key": "dicht",
+        "name": "Dicht (dense pack)",
+        "beschreibung": "Bewusst fest gepackt, Oberflaeche eben abgezogen — braucht mehr Hitze.",
+        "erwartete_dichte": [
+          65,
+          90
+        ]
       }
     ]
   }

@@ -39,6 +39,9 @@ const Engine = (() => {
     anbieter: 'gemini',
     gemini_key: '',
     gemini_modell: 'gemini-2.5-flash',
+    // Fuer das Endurteil darf ein staerkeres Modell ran: live zaehlt Tempo,
+    // beim Endurteil Genauigkeit. Leer = dasselbe wie live.
+    gemini_modell_voll: '',
     openrouter_key: '',
     openrouter_modell: 'meta-llama/llama-4-maverick:free',
     server_url: '',
@@ -168,9 +171,10 @@ const Engine = (() => {
       bilder.push({ inline_data: { mime_type: 'image/jpeg', data: await base64(blob) } });
     }
 
-    const budget = denkbudget(e.gemini_modell, modus);
+    const modell = (modus === 'voll' && e.gemini_modell_voll) ? e.gemini_modell_voll : e.gemini_modell;
+    const budget = denkbudget(modell, modus);
     const antwort = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(e.gemini_modell)}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modell)}:generateContent`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': e.gemini_key },
@@ -446,6 +450,15 @@ const Engine = (() => {
     ];
     felder.forEach(([name, wert]) => { if (wert) zeilenListe.push(`- ${name}: ${wert}`); });
 
+    // Dieselbe Aufnahme heisst bei "locker" Fehler und bei "dicht" Absicht.
+    const pack = packmethode(kontext);
+    if (pack) {
+      zeilenListe.push(
+        `- Packmethode laut Nutzer: ${pack.name} — ${pack.beschreibung}`
+        + ` Erwartete Dichte etwa ${pack.erwartete_dichte[0]} bis ${pack.erwartete_dichte[1]} von 100.`
+      );
+    }
+
     const kopf = angenommenerKopf(kontext);
     if (kopf && kopf.herkunft === 'standard') {
       zeilenListe.push(
@@ -462,6 +475,13 @@ const Engine = (() => {
     const offen = fehlendeAngaben(kontext);
     if (offen.length) zeilenListe.push(`- Nicht angegeben: ${offen.join(', ')}`);
     return zeilenListe.join('\n');
+  }
+
+  /** Die gewaehlte Packmethode, oder null wenn nichts angegeben wurde. */
+  function packmethode(kontext) {
+    const key = String((kontext || {}).packmethode || '').trim();
+    if (!key) return null;
+    return ((spec.packmethoden || {}).liste || []).find((m) => m.key === key) || null;
   }
 
   function fehlendeAngaben(kontext) {
@@ -498,6 +518,7 @@ const Engine = (() => {
       teile.push(zeilen(angenommen.herkunft === 'angegeben' ? p.kopf_angegeben : p.kopf_standard));
     }
     if (durchmesserBestimmen(kontext)) teile.push(zeilen(p.massstab));
+    if (packmethode(kontext)) teile.push(zeilen(p.packmethode));
     if (bilder > 1) teile.push(zeilen(p.mehrere_bilder));
     if (gegenprobe) teile.push(zeilen(p.gegenprobe));
 
@@ -710,6 +731,8 @@ const Engine = (() => {
       || ergebnis.confidence.gesamt < 40
     );
 
+    ergebnis.ampel = ampelStellen(ergebnis);
+
     // Ohne erkennbaren Kopf ist eine Note bedeutungslos — dann lieber keine.
     if (status !== 'ok') {
       ergebnis.gesamtscore = null;
@@ -717,6 +740,43 @@ const Engine = (() => {
       ergebnis.stufe_text = null;
     }
     return ergebnis;
+  }
+
+  /* Vier Zustaende statt einer Zahl: gruen, gelb, rot, unsicher.
+   *
+   * Eine Note von 0 bis 100 sagt einem beim Bauen wenig — beim Bauen will man
+   * wissen: passt es, oder muss ich ran? Und vor allem: der vierte Zustand.
+   * Wenn das Bild nichts hergibt, darf nicht geraten werden; dann steht da, was
+   * zu tun ist, damit es beurteilbar wird.
+   *
+   * Deterministisch aus dem, was schon geprueft ist — kein zweites Urteil.
+   */
+  function ampelStellen(ergebnis) {
+    if (ergebnis.analysis_status === 'no_head_detected') {
+      return { stand: 'unsicher', text: 'Kein Kopf im Bild',
+               was_tun: 'Halt den Kopf mittig ins Bild, etwa eine Handbreit entfernt.' };
+    }
+    if (ergebnis.analysis_status === 'insufficient_image') {
+      const bild = ergebnis.bildqualitaet;
+      const grund = bild.licht < bild.schaerfe ? 'Zu dunkel.' : 'Zu unscharf.';
+      return { stand: 'unsicher', text: 'Bild reicht nicht',
+               was_tun: `${grund} Naeher ran, ruhig halten, mehr Licht.` };
+    }
+    if (ergebnis.vorlaeufig) {
+      return { stand: 'unsicher', text: 'Noch kein Urteil',
+               was_tun: 'Halt kurz still und geh naeher ran — dann schau ich genauer hin.' };
+    }
+
+    const schwer = ergebnis.probleme.find((p) => p.severity === 'critical' || p.severity === 'high');
+    if (schwer) return { stand: 'rot', text: schwer.titel, was_tun: '' };
+
+    const mittel = ergebnis.probleme.find((p) => p.severity === 'medium');
+    if (mittel) return { stand: 'gelb', text: mittel.titel, was_tun: '' };
+
+    if (ergebnis.probleme.length) {
+      return { stand: 'gelb', text: ergebnis.probleme[0].titel, was_tun: '' };
+    }
+    return { stand: 'gruen', text: 'Sieht gut aus', was_tun: '' };
   }
 
   /* Faengt den einen Satz ab, der nichts bringt: "Kopf nicht erkannt".
@@ -1311,7 +1371,7 @@ const Engine = (() => {
   class Sitzung {
     constructor(kontext) {
       this.kontext = { ziel: 'balanced', kopf_modell: '', tabak_marke: '', tabak_sorte: '',
-                       hmd: '', kohlen: '', notiz: '', aussendurchmesser_mm: '', ...(kontext || {}) };
+                       hmd: '', kohlen: '', notiz: '', aussendurchmesser_mm: '', packmethode: '', ...(kontext || {}) };
       this.phase = spec.phasen[0].key;
       this.verlauf = [];
       this.letzte = null;
@@ -1346,6 +1406,7 @@ const Engine = (() => {
     /** Ein fertig normalisiertes Ergebnis einsortieren. */
     aufnehmen(ergebnis, autoWeiter = true) {
       const eintrag = { ...ergebnis, zeit: Date.now() };
+      eintrag.behoben = this.behobeneProbleme(eintrag);
       eintrag.sprechen = this.darfSprechen(eintrag.coach_satz);
 
       let gewechselt = false;
@@ -1372,6 +1433,28 @@ const Engine = (() => {
       // Erst nach dem Einsortieren, damit das eigene Ergebnis mitzaehlt.
       eintrag.konsens = this.konsens();
       return eintrag;
+    }
+
+    /* Was seit dem letzten Bild verschwunden ist.
+     *
+     * Ohne das bleibt die App bei "hier ist ein Problem" stehen: der Nutzer
+     * korrigiert, und niemand sagt ihm, ob es geholfen hat. Genau diese
+     * Rueckmeldung schliesst die Schleife scannen — korrigieren — scannen.
+     *
+     * Verglichen wird nur mit dem letzten Bild derselben Phase, und nur wenn
+     * beide brauchbar waren: ein Problem, das blos wegen eines verwackelten
+     * Bildes nicht mehr gemeldet wird, ist nicht behoben.
+     */
+    behobeneProbleme(eintrag) {
+      const vorher = this.letzte;
+      if (!vorher || vorher.analysis_status !== 'ok' || eintrag.analysis_status !== 'ok') return [];
+      if (vorher.vorlaeufig || eintrag.vorlaeufig) return [];
+      if (vorher.phase !== this.phase) return [];
+
+      const jetztOffen = new Set(eintrag.probleme.map((p) => p.id));
+      return vorher.probleme
+        .filter((p) => !jetztOffen.has(p.id) && p.severity !== 'low')
+        .map((p) => ({ id: p.id, titel: p.titel, severity: p.severity }));
     }
 
     /* Urteil ueber mehrere Bilder statt ueber eines.
@@ -1558,6 +1641,7 @@ const Engine = (() => {
     standardKopf,
     angenommenerKopf,
     durchmesserBestimmen,
+    packmethode,
     verbrauch,
     vergleiche,
     profil: { laden: profilLaden, merken: feedbackMerken, treffsicherheit, lernkontext, erlebteNote, lernregeln },

@@ -504,6 +504,9 @@ function liveUebernehmen(analyse) {
   $('coach').textContent = analyse.coach_satz || (ok ? 'Weiter so.' : 'Kopf ins Bild holen.');
   $('coach').classList.toggle('gut', ok && !analyse.probleme.length);
 
+  ampelZeigen(analyse.ampel);
+  behobenZeigen(analyse.behoben);
+
   const schritte = $('schritte');
   schritte.innerHTML = '';
   analyse.optimierungen.forEach((eintrag) => {
@@ -512,15 +515,7 @@ function liveUebernehmen(analyse) {
     schritte.appendChild(zeile);
   });
 
-  const probleme = $('probleme');
-  probleme.innerHTML = '';
-  analyse.probleme.forEach((problem) => {
-    const zeile = document.createElement('div');
-    zeile.className = `problem ${problem.severity}`;
-    zeile.dataset.symbol = problem.symbol;
-    zeile.textContent = problem.titel;
-    probleme.appendChild(zeile);
-  });
+  problemeZeigen(analyse.probleme);
 
   const frage = $('rueckfrage');
   frage.hidden = !analyse.rueckfrage;
@@ -558,6 +553,120 @@ function liveUebernehmen(analyse) {
   if (analyse.sprechen && analyse.coach_satz) sprich(analyse.coach_satz);
   if (analyse.phase_gewechselt) vibriere(30);
   if (analyse.probleme.some((p) => p.severity === 'critical')) vibriere([20, 60, 20]);
+}
+
+/* Die Ampel: vier Zustaende, einer davon ehrlich.
+ *
+ * "gruen, gelb, rot" sagt beim Bauen mehr als eine Zahl von 0 bis 100. Der
+ * vierte Zustand ist der wichtigste: kann das Modell es anhand des Bildes nicht
+ * beurteilen, steht hier nicht irgendein Urteil, sondern was zu tun ist, damit
+ * es beurteilbar wird.
+ */
+function ampelZeigen(ampel) {
+  const kasten = $('ampel');
+  if (!ampel) {
+    kasten.hidden = true;
+    return;
+  }
+  kasten.hidden = false;
+  kasten.className = `ampel ${ampel.stand}`;
+  $('ampelPunkt').textContent = { gruen: '🟢', gelb: '🟡', rot: '🔴', unsicher: '⚪' }[ampel.stand] || '⚪';
+  $('ampelText').textContent = ampel.was_tun ? `${ampel.text} — ${ampel.was_tun}` : ampel.text;
+}
+
+/* Was seit dem letzten Bild verschwunden ist.
+ *
+ * Ohne diese Rueckmeldung bleibt die App bei "hier ist ein Problem" stehen: man
+ * korrigiert, und niemand sagt, ob es geholfen hat. Das hier schliesst die
+ * Schleife — und es wird auch gesprochen, weil man beim Bauen nicht hinschaut.
+ */
+function behobenZeigen(behoben) {
+  const kasten = $('behoben');
+  if (!behoben || !behoben.length) {
+    kasten.hidden = true;
+    return;
+  }
+  kasten.hidden = false;
+  kasten.textContent = `Besser: ${behoben.map((b) => b.titel).join(', ')}`;
+  vibriere([15, 40, 15]);
+  sprich(behoben.length === 1
+    ? `Besser. ${behoben[0].titel} ist weg.`
+    : `Besser. ${behoben.length} Punkte erledigt.`);
+}
+
+/* Ein Problem ist kein Aushang, sondern ein Auftrag.
+ *
+ * Vorher stand hier nur der Titel — die Begruendung und die vorgeschlagene
+ * Aktion wurden zwar vom Modell geliefert und geprueft, aber nie angezeigt und
+ * waren nirgends anklickbar. Jetzt fuehrt jedes Problem zu einer Anleitung und
+ * von dort zurueck vor die Kamera.
+ */
+function problemeZeigen(liste) {
+  const kasten = $('probleme');
+  kasten.innerHTML = '';
+  (liste || []).forEach((problem) => {
+    const zeile = document.createElement('div');
+    zeile.className = `problem ${problem.severity}`;
+    zeile.dataset.symbol = problem.symbol;
+
+    const titel = document.createElement('span');
+    titel.className = 'problem-zeile';
+    titel.textContent = problem.titel;
+    zeile.appendChild(titel);
+
+    const knopf = document.createElement('button');
+    knopf.className = 'problem-knopf';
+    knopf.textContent = 'Zeig mir wie';
+    knopf.onclick = () => anleitungZeigen(problem);
+    zeile.appendChild(knopf);
+
+    kasten.appendChild(zeile);
+  });
+}
+
+/* Das Anleitungsblatt zu einem gemeldeten Problem.
+ *
+ * Problem, Ursache, Handgriffe, Zielbild, und ein Knopf, der zurueck vor die
+ * Kamera fuehrt und sofort neu prueft — statt zu warten, bis der Sparmodus
+ * zufaellig eine Aenderung bemerkt.
+ */
+let offenesProblem = null;
+
+function anleitungZeigen(problem) {
+  offenesProblem = problem;
+  const anleitung = (Engine.spec.anleitungen || {})[problem.aktion];
+
+  $('anleitungMarke').textContent = problem.symbol;
+  $('anleitungTitel').textContent = problem.titel;
+  $('anleitungGrund').textContent = problem.beschreibung
+    || 'Das Modell hat dazu keine Begruendung geliefert.';
+
+  const schritte = $('anleitungSchritte');
+  schritte.innerHTML = '';
+  const zeilen = anleitung ? anleitung.schritte : [];
+  zeilen.forEach((text) => {
+    const zeile = document.createElement('li');
+    zeile.textContent = text;
+    schritte.appendChild(zeile);
+  });
+  if (!zeilen.length) {
+    const zeile = document.createElement('li');
+    zeile.textContent = Engine.spec.aktionen[problem.aktion] || 'Korrigiere die genannte Stelle.';
+    schritte.appendChild(zeile);
+  }
+
+  $('anleitungZiel').textContent = anleitung ? anleitung.ziel : 'Danach sollte der Punkt behoben sein.';
+  $('anleitung').hidden = false;
+}
+
+function anleitungSchliessen(neuPruefen) {
+  $('anleitung').hidden = true;
+  offenesProblem = null;
+  if (!neuPruefen) return;
+  // Sofort neu beurteilen, statt auf eine zufaellige Bildaenderung zu warten.
+  neuBeurteilen();
+  zustand.wartetSeit = 0;
+  setzeLage('pruefe nach', 'denkt');
 }
 
 function messwerteZeigen(analyse) {
@@ -1100,6 +1209,7 @@ function einstellungenFuellen() {
   [...$('anbieterwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.anbieter === e.anbieter));
   $('fGeminiKey').value = e.gemini_key;
   $('fGeminiModell').value = e.gemini_modell;
+  $('fGeminiModellVoll').value = e.gemini_modell_voll;
   $('fOrKey').value = e.openrouter_key;
   $('fOrModell').value = e.openrouter_modell;
   $('fServerUrl').value = e.server_url;
@@ -1124,6 +1234,7 @@ function einstellungenSpeichern() {
     anbieter: gewaehlt ? gewaehlt.dataset.anbieter : 'gemini',
     gemini_key: $('fGeminiKey').value.trim(),
     gemini_modell: $('fGeminiModell').value.trim() || 'gemini-2.5-flash',
+    gemini_modell_voll: $('fGeminiModellVoll').value.trim(),
     openrouter_key: $('fOrKey').value.trim(),
     openrouter_modell: $('fOrModell').value.trim(),
     server_url: $('fServerUrl').value.trim(),
@@ -1184,6 +1295,7 @@ function kontextLesen() {
     kohlen: $('fKohlen').value.trim(),
     notiz: $('fNotiz').value.trim(),
     aussendurchmesser_mm: $('fDurchmesser').value.trim(),
+    packmethode: $('fPack').value,
   };
 }
 
@@ -1231,6 +1343,7 @@ function kontextWiederherstellen() {
   $('fHmd').value = gespeichert.hmd || '';
   $('fKohlen').value = gespeichert.kohlen || '';
   $('fDurchmesser').value = gespeichert.aussendurchmesser_mm || '';
+  $('fPack').value = gespeichert.packmethode || '';
   if (gespeichert.ziel) {
     [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
   }
@@ -1920,6 +2033,8 @@ $('neuButton').addEventListener('click', () => {
 });
 
 $('zurueckButton').addEventListener('click', () => { $('report').hidden = true; });
+$('anleitungPruefen').addEventListener('click', () => anleitungSchliessen(true));
+$('anleitungZurueck').addEventListener('click', () => anleitungSchliessen(false));
 
 $('nochmalButton').addEventListener('click', () => {
   $('report').hidden = true;
@@ -1969,6 +2084,7 @@ Engine.specLaden()
   .then(() => {
     zielwahlFuellen();
     kopflisteFuellen();
+    packwahlFuellen();
     kontextWiederherstellen();
     startBereitschaft();
   })
@@ -1985,6 +2101,23 @@ function kopflisteFuellen() {
     eintrag.value = kopf.name;
     eintrag.label = `${kopf.aussendurchmesser_mm} mm`;
     liste.appendChild(eintrag);
+  });
+}
+
+/* Packmethoden aus spec.json — nicht fest verdrahtet.
+ *
+ * Die Angabe entscheidet, ob eine feste Packung ein Fehler oder das gewollte
+ * Ergebnis ist. Ohne sie muss das Modell raten.
+ */
+function packwahlFuellen() {
+  const feld = $('fPack');
+  const liste = ((Engine.spec.packmethoden || {}).liste || []);
+  liste.forEach((methode) => {
+    const eintrag = document.createElement('option');
+    eintrag.value = methode.key;
+    eintrag.textContent = methode.name;
+    eintrag.title = methode.beschreibung;
+    feld.appendChild(eintrag);
   });
 }
 
