@@ -115,9 +115,11 @@ pruefe('Start nach Schluessel frei', $('losButton').disabled === false, $('start
 pruefe('Standardkopf im Feld', $('fStandardkopf').placeholder === 'Oblako Phunnel M');
 
 // --- Angaben eintragen -------------------------------------------------------
+$('fPack').value = 'locker';
 $('fKopf').value = 'Oblako Phunnel M';
 (($('fKopf').horcher.change) || []).forEach((fn) => fn({ target: $('fKopf') }));
 pruefe('Durchmesser vorgeschlagen', $('fDurchmesser').value === '78', `war "${$('fDurchmesser').value}"`);
+pruefe('Packmethoden zur Auswahl', $('fPack').children.length === 3, `${$('fPack').children.length} Eintraege`);
 
 // --- Kamera starten ----------------------------------------------------------
 $('losButton').klick();
@@ -131,9 +133,16 @@ pruefe('Livebild wird analysiert', protokoll.anfragen.length >= 1, `${protokoll.
 pruefe('Coach spricht', $('coach').textContent.length > 5, `"${$('coach').textContent}"`);
 pruefe('Kopf benannt', $('kopfInfo').textContent.includes('Oblako'), `"${$('kopfInfo').textContent}"`);
 pruefe('Note angezeigt', $('liveScore').textContent.includes('/100'), `"${$('liveScore').textContent}"`);
-pruefe('Handgriff gelistet', $('schritte').children.length === 1);
 pruefe('Problem gelistet', $('probleme').children.length === 1);
-pruefe('Messwerte da', $('messwerte').children.length >= 2, `${$('messwerte').children.length} Werte`);
+// Die Livekarte traegt nur noch, was beim Bauen zaehlt: Ampel, Coach, Probleme.
+// Messwerte und die nummerierte Liste stehen im Report — jede Zeile in der Karte
+// kostet Sicht auf den Kopf, auf den man zielt.
+pruefe('Livekarte bleibt schlank',
+       $('messwerte') === undefined && $('schritte') === undefined,
+       `messwerte=${$('messwerte') === undefined ? 'weg' : 'da'}, schritte=${$('schritte') === undefined ? 'weg' : 'da'}`);
+// Und der Nachbau kennt jetzt das hidden-Attribut — sonst war jede Pruefung auf
+// "ist verborgen" wertlos.
+pruefe('Nachbau kennt hidden', $('aufnahme').hidden === true, `aufnahme.hidden=${$('aufnahme').hidden}`);
 pruefe('Kontingent gezaehlt', $('kontingent').textContent.startsWith('1/') || $('kontingent').textContent.startsWith('2/'),
        `"${$('kontingent').textContent}"`);
 pruefe('Gesprochen', protokoll.gesprochen.some((s) => s.includes('neun Uhr')), protokoll.gesprochen.join(' | ').slice(0, 60));
@@ -144,6 +153,91 @@ const ersteAnfrage = JSON.parse(protokoll.anfragen[0].optionen.body);
 pruefe('Live ohne Denkzeit gefragt',
        ersteAnfrage.generationConfig.thinkingConfig.thinkingBudget === 0,
        JSON.stringify(ersteAnfrage.generationConfig.thinkingConfig));
+
+// --- Die Schleife: Problem -> Anleitung -> korrigieren -> Bestaetigung ----------
+// Das ist der Kern der App. Vorher stand ein Problem nur als Text da: keine
+// Ursache, kein Handgriff, kein Weg zurueck vor die Kamera, keine Bestaetigung.
+pruefe('Ampel zeigt einen Zustand', $('ampel').hidden === false, $('ampelText').textContent);
+pruefe('Ampel ist gelb bei einem mittleren Problem',
+       $('ampel').className.includes('gelb'), $('ampel').className);
+pruefe('Problem ist anklickbar',
+       $('probleme').children.length === 1 && $('probleme').children[0].children.length === 2,
+       `${$('probleme').children.length} Probleme`);
+
+// Die ganze Zeile ist das Ziel — ein 26 Pixel hoher Knopf am Zeilenende trifft
+// man einhaendig im Stehen nicht.
+const problemZeile = $('probleme').children[0];
+pruefe('Zeile fuehrt zur Anleitung', typeof problemZeile.onclick === 'function');
+pruefe('Und sagt es auch', problemZeile.children[1].textContent.startsWith('Zeig mir wie'));
+
+problemZeile.klick();
+pruefe('Anleitung geht auf', $('anleitung').hidden === false);
+pruefe('Anleitung nennt das Problem', $('anleitungTitel').textContent === 'Bei 9 Uhr etwas hoeher',
+       `"${$('anleitungTitel').textContent}"`);
+pruefe('Anleitung nennt die Ursache', $('anleitungGrund').textContent.includes('Links liegt mehr'),
+       `"${$('anleitungGrund').textContent}"`);
+pruefe('Anleitung hat Handgriffe', $('anleitungSchritte').children.length >= 2,
+       `${$('anleitungSchritte').children.length} Schritte`);
+pruefe('Anleitung hat ein Zielbild', $('anleitungZiel').textContent.length > 15,
+       `"${$('anleitungZiel').textContent}"`);
+
+// "Erledigt" schliesst das Blatt und prueft sofort neu, statt zu warten
+$('anleitungPruefen').klick();
+pruefe('Anleitung wieder zu', $('anleitung').hidden === true);
+pruefe('Es wird sofort nachgeprueft',
+       ['pruefe nach', 'analysiere'].includes($('lage').textContent),
+       `"${$('lage').textContent}"`);
+// Rueckmeldung dort, wo der Daumen ist — die Marke ganz oben liest in dem
+// Moment niemand.
+pruefe('Rueckmeldung in der Karte', $('coach').textContent.includes('9 Uhr'),
+       `"${$('coach').textContent}"`);
+
+// Hinter dem offenen Blatt darf nichts weiterlaufen — auch nicht ueber den
+// Umweg "App in den Hintergrund und zurueck".
+problemZeile.klick();
+pruefe('Anleitung wieder offen', $('anleitung').hidden === false);
+// Eine im selben Moment schon abgeschickte Anfrage laesst sich nicht mehr
+// zurueckholen — die zaehlt nicht. Gemessen wird, ob DANACH noch etwas anfaengt.
+while (kontext.__zustand.busy) await warte(100);
+const vorLesen = protokoll.anfragen.length;
+dokument.visibilityState = 'hidden';
+(dokument._horcher.visibilitychange || []).forEach((fn) => fn());
+await warte(150);
+dokument.visibilityState = 'visible';
+for (const fn of dokument._horcher.visibilitychange || []) await fn();
+await warte(2500);
+pruefe('Hinter der Anleitung bleibt es still',
+       protokoll.anfragen.length === vorLesen && kontext.__zustand.laeuft === false,
+       `${protokoll.anfragen.length - vorLesen} Anfragen, laeuft=${kontext.__zustand.laeuft}`);
+
+// Und das Hauptmenue raeumt das Blatt mit weg, statt es liegen zu lassen
+$('menueButton').klick();
+await warte(200);
+pruefe('Hauptmenue raeumt die Anleitung weg', $('anleitung').hidden === true);
+pruefe('Kein Blatt ueber dem Startbildschirm', $('start').hidden === false);
+
+// Zurueck in die Sitzung fuer den Rest des Durchgangs
+$('losButton').klick();
+await warte(1500);
+
+// Jetzt ist das Problem behoben — die App muss das bestaetigen
+const ohneProblem = { ...ANTWORT, probleme: [], optimierungen: [],
+                      coach_satz: 'Sieht jetzt gleichmaessig aus.' };
+antwortPlan.text = () => JSON.stringify(ohneProblem);
+bildAendern();
+await warteBis(() => $('behoben').hidden === false, 6000);
+pruefe('Verbesserung wird bestaetigt', $('behoben').hidden === false, $('behoben').textContent);
+pruefe('Und zwar mit dem Namen des Problems',
+       $('behoben').textContent.includes('Bei 9 Uhr'), `"${$('behoben').textContent}"`);
+pruefe('Bestaetigung wird auch gesagt',
+       protokoll.gesprochen.some((t) => t.startsWith('Besser')),
+       protokoll.gesprochen.slice(-3).join(' | ').slice(0, 60));
+pruefe('Ampel jetzt gruen', $('ampel').className.includes('gruen'), $('ampel').className);
+pruefe('Keine Probleme mehr gelistet', $('probleme').children.length === 0);
+
+antwortPlan.text = () => JSON.stringify(ANTWORT);
+bildAendern();
+await warteBis(() => $('probleme').children.length > 0, 6000);
 
 // --- Sparmodus ---------------------------------------------------------------
 const vorSparen = protokoll.anfragen.length;
@@ -198,10 +292,14 @@ pruefe2('Genau eine Anfrage fuer die Vollanalyse', protokoll.anfragen.length ===
 
 // --- Report -------------------------------------------------------------------
 pruefe2('Report offen', $('report').hidden === false);
-pruefe2('Note im Report', String($('noteZahl').textContent) === '73', `"${$('noteZahl').textContent}"`);
+// Ohne HMD und ohne Kohle im Bild zaehlt das Hitzemanagement nicht mit — es
+// gibt dazu nichts zu sehen. Die uebrigen sechs Kategorien ergeben 75.
+pruefe2('Note im Report', String($('noteZahl').textContent) === '75', `"${$('noteZahl').textContent}"`);
 pruefe2('Stufe benannt', $('stufeText').textContent === 'gut', `"${$('stufeText').textContent}"`);
 pruefe2('Befund gezeigt', $('befund').textContent.includes('Phunnel'));
 pruefe2('Sieben Kategorien', $('kategorien').children.length === 7, `${$('kategorien').children.length}`);
+pruefe2('Messwerte im Report', $('messwerteReport').children.length >= 2,
+        `${$('messwerteReport').children.length} Werte`);
 pruefe2('Optimierungsplan', $('planliste').children.length === 1);
 pruefe2('Erwartung gefuellt', $('erwartung').children.length === 4);
 pruefe2('Sicherheiten gefuellt', $('konfidenz').children.length === 7);
@@ -223,9 +321,9 @@ $('nachmessenButton').klick();
 await warteBis(() => $('vergleich').innerHTML.includes('→'));
 await warte(120);
 
-pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '81', `"${$('noteZahl').textContent}"`);
+pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '82', `"${$('noteZahl').textContent}"`);
 pruefe2('Vergleich sichtbar', $('vergleich').hidden === false);
-pruefe2('Vergleich zeigt Delta', $('vergleich').innerHTML.includes('73 → 81'), $('vergleich').innerHTML.slice(0, 60));
+pruefe2('Vergleich zeigt Delta', $('vergleich').innerHTML.includes('75 → 82'), $('vergleich').innerHTML.slice(0, 60));
 pruefe2('Prognose bewertet', $('vergleich').innerHTML.includes('Vorhergesagt'),
         $('vergleich').innerHTML.slice(-90));
 
@@ -236,7 +334,7 @@ kontext.__zustand.feedback = { geschmack: 2, rauch: 3, kratzen: 5, hitze: 5 };
 $('fDauer').value = '50';
 $('feedbackSenden').klick();
 pruefe2('Feedback gespeichert', kontext.__Engine.profil.laden().sessions.length === 1);
-pruefe2('Feedback traegt die Note', kontext.__Engine.profil.laden().sessions[0].score === 81,
+pruefe2('Feedback traegt die Note', kontext.__Engine.profil.laden().sessions[0].score === 82,
         String(kontext.__Engine.profil.laden().sessions[0].score));
 pruefe2('Feedback-Blatt zu', $('feedback').hidden === true);
 
@@ -343,7 +441,9 @@ await warte(5000);
 p3('Ohne Kopf keine Note', $('liveScore').hidden === true || !String($('liveScore').textContent).includes('/'),
    `"${$('liveScore').textContent}" hidden=${$('liveScore').hidden}`);
 p3('Ohne Kopf klare Ansage', $('kopfInfo').textContent === 'kein Kopf im Bild', `"${$('kopfInfo').textContent}"`);
-p3('Messwerte geleert', $('messwerte').children.length === 0);
+p3('Ohne Kopf keine Probleme in der Karte', $('probleme').children.length === 0);
+p3('Ampel meldet unsicher statt zu raten', $('ampel').className.includes('unsicher'),
+   `"${$('ampelText').textContent}"`);
 
 // --- 4. Bild zu schlecht ----------------------------------------------------------
 antwortPlan.text = () => JSON.stringify({ analysis_status: 'insufficient_image', coach_satz: 'Mehr Licht.' });
@@ -474,13 +574,10 @@ await warte(300);
 // auf jetzt gestellt, sonst haengt das Ergebnis daran, wie lange die Abschnitte
 // davor gedauert haben.
 z.wartetSeit = Date.now();
-const MESSSTART = Date.now();
 const vorWackeln = protokoll.anfragen.length;
 await warte(2500);
 p3('Wackelbild wird zuerst abgewartet', protokoll.anfragen.length === vorWackeln,
-   `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s; `
-   + `busy=${z.busy} wartetSeit=${z.wartetSeit ? Date.now() - z.wartetSeit : 0} `
-   + `neu nach ${protokoll.anfragen.slice(vorWackeln).map((a) => a.zeit - MESSSTART).join(',')} ms`);
+   `${protokoll.anfragen.length - vorWackeln} Anfragen in den ersten 2,5 s`);
 p3('Wartegrund steht in der Anzeige', /halt still|unscharf/.test($('lage').textContent),
    `"${$('lage').textContent}"`);
 

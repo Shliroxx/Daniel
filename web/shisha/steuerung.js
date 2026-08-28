@@ -97,8 +97,10 @@ const Steuerung = (() => {
    * eine unnoetige Huerde. Nur wenn sie wirklich weg ist, kommt die Blende.
    */
   function rueckkehrPlan(lage) {
-    const { spurLebt, videoLaeuft, pausiert, imHauptmenue, sitzungDa } = lage;
-    if (pausiert || imHauptmenue || !sitzungDa) return { aktion: 'nichts', grund: '' };
+    const { spurLebt, videoLaeuft, pausiert, imHauptmenue, sitzungDa, anleitungOffen } = lage;
+    // Steht eine Anleitung offen, wird sie gelesen — dahinter faengt nichts
+    // wieder an zu analysieren, zu reden und Kontingent zu verbrauchen.
+    if (pausiert || imHauptmenue || !sitzungDa || anleitungOffen) return { aktion: 'nichts', grund: '' };
     if (spurLebt && videoLaeuft) return { aktion: 'weiter', grund: '' };
     return { aktion: 'pausieren', grund: 'Die App war im Hintergrund — die Kamera wurde angehalten.' };
   }
@@ -167,7 +169,17 @@ const Steuerung = (() => {
    * "weitermachen" nur greift, wenn wirklich pausiert ist.
    */
   function befehlPlan(befehl, lage = {}) {
-    const { pausiert = false, imHauptmenue = false, laeuft = false } = lage;
+    const { pausiert = false, imHauptmenue = false, laeuft = false,
+            anleitungOffen = false } = lage;
+
+    /* Bei offener Anleitung liest der Nutzer. Dann darf ein Zuruf nicht die
+     * Kamera anwerfen oder eine Vollanalyse starten, waehrend das Blatt noch
+     * ueber dem Bild liegt — nur der Weg heraus bleibt offen.
+     */
+    if (anleitungOffen) {
+      if (befehl === 'menue') return { aktion: 'hauptmenue', grund: '' };
+      return { aktion: 'nichts', grund: 'Anleitung offen' };
+    }
 
     if (imHauptmenue) {
       // Im Hauptmenue steuert man nichts, was eine laufende Sitzung braucht.

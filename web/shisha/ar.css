@@ -1,6 +1,7 @@
 :root {
   --bg: #04080d;
-  --panel: rgba(8, 16, 24, 0.74);
+  /* Hinter der Karte ist das Bild ohnehin verdeckt — dann lieber lesbar. */
+  --panel: rgba(8, 16, 24, 0.88);
   --line: rgba(96, 214, 255, 0.2);
   --cyan: #5fe3ff;
   --cyan-dim: #2b8fae;
@@ -224,8 +225,45 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   padding: 13px 15px;
   backdrop-filter: blur(14px);
   margin-bottom: 10px;
-  max-height: 45vh;
+  /* Nicht groesser: darunter liegt das Livebild, auf das man zielt. Bei 45vh
+     blieb auf einem iPhone rechnerisch ein Schlitz von rund 150 px uebrig —
+     man sah Text statt Kopf. */
+  max-height: 32vh;
   overflow-y: auto;
+}
+
+/* ---------- Ampel: der Zustand auf einen Blick ---------- */
+.ampel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 8px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.ampel-punkt { font-size: 17px; flex: 0 0 auto; }
+.ampel-text { flex: 1; min-width: 0; }
+.ampel.gruen { border-color: rgba(87, 227, 154, 0.5); background: rgba(87, 227, 154, 0.09); color: var(--gruen); }
+.ampel.gelb { border-color: rgba(255, 180, 84, 0.5); background: rgba(255, 180, 84, 0.09); color: var(--amber); }
+.ampel.rot { border-color: rgba(255, 107, 125, 0.5); background: rgba(255, 107, 125, 0.1); color: var(--rose); }
+/* Unsicher ist farblos, aber nicht blass: die gestrichelte Kontur sagt "hier
+   wird nichts behauptet", der Text muss trotzdem lesbar sein — er traegt als
+   einziger Ampelzustand eine Handlungsanweisung. */
+.ampel.unsicher { border-style: dashed; color: var(--text); }
+
+/* Bestaetigung, dass eine Korrektur gewirkt hat. */
+.behoben {
+  margin-bottom: 10px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  background: rgba(87, 227, 154, 0.14);
+  color: var(--gruen);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .coach { font-size: 18px; line-height: 1.35; font-weight: 600; }
@@ -255,7 +293,7 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   place-items: center;
 }
 
-.probleme { margin-top: 10px; display: grid; gap: 5px; }
+.probleme { margin-top: 10px; display: grid; gap: 8px; }
 
 .problem {
   font-size: 13px;
@@ -266,6 +304,37 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 }
 
 .problem::before { content: attr(data-symbol); position: absolute; left: 0; }
+
+/* Jedes Problem ist ein Auftrag, kein Aushang — die ganze Zeile ist das Ziel.
+   Ein 26 Pixel hoher Knopf am Zeilenende trifft man einhaendig im Stehen nicht. */
+.problem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 4px 4px 22px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.problem:active { background: rgba(95, 227, 255, 0.12); }
+.problem::before { top: 50%; transform: translateY(-50%); }
+.problem-zeile { flex: 1; min-width: 0; }
+
+.problem-knopf {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(10, 22, 34, 0.8);
+  color: var(--cyan);
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;   /* die Zeile faengt den Tipp, nicht dieser Text */
+}
+
+/* Behandelt, Urteil steht noch aus. */
+.problem.wird-geprueft { opacity: 0.4; }
 .problem.critical, .problem.high { color: var(--rose); }
 .problem.medium { color: var(--amber); }
 
@@ -718,6 +787,30 @@ code {
 .historie-text b { color: var(--cyan); font-size: 16px; }
 .historie-text small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .historie-liste .leer { justify-content: center; color: var(--muted); font-size: 14px; }
+
+/* ---------- Anleitungsblatt ---------- */
+.anleitung-kopf { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.anleitung-marke { font-size: 24px; }
+.anleitung-kopf h2 { margin: 0; font-size: 21px; }
+
+.ziel-kasten {
+  margin: 18px 0 22px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(87, 227, 154, 0.35);
+  background: rgba(87, 227, 154, 0.08);
+}
+
+.ziel-marke {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gruen);
+  margin-bottom: 6px;
+}
+
+.ziel-kasten p { margin: 0; font-size: 14px; line-height: 1.5; }
 
 /* ---------- Kleinkram ---------- */
 select {

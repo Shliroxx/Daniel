@@ -302,6 +302,18 @@ dein Claude-Abo laufen lassen willst.
 
 - **Live-Coaching** während des Bauens: ein gesprochener Satz plus die nächsten
   Handgriffe, phasenweise von „Kopf prüfen" bis „Kohle auflegen".
+- **Jedes Problem ist ein Auftrag, kein Aushang.** Neben jedem gemeldeten Punkt
+  steht *Zeig mir wie* — dahinter liegen die Ursache, drei bis vier konkrete
+  Handgriffe und ein Zielbild („so soll es danach aussehen"). Der Knopf
+  *Erledigt — nochmal prüfen* bringt dich zurück vor die Kamera und löst sofort
+  eine neue Beurteilung aus.
+- **Bestätigung, wenn es geholfen hat.** Verschwindet ein gemeldetes Problem, sagt
+  die App es dir — angezeigt und gesprochen. Damit schließt sich die Schleife
+  scannen → korrigieren → scannen, statt bei „hier ist ein Problem" stehenzubleiben.
+- **Ampel mit vier Zuständen:** 🟢 passt · 🟡 optimierbar · 🔴 ran da ·
+  ⚪ **unsicher**. Der vierte ist der wichtigste: Was sich auf dem Bild nicht
+  beurteilen lässt, wird nicht beurteilt — dann steht dort, was zu tun ist, damit
+  es beurteilbar wird.
 - **AR-Markierungen** direkt im Kamerabild: Rot heißt hier Tabak weg, Gelb
   auflockern, Blau ist die empfohlene Füllhöhe, Grün passt schon.
 - **Vollanalyse** auf Knopfdruck: Note von 0 bis 100, sieben Einzelkategorien,
@@ -343,6 +355,25 @@ Wort `SHISHA_TOKEN` in die `.env` schreiben.
 Bei kostenlosen Modellen ist ein **Limit pro Minute und pro Tag** normal. Wenn es
 greift, steht in der App „Freikontingent gerade erschöpft" — dann kurz warten.
 Bilder gehen auf 896 Pixel Kantenlänge verkleinert raus, das schont das Kontingent.
+
+### Welches Modell für was
+
+In den Einstellungen gibt es **zwei** Modellfelder: eines für die Livevorschau,
+eines fürs Endurteil. Das ist Absicht — live zählt Tempo, beim Endurteil zählt
+Genauigkeit.
+
+| | Empfehlung | Warum |
+|---|---|---|
+| Livevorschau | `gemini-2.5-flash` | schnell, großzügiges Freikontingent |
+| Endurteil | `gemini-2.5-pro` (optional) | sieht feine Unterschiede besser, dafür langsamer und knapperes Kontingent |
+
+Bleibt das zweite Feld leer, wird überall dasselbe Modell benutzt.
+
+**Ist das Modell schuld, wenn die Analyse daneben liegt?** Rate nicht — miss.
+Unter *Modell und Zugang* gibt es die **Gegenprobe**: dasselbe Bild wird beim
+Endurteil unabhängig von einem zweiten Anbieter beurteilt. Weichen die Urteile um
+mehr als 15 Punkte ab, sagt die App das und setzt die Sicherheit herunter. Das ist
+der ehrlichste verfügbare Test, ob ein Modell für deine Köpfe taugt.
 
 ### Kontingent im Blick
 

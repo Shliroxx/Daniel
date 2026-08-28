@@ -24,6 +24,11 @@ export function baueUmgebung(webDir, { antwort }) {
       style: {}, children: [], classList: klassenListe(), horcher: {},
       addEventListener(art, fn) { (this.horcher[art] ||= []).push(fn); },
       appendChild(kind) { this.children.push(kind); return kind; },
+      removeChild(kind) {
+        const platz = this.children.indexOf(kind);
+        if (platz >= 0) this.children.splice(platz, 1);
+        return kind;
+      },
       scrollIntoView() {},
       closest(wahl) {
         const attribut = wahl.replace(/[[\]]/g, '');
@@ -108,6 +113,18 @@ export function baueUmgebung(webDir, { antwort }) {
   // --- Dokument ---------------------------------------------------------
   const html = readFileSync(`${webDir}/index.html`, 'utf8');
   [...html.matchAll(/id="([a-zA-Z-]+)"/g)].forEach((t) => elemente.set(t[1], neuesElement(t[1])));
+
+  /* Das hidden-Attribut aus dem HTML uebernehmen.
+   *
+   * Der Nachbau hat es bisher ignoriert und jedes Element als sichtbar
+   * angelegt. Damit war jede Pruefung auf "ist verborgen" wertlos, solange der
+   * Code es nicht ausdruecklich selbst setzte — ein Test konnte gruen sein,
+   * waehrend am Geraet das Gegenteil zu sehen war.
+   */
+  [...html.matchAll(/<[a-z]+\s[^>]*id="([a-zA-Z-]+)"[^>]*>/g)].forEach((treffer) => {
+    const element = elemente.get(treffer[1]);
+    if (element && /\shidden(\s|>|=)/.test(treffer[0])) element.hidden = true;
+  });
 
   const video = elemente.get('kamera');
   video.videoWidth = 1920;

@@ -130,7 +130,11 @@ const sauberesUrteil = Engine.normalisiere({
 }, true);
 assert.equal(sauberesUrteil.scores.fuellhoehe, 70);
 assert.deepEqual(sauberesUrteil.kappungen, []);
-assert.equal(sauberesUrteil.gesamtscore, 65);
+// Ohne HMD und ohne Kohle im Bild zaehlt das Hitzemanagement nicht mit: es gibt
+// dazu schlicht nichts zu sehen. 60*.20 + 70*.15 + 65*.15 + 85*.10 + 75*.10 +
+// 60*.10 = 54.5 bei Gewichtssumme .80 -> 68.
+assert.equal(sauberesUrteil.gesamtscore, 68);
+assert.deepEqual(sauberesUrteil.nicht_bewertbar, ['hitzemanagement']);
 
 // HMD beruehrt den Tabak -> Hitzemanagement kann nicht gut sein
 const heiss = Engine.normalisiere({
@@ -197,7 +201,11 @@ assert.equal(leer.stufe_text, null);
 
 // Muell darf nicht durchschlagen
 const muell = Engine.normalisiere({ scores: 'kaputt', probleme: 'nein', ar_marker: 42, tabak: null }, false);
-assert.equal(muell.gesamtscore, 0);
+// Keine einzige Kategorie bewertet: dann gibt es keine Note. Eine 0 waere eine
+// Behauptung ueber etwas, das niemand gesehen hat — und sie stand frueher als
+// "schlecht" auf dem Schirm.
+assert.equal(muell.gesamtscore, null);
+assert.equal(muell.stufe_text, null);
 assert.deepEqual(muell.probleme, []);
 assert.deepEqual(muell.ar_marker, []);
 assert.equal(muell.tabak.fuellhoehe_mm, null);
@@ -417,6 +425,10 @@ const gesagt = Engine.normalisiere(
 );
 assert.equal(gesagt.kopf.art, 'killer');
 assert.equal(gesagt.kopf.modell, 'Killerkopf gross');
+// Wer den Kopf selbst eingetragen hat, soll nicht "angenommen" lesen — das
+// klingt nach Versagen, obwohl es genau seine eigene Angabe ist.
+assert.equal(gesagt.kopf.herkunft, 'angegeben');
+assert.equal(unerkannt.kopf.herkunft, 'standard', 'ohne Angabe bleibt es eine Annahme');
 
 // Erkennt das Modell den Kopf selbst, bleibt es dabei
 const erkannt = Engine.normalisiere(ANTWORT, true, { kopf_modell: 'Killerkopf gross' });
@@ -462,37 +474,151 @@ assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').aussendurchmess
              'Zusaetze stoeren nicht — der laengste Treffer gewinnt');
 
 // --- Leerer Kopf: keine erfundenen Tabaknoten -----------------------------------
-// In der Phase "Kopf pruefen" ist der Kopf absichtlich leer. Frueher musste das
-// Modell trotzdem Tabakverteilung und Fuellhoehe benoten — zusammen 35 Prozent
-// Gewicht — und lieferte entweder erfundene Zahlen oder strafte den fehlenden
-// Tabak ab.
+// Am Geraet stand neben einem makellosen leeren Kopf die Note 32 und die Stufe
+// "schlecht" — und daneben eine gruene Ampel. Ursache: die App konnte
+// "null Punkte" nicht von "nicht beurteilbar" unterscheiden. Der Prompt sagt dem
+// Modell "lass es auf null", und aus null wurde beim Einlesen eine 0, die mit
+// vollem Gewicht in die Note ging.
 const leererKopf = {
   ...ANTWORT, probleme: [], optimierungen: [],
-  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  // wirklich leer: keine Fuellhoehe, keine Dichte
+  tabak: { fuellhoehe_mm: null, fuellhoehe_quelle: 'unknown', dichte: 0, gleichmaessigkeit: 0,
+           klumpen: false, luecken: false, randkontakt: false, ueber_rand: false,
+           menge_gramm: '', quelle: 'observed', confidence: 80 },
   airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
-  scores: { tabak_verteilung: 0, fuellhoehe: 0, airflow: 0, hitzemanagement: 80,
-            kopfgeometrie: 90, tabak_kompatibilitaet: 0, zielerreichung: 0 },
+  // Das Modell enthaelt sich, wo es nichts sieht — genau so steht es im Prompt.
+  scores: { tabak_verteilung: null, fuellhoehe: null, airflow: 96, hitzemanagement: null,
+            kopfgeometrie: 90, tabak_kompatibilitaet: null, zielerreichung: null },
 };
 const inPhaseKopf = Engine.normalisiere(leererKopf, false, {}, 'kopf');
-// 80*.20 + 90*.10 = 25, Gewichtssumme .30 -> 83
-assert.equal(inPhaseKopf.gesamtscore, 83, `leerer Kopf falsch benotet: ${inPhaseKopf.gesamtscore}`);
+// 96*.15 + 90*.10 = 23.4, Gewichtssumme .25 -> 94
+assert.equal(inPhaseKopf.gesamtscore, 94, `leerer Kopf falsch benotet: ${inPhaseKopf.gesamtscore}`);
+assert.equal(inPhaseKopf.stufe_text, 'hervorragend');
+assert.equal(inPhaseKopf.ampel.stand, 'gruen', 'Note und Ampel duerfen sich nicht widersprechen');
 assert.deepEqual(inPhaseKopf.nicht_bewertbar.sort(),
-  ['airflow', 'fuellhoehe', 'tabak_kompatibilitaet', 'tabak_verteilung', 'zielerreichung']);
+  ['fuellhoehe', 'hitzemanagement', 'tabak_kompatibilitaet', 'tabak_verteilung', 'zielerreichung']);
 
-// Dieselbe Antwort spaeter im Bau ist ein schlechter Kopf — da zaehlt alles.
-const spaeter = Engine.normalisiere(leererKopf, false, {}, 'glattziehen');
-assert.equal(spaeter.gesamtscore, 25);
-assert.deepEqual(spaeter.nicht_bewertbar, []);
+// Eine 0 vom Modell bleibt eine 0 — nur null ist eine Enthaltung.
+const echteNull = Engine.normalisiere({
+  ...leererKopf, scores: { ...leererKopf.scores, airflow: 0 },
+}, false, {}, 'kopf');
+assert.equal(echteNull.gesamtscore, 36, 'eine gemeldete 0 zaehlt mit');
+assert.ok(!echteNull.nicht_bewertbar.includes('airflow'));
 
-// Ohne Phasenangabe bleibt es beim alten Verhalten: alle Kategorien zaehlen.
-assert.equal(Engine.normalisiere(leererKopf, false, {}).gesamtscore, 25);
+// Hitzemanagement braucht HMD oder Kohle im Bild — nicht die Phase.
+const mitHaube = Engine.normalisiere({
+  ...leererKopf,
+  hmd: { erkannt: true, zentriert: true, abstand_mm: 3, kontakt_tabak: false, confidence: 80 },
+  scores: { ...leererKopf.scores, hitzemanagement: 85 },
+}, false, {}, 'kopf');
+assert.ok(!mitHaube.nicht_bewertbar.includes('hitzemanagement'),
+  'liegt ein HMD im Bild, wird das Hitzemanagement bewertet');
+
+// Und ohne alles gibt es gar keine Note statt einer erfundenen Null.
+const nichtsBewertet = Engine.normalisiere({
+  ...leererKopf,
+  scores: { tabak_verteilung: null, fuellhoehe: null, airflow: null, hitzemanagement: null,
+            kopfgeometrie: null, tabak_kompatibilitaet: null, zielerreichung: null },
+}, false, {}, 'kopf');
+assert.equal(nichtsBewertet.gesamtscore, null, 'keine Kategorie, keine Note');
+assert.equal(nichtsBewertet.stufe_text, null);
+
+// Eine schlechte Note und eine gruene Ampel schliessen sich aus
+const schlechtOhneProblem = Engine.normalisiere({
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+  scores: { tabak_verteilung: 30, fuellhoehe: 30, airflow: 30, hitzemanagement: 30,
+            kopfgeometrie: 30, tabak_kompatibilitaet: 30, zielerreichung: 30 },
+}, true, {}, 'kohle');
+assert.equal(schlechtOhneProblem.gesamtscore, 30);
+assert.equal(schlechtOhneProblem.ampel.stand, 'gelb',
+  'ohne gemeldetes Problem, aber mit schlechter Note: nicht gruen');
 
 // Der Prompt sagt dem Modell auch, welche Kategorien gerade null bleiben duerfen
 const phasenPrompt = Engine.promptBauen({
   modus: 'live', kontext: { ziel: 'balanced' }, phase: 'kopf', verlauf: '', lernen: '',
 });
-assert.ok(phasenPrompt.includes('gibt es in dieser Phase noch gar nicht'));
-assert.ok(phasenPrompt.includes('tabak_verteilung'));
+assert.ok(phasenPrompt.includes('laesst du auf null statt sie zu'),
+  'das Modell soll nichts raten, was es nicht sieht');
+
+// --- Der Prozessfehler: die Phase darf nicht diktieren, was zu sehen ist ---------
+// Am Geraet gemeldet: "erkannte den Tabak nicht". Die App startet immer in Phase 1
+// und schrieb dem Modell dort vor, der Kopf sei leer. Wer die Kamera auf einen
+// FERTIGEN Kopf haelt — also genau dann, wenn man eine Bewertung will — bekam
+// deshalb keine Tabakwerte. Das Modell hat nicht versagt, es hat gehorcht.
+const vollerKopfInPhaseEins = Engine.normalisiere({
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false, dichte: 60, fuellhoehe_mm: 2 },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+}, true, {}, 'kopf');
+assert.ok(!vollerKopfInPhaseEins.nicht_bewertbar.includes('fuellhoehe'),
+  'sichtbarer Tabak wird bewertet, egal welche Phase die App mitzaehlt');
+assert.ok(!vollerKopfInPhaseEins.nicht_bewertbar.includes('tabak_verteilung'));
+// Das Hitzemanagement bleibt trotzdem draussen: ohne HMD und ohne Kohle im Bild
+// gibt es dazu nichts zu sehen, egal wie viel Tabak drin liegt.
+assert.deepEqual(vollerKopfInPhaseEins.nicht_bewertbar, ['hitzemanagement']);
+assert.ok(vollerKopfInPhaseEins.gesamtscore > 0, 'und ergibt eine Note');
+
+// Die Beobachtung des Modells schlaegt die Vermutung der App
+const modellSiehtEinstreuen = Engine.normalisiere({
+  ...leererKopf, beobachtete_phase: 'einstreuen',
+  tabak: { ...leererKopf.tabak, fuellhoehe_mm: 3, dichte: 50 },
+  scores: { tabak_verteilung: 80, fuellhoehe: 80, airflow: 80, hitzemanagement: null,
+            kopfgeometrie: 80, tabak_kompatibilitaet: 80, zielerreichung: 80 },
+}, true, {}, 'kopf');
+assert.deepEqual(modellSiehtEinstreuen.nicht_bewertbar, ['hitzemanagement'],
+  'sagt das Modell "einstreuen", gilt nicht mehr die Leer-Annahme');
+assert.equal(modellSiehtEinstreuen.beobachtete_phase, 'einstreuen');
+
+// Umgekehrt genauso: ein wirklich leerer Kopf bleibt ein leerer Kopf
+const modellSiehtLeer = Engine.normalisiere({
+  ...leererKopf, beobachtete_phase: 'kopf',
+}, true, {}, 'glattziehen');
+assert.ok(modellSiehtLeer.nicht_bewertbar.includes('fuellhoehe'),
+  'ist nichts drin, wird nichts erfunden');
+
+// Der Prompt sagt dem Modell auch, dass die Phase nur eine Vermutung ist
+const phasenPromptZwei = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, phase: 'kopf', verlauf: '', lernen: '',
+});
+assert.ok(phasenPromptZwei.includes('das ist eine Vermutung'), 'Phase als Vermutung benannt');
+assert.ok(phasenPromptZwei.includes('beobachtete_phase'), 'und das Modell soll melden, was es sieht');
+assert.ok(phasenPromptZwei.includes('richtest du dich nach dem BILD'));
+assert.ok(!phasenPromptZwei.includes('absichtlich LEER'),
+  'nirgends mehr die Behauptung, der Kopf sei leer');
+
+// --- Die Sitzung zieht die Phase nach ---------------------------------------------
+// Aber nicht nach einem einzelnen Bild: Modelle schwanken. Gemessen wurde, dass
+// die Anleitung sonst im Sekundentakt zwischen zwei Phasen hin und her sprang,
+// ohne dass sich vor der Kamera etwas bewegte.
+const beobachtet = (phase) => Engine.normalisiere({
+  ...ANTWORT, probleme: [], beobachtete_phase: phase,
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+}, true, {}, 'kopf');
+
+const nachziehen = new Engine.Sitzung({ ziel: 'balanced' });
+assert.equal(nachziehen.phase, 'kopf', 'die App startet immer bei Phase eins');
+nachziehen.aufnehmen(beobachtet('einstreuen'));
+assert.equal(nachziehen.phase, 'kopf', 'ein einzelnes Bild ist ein Verdacht');
+const gesehenEinstreuen = nachziehen.aufnehmen(beobachtet('einstreuen'));
+assert.equal(nachziehen.phase, 'einstreuen', 'zwei gleiche sind eine Beobachtung');
+assert.equal(gesehenEinstreuen.phase_nachgezogen, 'Einstreuen', 'und es wird gesagt');
+
+// Wechselt die Meldung staendig, bleibt die Phase stehen
+const flattern = new Engine.Sitzung({ ziel: 'balanced' });
+['einstreuen', 'kohle', 'einstreuen', 'aufsatz', 'einstreuen'].forEach((p) => {
+  flattern.aufnehmen(beobachtet(p));
+});
+assert.equal(flattern.phase, 'kopf', 'Rauschen verstellt die Bauphase nicht');
+
+// Aus einem duennen Bild wird die Phase nicht verstellt
+const duennesBild = new Engine.Sitzung({ ziel: 'balanced' });
+duennesBild.aufnehmen(Engine.normalisiere({
+  ...ANTWORT, beobachtete_phase: 'kohle',
+  bildqualitaet: { schaerfe: 12, licht: 15, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true, {}, 'kopf'));
+assert.equal(duennesBild.phase, 'kopf', 'ein wackliges Bild verstellt nichts');
 
 // --- Angabe und Annahme sind zweierlei -----------------------------------------
 // Der Standardkopf greift immer. Frueher bekam das Modell deshalb auch ohne
@@ -555,6 +681,119 @@ const dreiKritische = Engine.normalisiere({
 assert.equal(dreiKritische.probleme.length, 2, 'live bleiben zwei stehen');
 assert.equal(dreiKritische.scores.kopfgeometrie, 45, 'das dritte kappt trotzdem');
 
+// --- Staerkeres Modell fuers Endurteil -------------------------------------------
+// Live zaehlt Tempo, beim Endurteil Genauigkeit. Ohne Eintrag bleibt es bei einem.
+Engine.einstellungenSpeichern({ gemini_modell: 'gemini-2.5-flash', gemini_modell_voll: 'gemini-2.5-pro' });
+const zweiModelle = new Engine.Sitzung({ ziel: 'balanced' });
+await zweiModelle.analysieren(new Blob(['x']), 'live');
+assert.match(letzteAnfrage.url, /gemini-2\.5-flash/, 'live das schnelle');
+await zweiModelle.analysieren(new Blob(['x']), 'voll');
+assert.match(letzteAnfrage.url, /gemini-2\.5-pro/, 'Endurteil das genauere');
+Engine.einstellungenSpeichern({ gemini_modell_voll: '' });
+await zweiModelle.analysieren(new Blob(['x']), 'voll');
+assert.match(letzteAnfrage.url, /gemini-2\.5-flash/, 'ohne Eintrag bleibt es bei einem Modell');
+
+// --- Ampel: vier Zustaende, einer davon ehrlich ---------------------------------
+// Beim Bauen hilft "gruen, gelb, rot" mehr als eine Zahl. Der vierte Zustand ist
+// der wichtigste: was nicht beurteilbar ist, wird nicht beurteilt.
+const sauberOhneProblem = {
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+};
+assert.equal(Engine.normalisiere(sauberOhneProblem, true).ampel.stand, 'gruen');
+assert.equal(Engine.normalisiere(ANTWORT, true).ampel.stand, 'rot', 'kritisches Problem ist rot');
+
+const nurMittel = Engine.normalisiere({
+  ...sauberOhneProblem,
+  probleme: [{ id: 'x', severity: 'medium', kategorie: 'tabak_verteilung', titel: 'Links hoeher',
+               beschreibung: 'y', confidence: 60, aktion: 'redistribute_tobacco' }],
+}, true);
+assert.equal(nurMittel.ampel.stand, 'gelb');
+assert.equal(nurMittel.ampel.text, 'Links hoeher', 'die Ampel nennt das Problem beim Namen');
+
+// Kein Kopf, schlechtes Bild, wackliges Urteil: alles "unsicher" — mit Anweisung.
+const ohneKopf = Engine.normalisiere({ ...ANTWORT, analysis_status: 'no_head_detected' }, true);
+assert.equal(ohneKopf.ampel.stand, 'unsicher');
+assert.ok(ohneKopf.ampel.was_tun.length > 10, 'und sagt, was zu tun ist');
+
+const schlechtesBild = Engine.normalisiere({
+  ...ANTWORT, analysis_status: 'insufficient_image',
+  bildqualitaet: { schaerfe: 60, licht: 10, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true);
+assert.equal(schlechtesBild.ampel.stand, 'unsicher');
+assert.match(schlechtesBild.ampel.was_tun, /dunkel/i, 'nennt den tatsaechlichen Grund');
+
+const wackligeSicherheit = Engine.normalisiere({
+  ...sauberOhneProblem,
+  confidence: { gesamt: 20, kopf_erkennung: 20, tabak_analyse: 20, fuellhoehe: 20,
+                airflow: 20, hitzemanagement: 20, optimierung: 20 },
+}, true);
+assert.equal(wackligeSicherheit.ampel.stand, 'unsicher', 'niedrige Sicherheit heisst kein gruen');
+
+// --- Behobene Probleme: die Schleife schliesst sich -----------------------------
+// Ohne diese Rueckmeldung bleibt die App bei "hier ist ein Problem" stehen — man
+// korrigiert, und niemand sagt einem, ob es geholfen hat.
+const loop = new Engine.Sitzung({ ziel: 'balanced' });
+const mitProblem = loop.aufnehmen(Engine.normalisiere(ANTWORT, true), false);
+assert.deepEqual(mitProblem.behoben, [], 'beim ersten Bild gibt es nichts zu bestaetigen');
+
+const danach = loop.aufnehmen(Engine.normalisiere(sauberOhneProblem, true), false);
+assert.equal(danach.behoben.length, 2, `behoben: ${JSON.stringify(danach.behoben)}`);
+assert.ok(danach.behoben.some((b) => b.titel === 'Tabak am Rand'));
+
+// Nennt das Modell dasselbe Problem beim naechsten Bild anders, ist es nicht
+// behoben. Gemessen: aus "randkontakt_3uhr" wurde "rand_tabak_3_uhr", und die
+// App meldete Erfolg, obwohl der Randkontakt unveraendert gemeldet blieb.
+const umbenannt = new Engine.Sitzung({ ziel: 'balanced' });
+umbenannt.aufnehmen(Engine.normalisiere({
+  ...ANTWORT,
+  probleme: [{ id: 'randkontakt_3uhr', severity: 'high', kategorie: 'fuellhoehe',
+               titel: 'Tabak am Rand', beschreibung: 'x', confidence: 80, aktion: 'remove_tobacco' }],
+}, true), false);
+const nurAndersGenannt = umbenannt.aufnehmen(Engine.normalisiere({
+  ...ANTWORT,
+  probleme: [{ id: 'rand_tabak_3_uhr', severity: 'high', kategorie: 'fuellhoehe',
+               titel: 'Tabak liegt am Rand', beschreibung: 'x', confidence: 80, aktion: 'remove_tobacco' }],
+}, true), false);
+assert.deepEqual(nurAndersGenannt.behoben, [],
+  'derselbe Randkontakt unter neuem Namen ist nicht behoben');
+
+// Ein verwackeltes Bild darf nichts bestaetigen — da fehlt nur der Nachweis.
+const wackelSitzung = new Engine.Sitzung({ ziel: 'balanced' });
+wackelSitzung.aufnehmen(Engine.normalisiere(ANTWORT, true), false);
+const unscharf = wackelSitzung.aufnehmen(Engine.normalisiere({
+  ...sauberOhneProblem,
+  bildqualitaet: { schaerfe: 15, licht: 20, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true), false);
+assert.deepEqual(unscharf.behoben, [], 'aus einem duennen Bild folgt keine Bestaetigung');
+
+// --- Packmethode aendert die Bewertung der Dichte --------------------------------
+// Dieselbe Aufnahme heisst bei "locker" Fehler und bei "dicht" Absicht.
+assert.equal(Engine.packmethode({}), null);
+assert.equal(Engine.packmethode({ packmethode: 'dicht' }).name, 'Dicht (dense pack)');
+
+const mitPack = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced', packmethode: 'locker' }, verlauf: '', lernen: '',
+});
+assert.ok(mitPack.includes('Packmethode laut Nutzer'), 'die Angabe steht im Prompt');
+assert.ok(mitPack.includes('Erwartete Dichte'), 'mit dem erwarteten Bereich');
+assert.ok(mitPack.includes('gewollte Ergebnis'), 'und der Anweisung, dagegen zu pruefen');
+
+const ohnePack = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '',
+});
+assert.ok(!ohnePack.includes('Packmethode laut Nutzer'), 'ohne Angabe wird nichts behauptet');
+
+// --- Zu jeder Aktion gibt es eine Anleitung ---------------------------------------
+// Ein gemeldetes Problem ohne Handgriff ist nur eine Feststellung.
+Object.keys(Engine.spec.aktionen).forEach((aktion) => {
+  const anleitung = Engine.spec.anleitungen[aktion];
+  assert.ok(anleitung, `keine Anleitung fuer ${aktion}`);
+  assert.ok(anleitung.schritte.length >= 2, `zu duenne Anleitung fuer ${aktion}`);
+  assert.ok(anleitung.ziel && anleitung.ziel.length > 15, `kein Zielbild fuer ${aktion}`);
+});
+
 // --- (3) Mehrere Bilder -------------------------------------------------------
 const mehrere = Engine.promptBauen({
   modus: 'voll', kontext: { ziel: 'balanced' }, verlauf: '', lernen: '', bilder: 3,
@@ -605,14 +844,16 @@ const nachher = Engine.normalisiere({
 }, false);
 
 const v = Engine.vergleiche(vorher, nachher);
+// Beide ohne HMD und Kohle im Bild — das Hitzemanagement zaehlt in beiden nicht.
 assert.equal(v.von, 60);
-// 90*.20 + 60*.15 + 55*.15 + 80*.20 + 60*.10 + 60*.10 + 60*.10 = 69.25 -> 69
-assert.equal(v.auf, 69);
-assert.equal(v.delta, 9);
-assert.deepEqual(v.besser.map((k) => k.key), ['tabak_verteilung', 'hitzemanagement']);
+// 90*.20 + 60*.15 + 55*.15 + 60*.10 + 60*.10 + 60*.10 = 53.25 bei .80 -> 67
+assert.equal(v.auf, 67);
+assert.equal(v.delta, 7);
+assert.deepEqual(v.besser.map((k) => k.key), ['tabak_verteilung', 'hitzemanagement'],
+  'die Kategorien werden weiter einzeln verglichen, auch die nicht benotete');
 assert.deepEqual(v.schlechter.map((k) => k.key), ['airflow'], 'auch Verschlechterungen werden benannt');
 assert.equal(v.versprochen, 85);
-assert.equal(v.prognose_abweichung, 16, 'die Prognose war 16 Punkte zu optimistisch');
+assert.equal(v.prognose_abweichung, 18, 'die Prognose war 18 Punkte zu optimistisch');
 assert.equal(Engine.vergleiche(null, nachher), null);
 
 // Zweite Vollanalyse in derselben Sitzung ist ein Nachmessen
@@ -636,7 +877,11 @@ assert.equal(stillstand.verlauf.length, 0, 'nichts einsortiert');
 assert.equal(stillstand.phase, vorPhase, 'und die Phase steht noch');
 const eingereiht = stillstand.aufnehmen(await stillstand.analysieren(new Blob(['x']), 'live', false));
 assert.equal(stillstand.verlauf.length, 1, 'per Hand geht es weiter wie bisher');
-assert.ok(eingereiht.konsens !== undefined || eingereiht.gesamtscore !== null);
+// Beides muss stimmen, nicht eines von beiden: eine Oder-Behauptung haelt auch
+// dann, wenn der Konsens gar nicht mehr gebildet wird.
+assert.equal(eingereiht.gesamtscore, 55);
+assert.equal(eingereiht.konsens.score, 55);
+assert.equal(eingereiht.konsens.bilder, 1);
 
 // --- (7) Kontingent ------------------------------------------------------------
 speicher.delete('shisha.verbrauch');

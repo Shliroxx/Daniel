@@ -62,6 +62,11 @@
         <label>Sorte<input id="fSorte" type="text" placeholder="z. B. Love 66" /></label>
         <label>HMD<input id="fHmd" type="text" placeholder="z. B. Kaloud Lotus / Folie" /></label>
         <label>Kohlen<input id="fKohlen" type="text" placeholder="z. B. 3 × 26er" /></label>
+        <label>Packmethode <small>ändert, wie die Dichte bewertet wird</small>
+          <select id="fPack">
+            <option value="">nicht angegeben</option>
+          </select>
+        </label>
         <label>Anmerkung<input id="fNotiz" type="text" placeholder="z. B. Tabak sehr feucht" /></label>
       </div>
     </details>
@@ -99,11 +104,14 @@
 <!-- Fusszeile ----------------------------------------------------------- -->
 <footer class="unten" id="unten" hidden>
   <div class="karte">
+    <div class="ampel" id="ampel" hidden>
+      <span class="ampel-punkt" id="ampelPunkt"></span>
+      <span class="ampel-text" id="ampelText"></span>
+    </div>
+    <div class="behoben" id="behoben" hidden></div>
     <div class="coach" id="coach">Halt die Kamera von oben ueber den Kopf.</div>
-    <ol class="schritte" id="schritte"></ol>
     <div class="probleme" id="probleme"></div>
     <div class="frage" id="rueckfrage" hidden></div>
-    <div class="messwerte" id="messwerte"></div>
   </div>
   <div class="knopfreihe">
     <button id="tonButton" class="rund" title="Sprachausgabe">🔊</button>
@@ -120,6 +128,28 @@
   <div class="aufnahme-punkt"></div>
   <span id="aufnahmeText">Bild 1 von 3</span>
 </div>
+
+<!-- Anleitung zu einem gemeldeten Problem ------------------------------ -->
+<section id="anleitung" class="blatt" hidden>
+  <div class="blatt-inner schmal">
+    <div class="anleitung-kopf">
+      <span class="anleitung-marke" id="anleitungMarke">🔴</span>
+      <h2 id="anleitungTitel">Problem</h2>
+    </div>
+    <p class="unterzeile" id="anleitungGrund"></p>
+
+    <h3>So machst du es</h3>
+    <ol class="schritte" id="anleitungSchritte"></ol>
+
+    <div class="ziel-kasten">
+      <span class="ziel-marke">🎯 So soll es danach aussehen</span>
+      <p id="anleitungZiel"></p>
+    </div>
+
+    <button id="anleitungPruefen" class="gross">Erledigt — jetzt prüfen</button>
+    <button id="anleitungZurueck" class="flach">Abbrechen</button>
+  </div>
+</section>
 
 <!-- Pause: Kamera steht ------------------------------------------------ -->
 <section id="pause" class="blende pause" hidden>
@@ -167,9 +197,17 @@
       <label class="langfeld">API-Schlüssel
         <input id="fGeminiKey" type="password" autocomplete="off" placeholder="AIza…" />
       </label>
-      <label class="langfeld">Modell
+      <label class="langfeld">Modell für die Livevorschau
         <input id="fGeminiModell" type="text" autocomplete="off" placeholder="gemini-2.5-flash" />
       </label>
+      <label class="langfeld">Modell für das Endurteil <small>optional</small>
+        <input id="fGeminiModellVoll" type="text" autocomplete="off" placeholder="leer = dasselbe" />
+      </label>
+      <p class="hinweis-text">
+        Live zählt Tempo, beim Endurteil zählt Genauigkeit. Wer beim Endurteil mehr
+        will, trägt hier <b>gemini-2.5-pro</b> ein — langsamer und mit kleinerem
+        Freikontingent, dafür genauer beim Hinsehen.
+      </p>
     </div>
 
     <div id="block-openrouter" class="anbieter-block" hidden>
@@ -266,6 +304,7 @@
       <div class="report-kopf-text">
         <h2 id="stufeText">Analyse</h2>
         <p id="erkanntes"></p>
+        <div class="messwerte" id="messwerteReport"></div>
         <p class="prognose-zeile" id="prognoseZeile"></p>
       </div>
     </div>

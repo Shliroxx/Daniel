@@ -56,6 +56,7 @@ const zustand = {
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
   lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
   wartetSeit: 0,        // seit wann wartet die Schleife auf ein brauchbares Bild
+  anleitung: false,     // Anleitungsblatt offen — dann ruht alles andere
   // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
   versatz: { x: 0, y: 0 },
   markerZeit: 0,        // wann die aktuellen Marker entstanden sind
@@ -229,6 +230,10 @@ function zumHauptmenue() {
   $('pause').hidden = true;
   $('report').hidden = true;
   $('feedback').hidden = true;
+  // Sonst bleibt das Anleitungsblatt ueber dem Startbildschirm liegen.
+  $('anleitung').hidden = true;
+  zustand.anleitung = false;
+  offenesProblem = null;
   $('oben').hidden = true;
   $('unten').hidden = true;
   $('start').hidden = false;
@@ -291,6 +296,7 @@ document.addEventListener('visibilitychange', async () => {
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
     sitzungDa: Boolean(zustand.sitzung),
+    anleitungOffen: zustand.anleitung,
   });
 
   if (plan.aktion === 'weiter' && !zustand.laeuft) {
@@ -436,6 +442,9 @@ async function schleife() {
     let stolperstein = '';
     setzeLage(urteil.nachsichtig ? 'analysiere (unruhig)' : 'analysiere', 'denkt');
     try {
+      // Letzte Gelegenheit umzukehren: zwischen Guetepruefung und Aufnahme kann
+      // ein Anleitungsblatt aufgegangen oder die Runde entwertet worden sein.
+      if (!meineRunde()) break;
       // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
       const blob = await bildAufnehmen(896);
       analyseMini = zustand.letzteGrau;
@@ -504,29 +513,17 @@ function liveUebernehmen(analyse) {
   $('coach').textContent = analyse.coach_satz || (ok ? 'Weiter so.' : 'Kopf ins Bild holen.');
   $('coach').classList.toggle('gut', ok && !analyse.probleme.length);
 
-  const schritte = $('schritte');
-  schritte.innerHTML = '';
-  analyse.optimierungen.forEach((eintrag) => {
-    const zeile = document.createElement('li');
-    zeile.textContent = eintrag.text;
-    schritte.appendChild(zeile);
-  });
+  ampelZeigen(analyse.ampel);
+  behobenZeigen(analyse.behoben);
 
-  const probleme = $('probleme');
-  probleme.innerHTML = '';
-  analyse.probleme.forEach((problem) => {
-    const zeile = document.createElement('div');
-    zeile.className = `problem ${problem.severity}`;
-    zeile.dataset.symbol = problem.symbol;
-    zeile.textContent = problem.titel;
-    probleme.appendChild(zeile);
-  });
+  problemeZeigen(analyse.probleme);
 
   const frage = $('rueckfrage');
   frage.hidden = !analyse.rueckfrage;
   frage.textContent = analyse.rueckfrage || '';
 
-  messwerteZeigen(analyse);
+  // Messwerte stehen im Report, nicht in der Livekarte: beim Bauen liest sie
+  // niemand, und jede Zeile hier kostet Sicht auf den Kopf.
 
   const kopf = analyse.kopf || {};
   $('kopfInfo').textContent = ok
@@ -555,13 +552,194 @@ function liveUebernehmen(analyse) {
   phasenZeichnen();
   setzeLage(ok ? 'live' : 'suche Kopf', ok ? '' : 'warn');
 
+  if (analyse.phase_nachgezogen) {
+    // Die App hat sich nach dem Bild gerichtet — das gehoert gesagt, sonst
+    // wundert man sich, warum die Phase springt.
+    setzeLage(`sehe: ${analyse.phase_nachgezogen}`, '');
+    fortschrittZeichnen();
+  }
   if (analyse.sprechen && analyse.coach_satz) sprich(analyse.coach_satz);
   if (analyse.phase_gewechselt) vibriere(30);
   if (analyse.probleme.some((p) => p.severity === 'critical')) vibriere([20, 60, 20]);
 }
 
+/* Die Ampel: vier Zustaende, einer davon ehrlich.
+ *
+ * "gruen, gelb, rot" sagt beim Bauen mehr als eine Zahl von 0 bis 100. Der
+ * vierte Zustand ist der wichtigste: kann das Modell es anhand des Bildes nicht
+ * beurteilen, steht hier nicht irgendein Urteil, sondern was zu tun ist, damit
+ * es beurteilbar wird.
+ */
+function ampelZeigen(ampel) {
+  const kasten = $('ampel');
+  if (!ampel) {
+    kasten.hidden = true;
+    return;
+  }
+  kasten.hidden = false;
+  kasten.className = `ampel ${ampel.stand}`;
+  $('ampelPunkt').textContent = { gruen: '🟢', gelb: '🟡', rot: '🔴', unsicher: '⚪' }[ampel.stand] || '⚪';
+  $('ampelText').textContent = ampel.was_tun ? `${ampel.text} — ${ampel.was_tun}` : ampel.text;
+}
+
+/* Was seit dem letzten Bild verschwunden ist.
+ *
+ * Ohne diese Rueckmeldung bleibt die App bei "hier ist ein Problem" stehen: man
+ * korrigiert, und niemand sagt, ob es geholfen hat. Das hier schliesst die
+ * Schleife — und es wird auch gesprochen, weil man beim Bauen nicht hinschaut.
+ */
+function behobenZeigen(behoben) {
+  const kasten = $('behoben');
+  if (!behoben || !behoben.length) {
+    kasten.hidden = true;
+    return;
+  }
+  kasten.hidden = false;
+  kasten.textContent = `Besser: ${behoben.map((b) => b.titel).join(', ')}`;
+  vibriere([15, 40, 15]);
+  sprich(behoben.length === 1
+    ? `Besser. ${behoben[0].titel} ist weg.`
+    : `Besser. ${behoben.length} Punkte erledigt.`);
+}
+
+/* Ein Problem ist kein Aushang, sondern ein Auftrag.
+ *
+ * Vorher stand hier nur der Titel — die Begruendung und die vorgeschlagene
+ * Aktion wurden zwar vom Modell geliefert und geprueft, aber nie angezeigt und
+ * waren nirgends anklickbar. Jetzt fuehrt jedes Problem zu einer Anleitung und
+ * von dort zurueck vor die Kamera.
+ */
+function problemeZeigen(liste) {
+  const kasten = $('probleme');
+  const neu = liste || [];
+
+  /* Nur austauschen, was sich geaendert hat.
+   *
+   * Vorher wurde die Liste bei jedem Ergebnis komplett neu gebaut — im
+   * Sekundentakt. Wer gerade den Daumen ueber "Zeig mir wie" hatte, tippte
+   * dann auf ein anderes Problem oder ins Leere, und merkte es erst an der
+   * falschen Anleitung.
+   */
+  const vorhanden = new Map([...kasten.children].map((z) => [z.dataset.id, z]));
+  const gebraucht = new Set(neu.map((p) => p.id));
+
+  vorhanden.forEach((zeile, id) => {
+    if (!gebraucht.has(id)) kasten.removeChild(zeile);
+  });
+
+  neu.forEach((problem) => {
+    const alt = vorhanden.get(problem.id);
+    if (alt) {
+      // Dieselbe Sache, nur vielleicht anders formuliert.
+      alt.className = `problem ${problem.severity}`;
+      alt.dataset.symbol = problem.symbol;
+      alt.children[0].textContent = problem.titel;
+      alt.onclick = () => anleitungZeigen(problem);
+      return;
+    }
+
+    const zeile = document.createElement('div');
+    zeile.className = `problem ${problem.severity}`;
+    zeile.dataset.symbol = problem.symbol;
+    zeile.dataset.id = problem.id;
+
+    const titel = document.createElement('span');
+    titel.className = 'problem-zeile';
+    titel.textContent = problem.titel;
+    zeile.appendChild(titel);
+
+    const pfeil = document.createElement('span');
+    pfeil.className = 'problem-knopf';
+    pfeil.textContent = 'Zeig mir wie ›';
+    zeile.appendChild(pfeil);
+
+    // Die ganze Zeile ist das Ziel, nicht nur der kleine Text daneben.
+    zeile.onclick = () => anleitungZeigen(problem);
+    kasten.appendChild(zeile);
+  });
+}
+
+/* Das Anleitungsblatt zu einem gemeldeten Problem.
+ *
+ * Problem, Ursache, Handgriffe, Zielbild, und ein Knopf, der zurueck vor die
+ * Kamera fuehrt und sofort neu prueft — statt zu warten, bis der Sparmodus
+ * zufaellig eine Aenderung bemerkt.
+ */
+let offenesProblem = null;
+
+function anleitungZeigen(problem) {
+  offenesProblem = problem;
+  /* Solange man liest, zeigt das Handy irgendwohin. Ohne Pause redet die App
+   * dazwischen ("Kein Kopf im Bild"), vibriert und verbraucht Kontingent — an
+   * genau der Stelle, an der man Ruhe zum Lesen braucht.
+   *
+   * Der Zustand steht bewusst in `zustand` und nicht nur hier: die Schleife,
+   * die Rueckkehr aus dem Hintergrund und die Sprachbefehle muessen ihn alle
+   * kennen. Als lokale Variable kam die Analyse ueber den Umweg
+   * "App in den Hintergrund und zurueck" hinter dem offenen Blatt wieder hoch.
+   */
+  zustand.anleitung = true;
+  zustand.lauf++;
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  const anleitung = (Engine.spec.anleitungen || {})[problem.aktion];
+
+  $('anleitungMarke').textContent = problem.symbol;
+  $('anleitungTitel').textContent = problem.titel;
+  $('anleitungGrund').textContent = problem.beschreibung
+    || 'Das Modell hat dazu keine Begruendung geliefert.';
+
+  const schritte = $('anleitungSchritte');
+  schritte.innerHTML = '';
+  const zeilen = anleitung ? anleitung.schritte : [];
+  zeilen.forEach((text) => {
+    const zeile = document.createElement('li');
+    zeile.textContent = text;
+    schritte.appendChild(zeile);
+  });
+  if (!zeilen.length) {
+    const zeile = document.createElement('li');
+    zeile.textContent = Engine.spec.aktionen[problem.aktion] || 'Korrigiere die genannte Stelle.';
+    schritte.appendChild(zeile);
+  }
+
+  $('anleitungZiel').textContent = anleitung ? anleitung.ziel : 'Danach sollte der Punkt behoben sein.';
+  $('anleitung').hidden = false;
+}
+
+function anleitungSchliessen(neuPruefen) {
+  const behandelt = offenesProblem;
+  $('anleitung').hidden = true;
+  offenesProblem = null;
+  zustand.anleitung = false;
+
+  if (neuPruefen) {
+    // Sofort neu beurteilen, statt auf eine zufaellige Bildaenderung zu warten.
+    neuBeurteilen();
+    zustand.wartetSeit = 0;
+    setzeLage('pruefe nach', 'denkt');
+    // Rueckmeldung dort, wo der Daumen ist: die Anzeige oben liest in dem
+    // Moment niemand, und bis zum naechsten Ergebnis vergeht ueber eine Sekunde.
+    $('coach').textContent = behandelt
+      ? `Schau ich mir an: ${behandelt.titel}`
+      : 'Ich schau nochmal …';
+    problemAusgrauen(behandelt);
+    vibriere(20);
+  }
+
+  // Die Schleife lief waehrend des Lesens nicht — hier geht sie wieder an.
+  if (zustand.laeuft && !zustand.pausiert) schleife();
+}
+
+/** Das gerade behandelte Problem verblasst, bis das neue Urteil da ist. */
+function problemAusgrauen(problem) {
+  if (!problem) return;
+  [...$('probleme').children].forEach((zeile) => {
+    if (zeile.dataset.id === problem.id) zeile.classList.add('wird-geprueft');
+  });
+}
+
 function messwerteZeigen(analyse) {
-  const box = $('messwerte');
+  const box = $('messwerteReport');
   box.innerHTML = '';
   if (analyse.analysis_status !== 'ok') return;
 
@@ -609,7 +787,10 @@ function quellenKuerzel(quelle) {
 function kopfBeschriftung(kopf) {
   if (!kopf) return '';
   const name = kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt');
-  return kopf.angenommen ? `${name} · angenommen` : [name, quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ');
+  if (!kopf.angenommen) return [name, quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ');
+  // "angenommen" bei einem Kopf, den man selbst eingetragen hat, liest sich wie
+  // ein Fehlschlag. Es ist aber genau die eigene Angabe.
+  return kopf.herkunft === 'angegeben' ? `${name} · deine Angabe` : `${name} · angenommen`;
 }
 
 function setzeLage(text, art) {
@@ -954,6 +1135,7 @@ function befehlAusfuehren(befehl, gesagt) {
     laeuft: zustand.laeuft,
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
+    anleitungOffen: zustand.anleitung,
   });
 
   if (plan.aktion === 'nichts') return;
@@ -1100,6 +1282,7 @@ function einstellungenFuellen() {
   [...$('anbieterwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.anbieter === e.anbieter));
   $('fGeminiKey').value = e.gemini_key;
   $('fGeminiModell').value = e.gemini_modell;
+  $('fGeminiModellVoll').value = e.gemini_modell_voll;
   $('fOrKey').value = e.openrouter_key;
   $('fOrModell').value = e.openrouter_modell;
   $('fServerUrl').value = e.server_url;
@@ -1124,6 +1307,7 @@ function einstellungenSpeichern() {
     anbieter: gewaehlt ? gewaehlt.dataset.anbieter : 'gemini',
     gemini_key: $('fGeminiKey').value.trim(),
     gemini_modell: $('fGeminiModell').value.trim() || 'gemini-2.5-flash',
+    gemini_modell_voll: $('fGeminiModellVoll').value.trim(),
     openrouter_key: $('fOrKey').value.trim(),
     openrouter_modell: $('fOrModell').value.trim(),
     server_url: $('fServerUrl').value.trim(),
@@ -1184,6 +1368,7 @@ function kontextLesen() {
     kohlen: $('fKohlen').value.trim(),
     notiz: $('fNotiz').value.trim(),
     aussendurchmesser_mm: $('fDurchmesser').value.trim(),
+    packmethode: $('fPack').value,
   };
 }
 
@@ -1205,9 +1390,9 @@ function sitzungStarten() {
   zustand.analyse = null;
   $('fortschritt').style.width = '0%';
   $('coach').textContent = 'Halt die Kamera von oben ueber den Kopf.';
-  $('schritte').innerHTML = '';
   $('probleme').innerHTML = '';
-  $('messwerte').innerHTML = '';
+  $('ampel').hidden = true;
+  $('behoben').hidden = true;
   $('rueckfrage').hidden = true;
   $('liveScore').hidden = true;
   // Angaben merken, damit man sie beim naechsten Mal nicht neu tippt. Klappt das
@@ -1231,6 +1416,7 @@ function kontextWiederherstellen() {
   $('fHmd').value = gespeichert.hmd || '';
   $('fKohlen').value = gespeichert.kohlen || '';
   $('fDurchmesser').value = gespeichert.aussendurchmesser_mm || '';
+  $('fPack').value = gespeichert.packmethode || '';
   if (gespeichert.ziel) {
     [...$('zielwahl').children].forEach((k) => k.classList.toggle('aktiv', k.dataset.ziel === gespeichert.ziel));
   }
@@ -1290,6 +1476,7 @@ async function bilderSammeln(anzahl) {
 }
 
 async function vollanalyse() {
+  if (zustand.anleitung) return;   // erst lesen, dann messen
   if (zustand.busy) {
     // Frueher kam hier ein stilles return: der Knopf wirkte kaputt, wenn gerade
     // eine Liverunde lief — nach einem Netzfehler bis zu drei Sekunden lang.
@@ -1607,6 +1794,7 @@ function reportZeigen(analyse) {
     teile.push(`${analyse.kohle.anzahl} Kohlen`);
   }
   $('erkanntes').textContent = teile.join(' · ') || 'nichts sicher erkennbar';
+  messwerteZeigen(analyse);
 
   const prognose = analyse.prognose || {};
   $('prognoseZeile').textContent =
@@ -1920,6 +2108,8 @@ $('neuButton').addEventListener('click', () => {
 });
 
 $('zurueckButton').addEventListener('click', () => { $('report').hidden = true; });
+$('anleitungPruefen').addEventListener('click', () => anleitungSchliessen(true));
+$('anleitungZurueck').addEventListener('click', () => anleitungSchliessen(false));
 
 $('nochmalButton').addEventListener('click', () => {
   $('report').hidden = true;
@@ -1969,6 +2159,7 @@ Engine.specLaden()
   .then(() => {
     zielwahlFuellen();
     kopflisteFuellen();
+    packwahlFuellen();
     kontextWiederherstellen();
     startBereitschaft();
   })
@@ -1985,6 +2176,23 @@ function kopflisteFuellen() {
     eintrag.value = kopf.name;
     eintrag.label = `${kopf.aussendurchmesser_mm} mm`;
     liste.appendChild(eintrag);
+  });
+}
+
+/* Packmethoden aus spec.json — nicht fest verdrahtet.
+ *
+ * Die Angabe entscheidet, ob eine feste Packung ein Fehler oder das gewollte
+ * Ergebnis ist. Ohne sie muss das Modell raten.
+ */
+function packwahlFuellen() {
+  const feld = $('fPack');
+  const liste = ((Engine.spec.packmethoden || {}).liste || []);
+  liste.forEach((methode) => {
+    const eintrag = document.createElement('option');
+    eintrag.value = methode.key;
+    eintrag.textContent = methode.name;
+    eintrag.title = methode.beschreibung;
+    feld.appendChild(eintrag);
   });
 }
 
