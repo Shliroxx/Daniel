@@ -192,6 +192,34 @@ pruefe('Es wird sofort nachgeprueft',
 pruefe('Rueckmeldung in der Karte', $('coach').textContent.includes('9 Uhr'),
        `"${$('coach').textContent}"`);
 
+// Hinter dem offenen Blatt darf nichts weiterlaufen — auch nicht ueber den
+// Umweg "App in den Hintergrund und zurueck".
+problemZeile.klick();
+pruefe('Anleitung wieder offen', $('anleitung').hidden === false);
+// Eine im selben Moment schon abgeschickte Anfrage laesst sich nicht mehr
+// zurueckholen — die zaehlt nicht. Gemessen wird, ob DANACH noch etwas anfaengt.
+while (kontext.__zustand.busy) await warte(100);
+const vorLesen = protokoll.anfragen.length;
+dokument.visibilityState = 'hidden';
+(dokument._horcher.visibilitychange || []).forEach((fn) => fn());
+await warte(150);
+dokument.visibilityState = 'visible';
+for (const fn of dokument._horcher.visibilitychange || []) await fn();
+await warte(2500);
+pruefe('Hinter der Anleitung bleibt es still',
+       protokoll.anfragen.length === vorLesen && kontext.__zustand.laeuft === false,
+       `${protokoll.anfragen.length - vorLesen} Anfragen, laeuft=${kontext.__zustand.laeuft}`);
+
+// Und das Hauptmenue raeumt das Blatt mit weg, statt es liegen zu lassen
+$('menueButton').klick();
+await warte(200);
+pruefe('Hauptmenue raeumt die Anleitung weg', $('anleitung').hidden === true);
+pruefe('Kein Blatt ueber dem Startbildschirm', $('start').hidden === false);
+
+// Zurueck in die Sitzung fuer den Rest des Durchgangs
+$('losButton').klick();
+await warte(1500);
+
 // Jetzt ist das Problem behoben — die App muss das bestaetigen
 const ohneProblem = { ...ANTWORT, probleme: [], optimierungen: [],
                       coach_satz: 'Sieht jetzt gleichmaessig aus.' };
@@ -264,7 +292,9 @@ pruefe2('Genau eine Anfrage fuer die Vollanalyse', protokoll.anfragen.length ===
 
 // --- Report -------------------------------------------------------------------
 pruefe2('Report offen', $('report').hidden === false);
-pruefe2('Note im Report', String($('noteZahl').textContent) === '73', `"${$('noteZahl').textContent}"`);
+// Ohne HMD und ohne Kohle im Bild zaehlt das Hitzemanagement nicht mit — es
+// gibt dazu nichts zu sehen. Die uebrigen sechs Kategorien ergeben 75.
+pruefe2('Note im Report', String($('noteZahl').textContent) === '75', `"${$('noteZahl').textContent}"`);
 pruefe2('Stufe benannt', $('stufeText').textContent === 'gut', `"${$('stufeText').textContent}"`);
 pruefe2('Befund gezeigt', $('befund').textContent.includes('Phunnel'));
 pruefe2('Sieben Kategorien', $('kategorien').children.length === 7, `${$('kategorien').children.length}`);
@@ -291,9 +321,9 @@ $('nachmessenButton').klick();
 await warteBis(() => $('vergleich').innerHTML.includes('→'));
 await warte(120);
 
-pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '81', `"${$('noteZahl').textContent}"`);
+pruefe2('Nachmessen liefert bessere Note', String($('noteZahl').textContent) === '82', `"${$('noteZahl').textContent}"`);
 pruefe2('Vergleich sichtbar', $('vergleich').hidden === false);
-pruefe2('Vergleich zeigt Delta', $('vergleich').innerHTML.includes('73 → 81'), $('vergleich').innerHTML.slice(0, 60));
+pruefe2('Vergleich zeigt Delta', $('vergleich').innerHTML.includes('75 → 82'), $('vergleich').innerHTML.slice(0, 60));
 pruefe2('Prognose bewertet', $('vergleich').innerHTML.includes('Vorhergesagt'),
         $('vergleich').innerHTML.slice(-90));
 
@@ -304,7 +334,7 @@ kontext.__zustand.feedback = { geschmack: 2, rauch: 3, kratzen: 5, hitze: 5 };
 $('fDauer').value = '50';
 $('feedbackSenden').klick();
 pruefe2('Feedback gespeichert', kontext.__Engine.profil.laden().sessions.length === 1);
-pruefe2('Feedback traegt die Note', kontext.__Engine.profil.laden().sessions[0].score === 81,
+pruefe2('Feedback traegt die Note', kontext.__Engine.profil.laden().sessions[0].score === 82,
         String(kontext.__Engine.profil.laden().sessions[0].score));
 pruefe2('Feedback-Blatt zu', $('feedback').hidden === true);
 

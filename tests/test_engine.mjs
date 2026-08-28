@@ -130,7 +130,11 @@ const sauberesUrteil = Engine.normalisiere({
 }, true);
 assert.equal(sauberesUrteil.scores.fuellhoehe, 70);
 assert.deepEqual(sauberesUrteil.kappungen, []);
-assert.equal(sauberesUrteil.gesamtscore, 65);
+// Ohne HMD und ohne Kohle im Bild zaehlt das Hitzemanagement nicht mit: es gibt
+// dazu schlicht nichts zu sehen. 60*.20 + 70*.15 + 65*.15 + 85*.10 + 75*.10 +
+// 60*.10 = 54.5 bei Gewichtssumme .80 -> 68.
+assert.equal(sauberesUrteil.gesamtscore, 68);
+assert.deepEqual(sauberesUrteil.nicht_bewertbar, ['hitzemanagement']);
 
 // HMD beruehrt den Tabak -> Hitzemanagement kann nicht gut sein
 const heiss = Engine.normalisiere({
@@ -585,14 +589,28 @@ assert.ok(!phasenPromptZwei.includes('absichtlich LEER'),
   'nirgends mehr die Behauptung, der Kopf sei leer');
 
 // --- Die Sitzung zieht die Phase nach ---------------------------------------------
+// Aber nicht nach einem einzelnen Bild: Modelle schwanken. Gemessen wurde, dass
+// die Anleitung sonst im Sekundentakt zwischen zwei Phasen hin und her sprang,
+// ohne dass sich vor der Kamera etwas bewegte.
+const beobachtet = (phase) => Engine.normalisiere({
+  ...ANTWORT, probleme: [], beobachtete_phase: phase,
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+}, true, {}, 'kopf');
+
 const nachziehen = new Engine.Sitzung({ ziel: 'balanced' });
 assert.equal(nachziehen.phase, 'kopf', 'die App startet immer bei Phase eins');
-const gesehenEinstreuen = nachziehen.aufnehmen(Engine.normalisiere({
-  ...ANTWORT, probleme: [], beobachtete_phase: 'einstreuen',
-  tabak: { ...ANTWORT.tabak, randkontakt: false },
-}, true, {}, 'kopf'));
-assert.equal(nachziehen.phase, 'einstreuen', 'das Bild schlaegt den Zaehler');
+nachziehen.aufnehmen(beobachtet('einstreuen'));
+assert.equal(nachziehen.phase, 'kopf', 'ein einzelnes Bild ist ein Verdacht');
+const gesehenEinstreuen = nachziehen.aufnehmen(beobachtet('einstreuen'));
+assert.equal(nachziehen.phase, 'einstreuen', 'zwei gleiche sind eine Beobachtung');
 assert.equal(gesehenEinstreuen.phase_nachgezogen, 'Einstreuen', 'und es wird gesagt');
+
+// Wechselt die Meldung staendig, bleibt die Phase stehen
+const flattern = new Engine.Sitzung({ ziel: 'balanced' });
+['einstreuen', 'kohle', 'einstreuen', 'aufsatz', 'einstreuen'].forEach((p) => {
+  flattern.aufnehmen(beobachtet(p));
+});
+assert.equal(flattern.phase, 'kopf', 'Rauschen verstellt die Bauphase nicht');
 
 // Aus einem duennen Bild wird die Phase nicht verstellt
 const duennesBild = new Engine.Sitzung({ ziel: 'balanced' });
@@ -724,6 +742,23 @@ const danach = loop.aufnehmen(Engine.normalisiere(sauberOhneProblem, true), fals
 assert.equal(danach.behoben.length, 2, `behoben: ${JSON.stringify(danach.behoben)}`);
 assert.ok(danach.behoben.some((b) => b.titel === 'Tabak am Rand'));
 
+// Nennt das Modell dasselbe Problem beim naechsten Bild anders, ist es nicht
+// behoben. Gemessen: aus "randkontakt_3uhr" wurde "rand_tabak_3_uhr", und die
+// App meldete Erfolg, obwohl der Randkontakt unveraendert gemeldet blieb.
+const umbenannt = new Engine.Sitzung({ ziel: 'balanced' });
+umbenannt.aufnehmen(Engine.normalisiere({
+  ...ANTWORT,
+  probleme: [{ id: 'randkontakt_3uhr', severity: 'high', kategorie: 'fuellhoehe',
+               titel: 'Tabak am Rand', beschreibung: 'x', confidence: 80, aktion: 'remove_tobacco' }],
+}, true), false);
+const nurAndersGenannt = umbenannt.aufnehmen(Engine.normalisiere({
+  ...ANTWORT,
+  probleme: [{ id: 'rand_tabak_3_uhr', severity: 'high', kategorie: 'fuellhoehe',
+               titel: 'Tabak liegt am Rand', beschreibung: 'x', confidence: 80, aktion: 'remove_tobacco' }],
+}, true), false);
+assert.deepEqual(nurAndersGenannt.behoben, [],
+  'derselbe Randkontakt unter neuem Namen ist nicht behoben');
+
 // Ein verwackeltes Bild darf nichts bestaetigen — da fehlt nur der Nachweis.
 const wackelSitzung = new Engine.Sitzung({ ziel: 'balanced' });
 wackelSitzung.aufnehmen(Engine.normalisiere(ANTWORT, true), false);
@@ -809,14 +844,16 @@ const nachher = Engine.normalisiere({
 }, false);
 
 const v = Engine.vergleiche(vorher, nachher);
+// Beide ohne HMD und Kohle im Bild — das Hitzemanagement zaehlt in beiden nicht.
 assert.equal(v.von, 60);
-// 90*.20 + 60*.15 + 55*.15 + 80*.20 + 60*.10 + 60*.10 + 60*.10 = 69.25 -> 69
-assert.equal(v.auf, 69);
-assert.equal(v.delta, 9);
-assert.deepEqual(v.besser.map((k) => k.key), ['tabak_verteilung', 'hitzemanagement']);
+// 90*.20 + 60*.15 + 55*.15 + 60*.10 + 60*.10 + 60*.10 = 53.25 bei .80 -> 67
+assert.equal(v.auf, 67);
+assert.equal(v.delta, 7);
+assert.deepEqual(v.besser.map((k) => k.key), ['tabak_verteilung', 'hitzemanagement'],
+  'die Kategorien werden weiter einzeln verglichen, auch die nicht benotete');
 assert.deepEqual(v.schlechter.map((k) => k.key), ['airflow'], 'auch Verschlechterungen werden benannt');
 assert.equal(v.versprochen, 85);
-assert.equal(v.prognose_abweichung, 16, 'die Prognose war 16 Punkte zu optimistisch');
+assert.equal(v.prognose_abweichung, 18, 'die Prognose war 18 Punkte zu optimistisch');
 assert.equal(Engine.vergleiche(null, nachher), null);
 
 // Zweite Vollanalyse in derselben Sitzung ist ein Nachmessen
@@ -840,7 +877,11 @@ assert.equal(stillstand.verlauf.length, 0, 'nichts einsortiert');
 assert.equal(stillstand.phase, vorPhase, 'und die Phase steht noch');
 const eingereiht = stillstand.aufnehmen(await stillstand.analysieren(new Blob(['x']), 'live', false));
 assert.equal(stillstand.verlauf.length, 1, 'per Hand geht es weiter wie bisher');
-assert.ok(eingereiht.konsens !== undefined || eingereiht.gesamtscore !== null);
+// Beides muss stimmen, nicht eines von beiden: eine Oder-Behauptung haelt auch
+// dann, wenn der Konsens gar nicht mehr gebildet wird.
+assert.equal(eingereiht.gesamtscore, 55);
+assert.equal(eingereiht.konsens.score, 55);
+assert.equal(eingereiht.konsens.bilder, 1);
 
 // --- (7) Kontingent ------------------------------------------------------------
 speicher.delete('shisha.verbrauch');

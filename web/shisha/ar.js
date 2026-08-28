@@ -56,6 +56,7 @@ const zustand = {
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
   lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
   wartetSeit: 0,        // seit wann wartet die Schleife auf ein brauchbares Bild
+  anleitung: false,     // Anleitungsblatt offen — dann ruht alles andere
   // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
   versatz: { x: 0, y: 0 },
   markerZeit: 0,        // wann die aktuellen Marker entstanden sind
@@ -229,6 +230,10 @@ function zumHauptmenue() {
   $('pause').hidden = true;
   $('report').hidden = true;
   $('feedback').hidden = true;
+  // Sonst bleibt das Anleitungsblatt ueber dem Startbildschirm liegen.
+  $('anleitung').hidden = true;
+  zustand.anleitung = false;
+  offenesProblem = null;
   $('oben').hidden = true;
   $('unten').hidden = true;
   $('start').hidden = false;
@@ -291,6 +296,7 @@ document.addEventListener('visibilitychange', async () => {
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
     sitzungDa: Boolean(zustand.sitzung),
+    anleitungOffen: zustand.anleitung,
   });
 
   if (plan.aktion === 'weiter' && !zustand.laeuft) {
@@ -436,6 +442,9 @@ async function schleife() {
     let stolperstein = '';
     setzeLage(urteil.nachsichtig ? 'analysiere (unruhig)' : 'analysiere', 'denkt');
     try {
+      // Letzte Gelegenheit umzukehren: zwischen Guetepruefung und Aufnahme kann
+      // ein Anleitungsblatt aufgegangen oder die Runde entwertet worden sein.
+      if (!meineRunde()) break;
       // 896 Pixel Kante reichen dem Modell und halten die Uebertragung klein.
       const blob = await bildAufnehmen(896);
       analyseMini = zustand.letzteGrau;
@@ -660,9 +669,16 @@ let offenesProblem = null;
 
 function anleitungZeigen(problem) {
   offenesProblem = problem;
-  // Solange man liest, zeigt das Handy irgendwohin. Ohne Pause redet die App
-  // dazwischen ("Kein Kopf im Bild"), vibriert und verbraucht Kontingent — an
-  // genau der Stelle, an der man Ruhe zum Lesen braucht.
+  /* Solange man liest, zeigt das Handy irgendwohin. Ohne Pause redet die App
+   * dazwischen ("Kein Kopf im Bild"), vibriert und verbraucht Kontingent — an
+   * genau der Stelle, an der man Ruhe zum Lesen braucht.
+   *
+   * Der Zustand steht bewusst in `zustand` und nicht nur hier: die Schleife,
+   * die Rueckkehr aus dem Hintergrund und die Sprachbefehle muessen ihn alle
+   * kennen. Als lokale Variable kam die Analyse ueber den Umweg
+   * "App in den Hintergrund und zurueck" hinter dem offenen Blatt wieder hoch.
+   */
+  zustand.anleitung = true;
   zustand.lauf++;
   if (window.speechSynthesis) speechSynthesis.cancel();
   const anleitung = (Engine.spec.anleitungen || {})[problem.aktion];
@@ -694,6 +710,7 @@ function anleitungSchliessen(neuPruefen) {
   const behandelt = offenesProblem;
   $('anleitung').hidden = true;
   offenesProblem = null;
+  zustand.anleitung = false;
 
   if (neuPruefen) {
     // Sofort neu beurteilen, statt auf eine zufaellige Bildaenderung zu warten.
@@ -1118,6 +1135,7 @@ function befehlAusfuehren(befehl, gesagt) {
     laeuft: zustand.laeuft,
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
+    anleitungOffen: zustand.anleitung,
   });
 
   if (plan.aktion === 'nichts') return;
@@ -1458,6 +1476,7 @@ async function bilderSammeln(anzahl) {
 }
 
 async function vollanalyse() {
+  if (zustand.anleitung) return;   // erst lesen, dann messen
   if (zustand.busy) {
     // Frueher kam hier ein stilles return: der Knopf wirkte kaputt, wenn gerade
     // eine Liverunde lief — nach einem Netzfehler bis zu drei Sekunden lang.

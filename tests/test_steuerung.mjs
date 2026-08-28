@@ -84,6 +84,20 @@ assert.equal(Steuerung.rueckkehrPlan({ ...sitzung, pausiert: true, spurLebt: tru
 assert.equal(Steuerung.rueckkehrPlan({ ...sitzung, imHauptmenue: true, spurLebt: true, videoLaeuft: true }).aktion, 'nichts');
 assert.equal(Steuerung.rueckkehrPlan({ ...sitzung, sitzungDa: false, spurLebt: true, videoLaeuft: true }).aktion, 'nichts');
 
+// --- Offene Anleitung haelt alles an ------------------------------------------
+// Sonst laeuft die Analyse hinter dem Blatt weiter: redet dazwischen, vibriert
+// und verbraucht Kontingent, waehrend das Handy auf den Tisch zeigt.
+const liest = { ...sitzung, spurLebt: true, videoLaeuft: true, anleitungOffen: true };
+assert.equal(Steuerung.rueckkehrPlan(liest).aktion, 'nichts',
+             'aus dem Hintergrund zurueck faengt hinter der Anleitung nichts an');
+
+const amLesen = { laeuft: true, pausiert: false, imHauptmenue: false, anleitungOffen: true };
+assert.equal(Steuerung.befehlPlan('analyse', amLesen).aktion, 'nichts');
+assert.equal(Steuerung.befehlPlan('pause', amLesen).aktion, 'nichts');
+assert.equal(Steuerung.befehlPlan('weiter', amLesen).aktion, 'nichts');
+assert.equal(Steuerung.befehlPlan('menue', amLesen).aktion, 'hauptmenue',
+             'der Weg heraus bleibt aber offen');
+
 // --- Sparmodus ---------------------------------------------------------------
 assert.equal(Steuerung.lohntAnalyse(0.3, true).lohnt, false, 'unveraendertes Bild kostet kein Kontingent');
 assert.equal(Steuerung.lohntAnalyse(0.3, false).lohnt, true, 'ohne Sparmodus wird immer gefragt');

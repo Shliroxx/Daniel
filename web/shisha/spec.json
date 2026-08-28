@@ -78,59 +78,37 @@
       "key": "kopf",
       "name": "Kopf pruefen",
       "ziel": "Leerer, sauberer, trockener Kopf — aus jedem Winkel in Ordnung.",
-      "achte_auf": "Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. IST der Kopf leer, ist das kein Fehler und kein Grund abzubrechen — dann bleiben die Tabakwerte null. Ist er nicht leer, beurteilst du den Tabak ganz normal mit.",
-      "noch_nicht_bewertbar": [
-        "tabak_verteilung",
-        "fuellhoehe",
-        "tabak_kompatibilitaet",
-        "zielerreichung",
-        "hitzemanagement"
-      ]
+      "achte_auf": "Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. IST der Kopf leer, ist das kein Fehler und kein Grund abzubrechen — dann bleiben die Tabakwerte null. Ist er nicht leer, beurteilst du den Tabak ganz normal mit."
     },
     {
       "key": "tabak",
       "name": "Tabak vorbereiten",
       "ziel": "Aufgelockert, entrippt, ueberschuessige Molasse abgetropft.",
-      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt. Liegt der Tabak schon im Kopf, beurteilst du ihn dort.",
-      "noch_nicht_bewertbar": [
-        "tabak_verteilung",
-        "fuellhoehe",
-        "airflow",
-        "zielerreichung",
-        "hitzemanagement"
-      ]
+      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt. Liegt der Tabak schon im Kopf, beurteilst du ihn dort."
     },
     {
       "key": "einstreuen",
       "name": "Einstreuen",
       "ziel": "Locker und gleichmaessig einstreuen statt stopfen.",
-      "achte_auf": "Verteilung ueber die ganze Flaeche, Fuellhoehe, ungewollte Verdichtung, Tabak der in Kamin oder Zugloecher faellt, Hohlraeume.",
-      "noch_nicht_bewertbar": [
-        "hitzemanagement"
-      ]
+      "achte_auf": "Verteilung ueber die ganze Flaeche, Fuellhoehe, ungewollte Verdichtung, Tabak der in Kamin oder Zugloecher faellt, Hohlraeume."
     },
     {
       "key": "glattziehen",
       "name": "Glattziehen und Rand",
       "ziel": "Ebene Oberflaeche, freier Rand, freie zentrale Oeffnung.",
-      "achte_auf": "Hoehenunterschiede, Tabak am Rand, Randabstand in Millimetern, freier Kamin, Airflow-Blockaden.",
-      "noch_nicht_bewertbar": [
-        "hitzemanagement"
-      ]
+      "achte_auf": "Hoehenunterschiede, Tabak am Rand, Randabstand in Millimetern, freier Kamin, Airflow-Blockaden."
     },
     {
       "key": "aufsatz",
       "name": "Folie oder HMD",
       "ziel": "Folie straff und gelocht oder HMD sauber und zentriert aufgesetzt.",
-      "achte_auf": "Folie straff, Lochmuster gleichmaessig; beim HMD Sitz, Zentrierung, Abstand zum Tabak und ob der Boden den Tabak beruehrt.",
-      "noch_nicht_bewertbar": []
+      "achte_auf": "Folie straff, Lochmuster gleichmaessig; beim HMD Sitz, Zentrierung, Abstand zum Tabak und ob der Boden den Tabak beruehrt."
     },
     {
       "key": "kohle",
       "name": "Kohle auflegen",
       "ziel": "Durchgegluehte Kohle richtig verteilt.",
-      "achte_auf": "Kohle komplett durchgegluht, Anzahl, Verteilung, Abstand zueinander und zum Rand, keine Kohle mittig ueber dem Kamin.",
-      "noch_nicht_bewertbar": []
+      "achte_auf": "Kohle komplett durchgegluht, Anzahl, Verteilung, Abstand zueinander und zum Rand, keine Kohle mittig ueber dem Kamin."
     }
   ],
   "quellen": [

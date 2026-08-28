@@ -555,9 +555,18 @@ const Engine = (() => {
     text = String(text || '').trim();
     if (!text) throw new AnalyseFehler('leere Antwort');
 
-    if (text.startsWith('```')) {
-      const stuecke = text.split('```');
-      if (stuecke.length >= 2) text = stuecke[1].replace(/^json\s*/i, '');
+    /* Codezaeune: den letzten Block nehmen, nicht den ersten.
+     *
+     * Modelle stellen der eigentlichen Antwort gern ein Beispiel voran. Wer
+     * blind den ersten Block nimmt, verarbeitet lautlos die falschen Daten —
+     * ohne Fehler, ohne Hinweis. Der letzte Block ist die Antwort.
+     */
+    if (text.includes('```')) {
+      const bloecke = text.split('```')
+        .filter((teil, index) => index % 2 === 1)          // nur das Eingezaeunte
+        .map((teil) => teil.replace(/^json\s*/i, '').trim())
+        .filter((teil) => teil.startsWith('{'));
+      if (bloecke.length) text = bloecke[bloecke.length - 1];
     }
 
     try {
@@ -662,27 +671,31 @@ const Engine = (() => {
    * Jetzt entscheidet das Bild. Ausgelassen wird eine Kategorie nur, wenn die
    * beobachtete Phase das hergibt UND im Bild wirklich kein Tabak liegt.
    */
-  function nichtBewertbar(appPhase, roh, tabak, haube, glut, enthalten = []) {
-    const gesehen = wahl(roh.beobachtete_phase, spec.phasen.map((p) => p.key), '');
-    // Die Beobachtung schlaegt die Vermutung der App.
-    const massgeblich = gesehen || appPhase;
-    const phaseInfo = spec.phasen.find((p) => p.key === massgeblich);
-    const offen = (phaseInfo && phaseInfo.noch_nicht_bewertbar) || [];
-
-    // Nicht die Phase entscheidet, sondern der Nachweis im Bild — und zwar je
-    // Kategorie einzeln. Liegt Tabak im Kopf, werden die Tabakkategorien
-    // bewertet, auch wenn die App noch bei "Kopf pruefen" steht. Das
-    // Hitzemanagement dagegen braucht HMD oder Kohle im Bild; ohne beides gibt
-    // es dazu schlicht nichts zu sehen, egal wie viel Tabak drin liegt.
+  function nichtBewertbar(roh, tabak, haube, glut, enthalten = []) {
+    /* Was im Bild nicht belegt ist, wird nicht benotet.
+     *
+     * Diese Regel haengt bewusst NICHT mehr an der Bauphase. Genau das war der
+     * Fehler, ueber den der Nutzer gestolpert ist: die App startet immer in
+     * Phase 1, hat daraus "der Kopf ist leer" gefolgert und dem Modell
+     * vorgeschrieben, keine Tabakwerte zu melden. Wer die Kamera auf einen
+     * fertigen Kopf hielt, bekam deshalb keine. Die Phase ist eine Vermutung,
+     * das Bild ist die Wirklichkeit — also entscheidet das Bild.
+     */
     const tabakDa = tabak.fuellhoehe_mm !== null || tabak.dichte > 0
       || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand;
     const hitzeDa = haube.erkannt === true || glut.status === 'visible';
 
-    const ausPhase = offen.filter((kategorie) => (
-      kategorie === 'hitzemanagement' ? !hitzeDa : !tabakDa
-    ));
-    // Die Enthaltungen des Modells gelten immer: es hat hingeschaut, die App nicht.
-    return [...new Set([...ausPhase, ...enthalten])];
+    const offen = [];
+    // Ohne Tabak im Kopf gibt es weder Verteilung noch Fuellhoehe zu beurteilen,
+    // und ein Ziel wie "maximaler Rauch" ist noch nicht erreicht oder verfehlt.
+    if (!tabakDa) offen.push('tabak_verteilung', 'fuellhoehe', 'tabak_kompatibilitaet', 'zielerreichung');
+    // Hitzemanagement braucht etwas, das Hitze macht.
+    if (!hitzeDa) offen.push('hitzemanagement');
+    // Airflow und Kopfgeometrie sieht man immer — am leeren Kopf die freien
+    // Loecher, am vollen die verdeckten.
+
+    // Die Enthaltungen des Modells gelten zusaetzlich: es hat hingeschaut.
+    return [...new Set([...offen, ...enthalten])];
   }
 
   function normalisiere(roh, live, kontext, phase) {
@@ -713,20 +726,41 @@ const Engine = (() => {
     const rohScores = objekt(roh.scores);
     const scores = {};
     const enthalten = [];
+    const ausreisser = [];
     Object.keys(spec.gewichte).forEach((feld) => {
       const wert = rohScores[feld];
-      if (wert === null || wert === undefined || wert === '') {
+      const zahlWert = Number(wert);
+
+      // Enthaltung: fehlt, ist null — oder ist gar keine Zahl. Ein Modell, das
+      // "hoch" statt 80 schreibt, hat nichts Schlechtes gesagt; als 0 gelesen
+      // waere das eine Bestrafung fuer ein Formatierungsproblem.
+      if (wert === null || wert === undefined || wert === '' || !Number.isFinite(zahlWert)) {
         scores[feld] = null;
         enthalten.push(feld);
         return;
       }
-      scores[feld] = Math.round(zahl(wert, 0, 100));
+
+      // Weit ausserhalb des Bereichs heisst: die Antwort war unsauber. Das wird
+      // zwar geklemmt, aber nicht mehr stillschweigend.
+      if (zahlWert < -20 || zahlWert > 120) ausreisser.push(`${feld}=${zahlWert}`);
+      scores[feld] = Math.round(zahl(zahlWert, 0, 100));
     });
 
     // Widersprueche geradeziehen, bevor gerechnet wird.
+    // Erst feststellen, was ueberhaupt zaehlt: eine Kategorie, die nicht in die
+    // Note eingeht, muss auch nicht heruntergestuft werden — sonst blockiert
+    // eine folgenlose Kappung den Fortschritt durch die Bauphasen.
+    const nochNicht = nichtBewertbar(roh, tabak, haube, glut, enthalten);
+
     const kappungen = plausibilitaetAnwenden(
-      scores, { tabak, airflow: luft, hmd: haube, kohle: glut, probleme: alleProbleme }
+      scores, { tabak, airflow: luft, hmd: haube, kohle: glut, probleme: alleProbleme }, nochNicht
     );
+    if (ausreisser.length) {
+      kappungen.push({
+        kategorie: 'antwort', von: null, auf: null, schwer: false,
+        grund: `unsinnige Rohwerte vom Modell, zurechtgestutzt: ${ausreisser.join(', ')}`,
+      });
+    }
     const gemeldet = live ? alleProbleme.slice(0, 2) : alleProbleme;
 
     // Ein kritischer Befund zieht auch die Gesamtnote. Sonst kam heraus:
@@ -734,9 +768,6 @@ const Engine = (() => {
     // Kategorie herunterzustufen reicht nicht, wenn die uebrigen sechs die Zahl
     // wieder hochziehen.
     const kritisch = kappungen.some((k) => k.schwer);
-    // In fruehen Bauphasen gibt es manche Kategorien schlicht noch nicht — aber
-    // nur, wenn sie wirklich nicht da sind.
-    const nochNicht = nichtBewertbar(phase, roh, tabak, haube, glut, enthalten);
     const roheNote = gesamtscore(scores, nochNicht);
     const gesamt = (roheNote !== null && kritisch)
       ? Math.min(roheNote, spec.plausibilitaet.kappe_gesamt_kritisch)
@@ -793,6 +824,23 @@ const Engine = (() => {
       ergebnis.stufe_text = null;
     }
     return ergebnis;
+  }
+
+  /* Die harten Beobachtungen einer Analyse — unabhaengig davon, wie das Modell
+   * sie gerade benennt. Grundlage dafuer, ob eine Korrektur wirklich gewirkt hat.
+   */
+  function tatsachenLage(ergebnis) {
+    const t = ergebnis.tabak || {};
+    const h = ergebnis.hmd || {};
+    const l = ergebnis.airflow || {};
+    const offen = [];
+    if (t.randkontakt) offen.push('randkontakt');
+    if (t.ueber_rand) offen.push('ueber_rand');
+    if (t.klumpen) offen.push('klumpen');
+    if (t.luecken) offen.push('luecken');
+    if (h.kontakt_tabak === true) offen.push('hmd_kontakt');
+    if (l.zentrale_oeffnung_frei === false) offen.push('oeffnung_zu');
+    return offen;
   }
 
   /* Vier Zustaende statt einer Zahl: gruen, gelb, rot, unsicher.
@@ -875,7 +923,7 @@ const Engine = (() => {
    * spec.json und werden hier angewendet — sichtbar, damit im Report steht,
    * warum eine Zahl kleiner ausfaellt als vom Modell gemeldet.
    */
-  function plausibilitaetAnwenden(scores, daten) {
+  function plausibilitaetAnwenden(scores, daten, ausgenommen = []) {
     const grenzen = spec.plausibilitaet;
     const kappungen = [];
 
@@ -884,7 +932,9 @@ const Engine = (() => {
      * durchgegluehte Kohle. Solche Befunde deckeln spaeter auch die Gesamtnote.
      */
     const kappen = (kategorie, hoechstens, grund, schwer = false) => {
-      if (!(kategorie in scores) || scores[kategorie] <= hoechstens) return;
+      if (ausgenommen.includes(kategorie)) return;   // zaehlt ohnehin nicht mit
+      if (!(kategorie in scores) || scores[kategorie] === null) return;
+      if (scores[kategorie] <= hoechstens) return;
       kappungen.push({ kategorie, von: scores[kategorie], auf: hoechstens, grund, schwer });
       scores[kategorie] = hoechstens;
     };
@@ -1437,6 +1487,8 @@ const Engine = (() => {
       this.kontext = { ziel: 'balanced', kopf_modell: '', tabak_marke: '', tabak_sorte: '',
                        hmd: '', kohlen: '', notiz: '', aussendurchmesser_mm: '', packmethode: '', ...(kontext || {}) };
       this.phase = spec.phasen[0].key;
+      this.gesehenePhase = '';   // was das Modell zuletzt gemeldet hat
+      this.gesehenZaehler = 0;   // wie oft hintereinander dasselbe
       this.verlauf = [];
       this.letzte = null;
       this.analyse = null;
@@ -1476,12 +1528,32 @@ const Engine = (() => {
       // Sieht das Modell eine andere Bauphase, hat es recht: es schaut hin, die
       // App zaehlt nur mit. Ohne das laeuft der Nutzer mit einem fertigen Kopf
       // durch die Ansagen fuer einen leeren.
+      /* Zweimal dasselbe gesehen, dann erst umschalten.
+       *
+       * Modelle schwanken. Gemessen: meldet das Modell abwechselnd "kopf" und
+       * "einstreuen", sprang die Anleitung im Sekundentakt hin und her, ohne
+       * dass sich vor der Kamera irgendetwas bewegt haette. Ein einzelnes Bild
+       * ist ein Verdacht, zwei gleiche sind eine Beobachtung.
+       */
       const gesehen = eintrag.beobachtete_phase;
       let nachgezogen = '';
-      if (autoWeiter && gesehen && gesehen !== this.phase
-          && eintrag.analysis_status === 'ok' && !eintrag.vorlaeufig) {
+      const zaehlbar = gesehen && eintrag.analysis_status === 'ok' && !eintrag.vorlaeufig;
+
+      if (!zaehlbar || gesehen === this.phase) {
+        this.gesehenePhase = '';
+        this.gesehenZaehler = 0;
+      } else if (gesehen === this.gesehenePhase) {
+        this.gesehenZaehler++;
+      } else {
+        this.gesehenePhase = gesehen;
+        this.gesehenZaehler = 1;
+      }
+
+      if (autoWeiter && this.gesehenZaehler >= FERTIG_SCHWELLE) {
         this.phase = gesehen;
         this.fertigZaehler = 0;
+        this.gesehenZaehler = 0;
+        this.gesehenePhase = '';
         nachgezogen = this.phaseInfo.name;
       }
 
@@ -1528,9 +1600,25 @@ const Engine = (() => {
       if (vorher.vorlaeufig || eintrag.vorlaeufig) return [];
       if (vorher.phase !== this.phase) return [];
 
+      /* Verglichen wird nicht nur die Id.
+       *
+       * Gemessen: nennt das Modell dasselbe Problem beim zweiten Bild anders —
+       * "randkontakt_3uhr" statt "rand_tabak_3_uhr" —, galt es als behoben,
+       * obwohl der Randkontakt in den Rohdaten unveraendert gemeldet blieb.
+       * Deshalb zaehlt zusaetzlich, ob die Kategorie ueberhaupt noch beklagt
+       * wird und ob die harten Beobachtungen sich geaendert haben.
+       */
       const jetztOffen = new Set(eintrag.probleme.map((p) => p.id));
+      const jetztKategorien = new Set(eintrag.probleme.map((p) => p.kategorie));
+      const nochBelegt = tatsachenLage(eintrag);
+      const vorherBelegt = tatsachenLage(vorher);
+
       return vorher.probleme
-        .filter((p) => !jetztOffen.has(p.id) && p.severity !== 'low')
+        .filter((p) => p.severity !== 'low')
+        .filter((p) => !jetztOffen.has(p.id))
+        .filter((p) => !jetztKategorien.has(p.kategorie))
+        // Was das Modell als Tatsache gemeldet hat, muss auch weg sein.
+        .filter((p) => !vorherBelegt.some((tatsache) => nochBelegt.includes(tatsache)))
         .map((p) => ({ id: p.id, titel: p.titel, severity: p.severity }));
     }
 
@@ -1573,8 +1661,9 @@ const Engine = (() => {
       if (ergebnis.analysis_status !== 'ok') return false;
       if (ergebnis.probleme.some((p) => p.severity === 'critical' || p.severity === 'high')) return false;
       // Was die App heruntergestuft hat, ist kein erledigter Bauschritt — auch
-      // dann nicht, wenn das Modell selbst kein Problem gemeldet hat.
-      if (ergebnis.kappungen.length) return false;
+      // dann nicht, wenn das Modell selbst kein Problem gemeldet hat. Die blosse
+      // Notiz ueber unsaubere Rohwerte zaehlt dabei nicht als Herunterstufung.
+      if (ergebnis.kappungen.some((k) => k.kategorie !== 'antwort')) return false;
       return Boolean(ergebnis.gesamtscore >= PHASE_FERTIG_SCORE && ergebnis.confidence.gesamt >= 50);
     }
 
