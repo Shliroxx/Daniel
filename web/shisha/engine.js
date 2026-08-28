@@ -525,16 +525,14 @@ const Engine = (() => {
     if (modus === 'live') {
       const info = spec.phasen.find((ph) => ph.key === phase) || spec.phasen[0];
       teile.push(
-        `Der Nutzer baut gerade. Phase laut App: ${info.name}\n` +
+        `Der Nutzer baut gerade. Phase laut App — das ist eine Vermutung: ${info.name}\n` +
         `Ziel dieser Phase: ${info.ziel}\n` +
         `Achte besonders auf: ${info.achte_auf}\n` +
-        (info.noch_nicht_bewertbar && info.noch_nicht_bewertbar.length
-          ? `Diese Kategorien gibt es in dieser Phase noch gar nicht: ${info.noch_nicht_bewertbar.join(', ')}.\n`
-            + 'Setz sie auf null statt auf eine Zahl — die App rechnet die Note ohne sie.\n'
-          : '') +
-        'Die uebrigen Kategorien bewertest du normal; was du nicht sicher siehst,\n' +
-        'bekommt eine niedrige Sicherheit statt einer erfundenen Zahl.'
+        'Kategorien, die du im Bild nicht wiederfindest, laesst du auf null statt sie zu\n' +
+        'raten. Was du siehst, bewertest du normal; was du nicht sicher siehst, bekommt\n' +
+        'eine niedrige Sicherheit statt einer erfundenen Zahl.'
       );
+      teile.push(zeilen(p.phasen_abgleich));
     } else {
       teile.push(zeilen(p.voll));
     }
@@ -651,6 +649,32 @@ const Engine = (() => {
     return treffer;
   }
 
+  /* Welche Kategorien in dieser Aufnahme gar nicht existieren.
+   *
+   * Das war der teuerste Fehler im ganzen Ablauf: die App startet immer in
+   * Phase 1 und hat dem Modell dort vorgeschrieben, der Kopf sei leer und die
+   * Tabakwerte blieben null. Wer die Kamera auf einen FERTIGEN Kopf haelt —
+   * also genau dann, wenn man eine Bewertung will —, bekam deshalb "kein
+   * Tabak erkannt". Das Modell hat nicht versagt, es hat gehorcht.
+   *
+   * Jetzt entscheidet das Bild. Ausgelassen wird eine Kategorie nur, wenn die
+   * beobachtete Phase das hergibt UND im Bild wirklich kein Tabak liegt.
+   */
+  function nichtBewertbar(appPhase, roh, tabak) {
+    const gesehen = wahl(roh.beobachtete_phase, spec.phasen.map((p) => p.key), '');
+    // Die Beobachtung schlaegt die Vermutung der App.
+    const massgeblich = gesehen || appPhase;
+    const phaseInfo = spec.phasen.find((p) => p.key === massgeblich);
+    const offen = (phaseInfo && phaseInfo.noch_nicht_bewertbar) || [];
+    if (!offen.length) return [];
+
+    // Liegt sichtbar Tabak im Kopf, wird er bewertet — egal, welche Phase
+    // jemand mitzaehlt.
+    const tabakDa = tabak.fuellhoehe_mm !== null || tabak.dichte > 0
+      || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand;
+    return tabakDa ? [] : offen;
+  }
+
   function normalisiere(roh, live, kontext, phase) {
     const status = wahl(roh.analysis_status, spec.analyse_status, 'ok');
 
@@ -682,9 +706,9 @@ const Engine = (() => {
     // Kategorie herunterzustufen reicht nicht, wenn die uebrigen sechs die Zahl
     // wieder hochziehen.
     const kritisch = kappungen.some((k) => k.schwer);
-    // In fruehen Bauphasen gibt es manche Kategorien schlicht noch nicht.
-    const phaseInfo = spec.phasen.find((p) => p.key === phase);
-    const nochNicht = (phaseInfo && phaseInfo.noch_nicht_bewertbar) || [];
+    // In fruehen Bauphasen gibt es manche Kategorien schlicht noch nicht — aber
+    // nur, wenn sie wirklich nicht da sind.
+    const nochNicht = nichtBewertbar(phase, roh, tabak);
     const roheNote = gesamtscore(scores, nochNicht);
     const gesamt = kritisch
       ? Math.min(roheNote, spec.plausibilitaet.kappe_gesamt_kritisch)
@@ -706,6 +730,7 @@ const Engine = (() => {
       airflow: luft,
       hmd: haube,
       kohle: glut,
+      beobachtete_phase: wahl(roh.beobachtete_phase, spec.phasen.map((ph) => ph.key), ''),
       scores,
       nicht_bewertbar: nochNicht,
       kappungen,
@@ -904,6 +929,10 @@ const Engine = (() => {
       modell: daten.modell || ersatz.name || null,
       quelle: 'angegeben',
       angenommen: true,
+      // Getippt oder geraten? Wer den Kopf selbst eingetragen hat, soll nicht
+      // lesen, die App habe ihn "angenommen" — das klingt nach Versagen,
+      // obwohl es genau die eigene Angabe ist.
+      herkunft: ersatz.herkunft,
       // Die Sicherheit gehoert dem Modell — eine Annahme erhoeht sie nicht.
       herkunft: ersatz.herkunft,
     };
@@ -1409,6 +1438,18 @@ const Engine = (() => {
       eintrag.behoben = this.behobeneProbleme(eintrag);
       eintrag.sprechen = this.darfSprechen(eintrag.coach_satz);
 
+      // Sieht das Modell eine andere Bauphase, hat es recht: es schaut hin, die
+      // App zaehlt nur mit. Ohne das laeuft der Nutzer mit einem fertigen Kopf
+      // durch die Ansagen fuer einen leeren.
+      const gesehen = eintrag.beobachtete_phase;
+      let nachgezogen = '';
+      if (autoWeiter && gesehen && gesehen !== this.phase
+          && eintrag.analysis_status === 'ok' && !eintrag.vorlaeufig) {
+        this.phase = gesehen;
+        this.fertigZaehler = 0;
+        nachgezogen = this.phaseInfo.name;
+      }
+
       let gewechselt = false;
       if (this.phaseErledigt(eintrag)) {
         this.fertigZaehler++;
@@ -1424,6 +1465,7 @@ const Engine = (() => {
       eintrag.phase = this.phase;
       eintrag.phase_name = this.phaseInfo.name;
       eintrag.phase_gewechselt = gewechselt;
+      eintrag.phase_nachgezogen = nachgezogen;
       eintrag.fortschritt = this.fortschritt();
 
       this.letzte = eintrag;

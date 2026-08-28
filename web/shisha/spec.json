@@ -78,7 +78,7 @@
       "key": "kopf",
       "name": "Kopf pruefen",
       "ziel": "Leerer, sauberer, trockener Kopf — aus jedem Winkel in Ordnung.",
-      "achte_auf": "Der Kopf ist hier absichtlich LEER — das ist kein Fehler und kein Grund, die Analyse abzubrechen. Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. Tabakwerte bleiben in dieser Phase leer — die zugehoerigen Kategorien laesst du auf null, sie zaehlen hier nicht zur Note.",
+      "achte_auf": "Achte auf Kopfart und wenn moeglich Modell, Geometrie, Randhoehe, zentrale Oeffnung, Reste vom letzten Mal, Feuchtigkeit, verstopfte Loecher, Risse in der Glasur. IST der Kopf leer, ist das kein Fehler und kein Grund abzubrechen — dann bleiben die Tabakwerte null. Ist er nicht leer, beurteilst du den Tabak ganz normal mit.",
       "noch_nicht_bewertbar": [
         "tabak_verteilung",
         "fuellhoehe",
@@ -91,7 +91,7 @@
       "key": "tabak",
       "name": "Tabak vorbereiten",
       "ziel": "Aufgelockert, entrippt, ueberschuessige Molasse abgetropft.",
-      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt.",
+      "achte_auf": "Klumpen, gepresste Batzen, grobe Rippen, stehende Molasse, zu nasser oder ausgetrockneter Schnitt. Liegt der Tabak schon im Kopf, beurteilst du ihn dort.",
       "noch_nicht_bewertbar": [
         "tabak_verteilung",
         "fuellhoehe",
@@ -317,6 +317,7 @@
       "",
       "{",
       "  \"analysis_status\": \"ok|insufficient_image|no_head_detected\",",
+      "  \"beobachtete_phase\": \"kopf|tabak|einstreuen|glattziehen|aufsatz|kohle|unklar\",",
       "  \"befund\": \"Was du im Bild tatsaechlich siehst, ein bis drei Saetze, noch ohne Wertung.\",",
       "  \"bildqualitaet\": {\"schaerfe\": 0, \"licht\": 0, \"perspektive\": \"oben|schraeg|seitlich|unklar\",",
       "                    \"kopf_vollstaendig\": true, \"hinweis\": \"kurz, nur wenn etwas stoert\"},",
@@ -471,6 +472,24 @@
       "'dicht' das gewollte Ergebnis und bei 'locker' ein Fehler.",
       "Weicht das Bild klar von der Angabe ab, sag es im Befund und melde es als Problem —",
       "aber erfinde keine Abweichung, nur weil eine Zahl knapp ausserhalb liegt."
+    ],
+    "phasen_abgleich": [
+      "Zur Bauphase: Die App fuehrt eine Phase mit, aber das ist ihre VERMUTUNG — sie zaehlt",
+      "nur mit, sie sieht nichts. Massgeblich ist das Bild.",
+      "",
+      "Trag in \"beobachtete_phase\" ein, was du tatsaechlich siehst:",
+      "- \"kopf\": leerer Kopf, kein Tabak drin",
+      "- \"tabak\": Tabak liegt daneben oder in der Schuessel, nicht im Kopf",
+      "- \"einstreuen\": Tabak ist im Kopf, aber noch ungleichmaessig oder unfertig",
+      "- \"glattziehen\": Tabak liegt vollstaendig drin, Oberflaeche wird gerade gerichtet",
+      "- \"aufsatz\": Folie oder HMD liegt auf",
+      "- \"kohle\": Kohle liegt auf",
+      "- \"unklar\": das Bild gibt es nicht her",
+      "",
+      "Widerspricht das der Phase der App, richtest du dich nach dem BILD und nicht nach der",
+      "Vermutung. Beurteile immer, was da ist: Liegt Tabak im Kopf, bewertest du ihn — auch",
+      "wenn die App noch bei \"Kopf pruefen\" steht. Nichts wird ausgelassen, weil eine",
+      "Phasenangabe etwas anderes sagt."
     ]
   },
   "plausibilitaet": {

@@ -550,6 +550,12 @@ function liveUebernehmen(analyse) {
   phasenZeichnen();
   setzeLage(ok ? 'live' : 'suche Kopf', ok ? '' : 'warn');
 
+  if (analyse.phase_nachgezogen) {
+    // Die App hat sich nach dem Bild gerichtet — das gehoert gesagt, sonst
+    // wundert man sich, warum die Phase springt.
+    setzeLage(`sehe: ${analyse.phase_nachgezogen}`, '');
+    fortschrittZeichnen();
+  }
   if (analyse.sprechen && analyse.coach_satz) sprich(analyse.coach_satz);
   if (analyse.phase_gewechselt) vibriere(30);
   if (analyse.probleme.some((p) => p.severity === 'critical')) vibriere([20, 60, 20]);
@@ -718,7 +724,10 @@ function quellenKuerzel(quelle) {
 function kopfBeschriftung(kopf) {
   if (!kopf) return '';
   const name = kopf.modell || (kopf.art !== 'unbekannt' ? kopf.art : 'Kopf erkannt');
-  return kopf.angenommen ? `${name} · angenommen` : [name, quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ');
+  if (!kopf.angenommen) return [name, quellenKuerzel(kopf.quelle)].filter(Boolean).join(' · ');
+  // "angenommen" bei einem Kopf, den man selbst eingetragen hat, liest sich wie
+  // ein Fehlschlag. Es ist aber genau die eigene Angabe.
+  return kopf.herkunft === 'angegeben' ? `${name} · deine Angabe` : `${name} · angenommen`;
 }
 
 function setzeLage(text, art) {

@@ -417,6 +417,10 @@ const gesagt = Engine.normalisiere(
 );
 assert.equal(gesagt.kopf.art, 'killer');
 assert.equal(gesagt.kopf.modell, 'Killerkopf gross');
+// Wer den Kopf selbst eingetragen hat, soll nicht "angenommen" lesen — das
+// klingt nach Versagen, obwohl es genau seine eigene Angabe ist.
+assert.equal(gesagt.kopf.herkunft, 'angegeben');
+assert.equal(unerkannt.kopf.herkunft, 'standard', 'ohne Angabe bleibt es eine Annahme');
 
 // Erkennt das Modell den Kopf selbst, bleibt es dabei
 const erkannt = Engine.normalisiere(ANTWORT, true, { kopf_modell: 'Killerkopf gross' });
@@ -468,7 +472,10 @@ assert.equal(Engine.kopfSuchen('mein Oblako Phunnel M von 2023').aussendurchmess
 // Tabak ab.
 const leererKopf = {
   ...ANTWORT, probleme: [], optimierungen: [],
-  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false },
+  // wirklich leer: keine Fuellhoehe, keine Dichte
+  tabak: { fuellhoehe_mm: null, fuellhoehe_quelle: 'unknown', dichte: 0, gleichmaessigkeit: 0,
+           klumpen: false, luecken: false, randkontakt: false, ueber_rand: false,
+           menge_gramm: '', quelle: 'observed', confidence: 80 },
   airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
   scores: { tabak_verteilung: 0, fuellhoehe: 0, airflow: 0, hitzemanagement: 80,
             kopfgeometrie: 90, tabak_kompatibilitaet: 0, zielerreichung: 0 },
@@ -491,8 +498,65 @@ assert.equal(Engine.normalisiere(leererKopf, false, {}).gesamtscore, 25);
 const phasenPrompt = Engine.promptBauen({
   modus: 'live', kontext: { ziel: 'balanced' }, phase: 'kopf', verlauf: '', lernen: '',
 });
-assert.ok(phasenPrompt.includes('gibt es in dieser Phase noch gar nicht'));
-assert.ok(phasenPrompt.includes('tabak_verteilung'));
+assert.ok(phasenPrompt.includes('laesst du auf null statt sie zu'),
+  'das Modell soll nichts raten, was es nicht sieht');
+
+// --- Der Prozessfehler: die Phase darf nicht diktieren, was zu sehen ist ---------
+// Am Geraet gemeldet: "erkannte den Tabak nicht". Die App startet immer in Phase 1
+// und schrieb dem Modell dort vor, der Kopf sei leer. Wer die Kamera auf einen
+// FERTIGEN Kopf haelt — also genau dann, wenn man eine Bewertung will — bekam
+// deshalb keine Tabakwerte. Das Modell hat nicht versagt, es hat gehorcht.
+const vollerKopfInPhaseEins = Engine.normalisiere({
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { ...ANTWORT.tabak, randkontakt: false, klumpen: false, dichte: 60, fuellhoehe_mm: 2 },
+  airflow: { ...ANTWORT.airflow, blockade_risiko: 'low' },
+}, true, {}, 'kopf');
+assert.deepEqual(vollerKopfInPhaseEins.nicht_bewertbar, [],
+  'sichtbarer Tabak wird bewertet, egal welche Phase die App mitzaehlt');
+assert.ok(vollerKopfInPhaseEins.gesamtscore > 0, 'und ergibt eine Note');
+
+// Die Beobachtung des Modells schlaegt die Vermutung der App
+const modellSiehtEinstreuen = Engine.normalisiere({
+  ...leererKopf, beobachtete_phase: 'einstreuen',
+}, true, {}, 'kopf');
+assert.deepEqual(modellSiehtEinstreuen.nicht_bewertbar, [],
+  'sagt das Modell "einstreuen", gilt nicht mehr die Leer-Annahme');
+assert.equal(modellSiehtEinstreuen.beobachtete_phase, 'einstreuen');
+
+// Umgekehrt genauso: ein wirklich leerer Kopf bleibt ein leerer Kopf
+const modellSiehtLeer = Engine.normalisiere({
+  ...leererKopf, beobachtete_phase: 'kopf',
+}, true, {}, 'glattziehen');
+assert.ok(modellSiehtLeer.nicht_bewertbar.includes('fuellhoehe'),
+  'ist nichts drin, wird nichts erfunden');
+
+// Der Prompt sagt dem Modell auch, dass die Phase nur eine Vermutung ist
+const phasenPromptZwei = Engine.promptBauen({
+  modus: 'live', kontext: { ziel: 'balanced' }, phase: 'kopf', verlauf: '', lernen: '',
+});
+assert.ok(phasenPromptZwei.includes('das ist eine Vermutung'), 'Phase als Vermutung benannt');
+assert.ok(phasenPromptZwei.includes('beobachtete_phase'), 'und das Modell soll melden, was es sieht');
+assert.ok(phasenPromptZwei.includes('richtest du dich nach dem BILD'));
+assert.ok(!phasenPromptZwei.includes('absichtlich LEER'),
+  'nirgends mehr die Behauptung, der Kopf sei leer');
+
+// --- Die Sitzung zieht die Phase nach ---------------------------------------------
+const nachziehen = new Engine.Sitzung({ ziel: 'balanced' });
+assert.equal(nachziehen.phase, 'kopf', 'die App startet immer bei Phase eins');
+const gesehenEinstreuen = nachziehen.aufnehmen(Engine.normalisiere({
+  ...ANTWORT, probleme: [], beobachtete_phase: 'einstreuen',
+  tabak: { ...ANTWORT.tabak, randkontakt: false },
+}, true, {}, 'kopf'));
+assert.equal(nachziehen.phase, 'einstreuen', 'das Bild schlaegt den Zaehler');
+assert.equal(gesehenEinstreuen.phase_nachgezogen, 'Einstreuen', 'und es wird gesagt');
+
+// Aus einem duennen Bild wird die Phase nicht verstellt
+const duennesBild = new Engine.Sitzung({ ziel: 'balanced' });
+duennesBild.aufnehmen(Engine.normalisiere({
+  ...ANTWORT, beobachtete_phase: 'kohle',
+  bildqualitaet: { schaerfe: 12, licht: 15, perspektive: 'unklar', kopf_vollstaendig: true },
+}, true, {}, 'kopf'));
+assert.equal(duennesBild.phase, 'kopf', 'ein wackliges Bild verstellt nichts');
 
 // --- Angabe und Annahme sind zweierlei -----------------------------------------
 // Der Standardkopf greift immer. Frueher bekam das Modell deshalb auch ohne
