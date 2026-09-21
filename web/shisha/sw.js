@@ -5,13 +5,14 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v13';
+const CACHE = 'hookah-analyzer-v14';
 
 const DATEIEN = [
   './',
   './index.html',
   './ar.css',
   './ar.js',
+  './fehler.js',
   './engine.js',
   './steuerung.js',
   './spec.json',

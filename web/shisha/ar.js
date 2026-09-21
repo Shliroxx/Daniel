@@ -27,7 +27,7 @@ const $ = (id) => document.getElementById(id);
  * Deshalb landet jeder unbehandelte Fehler sichtbar auf dem Startbildschirm und
  * in einem Protokoll, das sich antippen und kopieren laesst.
  */
-const fehlerProtokoll = [];
+const fehlerProtokoll = (window.FRUEHE_FEHLER || []).slice();
 
 function fehlerMerken(was, quelle) {
   const text = `${was}${quelle ? ` (${quelle})` : ''}`;
