@@ -1868,10 +1868,30 @@ function reportZeigen(analyse) {
       kategorien.appendChild(zeile);
       return;
     }
-    zeile.innerHTML =
-      `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>` +
-      `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
-      `<span class="kat-zahl">${wert}</span>`;
+    /* Die Leiste wird ueber die Eigenschaften gesetzt, nicht als style-Attribut
+     * im HTML: die Content-Security-Policy der Seite erlaubt keine Inline-Styles.
+     * Am Geraet waeren die Balken sonst unsichtbar — hier im Test faellt das
+     * nicht auf, weil der Nachbau keine CSP kennt.
+     */
+    const name = document.createElement('span');
+    name.className = 'kat-name';
+    name.textContent = Engine.spec.kategorien[key] || key;
+
+    const leiste = document.createElement('span');
+    leiste.className = 'kat-leiste';
+    const fuellung = document.createElement('span');
+    fuellung.className = 'kat-fuell';
+    fuellung.style.width = `${wert}%`;
+    fuellung.style.background = noteFarbe(wert);
+    leiste.appendChild(fuellung);
+
+    const zahl = document.createElement('span');
+    zahl.className = 'kat-zahl';
+    zahl.textContent = String(wert);
+
+    zeile.appendChild(name);
+    zeile.appendChild(leiste);
+    zeile.appendChild(zahl);
     kategorien.appendChild(zeile);
   });
 
