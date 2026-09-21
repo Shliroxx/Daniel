@@ -17,6 +17,43 @@
 
 const $ = (id) => document.getElementById(id);
 
+/* Fehler sichtbar machen, statt sie zu verschlucken.
+ *
+ * Bricht das Skript beim Laden ab, werden die Knoepfe nie verdrahtet: die Seite
+ * steht da und tut nichts. Am Handy sieht man davon nichts — keine Konsole,
+ * keine Meldung —, und aus der Ferne ist nicht zu unterscheiden, ob die App
+ * kaputt ist, der Schluessel fehlt oder das Netz klemmt.
+ *
+ * Deshalb landet jeder unbehandelte Fehler sichtbar auf dem Startbildschirm und
+ * in einem Protokoll, das sich antippen und kopieren laesst.
+ */
+const fehlerProtokoll = [];
+
+function fehlerMerken(was, quelle) {
+  const text = `${was}${quelle ? ` (${quelle})` : ''}`;
+  fehlerProtokoll.push(text);
+
+  const feld = document.getElementById('startFehler');
+  if (feld) {
+    feld.textContent = `Fehler: ${text}`;
+    feld.title = fehlerProtokoll.join('\n');
+  }
+  const blende = document.getElementById('pauseFehler');
+  if (blende && !document.getElementById('pause').hidden) blende.textContent = text;
+}
+
+window.addEventListener('error', (ereignis) => {
+  const ort = ereignis.filename
+    ? `${String(ereignis.filename).split('/').pop()}:${ereignis.lineno}`
+    : '';
+  fehlerMerken(ereignis.message || 'unbekannter Fehler', ort);
+});
+
+window.addEventListener('unhandledrejection', (ereignis) => {
+  const grund = ereignis.reason;
+  fehlerMerken((grund && grund.message) || String(grund), 'unbehandelt');
+});
+
 const MARKER_FARBE = {
   remove: '#ff6b7d',
   loosen: '#ffb454',
@@ -1343,7 +1380,11 @@ function lernregelnZeigen() {
 
 function startBereitschaft() {
   const ok = Engine.bereit();
-  $('losButton').disabled = !ok;
+  // Der Knopf bleibt bedienbar: ohne Zugang fuehrt er zu den Einstellungen,
+  // statt stumm zu bleiben. Gesperrte Knoepfe sehen aus wie kaputte Knoepfe.
+  $('losButton').disabled = false;
+  $('losButton').classList.toggle('wartet', !ok);
+  $('losButton').textContent = ok ? 'Kamera starten' : 'Zugang einrichten';
   $('startInfo').textContent = ok
     ? `Analyse über ${Engine.anbieterName()}`
     : 'Noch kein Zugang eingerichtet — tipp auf „Modell und Zugang".';
@@ -1827,10 +1868,30 @@ function reportZeigen(analyse) {
       kategorien.appendChild(zeile);
       return;
     }
-    zeile.innerHTML =
-      `<span class="kat-name">${escape(Engine.spec.kategorien[key] || key)}</span>` +
-      `<span class="kat-leiste"><span class="kat-fuell" style="width:${wert}%;background:${noteFarbe(wert)}"></span></span>` +
-      `<span class="kat-zahl">${wert}</span>`;
+    /* Die Leiste wird ueber die Eigenschaften gesetzt, nicht als style-Attribut
+     * im HTML: die Content-Security-Policy der Seite erlaubt keine Inline-Styles.
+     * Am Geraet waeren die Balken sonst unsichtbar — hier im Test faellt das
+     * nicht auf, weil der Nachbau keine CSP kennt.
+     */
+    const name = document.createElement('span');
+    name.className = 'kat-name';
+    name.textContent = Engine.spec.kategorien[key] || key;
+
+    const leiste = document.createElement('span');
+    leiste.className = 'kat-leiste';
+    const fuellung = document.createElement('span');
+    fuellung.className = 'kat-fuell';
+    fuellung.style.width = `${wert}%`;
+    fuellung.style.background = noteFarbe(wert);
+    leiste.appendChild(fuellung);
+
+    const zahl = document.createElement('span');
+    zahl.className = 'kat-zahl';
+    zahl.textContent = String(wert);
+
+    zeile.appendChild(name);
+    zeile.appendChild(leiste);
+    zeile.appendChild(zahl);
     kategorien.appendChild(zeile);
   });
 
@@ -2048,6 +2109,20 @@ $('zugangAbbruch').addEventListener('click', () => { $('einstellungen').hidden =
 
 $('losButton').addEventListener('click', async () => {
   const knopf = $('losButton');
+
+  /* Ohne Zugang fuehrt der Knopf dorthin, wo man ihn einrichtet.
+   *
+   * Vorher war er in dem Fall einfach gesperrt. Ein Knopf, der auf Tippen nicht
+   * reagiert, ist von einer kaputten App nicht zu unterscheiden — und genau so
+   * kam es beim Nutzer an.
+   */
+  if (!Engine.bereit()) {
+    $('einstellungen').hidden = false;
+    einstellungenFuellen();
+    $('startFehler').textContent = 'Trag hier zuerst deinen Schluessel ein, dann geht es los.';
+    return;
+  }
+
   knopf.disabled = true;
   knopf.textContent = 'starte …';
   $('startFehler').textContent = '';
@@ -2074,7 +2149,7 @@ $('losButton').addEventListener('click', async () => {
     $('startFehler').textContent = fehler.message;
     knopf.disabled = false;
   } finally {
-    knopf.textContent = 'Kamera starten';
+    knopf.textContent = Engine.bereit() ? 'Kamera starten' : 'Zugang einrichten';
   }
 });
 
