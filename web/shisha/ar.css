@@ -155,6 +155,10 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   box-shadow: 0 0 34px rgba(95, 227, 255, 0.3);
 }
 
+/* Noch kein Zugang: der Knopf bleibt bedienbar, sieht aber nicht nach
+   "jetzt geht es los" aus. */
+.gross.wartet { background: var(--amber); box-shadow: 0 0 34px rgba(255, 180, 84, 0.25); }
+
 .fehler { color: var(--rose); font-size: 14px; min-height: 20px; margin: 12px 0 0; line-height: 1.5; }
 
 /* ---------- Kopfzeile ---------- */

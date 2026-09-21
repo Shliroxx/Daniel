@@ -105,13 +105,23 @@ await warte(60);   // specLaden().then(...) durchlassen
 pruefe('Regelwerk geladen', Boolean(kontext.__Engine.spec), $('startInfo').textContent);
 pruefe('Zielwahl gefuellt', $('zielwahl').children.length === 4, `${$('zielwahl').children.length} Ziele`);
 pruefe('Kopfliste gefuellt', $('kopfliste').children.length > 5, `${$('kopfliste').children.length} Koepfe`);
-pruefe('Start ohne Schluessel gesperrt', $('losButton').disabled === true);
+// Ein Knopf, der auf Tippen nicht reagiert, ist von einer kaputten App nicht zu
+// unterscheiden — genau so kam es beim Nutzer an. Ohne Zugang fuehrt er deshalb
+// dorthin, wo man ihn einrichtet.
+pruefe('Startknopf bleibt bedienbar', $('losButton').disabled === false);
+pruefe('Und sagt, was fehlt', $('losButton').textContent === 'Zugang einrichten',
+       `"${$('losButton').textContent}"`);
+$('losButton').klick();
+pruefe('Ohne Zugang fuehrt er zu den Einstellungen', $('einstellungen').hidden === false);
+pruefe('Mit Begruendung', $('startFehler').textContent.includes('Schluessel'),
+       `"${$('startFehler').textContent}"`);
 
 // --- Zugang einrichten -------------------------------------------------------
 $('zugangButton').klick();
 $('fGeminiKey').value = 'test-key';
 $('zugangSpeichern').klick();
-pruefe('Start nach Schluessel frei', $('losButton').disabled === false, $('startInfo').textContent);
+pruefe('Start nach Schluessel frei', $('losButton').textContent === 'Kamera starten',
+       $('startInfo').textContent);
 pruefe('Standardkopf im Feld', $('fStandardkopf').placeholder === 'Oblako Phunnel M');
 
 // --- Angaben eintragen -------------------------------------------------------
