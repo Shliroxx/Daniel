@@ -523,6 +523,31 @@ const nichtsBewertet = Engine.normalisiere({
 assert.equal(nichtsBewertet.gesamtscore, null, 'keine Kategorie, keine Note');
 assert.equal(nichtsBewertet.stufe_text, null);
 
+// --- Einstieg mitten drin: Kamera direkt auf den gestopften Kopf ----------------
+// Der Alltagsfall: die App startet in Phase "kopf", aber der Kopf ist laengst
+// gestopft. Frueher gab die Phase vor, was das Modell sehen durfte — die
+// Tabaknoten wurden weggeworfen und der Coach sagte, er sehe keinen Tabak.
+// Jetzt entscheidet allein das Bild: liegt Tabak drin, wird er bewertet, egal in
+// welcher Phase die App gerade steht.
+const direktGestopft = Engine.normalisiere({
+  ...ANTWORT,
+  beobachtete_phase: 'tabak',
+  tabak: { fuellhoehe_mm: 3, fuellhoehe_quelle: 'estimated', dichte: 58, gleichmaessigkeit: 74,
+           klumpen: false, luecken: false, randkontakt: false, ueber_rand: false,
+           menge_gramm: 'ca. 16 g', quelle: 'observed', confidence: 78 },
+  scores: { tabak_verteilung: 74, fuellhoehe: 76, airflow: 80, hitzemanagement: null,
+            kopfgeometrie: 82, tabak_kompatibilitaet: 78, zielerreichung: 72 },
+}, false, {}, 'kopf');
+['tabak_verteilung', 'fuellhoehe', 'tabak_kompatibilitaet', 'zielerreichung'].forEach((feld) => {
+  assert.ok(!direktGestopft.nicht_bewertbar.includes(feld),
+    `sichtbarer Tabak muss bewertet werden, ${feld} wurde uebergangen`);
+});
+assert.ok(direktGestopft.nicht_bewertbar.includes('hitzemanagement'),
+  'ohne HMD und ohne Kohle bleibt das Hitzemanagement offen');
+assert.ok(direktGestopft.gesamtscore > 0, 'ein gestopfter Kopf bekommt eine Note');
+assert.equal(direktGestopft.beobachtete_phase, 'tabak',
+  'die beobachtete Phase kommt aus dem Bild, nicht aus dem Stand der App');
+
 // Eine schlechte Note und eine gruene Ampel schliessen sich aus
 const schlechtOhneProblem = Engine.normalisiere({
   ...ANTWORT, probleme: [], optimierungen: [],

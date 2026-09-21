@@ -87,7 +87,7 @@ const $ = (id) => elemente.get(id);
 // --- Laden ------------------------------------------------------------------
 // Wie im Browser: klassische Skripte teilen sich einen Scope, deshalb alle drei
 // in einem Rutsch. Der Anhang reicht heraus, was der Test anfassen muss.
-const quelle = ['steuerung.js', 'engine.js', 'ar.js']
+const quelle = ['fehler.js', 'steuerung.js', 'engine.js', 'ar.js']
   .map((datei) => readFileSync(`${webDir}/${datei}`, 'utf8'))
   .join('\n;\n')
   + '\n; globalThis.__Engine = Engine; globalThis.__Steuerung = Steuerung; globalThis.__zustand = zustand;';
