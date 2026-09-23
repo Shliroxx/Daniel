@@ -10,6 +10,8 @@ function abbruchFehler() {
 
 export function baueUmgebung(webDir, { antwort }) {
   const protokoll = { fehler: [], gesprochen: [], vibriert: [], geteilt: [], anfragen: [] };
+  // Schalter fuer den Kamerafehler: DOMException-Name oder leer.
+  const kameraSchalter = { fehler: '' };
   const elemente = new Map();
 
   function klassenListe() {
@@ -207,7 +209,19 @@ export function baueUmgebung(webDir, { antwort }) {
       vibrate: (m) => protokoll.vibriert.push(m),
       onLine: true,
       mediaDevices: {
+        /* Die Kamera darf auch scheitern.
+         *
+         * Vorher gelang getUserMedia hier immer — ausgerechnet der haeufigste
+         * echte Fehler am iPhone (Erlaubnis abgelehnt, Kamera von einer anderen
+         * App belegt) wurde also in keinem Test je ausgefuehrt. Der Test setzt
+         * kameraFehler auf einen DOMException-Namen, um ihn auszuloesen.
+         */
         getUserMedia: async () => {
+          if (kameraSchalter.fehler) {
+            const fehler = new Error('Simulierter Kamerafehler');
+            fehler.name = kameraSchalter.fehler;
+            throw fehler;
+          }
           // Eine Spur, deren Zustand der Test umschalten kann.
           spur.readyState = 'live';
           return { getVideoTracks: () => [spur], getTracks: () => [spur] };
@@ -266,7 +280,7 @@ export function baueUmgebung(webDir, { antwort }) {
   global.btoa = btoa;
 
   return {
-    global, elemente, protokoll, dokument, spur,
+    global, elemente, protokoll, dokument, spur, kameraSchalter,
     bildAendern: () => { bildMuster++; },
     wackeln: (an) => { wackelt = Boolean(an); },
   };

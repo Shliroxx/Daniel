@@ -179,6 +179,29 @@ const shotCtx = shot.getContext('2d');
 
 let strom = null;
 
+/* Was der Browser meldet, und was davon weiterhilft.
+ *
+ * getUserMedia wirft englische DOMException-Texte ("The request is not allowed
+ * by the user agent"). Die standen bisher unveraendert auf dem
+ * Startbildschirm — und sagten niemandem, was jetzt zu tun ist. Gerade die
+ * abgelehnte Kameraerlaubnis ist auf dem iPhone ohne Anleitung kaum
+ * zurueckzuholen: sie steckt in den Safari-Einstellungen, nicht in der App.
+ */
+function kameraFehlerText(fehler) {
+  const art = (fehler && fehler.name) || '';
+  if (art === 'NotAllowedError' || art === 'SecurityError') {
+    return 'Die Kamera ist abgelehnt. In Safari: auf „aA" links in der Adressleiste '
+      + 'tippen, „Website-Einstellungen", Kamera auf „Erlauben". Danach die Seite neu laden.';
+  }
+  if (art === 'NotReadableError' || art === 'AbortError') {
+    return 'Eine andere App benutzt gerade die Kamera. Schliess sie und versuch es nochmal.';
+  }
+  if (art === 'NotFoundError' || art === 'OverconstrainedError') {
+    return 'Keine passende Kamera gefunden.';
+  }
+  return `Kamera laesst sich nicht starten: ${(fehler && fehler.message) || art || 'unbekannter Grund'}`;
+}
+
 async function kameraStarten() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error(
@@ -188,10 +211,14 @@ async function kameraStarten() {
   }
 
   kameraStoppen();
-  strom = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-    audio: false,
-  });
+  try {
+    strom = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false,
+    });
+  } catch (fehler) {
+    throw new Error(kameraFehlerText(fehler));
+  }
 
   // iOS gibt die Kamera frei, sobald die App laenger im Hintergrund war. Dann
   // endet die Spur und das Livebild friert ein — davon wollen wir erfahren.
@@ -356,9 +383,35 @@ document.addEventListener('visibilitychange', async () => {
 // Bildguete: Bewegung, Schaerfe, Helligkeit
 // --------------------------------------------------------------------------
 
+/* Welcher Teil des Kamerabildes ueberhaupt zu sehen ist.
+ *
+ * Das Video liegt mit object-fit: cover im Rahmen und wird dabei beschnitten.
+ * Die Kamera liefert quer (etwa 1920x1080), der Rahmen steht hochkant (etwa
+ * 390x844) — es bleiben rund ein Viertel der Bildbreite uebrig, der Rest liegt
+ * links und rechts ausserhalb.
+ *
+ * Frueher ging trotzdem das volle Bild ans Modell. Das Modell hat also einen
+ * Bereich mitanalysiert und mitmarkiert, den der Nutzer nie zu Gesicht bekam:
+ * jeder Marker mit x unter 0,37 oder ueber 0,63 lag ausserhalb des Schirms. Ein
+ * Hinweis "bei 9 Uhr" zeigte dann auf nichts. Jetzt bekommt das Modell genau
+ * das, was auch im Sucher steht — was es sieht, siehst du.
+ */
+function sichtbarerAusschnitt() {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const cw = overlay.clientWidth;
+  const ch = overlay.clientHeight;
+  if (!vw || !vh || !cw || !ch) return { sx: 0, sy: 0, sw: vw || 1, sh: vh || 1 };
+  const skala = Math.max(cw / vw, ch / vh);
+  const sw = Math.min(vw, cw / skala);
+  const sh = Math.min(vh, ch / skala);
+  return { sx: (vw - sw) / 2, sy: (vh - sh) / 2, sw, sh };
+}
+
 function bildGuete() {
   if (!video.videoWidth) return null;
-  miniCtx.drawImage(video, 0, 0, mini.width, mini.height);
+  const a = sichtbarerAusschnitt();
+  miniCtx.drawImage(video, a.sx, a.sy, a.sw, a.sh, 0, 0, mini.width, mini.height);
   const daten = miniCtx.getImageData(0, 0, mini.width, mini.height).data;
 
   const grau = new Float32Array(mini.width * mini.height);
@@ -420,10 +473,12 @@ function guetePruefen(wartetMs = 0) {
 // --------------------------------------------------------------------------
 
 function bildAufnehmen(maxKante) {
-  const faktor = Math.min(1, maxKante / Math.max(video.videoWidth, video.videoHeight));
-  shot.width = Math.round(video.videoWidth * faktor);
-  shot.height = Math.round(video.videoHeight * faktor);
-  shotCtx.drawImage(video, 0, 0, shot.width, shot.height);
+  // Nur der sichtbare Ausschnitt geht raus — siehe sichtbarerAusschnitt().
+  const a = sichtbarerAusschnitt();
+  const faktor = Math.min(1, maxKante / Math.max(a.sw, a.sh));
+  shot.width = Math.max(1, Math.round(a.sw * faktor));
+  shot.height = Math.max(1, Math.round(a.sh * faktor));
+  shotCtx.drawImage(video, a.sx, a.sy, a.sw, a.sh, 0, 0, shot.width, shot.height);
   return new Promise((fertig) => shot.toBlob(fertig, 'image/jpeg', 0.78));
 }
 
@@ -886,27 +941,56 @@ function setzeLage(text, art) {
   feld.className = `marke ${art || ''}`;
 }
 
+/* Die Leiste wird aktualisiert, nicht neu gebaut.
+ *
+ * Vorher stand hier innerHTML = '' und alle Knoepfe wurden neu erzeugt — bei
+ * jedem Live-Ergebnis, also etwa im Sekundentakt. Die Chips sind aber
+ * anklickbar und setzen die Bauphase: wer einen antippte, traf ein Element,
+ * das Sekundenbruchteile vorher ausgetauscht worden war. Genau dieser Fehler
+ * wurde bei der Problemliste schon behoben, hier stand er noch.
+ *
+ * Und scrollIntoView lief ebenfalls bei jedem Ergebnis und schob die Leiste
+ * zurueck, waehrend der Nutzer sie gerade selbst verschob. Jetzt nur noch,
+ * wenn die Phase wirklich gewechselt hat.
+ */
+let gezeigtePhase = null;
+
 function phasenZeichnen() {
   const box = $('phasen');
   const phasen = Engine.spec.phasen;
-  box.innerHTML = '';
   const aktuell = phasen.findIndex((p) => p.key === zustand.sitzung.phase);
+
+  if (box.children.length !== phasen.length) {
+    box.innerHTML = '';
+    phasen.forEach((phase) => {
+      const knopf = document.createElement('button');
+      knopf.className = 'phase';
+      knopf.textContent = phase.name;
+      knopf.title = phase.ziel;
+      knopf.onclick = () => {
+        zustand.sitzung.phaseSetzen(phase.key);
+        fortschrittZeichnen();
+        neuBeurteilen();
+      };
+      box.appendChild(knopf);
+    });
+  }
+
   phasen.forEach((phase, index) => {
-    const knopf = document.createElement('button');
-    knopf.className = 'phase';
-    if (index === aktuell) knopf.classList.add('aktiv');
-    else if (aktuell >= 0 && index < aktuell) knopf.classList.add('erledigt');
-    knopf.textContent = phase.name;
-    knopf.title = phase.ziel;
-    knopf.onclick = () => {
-      zustand.sitzung.phaseSetzen(phase.key);
-      fortschrittZeichnen();
-      neuBeurteilen();
-    };
-    box.appendChild(knopf);
+    const knopf = box.children[index];
+    if (!knopf) return;
+    knopf.classList.toggle('aktiv', index === aktuell);
+    knopf.classList.toggle('erledigt', aktuell >= 0 && index < aktuell);
   });
-  const aktives = box.querySelector('.aktiv');
-  if (aktives) aktives.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+
+  const phase = zustand.sitzung.phase;
+  if (phase !== gezeigtePhase) {
+    gezeigtePhase = phase;
+    const aktives = box.children[aktuell];
+    if (aktives && aktives.scrollIntoView) {
+      aktives.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -925,13 +1009,15 @@ window.addEventListener('orientationchange', () => setTimeout(overlayAnpassen, 3
 
 /* Rechnet normalisierte Bildkoordinaten auf den sichtbaren Ausschnitt um.
  * Das Video liegt mit object-fit: cover im Rahmen, wird also beschnitten. */
+/* Modellkoordinate zu Bildschirmpunkt.
+ *
+ * Seit bildAufnehmen() nur noch den sichtbaren Ausschnitt verschickt, sind die
+ * Koordinaten des Modells bereits auf genau das bezogen, was im Rahmen steht.
+ * Die Cover-Rechnung gehoert damit in den Zuschnitt und nicht mehr hierher —
+ * 0 ist die linke Rahmenkante, 1 die rechte.
+ */
 function bildAufBildschirm(nx, ny) {
-  const cw = overlay.clientWidth;
-  const ch = overlay.clientHeight;
-  const vw = video.videoWidth || cw;
-  const vh = video.videoHeight || ch;
-  const skala = Math.max(cw / vw, ch / vh);
-  return { x: (cw - vw * skala) / 2 + nx * vw * skala, y: (ch - vh * skala) / 2 + ny * vh * skala };
+  return { x: nx * overlay.clientWidth, y: ny * overlay.clientHeight };
 }
 
 function zeichnen() {

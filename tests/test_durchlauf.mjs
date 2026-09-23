@@ -51,7 +51,7 @@ const ANTWORT = {
 
 // Steuerbare Antwort: Text, Fehlerstatus, Verzoegerung.
 const antwortPlan = { text: (_url) => JSON.stringify(ANTWORT), status: 200, verzoegerung: 0 };
-const { global, elemente, protokoll, dokument, spur, bildAendern, wackeln } = baueUmgebung(webDir, {
+const { global, elemente, protokoll, dokument, spur, kameraSchalter, bildAendern, wackeln } = baueUmgebung(webDir, {
   antwort: (url) => ({ text: antwortPlan.text(url), status: antwortPlan.status, verzoegerung: antwortPlan.verzoegerung }),
 });
 
@@ -90,7 +90,8 @@ const $ = (id) => elemente.get(id);
 const quelle = ['fehler.js', 'steuerung.js', 'engine.js', 'ar.js']
   .map((datei) => readFileSync(`${webDir}/${datei}`, 'utf8'))
   .join('\n;\n')
-  + '\n; globalThis.__Engine = Engine; globalThis.__Steuerung = Steuerung; globalThis.__zustand = zustand;';
+  + '\n; globalThis.__Engine = Engine; globalThis.__Steuerung = Steuerung; globalThis.__zustand = zustand;'
+  + '\n; globalThis.__shot = shot; globalThis.__ausschnitt = sichtbarerAusschnitt;';
 
 try {
   vm.runInContext(quelle, kontext, { filename: 'app.js' });
@@ -131,6 +132,32 @@ $('fKopf').value = 'Oblako Phunnel M';
 pruefe('Durchmesser vorgeschlagen', $('fDurchmesser').value === '78', `war "${$('fDurchmesser').value}"`);
 pruefe('Packmethoden zur Auswahl', $('fPack').children.length === 3, `${$('fPack').children.length} Eintraege`);
 
+/* --- Kamera abgelehnt --------------------------------------------------------
+ *
+ * Der haeufigste echte Fehler am iPhone, und er lief bisher in keinem Test:
+ * der Nachbau liess getUserMedia immer gelingen. Was der Browser wirft, ist
+ * englischer DOMException-Text ("The request is not allowed by the user
+ * agent") — der stand frueher unveraendert auf dem Startbildschirm und sagte
+ * niemandem, wie man die Erlaubnis zurueckholt. In Safari steckt die naemlich
+ * in den Website-Einstellungen, nicht in der App.
+ */
+kameraSchalter.fehler = 'NotAllowedError';
+$('losButton').klick();
+await warte(120);
+pruefe('Abgelehnte Kamera haelt den Start auf', $('start').hidden === false);
+pruefe('Und wird auf Deutsch erklaert',
+       $('startFehler').textContent.includes('Kamera') && $('startFehler').textContent.includes('Safari'),
+       `"${$('startFehler').textContent}"`);
+pruefe('Der Startknopf bleibt danach bedienbar', $('losButton').disabled === false);
+
+kameraSchalter.fehler = 'NotReadableError';
+$('losButton').klick();
+await warte(120);
+pruefe('Belegte Kamera wird eigens benannt',
+       $('startFehler').textContent.includes('andere App'),
+       `"${$('startFehler').textContent}"`);
+kameraSchalter.fehler = '';
+
 // --- Kamera starten ----------------------------------------------------------
 $('losButton').klick();
 await warte(80);
@@ -153,6 +180,28 @@ pruefe('Livekarte bleibt schlank',
 // Und der Nachbau kennt jetzt das hidden-Attribut — sonst war jede Pruefung auf
 // "ist verborgen" wertlos.
 pruefe('Nachbau kennt hidden', $('aufnahme').hidden === true, `aufnahme.hidden=${$('aufnahme').hidden}`);
+
+/* Das Modell darf nur sehen, was auch der Nutzer sieht.
+ *
+ * Die Kamera liefert quer (1920x1080), der Rahmen steht hochkant (390x780).
+ * object-fit: cover schneidet links und rechts ab — vom Vollbild bleibt nur
+ * gut die Haelfte der Breite uebrig. Ging trotzdem das Vollbild raus, markierte
+ * das Modell auch Stellen, die nie auf dem Schirm standen: ein Hinweis "bei
+ * 9 Uhr" zeigte dann auf nichts. Der Zuschnitt muss dasselbe Seitenverhaeltnis
+ * haben wie der Rahmen.
+ */
+const ausschnitt = kontext.__ausschnitt();
+const rahmenVerhaeltnis = 390 / 780;
+const schnittVerhaeltnis = ausschnitt.sw / ausschnitt.sh;
+pruefe('Analysebild zeigt den sichtbaren Ausschnitt',
+       Math.abs(schnittVerhaeltnis - rahmenVerhaeltnis) < 0.01,
+       `Rahmen ${rahmenVerhaeltnis.toFixed(3)}, Zuschnitt ${schnittVerhaeltnis.toFixed(3)}`);
+pruefe('Und ist mittig aus dem Kamerabild geschnitten',
+       ausschnitt.sh === 1080 && Math.abs(ausschnitt.sx - (1920 - ausschnitt.sw) / 2) < 1,
+       `sx=${Math.round(ausschnitt.sx)}, sw=${Math.round(ausschnitt.sw)}, sh=${ausschnitt.sh}`);
+pruefe('Das verschickte Bild hat dasselbe Verhaeltnis',
+       Math.abs(kontext.__shot.width / kontext.__shot.height - rahmenVerhaeltnis) < 0.02,
+       `${kontext.__shot.width}x${kontext.__shot.height}`);
 pruefe('Kontingent gezaehlt', $('kontingent').textContent.startsWith('1/') || $('kontingent').textContent.startsWith('2/'),
        `"${$('kontingent').textContent}"`);
 pruefe('Gesprochen', protokoll.gesprochen.some((s) => s.includes('neun Uhr')), protokoll.gesprochen.join(' | ').slice(0, 60));
@@ -495,12 +544,21 @@ $('kamera').paused = true;
 $('fWinkel').checked = true;
 z.laeuft = false;
 await warte(600);
+/* Hier wurde frueher die eigene Schlafzeit gemessen, nicht die App.
+ *
+ * Der Test stand so da: klicken, feste 3 s warten, dann pruefen, ob weniger als
+ * 10 s vergangen sind. Das ist immer wahr — die Zusicherung konnte gar nicht
+ * fehlschlagen und bewachte damit ausgerechnet den Fehler, dessen Fund im
+ * Kopfkommentar dieser Datei gefeiert wird. Jetzt wird gewartet, bis die App
+ * selbst fertig ist, und erst danach die Zeit genommen.
+ */
 const begonnen = Date.now();
 $('analyseButton').klick();
-await warte(3000);
-const gedauert = Math.round((Date.now() - begonnen) / 1000);
-p3('Tote Kamera bricht schnell ab statt zu mahlen', gedauert < 10,
-   `${gedauert} s bis zur Meldung`);
+const fertigGeworden = await warteBis(() => $('analyseButton').disabled === false, 15000);
+const gedauert = Date.now() - begonnen;
+p3('Tote Kamera bricht ueberhaupt ab', fertigGeworden, 'Knopf blieb gesperrt');
+p3('Und zwar schnell statt zu mahlen', fertigGeworden && gedauert < 10000,
+   `${(gedauert / 1000).toFixed(1)} s bis der Knopf wieder frei war`);
 p3('Abbruch wird erklaert', $('coach').textContent.includes('Kamera') || $('coach').textContent.includes('fehlgeschlagen'),
    `"${$('coach').textContent}"`);
 p3('Analyse-Knopf wieder frei', $('analyseButton').disabled === false);
@@ -563,14 +621,26 @@ p3('Nach dem Hintergrund laeuft die Analyse wieder', taktNachher >= 2, `${taktNa
 
 const zeiten = protokoll.anfragen.slice(-Math.max(taktNachher, 1)).map((a) => a.zeit);
 const abstaende = zeiten.slice(1).map((t, i) => t - zeiten[i]);
-const kleinster = abstaende.length ? Math.min(...abstaende) : 9999;
 
 p3('Kein doppelter Analysetakt nach Hintergrund',
    taktNachher <= taktVorher + 1,
    `vorher ${taktVorher}, nachher ${taktNachher} Anfragen in 5 s`);
-p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
-   `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`
-   );
+
+/* Ohne zwei Anfragen gibt es keinen Abstand zu messen.
+ *
+ * Vorher stand hier bei leerer Liste ein Ersatzwert von 9999, und die
+ * Zusicherung ging durch, ohne irgendetwas geprueft zu haben — auf einem
+ * langsamen Rechner also stillschweigend gruen. Jetzt sagt der Test, dass er
+ * nichts messen konnte, statt Erfolg zu melden.
+ */
+if (abstaende.length) {
+  const kleinster = Math.min(...abstaende);
+  p3('Abstand zwischen Anfragen bleibt eingehalten', kleinster >= 800,
+     `kleinster Abstand ${kleinster} ms, alle: ${abstaende.join(', ')}`);
+} else {
+  p3('Abstand zwischen Anfragen bleibt eingehalten', false,
+     'zu wenige Anfragen zum Messen — der Test hat nichts geprueft');
+}
 
 // --- 9. Zittrige Hand: es darf nicht ewig gescannt werden ---------------------------------
 // Am Geraet gemeldet: "braucht erstmal lange zum Scannen". Aus der Hand ist ein

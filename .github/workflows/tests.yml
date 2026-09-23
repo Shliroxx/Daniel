@@ -12,6 +12,10 @@ concurrency:
   group: tests-${{ github.ref }}
   cancel-in-progress: true
 
+# Nur lesen — die Tests brauchen nichts zu schreiben.
+permissions:
+  contents: read
+
 jobs:
   pruefen:
     runs-on: ubuntu-latest
@@ -21,6 +25,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Vertraege pruefen (CSP, Cache, Schluessel)
+        run: node tests/test_vertrag.mjs
 
       - name: Analyse-Engine testen
         run: node tests/test_engine.mjs
