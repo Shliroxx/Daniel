@@ -559,17 +559,38 @@ const Engine = (() => {
     if (bilder > 1) teile.push(zeilen(p.mehrere_bilder));
     if (gegenprobe) teile.push(zeilen(p.gegenprobe));
 
+    /* Enthaltung gilt immer, nicht nur live.
+     *
+     * Dieser Satz stand frueher nur im Live-Zweig. Die Vollanalyse hatte damit
+     * ueberhaupt keine Erlaubnis, sich zu enthalten — auf einen leeren oder
+     * halbfertigen Kopf kamen dort zwangslaeufig erfundene oder strafende
+     * Zahlen heraus. Genau daher stammte die Note 32 auf einem makellosen
+     * leeren Kopf.
+     */
+    teile.push(
+      'Kategorien, die du im Bild nicht wiederfindest, laesst du auf null statt sie zu\n' +
+      'raten. Was du siehst, bewertest du normal; was du nicht sicher siehst, bekommt\n' +
+      'eine niedrige Sicherheit statt einer erfundenen Zahl. Null ist eine Enthaltung,\n' +
+      'nicht die Note null.'
+    );
+
     if (modus === 'live') {
+      /* Erst der Abgleich, dann der Phasenhinweis.
+       *
+       * Die Reihenfolge war vorher umgekehrt: der Phasenhinweis lenkte die
+       * Aufmerksamkeit ("der Kopf ist wahrscheinlich noch leer"), und die
+       * Korrektur kam erst danach. Das war dasselbe Priming, das dazu gefuehrt
+       * hat, dass der Tabak im Kopf nicht erkannt wurde. Was im Bild ist,
+       * entscheidet das Bild — die Phase ist nur eine Vermutung der App.
+       */
       const info = spec.phasen.find((ph) => ph.key === phase) || spec.phasen[0];
-      teile.push(
-        `Der Nutzer baut gerade. Phase laut App — das ist eine Vermutung: ${info.name}\n` +
-        `Ziel dieser Phase: ${info.ziel}\n` +
-        `Achte besonders auf: ${info.achte_auf}\n` +
-        'Kategorien, die du im Bild nicht wiederfindest, laesst du auf null statt sie zu\n' +
-        'raten. Was du siehst, bewertest du normal; was du nicht sicher siehst, bekommt\n' +
-        'eine niedrige Sicherheit statt einer erfundenen Zahl.'
-      );
       teile.push(zeilen(p.phasen_abgleich));
+      teile.push(
+        `Die App vermutet, der Nutzer sei gerade bei: ${info.name}\n` +
+        'Das ist nur eine Vermutung und niemals eine Vorgabe, was du sehen darfst.\n' +
+        `Passt das Bild dazu, achte zusaetzlich auf: ${info.achte_auf}\n` +
+        `Ziel dieses Schritts: ${info.ziel}`
+      );
     } else {
       teile.push(zeilen(p.voll));
     }
@@ -718,8 +739,24 @@ const Engine = (() => {
      * fertigen Kopf hielt, bekam deshalb keine. Die Phase ist eine Vermutung,
      * das Bild ist die Wirklichkeit — also entscheidet das Bild.
      */
-    const tabakDa = tabak.fuellhoehe_mm !== null || tabak.dichte > 0
-      || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand;
+    /* Zuerst zaehlt die ausdrueckliche Meldung, erst danach die Messwerte.
+     *
+     * Die Messwerte allein taugen nicht als Beleg, und das war eine echte
+     * Fehlerquelle: die Schemavorlage zeigte frueher "fuellhoehe_mm": 0.0, und
+     * 0 mm ist laut derselben Spec ein gueltiger Messwert (randbuendig). Ein
+     * Modell, das fuer einen leeren Kopf brav die Vorlage abschrieb, sah damit
+     * "Tabak vorhanden" aus — und die vier Tabakkategorien gingen mit ihren
+     * Nullen in die Note. Daher die 32 auf einem makellos leeren Kopf.
+     * Dasselbe bei dichte: 0 heisst laut Prompt "extrem locker", nicht "nichts".
+     *
+     * Deshalb fragt der Prompt jetzt ausdruecklich nach tabak.vorhanden. Die
+     * alte Messwert-Heuristik bleibt nur als Rueckfallebene fuer Modelle, die
+     * das Feld nicht fuellen.
+     */
+    const tabakDa = tabak.vorhanden !== null
+      ? tabak.vorhanden
+      : (tabak.fuellhoehe_mm !== null || tabak.dichte > 0
+         || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand);
     const hitzeDa = haube.erkannt === true || glut.status === 'visible';
 
     const offen = [];
@@ -1060,16 +1097,26 @@ const Engine = (() => {
     };
   }
 
+  /* Booleans kommen nicht immer als Booleans zurueck.
+   *
+   * Boolean("false") ist true, ebenso Boolean("nein") und Boolean("unbekannt").
+   * Manche Modelle geben Wahrheitswerte als Zeichenketten aus — daraus wurden
+   * erfundene Probleme und ungerechtfertigte Deckel auf die Note, etwa ein
+   * gemeldeter Randkontakt, den niemand im Bild sehen konnte. boolOderNull
+   * kennt diese Faelle und wird hier wie ueberall sonst benutzt.
+   */
   const tabakDaten = (roh) => ({
     // Negative Werte heissen: Tabak steht ueber dem Rand.
     fuellhoehe_mm: zahlOderNull(roh.fuellhoehe_mm, -15, 30),
     fuellhoehe_quelle: wahl(roh.fuellhoehe_quelle, spec.quellen, 'unknown'),
     dichte: Math.round(zahl(roh.dichte, 0, 100)),
     gleichmaessigkeit: Math.round(zahl(roh.gleichmaessigkeit, 0, 100)),
-    klumpen: Boolean(roh.klumpen),
-    luecken: Boolean(roh.luecken),
-    randkontakt: Boolean(roh.randkontakt),
-    ueber_rand: Boolean(roh.ueber_rand),
+    // null heisst "nicht gemeldet" — daraus wird kein Problem abgeleitet.
+    vorhanden: boolOderNull(roh.vorhanden),
+    klumpen: boolOderNull(roh.klumpen) === true,
+    luecken: boolOderNull(roh.luecken) === true,
+    randkontakt: boolOderNull(roh.randkontakt) === true,
+    ueber_rand: boolOderNull(roh.ueber_rand) === true,
     // Gramm sind aus einem Foto nicht bestimmbar — hoechstens eine Spanne als Text.
     menge_gramm: textOderNull(roh.menge_gramm, 40),
     quelle: wahl(roh.quelle, spec.quellen, 'unknown'),
@@ -1084,7 +1131,7 @@ const Engine = (() => {
   });
 
   const hmdDaten = (roh) => ({
-    erkannt: Boolean(roh.erkannt),
+    erkannt: boolOderNull(roh.erkannt) === true,
     modell: textOderNull(roh.modell, 60),
     zentriert: boolOderNull(roh.zentriert),
     abstand_mm: zahlOderNull(roh.abstand_mm, 0, 40),
