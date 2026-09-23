@@ -37,9 +37,23 @@ const wild = { helligkeit: 60, bewegung: 120, schaerfe: 1 };
 assert.equal(Steuerung.bildBewerten(wild, Steuerung.GRENZEN, 6000).ok, false, 'nach 6 s noch nicht');
 assert.equal(Steuerung.bildBewerten(wild, Steuerung.GRENZEN, 13000).ok, true, 'nach 13 s trotzdem');
 
+/* Eine Lounge ist dunkel, aber nicht stockdunkel.
+ *
+ * Frueher blieb im Notfallpfad die Nachsichtsgrenze (22) stehen. Das ist keine
+ * Dunkelheit, das ist Zimmerbeleuchtung mit einem dunklen Tonkopf im Bild —
+ * also genau die Lage, in der man Shisha baut. Die App schickte dort nie etwas
+ * los und zaehlte nur "zu dunkel" hoch. Das war die Haelfte von "braucht erstmal
+ * lange zum Scannen".
+ */
+const duester = { helligkeit: 18, bewegung: 1, schaerfe: 9 };
+assert.equal(Steuerung.bildBewerten(duester, Steuerung.GRENZEN).ok, false,
+  'am Anfang darf es streng sein');
+assert.equal(Steuerung.bildBewerten(duester, Steuerung.GRENZEN, 13000).ok, true,
+  'nach dem Notfallfenster geht auch ein duesteres Bild raus');
+
 // Ganz aus geht die Pruefung aber nie: stockdunkel bleibt stockdunkel.
 assert.equal(
-  Steuerung.bildBewerten({ helligkeit: 8, bewegung: 1, schaerfe: 9 }, Steuerung.GRENZEN, 60000).problem,
+  Steuerung.bildBewerten({ helligkeit: 3, bewegung: 1, schaerfe: 9 }, Steuerung.GRENZEN, 60000).problem,
   'zu dunkel'
 );
 

@@ -52,8 +52,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Dieselbe Node-Version wie in tests.yml — sonst laufen dieselben Tests
+      # hier auf der Zufalls-Node des Runners und dort auf einer festgelegten.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Regelwerk pruefen
         run: node -e "JSON.parse(require('fs').readFileSync('web/shisha/spec.json','utf8'))"
+
+      - name: Vertraege pruefen (CSP, Cache, Schluessel)
+        run: node tests/test_vertrag.mjs
 
       - name: Engine testen
         run: node tests/test_engine.mjs

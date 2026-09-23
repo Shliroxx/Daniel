@@ -523,6 +523,49 @@ const nichtsBewertet = Engine.normalisiere({
 assert.equal(nichtsBewertet.gesamtscore, null, 'keine Kategorie, keine Note');
 assert.equal(nichtsBewertet.stufe_text, null);
 
+/* --- Der Reproduktionspfad der Note 32 ------------------------------------------
+ *
+ * Die Schemavorlage zeigte frueher "fuellhoehe_mm": 0.0, und 0 mm ist laut Spec
+ * ein gueltiger Messwert (randbuendig). Ein Modell, das fuer einen leeren Kopf
+ * brav die Vorlage abschrieb, sah damit nach "Tabak vorhanden" aus. Jetzt fragt
+ * der Prompt ausdruecklich nach tabak.vorhanden, und das schlaegt die Messwerte.
+ */
+const leerTrotzNullwerten = Engine.normalisiere({
+  ...ANTWORT, probleme: [], optimierungen: [],
+  tabak: { vorhanden: false, fuellhoehe_mm: 0, fuellhoehe_quelle: 'unknown',
+           dichte: 0, gleichmaessigkeit: 0, klumpen: false, luecken: false,
+           randkontakt: false, ueber_rand: false, menge_gramm: null,
+           quelle: 'observed', confidence: 80 },
+  scores: { tabak_verteilung: null, fuellhoehe: null, airflow: 96, hitzemanagement: null,
+            kopfgeometrie: 90, tabak_kompatibilitaet: null, zielerreichung: null },
+}, false, {}, 'kopf');
+assert.ok(leerTrotzNullwerten.nicht_bewertbar.includes('fuellhoehe'),
+  'vorhanden:false schlaegt eine gemeldete Fuellhoehe von 0 mm');
+assert.equal(leerTrotzNullwerten.gesamtscore, 94,
+  `leerer Kopf falsch benotet: ${leerTrotzNullwerten.gesamtscore}`);
+
+// Umgekehrt: vorhanden:true wird geglaubt, auch wenn alle Messwerte auf 0 stehen.
+// dichte 0 heisst laut Prompt "extrem locker" — ein Fluffy-Kopf, kein leerer.
+const fluffy = Engine.normalisiere({
+  ...ANTWORT,
+  tabak: { ...ANTWORT.tabak, vorhanden: true, fuellhoehe_mm: 0, dichte: 0, gleichmaessigkeit: 0 },
+}, false, {}, 'kopf');
+assert.ok(!fluffy.nicht_bewertbar.includes('tabak_verteilung'),
+  'ein sehr locker gebauter Kopf ist kein leerer Kopf');
+
+// Wahrheitswerte als Zeichenkette duerfen keine Probleme erfinden.
+// Boolean("false") waere true — und haette einen Randkontakt gemeldet,
+// den niemand im Bild sehen kann.
+const stringBools = Engine.normalisiere({
+  ...ANTWORT,
+  tabak: { ...ANTWORT.tabak, randkontakt: 'false', ueber_rand: 'nein', klumpen: 'false' },
+  hmd: { ...ANTWORT.hmd, erkannt: 'false' },
+}, false, {}, 'glattziehen');
+assert.equal(stringBools.tabak.randkontakt, false, '"false" ist kein Randkontakt');
+assert.equal(stringBools.tabak.ueber_rand, false, '"nein" heisst nein');
+assert.equal(stringBools.tabak.klumpen, false);
+assert.equal(stringBools.hmd.erkannt, false, '"false" ist kein erkanntes HMD');
+
 // --- Einstieg mitten drin: Kamera direkt auf den gestopften Kopf ----------------
 // Der Alltagsfall: die App startet in Phase "kopf", aber der Kopf ist laengst
 // gestopft. Frueher gab die Phase vor, was das Modell sehen durfte — die
@@ -1001,5 +1044,41 @@ Engine.einstellungenSpeichern({ anbieter: 'gemini', gegenprobe: 'gemini' });
 anfragen = [];
 await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'voll');
 assert.equal(anfragen.length, 1, 'gegen sich selbst pruefen bringt nichts');
+
+/* --- Vertrag: was die App liest, muss der Prompt auch verlangen ------------------
+ *
+ * Genau hier klaffte eine Luecke, die niemandem auffiel: die Engine deckelte das
+ * Hitzemanagement, wenn kohle.durchgegluht false war — und die Wissensbasis nennt
+ * nicht durchgegluehte Kohle als Kohlenmonoxid-Thema, also den einzigen
+ * gesundheitsrelevanten Pruefpunkt der App. Nur stand "durchgegluht" in keinem
+ * Schema. Das Modell wurde nie danach gefragt, lieferte es nie, der Wert blieb
+ * null, und die Pruefung konnte konstruktionsbedingt nie ausloesen.
+ *
+ * Ein tot geborener Sicherheitscheck faellt im Betrieb nicht auf — er meldet
+ * einfach nichts. Deshalb steht er hier.
+ */
+const schemaText = Engine.spec.prompt.schema.join('\n');
+[
+  'vorhanden', 'fuellhoehe_mm', 'dichte', 'gleichmaessigkeit', 'klumpen', 'luecken',
+  'randkontakt', 'ueber_rand', 'zentrale_oeffnung_frei', 'blockade_risiko',
+  'erkannt', 'zentriert', 'abstand_mm', 'kontakt_tabak',
+  'status', 'anzahl', 'durchgegluht', 'hotspot_risiko',
+  'beobachtete_phase', 'coach_satz',
+].forEach((feld) => {
+  assert.ok(schemaText.includes(`"${feld}"`),
+    `Die App liest "${feld}", der Prompt verlangt es aber nicht`);
+});
+
+// Die Enthaltung muss in der Vorlage sichtbar sein, nicht nur in einem Nebensatz:
+// zeigt die Vorlage Nullen, schreibt das Modell Nullen.
+assert.ok(/"tabak_verteilung":\s*null/.test(schemaText),
+  'die Score-Vorlage muss null zeigen, sonst liefert das Modell 0');
+
+// Und die Kategorieschluessel muessen ausgeschrieben sein — trifft das Modell
+// daneben, greift die Plausibilitaetskappung gar nicht.
+Object.keys(Engine.spec.gewichte).forEach((kategorie) => {
+  assert.ok(schemaText.includes(kategorie),
+    `Kategorieschluessel ${kategorie} steht nicht im Schema`);
+});
 
 console.log('ALLE TESTS BESTANDEN');

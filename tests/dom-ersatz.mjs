@@ -1,8 +1,17 @@
 /* Minimaler Browser-Ersatz, gerade so viel wie ar.js anfasst. */
 import { readFileSync } from 'node:fs';
 
+/** Der Fehler, den ein abgebrochener fetch im Browser wirft. */
+function abbruchFehler() {
+  const fehler = new Error('The operation was aborted.');
+  fehler.name = 'AbortError';
+  return fehler;
+}
+
 export function baueUmgebung(webDir, { antwort }) {
   const protokoll = { fehler: [], gesprochen: [], vibriert: [], geteilt: [], anfragen: [] };
+  // Schalter fuer den Kamerafehler: DOMException-Name oder leer.
+  const kameraSchalter = { fehler: '' };
   const elemente = new Map();
 
   function klassenListe() {
@@ -200,7 +209,19 @@ export function baueUmgebung(webDir, { antwort }) {
       vibrate: (m) => protokoll.vibriert.push(m),
       onLine: true,
       mediaDevices: {
+        /* Die Kamera darf auch scheitern.
+         *
+         * Vorher gelang getUserMedia hier immer — ausgerechnet der haeufigste
+         * echte Fehler am iPhone (Erlaubnis abgelehnt, Kamera von einer anderen
+         * App belegt) wurde also in keinem Test je ausgefuehrt. Der Test setzt
+         * kameraFehler auf einen DOMException-Namen, um ihn auszuloesen.
+         */
         getUserMedia: async () => {
+          if (kameraSchalter.fehler) {
+            const fehler = new Error('Simulierter Kamerafehler');
+            fehler.name = kameraSchalter.fehler;
+            throw fehler;
+          }
           // Eine Spur, deren Zustand der Test umschalten kann.
           spur.readyState = 'live';
           return { getVideoTracks: () => [spur], getTracks: () => [spur] };
@@ -209,13 +230,39 @@ export function baueUmgebung(webDir, { antwort }) {
       canShare: () => true,
       share: async (d) => protokoll.geteilt.push(d.title),
     },
+    /* Echter Abbruch statt "geht immer irgendwann durch".
+     *
+     * Ohne AbortController lief hier jede Anfrage bis zum Ende, egal wie lange
+     * sie brauchte — der Nachbau konnte einen haengenden Fetch also gar nicht
+     * abbilden, und genau der hat am Geraet die ganze App eingefroren.
+     */
+    AbortController: class {
+      constructor() {
+        this.signal = { aborted: false, _horcher: [] };
+      }
+      abort() {
+        if (this.signal.aborted) return;
+        this.signal.aborted = true;
+        this.signal._horcher.forEach((fn) => fn());
+      }
+    },
     fetch: async (url, optionen = {}) => {
       if (String(url).endsWith('spec.json')) {
         return { ok: true, json: async () => JSON.parse(readFileSync(`${webDir}/spec.json`, 'utf8')) };
       }
       protokoll.anfragen.push({ url: String(url), optionen, zeit: Date.now() });
       const ergebnis = antwort(String(url));
-      if (ergebnis.verzoegerung) await new Promise((f) => setTimeout(f, ergebnis.verzoegerung));
+      const signal = optionen.signal;
+      if (signal && signal.aborted) throw abbruchFehler();
+      if (ergebnis.verzoegerung) {
+        // Wer zuerst kommt: die Verzoegerung oder der Abbruch.
+        await new Promise((fertig, scheitern) => {
+          const uhr = setTimeout(fertig, ergebnis.verzoegerung);
+          if (signal) {
+            signal._horcher.push(() => { clearTimeout(uhr); scheitern(abbruchFehler()); });
+          }
+        });
+      }
       if (ergebnis.status && ergebnis.status !== 200) {
         return { ok: false, status: ergebnis.status, text: async () => ergebnis.text || '' };
       }
@@ -233,7 +280,7 @@ export function baueUmgebung(webDir, { antwort }) {
   global.btoa = btoa;
 
   return {
-    global, elemente, protokoll, dokument, spur,
+    global, elemente, protokoll, dokument, spur, kameraSchalter,
     bildAendern: () => { bildMuster++; },
     wackeln: (an) => { wackelt = Boolean(an); },
   };

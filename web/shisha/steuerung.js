@@ -30,6 +30,9 @@ const Steuerung = (() => {
     nachsicht: { ruhe: 16, schaerfe: 3.4, helligkeit: 22 }, // dazwischen reicht weniger
   };
 
+  // Der echte Boden im Notfallpfad: darunter ist das Bild wirklich schwarz.
+  const NOTFALL_HELLIGKEIT = 8;
+
   /* Die Grenzen, die gerade gelten.
    *
    * Aus der Hand gehalten ist ein Bild selten ganz ruhig und selten ganz scharf.
@@ -43,11 +46,19 @@ const Steuerung = (() => {
     if (!(wartetMs > grenzen.notfallMs)) {
       return { grenzen: { ...grenzen, ...grenzen.nachsicht }, nachsichtig: true };
     }
-    // Nach zwoelf Sekunden ohne jedes Ergebnis ist Schweigen die schlechteste
-    // Antwort. Dann geht das Bild raus, wie es ist — nur stockdunkel bringt
-    // wirklich nichts, das bleibt die einzige Huerde.
+    /* Nach zwoelf Sekunden ohne jedes Ergebnis ist Schweigen die schlechteste
+     * Antwort. Dann geht das Bild raus, wie es ist — nur stockdunkel bringt
+     * wirklich nichts, das bleibt die einzige Huerde.
+     *
+     * Frueher stand hier die Nachsichtsgrenze (22), und die ist kein
+     * Stockdunkel: das ist normale Zimmerbeleuchtung mit einem dunklen Tonkopf
+     * im Bild. In einer Lounge oder abends auf der Terrasse — also genau dort,
+     * wo man Shisha baut — ging deshalb nie etwas raus. Oben zaehlte nur
+     * "zu dunkel · 180s" hoch. NOTFALL_HELLIGKEIT ist jetzt ein echter Boden:
+     * darunter ist das Bild wirklich schwarz und eine Analyse sinnlos.
+     */
     return {
-      grenzen: { ...grenzen, ruhe: Infinity, schaerfe: 0, helligkeit: grenzen.nachsicht.helligkeit },
+      grenzen: { ...grenzen, ruhe: Infinity, schaerfe: 0, helligkeit: NOTFALL_HELLIGKEIT },
       nachsichtig: true,
     };
   }

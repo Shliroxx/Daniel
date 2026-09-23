@@ -401,7 +401,15 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   font-weight: 700;
 }
 
-.haupt:disabled, .klein:disabled { opacity: 0.45; }
+/* Ein gesperrter Knopf muss gesperrt aussehen.
+ *
+ * Der Startknopf war frueher als .gross gesperrt, hatte hier aber keine Regel:
+ * er leuchtete in vollem Cyan mit Schein und tat beim Antippen nichts. Am Handy
+ * sieht das nicht nach "noch nicht so weit" aus, sondern nach kaputt. */
+.haupt:disabled, .klein:disabled, .gross:disabled, .rund:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
 
 /* ---------- Report ---------- */
 .blatt {
