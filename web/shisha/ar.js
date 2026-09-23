@@ -78,6 +78,8 @@ const PFEIL = { hoch: '↑', gleich: '→', runter: '↓' };
 
 // Die Schwellen fuer Ruhe, Schaerfe und Helligkeit stehen in steuerung.js.
 const PAUSE_MS = 900;          // Verschnaufpause zwischen zwei Analysen
+const WACHHUND_MS = 25000;     // laenger darf keine Anfrage "beschaeftigt" bleiben
+const FEHLER_AUFGEBEN = 6;     // so oft derselbe Fehler, dann Pause statt Endlosschleife
 
 const zustand = {
   sitzung: null,
@@ -94,6 +96,10 @@ const zustand = {
   lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
   wartetSeit: 0,        // seit wann wartet die Schleife auf ein brauchbares Bild
   anleitung: false,     // Anleitungsblatt offen — dann ruht alles andere
+  specFehlt: false,     // Regelwerk kam nicht durch — Startknopf laedt dann neu
+  busySeit: 0,          // seit wann laeuft die aktuelle Anfrage (Wachhund)
+  letzterFehler: '',    // fuer die Eskalation bei immer demselben Fehler
+  fehlerZaehler: 0,
   // Bildverschiebung seit der letzten Analyse, in normalisierten Koordinaten.
   versatz: { x: 0, y: 0 },
   markerZeit: 0,        // wann die aktuellen Marker entstanden sind
@@ -454,6 +460,20 @@ async function schleife() {
     if (!zustand.wartetSeit) zustand.wartetSeit = Date.now();
     const wartetMs = Date.now() - zustand.wartetSeit;
 
+    /* Wachhund auf eine haengende Anfrage.
+     *
+     * Die Fristen in engine.js fangen den Normalfall ab. Haengt aber etwas
+     * davor — eine eingefrorene Kamera in bildAufnehmen zum Beispiel —, bleibt
+     * "busy" stehen, und jede spaeter gestartete Schleife schlaeft hier in
+     * 220-ms-Schritten bis in alle Ewigkeit. Die App sieht dann lebendig aus
+     * und tut nichts. Lieber einmal zu viel freigeben als endlos warten.
+     */
+    if (zustand.busy && zustand.busySeit && Date.now() - zustand.busySeit > WACHHUND_MS) {
+      zustand.busy = false;
+      zustand.busySeit = 0;
+      setzeLage('Anfrage hing — neuer Versuch', 'fehler');
+    }
+
     const urteil = zustand.busy ? false : guetePruefen(wartetMs);
     if (!urteil) {
       await schlafen(220);
@@ -474,7 +494,9 @@ async function schleife() {
     }
 
     zustand.busy = true;
+    zustand.busySeit = Date.now();
     zustand.wartetSeit = 0;
+    const meineSitzung = zustand.sitzung;
     let ruhe = PAUSE_MS;
     let stolperstein = '';
     setzeLage(urteil.nachsichtig ? 'analysiere (unruhig)' : 'analysiere', 'denkt');
@@ -486,21 +508,49 @@ async function schleife() {
       const blob = await bildAufnehmen(896);
       analyseMini = zustand.letzteGrau;
       zustand.versatz = { x: 0, y: 0 };
-      const ergebnis = await zustand.sitzung.analysieren(blob, 'live', false);
+      const ergebnis = await meineSitzung.analysieren(blob, 'live', false);
       // Waehrend der Anfrage kann eine neue Runde begonnen haben — dann ist
       // dieses Ergebnis veraltet. Es wird dann weder angezeigt noch einsortiert:
       // sonst schoebe es sich in Verlauf und Konsens und koennte sogar die
       // Bauphase weiterschalten, ohne dass etwas davon zu sehen waere.
-      if (meineRunde()) liveUebernehmen(zustand.sitzung.aufnehmen(ergebnis));
+      //
+      // Und es muss dieselbe Sitzung sein: wer waehrend einer laufenden Anfrage
+      // "Neuer Kopf" tippt, bekam sonst auf den frischen Kopf sofort das Urteil
+      // des alten — samt Problemen, Note und moeglichem Phasensprung.
+      if (meineRunde() && zustand.sitzung === meineSitzung) {
+        liveUebernehmen(meineSitzung.aufnehmen(ergebnis));
+      }
+      zustand.fehlerZaehler = 0;
+      zustand.letzterFehler = '';
     } catch (fehler) {
       setzeLage(kurz(fehler.message), 'fehler');
       $('coach').textContent = fehler.message;
       ruhe = Steuerung.fehlerRuhe(fehler.status || 0);
       stolperstein = fehler.message;
+
+      /* Immer derselbe Fehler heisst: warten hilft nicht.
+       *
+       * Vorher lief jeder Dauerfehler — falscher Modellname, abgeschnittene
+       * Antwort, kaputtes JSON — alle drei Sekunden weiter, ohne Ende und ohne
+       * dass jemand mitzaehlte. Das verbrennt das Tageskontingent und sagt dem
+       * Nutzer fuenfzig Mal denselben halben Satz.
+       */
+      if (ruhe !== null) {
+        zustand.fehlerZaehler = fehler.message === zustand.letzterFehler
+          ? zustand.fehlerZaehler + 1 : 1;
+        zustand.letzterFehler = fehler.message;
+        if (zustand.fehlerZaehler >= FEHLER_AUFGEBEN) {
+          pausieren(`${fehler.message} — mehrfach hintereinander. Pruef Modellnamen und Schluessel.`);
+          return;
+        }
+        // Ruhe verdoppeln, gedeckelt: 3 s, 6 s, 12 s, dann Schluss.
+        ruhe = Math.min(ruhe * Math.pow(2, zustand.fehlerZaehler - 1), 30000);
+      }
     } finally {
       // Vor der Wartezeit freigeben, nicht danach: sonst blockiert eine lange
       // Kontingentpause den Knopf fuer die Vollanalyse gleich mit.
       zustand.busy = false;
+      zustand.busySeit = 0;
       kontingentZeigen();
     }
 
@@ -2110,6 +2160,9 @@ $('zugangAbbruch').addEventListener('click', () => { $('einstellungen').hidden =
 $('losButton').addEventListener('click', async () => {
   const knopf = $('losButton');
 
+  // Regelwerk fehlt: der Knopf ist dann der Weg zurueck, nicht eine Sackgasse.
+  if (zustand.specFehlt) { location.reload(); return; }
+
   /* Ohne Zugang fuehrt der Knopf dorthin, wo man ihn einrichtet.
    *
    * Vorher war er in dem Fall einfach gesperrt. Ein Knopf, der auf Tippen nicht
@@ -2239,7 +2292,20 @@ Engine.specLaden()
     startBereitschaft();
   })
   .catch((fehler) => {
-    $('startFehler').textContent = `Regelwerk konnte nicht geladen werden: ${fehler.message}`;
+    /* Ohne Regelwerk geht nichts — aber der Knopf muss trotzdem antworten.
+     *
+     * Vorher blieb hier nur eine kleine Zeile stehen, und der Startknopf blieb
+     * gesperrt: die Seite lud sauber, der Knopf leuchtete, und Tippen tat
+     * nichts. Genau so kam es beim Nutzer an. Jetzt sagt der Knopf, was los
+     * ist, und laedt auf Tippen neu. */
+    $('startFehler').textContent =
+      `Regelwerk konnte nicht geladen werden: ${fehler.message}`;
+    $('startInfo').textContent = 'Tipp auf den Knopf, um es nochmal zu versuchen.';
+    const knopf = $('losButton');
+    knopf.disabled = false;
+    knopf.classList.add('wartet');
+    knopf.textContent = 'Nochmal laden';
+    zustand.specFehlt = true;
   });
 
 /** Fuellt die Vorschlagsliste fuer das Kopfmodell aus spec.json. */

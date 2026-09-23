@@ -165,6 +165,38 @@ const Engine = (() => {
     return modus === 'live' ? 0 : 1024;
   }
 
+  /* Jede Anfrage bekommt eine Frist.
+   *
+   * Ohne Frist kann eine Anfrage ewig offen bleiben — iOS laesst sie beim
+   * Funkloch oder beim Wechsel von WLAN auf Mobilfunk gern weder ankommen noch
+   * scheitern. Dann bleibt die App in "analysiere" stehen, die Schleife haelt
+   * sich selbst fuer beschaeftigt, und auch die Vollanalyse ist tot. Es gibt
+   * keinen Weg zurueck ausser neu laden. Genau das war der Zustand, den der
+   * Nutzer als "der Prozess war kaputt" beschrieben hat.
+   *
+   * Live darf es kurz sein — ein Bild von vor 15 Sekunden hilft beim Bauen
+   * ohnehin nicht mehr. Die Vollanalyse darf laenger denken.
+   */
+  const FRIST_MS = { live: 15000, voll: 60000 };
+
+  async function mitFrist(aufruf, modus) {
+    const abbruch = new AbortController();
+    const frist = FRIST_MS[modus] || FRIST_MS.live;
+    const uhr = setTimeout(() => abbruch.abort(), frist);
+    try {
+      return await aufruf(abbruch.signal);
+    } catch (fehler) {
+      if (fehler && fehler.name === 'AbortError') {
+        throw new AnalyseFehler(
+          `Keine Antwort nach ${Math.round(frist / 1000)} Sekunden — Netz oder Anbieter klemmt.`
+        );
+      }
+      throw fehler;
+    } finally {
+      clearTimeout(uhr);
+    }
+  }
+
   async function ueberGemini(blobs, prompt, e, modus) {
     const bilder = [];
     for (const blob of blobs) {
@@ -173,10 +205,11 @@ const Engine = (() => {
 
     const modell = (modus === 'voll' && e.gemini_modell_voll) ? e.gemini_modell_voll : e.gemini_modell;
     const budget = denkbudget(modell, modus);
-    const antwort = await fetch(
+    const antwort = await mitFrist((signal) => fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modell)}:generateContent`,
       {
         method: 'POST',
+        signal,
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': e.gemini_key },
         body: JSON.stringify({
           system_instruction: { parts: [{ text: prompt }] },
@@ -193,7 +226,7 @@ const Engine = (() => {
           },
         }),
       }
-    );
+    ), modus);
 
     const rohtext = await antwort.text();
     if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
@@ -211,19 +244,22 @@ const Engine = (() => {
     return text;
   }
 
-  async function ueberOpenRouter(blobs, prompt, e) {
+  async function ueberOpenRouter(blobs, prompt, e, modus) {
     const bilder = [];
     for (const blob of blobs) {
       bilder.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${await base64(blob)}` } });
     }
 
-    const antwort = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const antwort = await mitFrist((signal) => fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
+      signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${e.openrouter_key}` },
       body: JSON.stringify({
         model: e.openrouter_modell,
         temperature: 0,
-        max_tokens: 2600,
+        // Die Vollanalyse darf mehr schreiben: acht Probleme, sechs Schritte,
+        // acht Marker und deutscher Fliesstext passen nicht in 2600 Tokens.
+        max_tokens: modus === 'voll' ? 8192 : 2600,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: prompt },
@@ -233,7 +269,7 @@ const Engine = (() => {
           },
         ],
       }),
-    });
+    }), modus);
 
     const rohtext = await antwort.text();
     if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
@@ -245,19 +281,20 @@ const Engine = (() => {
     return text;
   }
 
-  async function ueberServer(blobs, prompt, e) {
+  async function ueberServer(blobs, prompt, e, modus) {
     const basis = (e.server_url || location.origin).replace(/\/+$/, '');
     const daten = new FormData();
     blobs.forEach((blob, index) => daten.append('bild', blob, `kopf${index + 1}.jpg`));
     daten.append('prompt', prompt);
 
-    const antwort = await fetch(`${basis}/api/shisha/proxy`, {
+    const antwort = await mitFrist((signal) => fetch(`${basis}/api/shisha/proxy`, {
       method: 'POST',
+      signal,
       // Das Losungswort steht im eigenen Kopf — dadurch fragt der Browser erst
       // vorab an, statt die Anfrage einfach abzuschicken.
       headers: { 'X-Shisha-Token': e.server_token || '' },
       body: daten,
-    });
+    }), modus);
     const rohtext = await antwort.text();
     if (!antwort.ok) {
       if (antwort.status === 401) throw new AnalyseFehler('Losungswort stimmt nicht — steht in der Startzeile des Rechners.');
@@ -282,9 +319,9 @@ const Engine = (() => {
         text = await ueberGemini(blobs, prompt, e, modus);
       } else if (anbieter === 'openrouter') {
         if (!e.openrouter_key) throw new AnalyseFehler('Kein OpenRouter-Schluessel hinterlegt.');
-        text = await ueberOpenRouter(blobs, prompt, e);
+        text = await ueberOpenRouter(blobs, prompt, e, modus);
       } else {
-        text = await ueberServer(blobs, prompt, e);
+        text = await ueberServer(blobs, prompt, e, modus);
       }
       // Erst jetzt zaehlen: gezaehlt wird, was den Anbieter erreicht hat. Vorher
       // erhoehte jeder Netzabbruch, jede 429 und sogar ein fehlender Schluessel
