@@ -626,6 +626,74 @@ assert.equal(stringBools.tabak.ueber_rand, false, '"nein" heisst nein');
 assert.equal(stringBools.tabak.klumpen, false);
 assert.equal(stringBools.hmd.erkannt, false, '"false" ist kein erkanntes HMD');
 
+/* --- Ueber den Rand: fachlich richtig herum -----------------------------------
+ *
+ * Frueher ging "ueber Rand" nur MIT HMD durch. Ein HMD liegt aber plan auf der
+ * Randkante — steht Tabak darueber, liegt das HMD auf dem Tabak. Gewollt ist
+ * ueber Rand nur beim Dense Pack unter Folie. Diese Regel war vorher gar nicht
+ * getestet.
+ */
+const ueberRand = (hmdDa, aufsatz, pack) => Engine.normalisiere({
+  ...ANTWORT, probleme: [], aufsatz,
+  tabak: { ...ANTWORT.tabak, vorhanden: true, randkontakt: false, ueber_rand: true },
+  hmd: { ...ANTWORT.hmd, erkannt: hmdDa, kontakt_tabak: null },
+  scores: { ...ANTWORT.scores, fuellhoehe: 85 },
+}, false, { packmethode: pack }, 'glattziehen');
+
+const mitHmdDrauf = ueberRand(true, 'hmd', 'dicht');
+assert.ok(mitHmdDrauf.scores.fuellhoehe <= Engine.spec.plausibilitaet.kappe_ueber_rand,
+  `ueber Rand mit HMD blieb bei ${mitHmdDrauf.scores.fuellhoehe}`);
+assert.ok(mitHmdDrauf.kappungen.some((k) => /HMD liegt darauf/.test(k.grund)));
+
+const denseUnterFolie = ueberRand(false, 'folie', 'dicht');
+assert.equal(denseUnterFolie.scores.fuellhoehe, 85, 'Dense Pack unter Folie darf ueber den Rand');
+
+const lockerDrueber = ueberRand(false, 'folie', 'locker');
+assert.ok(lockerDrueber.scores.fuellhoehe <= Engine.spec.plausibilitaet.kappe_ueber_rand,
+  'locker gebaut und trotzdem ueber dem Rand ist ein Fehler');
+
+// Folie ist Werkzeug der Hitze wie das HMD — dann ist Hitzemanagement beurteilbar.
+assert.ok(!denseUnterFolie.nicht_bewertbar.includes('hitzemanagement'), 'Folie zaehlt als Aufsatz');
+assert.equal(denseUnterFolie.aufsatz, 'folie');
+
+/* --- Unmoegliche Messwerte werden verworfen, nicht geklemmt ------------------ */
+const skalenfehler = Engine.normalisiere({
+  ...ANTWORT,
+  tabak: { ...ANTWORT.tabak, fuellhoehe_mm: 28 },
+  hmd: { ...ANTWORT.hmd, erkannt: true, abstand_mm: 35 },
+  kohle: { ...ANTWORT.kohle, status: 'visible', anzahl: 11 },
+}, false, {}, 'kohle');
+assert.equal(skalenfehler.tabak.fuellhoehe_mm, null, '28 mm unter dem Rand ist kein Messwert');
+assert.equal(skalenfehler.hmd.abstand_mm, null, '35 mm HMD-Abstand ist kein Messwert');
+assert.equal(skalenfehler.kohle.anzahl, null, '11 Kohlen sind ein Erkennungsfehler');
+assert.ok(skalenfehler.kappungen.some((k) => k.kategorie === 'messwerte'),
+  'verworfene Messwerte stehen im Report');
+// Realistische Werte bleiben unangetastet.
+const normal = Engine.normalisiere({ ...ANTWORT, tabak: { ...ANTWORT.tabak, fuellhoehe_mm: 2.5 } }, false, {});
+assert.equal(normal.tabak.fuellhoehe_mm, 2.5);
+
+/* --- Massstab passt nicht zur erkannten Kopfart ------------------------------
+ * Ohne eigene Angabe rechnet die App mit dem Standardkopf (Oblako Phunnel M).
+ * Sieht das Modell eine flache Turbine, stimmt dieser Bezug nicht. */
+const turbine = Engine.normalisiere({
+  ...ANTWORT,
+  kopf: { ...ANTWORT.kopf, art: 'turbine', modell: null, quelle: 'observed', confidence: 80 },
+  tabak: { ...ANTWORT.tabak, fuellhoehe_quelle: 'estimated' },
+}, false, {});
+assert.equal(turbine.massstab_passt, false, 'Turbine passt nicht zum Phunnel-Massstab');
+assert.equal(turbine.tabak.fuellhoehe_quelle, 'unknown', 'Millimeter sind dann nur geraten');
+// Mit eigener Durchmesserangabe gilt der Massstab — dann hat der Nutzer gemessen.
+const turbineGemessen = Engine.normalisiere({
+  ...ANTWORT,
+  kopf: { ...ANTWORT.kopf, art: 'turbine', modell: null, quelle: 'observed', confidence: 80 },
+}, false, { aussendurchmesser_mm: 95 });
+assert.equal(turbineGemessen.massstab_passt, true);
+
+// Der aegyptische Tonkopf ist jetzt eine eigene Kopfart statt "killer" oder "unbekannt".
+assert.ok(Engine.spec.kopfarten.includes('tonkopf'));
+assert.equal(Engine.normalisiere({ ...ANTWORT, kopf: { ...ANTWORT.kopf, art: 'tonkopf' } }, false, {}).kopf.art,
+  'tonkopf');
+
 // --- Einstieg mitten drin: Kamera direkt auf den gestopften Kopf ----------------
 // Der Alltagsfall: die App startet in Phase "kopf", aber der Kopf ist laengst
 // gestopft. Frueher gab die Phase vor, was das Modell sehen durfte — die
@@ -1183,7 +1251,7 @@ const schemaText = Engine.spec.prompt.schema.join('\n');
   'randkontakt', 'ueber_rand', 'zentrale_oeffnung_frei', 'blockade_risiko',
   'erkannt', 'zentriert', 'abstand_mm', 'kontakt_tabak',
   'status', 'anzahl', 'durchgegluht', 'hotspot_risiko',
-  'beobachtete_phase', 'coach_satz',
+  'beobachtete_phase', 'coach_satz', 'aufsatz',
 ].forEach((feld) => {
   assert.ok(schemaText.includes(`"${feld}"`),
     `Die App liest "${feld}", der Prompt verlangt es aber nicht`);

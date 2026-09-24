@@ -2179,12 +2179,16 @@ function reportZeigen(analyse) {
   // Wo die App die Bewertung des Modells heruntergesetzt hat, und warum.
   const kappungen = $('kappungen');
   kappungen.innerHTML = '';
+  // Hinweise ohne Zahlen (verworfene Messwerte, unpassender Massstab) stehen
+  // frueher als "antwort: null → null, weil …" im Report.
+  const NAMEN = { antwort: 'Antwort', messwerte: 'Messwerte', massstab: 'Maßstab', gesamt: 'Gesamtnote' };
   (analyse.kappungen || []).forEach((kappung) => {
     const zeile = document.createElement('div');
     zeile.className = 'kappung';
-    zeile.textContent =
-      `${Engine.spec.kategorien[kappung.kategorie] || kappung.kategorie}: `
-      + `${kappung.von} → ${kappung.auf}, weil ${kappung.grund}`;
+    const name = Engine.spec.kategorien[kappung.kategorie] || NAMEN[kappung.kategorie] || kappung.kategorie;
+    zeile.textContent = kappung.von === null || kappung.von === undefined
+      ? `${name}: ${kappung.grund}`
+      : `${name}: ${kappung.von} → ${kappung.auf}, weil ${kappung.grund}`;
     kappungen.appendChild(zeile);
   });
 

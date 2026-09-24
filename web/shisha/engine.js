@@ -561,6 +561,9 @@ const Engine = (() => {
       zeilenListe.push(
         `- Packmethode laut Nutzer: ${pack.name} — ${pack.beschreibung}`
         + ` Erwartete Dichte etwa ${pack.erwartete_dichte[0]} bis ${pack.erwartete_dichte[1]} von 100.`
+        // Frueher galt ein einziger Hoehenwert fuer alle Bauweisen — ein
+        // korrekt gebauter Fluffy- oder Dense-Kopf wurde daran falsch gemessen.
+        + (pack.hoehe_text ? ` Fuellhoehe dabei: ${pack.hoehe_text}.` : '')
       );
     }
 
@@ -604,7 +607,11 @@ const Engine = (() => {
     const teile = [
       zeilen(p.rolle),
       `Kopftypen:\n${zeilen(w.kopftypen)}\n\nTabakphysik:\n${zeilen(w.tabakphysik)}\n\n` +
-      `Mengen und Hoehen:\n${zeilen(w.mengen)}\n\nTypische Fehler:\n${zeilen(w.fehler)}`,
+      (w.tabaklinien ? `Tabaklinien:\n${zeilen(w.tabaklinien)}\n\n` : '') +
+      `Mengen und Hoehen:\n${zeilen(w.mengen)}\n\n` +
+      (w.kohle ? `Kohle und Sicherheit:\n${zeilen(w.kohle)}\n\n` : '') +
+      (w.anrauchen ? `Nach dem Aufbau:\n${zeilen(w.anrauchen)}\n\n` : '') +
+      `Typische Fehler:\n${zeilen(w.fehler)}`,
       zeilen(p.wahrheit),
       zeilen(p.erkennung),
       zeilen(p.sicht),
@@ -841,7 +848,7 @@ const Engine = (() => {
    * Jetzt entscheidet das Bild. Ausgelassen wird eine Kategorie nur, wenn die
    * beobachtete Phase das hergibt UND im Bild wirklich kein Tabak liegt.
    */
-  function nichtBewertbar(roh, tabak, haube, glut, enthalten = []) {
+  function nichtBewertbar(roh, tabak, haube, glut, enthalten = [], aufsatz = 'unklar') {
     /* Was im Bild nicht belegt ist, wird nicht benotet.
      *
      * Diese Regel haengt bewusst NICHT mehr an der Bauphase. Genau das war der
@@ -869,7 +876,9 @@ const Engine = (() => {
       ? tabak.vorhanden
       : (tabak.fuellhoehe_mm !== null || tabak.dichte > 0
          || tabak.gleichmaessigkeit > 0 || tabak.randkontakt || tabak.ueber_rand);
-    const hitzeDa = haube.erkannt === true || glut.status === 'visible';
+    // Folie ist wie das HMD das Werkzeug der Hitze — liegt sie drauf, laesst
+    // sich beurteilen, ob sie richtig sitzt.
+    const hitzeDa = haube.erkannt === true || aufsatz === 'folie' || glut.status === 'visible';
 
     const offen = [];
     // Ohne Tabak im Kopf gibt es weder Verteilung noch Fuellhoehe zu beurteilen,
@@ -895,6 +904,50 @@ const Engine = (() => {
     const luft = airflowDaten(objekt(roh.airflow));
     const haube = hmdDaten(objekt(roh.hmd));
     const glut = kohleDaten(objekt(roh.kohle));
+    // Folie gab es im Datenmodell bisher nicht: hmd.erkannt = false hiess
+    // zugleich "Folie", "nichts drauf" und "nicht zu sehen".
+    const aufsatz = wahl(roh.aufsatz, ['hmd', 'folie', 'keiner', 'unklar'],
+      haube.erkannt ? 'hmd' : 'unklar');
+
+    /* Unmoegliche Messwerte werden verworfen, nicht zurechtgebogen.
+     *
+     * Frueher wurde nur geklemmt: Fuellhoehe auf -15 bis 30 mm, HMD-Abstand auf
+     * 0 bis 40 mm, Kohle auf 0 bis 12 Stueck. Das sind keine Werte, die an einem
+     * Shisha-Kopf vorkommen — ein Skalenfehler des Modells ging so als gueltige
+     * Messung durch. Geklemmt waere er sogar eine erfundene Messung. Ausserhalb
+     * der Bereiche aus spec.json heisst: nicht gemessen, und das steht im Report.
+     */
+    const bereiche = spec.plausibilitaet;
+    const messAusreisser = [];
+    const pruefeMesswert = (objektRef, feld, bereich, name) => {
+      const wert = objektRef[feld];
+      if (wert === null || !Array.isArray(bereich)) return;
+      if (wert < bereich[0] || wert > bereich[1]) {
+        messAusreisser.push(`${name} ${wert}`);
+        objektRef[feld] = null;
+      }
+    };
+    pruefeMesswert(tabak, 'fuellhoehe_mm', bereiche.fuellhoehe_mm_bereich, 'Fuellhoehe');
+    pruefeMesswert(haube, 'abstand_mm', bereiche.hmd_abstand_mm_bereich, 'HMD-Abstand');
+    pruefeMesswert(glut, 'anzahl', bereiche.kohle_anzahl_bereich, 'Kohlen');
+    if (tabak.fuellhoehe_mm === null && messAusreisser.some((m) => m.startsWith('Fuellhoehe'))) {
+      tabak.fuellhoehe_quelle = 'unknown';
+    }
+
+    /* Passt der Massstab zum Kopf im Bild?
+     *
+     * Ohne eigene Angabe rechnet die App mit dem Aussendurchmesser des
+     * Standardkopfes. Erkennt das Modell aber eine andere Bauart — eine flache,
+     * breite Turbine statt eines Phunnels —, stimmt dieser Bezug nicht, und
+     * jede Millimeterangabe ist plausibel falsch: man sieht es ihr nicht an.
+     * Dann werden die Millimeter als unsicher gekennzeichnet.
+     */
+    const annahme = angenommenerKopf(kontext);
+    const eigenerDurchmesser = Number((kontext || {}).aussendurchmesser_mm) > 0;
+    const massstabPasst = !(kopf.art !== 'unbekannt' && !kopf.angenommen && annahme && annahme.art
+      && annahme.art !== kopf.art && !eigenerDurchmesser);
+    if (!massstabPasst && tabak.fuellhoehe_quelle !== 'unknown') tabak.fuellhoehe_quelle = 'unknown';
+
     // Erst kappen, dann kuerzen: im Livebetrieb bleiben nur zwei Probleme in der
     // Anzeige stehen. Wurde vorher gekuerzt, kappte das dritte kritische Problem
     // gar nichts mehr.
@@ -936,11 +989,26 @@ const Engine = (() => {
     // Erst feststellen, was ueberhaupt zaehlt: eine Kategorie, die nicht in die
     // Note eingeht, muss auch nicht heruntergestuft werden — sonst blockiert
     // eine folgenlose Kappung den Fortschritt durch die Bauphasen.
-    const nochNicht = nichtBewertbar(roh, tabak, haube, glut, enthalten);
+    const nochNicht = nichtBewertbar(roh, tabak, haube, glut, enthalten, aufsatz);
 
     const kappungen = plausibilitaetAnwenden(
-      scores, { tabak, airflow: luft, hmd: haube, kohle: glut, probleme: alleProbleme }, nochNicht
+      scores,
+      { tabak, airflow: luft, hmd: haube, kohle: glut, probleme: alleProbleme,
+        aufsatz, pack: String((kontext || {}).packmethode || '') },
+      nochNicht
     );
+    if (messAusreisser.length) {
+      kappungen.push({
+        kategorie: 'messwerte', von: null, auf: null, schwer: false,
+        grund: `unmoegliche Messwerte vom Modell verworfen: ${messAusreisser.join(', ')}`,
+      });
+    }
+    if (!massstabPasst) {
+      kappungen.push({
+        kategorie: 'massstab', von: null, auf: null, schwer: false,
+        grund: 'Kopfart im Bild passt nicht zum angenommenen Kopf — Millimeter sind nur geschaetzt',
+      });
+    }
     if (ausreisser.length) {
       kappungen.push({
         kategorie: 'antwort', von: null, auf: null, schwer: false,
@@ -975,6 +1043,8 @@ const Engine = (() => {
       airflow: luft,
       hmd: haube,
       kohle: glut,
+      aufsatz,
+      massstab_passt: massstabPasst,
       beobachtete_phase: wahl(roh.beobachtete_phase, spec.phasen.map((ph) => ph.key), ''),
       scores,
       nicht_bewertbar: nochNicht,
@@ -1190,9 +1260,24 @@ const Engine = (() => {
     if (daten.tabak.randkontakt) {
       kappen('fuellhoehe', grenzen.kappe_randkontakt, 'Tabak beruehrt den Rand');
     }
-    // Ueber den Rand gebaut ist nur mit HMD sinnvoll, sonst brennt es an der Folie an.
-    if (daten.tabak.ueber_rand && !daten.hmd.erkannt) {
-      kappen('fuellhoehe', grenzen.kappe_ueber_rand, 'Tabak steht ueber dem Rand, ohne HMD', true);
+    /* Ueber den Rand — fachlich andersherum als frueher hier stand.
+     *
+     * Die alte Regel liess "ueber Rand" nur MIT HMD durchgehen. Ein HMD liegt
+     * aber plan auf der Randkante: steht Tabak darueber, liegt das HMD auf dem
+     * Tabak, und genau das ist der Kontaktfehler, den die Wissensbasis als
+     * kritisch fuehrt. Gefangen wurde er nur, wenn das Modell zusaetzlich
+     * kontakt_tabak meldete, was bei aufgesetztem HMD kaum zu sehen ist.
+     * Ueber den Rand gebaut wird nur beim Dense Pack unter Folie.
+     */
+    if (daten.tabak.ueber_rand) {
+      const mitHmd = daten.hmd.erkannt || daten.aufsatz === 'hmd';
+      if (mitHmd) {
+        kappen('fuellhoehe', grenzen.kappe_ueber_rand,
+          'Tabak steht ueber dem Rand — das HMD liegt darauf auf', true);
+      } else if (daten.pack !== 'dicht') {
+        kappen('fuellhoehe', grenzen.kappe_ueber_rand,
+          'Tabak steht ueber dem Rand — gewollt ist das nur beim Dense Pack unter Folie', true);
+      }
     }
     if (daten.hmd.kontakt_tabak === true) {
       kappen('hitzemanagement', grenzen.kappe_hmd_kontakt, 'Tabak beruehrt das HMD', true);
