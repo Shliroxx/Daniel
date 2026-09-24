@@ -60,7 +60,7 @@
     "geschmack": {
       "name": "Maximaler Geschmack",
       "prioritaet": "1. Aromaintensitaet 2. gleichmaessige Hitze 3. kontrollierte Temperatur 4. lange Aromastabilitaet 5. Ueberhitzung vermeiden",
-      "bau": "Eher locker und etwas niedriger bauen, grosszuegiger Abstand zum HMD (3 bis 5 mm), Hitze zurueckhaltend dosieren."
+      "bau": "Eher locker und etwas niedriger bauen (etwa 3 mm unter dem Rand). Mit HMD grosszuegig Abstand zwischen Tabak und HMD-Boden lassen (3 bis 5 mm). Hitze zurueckhaltend dosieren."
     },
     "rauch": {
       "name": "Maximaler Rauch",
@@ -70,7 +70,7 @@
     "lange_session": {
       "name": "Lange Session",
       "prioritaet": "1. Temperaturkontrolle 2. gleichmaessige Hitze 3. langsame Tabakausnutzung 4. Hotspots vermeiden",
-      "bau": "Etwas dichter und tiefer, grosser Abstand zum HMD, Kohle am Rand, lieber weniger Hitze und dafuer laenger."
+      "bau": "Die Mulde gut ausnutzen — mehr Tabak, aber nicht fester gedrueckt, sonst kratzt es. Grosser Abstand zum HMD, Kohle am Rand, lieber weniger Hitze und dafuer laenger."
     }
   },
   "phasen": [
@@ -140,6 +140,7 @@
     "vortex",
     "steinkopf",
     "turbine",
+    "tonkopf",
     "unbekannt"
   ],
   "marker_typen": [
@@ -183,6 +184,10 @@
       "- Steinkopf: saugt Molasse auf, speichert Hitze lange und reagiert traege auf",
       "  Kohlekorrekturen — eher zurueckhaltend heizen und frueh gegensteuern.",
       "- Turbinen- / Rauchsaeulenkopf: flache Schale, sehr locker bauen.",
+      "- Aegyptischer Tonkopf: flache Schale mit mehreren Loechern im Boden, fast immer mit",
+      "  Folie. Molasse laeuft direkt in den Rauchweg, deshalb nur abgetropften Tabak, die",
+      "  untersten Lagen nicht andruecken und die Bodenloecher frei lassen. Eher niedriger",
+      "  bauen als beim Phunnel. Der typische Anfaengerkopf.",
       "Grosse Koepfe brauchen mehr Hitze und vertragen mehr Kohle, kleine Koepfe",
       "ueberhitzen schnell."
     ],
@@ -207,9 +212,12 @@
       "Tabak den Kamin ueberragt, gehoert als Text in \"kopf.geometrie\".",
       "Fuellhoehe wird in Millimetern unter dem Rand angegeben: 0 mm = randbuendig,",
       "2 bis 3 mm ist der uebliche Zielbereich, negative Werte heissen: Tabak steht ueber",
-      "den Rand. Ueber Rand ist nur mit HMD und hitzefestem Tabak sinnvoll.",
+      "den Rand. Ueber den Rand wird nur beim Dense Pack unter Folie gebaut, und nur mit",
+      "dunklem, hitzefestem Tabak. Mit HMD nie: das HMD liegt plan auf der Randkante auf",
+      "und laege dann auf dem Tabak — das ist der Kontaktfehler, nicht eine Bauweise.",
       "Kohle: drei bis vier 26er Wuerfel bei Folie, zwei bis drei bei HMD, am Rand",
-      "verteilt, nie mittig ueber dem Kamin, Abstand zueinander halten.",
+      "verteilt, nie mittig ueber dem Kamin, Abstand zueinander halten. Das gilt fuer einen",
+      "mittleren Kopf: ein kleiner Kopf bekommt eine Kohle weniger, sonst ueberhitzt er.",
       "HMD-Abstand zum Tabak: 2 bis 5 mm, je nach Ziel und Tabak. Unter 2 mm brennt der",
       "Tabak oben an, ueber 5 mm kommt zu wenig Hitze an."
     ],
@@ -224,6 +232,35 @@
       "- Molassepfuetze im Kopf -> blubbert, kocht, verbrannter Geschmack.",
       "- Kohle nicht durchgegluht -> Kohlegeschmack und Kohlenmonoxid.",
       "- Kohle mittig ueber dem Kamin -> Kern verbrennt zuerst."
+    ],
+    "kohle": [
+      "Naturkohle (Kokosnuss, gepresst) ist die Kohle fuer Shisha. Selbstzuender sind",
+      "mit Zuendmitteln getraenkt, schmecken durch und geben mehr Kohlenmonoxid ab —",
+      "rate davon ab, wenn der Nutzer sie erwaehnt oder man sie erkennt (gleichmaessig",
+      "runde Tabletten mit Mulde).",
+      "Durchgegluehte Kohle ist rundum grau-weiss mit Asche, ohne schwarze Kanten.",
+      "Kohle wird auf dem Kohleanzuender oder Ceranfeld durchgeglueht, nie mit dem",
+      "Feuerzeug auf dem Kopf.",
+      "Kohlenmonoxid ist geruchlos. Gut lueften und nie in geschlossenen, kleinen Raeumen",
+      "ohne Luftzug rauchen. Bei Kopfschmerz, Schwindel oder Uebelkeit: sofort an die",
+      "frische Luft. Das ist der einzige Punkt, an dem du ungefragt warnst."
+    ],
+    "anrauchen": [
+      "Nach dem Auflegen der Kohle ist der Kopf noch nicht fertig: drei bis fuenf",
+      "Minuten durchwaermen lassen, mit HMD eher fuenf. Nicht sofort hart ziehen — die",
+      "ersten Zuege sanft, sonst verbrennt die oberste Lage, bevor der Rest warm ist.",
+      "Ist die Phase \"Kohle auflegen\" in Ordnung, nennt der Coach-Satz genau das als",
+      "naechsten Schritt."
+    ],
+    "tabaklinien": [
+      "Richtwerte fuer bekannte Linien. Einzelne Sorten einer Marke koennen abweichen.",
+      "Passt der Schnitt im Bild erkennbar nicht zur Tabelle, gilt das Bild.",
+      "- Hell, feucht, hitzeempfindlich (locker bauen, weniger Kohle): Al Fakher,",
+      "  Adalya, Fumari, Serbetli, Starbuzz in der Standardlinie.",
+      "- Dunkel, hitzefest (dichter bauen, mehr Hitze, Phunnel): Tangiers, Darkside.",
+      "- Trifecta: die Linie \"Blonde\" ist hell, \"Dark\" ist dunkel.",
+      "Unbekannte Marke: sag das und schliesse nur aus dem, was du am Schnitt siehst",
+      "(Farbe, Feuchte, Blattgroesse)."
     ]
   },
   "prompt": {
@@ -306,21 +343,23 @@
       "  \"befund\": \"Was du im Bild tatsaechlich siehst, ein bis drei Saetze, noch ohne Wertung.\",",
       "  \"bildqualitaet\": {\"schaerfe\": 0, \"licht\": 0, \"perspektive\": \"oben|schraeg|seitlich|unklar\",",
       "                    \"kopf_vollstaendig\": true, \"hinweis\": \"kurz, nur wenn etwas stoert\"},",
-      "  \"kopf\": {\"art\": \"phunnel|killer|vortex|steinkopf|turbine|unbekannt\", \"modell\": null,",
-      "           \"geometrie\": \"kurz\", \"zentrale_oeffnung_sichtbar\": true,",
-      "           \"quelle\": \"observed|estimated|unknown|angegeben\", \"confidence\": 0},",
+      "  \"kopf\": {\"art\": \"phunnel|killer|vortex|steinkopf|turbine|tonkopf|unbekannt\", \"modell\": null,",
+      "           \"geometrie\": \"kurz\", \"quelle\": \"observed|estimated|unknown|angegeben\", \"confidence\": 0},",
       "  \"tabak\": {\"vorhanden\": true, \"fuellhoehe_mm\": null, \"fuellhoehe_quelle\": \"observed|estimated|unknown\",",
       "            \"dichte\": 0, \"gleichmaessigkeit\": 0, \"klumpen\": false, \"luecken\": false,",
       "            \"randkontakt\": false, \"ueber_rand\": false, \"menge_gramm\": null,",
       "            \"quelle\": \"observed|estimated|unknown\", \"confidence\": 0},",
       "  \"airflow\": {\"zentrale_oeffnung_frei\": true, \"blockade_risiko\": \"low|medium|high\",",
       "              \"notiz\": \"kurz\", \"confidence\": 0},",
+      "  \"aufsatz\": \"hmd|folie|keiner|unklar\",",
       "  \"hmd\": {\"erkannt\": false, \"modell\": null, \"zentriert\": null, \"abstand_mm\": null,",
       "          \"kontakt_tabak\": null, \"confidence\": 0},",
       "  \"kohle\": {\"status\": \"visible|not_visible\", \"anzahl\": null, \"position\": \"kurz\",",
       "            \"durchgegluht\": null, \"hotspot_risiko\": \"low|medium|high|unknown\", \"confidence\": 0},",
       "  \"scores\": {\"tabak_verteilung\": null, \"fuellhoehe\": null, \"airflow\": null, \"hitzemanagement\": null,",
       "             \"kopfgeometrie\": null, \"tabak_kompatibilitaet\": null, \"zielerreichung\": null},",
+      "  \"confidence\": {\"gesamt\": 0, \"kopf_erkennung\": 0, \"tabak_analyse\": 0, \"fuellhoehe\": 0,",
+      "                 \"airflow\": 0, \"hitzemanagement\": 0, \"optimierung\": 0},",
       "  \"probleme\": [",
       "    {\"id\": \"kurzer_schluessel\", \"severity\": \"critical|high|medium|low\",",
       "     \"kategorie\": \"exakt einer dieser Schluessel: tabak_verteilung|fuellhoehe|airflow|hitzemanagement|kopfgeometrie|tabak_kompatibilitaet|zielerreichung\", \"titel\": \"kurz\",",
@@ -332,22 +371,24 @@
       "     \"text\": \"konkrete Handlung mit Menge oder Millimeterangabe\",",
       "     \"wirkung\": \"was das bringt\"}",
       "  ],",
+      "  \"coach_satz\": \"Ein gesprochener Satz fuer den Nutzer, maximal 14 Woerter.\",",
+      "  \"rueckfrage\": null,",
       "  \"ar_marker\": [",
       "    {\"typ\": \"remove|loosen|distribute|ok|fill_height|hmd|coal\",",
       "     \"x\": 0.0, \"y\": 0.0, \"w\": 0.0, \"h\": 0.0, \"label\": \"max drei Woerter\",",
       "     \"aktion\": \"eine der erlaubten Aktionen\"}",
       "  ],",
-      "  \"prognose\": {\"score_nach_optimierung\": 0, \"geschmack\": \"hoch|gleich|runter\",",
+      "  \"prognose\": {\"score_nach_optimierung\": null, \"geschmack\": \"hoch|gleich|runter\",",
       "               \"rauch\": \"hoch|gleich|runter\", \"dauer\": \"hoch|gleich|runter\",",
       "               \"hitzerisiko\": \"hoch|gleich|runter\",",
-      "               \"verbesserung\": {\"tabak_verteilung\": 0, \"hitzemanagement\": 0, \"airflow\": 0}},",
-      "  \"confidence\": {\"gesamt\": 0, \"kopf_erkennung\": 0, \"tabak_analyse\": 0, \"fuellhoehe\": 0,",
-      "                 \"airflow\": 0, \"hitzemanagement\": 0, \"optimierung\": 0},",
-      "  \"rueckfrage\": null,",
-      "  \"coach_satz\": \"Ein gesprochener Satz fuer den Nutzer, maximal 14 Woerter.\"",
+      "               \"verbesserung\": {\"tabak_verteilung\": 0, \"hitzemanagement\": 0, \"airflow\": 0}}",
       "}",
       "",
       "Regeln:",
+      "- \"aufsatz\": was auf dem Kopf liegt. \"keiner\", wenn noch nichts aufgesetzt ist;",
+      "  \"unklar\", wenn man es aus diesem Winkel nicht sieht.",
+      "- \"tabak.ueber_rand\": true, wenn Tabak ueber die Randoberkante hinaus steht. Mit HMD",
+      "  ist das immer ein kritisches Problem, weil das HMD dann auf dem Tabak aufliegt.",
       "- \"scores\": null heisst \"kann ich an diesem Bild nicht beurteilen\" und ist",
       "  ausdruecklich erlaubt und erwuenscht. 0 heisst \"beurteilt und miserabel\".",
       "  Verwechsle beides nie. Liegt kein Tabak im Kopf, sind tabak_verteilung,",
@@ -371,7 +412,21 @@
       "- \"confidence\": Prozentwerte 0 bis 100.",
       "- \"rueckfrage\": null, wenn die Angaben reichen. Sonst genau EINE Frage nach der",
       "  wichtigsten fehlenden Angabe (Reihenfolge: Kopfmodell, Tabak, HMD, Kohlen, Ziel).",
-      "- \"coach_satz\": gesprochenes Deutsch, geduzt, ohne Aufzaehlung und ohne Emojis.",
+      "- \"coach_satz\" ist der EINE Satz, den der Nutzer gesprochen hoert, waehrend er",
+      "  baut. Gesprochenes Deutsch, geduzt, ohne Aufzaehlung und ohne Emojis. Er nennt",
+      "  den naechsten Handgriff mit Ort und Menge. Er sagt nie, was du nicht erkennst,",
+      "  nie was du bist und nie wie sicher du bist. Gibt es nichts zu tun, sag das",
+      "  positiv und nenne den naechsten Bauschritt.",
+      "  Richtig: \"Nimm bei 3 Uhr eine Prise weg und zieh es glatt.\"",
+      "  Richtig: \"Passt — leg jetzt das HMD auf.\"",
+      "  Falsch: \"Oblako M nicht erkannt.\"",
+      "  Falsch: \"Der Kopf ist nur teilweise sichtbar.\"",
+      "- \"airflow.zentrale_oeffnung_frei\": false nur, wenn Tabak die Oeffnung verdeckt —",
+      "  nicht, wenn sie aus diesem Winkel bloss nicht zu sehen ist. Nicht beurteilbar: null.",
+      "- \"hmd.abstand_mm\": Abstand zwischen Tabakoberflaeche und HMD-Boden. Beruehrt",
+      "  der Tabak den Boden, ist kontakt_tabak true und abstand_mm 0.",
+      "- Laengen: \"befund\" unter 400 Zeichen, \"beschreibung\" und \"text\" unter 300,",
+      "  \"label\" hoechstens drei Woerter. Mehr wird abgeschnitten.",
       "- \"befund\" fuellst du ZUERST aus, bevor du bewertest: erst hinsehen und",
       "  beschreiben, dann urteilen. Reine Beobachtung, keine Empfehlung.",
       "- Widerspruchsfrei bleiben: was du als kritisches Problem meldest, darf in der",
@@ -409,7 +464,11 @@
       "Fuellhoehe, HMD-Abstand — misst du in diesem Massstab im Bild aus.",
       "Steht bei der Angabe \"angegeben\" oder \"aus der Liste\", duerfen die so",
       "hergeleiteten Millimeter \"estimated\" sein. Steht dort \"angenommen\", ist der",
-      "Bezug selbst geraten — dann bleibt die Millimeterzahl \"unknown\", und du sagst es."
+      "Bezug selbst geraten — dann bleibt die Millimeterzahl \"unknown\", und du sagst es.",
+      "Der Wert gilt nur, wenn die Kopfart im Bild zur Angabe passt. Siehst du erkennbar",
+      "eine andere Bauart — etwa eine flache, breite Turbine oder einen flachen Tonkopf",
+      "statt eines Phunnels —, leitest du keine Millimeter aus diesem Wert ab: dann ist",
+      "fuellhoehe_quelle \"unknown\", und im befund steht, dass der Massstab nicht passt."
     ],
     "mehrere_bilder": [
       "Du bekommst mehrere Bilder desselben Kopfes aus verschiedenen Winkeln.",
@@ -469,7 +528,10 @@
       "diese Absicht, nicht gegen einen allgemeinen Idealwert: eine feste Packung ist bei",
       "'dicht' das gewollte Ergebnis und bei 'locker' ein Fehler.",
       "Weicht das Bild klar von der Angabe ab, sag es im Befund und melde es als Problem —",
-      "aber erfinde keine Abweichung, nur weil eine Zahl knapp ausserhalb liegt."
+      "aber erfinde keine Abweichung, nur weil eine Zahl knapp ausserhalb liegt.",
+      "Die Fuellhoehe gehoert zur Packmethode: locker liegt tiefer, dicht am Rand. Die",
+      "Richtwerte stehen bei den Angaben des Nutzers. Beurteile die Hoehe daran, nicht an",
+      "einem allgemeinen Wert."
     ],
     "phasen_abgleich": [
       "Zur Bauphase: Die App fuehrt eine Phase mit, aber das ist ihre VERMUTUNG — sie zaehlt",
@@ -488,6 +550,19 @@
       "Vermutung. Beurteile immer, was da ist: Liegt Tabak im Kopf, bewertest du ihn — auch",
       "wenn die App noch bei \"Kopf pruefen\" steht. Nichts wird ausgelassen, weil eine",
       "Phasenangabe etwas anderes sagt."
+    ],
+    "beispiele": [
+      "Zwei Beispiele fuer das Format — ohne Bild, nur damit klar ist, wie Enthaltung,",
+      "Kategorieschluessel und Markergroessen aussehen. Uebernimm keine Werte daraus.",
+      "",
+      "Beispiel A — leerer, sauberer Phunnel:",
+      "{\"analysis_status\":\"ok\",\"beobachtete_phase\":\"kopf\",\"befund\":\"Leerer Phunnel von oben, trocken, Kamin frei, keine Reste.\", \"bildqualitaet\":{\"schaerfe\":78,\"licht\":70,\"perspektive\":\"oben\",\"kopf_vollstaendig\":true,\"hinweis\":\"\"}, \"kopf\":{\"art\":\"phunnel\",\"modell\":null,\"geometrie\":\"mittel, erhoehter Kamin\",\"quelle\":\"observed\",\"confidence\":80}, \"tabak\":{\"vorhanden\":false,\"fuellhoehe_mm\":null,\"fuellhoehe_quelle\":\"unknown\",\"dichte\":null,\"gleichmaessigkeit\":null,  \"klumpen\":null,\"luecken\":null,\"randkontakt\":null,\"ueber_rand\":null,\"menge_gramm\":null,\"quelle\":\"observed\",\"confidence\":85}, \"airflow\":{\"zentrale_oeffnung_frei\":true,\"blockade_risiko\":\"low\",\"notiz\":\"Kamin frei\",\"confidence\":80}, \"hmd\":{\"erkannt\":false,\"modell\":null,\"zentriert\":null,\"abstand_mm\":null,\"kontakt_tabak\":null,\"confidence\":80}, \"kohle\":{\"status\":\"not_visible\",\"anzahl\":null,\"position\":\"\",\"durchgegluht\":null,\"hotspot_risiko\":\"unknown\",\"confidence\":80}, \"scores\":{\"tabak_verteilung\":null,\"fuellhoehe\":null,\"airflow\":95,\"hitzemanagement\":null,\"kopfgeometrie\":88,  \"tabak_kompatibilitaet\":null,\"zielerreichung\":null}, \"confidence\":{\"gesamt\":80,\"kopf_erkennung\":80,\"tabak_analyse\":85,\"fuellhoehe\":0,\"airflow\":80,\"hitzemanagement\":0,\"optimierung\":70}, \"probleme\":[],\"optimierungen\":[],\"coach_satz\":\"Kopf ist sauber — jetzt den Tabak auflockern.\",\"rueckfrage\":null, \"ar_marker\":[],\"prognose\":{\"score_nach_optimierung\":null,\"geschmack\":\"gleich\",\"rauch\":\"gleich\",\"dauer\":\"gleich\",\"hitzerisiko\":\"gleich\",\"verbesserung\":{}}}",
+      "",
+      "Beispiel B — ueberfuellt, Tabak liegt bei 3 Uhr auf der Randkante:",
+      "{\"analysis_status\":\"ok\",\"beobachtete_phase\":\"glattziehen\",\"befund\":\"Gefuellter Phunnel, rechts bei 3 Uhr liegt Tabak auf der Randkante, Mitte eben, Kamin frei.\", ... \"tabak\":{\"vorhanden\":true,\"fuellhoehe_mm\":0.5,\"randkontakt\":true, ...}, \"scores\":{\"tabak_verteilung\":62,\"fuellhoehe\":35,\"airflow\":80,\"hitzemanagement\":null, ...}, \"probleme\":[{\"id\":\"rand_3uhr\",\"severity\":\"critical\",\"kategorie\":\"fuellhoehe\",\"titel\":\"Tabak auf dem Rand bei 3 Uhr\",  \"beschreibung\":\"Dort brennt er beim ersten Zug an.\",\"confidence\":80,\"aktion\":\"remove_tobacco\"}], \"coach_satz\":\"Nimm bei 3 Uhr den Tabak vom Rand und zieh es glatt.\", \"ar_marker\":[{\"typ\":\"remove\",\"x\":0.74,\"y\":0.44,\"w\":0.12,\"h\":0.12,\"label\":\"vom Rand\",\"aktion\":\"remove_tobacco\"}], ...}",
+      "Marker sind klein: w und h liegen ueblich zwischen 0.08 und 0.25, als Anteil der Bildbreite",
+      "und -hoehe, nie in Prozent. Kannst du eine Stelle nicht genau verorten, gib KEINEN Marker aus —",
+      "eine geratene Position ist schlechter als keine."
     ]
   },
   "plausibilitaet": {
@@ -502,6 +577,19 @@
     "kappe_hotspot_hoch": 40,
     "kappe_kohle_nicht_durch": 35,
     "kappe_gesamt_kritisch": 55,
+    "fuellhoehe_mm_bereich": [
+      -5,
+      20
+    ],
+    "hmd_abstand_mm_bereich": [
+      0,
+      15
+    ],
+    "kohle_anzahl_bereich": [
+      0,
+      6
+    ],
+    "bereiche_hinweis": "Ausserhalb dieser Bereiche ist ein Messwert kein Messwert, sondern ein Skalenfehler — er wird verworfen, nicht geklemmt.",
     "bildqualitaet_min": 45,
     "konsens_bilder": 5,
     "konsens_spanne": 12,
@@ -822,7 +910,12 @@
         "erwartete_dichte": [
           15,
           40
-        ]
+        ],
+        "fuellhoehe_mm": [
+          2,
+          4
+        ],
+        "hoehe_text": "etwa 2 bis 4 mm unter dem Rand"
       },
       {
         "key": "gemischt",
@@ -831,7 +924,12 @@
         "erwartete_dichte": [
           40,
           65
-        ]
+        ],
+        "fuellhoehe_mm": [
+          1,
+          3
+        ],
+        "hoehe_text": "etwa 1 bis 3 mm unter dem Rand"
       },
       {
         "key": "dicht",
@@ -840,8 +938,14 @@
         "erwartete_dichte": [
           65,
           90
-        ]
+        ],
+        "fuellhoehe_mm": [
+          -1,
+          1
+        ],
+        "hoehe_text": "randbuendig; unter Folie auch knapp darueber, mit HMD nie darueber"
       }
-    ]
+    ],
+    "hinweis_hoehe": "Richtwerte. Die Fuellhoehe haengt an der Packmethode: locker liegt tiefer, dicht liegt am Rand."
   }
 }

@@ -18,7 +18,7 @@ import secrets
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, File, Form, Header, Response, UploadFile
+from fastapi import APIRouter, FastAPI, Request, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -132,12 +132,26 @@ async def _bilddaten(datei: UploadFile) -> bytes | None:
     return daten if len(daten) <= MAX_BILD else None
 
 
+def _losungswort_stimmt(gesendet: str) -> bool:
+    """Zeitkonstanter Vergleich — auf Bytes.
+
+    compare_digest auf Zeichenketten verlangt reines ASCII. Kopfzeilen kommen als
+    Latin-1 an; ein Losungswort mit Umlaut liess den Vergleich mit TypeError
+    scheitern, und aus einem 401 wurde ein 500.
+    """
+    return secrets.compare_digest(
+        (gesendet or "").encode("utf-8", "surrogateescape"),
+        TOKEN.encode("utf-8"),
+    )
+
+
+# Mehr kann eine erlaubte Anfrage nicht sein: fuenf Bilder, ein Prompt, etwas
+# Huelle fuer das Formular.
+MAX_KOERPER = MAX_BILDER * MAX_BILD + MAX_PROMPT + 64 * 1024
+
+
 @router.post("/api/shisha/proxy")
-async def proxy(
-    bild: list[UploadFile] = File(default=[]),
-    prompt: str = Form(""),
-    x_shisha_token: str = Header(default=""),
-) -> JSONResponse:
+async def proxy(request: Request) -> JSONResponse:
     """Bild und Prompt an Claude weiterreichen und den Rohtext zurueckgeben.
 
     Bewusst dumm: der Server bewertet nichts und kennt die Regeln nicht. Die
@@ -145,16 +159,43 @@ async def proxy(
     nur eine Stelle, an der die Bewertungslogik lebt.
     """
     # Zuerst das Losungswort — vor allem anderen, auch vor dem Lesen der Daten.
-    if not secrets.compare_digest(x_shisha_token, TOKEN):
+    #
+    # Das stand schon frueher so im Kommentar, stimmte aber nicht: mit
+    # File(...)- und Form(...)-Parametern loest FastAPI den ganzen Koerper auf,
+    # BEVOR die Funktion laeuft. Wer im Heimnetz ohne Losungswort grosse Uploads
+    # schickte, fuellte also Speicher und Platte, und erst danach kam die 401.
+    # Jetzt wird der Kopf gelesen, dann die angekuendigte Groesse geprueft, und
+    # erst dann das Formular geparst.
+    if not _losungswort_stimmt(request.headers.get("x-shisha-token", "")):
         return _freigeben(JSONResponse(
             {"ok": False, "fehler": "Losungswort fehlt oder stimmt nicht"}, status_code=401,
         ))
+
+    laenge = request.headers.get("content-length", "")
+    if laenge.isdigit() and int(laenge) > MAX_KOERPER:
+        return _freigeben(JSONResponse({"ok": False, "fehler": "Anfrage zu gross"}, status_code=413))
 
     if rueckweg.analysator is None:
         return _freigeben(JSONResponse(
             {"ok": False, "fehler": rueckweg.startfehler or "Analyse nicht bereit"},
             status_code=503,
         ))
+
+    try:
+        try:
+            formular = await request.form(
+                max_files=MAX_BILDER + 1, max_fields=8, max_part_size=MAX_PROMPT * 4,
+            )
+        except TypeError:             # aeltere Starlette-Fassung ohne diese Grenzen
+            formular = await request.form()
+    except Exception as exc:          # kaputtes oder uebergrosses Formular
+        return _freigeben(JSONResponse(
+            {"ok": False, "fehler": f"Formular unlesbar: {exc}"[:140]}, status_code=400,
+        ))
+    bild = [teil for teil in formular.getlist("bild") if hasattr(teil, "read")]
+    prompt = formular.get("prompt") or ""
+    if not isinstance(prompt, str):
+        prompt = ""
 
     if not bild:
         return _freigeben(JSONResponse({"ok": False, "fehler": "kein Bild mitgeschickt"}, status_code=400))

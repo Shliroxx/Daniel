@@ -219,6 +219,13 @@ pruefe('Live ohne Denkzeit gefragt',
 pruefe('Ampel zeigt einen Zustand', $('ampel').hidden === false, $('ampelText').textContent);
 pruefe('Ampel ist gelb bei einem mittleren Problem',
        $('ampel').className.includes('gelb'), $('ampel').className);
+// Form statt nur Farbe: vier gleich runde Farbpunkte sind bei Rot-Gruen-Schwaeche
+// nicht auseinanderzuhalten.
+pruefe('Ampel traegt ein Zeichen, nicht nur eine Farbe', $('ampelPunkt').textContent === '!',
+       `"${$('ampelPunkt').textContent}"`);
+pruefe('Problem sagt seine Dringlichkeit als Wort',
+       $('probleme').children[0] && $('probleme').children[0].dataset.rang === 'mittel',
+       $('probleme').children[0] && $('probleme').children[0].dataset.rang);
 pruefe('Problem ist anklickbar',
        $('probleme').children.length === 1 && $('probleme').children[0].children.length === 2,
        `${$('probleme').children.length} Probleme`);
@@ -268,6 +275,22 @@ await warte(2500);
 pruefe('Hinter der Anleitung bleibt es still',
        protokoll.anfragen.length === vorLesen && kontext.__zustand.laeuft === false,
        `${protokoll.anfragen.length - vorLesen} Anfragen, laeuft=${kontext.__zustand.laeuft}`);
+
+/* Und danach muss es weitergehen.
+ *
+ * Genau hier sass ein Fehler, den kein Test bemerkte: der Hintergrundwechsel
+ * setzt `laeuft` auf false, und das Schliessen der Anleitung startete die
+ * Schleife nur, wenn `laeuft` noch true war. Ergebnis: Anleitung zu, Livebild
+ * da, aber nie wieder eine Analyse — ohne jede Meldung.
+ */
+$('anleitungPruefen').klick();
+const nachLesen = protokoll.anfragen.length;
+await warteBis(() => protokoll.anfragen.length > nachLesen, 6000);
+pruefe('Nach Hintergrund und Anleitung laeuft die Analyse wieder',
+       protokoll.anfragen.length > nachLesen && kontext.__zustand.laeuft === true,
+       `${protokoll.anfragen.length - nachLesen} neue Anfragen, laeuft=${kontext.__zustand.laeuft}`);
+problemZeile.klick();
+while (kontext.__zustand.busy) await warte(100);
 
 // Und das Hauptmenue raeumt das Blatt mit weg, statt es liegen zu lassen
 $('menueButton').klick();
@@ -407,8 +430,21 @@ pruefe2('Regeln in den Einstellungen', $('lernregeln').children.length === 2);
 $('zugangAbbruch').klick();
 
 // --- Pause und Wiederaufnahme ----------------------------------------------------
-$('report').hidden = true;
-kontext.__zustand.laeuft = true;
+/* Hinter dem offenen Report ruht die Liveanalyse.
+ *
+ * Frueher lief sie dort weiter, redete und verbrauchte Kontingent, waehrend man
+ * das Endurteil las — dieser Test setzte den Report deshalb einfach von Hand
+ * auf hidden und verliess sich darauf, dass die Schleife noch lief. Jetzt wird
+ * erst geprueft, dass hinter dem Report Ruhe ist, und dann der echte
+ * Schliessweg genommen.
+ */
+const vorReportRuhe = protokoll.anfragen.length;
+bildAendern();
+await warte(1800);
+pruefe2('Hinter dem Report wird nicht analysiert', protokoll.anfragen.length === vorReportRuhe,
+        `${protokoll.anfragen.length - vorReportRuhe} Anfragen`);
+$('zurueckButton').klick();
+pruefe2('Weiter bauen nimmt den Livebetrieb wieder auf', kontext.__zustand.laeuft === true);
 $("kamera").paused = true;
 await warte(5200);
 pruefe2('Eingefrorenes Bild fuehrt zur Pause', $('pause').hidden === false, $('pauseGrund').textContent);

@@ -35,6 +35,16 @@ assert.ok(richtlinie.includes("script-src 'self'"), "script-src 'self' muss gese
 assert.ok(!richtlinie.includes("'unsafe-inline'"), "'unsafe-inline' hebelt script-src aus");
 assert.ok(!richtlinie.includes("'unsafe-eval'"), "'unsafe-eval' hebelt script-src aus");
 
+/* frame-ancestors wirkt im meta-Tag nicht — jeder Browser ignoriert es dort.
+ * Stand es trotzdem da, taeuschte es einen Schutz vor, den es nicht gab. Der
+ * echte Schutz gegen Einbettung sitzt in fehler.js, als erstes Skript. */
+assert.ok(!richtlinie.includes('frame-ancestors'),
+  'frame-ancestors im meta-Tag ist wirkungslos und taeuscht Schutz vor');
+const frueh = readFileSync(join(webDir, 'fehler.js'), 'utf8');
+assert.ok(/window\.top\s*!==\s*window\.self/.test(frueh), 'fehler.js muss die Einbettung pruefen');
+const erstesSkript = (html.match(/<script\s+src="([^"]+)"/) || [])[1];
+assert.equal(erstesSkript, 'fehler.js', 'der Einbettungsschutz muss vor allem anderen laufen');
+
 // --- Was die Richtlinie verbietet, darf auch nicht dastehen --------------------
 // Ohne 'unsafe-inline' verwirft der Browser beides stumm: der Knopf bleibt
 // unverdrahtet, der Balken unsichtbar. Im Test faellt das sonst nie auf, weil
@@ -49,6 +59,31 @@ skripte.forEach((datei) => {
   const quelle = readFileSync(join(webDir, datei), 'utf8');
   assert.ok(!/style="\$\{|style='\$\{/.test(quelle),
     `${datei}: Inline-Style ueber eine Vorlage — die CSP verwirft ihn stumm`);
+});
+
+/* --- Nur Syntax, die auch aeltere iPhones verstehen ----------------------------
+ *
+ * Ein einziges Konstrukt, das Safari nicht kennt, ist beim Laden ein
+ * Syntaxfehler — dann laeuft die ganze Datei nicht, und alle Knoepfe sind tot.
+ * Genau das Bild, das der Nutzer als "die Buttons funktionieren nicht"
+ * beschrieben hat. Lookbehind im Regex kann Safari erst ab iOS 16.4; die
+ * logischen Zuweisungen ab 14. Node versteht beides, deshalb faellt es in
+ * keinem anderen Test auf.
+ */
+const ZU_NEU = [
+  [/\(\?<[=!]/, 'Lookbehind im Regex (Safari erst ab iOS 16.4)'],
+  [/\|\|=|&&=|\?\?=/, 'logische Zuweisung (Safari erst ab iOS 14)'],
+  [/\.at\(\s*-?\d/, 'Array.prototype.at (Safari erst ab iOS 15.4)'],
+  [/structuredClone\(/, 'structuredClone (Safari erst ab iOS 15.4)'],
+  [/Object\.hasOwn\(/, 'Object.hasOwn (Safari erst ab iOS 15.4)'],
+  [/\.findLast(Index)?\(/, 'findLast (Safari erst ab iOS 15.4)'],
+];
+skripte.forEach((datei) => {
+  const quelle = readFileSync(join(webDir, datei), 'utf8')
+    .split('\n').filter((zeile) => !/^\s*(\/\/|\*)/.test(zeile)).join('\n');
+  ZU_NEU.forEach(([muster, was]) => {
+    assert.ok(!muster.test(quelle), `${datei}: ${was} — auf aelteren iPhones laeuft die Datei dann gar nicht`);
+  });
 });
 
 // --- Alles Fremde bleibt draussen ----------------------------------------------

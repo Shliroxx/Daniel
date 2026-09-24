@@ -54,6 +54,40 @@ window.addEventListener('unhandledrejection', (ereignis) => {
   fehlerMerken((grund && grund.message) || String(grund), 'unbehandelt');
 });
 
+/* Das Protokoll antippen zeigt alles und kopiert es.
+ *
+ * Der Kommentar oben versprach ein Protokoll, "das sich antippen und kopieren
+ * laesst" — tatsaechlich hing es nur im title-Attribut, und das sieht man auf
+ * einem Touchscreen nie. Jetzt klappt ein Tipp die ganze Liste aus und legt sie
+ * in die Zwischenablage, damit man sie weitergeben kann.
+ */
+(() => {
+  const feld = document.getElementById('startFehler');
+  if (!feld || !feld.addEventListener) return;
+  feld.addEventListener('click', () => {
+    if (!fehlerProtokoll.length) return;
+    const alles = fehlerProtokoll.join('\n');
+    feld.textContent = `Fehler (${fehlerProtokoll.length}): ${fehlerProtokoll.join(' · ')}`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(alles).then(
+          () => { feld.textContent += ' — kopiert'; },
+          () => { /* dann eben nur angezeigt */ }
+        );
+      }
+    } catch (_) { /* Zwischenablage gesperrt */ }
+  });
+})();
+
+/* Laeuft die Seite im normalen Safari statt als App vom Homescreen?
+ * Dann kann die untere Browserleiste die Knopfreihe verdecken, und safe-area
+ * schuetzt dort nicht. ar.css gibt der Fusszeile in dem Fall mehr Luft. */
+(() => {
+  const alsApp = navigator.standalone === true
+    || (typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches);
+  if (!alsApp && document.body && document.body.classList) document.body.classList.add('im-browser');
+})();
+
 const MARKER_FARBE = {
   remove: '#ff6b7d',
   loosen: '#ffb454',
@@ -94,9 +128,11 @@ const zustand = {
   feedback: {},
   blindSeit: 0,         // seit wann liefert die Kamera kein Bild mehr
   lauf: 0,              // Nummer des aktuellen Schleifendurchgangs
+  vollLauf: 0,          // Nummer der aktuellen Vollanalyse — getrennt von der Schleife
   wartetSeit: 0,        // seit wann wartet die Schleife auf ein brauchbares Bild
   anleitung: false,     // Anleitungsblatt offen — dann ruht alles andere
   specFehlt: false,     // Regelwerk kam nicht durch — Startknopf laedt dann neu
+  neueFassung: false,   // Update liegt bereit — wird im Hauptmenue geladen
   busySeit: 0,          // seit wann laeuft die aktuelle Anfrage (Wachhund)
   letzterFehler: '',    // fuer die Eskalation bei immer demselben Fehler
   fehlerZaehler: 0,
@@ -289,10 +325,17 @@ async function fortsetzen() {
 }
 
 function zumHauptmenue() {
+  // Eine waehrend des Bauens eingetroffene neue Fassung wird jetzt geladen —
+  // im Menue stoert das niemanden.
+  if (zustand.neueFassung) {
+    location.reload();
+    return;
+  }
   zustand.laeuft = false;
   zustand.pausiert = false;
   zustand.analyse = null;
   zustand.lauf++;          // laufende Antworten gehoeren nicht mehr hierher
+  zustand.vollLauf++;      // eine laufende Vollanalyse auch nicht
   kameraStoppen();
   bildschirmFreigeben();
   hoerenAus();
@@ -318,7 +361,13 @@ function zumHauptmenue() {
  * prueft, fordert nie wieder an. Folge: einmal kurz aus der App heraus, und ab
  * da geht der Bildschirm mitten im Bauen aus.
  */
+let sperreAngefragt = false;
+
 async function bildschirmWachhalten() {
+  // Bei schnellem Hin und Her liefen sonst mehrere Anfragen gleichzeitig; nur
+  // die letzte landete in zustand.wakeLock, die anderen wurden nie freigegeben.
+  if (sperreAngefragt || zustand.wakeLock) return;
+  sperreAngefragt = true;
   try {
     if (!('wakeLock' in navigator)) return;
     const sperre = await navigator.wakeLock.request('screen');
@@ -328,6 +377,8 @@ async function bildschirmWachhalten() {
     });
   } catch (_) {
     /* nicht schlimm — dann geht das Display eben irgendwann aus */
+  } finally {
+    sperreAngefragt = false;
   }
 }
 
@@ -351,7 +402,19 @@ document.addEventListener('visibilitychange', async () => {
     return;
   }
 
-  if (!zustand.wakeLock) bildschirmWachhalten();
+  // Wachhalten nur, wenn wirklich gebaut wird. Frueher lief das bei jeder
+  // Rueckkehr — auch im Hauptmenue und in der Pause, wo die Sperre gerade mit
+  // Absicht zurueckgegeben worden war. Der Bildschirm ging dort nie mehr aus.
+  if (!zustand.wakeLock && zustand.sitzung && $('start').hidden && !zustand.pausiert) {
+    bildschirmWachhalten();
+  }
+
+  // Safaris Sprachausgabe haengt nach dem Hintergrund gern im Pausezustand,
+  // und eine unterbrochene Ansage liefert kein onend mehr.
+  if (window.speechSynthesis) {
+    try { speechSynthesis.resume(); } catch (_) { /* egal */ }
+  }
+  hoererPause = false;
 
   // Zurueck aus dem Hintergrund: laeuft die Kamera noch, geht es einfach weiter.
   if (kameraLaeuft()) {
@@ -366,7 +429,7 @@ document.addEventListener('visibilitychange', async () => {
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
     sitzungDa: Boolean(zustand.sitzung),
-    anleitungOffen: zustand.anleitung,
+    anleitungOffen: blattOffen(),
   });
 
   if (plan.aktion === 'weiter' && !zustand.laeuft) {
@@ -496,6 +559,15 @@ async function schleife() {
   const meineRunde = () => zustand.laeuft && zustand.lauf === meiner;
 
   while (meineRunde()) {
+    // Hinter einem offenen Blatt wird nicht analysiert und nicht geredet. Die
+    // Schleife bleibt dabei am Leben und macht nach dem Schliessen einfach
+    // weiter — so kann kein Schliessweg vergessen, sie neu zu starten.
+    if (blattOffen()) {
+      zustand.wartetSeit = 0;
+      await schlafen(300);
+      continue;
+    }
+
     const lage = Steuerung.kameraLage({
       spurLebt: kameraLaeuft(),
       videoLaeuft: !video.paused,
@@ -720,7 +792,18 @@ function ampelZeigen(ampel) {
   }
   kasten.hidden = false;
   kasten.className = `ampel ${ampel.stand}`;
-  $('ampelPunkt').textContent = { gruen: '🟢', gelb: '🟡', rot: '🔴', unsicher: '⚪' }[ampel.stand] || '⚪';
+  /* Form statt nur Farbe.
+   *
+   * Vorher standen hier vier formgleiche Farbkreise. Bei Rot-Gruen-Schwaeche —
+   * rund jeder zwoelfte Mann — sind rot und gruen davon kaum zu unterscheiden,
+   * ausgerechnet die beiden Zustaende, auf die es ankommt. Und der weisse Kreis
+   * fuer "unsicher" las sich wie eine weitere, schlechte Note. Jetzt traegt
+   * jeder Zustand ein eigenes Zeichen und ein Wort fuer den Screenreader.
+   */
+  const ZEICHEN = { gruen: '✓', gelb: '!', rot: '✕', unsicher: '?' };
+  const WORT = { gruen: 'Gut', gelb: 'Achtung', rot: 'Problem', unsicher: 'Noch kein Urteil' };
+  $('ampelPunkt').textContent = ZEICHEN[ampel.stand] || '?';
+  $('ampelPunkt').setAttribute && $('ampelPunkt').setAttribute('aria-label', WORT[ampel.stand] || WORT.unsicher);
   $('ampelText').textContent = ampel.was_tun ? `${ampel.text} — ${ampel.was_tun}` : ampel.text;
 }
 
@@ -751,6 +834,9 @@ function behobenZeigen(behoben) {
  * waren nirgends anklickbar. Jetzt fuehrt jedes Problem zu einer Anleitung und
  * von dort zurueck vor die Kamera.
  */
+// Dringlichkeit als Wort — die Farbe allein traegt sie nicht.
+const RANG = { critical: 'dringend', high: 'wichtig', medium: 'mittel', low: 'klein' };
+
 function problemeZeigen(liste) {
   const kasten = $('probleme');
   const neu = liste || [];
@@ -775,6 +861,7 @@ function problemeZeigen(liste) {
       // Dieselbe Sache, nur vielleicht anders formuliert.
       alt.className = `problem ${problem.severity}`;
       alt.dataset.symbol = problem.symbol;
+      alt.dataset.rang = RANG[problem.severity] || '';
       alt.children[0].textContent = problem.titel;
       alt.onclick = () => anleitungZeigen(problem);
       return;
@@ -783,6 +870,7 @@ function problemeZeigen(liste) {
     const zeile = document.createElement('div');
     zeile.className = `problem ${problem.severity}`;
     zeile.dataset.symbol = problem.symbol;
+    zeile.dataset.rang = RANG[problem.severity] || '';
     zeile.dataset.id = problem.id;
 
     const titel = document.createElement('span');
@@ -848,6 +936,42 @@ function anleitungZeigen(problem) {
   $('anleitung').hidden = false;
 }
 
+/* Liegt gerade ein Blatt ueber dem Livebild?
+ *
+ * Solange man liest — Anleitung, Report, Feedback —, zeigt das Handy
+ * irgendwohin. Analysiert die App dann weiter, redet sie dazwischen, vibriert
+ * und verbraucht Kontingent. Frueher kannte nur die Anleitung diesen Schutz;
+ * hinter dem Report lief die Liveschleife munter weiter und sprach, waehrend
+ * man das Endurteil las.
+ */
+function blattOffen() {
+  return zustand.anleitung
+    || !$('report').hidden
+    || !$('feedback').hidden;
+}
+
+/* Den Livebetrieb wieder aufnehmen, nachdem ein Blatt zu ist.
+ *
+ * Frueher hing das am Flag `laeuft`: nur wenn es noch true war, lief die
+ * Schleife wieder an. Ging die App aber bei offener Anleitung kurz in den
+ * Hintergrund, war es danach false — und nach dem Schliessen der Anleitung
+ * stand die Analyse fuer immer still. Kein Fehler, keine Meldung, einfach
+ * nichts mehr. Jetzt entscheidet der tatsaechliche Zustand: Sitzung da, nicht
+ * im Menue, nicht pausiert, Kamera lebt.
+ */
+function liveWiederAufnehmen() {
+  if (blattOffen() || zustand.pausiert || !zustand.sitzung) return;
+  if (!$('start').hidden) return;
+  if (document.visibilityState && document.visibilityState !== 'visible') return;
+  if (!kameraLaeuft()) {
+    pausieren('Die Kamera liefert gerade kein Bild.');
+    return;
+  }
+  zustand.laeuft = true;
+  zustand.blindSeit = 0;
+  schleife();
+}
+
 function anleitungSchliessen(neuPruefen) {
   const behandelt = offenesProblem;
   $('anleitung').hidden = true;
@@ -869,7 +993,7 @@ function anleitungSchliessen(neuPruefen) {
   }
 
   // Die Schleife lief waehrend des Lesens nicht — hier geht sie wieder an.
-  if (zustand.laeuft && !zustand.pausiert) schleife();
+  liveWiederAufnehmen();
 }
 
 /** Das gerade behandelte Problem verblasst, bis das neue Urteil da ist. */
@@ -1084,12 +1208,35 @@ function zeichneSucher(mx, my, radius, aktiv) {
   ctx.restore();
 }
 
+const MARKER_MIN_PX = 28;   // kleiner sieht man einen Rahmen am Handy nicht mehr
+
 function zeichneMarker(marker, staerke = 1) {
   const farbe = MARKER_FARBE[marker.typ] || MARKER_FARBE.distribute;
   const oben = bildAufBildschirm(marker.x, marker.y);
   const unten = bildAufBildschirm(marker.x + marker.w, marker.y + marker.h);
-  const breite = unten.x - oben.x;
-  const hoehe = unten.y - oben.y;
+  let breite = unten.x - oben.x;
+  let hoehe = unten.y - oben.y;
+
+  // Ein winziger Marker zeichnete frueher keinen sichtbaren Rahmen — uebrig
+  // blieb nur das Etikett. Er waechst jetzt um seine Mitte auf eine Mindestgroesse.
+  if (marker.typ !== 'fill_height') {
+    if (breite < MARKER_MIN_PX) { oben.x -= (MARKER_MIN_PX - breite) / 2; breite = MARKER_MIN_PX; }
+    if (hoehe < MARKER_MIN_PX) { oben.y -= (MARKER_MIN_PX - hoehe) / 2; hoehe = MARKER_MIN_PX; }
+  }
+
+  /* Ganz aus dem Bild gewandert?
+   *
+   * Die Marker folgen der Handbewegung. Ist einer dabei ganz aus dem Bild
+   * gerutscht, wurde bisher nur das Etikett an den Rand geklemmt — der Rahmen
+   * nicht. Uebrig blieb eine Beschriftung, die auf nichts zeigte. Jetzt zeigt
+   * ein Pfeil am Rand, wohin man schwenken muss.
+   */
+  const cw = overlay.clientWidth;
+  const ch = overlay.clientHeight;
+  if (oben.x + breite < 0 || oben.x > cw || oben.y + hoehe < 0 || oben.y > ch) {
+    randPfeil(oben.x + breite / 2, oben.y + hoehe / 2, farbe, staerke);
+    return;
+  }
 
   ctx.save();
 
@@ -1129,6 +1276,28 @@ function zeichneMarker(marker, staerke = 1) {
   ctx.restore();
 
   zeichneEtikett(oben.x + breite / 2, oben.y - 12, marker, farbe, staerke);
+}
+
+/** Ein Dreieck am Bildrand, das zu einem Marker ausserhalb zeigt. */
+function randPfeil(zielX, zielY, farbe, staerke = 1) {
+  const cw = overlay.clientWidth;
+  const ch = overlay.clientHeight;
+  const rand = 18;
+  const x = Math.min(Math.max(zielX, rand), cw - rand);
+  const y = Math.min(Math.max(zielY, rand), ch - rand);
+  const winkel = Math.atan2(zielY - y, zielX - x);
+  ctx.save();
+  ctx.globalAlpha = 0.9 * staerke;
+  ctx.translate(x, y);
+  ctx.rotate(winkel);
+  ctx.fillStyle = farbe;
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(-7, -8);
+  ctx.lineTo(-7, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function rundesRechteck(x, y, breite, hoehe, radius) {
@@ -1224,6 +1393,9 @@ const noteFarbe = (score) =>
 const Erkennung = window.SpeechRecognition || window.webkitSpeechRecognition;
 let hoerer = null;
 let hoererPause = false;   // waehrend die App selbst spricht
+let hoererPauseUhr = 0;    // hebt die Pause auf, falls Safari kein onend liefert
+const HOER_MINDESTLAUF_MS = 1500;  // kuerzer gelaufen heisst: Fehlstart
+const HOER_FEHLSTARTS = 5;         // so viele in Folge, dann aus
 
 function spracheMoeglich() {
   return Boolean(Erkennung);
@@ -1257,16 +1429,44 @@ function hoererBauen() {
     if (ereignis.error === 'not-allowed' || ereignis.error === 'service-not-allowed') {
       hoerenAus();
       setzeLage('Mikrofon verweigert', 'fehler');
+      $('coach').textContent = 'Das Mikrofon ist nicht freigegeben. Bedienen geht auch ohne — über die Knöpfe.';
     }
   };
 
-  // Safari beendet die Erkennung nach kurzer Stille von selbst — neu starten.
-  h.onend = () => {
+  /* Safari beendet die Erkennung nach kurzer Stille von selbst — neu starten.
+   *
+   * Aber nicht blind. Das Diktat laeuft bei Safari ueber einen Server; ohne Netz
+   * feuert sofort onerror, dann onend, dann wieder start — ohne Pause und ohne
+   * Ende. Das Handy wird warm, der Akku faellt, das Livebild ruckelt, und nichts
+   * sagt warum. Deshalb: kommt das Ende zu schnell nach dem Start, wird mit
+   * wachsendem Abstand neu versucht, und nach einigen Fehlstarts in Folge ist
+   * Schluss, mit einer Meldung dort, wo man hinschaut.
+   */
+  let gestartet = 0;
+  let fehlstarts = 0;
+  const neuStarten = () => {
     if (!zustand.hoeren) return;
     try {
+      gestartet = Date.now();
       h.start();
     } catch (_) { /* laeuft schon */ }
   };
+  h.onend = () => {
+    if (!zustand.hoeren) return;
+    const lief = Date.now() - gestartet;
+    fehlstarts = lief < HOER_MINDESTLAUF_MS ? fehlstarts + 1 : 0;
+    if (fehlstarts >= HOER_FEHLSTARTS) {
+      fehlstarts = 0;
+      hoerenAus();
+      setzeLage('Sprache aus', 'warn');
+      $('coach').textContent = 'Die Sprachsteuerung bricht immer wieder ab — vermutlich fehlt Netz. Ich hab sie ausgeschaltet.';
+      return;
+    }
+    // 0 ms beim normalen Ende nach Stille, sonst 0,5 s, 1 s, 2 s, 4 s.
+    const warte = fehlstarts ? 250 * Math.pow(2, fehlstarts) : 0;
+    setTimeout(neuStarten, warte);
+  };
+  h.markStart = () => { gestartet = Date.now(); fehlstarts = 0; };
 
   return h;
 }
@@ -1275,12 +1475,15 @@ function hoerenAn() {
   if (!spracheMoeglich() || zustand.hoeren) return;
   hoerer = hoerer || hoererBauen();
   try {
+    hoerer.markStart();
     hoerer.start();
     zustand.hoeren = true;
     hoerenAnzeigen();
     sprich('Ich höre.');
   } catch (fehler) {
+    // Die Marke oben liest niemand, waehrend der Daumen unten am Knopf ist.
     setzeLage('Sprache nicht verfügbar', 'warn');
+    $('coach').textContent = 'Die Sprachsteuerung ließ sich nicht starten. Tipp noch einmal auf das Mikrofon.';
   }
 }
 
@@ -1308,7 +1511,7 @@ function befehlAusfuehren(befehl, gesagt) {
     laeuft: zustand.laeuft,
     pausiert: zustand.pausiert,
     imHauptmenue: !$('start').hidden,
-    anleitungOffen: zustand.anleitung,
+    anleitungOffen: blattOffen(),
   });
 
   if (plan.aktion === 'nichts') return;
@@ -1425,11 +1628,23 @@ function sprich(text) {
   spruch.rate = 1.08;
   if (stimme) spruch.voice = stimme;
 
-  // Waehrend die App spricht, hoert sie nicht zu — sonst nimmt sie ihre eigenen
-  // Hinweise als Befehle entgegen.
-  spruch.onstart = () => { hoererPause = true; };
-  spruch.onend = () => { hoererPause = false; };
-  spruch.onerror = () => { hoererPause = false; };
+  /* Waehrend die App spricht, hoert sie nicht zu — sonst nimmt sie ihre eigenen
+   * Hinweise als Befehle entgegen.
+   *
+   * Die Pause endet mit onend oder onerror. Geht die App aber mitten in einer
+   * Ansage in den Hintergrund, liefert Safari manchmal keins von beiden — dann
+   * blieb die Pause fuer den Rest der Sitzung stehen, und jeder Sprachbefehl
+   * wurde still ignoriert, waehrend die Mikrofonmarke weiter "an" zeigte. Eine
+   * Sicherheitsfrist nach Textlaenge hebt sie spaetestens dann auf.
+   */
+  clearTimeout(hoererPauseUhr);
+  const aufheben = () => { hoererPause = false; clearTimeout(hoererPauseUhr); };
+  spruch.onstart = () => {
+    hoererPause = true;
+    hoererPauseUhr = setTimeout(aufheben, text.length * 90 + 3000);
+  };
+  spruch.onend = aufheben;
+  spruch.onerror = aufheben;
 
   speechSynthesis.speak(spruch);
 }
@@ -1476,6 +1691,22 @@ function anbieterUmschalten(anbieter) {
 
 function einstellungenSpeichern() {
   const gewaehlt = document.querySelector('#anbieterwahl .aktiv');
+
+  /* Eine http-Adresse fuer den eigenen Rechner kann nicht funktionieren.
+   *
+   * Die App laeuft ueber https; der Browser blockiert von dort jeden Aufruf an
+   * eine http-Adresse, und die Sicherheitsrichtlinie erlaubt ohnehin nur https.
+   * Frueher liess sich eine solche Adresse speichern, und jede Analyse brach
+   * danach wortlos ab. Jetzt wird es beim Speichern gesagt.
+   */
+  const adresse = $('fServerUrl').value.trim();
+  const anbieter = gewaehlt ? gewaehlt.dataset.anbieter : 'gemini';
+  if (anbieter === 'server' && /^http:\/\//i.test(adresse)) {
+    $('startFehler').textContent = 'Die Adresse des Rechners muss mit https:// beginnen — '
+      + 'von einer https-Seite blockiert der Browser jede http-Verbindung. SHISHA_TLS in der .env einschalten.';
+    return;
+  }
+
   Engine.einstellungenSpeichern({
     anbieter: gewaehlt ? gewaehlt.dataset.anbieter : 'gemini',
     gemini_key: $('fGeminiKey').value.trim(),
@@ -1518,7 +1749,8 @@ function startBereitschaft() {
   const ok = Engine.bereit();
   // Der Knopf bleibt bedienbar: ohne Zugang fuehrt er zu den Einstellungen,
   // statt stumm zu bleiben. Gesperrte Knoepfe sehen aus wie kaputte Knoepfe.
-  $('losButton').disabled = false;
+  // Eingebettet in eine fremde Seite bleibt der Start gesperrt (siehe fehler.js).
+  $('losButton').disabled = Boolean(window.EINGEBETTET);
   $('losButton').classList.toggle('wartet', !ok);
   $('losButton').textContent = ok ? 'Kamera starten' : 'Zugang einrichten';
   $('startInfo').textContent = ok
@@ -1560,6 +1792,35 @@ function durchmesserVorschlagen() {
     $('fDurchmesser').value = String(treffer.aussendurchmesser_mm);
     $('fDurchmesser').classList.add('vorgeschlagen');
   }
+}
+
+/* Passende Koepfe als antippbare Vorschlaege.
+ *
+ * Die Liste hing bisher an <datalist>, und das zeigt Safari auf dem iPhone
+ * nicht zuverlaessig an. Dann griff der Durchmesser-Vorschlag nur, wer den
+ * Namen exakt tippte — und genau der Durchmesser ist der Massstab fuer jede
+ * Millimeterangabe. Jetzt stehen bis zu vier Treffer als Knoepfe unter dem Feld.
+ */
+function kopfVorschlaegeZeigen() {
+  const box = $('kopfVorschlaege');
+  if (!box) return;
+  box.innerHTML = '';
+  const eingabe = String($('fKopf').value || '').trim().toLowerCase();
+  if (eingabe.length < 2) return;
+  const liste = ((Engine.spec && Engine.spec.koepfe) || {}).liste || [];
+  const treffer = liste.filter((kopf) => kopf.name.toLowerCase().includes(eingabe)
+    && kopf.name.toLowerCase() !== eingabe).slice(0, 4);
+  treffer.forEach((kopf) => {
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.textContent = `${kopf.name} · ${kopf.aussendurchmesser_mm} mm`;
+    knopf.onclick = () => {
+      $('fKopf').value = kopf.name;
+      box.innerHTML = '';
+      durchmesserVorschlagen();
+    };
+    box.appendChild(knopf);
+  });
 }
 
 function sitzungStarten() {
@@ -1663,8 +1924,23 @@ async function vollanalyse() {
     if (zustand.busy) return;
   }
   zustand.busy = true;
+  // Der Wachhund gilt nur fuer Live-Anfragen. Eine Vollanalyse darf mit drei
+  // Aufnahmen und Denkzeit laenger brauchen als seine Frist — liefe er hier mit,
+  // gaebe er "busy" mitten in der Analyse frei und eine Liveanfrage liefe parallel.
+  zustand.busySeit = 0;
   const meineSitzung = zustand.sitzung;
-  const meiner = ++zustand.lauf;
+  /* Eine eigene Nummer, nicht die der Liveschleife.
+   *
+   * Frueher lief die Vollanalyse ueber `zustand.lauf` — dieselbe Nummer, die
+   * jede Rueckkehr aus dem Hintergrund und jedes Oeffnen einer Anleitung
+   * hochzaehlt. Kam waehrend der Analyse ein Anruf oder tippte man ein Problem
+   * an, wurde das fertige, bezahlte Ergebnis mit einem nackten return
+   * weggeworfen: 20 Sekunden gewartet, kein Report, keine Meldung. Die
+   * Liveschleife wird weiterhin angehalten; verworfen wird aber nur noch, wenn
+   * das Ergebnis wirklich zu nichts mehr passt.
+   */
+  const meineVoll = ++zustand.vollLauf;
+  zustand.lauf++;
   $('analyseButton').disabled = true;
   setzeLage('Vollanalyse', 'denkt');
 
@@ -1674,11 +1950,23 @@ async function vollanalyse() {
     setzeLage('bewerte', 'denkt');
 
     const analyse = await meineSitzung.analysieren(bilder, 'voll');
-    // Waehrend der Anfrage kann der Nutzer laengst im Hauptmenue sein oder eine
-    // neue Sitzung begonnen haben. Dann draengt sich der Report nicht mehr ueber
-    // den Bildschirm und landet auch nicht in der Historie einer Sitzung, die es
-    // nicht mehr gibt.
-    if (zustand.lauf !== meiner || zustand.sitzung !== meineSitzung) return;
+    // Zurueck im Hauptmenue: dann draengt sich kein Report mehr ueber den
+    // Startbildschirm.
+    if (zustand.vollLauf !== meineVoll || !$('start').hidden) return;
+    // Neuer Kopf waehrend der Analyse: das Ergebnis gehoert zum alten. Es wird
+    // nicht gezeigt und nicht abgelegt — aber gesagt, damit niemand wartet.
+    if (zustand.sitzung !== meineSitzung) {
+      setzeLage('verworfen', 'warn');
+      $('coach').textContent = 'Das Ergebnis gehörte zum vorigen Kopf — ich hab es verworfen.';
+      return;
+    }
+    // Hat man waehrend der Analyse eine Anleitung aufgemacht, liegt sie sonst
+    // ueber dem Report und verdeckt das Ergebnis, auf das man gewartet hat.
+    if (zustand.anleitung) {
+      $('anleitung').hidden = true;
+      zustand.anleitung = false;
+      offenesProblem = null;
+    }
     reportZeigen(analyse);
     historieMerken(analyse, bilder[0]);
     setzeLage('live', '');
@@ -1695,8 +1983,9 @@ async function vollanalyse() {
     // sofort nach dem Report noch eine Anfrage hinterher.
     if (zustand.letzteGrau) analyseMini = zustand.letzteGrau;
     // Die Rundennummer oben hat die Liveschleife beendet — hier laeuft sie
-    // wieder an, sonst steht die Vorschau nach dem Report still.
-    if (zustand.laeuft && !zustand.pausiert && zustand.sitzung === meineSitzung) schleife();
+    // wieder an, sonst steht die Vorschau nach einem Fehler still. Liegt der
+    // Report offen, wartet sie, bis er zu ist.
+    if (zustand.sitzung === meineSitzung) liveWiederAufnehmen();
   }
 }
 
@@ -1767,11 +2056,27 @@ async function historieZeigen() {
     const zeile = document.createElement('li');
     const datum = new Date(eintrag.zeit).toLocaleString('de-DE',
       { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    /* Das Vorschaubild als Eigenschaft, nicht als Vorlage.
+     *
+     * Die Adresse stammt aus der eigenen Ablage und entsteht lokal aus
+     * toDataURL — trotzdem war das die einzige Stelle, an der ein Wert
+     * ungeschuetzt in ein HTML-Attribut ging, und escape() maskiert keine
+     * Anfuehrungszeichen. Jetzt wird nur ein echtes data:image gesetzt.
+     */
+    const note = Number.isFinite(Number(eintrag.score)) && eintrag.score !== null
+      ? Math.round(Number(eintrag.score)) : '–';
     zeile.innerHTML =
-      (eintrag.vorschau ? `<img src="${eintrag.vorschau}" alt="" />` : '<span class="kein-bild">–</span>')
-      + `<span class="historie-text"><b>${eintrag.score === null ? '–' : eintrag.score}/100</b>`
-      + ` ${escape(eintrag.stufe_text || '')}<small>${datum}`
+      (eintrag.vorschau ? '' : '<span class="kein-bild">–</span>')
+      + `<span class="historie-text"><b>${note}/100</b>`
+      + ` ${escape(eintrag.stufe_text || '')}<small>${escape(datum)}`
       + `${eintrag.kopf ? ' · ' + escape(eintrag.kopf) : ''}</small></span>`;
+    if (eintrag.vorschau && /^data:image\/(jpeg|png|webp);base64,/.test(eintrag.vorschau)) {
+      const bild = document.createElement('img');
+      bild.alt = '';
+      bild.src = eintrag.vorschau;
+      if (zeile.insertBefore && zeile.firstChild !== undefined) zeile.insertBefore(bild, zeile.firstChild);
+      else zeile.appendChild(bild);
+    }
     liste.appendChild(zeile);
   });
 }
@@ -2034,12 +2339,16 @@ function reportZeigen(analyse) {
   // Wo die App die Bewertung des Modells heruntergesetzt hat, und warum.
   const kappungen = $('kappungen');
   kappungen.innerHTML = '';
+  // Hinweise ohne Zahlen (verworfene Messwerte, unpassender Massstab) stehen
+  // frueher als "antwort: null → null, weil …" im Report.
+  const NAMEN = { antwort: 'Antwort', messwerte: 'Messwerte', massstab: 'Maßstab', gesamt: 'Gesamtnote' };
   (analyse.kappungen || []).forEach((kappung) => {
     const zeile = document.createElement('div');
     zeile.className = 'kappung';
-    zeile.textContent =
-      `${Engine.spec.kategorien[kappung.kategorie] || kappung.kategorie}: `
-      + `${kappung.von} → ${kappung.auf}, weil ${kappung.grund}`;
+    const name = Engine.spec.kategorien[kappung.kategorie] || NAMEN[kappung.kategorie] || kappung.kategorie;
+    zeile.textContent = kappung.von === null || kappung.von === undefined
+      ? `${name}: ${kappung.grund}`
+      : `${name}: ${kappung.von} → ${kappung.auf}, weil ${kappung.grund}`;
     kappungen.appendChild(zeile);
   });
 
@@ -2205,6 +2514,7 @@ function feedbackSpeichern() {
   $('fDauer').value = '';
   $('fFeedbackNotiz').value = '';
   document.querySelectorAll('.skala-knoepfe button').forEach((k) => k.classList.remove('aktiv'));
+  liveWiederAufnehmen();
 }
 
 function treffsicherheitZeigen() {
@@ -2245,6 +2555,7 @@ $('zugangAbbruch').addEventListener('click', () => { $('einstellungen').hidden =
 
 $('losButton').addEventListener('click', async () => {
   const knopf = $('losButton');
+  if (window.EINGEBETTET) return;
 
   // Regelwerk fehlt: der Knopf ist dann der Weg zurueck, nicht eine Sackgasse.
   if (zustand.specFehlt) { location.reload(); return; }
@@ -2321,7 +2632,10 @@ $('neuButton').addEventListener('click', () => {
   if (confirm('Neuen Kopf anfangen?')) sitzungStarten();
 });
 
-$('zurueckButton').addEventListener('click', () => { $('report').hidden = true; });
+$('zurueckButton').addEventListener('click', () => {
+  $('report').hidden = true;
+  liveWiederAufnehmen();
+});
 $('anleitungPruefen').addEventListener('click', () => anleitungSchliessen(true));
 $('anleitungZurueck').addEventListener('click', () => anleitungSchliessen(false));
 
@@ -2357,8 +2671,12 @@ $('historieLeeren').addEventListener('click', async () => {
 
 $('fKopf').addEventListener('change', durchmesserVorschlagen);
 $('fKopf').addEventListener('blur', durchmesserVorschlagen);
+$('fKopf').addEventListener('input', kopfVorschlaegeZeigen);
 
-$('feedbackAbbruch').addEventListener('click', () => { $('feedback').hidden = true; });
+$('feedbackAbbruch').addEventListener('click', () => {
+  $('feedback').hidden = true;
+  liveWiederAufnehmen();
+});
 $('feedbackSenden').addEventListener('click', feedbackSpeichern);
 
 // --------------------------------------------------------------------------
@@ -2440,5 +2758,22 @@ function zielwahlFuellen() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* geht auch ohne */ });
+  });
+
+  /* Eine neue Fassung ist da — und kommt an, ohne dass man die App abschiesst.
+   *
+   * Bisher musste man nach jedem Update die App aus dem App-Umschalter
+   * wischen, sonst lief die alte Fassung weiter, womoeglich mit neuen Dateien
+   * gemischt. Jetzt meldet der Service Worker eine neue Fassung. Im Hauptmenue
+   * wird sofort neu geladen; mitten im Bauen wird nicht gestoert, sondern beim
+   * naechsten Gang ins Menue.
+   */
+  navigator.serviceWorker.addEventListener('message', (ereignis) => {
+    if (!ereignis.data || ereignis.data.art !== 'neue-fassung') return;
+    if (!$('start').hidden) {
+      location.reload();
+      return;
+    }
+    zustand.neueFassung = true;
   });
 }

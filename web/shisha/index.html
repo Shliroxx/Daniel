@@ -8,8 +8,13 @@
        Skript darf laufen (script-src 'self'), nichts wird von aussen nachgeladen,
        und Formulare koennen nirgendwohin abschicken. connect-src bleibt bei
        https: offen, weil der eigene Rechner jede beliebige Adresse im Heimnetz
-       haben kann — der eigentliche Schutz ist script-src. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+       haben kann — der eigentliche Schutz ist script-src.
+       frame-ancestors steht bewusst NICHT hier: im meta-Tag ignoriert jeder
+       Browser diese Regel, sie wirkt nur als HTTP-Kopf, und den laesst GitHub
+       Pages nicht setzen. Sie stand frueher trotzdem da und taeuschte einen
+       Schutz vor, den es nicht gab. Die Einbettung in fremde Seiten verweigert
+       jetzt fehler.js. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'" />
   <meta name="theme-color" content="#04080d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -52,8 +57,9 @@
       <summary>Angaben zum Aufbau <small>(macht die Analyse deutlich genauer)</small></summary>
       <div class="angaben-gitter">
         <label>Kopfmodell
-          <input id="fKopf" type="text" list="kopfliste" placeholder="z. B. Oblako Phunnel M" />
+          <input id="fKopf" type="text" list="kopfliste" autocomplete="off" placeholder="z. B. Oblako Phunnel M" />
           <datalist id="kopfliste"></datalist>
+          <div class="vorschlaege" id="kopfVorschlaege"></div>
         </label>
         <label>Außendurchmesser in mm <small>über den Rand gemessen — Maßstab für genaue Millimeter</small>
           <input id="fDurchmesser" type="number" inputmode="numeric" min="40" max="140" placeholder="z. B. 78" />
@@ -72,8 +78,8 @@
     </details>
 
     <label class="schalter">
-      <input id="fSprache" type="checkbox" checked />
-      <span>Sprachsteuerung beim Start einschalten</span>
+      <input id="fSprache" type="checkbox" />
+      <span>Sprachsteuerung beim Start einschalten (fragt nach dem Mikrofon)</span>
     </label>
     <label class="schalter">
       <input id="fWinkel" type="checkbox" checked />
@@ -83,7 +89,7 @@
     <button id="losButton" class="gross">Kamera starten</button>
     <button id="zugangButton" class="flach">Modell und Zugang</button>
     <button id="historieButton" class="flach">Meine bisherigen Köpfe</button>
-    <p id="startFehler" class="fehler"></p>
+    <p id="startFehler" class="fehler" role="alert"></p>
     <p class="fuss" id="startInfo">Regelwerk wird geladen …</p>
   </div>
 </section>
@@ -105,21 +111,21 @@
 <footer class="unten" id="unten" hidden>
   <div class="karte">
     <div class="ampel" id="ampel" hidden>
-      <span class="ampel-punkt" id="ampelPunkt"></span>
-      <span class="ampel-text" id="ampelText"></span>
+      <span class="ampel-punkt" id="ampelPunkt" role="img" aria-label="Noch kein Urteil"></span>
+      <span class="ampel-text" id="ampelText" aria-live="polite"></span>
     </div>
-    <div class="behoben" id="behoben" hidden></div>
-    <div class="coach" id="coach">Halt die Kamera von oben ueber den Kopf.</div>
+    <div class="behoben" id="behoben" aria-live="polite" hidden></div>
+    <div class="coach" id="coach" aria-live="polite">Halt die Kamera von oben ueber den Kopf.</div>
     <div class="probleme" id="probleme"></div>
     <div class="frage" id="rueckfrage" hidden></div>
   </div>
   <div class="knopfreihe">
-    <button id="tonButton" class="rund" title="Sprachausgabe">🔊</button>
-    <button id="hoerButton" class="rund aus" title="Sprachsteuerung" hidden>🎤</button>
+    <button id="tonButton" class="rund" title="Sprachausgabe" aria-label="Sprachausgabe an oder aus">🔊</button>
+    <button id="hoerButton" class="rund aus" title="Sprachsteuerung" aria-label="Sprachsteuerung an oder aus" hidden>🎤</button>
     <button id="weiterButton" class="klein">Phase weiter</button>
     <button id="analyseButton" class="haupt">Vollanalyse</button>
-    <button id="neuButton" class="rund" title="Neu anfangen">↺</button>
-    <button id="menueButton" class="rund" title="Hauptmenü">☰</button>
+    <button id="neuButton" class="rund" title="Neu anfangen" aria-label="Neuen Kopf anfangen">↺</button>
+    <button id="menueButton" class="rund" title="Hauptmenü" aria-label="Zum Hauptmenü">☰</button>
   </div>
 </footer>
 
@@ -130,7 +136,7 @@
 </div>
 
 <!-- Anleitung zu einem gemeldeten Problem ------------------------------ -->
-<section id="anleitung" class="blatt" hidden>
+<section id="anleitung" class="blatt" role="dialog" aria-modal="true" aria-labelledby="anleitungTitel" hidden>
   <div class="blatt-inner schmal">
     <div class="anleitung-kopf">
       <span class="anleitung-marke" id="anleitungMarke">🔴</span>
@@ -166,7 +172,7 @@
 </section>
 
 <!-- Modell und Zugang ------------------------------------------------- -->
-<section id="einstellungen" class="blatt" hidden>
+<section id="einstellungen" class="blatt" role="dialog" aria-modal="true" aria-label="Modell und Zugang" hidden>
   <div class="blatt-inner schmal">
     <h2>Modell und Zugang</h2>
     <p class="unterzeile">
@@ -178,6 +184,13 @@
       Seiten unter derselben Adresse könnten den Schlüssel lesen. Beschränke ihn
       deshalb beim Anbieter: bei Google unter <b>API key → Website restrictions</b>
       auf diese Adresse, bei OpenRouter über ein Guthabenlimit pro Schlüssel.
+    </p>
+    <p class="unterzeile">
+      <b>Was das Handy verlässt:</b> Im Livebetrieb geht etwa alle ein bis drei
+      Sekunden ein Kamerabild an den gewählten Anbieter, bei der Vollanalyse bis
+      zu drei. Dazu deine Angaben zum Aufbau (Kopf, Tabak, HMD, Kohlen, Notiz).
+      Mit Gegenprobe geht jedes Bild an zwei Anbieter. Richte die Kamera deshalb
+      nur auf den Kopf. Schlüssel, Historie und Lernprofil bleiben auf diesem Gerät.
     </p>
 
     <div class="feld">
@@ -291,7 +304,7 @@
 </section>
 
 <!-- Vollanalyse --------------------------------------------------------- -->
-<section id="report" class="blatt" hidden>
+<section id="report" class="blatt" role="dialog" aria-modal="true" aria-label="Ergebnis" hidden>
   <div class="blatt-inner">
     <div class="report-kopf">
       <div class="note-ring">
@@ -345,7 +358,7 @@
 </section>
 
 <!-- Historie ------------------------------------------------------------ -->
-<section id="historie" class="blatt" hidden>
+<section id="historie" class="blatt" role="dialog" aria-modal="true" aria-label="Bisherige Köpfe" hidden>
   <div class="blatt-inner">
     <h2>Meine bisherigen Köpfe</h2>
     <p class="unterzeile">Bleibt auf diesem Gerät. Die gestrichelte Linie ist die 85er-Marke.</p>
@@ -361,7 +374,7 @@
 </section>
 
 <!-- Session-Feedback ---------------------------------------------------- -->
-<section id="feedback" class="blatt" hidden>
+<section id="feedback" class="blatt" role="dialog" aria-modal="true" aria-label="Wie war der Kopf" hidden>
   <div class="blatt-inner schmal">
     <h2>Wie war die Session?</h2>
     <p class="unterzeile">Damit lernt die naechste Empfehlung dazu.</p>
