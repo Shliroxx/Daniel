@@ -913,7 +913,7 @@ input.vorgeschlagen { border-color: rgba(95, 227, 255, 0.45); }
 .phase::after {
   content: '';
   position: absolute;
-  inset: -4px -2px;
+  top: -4px; bottom: -4px; left: -2px; right: -2px;
 }
 details > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
 

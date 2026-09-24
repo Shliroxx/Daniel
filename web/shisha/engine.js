@@ -1204,7 +1204,14 @@ const Engine = (() => {
 
   /** Der erste Satz, gekuerzt — gesprochen wird kein Absatz. */
   function ersterSatz(text) {
-    const satz = String(text || '').split(/(?<=[.!?])\s/)[0].trim();
+    // Kein Lookbehind: den versteht Safari erst ab iOS 16.4, und auf einem
+    // aelteren iPhone waere das ein Syntaxfehler beim Laden — die ganze App
+    // stuende still. tests/test_vertrag.mjs haelt das fest.
+    // Satzende nur, wenn danach ein Grossbuchstabe oder nichts kommt — sonst
+    // wurde "Nimm ca. 2 mm weg" nach "ca." abgeschnitten.
+    const ganz = String(text || '').trim();
+    const treffer = ganz.match(/^[\s\S]*?[.!?](?=\s+[A-ZÄÖÜ]|\s*$)/);
+    const satz = (treffer ? treffer[0] : ganz).trim();
     return satz.length > 120 ? `${satz.slice(0, 117).trim()} …` : satz;
   }
 

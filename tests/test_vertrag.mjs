@@ -61,6 +61,31 @@ skripte.forEach((datei) => {
     `${datei}: Inline-Style ueber eine Vorlage — die CSP verwirft ihn stumm`);
 });
 
+/* --- Nur Syntax, die auch aeltere iPhones verstehen ----------------------------
+ *
+ * Ein einziges Konstrukt, das Safari nicht kennt, ist beim Laden ein
+ * Syntaxfehler — dann laeuft die ganze Datei nicht, und alle Knoepfe sind tot.
+ * Genau das Bild, das der Nutzer als "die Buttons funktionieren nicht"
+ * beschrieben hat. Lookbehind im Regex kann Safari erst ab iOS 16.4; die
+ * logischen Zuweisungen ab 14. Node versteht beides, deshalb faellt es in
+ * keinem anderen Test auf.
+ */
+const ZU_NEU = [
+  [/\(\?<[=!]/, 'Lookbehind im Regex (Safari erst ab iOS 16.4)'],
+  [/\|\|=|&&=|\?\?=/, 'logische Zuweisung (Safari erst ab iOS 14)'],
+  [/\.at\(\s*-?\d/, 'Array.prototype.at (Safari erst ab iOS 15.4)'],
+  [/structuredClone\(/, 'structuredClone (Safari erst ab iOS 15.4)'],
+  [/Object\.hasOwn\(/, 'Object.hasOwn (Safari erst ab iOS 15.4)'],
+  [/\.findLast(Index)?\(/, 'findLast (Safari erst ab iOS 15.4)'],
+];
+skripte.forEach((datei) => {
+  const quelle = readFileSync(join(webDir, datei), 'utf8')
+    .split('\n').filter((zeile) => !/^\s*(\/\/|\*)/.test(zeile)).join('\n');
+  ZU_NEU.forEach(([muster, was]) => {
+    assert.ok(!muster.test(quelle), `${datei}: ${was} — auf aelteren iPhones laeuft die Datei dann gar nicht`);
+  });
+});
+
 // --- Alles Fremde bleibt draussen ----------------------------------------------
 // default-src 'none' laesst nichts von aussen zu. Ein Font, ein Symbolsatz oder
 // eine Bibliothek von einem CDN wuerde am Geraet einfach fehlen.

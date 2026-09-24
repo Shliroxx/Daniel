@@ -520,6 +520,13 @@ const langerPlan = Engine.normalisiere({
     wirkung: 'gleichmaessige Hitze' }],
 }, true, {}).coach_satz;
 assert.equal(langerPlan, 'Zieh bei 9 Uhr etwas Tabak zur Mitte.', `Ersatz zu lang: "${langerPlan}"`);
+// Abkuerzungen sind kein Satzende.
+const mitAbkuerzung = Engine.normalisiere({
+  ...ANTWORT, coach_satz: 'Oblako M nicht erkannt.',
+  optimierungen: [{ schritt: 1, aktion: 'remove_tobacco', bereich: '3 Uhr',
+    text: 'Nimm bei 3 Uhr ca. 2 mm Tabak weg. Danach glattziehen.', wirkung: '' }],
+}, true, {}).coach_satz;
+assert.equal(mitAbkuerzung, 'Nimm bei 3 Uhr ca. 2 mm Tabak weg.', `nach "ca." abgeschnitten: "${mitAbkuerzung}"`);
 
 // --- Mehrdeutige Kopfnamen werden nicht stillschweigend geraten -----------------
 // "Killerkopf" passt auf klein (68 mm) und gross (80 mm) — 15 Prozent
