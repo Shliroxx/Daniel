@@ -5,7 +5,7 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v16';
+const CACHE = 'hookah-analyzer-v17';
 
 /* Ohne diese Dateien laeuft nichts.
  *

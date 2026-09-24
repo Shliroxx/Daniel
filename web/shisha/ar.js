@@ -1691,6 +1691,22 @@ function anbieterUmschalten(anbieter) {
 
 function einstellungenSpeichern() {
   const gewaehlt = document.querySelector('#anbieterwahl .aktiv');
+
+  /* Eine http-Adresse fuer den eigenen Rechner kann nicht funktionieren.
+   *
+   * Die App laeuft ueber https; der Browser blockiert von dort jeden Aufruf an
+   * eine http-Adresse, und die Sicherheitsrichtlinie erlaubt ohnehin nur https.
+   * Frueher liess sich eine solche Adresse speichern, und jede Analyse brach
+   * danach wortlos ab. Jetzt wird es beim Speichern gesagt.
+   */
+  const adresse = $('fServerUrl').value.trim();
+  const anbieter = gewaehlt ? gewaehlt.dataset.anbieter : 'gemini';
+  if (anbieter === 'server' && /^http:\/\//i.test(adresse)) {
+    $('startFehler').textContent = 'Die Adresse des Rechners muss mit https:// beginnen — '
+      + 'von einer https-Seite blockiert der Browser jede http-Verbindung. SHISHA_TLS in der .env einschalten.';
+    return;
+  }
+
   Engine.einstellungenSpeichern({
     anbieter: gewaehlt ? gewaehlt.dataset.anbieter : 'gemini',
     gemini_key: $('fGeminiKey').value.trim(),
@@ -1733,7 +1749,8 @@ function startBereitschaft() {
   const ok = Engine.bereit();
   // Der Knopf bleibt bedienbar: ohne Zugang fuehrt er zu den Einstellungen,
   // statt stumm zu bleiben. Gesperrte Knoepfe sehen aus wie kaputte Knoepfe.
-  $('losButton').disabled = false;
+  // Eingebettet in eine fremde Seite bleibt der Start gesperrt (siehe fehler.js).
+  $('losButton').disabled = Boolean(window.EINGEBETTET);
   $('losButton').classList.toggle('wartet', !ok);
   $('losButton').textContent = ok ? 'Kamera starten' : 'Zugang einrichten';
   $('startInfo').textContent = ok
@@ -2039,11 +2056,27 @@ async function historieZeigen() {
     const zeile = document.createElement('li');
     const datum = new Date(eintrag.zeit).toLocaleString('de-DE',
       { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    /* Das Vorschaubild als Eigenschaft, nicht als Vorlage.
+     *
+     * Die Adresse stammt aus der eigenen Ablage und entsteht lokal aus
+     * toDataURL — trotzdem war das die einzige Stelle, an der ein Wert
+     * ungeschuetzt in ein HTML-Attribut ging, und escape() maskiert keine
+     * Anfuehrungszeichen. Jetzt wird nur ein echtes data:image gesetzt.
+     */
+    const note = Number.isFinite(Number(eintrag.score)) && eintrag.score !== null
+      ? Math.round(Number(eintrag.score)) : '–';
     zeile.innerHTML =
-      (eintrag.vorschau ? `<img src="${eintrag.vorschau}" alt="" />` : '<span class="kein-bild">–</span>')
-      + `<span class="historie-text"><b>${eintrag.score === null ? '–' : eintrag.score}/100</b>`
-      + ` ${escape(eintrag.stufe_text || '')}<small>${datum}`
+      (eintrag.vorschau ? '' : '<span class="kein-bild">–</span>')
+      + `<span class="historie-text"><b>${note}/100</b>`
+      + ` ${escape(eintrag.stufe_text || '')}<small>${escape(datum)}`
       + `${eintrag.kopf ? ' · ' + escape(eintrag.kopf) : ''}</small></span>`;
+    if (eintrag.vorschau && /^data:image\/(jpeg|png|webp);base64,/.test(eintrag.vorschau)) {
+      const bild = document.createElement('img');
+      bild.alt = '';
+      bild.src = eintrag.vorschau;
+      if (zeile.insertBefore && zeile.firstChild !== undefined) zeile.insertBefore(bild, zeile.firstChild);
+      else zeile.appendChild(bild);
+    }
     liste.appendChild(zeile);
   });
 }
@@ -2522,6 +2555,7 @@ $('zugangAbbruch').addEventListener('click', () => { $('einstellungen').hidden =
 
 $('losButton').addEventListener('click', async () => {
   const knopf = $('losButton');
+  if (window.EINGEBETTET) return;
 
   // Regelwerk fehlt: der Knopf ist dann der Weg zurueck, nicht eine Sackgasse.
   if (zustand.specFehlt) { location.reload(); return; }

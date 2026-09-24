@@ -8,8 +8,13 @@
        Skript darf laufen (script-src 'self'), nichts wird von aussen nachgeladen,
        und Formulare koennen nirgendwohin abschicken. connect-src bleibt bei
        https: offen, weil der eigene Rechner jede beliebige Adresse im Heimnetz
-       haben kann — der eigentliche Schutz ist script-src. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+       haben kann — der eigentliche Schutz ist script-src.
+       frame-ancestors steht bewusst NICHT hier: im meta-Tag ignoriert jeder
+       Browser diese Regel, sie wirkt nur als HTTP-Kopf, und den laesst GitHub
+       Pages nicht setzen. Sie stand frueher trotzdem da und taeuschte einen
+       Schutz vor, den es nicht gab. Die Einbettung in fremde Seiten verweigert
+       jetzt fehler.js. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'" />
   <meta name="theme-color" content="#04080d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -179,6 +184,13 @@
       Seiten unter derselben Adresse könnten den Schlüssel lesen. Beschränke ihn
       deshalb beim Anbieter: bei Google unter <b>API key → Website restrictions</b>
       auf diese Adresse, bei OpenRouter über ein Guthabenlimit pro Schlüssel.
+    </p>
+    <p class="unterzeile">
+      <b>Was das Handy verlässt:</b> Im Livebetrieb geht etwa alle ein bis drei
+      Sekunden ein Kamerabild an den gewählten Anbieter, bei der Vollanalyse bis
+      zu drei. Dazu deine Angaben zum Aufbau (Kopf, Tabak, HMD, Kohlen, Notiz).
+      Mit Gegenprobe geht jedes Bild an zwei Anbieter. Richte die Kamera deshalb
+      nur auf den Kopf. Schlüssel, Historie und Lernprofil bleiben auf diesem Gerät.
     </p>
 
     <div class="feld">

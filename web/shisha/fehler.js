@@ -37,3 +37,28 @@ function fruehAnzeigen() {
   feld.textContent = `Fehler: ${window.FRUEHE_FEHLER[window.FRUEHE_FEHLER.length - 1]}`;
   feld.title = window.FRUEHE_FEHLER.join('\n');
 }
+
+/* Nicht in fremden Seiten laufen.
+ *
+ * Eingebettet in eine fremde Seite liesse sich der Kamerastart unter ein
+ * unsichtbares Element legen (Clickjacking). Die Regel frame-ancestors, die das
+ * verhindern soll, wirkt nur als HTTP-Kopf — und den laesst GitHub Pages nicht
+ * setzen. Deshalb prueft die App es selbst, als erstes, bevor irgendein Knopf
+ * verdrahtet ist.
+ */
+(function nichtEingebettet() {
+  let eingebettet = false;
+  try {
+    eingebettet = window.top !== window.self;
+  } catch (_) {
+    eingebettet = true;   // fremde Herkunft verweigert schon den Zugriff auf top
+  }
+  if (!eingebettet) return;
+  window.EINGEBETTET = true;
+  document.addEventListener('DOMContentLoaded', () => {
+    const knopf = document.getElementById('losButton');
+    if (knopf) knopf.disabled = true;
+    const feld = document.getElementById('startFehler');
+    if (feld) feld.textContent = 'Diese App laeuft nur direkt, nicht eingebettet in eine andere Seite.';
+  });
+})();

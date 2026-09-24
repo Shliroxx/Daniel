@@ -35,6 +35,16 @@ assert.ok(richtlinie.includes("script-src 'self'"), "script-src 'self' muss gese
 assert.ok(!richtlinie.includes("'unsafe-inline'"), "'unsafe-inline' hebelt script-src aus");
 assert.ok(!richtlinie.includes("'unsafe-eval'"), "'unsafe-eval' hebelt script-src aus");
 
+/* frame-ancestors wirkt im meta-Tag nicht — jeder Browser ignoriert es dort.
+ * Stand es trotzdem da, taeuschte es einen Schutz vor, den es nicht gab. Der
+ * echte Schutz gegen Einbettung sitzt in fehler.js, als erstes Skript. */
+assert.ok(!richtlinie.includes('frame-ancestors'),
+  'frame-ancestors im meta-Tag ist wirkungslos und taeuscht Schutz vor');
+const frueh = readFileSync(join(webDir, 'fehler.js'), 'utf8');
+assert.ok(/window\.top\s*!==\s*window\.self/.test(frueh), 'fehler.js muss die Einbettung pruefen');
+const erstesSkript = (html.match(/<script\s+src="([^"]+)"/) || [])[1];
+assert.equal(erstesSkript, 'fehler.js', 'der Einbettungsschutz muss vor allem anderen laufen');
+
 // --- Was die Richtlinie verbietet, darf auch nicht dastehen --------------------
 // Ohne 'unsafe-inline' verwirft der Browser beides stumm: der Knopf bleibt
 // unverdrahtet, der Balken unsichtbar. Im Test faellt das sonst nie auf, weil
