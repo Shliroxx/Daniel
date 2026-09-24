@@ -54,6 +54,40 @@ window.addEventListener('unhandledrejection', (ereignis) => {
   fehlerMerken((grund && grund.message) || String(grund), 'unbehandelt');
 });
 
+/* Das Protokoll antippen zeigt alles und kopiert es.
+ *
+ * Der Kommentar oben versprach ein Protokoll, "das sich antippen und kopieren
+ * laesst" — tatsaechlich hing es nur im title-Attribut, und das sieht man auf
+ * einem Touchscreen nie. Jetzt klappt ein Tipp die ganze Liste aus und legt sie
+ * in die Zwischenablage, damit man sie weitergeben kann.
+ */
+(() => {
+  const feld = document.getElementById('startFehler');
+  if (!feld || !feld.addEventListener) return;
+  feld.addEventListener('click', () => {
+    if (!fehlerProtokoll.length) return;
+    const alles = fehlerProtokoll.join('\n');
+    feld.textContent = `Fehler (${fehlerProtokoll.length}): ${fehlerProtokoll.join(' · ')}`;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(alles).then(
+          () => { feld.textContent += ' — kopiert'; },
+          () => { /* dann eben nur angezeigt */ }
+        );
+      }
+    } catch (_) { /* Zwischenablage gesperrt */ }
+  });
+})();
+
+/* Laeuft die Seite im normalen Safari statt als App vom Homescreen?
+ * Dann kann die untere Browserleiste die Knopfreihe verdecken, und safe-area
+ * schuetzt dort nicht. ar.css gibt der Fusszeile in dem Fall mehr Luft. */
+(() => {
+  const alsApp = navigator.standalone === true
+    || (typeof matchMedia === 'function' && matchMedia('(display-mode: standalone)').matches);
+  if (!alsApp && document.body && document.body.classList) document.body.classList.add('im-browser');
+})();
+
 const MARKER_FARBE = {
   remove: '#ff6b7d',
   loosen: '#ffb454',
@@ -758,7 +792,18 @@ function ampelZeigen(ampel) {
   }
   kasten.hidden = false;
   kasten.className = `ampel ${ampel.stand}`;
-  $('ampelPunkt').textContent = { gruen: '🟢', gelb: '🟡', rot: '🔴', unsicher: '⚪' }[ampel.stand] || '⚪';
+  /* Form statt nur Farbe.
+   *
+   * Vorher standen hier vier formgleiche Farbkreise. Bei Rot-Gruen-Schwaeche —
+   * rund jeder zwoelfte Mann — sind rot und gruen davon kaum zu unterscheiden,
+   * ausgerechnet die beiden Zustaende, auf die es ankommt. Und der weisse Kreis
+   * fuer "unsicher" las sich wie eine weitere, schlechte Note. Jetzt traegt
+   * jeder Zustand ein eigenes Zeichen und ein Wort fuer den Screenreader.
+   */
+  const ZEICHEN = { gruen: '✓', gelb: '!', rot: '✕', unsicher: '?' };
+  const WORT = { gruen: 'Gut', gelb: 'Achtung', rot: 'Problem', unsicher: 'Noch kein Urteil' };
+  $('ampelPunkt').textContent = ZEICHEN[ampel.stand] || '?';
+  $('ampelPunkt').setAttribute && $('ampelPunkt').setAttribute('aria-label', WORT[ampel.stand] || WORT.unsicher);
   $('ampelText').textContent = ampel.was_tun ? `${ampel.text} — ${ampel.was_tun}` : ampel.text;
 }
 
@@ -789,6 +834,9 @@ function behobenZeigen(behoben) {
  * waren nirgends anklickbar. Jetzt fuehrt jedes Problem zu einer Anleitung und
  * von dort zurueck vor die Kamera.
  */
+// Dringlichkeit als Wort — die Farbe allein traegt sie nicht.
+const RANG = { critical: 'dringend', high: 'wichtig', medium: 'mittel', low: 'klein' };
+
 function problemeZeigen(liste) {
   const kasten = $('probleme');
   const neu = liste || [];
@@ -813,6 +861,7 @@ function problemeZeigen(liste) {
       // Dieselbe Sache, nur vielleicht anders formuliert.
       alt.className = `problem ${problem.severity}`;
       alt.dataset.symbol = problem.symbol;
+      alt.dataset.rang = RANG[problem.severity] || '';
       alt.children[0].textContent = problem.titel;
       alt.onclick = () => anleitungZeigen(problem);
       return;
@@ -821,6 +870,7 @@ function problemeZeigen(liste) {
     const zeile = document.createElement('div');
     zeile.className = `problem ${problem.severity}`;
     zeile.dataset.symbol = problem.symbol;
+    zeile.dataset.rang = RANG[problem.severity] || '';
     zeile.dataset.id = problem.id;
 
     const titel = document.createElement('span');
@@ -1158,12 +1208,35 @@ function zeichneSucher(mx, my, radius, aktiv) {
   ctx.restore();
 }
 
+const MARKER_MIN_PX = 28;   // kleiner sieht man einen Rahmen am Handy nicht mehr
+
 function zeichneMarker(marker, staerke = 1) {
   const farbe = MARKER_FARBE[marker.typ] || MARKER_FARBE.distribute;
   const oben = bildAufBildschirm(marker.x, marker.y);
   const unten = bildAufBildschirm(marker.x + marker.w, marker.y + marker.h);
-  const breite = unten.x - oben.x;
-  const hoehe = unten.y - oben.y;
+  let breite = unten.x - oben.x;
+  let hoehe = unten.y - oben.y;
+
+  // Ein winziger Marker zeichnete frueher keinen sichtbaren Rahmen — uebrig
+  // blieb nur das Etikett. Er waechst jetzt um seine Mitte auf eine Mindestgroesse.
+  if (marker.typ !== 'fill_height') {
+    if (breite < MARKER_MIN_PX) { oben.x -= (MARKER_MIN_PX - breite) / 2; breite = MARKER_MIN_PX; }
+    if (hoehe < MARKER_MIN_PX) { oben.y -= (MARKER_MIN_PX - hoehe) / 2; hoehe = MARKER_MIN_PX; }
+  }
+
+  /* Ganz aus dem Bild gewandert?
+   *
+   * Die Marker folgen der Handbewegung. Ist einer dabei ganz aus dem Bild
+   * gerutscht, wurde bisher nur das Etikett an den Rand geklemmt — der Rahmen
+   * nicht. Uebrig blieb eine Beschriftung, die auf nichts zeigte. Jetzt zeigt
+   * ein Pfeil am Rand, wohin man schwenken muss.
+   */
+  const cw = overlay.clientWidth;
+  const ch = overlay.clientHeight;
+  if (oben.x + breite < 0 || oben.x > cw || oben.y + hoehe < 0 || oben.y > ch) {
+    randPfeil(oben.x + breite / 2, oben.y + hoehe / 2, farbe, staerke);
+    return;
+  }
 
   ctx.save();
 
@@ -1203,6 +1276,28 @@ function zeichneMarker(marker, staerke = 1) {
   ctx.restore();
 
   zeichneEtikett(oben.x + breite / 2, oben.y - 12, marker, farbe, staerke);
+}
+
+/** Ein Dreieck am Bildrand, das zu einem Marker ausserhalb zeigt. */
+function randPfeil(zielX, zielY, farbe, staerke = 1) {
+  const cw = overlay.clientWidth;
+  const ch = overlay.clientHeight;
+  const rand = 18;
+  const x = Math.min(Math.max(zielX, rand), cw - rand);
+  const y = Math.min(Math.max(zielY, rand), ch - rand);
+  const winkel = Math.atan2(zielY - y, zielX - x);
+  ctx.save();
+  ctx.globalAlpha = 0.9 * staerke;
+  ctx.translate(x, y);
+  ctx.rotate(winkel);
+  ctx.fillStyle = farbe;
+  ctx.beginPath();
+  ctx.moveTo(10, 0);
+  ctx.lineTo(-7, -8);
+  ctx.lineTo(-7, 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function rundesRechteck(x, y, breite, hoehe, radius) {
@@ -1334,6 +1429,7 @@ function hoererBauen() {
     if (ereignis.error === 'not-allowed' || ereignis.error === 'service-not-allowed') {
       hoerenAus();
       setzeLage('Mikrofon verweigert', 'fehler');
+      $('coach').textContent = 'Das Mikrofon ist nicht freigegeben. Bedienen geht auch ohne — über die Knöpfe.';
     }
   };
 
@@ -1385,7 +1481,9 @@ function hoerenAn() {
     hoerenAnzeigen();
     sprich('Ich höre.');
   } catch (fehler) {
+    // Die Marke oben liest niemand, waehrend der Daumen unten am Knopf ist.
     setzeLage('Sprache nicht verfügbar', 'warn');
+    $('coach').textContent = 'Die Sprachsteuerung ließ sich nicht starten. Tipp noch einmal auf das Mikrofon.';
   }
 }
 
@@ -1677,6 +1775,35 @@ function durchmesserVorschlagen() {
     $('fDurchmesser').value = String(treffer.aussendurchmesser_mm);
     $('fDurchmesser').classList.add('vorgeschlagen');
   }
+}
+
+/* Passende Koepfe als antippbare Vorschlaege.
+ *
+ * Die Liste hing bisher an <datalist>, und das zeigt Safari auf dem iPhone
+ * nicht zuverlaessig an. Dann griff der Durchmesser-Vorschlag nur, wer den
+ * Namen exakt tippte — und genau der Durchmesser ist der Massstab fuer jede
+ * Millimeterangabe. Jetzt stehen bis zu vier Treffer als Knoepfe unter dem Feld.
+ */
+function kopfVorschlaegeZeigen() {
+  const box = $('kopfVorschlaege');
+  if (!box) return;
+  box.innerHTML = '';
+  const eingabe = String($('fKopf').value || '').trim().toLowerCase();
+  if (eingabe.length < 2) return;
+  const liste = ((Engine.spec && Engine.spec.koepfe) || {}).liste || [];
+  const treffer = liste.filter((kopf) => kopf.name.toLowerCase().includes(eingabe)
+    && kopf.name.toLowerCase() !== eingabe).slice(0, 4);
+  treffer.forEach((kopf) => {
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.textContent = `${kopf.name} · ${kopf.aussendurchmesser_mm} mm`;
+    knopf.onclick = () => {
+      $('fKopf').value = kopf.name;
+      box.innerHTML = '';
+      durchmesserVorschlagen();
+    };
+    box.appendChild(knopf);
+  });
 }
 
 function sitzungStarten() {
@@ -2510,6 +2637,7 @@ $('historieLeeren').addEventListener('click', async () => {
 
 $('fKopf').addEventListener('change', durchmesserVorschlagen);
 $('fKopf').addEventListener('blur', durchmesserVorschlagen);
+$('fKopf').addEventListener('input', kopfVorschlaegeZeigen);
 
 $('feedbackAbbruch').addEventListener('click', () => {
   $('feedback').hidden = true;

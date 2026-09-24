@@ -249,7 +249,28 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
   line-height: 1.35;
 }
 
-.ampel-punkt { font-size: 17px; flex: 0 0 auto; }
+/* Das Zeichen sitzt in einer Plakette: Form und Zeichen tragen den Zustand,
+   die Farbe verstaerkt ihn nur. */
+.ampel-punkt {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  color: #04080d;
+  border-radius: 50%;
+}
+/* Drei Formen, drei Zeichen: gut ist rund mit Haken, Achtung ist ein
+   abgerundetes Quadrat mit Ausrufezeichen, Problem ein kantiges Quadrat mit
+   Kreuz. "Unsicher" ist leer und gestrichelt — es behauptet nichts. */
+.ampel.gruen .ampel-punkt { background: var(--gruen); border-radius: 50%; }
+.ampel.gelb .ampel-punkt { background: var(--amber); border-radius: 7px; }
+.ampel.rot .ampel-punkt { background: var(--rose); border-radius: 2px; }
+.ampel.unsicher .ampel-punkt { background: transparent; color: var(--text); border: 2px dashed var(--muted); }
 .ampel-text { flex: 1; min-width: 0; }
 .ampel.gruen { border-color: rgba(87, 227, 154, 0.5); background: rgba(87, 227, 154, 0.09); color: var(--gruen); }
 .ampel.gelb { border-color: rgba(255, 180, 84, 0.5); background: rgba(255, 180, 84, 0.09); color: var(--amber); }
@@ -339,8 +360,33 @@ input::placeholder { color: rgba(125, 149, 163, 0.6); }
 
 /* Behandelt, Urteil steht noch aus. */
 .problem.wird-geprueft { opacity: 0.4; }
-.problem.critical, .problem.high { color: var(--rose); }
+
+/* Dringlichkeit als Wort, nicht nur als Farbe.
+ *
+ * Vorher trug jede Zeile nur ein farbiges Symbol, und "kritisch" und "hoch"
+ * hatten sogar dieselbe Farbe; "niedrig" war gar nicht markiert. Wer rot und
+ * gruen schlecht unterscheidet, sah vier gleiche Zeilen. */
+.problem { padding-left: 4px; }
+.problem::before {
+  content: attr(data-rang);
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+  min-width: 58px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.problem.critical { color: var(--rose); }
+.problem.critical::before { background: rgba(255, 107, 125, 0.18); }
+.problem.high { color: #ff9a5c; }
 .problem.medium { color: var(--amber); }
+.problem.low { color: var(--muted); }
 
 .frage {
   margin-top: 11px;
@@ -844,3 +890,63 @@ select {
 
 /* Ein vorgeschlagener Wert sieht anders aus als ein selbst eingetippter. */
 input.vorgeschlagen { border-color: rgba(95, 227, 255, 0.45); }
+
+/* ---------- Trefferflaechen ----------
+ *
+ * Wer mit einer Hand das Handy haelt und mit der anderen am Kopf baut, trifft
+ * mit dem Daumen nicht auf den Millimeter. Apple setzt 44 Punkt als Untergrenze.
+ * Mehrere Bedienelemente lagen darunter: die Phasen-Chips bei etwa 26, die
+ * Ziel- und Anbieter-Chips bei 35, die Skalenknoepfe im Feedback bei 38 und die
+ * kleinen Knoepfe bei 41 Punkt. Die Phasen-Chips setzen die Bauphase — ein
+ * Fehltipp dort verstellt die ganze Bewertung.
+ */
+.chip, .klein { min-height: 44px; }
+.skala-knoepfe button { width: 44px; height: 44px; }
+.phase {
+  min-height: 36px;
+  padding: 8px 13px;
+  font-size: 13px;
+  /* Die Leiste ist schmal; der Tippbereich reicht per Innenabstand ueber den
+     sichtbaren Chip hinaus. */
+  position: relative;
+}
+.phase::after {
+  content: '';
+  position: absolute;
+  inset: -4px -2px;
+}
+details > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; }
+
+/* ---------- Weniger Bewegung, wenn gewuenscht ----------
+ * Pulsierende Punkte und fliessende Uebergaenge sind fuer manche Menschen
+ * anstrengend bis schwindelerregend. iOS hat dafuer eine Einstellung; die
+ * gilt jetzt auch hier. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Safari mit Adressleiste ----------
+ * In der Homescreen-App schuetzt safe-area den unteren Rand. Im normalen
+ * Safari ist der Wert 0, und die untere Leiste des Browsers kann die
+ * Knopfreihe verdecken — samt "Vollanalyse". Die Klasse setzt ar.js nur, wenn
+ * die Seite nicht als App vom Homescreen laeuft. */
+.im-browser .unten { padding-bottom: calc(12px + env(safe-area-inset-bottom) + 14px); }
+
+/* Kopfvorschlaege unter dem Eingabefeld — <datalist> zeigt auf dem iPhone
+   nicht zuverlaessig etwas an. */
+.vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.vorschlaege:empty { display: none; }
+.vorschlaege button {
+  min-height: 36px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(10, 22, 34, 0.7);
+  color: var(--cyan);
+  font-size: 13px;
+}

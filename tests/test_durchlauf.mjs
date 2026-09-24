@@ -219,6 +219,13 @@ pruefe('Live ohne Denkzeit gefragt',
 pruefe('Ampel zeigt einen Zustand', $('ampel').hidden === false, $('ampelText').textContent);
 pruefe('Ampel ist gelb bei einem mittleren Problem',
        $('ampel').className.includes('gelb'), $('ampel').className);
+// Form statt nur Farbe: vier gleich runde Farbpunkte sind bei Rot-Gruen-Schwaeche
+// nicht auseinanderzuhalten.
+pruefe('Ampel traegt ein Zeichen, nicht nur eine Farbe', $('ampelPunkt').textContent === '!',
+       `"${$('ampelPunkt').textContent}"`);
+pruefe('Problem sagt seine Dringlichkeit als Wort',
+       $('probleme').children[0] && $('probleme').children[0].dataset.rang === 'mittel',
+       $('probleme').children[0] && $('probleme').children[0].dataset.rang);
 pruefe('Problem ist anklickbar',
        $('probleme').children.length === 1 && $('probleme').children[0].children.length === 2,
        `${$('probleme').children.length} Probleme`);
