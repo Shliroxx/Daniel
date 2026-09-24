@@ -981,6 +981,46 @@ const abgeschnitten = await new Engine.Sitzung({ ziel: 'balanced' })
   .analysieren(new Blob(['x']), 'live').catch((f) => f);
 assert.match(abgeschnitten.message, /abgeschnitten/);
 assert.equal(Engine.verbrauch('gemini').anzahl, 1, 'angekommen ist angekommen');
+
+/* Abgeschnitten MIT Teiltext — der Normalfall bei JSON-Antworten.
+ * Frueher lief das weiter und scheiterte mit "JSON unvollstaendig". */
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS',
+    content: { parts: [{ text: '{"analysis_status": "ok", "befund": "Phunnel mit' }] } }] }),
+});
+const halb = await new Engine.Sitzung({ ziel: 'balanced' })
+  .analysieren(new Blob(['x']), 'live').catch((f) => f);
+assert.match(halb.message, /mittendrin/, `halbe Antwort: "${halb.message}"`);
+
+// Ist die abgeschnittene Antwort trotzdem vollstaendig lesbar, wird sie genommen.
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS',
+    content: { parts: [{ text: JSON.stringify(ANTWORT) }] } }] }),
+});
+const trotzdem = await new Engine.Sitzung({ ziel: 'balanced' }).analysieren(new Blob(['x']), 'live');
+assert.equal(trotzdem.analysis_status, 'ok', 'eine lesbare Antwort wird nicht weggeworfen');
+
+/* Die WLAN-Anmeldeseite: Status 200, aber HTML.
+ * Frueher kam das als "Unexpected token '<'" an. */
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => '<!DOCTYPE html><html><body>Bitte im Hotel-WLAN anmelden</body></html>',
+});
+const portal = await new Engine.Sitzung({ ziel: 'balanced' })
+  .analysieren(new Blob(['x']), 'live').catch((f) => f);
+assert.match(portal.message, /WLAN/, `Anmeldeseite: "${portal.message}"`);
+
+// Eine Liste mit mehreren Objekten ist keine Bewertung — nicht still das erste nehmen.
+globalThis.fetch = async () => ({
+  ok: true, status: 200,
+  text: async () => JSON.stringify({ candidates: [{
+    content: { parts: [{ text: JSON.stringify([ANTWORT, ANTWORT]) }] } }] }),
+});
+const liste = await new Engine.Sitzung({ ziel: 'balanced' })
+  .analysieren(new Blob(['x']), 'live').catch((f) => f);
+assert.match(liste.message, /Liste/, `Liste: "${liste.message}"`);
 globalThis.fetch = standardFetch;
 
 speicher.set('shisha.verbrauch', JSON.stringify({

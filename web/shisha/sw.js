@@ -5,9 +5,17 @@
  * zwischengespeichert.
  */
 
-const CACHE = 'hookah-analyzer-v15';
+const CACHE = 'hookah-analyzer-v16';
 
-const DATEIEN = [
+/* Ohne diese Dateien laeuft nichts.
+ *
+ * Sie werden gemeinsam abgelegt: fehlt eine, scheitert die ganze Installation,
+ * und die alte, vollstaendige Fassung bleibt in Betrieb. Frueher durfte jede
+ * einzeln scheitern — brach das Netz waehrend der Installation weg, lag
+ * offline eine halbe App im Cache: die Seite kam, ein Skript fehlte, und alle
+ * Knoepfe waren tot.
+ */
+const KERN = [
   './',
   './index.html',
   './ar.css',
@@ -16,6 +24,10 @@ const DATEIEN = [
   './engine.js',
   './steuerung.js',
   './spec.json',
+];
+
+// Beiwerk darf fehlen — ohne Symbol startet die App trotzdem.
+const BEIWERK = [
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
@@ -30,10 +42,8 @@ const NETZ_FRIST_MS = 2500;
 self.addEventListener('install', (ereignis) => {
   ereignis.waitUntil(
     caches.open(CACHE)
-      // Einzeln statt addAll: sonst ist eine fehlende Datei genug, damit die
-      // Installation scheitert und es gar keinen Offline-Betrieb gibt — still,
-      // ohne jedes Anzeichen.
-      .then((cache) => Promise.all(DATEIEN.map((datei) => cache.add(datei).catch(() => {}))))
+      .then((cache) => cache.addAll(KERN)
+        .then(() => Promise.all(BEIWERK.map((datei) => cache.add(datei).catch(() => {})))))
       .then(() => self.skipWaiting())
   );
 });
@@ -41,8 +51,19 @@ self.addEventListener('install', (ereignis) => {
 self.addEventListener('activate', (ereignis) => {
   ereignis.waitUntil(
     caches.keys()
-      .then((namen) => Promise.all(namen.filter((n) => n !== CACHE).map((n) => caches.delete(n))))
-      .then(() => self.clients.claim())
+      .then((namen) => {
+        const alte = namen.filter((n) => n !== CACHE);
+        return Promise.all(alte.map((n) => caches.delete(n))).then(() => alte.length > 0);
+      })
+      .then((warUpdate) => self.clients.claim().then(() => warUpdate))
+      .then((warUpdate) => {
+        // Nur bei einem echten Update melden — beim allerersten Besuch gibt es
+        // nichts Altes, und ein Neuladen waere dort nur ein Flackern.
+        if (!warUpdate) return;
+        return self.clients.matchAll({ type: 'window' }).then((fenster) => {
+          fenster.forEach((f) => f.postMessage({ art: 'neue-fassung', cache: CACHE }));
+        });
+      })
   );
 });
 

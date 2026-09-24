@@ -143,6 +143,28 @@ const Engine = (() => {
     return btoa(roh);
   }
 
+  /* Die Huelle der Anbieterantwort lesen — mit einer Meldung, die weiterhilft.
+   *
+   * Im Cafe- oder Hotel-WLAN kommt oft Status 200 mit einer HTML-Seite zurueck:
+   * die Anmeldeseite des Netzes. JSON.parse warf dann einen SyntaxError, der
+   * als "Verbindung gescheitert: Unexpected token '<'" beim Nutzer ankam — eine
+   * Diagnose, die genau vom eigentlichen Problem wegfuehrt.
+   */
+  function huelleLesen(rohtext) {
+    const anfang = String(rohtext || '').trimStart().slice(0, 1);
+    if (anfang === '<') {
+      throw new AnalyseFehler(
+        'Statt einer Antwort kam eine Webseite — vermutlich die Anmeldeseite des WLANs. '
+        + 'Einmal im Browser anmelden, dann geht es weiter.'
+      );
+    }
+    try {
+      return JSON.parse(rohtext);
+    } catch (_) {
+      throw new AnalyseFehler('Der Anbieter hat unlesbar geantwortet — gleich nochmal.');
+    }
+  }
+
   function fehlerText(status, rohtext) {
     if (status === 429) return 'Freikontingent gerade erschoepft — kurz warten.';
     if (status === 401 || status === 403) return 'Schluessel wird abgelehnt. Stimmt er noch?';
@@ -231,15 +253,34 @@ const Engine = (() => {
     const rohtext = await antwort.text();
     if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
-    const daten = JSON.parse(rohtext);
-    const teile = ((daten.candidates || [])[0] || {}).content || {};
+    const daten = huelleLesen(rohtext);
+    const kandidat = (daten.candidates || [])[0] || {};
+    const teile = kandidat.content || {};
     const text = (teile.parts || []).map((p) => p.text || '').join('');
+    const grund = kandidat.finishReason || '';
     if (!text) {
-      const grund = ((daten.candidates || [])[0] || {}).finishReason || 'leere Antwort';
       if (grund === 'MAX_TOKENS') {
         throw new AnalyseFehler('Antwort abgeschnitten — Modell hat zu lange nachgedacht.', { gezaehlt: true });
       }
-      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund}).`, { gezaehlt: true });
+      if (grund === 'SAFETY' || grund === 'PROHIBITED_CONTENT') {
+        throw new AnalyseFehler('Der Anbieter hat das Bild abgelehnt. Nur den Kopf ins Bild nehmen.', { gezaehlt: true });
+      }
+      throw new AnalyseFehler(`Modell hat nichts geliefert (${grund || 'leere Antwort'}).`, { gezaehlt: true });
+    }
+    /* Abgeschnitten mit Teiltext — der Normalfall bei JSON-Antworten.
+     *
+     * Frueher wurde finishReason nur geprueft, wenn gar kein Text kam. Kam ein
+     * halbes JSON, lief es weiter und scheiterte spaeter mit "JSON
+     * unvollstaendig" — eine Meldung, mit der niemand etwas anfangen kann. Ist
+     * der Text trotzdem lesbar, wird er genommen; sonst gibt es die ehrliche
+     * Meldung, woran es lag.
+     */
+    if (grund === 'MAX_TOKENS') {
+      try {
+        jsonAusText(text);
+      } catch (_) {
+        throw new AnalyseFehler('Antwort brach mittendrin ab — zu lang fuer das Budget. Gleich nochmal.', { gezaehlt: true });
+      }
     }
     return text;
   }
@@ -274,7 +315,7 @@ const Engine = (() => {
     const rohtext = await antwort.text();
     if (!antwort.ok) throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
 
-    const daten = JSON.parse(rohtext);
+    const daten = huelleLesen(rohtext);
     if (daten.error) throw new AnalyseFehler(String(daten.error.message || daten.error).slice(0, 140));
     const text = (((daten.choices || [])[0] || {}).message || {}).content;
     if (!text) throw new AnalyseFehler('Modell hat nichts geliefert.', { gezaehlt: true });
@@ -301,7 +342,7 @@ const Engine = (() => {
       throw new AnalyseFehler(fehlerText(antwort.status, rohtext), { status: antwort.status });
     }
 
-    const inhalt = JSON.parse(rohtext);
+    const inhalt = huelleLesen(rohtext);
     if (!inhalt.ok) throw new AnalyseFehler(inhalt.fehler || 'Rechner meldet einen Fehler.');
     return inhalt.text;
   }
@@ -628,8 +669,11 @@ const Engine = (() => {
     }
 
     try {
-      return JSON.parse(text);
-    } catch (_) { /* weiter unten von Hand suchen */ }
+      return nurObjekt(JSON.parse(text));
+    } catch (fehler) {
+      if (fehler instanceof AnalyseFehler) throw fehler;
+      /* weiter unten von Hand suchen */
+    }
 
     // Klammern zaehlen, damit Text drumherum nicht stoert.
     const start = text.indexOf('{');
@@ -655,7 +699,21 @@ const Engine = (() => {
         }
       }
     }
-    throw new AnalyseFehler('JSON unvollstaendig');
+    throw new AnalyseFehler('Antwort brach mittendrin ab — gleich nochmal.');
+  }
+
+  /* Eine Liste ist keine Antwort.
+   *
+   * Liefert ein Modell ein Array, griff die Klammersuche frueher still das
+   * erste Objekt heraus und verarbeitete es als ganze Antwort. Bei genau einem
+   * Objekt ist das vertretbar; bei mehreren waere es geraten.
+   */
+  function nurObjekt(wert) {
+    if (Array.isArray(wert)) {
+      if (wert.length === 1 && wert[0] && typeof wert[0] === 'object') return wert[0];
+      throw new AnalyseFehler('Antwort war eine Liste statt einer Bewertung.');
+    }
+    return wert;
   }
 
   const zahl = (wert, min, max, standard = 0) => {
