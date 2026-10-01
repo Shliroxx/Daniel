@@ -90,10 +90,15 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 
 ---
 
+### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)
+- [ ] AlienEvo und Kingdom Keys selbst kurz anspielen und mit Kingdom Omnitrix vergleichen (die Mod-Seiten sind in der Cloud gesperrt, Claude konnte sie nicht testen)
+
 ## 5. Entscheidungen, die noch offen sind
 
 - [ ] Fehlverwandlung (Omnitrix gibt manchmal das falsche Alien, wie in der Serie): ja/nein?
 - [ ] Controller-Unterstützung: über die Mod **Controlify** (empfohlen) oder eigene Lösung?
+- [ ] Sauerstoff/Überleben im All wie Ad Astra (Pflicht) oder nur als Gadget (O2-System, Vorgabe)?
+- [ ] Alien-Farbanpassung am Omnitrix wie bei AlienEvo: gewünscht?
 
 ---
 
