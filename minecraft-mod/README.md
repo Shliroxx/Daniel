@@ -8,6 +8,8 @@ Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 > Nicht-kommerzielles Fanprojekt. Kingdom Hearts gehört Square Enix/Disney, Ben 10 Cartoon Network,
 > Ratchet & Clank Insomniac Games/Sony. Alle Texturen sind selbst erzeugt (`tools/generate_textures.py`).
 
+> **Offene Aufgaben für dich:** [`docs/TODO_SANTIQ.md`](docs/TODO_SANTIQ.md) — Netzwerk-Freigaben, Installationen, Testliste.
+
 ## Inhalt
 
 ### Kingdom Hearts
@@ -149,6 +151,7 @@ src/main/resources/
 tools/generate_textures.py  erzeugt alle Texturen neu (pip install pillow)
 tools/generate_alien_models.py  erzeugt Alien-Körper (Geometrie, Animation, Textur)
 tools/check_assets.py       prüft alle Ressourcen auf Lücken
+docs/TODO_SANTIQ.md         was nur SANTIQ erledigen kann (Downloads, Freigaben, Tests)
 docs/ANALYSE_UND_ROADMAP.md Bestandsaufnahme, Architektur, Roadmap
 ```
 
