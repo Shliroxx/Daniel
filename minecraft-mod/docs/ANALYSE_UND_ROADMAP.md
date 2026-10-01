@@ -325,6 +325,21 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Schnelle Klicks unter 1 Tick | behoben | wurden anfangs verschluckt (im Client-Test gefunden) |
 | Skilltree-Anbindung (Combo Plus, Air Combo …) | TODO → Phase 15 | laut `DESIGN_PROGRESSION.md` |
 
+### Phase 5 — Keyblades
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Keyblade-Werte als JSON (`data/<ns>/kingdomomnitrix/keyblade/*.json`) | IMPLEMENTED | Schaden, Magie, Tempo, Reichweite, Combo-Länge, Passive, Seltenheit, Upgrade-Kosten; synchronisiert |
+| Kingdom Key + Treueschwur (Oathkeeper) | IMPLEMENTED | je 5 Stufen; Erhalt per Crafting (Entscheidung SANTIQ) |
+| Passive: Combo Plus, Kritisch, Finisher Plus | IMPLEMENTED | wirken im Kampfsystem |
+| Passive: Magie-Boost, MP-Eile | TODO → Phase 6 | Werte vorhanden, Wirkung kommt mit dem MP-System |
+| Keyblade-Schmiede (Block) | IMPLEMENTED | im Client getestet: Stufe 1 → 2, Bolts und Herzen abgezogen, zeigt nächste Kosten |
+| Tooltip mit Werten | IMPLEMENTED | im Client getestet |
+| Unzerstörbar, verzauberbar (Schärfe, Verbrennung …) | IMPLEMENTED | über Item-Tags |
+| Kampfwerte über `ComboProfile` | IMPLEMENTED | Kampfsystem kennt keine Waffenarten mehr |
+| Bolts als Kosten | PROTOTYPE | heute Bolt-Items im Inventar; ab Phase 8 Bolt-Konto |
+| 3D-Modelle für Keyblades | TODO | aktuell 2D-Pixel-Texturen |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

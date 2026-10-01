@@ -104,5 +104,22 @@
   "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: aktiv %s · Rest %s s · Nachladen %s s",
   "key.kingdomomnitrix.dodge": "Kampf: Ausweichen",
   "key.kingdomomnitrix.guard": "Kampf: Blocken (halten)",
-  "key.kingdomomnitrix.lock_on": "Kampf: Lock-On / Ziel wechseln"
+  "key.kingdomomnitrix.lock_on": "Kampf: Lock-On / Ziel wechseln",
+  "item.kingdomomnitrix.oathkeeper": "Treueschwur",
+  "block.kingdomomnitrix.keyblade_forge": "Keyblade-Schmiede",
+  "tooltip.kingdomomnitrix.keyblade.level": "Stufe %s / %s",
+  "tooltip.kingdomomnitrix.keyblade.stats": "Schaden %s · Magie %s · Tempo ×%s · Reichweite +%s",
+  "tooltip.kingdomomnitrix.keyblade.combo": "Combo: %s Schläge",
+  "passive.kingdomomnitrix.combo_plus": "Combo Plus (+%s Schlag)",
+  "passive.kingdomomnitrix.critical": "Kritisch (%s %%)",
+  "passive.kingdomomnitrix.finisher_plus": "Finisher Plus (+%s %%)",
+  "passive.kingdomomnitrix.magic_boost": "Magie-Boost (+%s %%)",
+  "passive.kingdomomnitrix.mp_haste": "MP-Eile (+%s %%)",
+  "message.kingdomomnitrix.forge.hold_keyblade": "Halte ein Keyblade, um es aufzuwerten.",
+  "message.kingdomomnitrix.forge.unknown": "Für dieses Keyblade gibt es keine Daten.",
+  "message.kingdomomnitrix.forge.max": "Dieses Keyblade hat bereits die Höchststufe.",
+  "message.kingdomomnitrix.forge.cost": "Stufe %s kostet: %s",
+  "message.kingdomomnitrix.forge.missing": "Es fehlt etwas. Benötigt: %s",
+  "message.kingdomomnitrix.forge.upgraded": "%s ist jetzt Stufe %s!",
+  "message.kingdomomnitrix.forge.free": "nichts"
 }

@@ -9,7 +9,9 @@ import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
 import com.santiq.kingdomomnitrix.weapon.CombusterItem;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeItem;
 import com.santiq.kingdomomnitrix.weapon.OmniWrenchItem;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.FoodComponent;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.BlockItem;
@@ -23,10 +25,9 @@ import net.minecraft.util.Rarity;
 
 public final class ModItems {
 	// --- Kingdom Hearts ---
-	public static final Item KINGDOM_KEY = register("kingdom_key", new KeybladeItem(ToolMaterials.NETHERITE,
-			new Item.Settings()
-					.rarity(Rarity.EPIC)
-					.attributeModifiers(SwordItem.createAttributeModifiers(ToolMaterials.NETHERITE, 4, -2.2f))));
+	public static final Item KINGDOM_KEY = register("kingdom_key", keyblade(Rarity.RARE));
+	public static final Item OATHKEEPER = register("oathkeeper", keyblade(Rarity.EPIC));
+	public static final Item KEYBLADE_FORGE = register("keyblade_forge", new BlockItem(ModBlocks.KEYBLADE_FORGE, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item HEART = register("heart", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item HI_POTION = register("hi_potion", new HiPotionItem(new Item.Settings().maxCount(16)));
 	public static final Item PAOPU_FRUIT = register("paopu_fruit", new Item(new Item.Settings()
@@ -67,6 +68,15 @@ public final class ModItems {
 
 	public static void register() {
 		KingdomOmnitrix.LOGGER.debug("Items registriert");
+	}
+
+	/** Keyblades sind unzerstoerbar; ihre Werte kommen aus data/…/kingdomomnitrix/keyblade/*.json. */
+	private static Item keyblade(Rarity rarity) {
+		return new KeybladeItem(new Item.Settings()
+				.maxCount(1)
+				.maxDamage(2000)
+				.rarity(rarity)
+				.component(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false)));
 	}
 
 	private static Item register(String name, Item item) {

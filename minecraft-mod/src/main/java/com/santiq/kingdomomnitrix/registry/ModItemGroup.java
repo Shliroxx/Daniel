@@ -19,6 +19,8 @@ public final class ModItemGroup {
 					.displayName(Text.translatable("itemGroup.kingdomomnitrix"))
 					.entries((context, entries) -> {
 						entries.add(ModItems.KINGDOM_KEY);
+						entries.add(ModItems.OATHKEEPER);
+						entries.add(ModItems.KEYBLADE_FORGE);
 						entries.add(ModItems.HEART);
 						entries.add(ModItems.HI_POTION);
 						entries.add(ModItems.PAOPU_FRUIT);

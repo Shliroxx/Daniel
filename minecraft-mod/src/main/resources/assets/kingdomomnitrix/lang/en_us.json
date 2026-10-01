@@ -104,5 +104,22 @@
   "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: active %s · left %s s · recharge %s s",
   "key.kingdomomnitrix.dodge": "Combat: dodge",
   "key.kingdomomnitrix.guard": "Combat: guard (hold)",
-  "key.kingdomomnitrix.lock_on": "Combat: lock-on / switch target"
+  "key.kingdomomnitrix.lock_on": "Combat: lock-on / switch target",
+  "item.kingdomomnitrix.oathkeeper": "Oathkeeper",
+  "block.kingdomomnitrix.keyblade_forge": "Keyblade Forge",
+  "tooltip.kingdomomnitrix.keyblade.level": "Level %s / %s",
+  "tooltip.kingdomomnitrix.keyblade.stats": "Damage %s · Magic %s · Speed ×%s · Reach +%s",
+  "tooltip.kingdomomnitrix.keyblade.combo": "Combo: %s hits",
+  "passive.kingdomomnitrix.combo_plus": "Combo Plus (+%s hit)",
+  "passive.kingdomomnitrix.critical": "Critical (%s %%)",
+  "passive.kingdomomnitrix.finisher_plus": "Finisher Plus (+%s %%)",
+  "passive.kingdomomnitrix.magic_boost": "Magic Boost (+%s %%)",
+  "passive.kingdomomnitrix.mp_haste": "MP Haste (+%s %%)",
+  "message.kingdomomnitrix.forge.hold_keyblade": "Hold a keyblade to upgrade it.",
+  "message.kingdomomnitrix.forge.unknown": "There is no data for this keyblade.",
+  "message.kingdomomnitrix.forge.max": "This keyblade is already at max level.",
+  "message.kingdomomnitrix.forge.cost": "Level %s costs: %s",
+  "message.kingdomomnitrix.forge.missing": "Something is missing. Needed: %s",
+  "message.kingdomomnitrix.forge.upgraded": "%s is now level %s!",
+  "message.kingdomomnitrix.forge.free": "nothing"
 }

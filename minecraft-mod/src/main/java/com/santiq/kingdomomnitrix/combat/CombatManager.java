@@ -87,9 +87,9 @@ public final class CombatManager {
 		if (stack.isEmpty() || !player.isAlive() || player.isSpectator()) {
 			return;
 		}
-		ComboWeapon weapon = (ComboWeapon) stack.getItem();
 		CombatState state = state(player);
 		ServerWorld world = player.getServerWorld();
+		ComboProfile weapon = ((ComboWeapon) stack.getItem()).comboProfile(world.getRegistryManager(), stack);
 		long now = world.getTime();
 		if (now < state.nextAttackTick) {
 			return;
@@ -104,11 +104,11 @@ public final class CombatManager {
 		}
 		state.airComboActive = airborne;
 
-		int length = Math.max(2, weapon.comboLength(stack));
+		int length = weapon.comboLength();
 		if (type == Attack.HEAVY) {
 			performHeavy(player, world, stack, weapon, state);
 			state.comboStep = 0;
-			state.nextAttackTick = now + weapon.heavyDelayTicks(stack);
+			state.nextAttackTick = now + weapon.heavyDelayTicks();
 			broadcastAnimation(player, "heavy");
 		} else {
 			int step = state.comboStep;
@@ -116,23 +116,23 @@ public final class CombatManager {
 			performLight(player, world, stack, weapon, state, step, finisher, airborne);
 			state.comboStep = finisher ? 0 : step + 1;
 			// Nach dem Finisher eine laengere Pause, damit die Combo einen Rhythmus hat.
-			state.nextAttackTick = now + weapon.lightDelayTicks(stack) * (finisher ? 2 : 1);
+			state.nextAttackTick = now + weapon.lightDelayTicks() * (finisher ? 2 : 1);
 			broadcastAnimation(player, (airborne ? "air_" : "combo_") + (finisher ? "finisher" : String.valueOf(step + 1)));
 		}
 		state.lastAttackTick = now;
 	}
 
-	private static void performLight(ServerPlayerEntity player, ServerWorld world, ItemStack stack, ComboWeapon weapon,
+	private static void performLight(ServerPlayerEntity player, ServerWorld world, ItemStack stack, ComboProfile weapon,
 			CombatState state, int step, boolean finisher, boolean airborne) {
-		float multiplier = finisher ? weapon.finisherMultiplier(stack) : weapon.comboMultiplier(stack, step);
-		double reach = player.getEntityInteractionRange() + weapon.reachBonus(stack);
+		float multiplier = finisher ? weapon.finisherMultiplier() : step == 0 ? 1.0f : weapon.stepMultiplier();
+		double reach = player.getEntityInteractionRange() + weapon.reachBonus();
 		List<LivingEntity> targets = finisher && !airborne
-				? livingAround(player, FINISHER_RADIUS + weapon.reachBonus(stack))
+				? livingAround(player, FINISHER_RADIUS + weapon.reachBonus())
 				: targetsInFront(player, state, reach);
 
 		Vec3d look = horizontalLook(player);
 		for (LivingEntity target : targets) {
-			if (!hit(player, world, stack, target, multiplier)) {
+			if (!hit(player, world, stack, weapon, target, multiplier)) {
 				continue;
 			}
 			if (airborne) {
@@ -159,11 +159,11 @@ public final class CombatManager {
 		}
 	}
 
-	private static void performHeavy(ServerPlayerEntity player, ServerWorld world, ItemStack stack, ComboWeapon weapon, CombatState state) {
-		double reach = player.getEntityInteractionRange() + weapon.reachBonus(stack) + 0.5;
+	private static void performHeavy(ServerPlayerEntity player, ServerWorld world, ItemStack stack, ComboProfile weapon, CombatState state) {
+		double reach = player.getEntityInteractionRange() + weapon.reachBonus() + 0.5;
 		Vec3d look = horizontalLook(player);
 		for (LivingEntity target : targetsInFront(player, state, reach)) {
-			if (hit(player, world, stack, target, weapon.heavyMultiplier(stack))) {
+			if (hit(player, world, stack, weapon, target, weapon.heavyMultiplier())) {
 				target.takeKnockback(1.3, -look.x, -look.z);
 				target.addVelocity(0.0, 0.25, 0.0);
 				target.velocityModified = true;
@@ -173,17 +173,26 @@ public final class CombatManager {
 		sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 0.7f);
 	}
 
-	/** Fuegt Schaden mit Verzauberungen zu. Unverwundbarkeits-Ticks des Ziels werden fuer fluessige Combos ausgesetzt. */
-	private static boolean hit(ServerPlayerEntity player, ServerWorld world, ItemStack stack, LivingEntity target, float multiplier) {
-		float base = (float) player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+	/**
+	 * Fuegt Schaden mit Waffenbonus, kritischen Treffern und Verzauberungen zu.
+	 * Unverwundbarkeits-Ticks des Ziels werden fuer fluessige Combos ausgesetzt.
+	 */
+	private static boolean hit(ServerPlayerEntity player, ServerWorld world, ItemStack stack, ComboProfile weapon,
+			LivingEntity target, float multiplier) {
+		float base = (float) player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) + weapon.bonusDamage();
+		boolean critical = weapon.critChance() > 0 && player.getRandom().nextFloat() < weapon.critChance();
 		DamageSource source = world.getDamageSources().playerAttack(player);
-		float damage = EnchantmentHelper.getDamage(world, stack, target, source, base * multiplier);
+		float damage = EnchantmentHelper.getDamage(world, stack, target, source, base * multiplier * (critical ? 1.5f : 1.0f));
 		target.timeUntilRegen = 0;
 		if (!target.damage(source, damage)) {
 			return false;
 		}
 		EnchantmentHelper.onTargetDamaged(world, target, source, stack);
 		player.onAttacking(target);
+		if (critical) {
+			player.addCritParticles(target);
+			world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.8f, 1.0f);
+		}
 		stack.damage(1, player, EquipmentSlot.MAINHAND);
 		return true;
 	}
@@ -260,7 +269,8 @@ public final class CombatManager {
 	public static void setGuard(ServerPlayerEntity player, boolean active) {
 		CombatState state = state(player);
 		ItemStack stack = comboWeapon(player);
-		boolean allowed = active && !stack.isEmpty() && ((ComboWeapon) stack.getItem()).canGuard(stack) && player.isAlive();
+		boolean allowed = active && !stack.isEmpty() && player.isAlive()
+				&& ((ComboWeapon) stack.getItem()).comboProfile(player.getServerWorld().getRegistryManager(), stack).canGuard();
 		if (allowed == state.guarding) {
 			return;
 		}

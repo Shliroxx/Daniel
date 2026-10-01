@@ -1,0 +1,64 @@
+{
+  "item": "kingdomomnitrix:kingdom_key",
+  "rarity": "rare",
+  "damage": 6.0,
+  "damage_per_level": 1.0,
+  "magic": 2.0,
+  "magic_per_level": 1.0,
+  "attack_speed": 1.0,
+  "reach": 0.5,
+  "combo_length": 3,
+  "passives": {
+    "critical": 0.05
+  },
+  "upgrades": [
+    {
+      "bolts": 40,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "bolts": 80,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 2
+        },
+        {
+          "id": "minecraft:gold_ingot",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "bolts": 150,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 4
+        },
+        {
+          "id": "minecraft:diamond",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "bolts": 300,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 8
+        },
+        {
+          "id": "minecraft:netherite_scrap",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

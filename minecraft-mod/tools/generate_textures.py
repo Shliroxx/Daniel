@@ -87,6 +87,26 @@ def item_textures() -> dict[str, Image.Image]:
     ], {"S": hexc("D6DAE3"), "s": hexc("8A8F9C"), "Y": hexc("F2C230"), "y": hexc("A87F12"),
         "B": hexc("2A3F9A"), "K": hexc("C0C0C8")})
 
+    t["oathkeeper"] = from_ascii([
+        "..........WWWW..",
+        "..........W.WW..",
+        "..........WWW.W.",
+        "..........WW....",
+        ".........Ww.....",
+        "........Ww......",
+        ".......Ww.......",
+        "......Ww........",
+        ".....Ww.........",
+        "..P.Ww..........",
+        ".PpPw...........",
+        "..PpP...........",
+        ".BPPpP..........",
+        "BB..P...........",
+        "B.Y.............",
+        ".YYY............",
+    ], {"W": hexc("F4F6FA"), "w": hexc("A9B4C8"), "P": hexc("D9DDE6"), "p": hexc("8E97A8"),
+        "B": hexc("2D3A6E"), "Y": hexc("FFE14D")})
+
     t["heart"] = from_ascii([
         "",
         "",
@@ -292,7 +312,30 @@ def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
     # Bolt-Symbol auf der Seite
     for x, y in [(6, 6), (7, 6), (8, 6), (9, 6), (6, 9), (7, 9), (8, 9), (9, 9), (6, 7), (6, 8), (9, 7), (9, 8)]:
         side.putpixel((x, y), hexc("FFD84A"))
-    return {"bolt_crate": side, "bolt_crate_top": top}
+    forge_side, forge_top, forge_bottom = Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16))
+    stone, stone_dark, gold, glow = hexc("5E636B"), hexc("3E4249"), hexc("F2C230"), hexc("7FE3FF")
+    for y in range(16):
+        for x in range(16):
+            jitter = rng.randint(-8, 8)
+            base = stone if (x + y) % 7 else stone_dark
+            px = tuple(max(0, min(255, c + jitter)) for c in base[:3]) + (255,)
+            forge_side.putpixel((x, y), px)
+            forge_bottom.putpixel((x, y), px)
+            forge_top.putpixel((x, y), px)
+    for i in range(16):
+        forge_side.putpixel((i, 0), gold)
+        forge_side.putpixel((i, 15), stone_dark)
+        forge_top.putpixel((i, 0), gold)
+        forge_top.putpixel((i, 15), gold)
+        forge_top.putpixel((0, i), gold)
+        forge_top.putpixel((15, i), gold)
+    # Krone auf der Seite, leuchtende Rune oben
+    for x, y in [(4, 9), (5, 7), (6, 9), (7, 6), (8, 6), (9, 9), (10, 7), (11, 9)] + [(x, 10) for x in range(4, 12)]:
+        forge_side.putpixel((x, y), gold)
+    for x, y in [(7, 4), (8, 4), (6, 5), (9, 5), (5, 7), (10, 7), (6, 9), (9, 9), (7, 10), (8, 10), (7, 7), (8, 7), (7, 8), (8, 8)]:
+        forge_top.putpixel((x, y), glow)
+    return {"bolt_crate": side, "bolt_crate_top": top,
+            "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
 
 
 def shadow_texture(rng: random.Random) -> Image.Image:

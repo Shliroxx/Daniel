@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.keyblade.KeybladeForgeBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.MapColor;
@@ -15,6 +16,14 @@ public final class ModBlocks {
 					.mapColor(MapColor.ORANGE)
 					.strength(0.4f)
 					.sounds(BlockSoundGroup.WOOD)));
+
+	/** Keyblade-Schmiede: wertet Keyblades mit Bolts und Materialien auf. */
+	public static final Block KEYBLADE_FORGE = Registry.register(Registries.BLOCK, KingdomOmnitrix.id("keyblade_forge"),
+			new KeybladeForgeBlock(AbstractBlock.Settings.create()
+					.mapColor(MapColor.IRON_GRAY)
+					.strength(3.5f, 6.0f)
+					.requiresTool()
+					.sounds(BlockSoundGroup.ANVIL)));
 
 	private ModBlocks() {
 	}
