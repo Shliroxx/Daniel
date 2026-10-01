@@ -72,6 +72,7 @@ public final class ModItems {
 	public static final Item BOLT_CRATE = register("bolt_crate", new BlockItem(ModBlocks.BOLT_CRATE, new Item.Settings()));
 
 	// --- Raumfahrt und Erze (Phase 12) ---------------------------------------------------------
+	public static final Item ARENA_TERMINAL = register("arena_terminal", new BlockItem(ModBlocks.ARENA_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item APHELION = register("aphelion", new ShipItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
 	public static final Item RARITANIUM_ORE = register("raritanium_ore", new BlockItem(ModBlocks.RARITANIUM_ORE, new Item.Settings()));
 	public static final Item MYTHRIL_ORE = register("mythril_ore", new BlockItem(ModBlocks.MYTHRIL_ORE, new Item.Settings()));

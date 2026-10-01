@@ -21,6 +21,8 @@ import com.santiq.kingdomomnitrix.npc.NpcDefinition;
 import com.santiq.kingdomomnitrix.npc.NpcRegistry;
 import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.world.ServerWorld;
+import com.santiq.kingdomomnitrix.world.TraverseTown;
 import com.santiq.kingdomomnitrix.quest.QuestRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
@@ -132,6 +134,17 @@ public final class HeroCommand {
 						.executes(ctx -> openRift(ctx, Optional.empty()))
 						.then(CommandManager.argument("rift", IdentifierArgumentType.identifier())
 								.executes(ctx -> openRift(ctx, Optional.of(IdentifierArgumentType.getIdentifier(ctx, "rift"))))))
+				.then(CommandManager.literal("world")
+						.then(targeted(CommandManager.literal("traverse_town"), (ctx, target) -> {
+							ServerWorld town = ctx.getSource().getServer().getWorld(TraverseTown.WORLD);
+							if (town == null) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.world_missing", TraverseTown.WORLD.getValue().toString()));
+								return 0;
+							}
+							BlockPos center = TraverseTown.ensure(town);
+							target.teleport(town, center.getX() + 0.5, center.getY(), center.getZ() + 3.5, 180.0f, 0.0f);
+							return 1;
+						})))
 				.then(CommandManager.literal("npc")
 						.then(CommandManager.literal("spawn")
 								.then(CommandManager.argument("npc", IdentifierArgumentType.identifier()).suggests(NPC_SUGGESTIONS)

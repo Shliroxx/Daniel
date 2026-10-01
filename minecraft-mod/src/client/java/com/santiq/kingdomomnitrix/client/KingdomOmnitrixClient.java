@@ -20,6 +20,8 @@ import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
 import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
 import com.santiq.kingdomomnitrix.client.quest.QuestBookScreen;
 import com.santiq.kingdomomnitrix.client.npc.NpcDialogScreen;
+import com.santiq.kingdomomnitrix.client.arena.ArenaScreen;
+import com.santiq.kingdomomnitrix.networking.OpenArenaPayload;
 import com.santiq.kingdomomnitrix.client.npc.NpcRenderer;
 import com.santiq.kingdomomnitrix.client.space.ShipClient;
 import com.santiq.kingdomomnitrix.client.space.ShipRenderer;
@@ -107,6 +109,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			ShipClient.reset();
 		});
 
+		ClientPlayNetworking.registerGlobalReceiver(OpenArenaPayload.ID, (payload, context) ->
+				context.client().setScreen(new ArenaScreen(payload.terminal(), payload.running())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenNpcDialogPayload.ID, (payload, context) ->
 				NpcDialogScreen.open(context.client(), payload.entityId(), payload.npc()));
 		ClientPlayNetworking.registerGlobalReceiver(OpenQuestBookPayload.ID, (payload, context) -> QuestBookScreen.open(context.client()));

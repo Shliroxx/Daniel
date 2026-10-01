@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
+import com.santiq.kingdomomnitrix.arena.ArenaManager;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
@@ -38,6 +39,26 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenQuestBookPayload.ID, OpenQuestBookPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenNpcDialogPayload.ID, OpenNpcDialogPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenArenaPayload.ID, OpenArenaPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ArenaStartPayload.ID, ArenaStartPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(ArenaStartPayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			if (!canAct(player)) {
+				return;
+			}
+			ArenaManager.Result result = ArenaManager.start(player, payload.terminal(), payload.challenge());
+			String key = switch (result) {
+				case RUNNING -> "arena.kingdomomnitrix.busy";
+				case LEVEL_TOO_LOW -> "arena.kingdomomnitrix.level_too_low";
+				case NO_TERMINAL, NOT_IN_ARENA -> "arena.kingdomomnitrix.too_far";
+				case UNKNOWN -> "message.kingdomomnitrix.quest_unknown";
+				default -> null;
+			};
+			if (key != null) {
+				player.sendMessage(Text.translatable(key).formatted(Formatting.RED), true);
+			}
+		});
 		PayloadTypeRegistry.playC2S().register(QuestActionPayload.ID, QuestActionPayload.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(QuestActionPayload.ID, (payload, context) -> {

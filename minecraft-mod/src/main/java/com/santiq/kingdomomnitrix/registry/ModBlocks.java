@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.arena.ArenaTerminalBlock;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeForgeBlock;
 import com.santiq.kingdomomnitrix.weapon.WeaponTerminalBlock;
 import net.minecraft.block.AbstractBlock;
@@ -36,6 +37,15 @@ public final class ModBlocks {
 					.strength(3.0f, 6.0f)
 					.requiresTool()
 					.luminance(state -> 7)
+					.sounds(BlockSoundGroup.METAL)));
+
+	/** Arena-Terminal: startet Arena-Herausforderungen (Ratchet & Clank). */
+	public static final Block ARENA_TERMINAL = Registry.register(Registries.BLOCK, KingdomOmnitrix.id("arena_terminal"),
+			new ArenaTerminalBlock(AbstractBlock.Settings.create()
+					.mapColor(MapColor.GOLD)
+					.strength(3.0f, 6.0f)
+					.requiresTool()
+					.luminance(state -> 9)
 					.sounds(BlockSoundGroup.METAL)));
 
 	// --- Erze (Phase 12): Asteroiden im All und die Mod-Welten ----------------------------------

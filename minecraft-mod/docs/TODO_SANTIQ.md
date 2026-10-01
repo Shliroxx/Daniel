@@ -80,6 +80,14 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Quest erfüllen → „?“ erscheint → beim NPC abgeben
 - [ ] Gefallen dir Aussehen und Sprüche der drei? Wünsche für weitere NPCs
 
+### Phase 12 — Raumfahrt, Traverse Town, Arena
+- [ ] Aphelion herstellen, aufstellen, einsteigen, nach oben fliegen → Weltall
+- [ ] Im All dem Cockpit-Pfeil zu „Traverse Town“ folgen und in den Wirbel fliegen → Ankunft über der Stadt
+- [ ] Stadt ansehen: gefallen dir Häuser, Platz, Laternen? (Jede Welt baut ihre Stadt anders)
+- [ ] Arena-Terminal am Südende: Bronze-Pokal spielen
+- [ ] Außerhalb der Stadt Mythril/Raritanium/Orichalcum suchen, Keyblade und Combuster auf die höchste Stufe bringen
+- [ ] Rückweg: im All nach unten fliegen (unter Y 0) oder in den Riss „Heimatwelt“
+
 ---
 
 ## 5. Entscheidungen, die noch offen sind

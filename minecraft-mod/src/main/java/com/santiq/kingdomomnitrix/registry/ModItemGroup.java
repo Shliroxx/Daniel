@@ -62,6 +62,7 @@ public final class ModItemGroup {
 						entries.add(ModItems.BOLT);
 						entries.add(ModItems.BOLT_CRATE);
 						entries.add(ModItems.WEAPON_TERMINAL);
+						entries.add(ModItems.ARENA_TERMINAL);
 						entries.add(ModItems.APHELION);
 						entries.add(ModItems.RARITANIUM_ORE);
 						entries.add(ModItems.MYTHRIL_ORE);

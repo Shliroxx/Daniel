@@ -444,6 +444,25 @@ Neu: `tools/client_smoke.sh server|join` startet einen Dedicated Server und verb
 | Händler | TODO → später | nicht gewählt |
 | Eigene Stimmen/Sounds | TODO → Phase 18 | aktuell Dorfbewohner-Laut |
 
+### Phase 12 — Welten (Raumfahrt, Traverse Town, Arena)
+
+Entscheidung SANTIQ: Zugang über das KI-Raumschiff aus Ratchet & Clank 3 → Weltall → Weltraumrisse in verschiedene
+Welten (Vorbild: Galaxie-Mods); eigene, immer andere Generierung mit neuen Erzen; Arena mit Belohnungen, Herzlosen-Arena, Bauen erlaubt.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Aphelion: fliegbar (Pilot-Client rechnet, Server prüft), 2 Plätze, Cockpit-HUD, Verfolgerkamera, Bord-KI-Meldungen | IMPLEMENTED | Flug, Aufstieg, Rückkehr getestet |
+| Aphelion-Modell (GeckoLib) | PLACEHOLDER | `tools/generate_ship_models.py` |
+| Weltall: Sternenhimmel, Nebel, Planet, Asteroiden mit Raritanium, 25 % Schwerkraft, Wiedereintritt | IMPLEMENTED | getestet |
+| Weltraumrisse als JSON (Wirbel, Name, Entfernung, HUD-Navigation, Durchflug, Rückweg) | IMPLEMENTED | Erde ↔ All ↔ Traverse Town getestet |
+| Traverse Town: Dimension (ewige Nacht), 4 Biome, Laternen und Kristallnadeln, Herzlose als Spawns | IMPLEMENTED | Gelände getestet |
+| Erze Raritanium / Mythril / Orichalcum mit Zweck (Waffen- bzw. Keyblade-Upgrades) | IMPLEMENTED | Generierung nur stichprobenhaft gesehen |
+| Stadt: prozedural pro Welt (Platz, Brunnen, Straßen, Häuser, Laden mit Clank, Schmiede, NPCs, Kisten), sicherer Ort | IMPLEMENTED | Bau (3,6 s) und Schutz getestet |
+| Arena: Herausforderungen als JSON, Countdown, Runden, Zeitlimit, Bossleiste, Titel, Belohnung, Bestzeit | IMPLEMENTED | Bronze-Pokal komplett getestet; Niederlage nur im Code geprüft |
+| Keine „Experimentell“-Warnung durch Mod-Dimensionen | IMPLEMENTED | |
+| Weitere Welten (Insel, Halloween-artig, Sci-Fi-Planet) | TODO → Phase 22 | Weltraumriss + Dimension per JSON vorbereitet |
+| Eigene Sounds für Schiff, Risse, Arena | TODO → Phase 18 | Vanilla-Klänge |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

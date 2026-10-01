@@ -1,0 +1,76 @@
+{
+  "min_level": 7,
+  "sort_order": 3,
+  "time_limit": 360,
+  "elite_chance": 0.25,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 6
+      },
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 2
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 2
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 4
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 4
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 4
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 8
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 2
+      },
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 3
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts": 900,
+    "experience": 400,
+    "items": [
+      {
+        "id": "kingdomomnitrix:orichalcum",
+        "count": 1
+      },
+      {
+        "id": "kingdomomnitrix:raritanium",
+        "count": 5
+      }
+    ]
+  }
+}

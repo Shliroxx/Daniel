@@ -60,6 +60,21 @@ Neue Aliens: JSON-Datei in `data/<namespace>/kingdomomnitrix/alien/` + Übersetz
 Waffenstufe und Munition stehen im Waffen-HUD am rechten Rand. Gadgets liegen im **Gadget-Gürtel** (**H** öffnet ihn,
 oder Rechtsklick mit dem Gadget). Beim Tod fallen Gadgets wie normale Items (außer mit `keepInventory`).
 
+### Raumfahrt und Welten
+- **Aphelion** (Raumschiff mit Bord-KI aus Ratchet & Clank 3): auf den Boden setzen, Rechtsklick zum Einsteigen.
+  W/S fliegt in Blickrichtung, A/D seitlich, Leertaste steigt, Schleichen steigt aus. Cockpit-Anzeige mit Tempo und Höhe.
+- Hoch genug fliegen (16 Blöcke unter der Bauhöhe) → **Weltall**: Sternenhimmel, Asteroiden mit **Raritanium**, geringe Schwerkraft.
+  Ohne Schiff ins Leere gefallen → Wiedereintritt über der Oberwelt (mit Sanftem Fall).
+- **Weltraumrisse** (Wirbel mit Name und Entfernung, Navigation im Cockpit): hineinfliegen = Reise. „Heimatwelt“ führt zurück,
+  ebenso ein Sinkflug unter Y 0. In einer Welt wieder hoch genug fliegen → zurück ins All neben deren Riss.
+- **Traverse Town**: eigene Welt in ewiger Nacht, jedes Mal anders generiert: Stadtrand mit Laternen, Schattenwald,
+  Kristallfelder, dunkles Meer. Erze **Mythril**, **Raritanium**, **Orichalcum**. Herzlose streifen draußen umher.
+  Die **Stadt** entsteht beim ersten Besuch: Platz mit Brunnen, Straßen, Häuser, Waffenladen (Clank, Terminal), Schmiede,
+  Yen Sid und Max auf dem Platz. In der Stadt entstehen keine Monster; bauen und abbauen ist erlaubt.
+- **Arena** (Ratchet & Clank): Arena-Terminal → Pokal wählen → Countdown, Runden, Zeitlimit, Bossleiste.
+  Sieg: Bolts, Helden-EP, Material, Bestzeit. Ein Arena-Terminal lässt sich auch selbst bauen (Kampffläche: Radius 12 um das Terminal).
+- **Materialien**: Raritanium → Waffen-Aufrüstungen (Stufe 4–5), Mythril und Orichalcum → Keyblade-Upgrades.
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -98,6 +113,8 @@ Eisen .    .          .     Nugget .          .      Nugget   .       Eisen Reds
 
 Bolt-Kiste: 8 Bretter um 1 Eisennugget
 Quest-Buch (formlos): Buch + Goldnugget + Feder
+Aphelion: Glas Enderauge Glas / Eisenblock Diamantblock Eisenblock / Schmelzofen Redstoneblock Schmelzofen
+Arena-Terminal: Gold Glocke Gold / Eisen Raritanium Eisen / Eisen Eisen Eisen
 Hi-Potion (formlos): Glasflasche + glitzernde Melonenscheibe + Zucker
 Paopu-Frucht (formlos): Apfel + Glowstonestaub + Herz
 ```
@@ -149,6 +166,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero quest reset <quest>\|all [spieler]` | setzt Quest-Fortschritt zurück |
 | `/hero quest list [spieler]` | zeigt alle Quests mit Status |
 | `/hero npc spawn <npc>` | stellt einen NPC an deiner Position auf |
+| `/hero world traverse_town [spieler]` | teleportiert nach Traverse Town (baut die Stadt beim ersten Mal) |
 
 ## Installieren
 

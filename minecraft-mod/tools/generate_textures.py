@@ -440,7 +440,15 @@ def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
         term_side.putpixel((x, y), hexc("FFD84A"))
     for x, y in [(7, 5), (8, 5), (6, 6), (9, 6), (6, 7), (9, 7), (7, 8), (8, 8)]:
         term_top.putpixel((x, y), hexc("FFD84A"))
-    return {"bolt_crate": side, "bolt_crate_top": top, "weapon_terminal": term_side, "weapon_terminal_top": term_top,
+    arena_side = term_side.copy()
+    for x in range(3, 13):
+        for y in range(3, 9):
+            arena_side.putpixel((x, y), hexc("3A2A10") if x in (3, 12) or y in (3, 8) else hexc("F5C542") if (x + y) % 3 else hexc("FFE9A0"))
+    arena_top = term_top.copy()
+    for x, y in [(7, 4), (8, 4), (6, 5), (9, 5), (5, 7), (10, 7), (6, 9), (9, 9), (7, 10), (8, 10)]:
+        arena_top.putpixel((x, y), hexc("F5C542"))
+    return {"arena_terminal": arena_side, "arena_terminal_top": arena_top,
+            "bolt_crate": side, "bolt_crate_top": top, "weapon_terminal": term_side, "weapon_terminal_top": term_top,
             "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
 
 

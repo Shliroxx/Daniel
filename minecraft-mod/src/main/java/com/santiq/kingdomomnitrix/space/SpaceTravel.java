@@ -2,7 +2,9 @@ package com.santiq.kingdomomnitrix.space;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.mixin.ServerPlayNetworkHandlerAccessor;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.Optional;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -40,7 +42,25 @@ public final class SpaceTravel {
 	private static final double ANNOUNCE_DISTANCE = 60.0;
 	private static final Identifier LOW_GRAVITY = KingdomOmnitrix.id("space_low_gravity");
 
+	/** Feste Ankunftsorte einzelner Welten (z. B. der Stadtplatz von Traverse Town). */
+	private static final Map<RegistryKey<World>, Function<ServerWorld, BlockPos>> ARRIVALS = new HashMap<>();
+
 	private SpaceTravel() {
+	}
+
+	public static void registerArrival(RegistryKey<World> world, Function<ServerWorld, BlockPos> arrival) {
+		ARRIVALS.put(world, arrival);
+	}
+
+	/** Wo man in einer Welt ankommt: fester Ankunftsort, sonst Risskoordinaten, sonst Weltspawn. */
+	public static BlockPos arrivalPoint(ServerWorld world, Optional<java.util.List<Integer>> routeArrival) {
+		Function<ServerWorld, BlockPos> fixed = ARRIVALS.get(world.getRegistryKey());
+		if (fixed != null) {
+			return fixed.apply(world);
+		}
+		BlockPos spawn = world.getSpawnPos();
+		return new BlockPos(routeArrival.map(list -> list.get(0)).orElse(spawn.getX()), spawn.getY(),
+				routeArrival.map(list -> list.get(1)).orElse(spawn.getZ()));
 	}
 
 	public static void register() {
@@ -121,9 +141,9 @@ public final class SpaceTravel {
 			}
 			return;
 		}
-		BlockPos spawn = destination.getSpawnPos();
-		int x = route.arrival().map(list -> list.get(0)).orElse(spawn.getX());
-		int z = route.arrival().map(list -> list.get(1)).orElse(spawn.getZ());
+		BlockPos arrival = arrivalPoint(destination, route.arrival());
+		int x = arrival.getX();
+		int z = arrival.getZ();
 		ShipEntity moved = teleport(ship, destination, new Vec3d(x + 0.5, arrivalHeight(destination, x, z), z + 0.5));
 		if (moved != null) {
 			moved.setHomeWorld(destination.getRegistryKey().getValue());

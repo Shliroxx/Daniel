@@ -33,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route", "arena"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity|arena)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -229,6 +229,14 @@ def check_feature_order(report: Report) -> None:
                         before.setdefault((step, first, second), path.stem)
 
 
+def check_arena(report: Report, lang: dict[str, str]) -> int:
+    files = sorted((DATA / MOD_ID / "arena_challenge").glob("*.json"))
+    for path in files:
+        if f"arena.{MOD_ID}.{path.stem}" not in lang:
+            report.error("Arena-Herausforderung ohne Namen: arena.%s.%s", MOD_ID, path.stem)
+    return len(files)
+
+
 def check_routes(report: Report, lang: dict[str, str]) -> int:
     files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
     for path in files:
@@ -320,6 +328,7 @@ def main(argv: list[str] | None = None) -> int:
     spell_count = check_spells(report, lang)
     npcs = check_npcs(report, lang)
     check_routes(report, lang)
+    check_arena(report, lang)
     check_feature_order(report)
     quest_count = check_quests(report, lang, set(items), npcs)
 
