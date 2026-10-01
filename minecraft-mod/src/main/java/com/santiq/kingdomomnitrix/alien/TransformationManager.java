@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.alien;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
@@ -357,7 +358,9 @@ public final class TransformationManager {
 		world.spawnParticles(new DustParticleEffect(color, 1.2f),
 				player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.5, 0.8, 0.5, 0.0);
 		if (transforming) {
-			world.spawnParticles(ParticleTypes.FLASH, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0, 0, 0, 0);
+			Vfx.transform(world, player);
+		} else {
+			Vfx.revert(world, player);
 		}
 		world.playSound(null, player.getX(), player.getY(), player.getZ(),
 				transforming ? SoundEvents.BLOCK_BEACON_POWER_SELECT : SoundEvents.BLOCK_BEACON_DEACTIVATE,

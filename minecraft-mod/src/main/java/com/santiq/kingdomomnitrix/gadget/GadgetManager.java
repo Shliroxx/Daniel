@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.registry.ModParticles;
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -186,11 +188,14 @@ public final class GadgetManager {
 		ServerWorld world = player.getServerWorld();
 		if (jet) {
 			sound(player, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.7f, 1.3f);
-			world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 0.8, player.getZ(), 10, 0.2, 0.2, 0.2, 0.02);
+			world.spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.8, player.getZ(), 12, 0.2, 0.2, 0.2, 0.02);
+			Vfx.directed(world, ModParticles.MUZZLE_FLASH, player.getPos().add(player.getRotationVec(1.0f).multiply(-0.5)).add(0, 0.9, 0),
+					player.getRotationVec(1.0f).multiply(-0.1));
 			world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 0.6, player.getZ(), 8, 0.2, 0.2, 0.2, 0.02);
 		} else {
 			sound(player, SoundEvents.ENTITY_BREEZE_JUMP, 0.7f, 1.4f);
 			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 8, 0.3, 0.05, 0.3, 0.02);
+			Vfx.rotorWind(world, player);
 		}
 	}
 
@@ -218,6 +223,8 @@ public final class GadgetManager {
 			return;
 		}
 		SWINGING.put(player.getUuid(), new Swing(hit.getPos(), now));
+		Vfx.burst(world, ModParticles.HIT_SPARK, hit.getPos(), 2, 0.05);
+		Vfx.burst(world, ModParticles.KEYBLADE_SPARK, hit.getPos(), 6, 0.2);
 		player.fallDistance = 0.0f;
 		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_FISHING_BOBBER_THROW, SoundCategory.PLAYERS, 0.9f, 0.7f);
 		world.playSound(null, anchor.x, anchor.y, anchor.z, SoundEvents.BLOCK_CHAIN_PLACE, SoundCategory.PLAYERS, 1.0f, 1.2f);
@@ -272,6 +279,16 @@ public final class GadgetManager {
 				GLIDING.remove(id);
 			} else {
 				player.fallDistance = 0.0f;
+				// Rotor ueber dem Kopf (alle 4 Ticks, nur Heli-Pack und Faehigkeit Gleiten; der Jet hat Duesenglut)
+				if (player.age % 4 == 0) {
+					boolean jet = pack(player).map(HeliPackItem::isJet).orElse(false);
+					if (!jet) {
+						Vfx.rotorWind(player.getServerWorld(), player);
+					} else {
+						player.getServerWorld().spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.7, player.getZ(),
+								2, 0.15, 0.1, 0.15, 0.01);
+					}
+				}
 			}
 		}
 	}

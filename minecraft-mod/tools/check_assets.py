@@ -295,6 +295,22 @@ def check_icons(report: Report) -> None:
             report.error("Symbol fehlt: textures/gui/icon/%s.png (tools/generate_icons.py ergaenzen)", name)
 
 
+def check_particles(report: Report) -> int:
+    """Jeder registrierte Partikel braucht particles/<name>.json mit vorhandenen Texturen (tools/generate_particles.py)."""
+    source = (ROOT / "src/main/java/com/santiq/kingdomomnitrix/registry/ModParticles.java").read_text(encoding="utf-8")
+    names = re.findall(r'register\("([a-z0-9_]+)"\)', source)
+    for name in names:
+        definition = load_json(ASSETS / "particles" / f"{name}.json", report)
+        if not isinstance(definition, dict) or not definition.get("textures"):
+            report.error("Partikel ohne Definition: particles/%s.json", name)
+            continue
+        for texture in definition["textures"]:
+            path = texture.split(":", 1)[1]
+            if not (ASSETS / "textures" / "particle" / f"{path}.png").is_file():
+                report.error("Partikel %s: Textur fehlt: textures/particle/%s.png", name, path)
+    return len(names)
+
+
 def check_routes(report: Report, lang: dict[str, str]) -> int:
     files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
     for path in files:
@@ -390,6 +406,7 @@ def main(argv: list[str] | None = None) -> int:
     check_feature_order(report)
     ability_count = check_hero_abilities(report, lang)
     check_icons(report)
+    particle_count = check_particles(report)
     for row in ("attack", "magic", "items", "omnitrix"):
         if f"hud.{MOD_ID}.command.{row}" not in lang:
             report.error("Kommandomenue-Zeile ohne Text: hud.%s.command.%s", MOD_ID, row)
@@ -401,8 +418,8 @@ def main(argv: list[str] | None = None) -> int:
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Faehigkeiten, %d Uebersetzungen",
-             len(items), alien_count, spell_count, quest_count, len(npcs), ability_count, len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Faehigkeiten, %d Partikel, %d Uebersetzungen",
+             len(items), alien_count, spell_count, quest_count, len(npcs), ability_count, particle_count, len(lang))
     return 0
 
 

@@ -14,7 +14,8 @@ import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.ParticleTypes;
+import com.santiq.kingdomomnitrix.registry.ModParticles;
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -132,7 +133,7 @@ public final class SpellEffects {
 				victim.timeUntilRegen = 0;
 				victim.damage(ctx.world().getDamageSources().indirectMagic(caster, caster), damage);
 			}
-			ctx.world().spawnParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y + 0.5, point.z, 30, 1.0, 0.8, 1.0, 0.1);
+			Vfx.thunderStrike(ctx.world(), point);
 		}
 		return true;
 	}
@@ -154,9 +155,9 @@ public final class SpellEffects {
 		}
 		for (LivingEntity target : targets) {
 			target.heal(amount);
-			ctx.world().spawnParticles(ParticleTypes.HEART, target.getX(), target.getBodyY(0.8), target.getZ(), 4 + ctx.level() * 2, 0.5, 0.4, 0.5, 0.0);
+			Vfx.cure(ctx.world(), target);
 		}
-		ctx.world().spawnParticles(ParticleTypes.HAPPY_VILLAGER, caster.getX(), caster.getBodyY(0.5), caster.getZ(), 20, radius * 0.3 + 0.5, 0.5, radius * 0.3 + 0.5, 0.0);
+		Vfx.ring(ctx.world(), ModParticles.CURE_LEAF, caster.getPos().add(0, 0.2, 0), 0.6, 12 + ctx.level() * 4, 0.12 + radius * 0.03);
 		sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 0.9f + ctx.level() * 0.1f);
 		return true;
 	}

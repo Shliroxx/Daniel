@@ -55,6 +55,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
 | Progression (Phase 15) | Stufe 50; Werte automatisch + neue Fähigkeiten pro Stufe; KH-Fähigkeitenliste mit AP; EP auch aus Herzlosen/Bossen, Erkunden, Alien-Meisterschaft |
 | UI (Phase 16) | KH-Kommandomenü, Weltkarte, Inventar-Reiter, HUD aufräumen; Farben je System; HUD verschieb- und skalierbar; eigene Symbole |
+| VFX (Phase 17) | alle vier Bereiche (Verwandlung, Treffer/Combos, Magie, Waffen/Gadgets); immer voll; Bildschirm-Blitz und Vignette; eigene Partikel-Texturen |
 | Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
@@ -520,6 +521,23 @@ HUD mit Position und Größe anpassbar; eigene Symbole statt Text.
 | Aliens-Seite (Meisterschaft, Dauer mit Boni, Fähigkeiten, DNA-Quellen gesperrter Aliens) | IMPLEMENTED | getestet |
 | Weltkarte (Galaxie mit Rissen, entdeckt/unentdeckt, Standort, Nether/Ende) | IMPLEMENTED | getestet |
 | Controller-Steuerung des Kommandomenüs | TODO | offen (Entscheidung Controlify, TODO_SANTIQ) |
+
+### Phase 17 — VFX
+
+Entscheidung SANTIQ: Verwandlung, Treffer & Combos, Magie, Waffen & Gadgets; Effekte immer voll; Bildschirm-Blitz/Vignette
+(kein Kamerawackeln, keine Trefferpause); eigene Partikel-Texturen.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| 14 Partikel-Typen mit animierten Texturen (`tools/generate_particles.py`), ein Client-Partikel mit Stil je Typ (Leuchten, Wachsen, Drehung, Schwerkraft) | IMPLEMENTED | Texturen PLACEHOLDER (generiert); CI und `check_assets` prüfen Vollständigkeit |
+| `Vfx`: fertige Effekt-Abläufe serverseitig (an alle Spieler in Sichtweite) | IMPLEMENTED | |
+| Verwandlung: Omnitrix-Stern, DNA-Doppelhelix, Funkenring; Rückverwandlung: rote Funken | IMPLEMENTED | getestet |
+| Combo-Schwungspur (durchgehender Bogen, Luft schräg), Trefferfunken, Keyblade-Funken, Finisher-Ring, Blocken | IMPLEMENTED | Schwungspur + Treffer getestet |
+| Magie: Glut, Eissplitter, Blitzfunken, Heil-Blätter | IMPLEMENTED | Feuer, Donner, Vita getestet |
+| Combuster-Mündungsfeuer und Plasma-Spur (beginnt erst nach 2 Ticks, verdeckt nicht die Sicht), Granaten-Explosion | IMPLEMENTED | Combuster getestet |
+| Gadgets: Rotor-Wind beim Gleiten/Doppelsprung, Düsenglut, Swingshot-Funken | IMPLEMENTED | im Code geprüft |
+| Bildschirm: grüner/roter Blitz mit Vignette beim (Rück-)Verwandeln, rote Puls-Vignette bei wenig Leben | IMPLEMENTED | getestet |
+| Boss- und Herzlosen-Effekte auf eigene Partikel umstellen | TODO → Abschluss-Überarbeitung | nutzen noch Vanilla-Partikel |
 
 ### Testumgebung (seit Phase 4)
 

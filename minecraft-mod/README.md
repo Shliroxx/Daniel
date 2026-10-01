@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.8.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.9.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -115,6 +115,14 @@ für alle Fähigkeiten, Zauber und Alien-Fähigkeiten (`tools/generate_icons.py`
 - **HUD anpassen:** jede Anzeige (Status, Kommandomenü, Waffe, Omnitrix, Gadgets, Cockpit) ziehen, mit dem Mausrad
   vergrößern/verkleinern (50–200 %), mit Rechtsklick ausblenden. Gespeichert in `config/kingdomomnitrix-hud.json`.
 
+### Effekte
+Eigene Partikel (`tools/generate_particles.py`, 14 Arten, animiert, leuchtend), immer in voller Stärke:
+- **Verwandlung:** grüner Bildschirmblitz, Omnitrix-Stern, aufsteigende DNA-Doppelhelix; zurück: roter Funkenregen und roter Blitz
+- **Kampf:** durchgehende Schwung-Spur bei jedem Combo-Schlag, Trefferfunken, goldene Keyblade-Funken, Finisher-Ring, Perfekt-Blocken
+- **Magie:** Glut (Feuer), Eissplitter (Eis), Blitzfunken (Donner), Heil-Blätter (Vita)
+- **Technik:** Mündungsfeuer und Plasma-Spur (Combuster), Explosion der Fusionsgranate, Rotor-Wind beim Gleiten, Düsenglut am Heli-Jet, Funken am Swingshot-Haken
+- **Bildschirm:** pulsierende rote Vignette bei wenig Leben (unter 30 %)
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -171,7 +179,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.8.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.9.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -181,6 +189,7 @@ Vor dem Bauen lassen sich die Ressourcen schnell prüfen:
 python tools/check_assets.py          # Übersetzungen, Modelle, Texturen, Rezepte, Loot
 python tools/generate_textures.py --check
 python tools/generate_icons.py --check     # GUI-Symbole
+python tools/generate_particles.py --check # Partikel
 ```
 
 ## Heldendaten, HUD und Befehle
@@ -216,7 +225,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.8.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.9.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.

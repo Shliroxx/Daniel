@@ -13,6 +13,8 @@ import com.santiq.kingdomomnitrix.client.hud.HudManager;
 import com.santiq.kingdomomnitrix.client.menu.MenuTabs;
 import com.santiq.kingdomomnitrix.client.space.ShipHud;
 import com.santiq.kingdomomnitrix.client.ui.UiDraw;
+import com.santiq.kingdomomnitrix.client.vfx.ModParticleFactories;
+import com.santiq.kingdomomnitrix.client.vfx.ScreenEffects;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
@@ -102,6 +104,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		CommandMenu.register();
 		LockOnHud.register();
 		MenuTabs.register();
+		ModParticleFactories.register();
+		ScreenEffects.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {
@@ -133,6 +137,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			SwingshotRopes.reset();
 			ShipClient.reset();
 			CommandMenu.INSTANCE.reset();
+			ScreenEffects.reset();
 		});
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenArenaPayload.ID, (payload, context) ->

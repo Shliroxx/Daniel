@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import java.util.List;
 import java.util.Optional;
@@ -76,6 +77,9 @@ public class CombusterItem extends WeaponItem {
 		float speed = (float) level.map(l -> l.stat("speed", 2.6)).orElse(2.6).doubleValue();
 		float explosion = (float) level.map(l -> l.stat("explosion", 0)).orElse(0.0).doubleValue();
 		HeroProjectileEntity.shoot(world, player, ModItems.PLASMA_SHOT, speed, 1.0f).withDamage(damage).withExplosion(explosion);
+		if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+			Vfx.muzzle(serverWorld, player);
+		}
 		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, SoundCategory.PLAYERS, 0.6f, 1.8f);
 	}
 

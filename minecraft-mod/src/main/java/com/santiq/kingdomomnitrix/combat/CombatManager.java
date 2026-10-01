@@ -1,6 +1,9 @@
 package com.santiq.kingdomomnitrix.combat;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
+import com.santiq.kingdomomnitrix.registry.ModParticles;
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
@@ -155,11 +158,11 @@ public final class CombatManager {
 			player.velocityModified = true;
 			player.fallDistance = 0.0f;
 		}
+		Vfx.slash(world, player, step, airborne);
 		if (finisher) {
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, player.getX(), player.getBodyY(0.5), player.getZ(), 6, 1.2, 0.2, 1.2, 0.0);
+			Vfx.finisher(world, player);
 			sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 1.0f, 0.8f);
 		} else {
-			player.spawnSweepAttackParticles();
 			sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, 1.2f + step * 0.15f);
 		}
 	}
@@ -172,9 +175,10 @@ public final class CombatManager {
 				target.takeKnockback(1.3, -look.x, -look.z);
 				target.addVelocity(0.0, 0.25, 0.0);
 				target.velocityModified = true;
-				world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getBodyY(0.5), target.getZ(), 12, 0.3, 0.3, 0.3, 0.3);
+				Vfx.hit(world, target, stack.getItem() instanceof KeybladeItem, true);
 			}
 		}
+		Vfx.slash(world, player, 1, false);
 		sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 0.7f);
 	}
 
@@ -195,8 +199,8 @@ public final class CombatManager {
 		EnchantmentHelper.onTargetDamaged(world, target, source, stack);
 		player.onAttacking(target);
 		MagicManager.onMeleeHit(player);
+		Vfx.hit(world, target, stack.getItem() instanceof KeybladeItem, critical);
 		if (critical) {
-			player.addCritParticles(target);
 			world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.8f, 1.0f);
 		}
 		stack.damage(1, player, EquipmentSlot.MAINHAND);
@@ -328,8 +332,8 @@ public final class CombatManager {
 				attacker.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 40, 1), player);
 			}
 		}
-		world.spawnParticles(perfect ? ParticleTypes.FLASH : ParticleTypes.CRIT, player.getX(), player.getBodyY(0.6), player.getZ(),
-				perfect ? 1 : 6, 0.3, 0.3, 0.3, 0.1);
+		Vfx.burst(world, perfect ? ModParticles.KEYBLADE_SPARK : ModParticles.HIT_SPARK,
+				player.getPos().add(player.getRotationVec(1.0f).multiply(0.6)).add(0, player.getHeight() * 0.6, 0), perfect ? 16 : 3, perfect ? 0.35 : 0.05);
 		sound(world, player, SoundEvents.ITEM_SHIELD_BLOCK, 1.0f, perfect ? 1.6f : 1.0f);
 		return false;
 	}

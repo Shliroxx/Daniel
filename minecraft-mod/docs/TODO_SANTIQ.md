@@ -108,6 +108,12 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] „HUD anpassen“: Anzeigen verschieben, größer machen, ausblenden — und dein Lieblings-Layout festlegen
 - [ ] Gefallen dir die Symbole? Welche sollen als Erstes von Hand (Blockbench/Aseprite) neu gezeichnet werden?
 
+### Phase 17 — Effekte
+- [ ] Verwandeln (G) in der Third-Person-Ansicht (F5): Blitz, DNA-Helix — zu viel, zu wenig?
+- [ ] Combo mit dem Keyblade: Schwungspur und Funken
+- [ ] Feuer, Eis, Donner, Vita und den Combuster ausprobieren
+- [ ] Mit wenig Leben die rote Vignette prüfen
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

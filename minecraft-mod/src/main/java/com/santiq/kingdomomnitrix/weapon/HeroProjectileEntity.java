@@ -11,8 +11,11 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import com.santiq.kingdomomnitrix.registry.ModParticles;
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -31,9 +34,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	private float explosionPower;
 
 	public enum Kind {
-		FIRE(5.0f, true, ParticleTypes.FLAME),
-		ICE(4.0f, true, ParticleTypes.SNOWFLAKE),
-		PLASMA(6.0f, false, ParticleTypes.ELECTRIC_SPARK),
+		FIRE(5.0f, true, ModParticles.FIRE_EMBER),
+		ICE(4.0f, true, ModParticles.ICE_SHARD),
+		PLASMA(6.0f, false, ModParticles.PLASMA),
 		CRYSTAL(5.0f, false, ParticleTypes.END_ROD),
 		WRENCH(8.0f, false, ParticleTypes.CRIT),
 		DARK(4.0f, true, ParticleTypes.SQUID_INK);
@@ -118,12 +121,18 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		return getKind() == Kind.WRENCH ? 0.02 : 0.0;
 	}
 
+	private static final int TRAIL_DELAY_TICKS = 2;
+	private static final double TRAIL_MIN_DISTANCE_SQ = 2.25;
+
 	@Override
 	public void tick() {
 		super.tick();
 		World world = getWorld();
 		if (world.isClient()) {
-			world.addParticle(getKind().particle, getX(), getY(), getZ(), 0.0, 0.0, 0.0);
+			// erst nach 2 Ticks: sonst entsteht die Spur direkt vor der Kamera des Schuetzen und verdeckt die Sicht
+			if (age > TRAIL_DELAY_TICKS && (getOwner() == null || getOwner().squaredDistanceTo(this) > TRAIL_MIN_DISTANCE_SQ)) {
+				world.addParticle(getKind().particle, getX(), getY(), getZ(), 0.0, 0.0, 0.0);
+			}
 		} else if (age > MAX_AGE_TICKS) {
 			discard();
 		}
@@ -158,6 +167,7 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 				serverWorld.createExplosion(this, getX(), getY(), getZ(), explosionPower, World.ExplosionSourceType.NONE);
 			}
 			serverWorld.spawnParticles(getKind().particle, getX(), getY(), getZ(), 8, 0.15, 0.15, 0.15, 0.05);
+			Vfx.directed(serverWorld, ModParticles.HIT_SPARK, getPos(), Vec3d.ZERO);
 			discard();
 		}
 	}

@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import net.minecraft.entity.EntityType;
@@ -34,6 +35,9 @@ public class FusionGrenadeEntity extends ThrownItemEntity {
 		if (!getWorld().isClient()) {
 			// ExplosionSourceType.NONE: Schaden und Rueckstoss, aber keine Blockzerstoerung
 			getWorld().createExplosion(this, getX(), getBodyY(0.0625), getZ(), power, World.ExplosionSourceType.NONE);
+			if (getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+				Vfx.explosion(serverWorld, getPos());
+			}
 			discard();
 		}
 	}

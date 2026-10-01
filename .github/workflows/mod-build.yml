@@ -49,6 +49,7 @@ jobs:
           python tools/generate_ship_models.py --check
           python tools/generate_boss_models.py --check
           python tools/generate_icons.py --check
+          python tools/generate_particles.py --check
 
       - uses: actions/setup-java@v4
         with:
