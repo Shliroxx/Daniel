@@ -109,19 +109,34 @@ public class ArenaScreen extends Screen {
 			int y = top + 22 + i * ROW;
 			context.fill(left, y, left + WIDTH, y + ROW - 4, 0xC0101420);
 			context.fill(left, y, left + 2, y + ROW - 4, records.cleared(id) ? 0xFFFFC94A : 0xFF6A4FB3);
-			context.drawTextWithShadow(textRenderer, ArenaChallenge.name(id), left + 8, y + 4, 0xFFFFFFFF);
+			int textRight = left + WIDTH - 92; // Platz bis zum Start-Knopf
+			// Bestzeit rechts in der ersten Zeile, der Name bekommt den Rest; ungeschafft zeigt
+			// der violette statt goldene Balken
+			Integer best = records.bestTicks().get(id);
+			int nameRight = textRight;
+			if (best != null) {
+				Text record = Text.translatable("screen.kingdomomnitrix.arena.best", ArenaManager.formatTime(best));
+				nameRight = textRight - textRenderer.getWidth(record) - 6;
+				context.drawTextWithShadow(textRenderer, record, textRight - textRenderer.getWidth(record), y + 4, 0xFFFFC94A);
+			}
+			context.drawTextWithShadow(textRenderer, trim(ArenaChallenge.name(id).getString(), nameRight - left - 8), left + 8, y + 4, 0xFFFFFFFF);
+			int rounds = challenge.get().waves().size();
 			int enemies = challenge.get().waves().stream().flatMap(List::stream).mapToInt(RiftDefinition.Group::count).sum();
-			String info = Text.translatable("screen.kingdomomnitrix.arena.info", challenge.get().waves().size(), enemies).getString();
+			String info = Text.translatable(rounds == 1 ? "screen.kingdomomnitrix.arena.round" : "screen.kingdomomnitrix.arena.rounds", rounds).getString()
+					+ " · " + Text.translatable(enemies == 1 ? "screen.kingdomomnitrix.arena.enemy" : "screen.kingdomomnitrix.arena.enemies", enemies).getString();
 			if (challenge.get().timeLimit() > 0) {
 				info += "  ⏱ " + challenge.get().timeLimit() / 60 + ":" + String.format("%02d", challenge.get().timeLimit() % 60);
 			}
 			context.drawTextWithShadow(textRenderer, info, left + 8, y + 15, 0xFFB0B8C4);
-			Integer best = records.bestTicks().get(id);
-			Text record = best == null ? Text.translatable("screen.kingdomomnitrix.arena.no_record")
-					: Text.translatable("screen.kingdomomnitrix.arena.best", ArenaManager.formatTime(best));
-			context.drawTextWithShadow(textRenderer, record, left + WIDTH - 92 - textRenderer.getWidth(record), y + 4,
-					best == null ? 0xFF808890 : 0xFFFFC94A);
 		}
+	}
+
+	/** Kuerzt Text mit "…", damit er nicht in den Knopf laeuft. */
+	private String trim(String text, int maxWidth) {
+		if (textRenderer.getWidth(text) <= maxWidth) {
+			return text;
+		}
+		return textRenderer.trimToWidth(text, maxWidth - textRenderer.getWidth("…")) + "…";
 	}
 
 	@Override

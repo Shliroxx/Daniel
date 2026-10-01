@@ -463,6 +463,26 @@ Welten (Vorbild: Galaxie-Mods); eigene, immer andere Generierung mit neuen Erzen
 | Weitere Welten (Insel, Halloween-artig, Sci-Fi-Planet) | TODO → Phase 22 | Weltraumriss + Dimension per JSON vorbereitet |
 | Eigene Sounds für Schiff, Risse, Arena | TODO → Phase 18 | Vanilla-Klänge |
 
+### Phase 13 — Boss: Dr. Nefarious
+
+Entscheidung SANTIQ: Dr. Nefarious; beschwörbar über ein Item und als Arena-Kampf; Phasen + Wut, angekündigte Angriffe,
+Schwachstellen, Arena-Mechanik; Belohnung: neues Keyblade, Kampf wiederholbar.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Nefarious-Mech (GeckoLib, 9 Animationen, Leuchtmaske), Bossleiste mit Phasenfarbe, Sprüche im Chat | IMPLEMENTED | Modell aus `tools/generate_boss_models.py` = PLACEHOLDER-Geometrie |
+| Angriffe mit Ankündigung: Laser (rote Ziellinie → Schuss → Überhitzung), Raketen (rote Ringe am Boden), Stampfer (gelber Ring) | IMPLEMENTED | getestet |
+| Schwachstellen: Rücken ×2, Front ×0,5, überhitzt ×2,5, beim Phasenwechsel unverwundbar | IMPLEMENTED | Rücken −38 / Front −9,5 bei 20 Schaden gemessen |
+| Phase 2 ab 60 % (Arena unter Strom: Elektrosektoren), Wut ab 25 % (Überladung, durch ≥30 Kernschaden unterbrechbar → lange Betäubung) | IMPLEMENTED | Phasen + Überladung getestet; Unterbrechen nur im Code geprüft |
+| Leben skaliert mit Spielerzahl (+50 % je weiterem Spieler) | IMPLEMENTED | nur Einzelspieler getestet |
+| Beschwörung: Nefarious-Kommunikator (Rezept), Landeplatz = Kampfmitte, max. einer im Umkreis von 96 Blöcken | IMPLEMENTED | getestet |
+| Arena: Platin-Pokal (ab Stufe 8) mit Nefarious als einziger Runde | IMPLEMENTED | Sieg 1:23,4 getestet |
+| Belohnung: erster Sieg Omega-Schlüssel + 2 Orichalcum + 5 Raritanium + 800 Bolts + 300 EP; danach 3 Raritanium + 300 Bolts + 120 EP | IMPLEMENTED | beide getestet |
+| Omega-Schlüssel (Keyblade, Passiv: Kritisch, MP-Eile, Finisher+) | IMPLEMENTED | Textur PLACEHOLDER |
+| Arena-Liste: Namen werden gekürzt statt überlappt, Einzahl „1 Runde / 1 Gegner“ | IMPLEMENTED | getestet |
+| Eigene Boss-Musik und Sounds | TODO → Phase 18 | Vanilla-Klänge |
+| Kampf mit 2+ Spielern auf Dedicated Server | TODO → Vertical-Slice-Abnahme | |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

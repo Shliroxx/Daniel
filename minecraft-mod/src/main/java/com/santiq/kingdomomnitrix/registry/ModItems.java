@@ -7,6 +7,7 @@ import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.gadget.SwingshotItem;
 import com.santiq.kingdomomnitrix.quest.QuestBookItem;
 import com.santiq.kingdomomnitrix.space.ShipItem;
+import com.santiq.kingdomomnitrix.boss.NefariousCommunicatorItem;
 import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
@@ -31,6 +32,8 @@ public final class ModItems {
 	// --- Kingdom Hearts ---
 	public static final Item KINGDOM_KEY = register("kingdom_key", keyblade(Rarity.RARE));
 	public static final Item OATHKEEPER = register("oathkeeper", keyblade(Rarity.EPIC));
+	/** Belohnung fuer den ersten Sieg gegen Dr. Nefarious. */
+	public static final Item OMEGA_KEY = register("omega_key", keyblade(Rarity.EPIC));
 	public static final Item KEYBLADE_FORGE = register("keyblade_forge", new BlockItem(ModBlocks.KEYBLADE_FORGE, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item SPELL_CRYSTAL = register("spell_crystal", new SpellCrystalItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
 	public static final Item HEART = register("heart", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
@@ -73,6 +76,8 @@ public final class ModItems {
 
 	// --- Raumfahrt und Erze (Phase 12) ---------------------------------------------------------
 	public static final Item ARENA_TERMINAL = register("arena_terminal", new BlockItem(ModBlocks.ARENA_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));
+	public static final Item NEFARIOUS_COMMUNICATOR = register("nefarious_communicator",
+			new NefariousCommunicatorItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
 	public static final Item APHELION = register("aphelion", new ShipItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
 	public static final Item RARITANIUM_ORE = register("raritanium_ore", new BlockItem(ModBlocks.RARITANIUM_ORE, new Item.Settings()));
 	public static final Item MYTHRIL_ORE = register("mythril_ore", new BlockItem(ModBlocks.MYTHRIL_ORE, new Item.Settings()));

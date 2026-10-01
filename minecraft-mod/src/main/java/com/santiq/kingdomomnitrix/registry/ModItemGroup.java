@@ -24,6 +24,7 @@ public final class ModItemGroup {
 					.entries((context, entries) -> {
 						entries.add(ModItems.KINGDOM_KEY);
 						entries.add(ModItems.OATHKEEPER);
+						entries.add(ModItems.OMEGA_KEY);
 						entries.add(ModItems.KEYBLADE_FORGE);
 						entries.add(ModItems.HEART);
 						context.lookup().getOptionalWrapper(SpellRegistry.KEY).ifPresent(spells ->
@@ -63,6 +64,7 @@ public final class ModItemGroup {
 						entries.add(ModItems.BOLT_CRATE);
 						entries.add(ModItems.WEAPON_TERMINAL);
 						entries.add(ModItems.ARENA_TERMINAL);
+						entries.add(ModItems.NEFARIOUS_COMMUNICATOR);
 						entries.add(ModItems.APHELION);
 						entries.add(ModItems.RARITANIUM_ORE);
 						entries.add(ModItems.MYTHRIL_ORE);

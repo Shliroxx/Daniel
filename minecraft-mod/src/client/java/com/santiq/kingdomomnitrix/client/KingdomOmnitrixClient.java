@@ -25,6 +25,7 @@ import com.santiq.kingdomomnitrix.networking.OpenArenaPayload;
 import com.santiq.kingdomomnitrix.client.npc.NpcRenderer;
 import com.santiq.kingdomomnitrix.client.space.ShipClient;
 import com.santiq.kingdomomnitrix.client.space.ShipRenderer;
+import com.santiq.kingdomomnitrix.client.boss.NefariousRenderer;
 import com.santiq.kingdomomnitrix.client.space.SpaceDimensionEffects;
 import com.santiq.kingdomomnitrix.client.space.SpaceRifts;
 import com.santiq.kingdomomnitrix.client.space.SpaceSkyRenderer;
@@ -74,6 +75,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.NPC, NpcRenderer::new);
 		EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
+		EntityRendererRegistry.register(ModEntities.NEFARIOUS, NefariousRenderer::new);
 		DimensionRenderingRegistry.registerDimensionEffects(KingdomOmnitrix.id("space"), new SpaceDimensionEffects());
 		DimensionRenderingRegistry.registerSkyRenderer(SpaceTravel.SPACE, new SpaceSkyRenderer());
 		DimensionRenderingRegistry.registerCloudRenderer(SpaceTravel.SPACE, context -> {

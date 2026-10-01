@@ -8,6 +8,7 @@ import com.santiq.kingdomomnitrix.enemy.LargeBodyHeartless;
 import com.santiq.kingdomomnitrix.enemy.ShadowHeartless;
 import com.santiq.kingdomomnitrix.enemy.SoldierHeartless;
 import com.santiq.kingdomomnitrix.npc.NpcEntity;
+import com.santiq.kingdomomnitrix.boss.NefariousEntity;
 import com.santiq.kingdomomnitrix.space.ShipEntity;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeEntity;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
@@ -61,6 +62,10 @@ public final class ModEntities {
 	public static final EntityType<ShipEntity> SHIP = register("aphelion",
 			EntityType.Builder.<ShipEntity>create(ShipEntity::new, SpawnGroup.MISC).dimensions(3.0f, 1.4f).maxTrackingRange(10));
 
+	public static final EntityType<NefariousEntity> NEFARIOUS = register("nefarious",
+			EntityType.Builder.<NefariousEntity>create(NefariousEntity::new, SpawnGroup.MONSTER).dimensions(2.4f, 3.9f).makeFireImmune()
+					.maxTrackingRange(12));
+
 	private ModEntities() {
 	}
 
@@ -71,6 +76,7 @@ public final class ModEntities {
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(SHADOW, ShadowHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(NPC, NpcEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(NEFARIOUS, NefariousEntity.createAttributes());
 		// Natuerliche Spawns (nur in Mod-Welten wie Traverse Town, die Biome listen sie): im Dunkeln, Bodentypen auf festem Grund.
 		SpawnRestriction.register(SHADOW, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
 		SpawnRestriction.register(SOLDIER, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);

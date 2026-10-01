@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.5.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.6.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -75,6 +75,17 @@ oder Rechtsklick mit dem Gadget). Beim Tod fallen Gadgets wie normale Items (au�
   Sieg: Bolts, Helden-EP, Material, Bestzeit. Ein Arena-Terminal lässt sich auch selbst bauen (Kampffläche: Radius 12 um das Terminal).
 - **Materialien**: Raritanium → Waffen-Aufrüstungen (Stufe 4–5), Mythril und Orichalcum → Keyblade-Upgrades.
 
+### Boss: Dr. Nefarious
+Der Erzschurke aus Ratchet & Clank in seinem Kampf-Mech. **Nefarious-Kommunikator** benutzen → er landet 8 Blöcke vor dir;
+oder im Arena-Terminal den **Platin-Pokal** wählen (ab Heldenstufe 8).
+- Jeder Angriff wird angekündigt: **rote Linie** = Laser (danach überhitzt er), **rote Ringe** = Raketeneinschläge,
+  **gelber Ring** = Stampfer. Aus den Markierungen gehen!
+- **Schwachstellen:** Rücken doppelter Schaden, Panzerfront nur halber; überhitzt (Rauch, Lava-Tropfen) 2,5-facher Schaden.
+- **Phase 2** (60 %): die Arena steht unter Strom, Elektrofelder wandern über den Boden.
+  **Wut** (25 %): regelmäßige Überladung — schnell 30 Schaden auf ihn, sonst gibt es eine große Explosion.
+- Erster Sieg: **Omega-Schlüssel** (neues Keyblade), Orichalcum, Raritanium, 800 Bolts. Danach jederzeit wiederholbar
+  für Raritanium und Bolts. Mit mehreren Spielern hat er mehr Leben.
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -115,6 +126,7 @@ Bolt-Kiste: 8 Bretter um 1 Eisennugget
 Quest-Buch (formlos): Buch + Goldnugget + Feder
 Aphelion: Glas Enderauge Glas / Eisenblock Diamantblock Eisenblock / Schmelzofen Redstoneblock Schmelzofen
 Arena-Terminal: Gold Glocke Gold / Eisen Raritanium Eisen / Eisen Eisen Eisen
+Nefarious-Kommunikator: Raritanium Amethyst Raritanium / Kupfer Echo-Splitter Kupfer / Raritanium Amethyst Raritanium
 Hi-Potion (formlos): Glasflasche + glitzernde Melonenscheibe + Zucker
 Paopu-Frucht (formlos): Apfel + Glowstonestaub + Herz
 ```
@@ -130,7 +142,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.5.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.6.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -172,7 +184,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.5.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.6.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.

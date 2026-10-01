@@ -88,6 +88,13 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Außerhalb der Stadt Mythril/Raritanium/Orichalcum suchen, Keyblade und Combuster auf die höchste Stufe bringen
 - [ ] Rückweg: im All nach unten fliegen (unter Y 0) oder in den Riss „Heimatwelt“
 
+### Phase 13 — Boss Dr. Nefarious
+- [ ] Nefarious-Kommunikator herstellen (Raritanium aus dem All/Traverse Town, Echo-Splitter aus der Antiken Stadt) und benutzen
+- [ ] Angriffe lesen: rote Linie, rote Ringe, gelber Ring — fair angekündigt oder zu schnell?
+- [ ] Von hinten angreifen und nach dem Laser (überhitzt) zuschlagen — fühlt sich die Schwachstelle gut an?
+- [ ] Phase 2 und Wut erleben, Überladung unterbrechen; Omega-Schlüssel ausprobieren
+- [ ] Platin-Pokal in der Arena spielen; wenn möglich zu zweit (mehr Leben, geteilte Belohnung)
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

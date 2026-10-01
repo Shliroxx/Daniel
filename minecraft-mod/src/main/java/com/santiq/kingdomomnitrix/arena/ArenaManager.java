@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.arena;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.boss.NefariousEntity;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
 import com.santiq.kingdomomnitrix.enemy.RiftDefinition;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -39,6 +40,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -263,7 +265,7 @@ public final class ArenaManager {
 		Text title = wave + 1 >= session.challenge.waves().size()
 				? Text.translatable("arena.kingdomomnitrix.final_round").formatted(Formatting.RED)
 				: Text.translatable("arena.kingdomomnitrix.round", wave + 1).formatted(Formatting.GOLD);
-		announce(world, session.participants, title, Text.translatable("arena.kingdomomnitrix.enemies", session.alive.size()).formatted(Formatting.GRAY),
+		announce(world, session.participants, title, enemies(session.alive.size()).formatted(Formatting.GRAY),
 				SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
 	}
 
@@ -283,6 +285,9 @@ public final class ArenaManager {
 		entity.refreshPositionAndAngles(x + 0.5, y, z + 0.5, random.nextFloat() * 360.0f, 0.0f);
 		if (entity instanceof MobEntity mob) {
 			mob.initialize(world, world.getLocalDifficulty(mob.getBlockPos()), SpawnReason.EVENT, null);
+			if (mob instanceof NefariousEntity boss) {
+				boss.setHome(session.center);
+			}
 			if (mob instanceof HeartlessEntity heartless) {
 				heartless.applyScaling(level, random.nextFloat() < session.challenge.eliteChance());
 			}
@@ -303,7 +308,7 @@ public final class ArenaManager {
 		float inWave = waveSize == 0 ? 1.0f : 1.0f - (float) session.alive.size() / waveSize;
 		session.bar.setPercent(MathHelper.clamp((wave + (session.pause > 0 ? 1.0f : inWave)) / total, 0.0f, 1.0f));
 		int limit = session.challenge.timeLimit() * 20;
-		Text name = Text.translatable("arena.kingdomomnitrix.bar", ArenaChallenge.name(session.id), wave + 1, total, session.alive.size());
+		Text name = Text.translatable("arena.kingdomomnitrix.bar", ArenaChallenge.name(session.id), wave + 1, total, enemies(session.alive.size()));
 		if (limit > 0) {
 			long left = Math.max(0, limit + COUNTDOWN_TICKS - (world.getTime() - session.startTick)) / 20;
 			name = name.copy().append(Text.literal(String.format("  ⏱ %d:%02d", left / 60, left % 60)));
@@ -358,6 +363,10 @@ public final class ArenaManager {
 		}
 		session.alive.clear();
 		session.bar.clearPlayers();
+	}
+
+	private static MutableText enemies(int count) {
+		return Text.translatable(count == 1 ? "arena.kingdomomnitrix.enemy" : "arena.kingdomomnitrix.enemies", count);
 	}
 
 	public static String formatTime(int ticks) {
