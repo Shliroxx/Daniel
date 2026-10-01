@@ -38,10 +38,11 @@ jobs:
       - name: Ressourcen pruefen (Uebersetzungen, Modelle, Rezepte, Loot)
         run: python tools/check_assets.py
 
-      - name: Texturen pruefen
+      - name: Texturen und Alien-Modelle pruefen
         run: |
           pip install --quiet pillow
           python tools/generate_textures.py --check
+          python tools/generate_alien_models.py --check
 
       - uses: actions/setup-java@v4
         with:

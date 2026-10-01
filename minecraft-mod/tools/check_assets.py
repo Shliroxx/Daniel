@@ -9,7 +9,7 @@ Geprueft wird:
   * jedes Item hat einen Namen in beiden Sprachen
   * Rezepte verweisen nur auf existierende Mod-Items, Muster und Schluessel passen zusammen
   * Loot-Tabellen verweisen nur auf existierende Mod-Items
-  * Alien-Definitionen: Pflichtfelder, bekannte Faehigkeits-Typen, Namen und Faehigkeiten uebersetzt
+  * Alien-Definitionen: Pflichtfelder, bekannte Faehigkeits-Typen, Uebersetzungen, Koerper-Dateien
 
 Aufruf aus dem Ordner minecraft-mod/:  python tools/check_assets.py [-v]
 Rueckgabe: 0 = alles in Ordnung, 1 = Fehler gefunden (Details im Log).
@@ -162,6 +162,12 @@ def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
                 report.error("Alien %s: Pflichtfeld %s fehlt", name, field)
         if f"alien.{MOD_ID}.{name}" not in lang:
             report.error("Alien %s hat keinen Namen in der Uebersetzung", name)
+        model_ns, _, model_path = str(alien.get("model", "")).partition(":")
+        if model_ns == MOD_ID:
+            for rel in (f"geo/entity/alien/{model_path}.geo.json", f"animations/entity/alien/{model_path}.animation.json",
+                        f"textures/entity/alien/{model_path}.png"):
+                if not (ASSETS / rel).is_file():
+                    report.error("Alien %s: Koerper-Datei fehlt: %s", name, rel)
         slots = alien.get("abilities", [])
         if not 1 <= len(slots) <= 3:
             report.error("Alien %s: 1 bis 3 Faehigkeiten erlaubt, gefunden %d", name, len(slots))

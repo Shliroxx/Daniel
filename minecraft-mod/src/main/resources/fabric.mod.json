@@ -4,18 +4,31 @@
 	"version": "${version}",
 	"name": "Kingdom Omnitrix",
 	"description": "Action-Adventure-Fan-Mod: Kingdom Hearts, Ben 10 und Ratchet & Clank in Minecraft. Keyblades und Magie, Omnitrix-Transformationen, Herzlose, Bolts, Waffen und Gadgets.",
-	"authors": ["SANTIQ"],
+	"authors": [
+		"SANTIQ"
+	],
 	"license": "MIT",
 	"icon": "assets/kingdomomnitrix/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": ["com.santiq.kingdomomnitrix.KingdomOmnitrix"],
-		"client": ["com.santiq.kingdomomnitrix.client.KingdomOmnitrixClient"]
+		"main": [
+			"com.santiq.kingdomomnitrix.KingdomOmnitrix"
+		],
+		"client": [
+			"com.santiq.kingdomomnitrix.client.KingdomOmnitrixClient"
+		]
 	},
 	"depends": {
-		"fabricloader": ">=0.16.0",
+		"fabricloader": ">=0.17.0",
 		"minecraft": "~1.21.1",
 		"java": ">=21",
-		"fabric-api": ">=0.116.0"
-	}
+		"fabric-api": ">=0.116.0",
+		"geckolib": ">=4.9.0"
+	},
+	"mixins": [
+		{
+			"config": "kingdomomnitrix.client.mixins.json",
+			"environment": "client"
+		}
+	]
 }
