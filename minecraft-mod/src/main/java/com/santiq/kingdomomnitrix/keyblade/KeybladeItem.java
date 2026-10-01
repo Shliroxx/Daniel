@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.keyblade;
 
+import com.santiq.kingdomomnitrix.combat.ComboWeapon;
 import com.santiq.kingdomomnitrix.magic.Spell;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.util.ItemData;
@@ -18,9 +19,10 @@ import net.minecraft.world.World;
 
 /**
  * Schluesselschwert "Koenigsschluessel".
- * Rechtsklick wirkt den gewaehlten Zauber, Schleichen + Rechtsklick wechselt ihn.
+ * Linksklick: Combo (3 Schlaege mit Finisher), Halten: schwerer Angriff (siehe {@link ComboWeapon}).
+ * Rechtsklick wirkt den gewaehlten Zauber, Schleichen + Rechtsklick wechselt ihn (Prototyp bis Phase 6).
  */
-public class KeybladeItem extends SwordItem {
+public class KeybladeItem extends SwordItem implements ComboWeapon {
 	private static final String SPELL_KEY = "spell";
 
 	public KeybladeItem(ToolMaterial toolMaterial, Settings settings) {

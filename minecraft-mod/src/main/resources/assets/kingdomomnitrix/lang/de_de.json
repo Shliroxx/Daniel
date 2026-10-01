@@ -37,7 +37,7 @@
   "message.kingdomomnitrix.scan": "Analyse – %s: %s/%s LP, Rüstung %s, Angriff %s",
   "tooltip.kingdomomnitrix.spell": "Zauber: %s",
   "tooltip.kingdomomnitrix.ammo": "Munition: %s/%s",
-  "tooltip.kingdomomnitrix.kingdom_key.usage": "Rechtsklick: Zauber wirken · Schleichen + Rechtsklick: Zauber wechseln",
+  "tooltip.kingdomomnitrix.kingdom_key.usage": "Linksklick: Combo · Halten: schwerer Angriff · X: Blocken · Rechtsklick: Zauber",
   "tooltip.kingdomomnitrix.omnitrix.usage": "Im Inventar tragen · Rechtsklick oder G: Alien-Rad · R/V/B: Fähigkeiten",
   "tooltip.kingdomomnitrix.combuster.usage": "Rechtsklick: Plasma feuern · lädt automatisch mit Bolts nach",
   "tooltip.kingdomomnitrix.fusion_grenade.usage": "Rechtsklick: werfen · explodiert ohne Blockschaden",
@@ -101,5 +101,8 @@
   "commands.kingdomomnitrix.transform.success": "%s wurde verwandelt bzw. zurückverwandelt.",
   "commands.kingdomomnitrix.transform.failed": "%s: nicht möglich (%s).",
   "commands.kingdomomnitrix.dna": "%s erhält eine DNA-Probe: %s",
-  "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: aktiv %s · Rest %s s · Nachladen %s s"
+  "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: aktiv %s · Rest %s s · Nachladen %s s",
+  "key.kingdomomnitrix.dodge": "Kampf: Ausweichen",
+  "key.kingdomomnitrix.guard": "Kampf: Blocken (halten)",
+  "key.kingdomomnitrix.lock_on": "Kampf: Lock-On / Ziel wechseln"
 }

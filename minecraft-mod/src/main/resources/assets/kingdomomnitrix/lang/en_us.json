@@ -37,7 +37,7 @@
   "message.kingdomomnitrix.scan": "Scan – %s: %s/%s HP, armor %s, attack %s",
   "tooltip.kingdomomnitrix.spell": "Spell: %s",
   "tooltip.kingdomomnitrix.ammo": "Ammo: %s/%s",
-  "tooltip.kingdomomnitrix.kingdom_key.usage": "Right-click: cast · Sneak + right-click: switch spell",
+  "tooltip.kingdomomnitrix.kingdom_key.usage": "Left-click: combo · Hold: heavy attack · X: guard · Right-click: cast",
   "tooltip.kingdomomnitrix.omnitrix.usage": "Carry in inventory · Right-click or G: alien wheel · R/V/B: abilities",
   "tooltip.kingdomomnitrix.combuster.usage": "Right-click: fire plasma · reloads automatically with bolts",
   "tooltip.kingdomomnitrix.fusion_grenade.usage": "Right-click: throw · explodes without breaking blocks",
@@ -101,5 +101,8 @@
   "commands.kingdomomnitrix.transform.success": "%s was transformed / reverted.",
   "commands.kingdomomnitrix.transform.failed": "%s: not possible (%s).",
   "commands.kingdomomnitrix.dna": "%s received a DNA sample: %s",
-  "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: active %s · left %s s · recharge %s s"
+  "commands.kingdomomnitrix.debug.omnitrix": "Omnitrix: active %s · left %s s · recharge %s s",
+  "key.kingdomomnitrix.dodge": "Combat: dodge",
+  "key.kingdomomnitrix.guard": "Combat: guard (hold)",
+  "key.kingdomomnitrix.lock_on": "Combat: lock-on / switch target"
 }

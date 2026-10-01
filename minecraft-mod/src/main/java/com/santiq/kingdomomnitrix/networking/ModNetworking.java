@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.networking;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
+import com.santiq.kingdomomnitrix.combat.CombatManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -22,6 +23,20 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(TransformRequestPayload.ID, TransformRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ComboAttackPayload.ID, ComboAttackPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DodgePayload.ID, DodgePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(GuardPayload.ID, GuardPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(LockOnPayload.ID, LockOnPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(CombatAnimationPayload.ID, CombatAnimationPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(ComboAttackPayload.ID, (payload, context) ->
+				CombatManager.attack(context.player(), payload.heavy() ? CombatManager.Attack.HEAVY : CombatManager.Attack.LIGHT));
+		ServerPlayNetworking.registerGlobalReceiver(DodgePayload.ID, (payload, context) ->
+				CombatManager.dodge(context.player(), payload.directionX(), payload.directionZ()));
+		ServerPlayNetworking.registerGlobalReceiver(GuardPayload.ID, (payload, context) ->
+				CombatManager.setGuard(context.player(), payload.active()));
+		ServerPlayNetworking.registerGlobalReceiver(LockOnPayload.ID, (payload, context) ->
+				CombatManager.setLockTarget(context.player(), payload.entityId()));
 
 		ServerPlayNetworking.registerGlobalReceiver(TransformRequestPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();

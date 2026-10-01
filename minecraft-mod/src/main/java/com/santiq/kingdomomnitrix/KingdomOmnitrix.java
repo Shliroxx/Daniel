@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.ability.AbilityRegistry;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaDrops;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.command.HeroCommand;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
@@ -44,6 +45,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		ModItemGroup.register();
 		TransformationManager.register();
 		DnaDrops.register();
+		CombatManager.register();
 		ModNetworking.register();
 		HeroCommand.register();
 		registerEvents();

@@ -23,6 +23,9 @@ public final class ModKeyBindings {
 			register("key.kingdomomnitrix.ability_2", GLFW.GLFW_KEY_V),
 			register("key.kingdomomnitrix.ability_3", GLFW.GLFW_KEY_B),
 	};
+	public static final KeyBinding DODGE = register("key.kingdomomnitrix.dodge", GLFW.GLFW_KEY_LEFT_ALT);
+	public static final KeyBinding GUARD = register("key.kingdomomnitrix.guard", GLFW.GLFW_KEY_X);
+	public static final KeyBinding LOCK_ON = register("key.kingdomomnitrix.lock_on", GLFW.GLFW_KEY_Z);
 
 	private ModKeyBindings() {
 	}
