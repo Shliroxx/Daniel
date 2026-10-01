@@ -43,6 +43,14 @@ public final class ModItems {
 					.build())));
 	public static final Item SHADOW_SPAWN_EGG = register("shadow_spawn_egg",
 			new SpawnEggItem(ModEntities.SHADOW, 0x111111, 0xFFD800, new Item.Settings()));
+	public static final Item SOLDIER_SPAWN_EGG = register("soldier_spawn_egg",
+			new SpawnEggItem(ModEntities.SOLDIER, 0x1B2A4A, 0xC9CDD3, new Item.Settings()));
+	public static final Item LARGE_BODY_SPAWN_EGG = register("large_body_spawn_egg",
+			new SpawnEggItem(ModEntities.LARGE_BODY, 0x3B2A5A, 0xE0A030, new Item.Settings()));
+	public static final Item AIR_SOLDIER_SPAWN_EGG = register("air_soldier_spawn_egg",
+			new SpawnEggItem(ModEntities.AIR_SOLDIER, 0x2A6E3A, 0xFFD800, new Item.Settings()));
+	public static final Item DARKBALL_SPAWN_EGG = register("darkball_spawn_egg",
+			new SpawnEggItem(ModEntities.DARKBALL, 0x0A0A12, 0x8E44AD, new Item.Settings()));
 
 	// --- Ben 10 ---
 	public static final Item OMNITRIX = register("omnitrix", new OmnitrixItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
@@ -63,6 +71,7 @@ public final class ModItems {
 	public static final Item FIRE_ORB = register("fire_orb", new Item(new Item.Settings()));
 	public static final Item ICE_ORB = register("ice_orb", new Item(new Item.Settings()));
 	public static final Item PLASMA_SHOT = register("plasma_shot", new Item(new Item.Settings()));
+	public static final Item DARK_ORB = register("dark_orb", new Item(new Item.Settings()));
 	public static final Item CRYSTAL_SHARD = register("crystal_shard", new Item(new Item.Settings()));
 
 	private ModItems() {

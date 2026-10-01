@@ -32,6 +32,10 @@ public final class ModItemGroup {
 						entries.add(ModItems.HI_POTION);
 						entries.add(ModItems.PAOPU_FRUIT);
 						entries.add(ModItems.SHADOW_SPAWN_EGG);
+						entries.add(ModItems.SOLDIER_SPAWN_EGG);
+						entries.add(ModItems.LARGE_BODY_SPAWN_EGG);
+						entries.add(ModItems.AIR_SOLDIER_SPAWN_EGG);
+						entries.add(ModItems.DARKBALL_SPAWN_EGG);
 						entries.add(ModItems.OMNITRIX);
 						// Eine DNA-Probe pro Alien aus den geladenen Datenpaketen (nur in einer Welt verfuegbar).
 						context.lookup().getOptionalWrapper(AlienRegistry.KEY).ifPresent(aliens ->

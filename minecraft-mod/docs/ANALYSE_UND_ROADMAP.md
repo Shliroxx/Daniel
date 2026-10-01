@@ -358,6 +358,26 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Aero, Gravity, Reflect, Stop | TODO | nach der Vertical Slice |
 | Eigene VFX/Sounds für Zauber | PROTOTYPE | Vanilla-Partikel und -Sounds; Phase 17/18 |
 
+### Phase 7 — Herzlose
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| `HeartlessEntity`-Basis: GeckoLib-Animationen (idle/walk/attack/special/emerge), Auftauchen, kein Tageslicht-Brand | IMPLEMENTED | |
+| Skalierung mit Heldenstufe (+8 % Leben, +5 % Schaden pro Stufe), Elite-Variante (×2 Leben, ×1,5 Schaden, Flammen-Aura, Name) | IMPLEMENTED | Entscheidung SANTIQ: mitwachsend |
+| Schatten: taucht ab (unsichtbar, unverwundbar), springt am Ziel heraus | IMPLEMENTED | KI im echten Kampf noch zu testen |
+| Soldat: Nahkampf + Sprung-Tritt | IMPLEMENTED | |
+| Großkörper: Front blockt 85 % (nur von hinten verwundbar), Rammangriff | IMPLEMENTED | |
+| Luftsoldat: Flug, kreist, Sturzflug | IMPLEMENTED | |
+| Dunkelball: Flug, Dunkelkugeln (Schwäche), Teleport nach Treffer | IMPLEMENTED | |
+| GeckoLib-Modelle aller 5 Typen | PLACEHOLDER | `tools/generate_heartless_models.py`, in Blockbench verfeinerbar; im Client sichtbar ✅ |
+| Spawn: **keine** natürlichen Oberwelt-Spawns | IMPLEMENTED | Entscheidung SANTIQ: nur Risse + Mod-Dimensionen |
+| Dunkelheitsrisse: nachts nahe Spielern, 3 Wellen, Bossleiste, Belohnung (Bolts, Herzen, Kristall/DNA-Chance, Helden-EP) | IMPLEMENTED | im Client getestet; speichert Fortschritt |
+| Riss-Definitionen als JSON (Mindeststufe, Gewicht, Wellen, Elite-Chance, Belohnung) | IMPLEMENTED | 3 Risse: Schattenschwarm (ab 1), Soldatentrupp (ab 3), Schwerer Angriff (ab 6) |
+| Gamerule `kingdomomnitrixDarknessRifts` | IMPLEMENTED | Casual-Spieler können Risse abschalten |
+| `/hero rift [id]` | IMPLEMENTED | |
+| Spawns in Mod-Dimensionen | TODO → Phase 12 | |
+| Eigene Herzlosen-Sounds | TODO → Phase 18 | aktuell Endermiten-Sounds |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

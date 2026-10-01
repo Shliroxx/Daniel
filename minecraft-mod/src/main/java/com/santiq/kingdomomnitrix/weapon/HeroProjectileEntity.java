@@ -33,7 +33,8 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		ICE(4.0f, true, ParticleTypes.SNOWFLAKE),
 		PLASMA(6.0f, false, ParticleTypes.ELECTRIC_SPARK),
 		CRYSTAL(5.0f, false, ParticleTypes.END_ROD),
-		WRENCH(8.0f, false, ParticleTypes.CRIT);
+		WRENCH(8.0f, false, ParticleTypes.CRIT),
+		DARK(4.0f, true, ParticleTypes.SQUID_INK);
 
 		public final float damage;
 		public final boolean magic;
@@ -63,6 +64,18 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		return projectile;
 	}
 
+	/** Feuert vom Schuetzen aus auf ein Ziel (fuer Gegner, die nicht ueber Blickrichtung zielen). */
+	public static HeroProjectileEntity shootAt(World world, LivingEntity owner, Item display, Entity target, float speed, float divergence) {
+		HeroProjectileEntity projectile = new HeroProjectileEntity(world, owner);
+		projectile.setItem(new ItemStack(display));
+		double dx = target.getX() - owner.getX();
+		double dy = target.getBodyY(0.5) - projectile.getY();
+		double dz = target.getZ() - owner.getZ();
+		projectile.setVelocity(dx, dy, dz, speed, divergence);
+		world.spawnEntity(projectile);
+		return projectile;
+	}
+
 	public HeroProjectileEntity withDamage(float damage) {
 		this.damageOverride = damage;
 		return this;
@@ -81,6 +94,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		}
 		if (stack.isOf(ModItems.OMNIWRENCH)) {
 			return Kind.WRENCH;
+		}
+		if (stack.isOf(ModItems.DARK_ORB)) {
+			return Kind.DARK;
 		}
 		return Kind.PLASMA;
 	}
@@ -117,6 +133,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		target.damage(source, damageOverride >= 0.0f ? damageOverride : kind.damage);
 		if (kind == Kind.FIRE) {
 			target.setOnFireFor(5.0f);
+		}
+		if (kind == Kind.DARK && target instanceof LivingEntity living) {
+			living.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 80, 0), getOwner());
 		}
 		if (kind == Kind.ICE && target instanceof LivingEntity living) {
 			living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 2), getOwner());

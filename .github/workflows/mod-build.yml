@@ -44,6 +44,7 @@ jobs:
           python tools/generate_textures.py --check
           python tools/generate_alien_models.py --check
           python tools/generate_player_animations.py --check
+          python tools/generate_heartless_models.py --check
 
       - uses: actions/setup-java@v4
         with:

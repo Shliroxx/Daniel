@@ -10,7 +10,7 @@
         },
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.5
+          "chance": 1.0
         }
       ],
       "entries": [
@@ -20,7 +20,7 @@
           "functions": [
             {
               "function": "minecraft:set_count",
-              "count": 1,
+              "count": 2,
               "add": false
             }
           ]
@@ -36,7 +36,7 @@
         },
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.04
+          "chance": 0.12
         }
       ],
       "entries": [

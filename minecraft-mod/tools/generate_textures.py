@@ -286,6 +286,7 @@ def item_textures() -> dict[str, Image.Image]:
 
     t["fire_orb"] = orb("FFF3B0", "FF9A1F", "D9380B")
     t["ice_orb"] = orb("FFFFFF", "9BE7FF", "3A8DDB")
+    t["dark_orb"] = orb("8E44AD", "2B1A40", "0A0A12")
     t["plasma_shot"] = orb("FFFFFF", "FF66E0", "8A2BE2")
     t["crystal_shard"] = from_ascii([
         "",
@@ -353,20 +354,6 @@ def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
             "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
 
 
-def shadow_texture(rng: random.Random) -> Image.Image:
-    """64x64 im Zombie-Layout: komplett schwarz-violett, gelbe Augen vorne am Kopf."""
-    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    regions = [(0, 0, 32, 16), (0, 16, 56, 32), (16, 48, 48, 64)]
-    for x0, y0, x1, y1 in regions:
-        for y in range(y0, y1):
-            for x in range(x0, x1):
-                shade = rng.randint(8, 26)
-                img.putpixel((x, y), (shade, shade // 2, shade + 10, 255))
-    for x, y in [(9, 11), (10, 11), (9, 12), (10, 12), (13, 11), (14, 11), (13, 12), (14, 12)]:
-        img.putpixel((x, y), hexc("FFE14D"))
-    return img
-
-
 def mod_icon(items: dict[str, Image.Image]) -> Image.Image:
     icon = Image.new("RGBA", (64, 64), hexc("14161F"))
     for (name, (x, y)) in {"kingdom_key": (0, 0), "omnitrix": (32, 0), "bolt": (0, 32), "combuster": (32, 32)}.items():
@@ -379,7 +366,6 @@ def build_all(rng: random.Random) -> dict[str, Image.Image]:
     items = item_textures()
     out: dict[str, Image.Image] = {f"textures/item/{k}.png": v for k, v in items.items()}
     out.update({f"textures/block/{k}.png": v for k, v in crate_textures(rng).items()})
-    out["textures/entity/shadow.png"] = shadow_texture(rng)
     out["icon.png"] = mod_icon(items)
     return out
 

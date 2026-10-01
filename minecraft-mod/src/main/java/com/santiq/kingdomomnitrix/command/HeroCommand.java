@@ -11,12 +11,14 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
+import com.santiq.kingdomomnitrix.enemy.RiftSpawner;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellDefinition;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -116,6 +118,10 @@ public final class HeroCommand {
 					ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mp", target.getDisplayName()), true);
 					return 1;
 				}))
+				.then(CommandManager.literal("rift")
+						.executes(ctx -> openRift(ctx, Optional.empty()))
+						.then(CommandManager.argument("rift", IdentifierArgumentType.identifier())
+								.executes(ctx -> openRift(ctx, Optional.of(IdentifierArgumentType.getIdentifier(ctx, "rift"))))))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),
@@ -164,6 +170,15 @@ public final class HeroCommand {
 		int actual = MagicManager.get(target).level(spellId);
 		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.spell", target.getDisplayName(),
 				Text.translatable(SpellDefinition.translationKey(spellId, actual)), actual), true);
+		return 1;
+	}
+
+	private static int openRift(CommandContext<ServerCommandSource> ctx, Optional<Identifier> riftId) throws CommandSyntaxException {
+		ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+		if (RiftSpawner.openNear(player.getServerWorld(), player, riftId).isEmpty()) {
+			ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.rift.failed"));
+			return 0;
+		}
 		return 1;
 	}
 

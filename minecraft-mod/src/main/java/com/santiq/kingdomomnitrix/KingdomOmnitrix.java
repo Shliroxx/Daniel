@@ -6,6 +6,8 @@ import com.santiq.kingdomomnitrix.alien.DnaDrops;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.command.HeroCommand;
+import com.santiq.kingdomomnitrix.enemy.RiftRegistry;
+import com.santiq.kingdomomnitrix.enemy.RiftSpawner;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeRegistry;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
@@ -43,6 +45,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		AlienRegistry.register();
 		KeybladeRegistry.register();
 		SpellRegistry.register();
+		RiftRegistry.register();
 		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();
@@ -52,6 +55,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		TransformationManager.register();
 		DnaDrops.register();
 		CombatManager.register();
+		RiftSpawner.register();
 		ModNetworking.register();
 		HeroCommand.register();
 		registerEvents();
