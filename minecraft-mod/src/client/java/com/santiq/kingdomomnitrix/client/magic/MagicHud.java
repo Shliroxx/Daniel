@@ -85,7 +85,7 @@ public final class MagicHud {
 		boolean charging = state.isCharging(now);
 		float fraction = charging
 				? state.chargeProgress(now, MagicManager.chargeTicks(player))
-				: state.currentMp(now, MagicManager.regenPerSecond(player)) / MagicState.MAX_MP;
+				: state.currentMp(now, MagicManager.regenPerSecond(player), MagicManager.maxMp(player)) / MagicManager.maxMp(player);
 		int filled = Math.round(barWidth * Math.max(0.0f, Math.min(1.0f, fraction)));
 		if (filled > 0) {
 			context.fill(x + PADDING, cy, x + PADDING + filled, cy + BAR_HEIGHT, charging ? CHARGE_COLOR : MP_COLOR);

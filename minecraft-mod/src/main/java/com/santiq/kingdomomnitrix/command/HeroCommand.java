@@ -16,6 +16,11 @@ import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellDefinition;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroData;
+import com.santiq.kingdomomnitrix.progression.AlienMastery;
+import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityDefinition;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityRegistry;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.npc.NpcDefinition;
 import com.santiq.kingdomomnitrix.npc.NpcRegistry;
@@ -56,6 +61,8 @@ public final class HeroCommand {
 			CommandSource.suggestIdentifiers(QuestRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> NPC_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(NpcRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
+	private static final SuggestionProvider<ServerCommandSource> HERO_ABILITY_SUGGESTIONS = (ctx, builder) ->
+			CommandSource.suggestIdentifiers(HeroAbilityRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
@@ -97,9 +104,13 @@ public final class HeroCommand {
 				.then(CommandManager.literal("xp")
 						.then(CommandManager.literal("add")
 								.then(targeted(CommandManager.argument("amount", IntegerArgumentType.integer(1)),
-										(ctx, target) -> change(ctx, target,
-												data -> data.addExperience(IntegerArgumentType.getInteger(ctx, "amount")),
-												"commands.kingdomomnitrix.level")))))
+										(ctx, target) -> {
+											// wie im Spiel: Aufstiegsmeldung, Heilung, neue Faehigkeiten
+											HeroData after = HeroDataAccess.grantExperience(target, IntegerArgumentType.getInteger(ctx, "amount"));
+											ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.level",
+													target.getDisplayName(), after.level()), true);
+											return 1;
+										}))))
 				.then(CommandManager.literal("alien")
 						.then(CommandManager.literal("unlock")
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
@@ -170,6 +181,30 @@ public final class HeroCommand {
 											return 1;
 										})))
 						.then(targeted(CommandManager.literal("list"), HeroCommand::listQuests)))
+				.then(CommandManager.literal("ability")
+						.then(CommandManager.literal("toggle")
+								.then(targeted(CommandManager.argument("ability", IdentifierArgumentType.identifier()).suggests(HERO_ABILITY_SUGGESTIONS),
+										(ctx, target) -> toggleAbility(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "ability")))))
+						.then(targeted(CommandManager.literal("clear"), (ctx, target) -> {
+							ProgressionManager.unequipAll(target);
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.ability_clear", target.getDisplayName()), true);
+							return 1;
+						})))
+				.then(CommandManager.literal("mastery")
+						.then(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS)
+								.then(targeted(CommandManager.argument("level", IntegerArgumentType.integer(1, AlienMastery.MAX_LEVEL)),
+										(ctx, target) -> {
+											Identifier alien = IdentifierArgumentType.getIdentifier(ctx, "alien");
+											int level = IntegerArgumentType.getInteger(ctx, "level");
+											if (AlienRegistry.get(ctx.getSource().getRegistryManager(), alien).isEmpty()) {
+												ctx.getSource().sendError(Text.literal("Unbekanntes Alien: " + alien));
+												return 0;
+											}
+											AlienMasteryManager.setLevel(target, alien, level);
+											ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mastery",
+													TransformationManager.alienName(alien), level, target.getDisplayName()), true);
+											return 1;
+										}))))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),
@@ -181,6 +216,22 @@ public final class HeroCommand {
 										(ctx, target) -> change(ctx, target,
 												data -> data.withFlag(StringArgumentType.getString(ctx, "flag"), false),
 												"commands.kingdomomnitrix.flag"))))));
+	}
+
+	private static int toggleAbility(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, Identifier ability) {
+		ProgressionManager.Result result = ProgressionManager.toggle(target, ability);
+		switch (result) {
+			case EQUIPPED, UNEQUIPPED -> {
+				ctx.getSource().sendFeedback(() -> Text.translatable(result == ProgressionManager.Result.EQUIPPED
+								? "commands.kingdomomnitrix.ability_on" : "commands.kingdomomnitrix.ability_off",
+						HeroAbilityDefinition.name(ability), target.getDisplayName()), true);
+				return 1;
+			}
+			case LOCKED -> ctx.getSource().sendError(Text.translatable("message.kingdomomnitrix.ability_locked"));
+			case NO_AP -> ctx.getSource().sendError(Text.translatable("message.kingdomomnitrix.ability_no_ap"));
+			default -> ctx.getSource().sendError(Text.translatable("message.kingdomomnitrix.ability_unknown"));
+		}
+		return 0;
 	}
 
 	private static int spawnNpc(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
@@ -297,6 +348,12 @@ public final class HeroCommand {
 		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.omnitrix",
 				state.activeAlien().map(Identifier::toString).orElse("-"),
 				state.remainingTicks(now) / 20, state.rechargeRemaining(now) / 20), false);
+		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.abilities",
+				ProgressionManager.usedAp(target), ProgressionManager.totalAp(target), joinIds(ProgressionManager.get(target).equipped())), false);
+		AlienMastery mastery = AlienMasteryManager.get(target);
+		String masteryText = mastery.experience().isEmpty() ? "-" : mastery.experience().keySet().stream().sorted()
+				.map(alien -> alien.getPath() + " " + mastery.level(alien)).collect(Collectors.joining(", "));
+		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.mastery", masteryText), false);
 		return 1;
 	}
 

@@ -89,7 +89,7 @@ public final class HeroStatusHud {
 		MagicState magic = MagicManager.get(player);
 		boolean charging = magic.isCharging(now);
 		float mpFraction = charging ? magic.chargeProgress(now, MagicManager.chargeTicks(player))
-				: magic.currentMp(now, MagicManager.regenPerSecond(player)) / MagicState.MAX_MP;
+				: magic.currentMp(now, MagicManager.regenPerSecond(player), MagicManager.maxMp(player)) / MagicManager.maxMp(player);
 		context.fill(x + PADDING, mpY, x + PADDING + barWidth, mpY + BAR_HEIGHT, BAR_BACKGROUND);
 		int mpFilled = Math.round(barWidth * Math.min(1.0f, Math.max(0.0f, mpFraction)));
 		if (mpFilled > 0) {

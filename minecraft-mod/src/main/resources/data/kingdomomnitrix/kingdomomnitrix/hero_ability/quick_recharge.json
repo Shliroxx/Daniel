@@ -1,0 +1,8 @@
+{
+  "category": "omnitrix",
+  "unlock_level": 22,
+  "ap_cost": 3,
+  "sort_order": 110,
+  "effect": "quick_recharge",
+  "value": 0.3
+}

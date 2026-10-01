@@ -58,6 +58,11 @@ public record TransformationState(
 		return isTransformed() ? Math.max(0L, endTick - now) : 0L;
 	}
 
+	/** Gesamtdauer der laufenden Verwandlung (mit Boni). */
+	public long totalTicks() {
+		return Math.max(1L, endTick - startTick);
+	}
+
 	public long rechargeRemaining(long now) {
 		return Math.max(0L, rechargeUntil - now);
 	}
@@ -84,8 +89,9 @@ public record TransformationState(
 				energy, energyStamp, abilityReadyAt, invulnerableUntil);
 	}
 
-	public TransformationState transformed(Identifier alienId, AlienDefinition alien, long now) {
-		return new TransformationState(Optional.of(alienId), Optional.of(alienId), now, now + alien.durationTicks(),
+	/** @param durationTicks Dauer inklusive Boni (Heldenstufe, Faehigkeiten, Meisterschaft) */
+	public TransformationState transformed(Identifier alienId, AlienDefinition alien, long now, int durationTicks) {
+		return new TransformationState(Optional.of(alienId), Optional.of(alienId), now, now + durationTicks,
 				rechargeUntil, alien.maxEnergy(), now, List.of(), 0L);
 	}
 

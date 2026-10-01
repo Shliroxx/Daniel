@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.client.gadget;
 
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
@@ -37,6 +39,9 @@ public final class GadgetInput {
 	private static final double JET_HOVER_FALL = -0.22;
 	private static final double JET_HOVER_MAX_SPEED = 0.55;
 	private static final double GLIDE_ACCELERATION = 1.05;
+	// Faehigkeit Gleiten
+	private static final double ABILITY_GLIDE_FALL = -0.12;
+	private static final double ABILITY_GLIDE_MAX_SPEED = 0.42;
 	// Swingshot
 	private static final double PULL_SPEED_START = 0.45;
 	private static final double PULL_SPEED_MAX = 1.35;
@@ -136,6 +141,11 @@ public final class GadgetInput {
 		// Ein Sprung vom Boden zaehlt nicht als Luftsprung: erst wenn der Spieler schon in der Luft war.
 		boolean airJump = jumpPressed && airborne && wasAirborne;
 		wasAirborne = airborne;
+		if (pack.isEmpty() && airborne && !isSwinging() && ProgressionManager.has(player, HeroAbilityEffect.GLIDE)) {
+			// Helden-Faehigkeit „Gleiten“ (wie in Kingdom Hearts): ohne Pack, etwas schneller als das Heli-Pack
+			glide(player, jumpDown, ABILITY_GLIDE_FALL, ABILITY_GLIDE_MAX_SPEED);
+			return;
+		}
 		if (pack.isEmpty() || !airborne || isSwinging()) {
 			setGliding(false);
 			return;
@@ -162,9 +172,12 @@ public final class GadgetInput {
 			}
 		}
 		// Gehaltene Sprungtaste beim Fallen: Gleiten (Heli) bzw. gebremster Sinkflug (Jet).
-		double fall = jet ? JET_HOVER_FALL : HELI_GLIDE_FALL;
+		glide(player, jumpDown, jet ? JET_HOVER_FALL : HELI_GLIDE_FALL, jet ? JET_HOVER_MAX_SPEED : HELI_GLIDE_MAX_SPEED);
+	}
+
+	private static void glide(ClientPlayerEntity player, boolean jumpDown, double fall, double maxSpeed) {
+		Vec3d velocity = player.getVelocity();
 		if (jumpDown && velocity.y < fall) {
-			double maxSpeed = jet ? JET_HOVER_MAX_SPEED : HELI_GLIDE_MAX_SPEED;
 			double horizontal = velocity.horizontalLength();
 			double boost = horizontal < maxSpeed ? GLIDE_ACCELERATION : 1.0;
 			player.setVelocity(velocity.x * boost, fall, velocity.z * boost);

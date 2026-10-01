@@ -1,6 +1,8 @@
 package com.santiq.kingdomomnitrix.combat;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.networking.CombatAnimationPayload;
 import java.util.ArrayList;
@@ -105,7 +107,8 @@ public final class CombatManager {
 		}
 		state.airComboActive = airborne;
 
-		int length = weapon.comboLength();
+		int length = weapon.comboLength() + Math.round(ProgressionManager.value(player,
+				airborne ? HeroAbilityEffect.AIR_COMBO_PLUS : HeroAbilityEffect.COMBO_PLUS));
 		if (type == Attack.HEAVY) {
 			performHeavy(player, world, stack, weapon, state);
 			state.comboStep = 0;
@@ -118,7 +121,8 @@ public final class CombatManager {
 			state.comboStep = finisher ? 0 : step + 1;
 			// Nach dem Finisher eine laengere Pause, damit die Combo einen Rhythmus hat.
 			state.nextAttackTick = now + weapon.lightDelayTicks() * (finisher ? 2 : 1);
-			broadcastAnimation(player, (airborne ? "air_" : "combo_") + (finisher ? "finisher" : String.valueOf(step + 1)));
+			// Es gibt zwei Schlag-Animationen; laengere Combos wechseln zwischen ihnen ab.
+			broadcastAnimation(player, (airborne ? "air_" : "combo_") + (finisher ? "finisher" : String.valueOf(step % 2 + 1)));
 		}
 		state.lastAttackTick = now;
 	}
@@ -241,11 +245,11 @@ public final class CombatManager {
 		}
 		boolean onGround = player.isOnGround();
 		if (onGround) {
-			state.airDodgeUsed = false;
-		} else if (state.airDodgeUsed) {
+			state.airDodgesUsed = 0;
+		} else if (state.airDodgesUsed >= 1 + Math.round(ProgressionManager.value(player, HeroAbilityEffect.AIR_DODGE_PLUS))) {
 			return;
 		} else {
-			state.airDodgeUsed = true;
+			state.airDodgesUsed++;
 		}
 		Vec3d direction = new Vec3d(directionX, 0, directionZ);
 		if (!Double.isFinite(direction.x) || !Double.isFinite(direction.z) || direction.lengthSquared() < 1.0E-4) {

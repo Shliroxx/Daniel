@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.mixin.ServerPlayNetworkHandlerAccessor;
 import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
@@ -140,13 +142,18 @@ public final class GadgetManager {
 			case TOGGLE_MODE -> toggleMode(player);
 			case DOUBLE_JUMP, JET_THRUST -> packBoost(player, action == Action.JET_THRUST);
 			case GLIDE_START -> {
-				if (pack(player).isPresent() && !player.isOnGround()) {
+				if (canGlide(player) && !player.isOnGround()) {
 					GLIDING.add(player.getUuid());
 					player.fallDistance = 0.0f;
 				}
 			}
 			case GLIDE_STOP -> GLIDING.remove(player.getUuid());
 		}
+	}
+
+	/** Gleiten geht mit Heli-Pack/-Jet oder mit der Helden-Faehigkeit „Gleiten“. */
+	private static boolean canGlide(ServerPlayerEntity player) {
+		return pack(player).isPresent() || ProgressionManager.has(player, HeroAbilityEffect.GLIDE);
 	}
 
 	private static void toggleMode(ServerPlayerEntity player) {
@@ -261,7 +268,7 @@ public final class GadgetManager {
 		}
 		for (UUID id : Set.copyOf(GLIDING)) {
 			ServerPlayerEntity player = server.getPlayerManager().getPlayer(id);
-			if (player == null || !player.isAlive() || pack(player).isEmpty() || player.isOnGround() || player.isTouchingWater()) {
+			if (player == null || !player.isAlive() || !canGlide(player) || player.isOnGround() || player.isTouchingWater()) {
 				GLIDING.remove(id);
 			} else {
 				player.fallDistance = 0.0f;

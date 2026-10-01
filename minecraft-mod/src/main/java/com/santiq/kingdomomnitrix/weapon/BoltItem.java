@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.List;
@@ -34,9 +36,12 @@ public class BoltItem extends Item {
 		if (space <= 0) {
 			return; // Konto voll: Bolts bleiben als Items erhalten
 		}
-		int deposited = Math.min(space, amount);
+		int taken = Math.min(space, amount);
+		// Faehigkeit „Bolt-Bonus“: zusaetzliche Bolts aufs Konto, die Items zaehlen normal
+		int bonus = Math.round(taken * ProgressionManager.value(player, HeroAbilityEffect.BOLT_BONUS));
+		int deposited = Math.min(space, taken + bonus);
 		HeroDataAccess.update(player, data -> data.addBolts(deposited));
-		stack.decrement(deposited);
+		stack.decrement(taken);
 		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
 				SoundCategory.PLAYERS, 0.4f, 1.6f + world.getRandom().nextFloat() * 0.3f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.bolts_gained", deposited, before.bolts() + deposited)

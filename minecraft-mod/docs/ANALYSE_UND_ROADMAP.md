@@ -53,6 +53,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Alien-Aussehen | echter, animierter Alien-Körper (GeckoLib), für alle sichtbar |
 | Alien-Freischaltung | DNA-Proben von Gegnern (Quellen pro Alien im JSON) |
 | Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
+| Progression (Phase 15) | Stufe 50; Werte automatisch + neue Fähigkeiten pro Stufe; KH-Fähigkeitenliste mit AP; EP auch aus Herzlosen/Bossen, Erkunden, Alien-Meisterschaft |
 | Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
@@ -482,6 +483,24 @@ Schwachstellen, Arena-Mechanik; Belohnung: neues Keyblade, Kampf wiederholbar.
 | Arena-Liste: Namen werden gekürzt statt überlappt, Einzahl „1 Runde / 1 Gegner“ | IMPLEMENTED | getestet |
 | Eigene Boss-Musik und Sounds | TODO → Phase 18 | Vanilla-Klänge |
 | Kampf mit 2+ Spielern auf Dedicated Server | TODO → Vertical-Slice-Abnahme | |
+
+### Phase 15 — Progression
+
+Entscheidung SANTIQ: Stufenaufstieg bringt Werte automatisch und neue Fähigkeiten; Ausrüsten über eine KH-Fähigkeitenliste;
+Höchststufe 50; EP zusätzlich aus Herzlosen & Bossen, Erkunden und Alien-Nutzung (Aliens steigen eigenständig auf).
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Höchststufe 50, alte Stände über 50 werden gekappt statt zurückgesetzt | IMPLEMENTED | |
+| Werte pro Stufe (Leben, Angriff, MP, Omnitrix-Dauer) als gespeicherte Attribut-Modifikatoren | IMPLEMENTED | Level-Up, Einloggen, Respawn (volles Leben) getestet |
+| Fähigkeiten als JSON-Registry (14 Stück, 5 Äste), AP-Budget, Freischaltung per Stufe, Meldung beim Aufstieg | IMPLEMENTED | `check_assets.py` prüft Texte, Kategorien, Effekte |
+| Heldenmenü [K]: Stufe, EP, AP-Leiste, Werte, Meisterschaft, Liste mit Kategorie/Kosten/Sperre, Beschreibung | IMPLEMENTED | getestet; Server prüft jede Änderung, legt bei Stufenverlust Gesperrtes ab |
+| Effekte: Combo-/Luftcombo-Plus, Luftrolle-Plus, Zweite Chance, MP-Eile, Magie-Boost, Lange Verwandlung, Schnellladung, Bolt-Bonus, Nanotech-Heilung, Schnelllauf, Hochsprung, Gleiten, EP-Boost | IMPLEMENTED | im Spiel getestet: AP, Zweite Chance (+Pause), Gleiten, Verwandlungsdauer; übrige im Code geprüft |
+| EP für Herzlose (½ Grundleben, Elite ×3, +5 % je Stufe) | IMPLEMENTED | +14 EP für Schatten auf Stufe 26 gemessen |
+| EP fürs Erkunden: Dimensionen (Nether, Ende, All, Traverse Town) und Biome im Tag `#kingdomomnitrix:discoverable` | IMPLEMENTED | Traverse Town getestet |
+| Alien-Meisterschaft ★1–10 (Schaden, Todesstoß, Fähigkeiten, Zeit), +5 % Dauer / −3 % Abklingzeit je Stufe, Helden-EP beim Aufstieg | IMPLEMENTED | ★1→★2 und Dauer 60 s → 87 s getestet |
+| Combos länger als 3 Schläge wechseln die beiden Schlag-Animationen ab | IMPLEMENTED | |
+| Fähigkeits-Symbole, eigene Sounds | TODO → Phase 16/18 | Text-Liste und Vanilla-Klänge |
 
 ### Testumgebung (seit Phase 4)
 

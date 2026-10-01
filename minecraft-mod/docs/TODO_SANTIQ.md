@@ -95,6 +95,13 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Phase 2 und Wut erleben, Überladung unterbrechen; Omega-Schlüssel ausprobieren
 - [ ] Platin-Pokal in der Arena spielen; wenn möglich zu zweit (mehr Leben, geteilte Belohnung)
 
+### Phase 15 — Progression
+- [ ] Heldenmenü mit **K** öffnen: Fähigkeiten an-/ablegen, gefällt dir die Liste?
+- [ ] Ein paar Stufen aufsteigen (Herzlose, Quests): sind die EP-Mengen fair, oder geht es zu schnell/langsam?
+- [ ] Gleiten (ab Stufe 18), Zweite Chance (ab 14) und Hochsprung ausprobieren
+- [ ] Ein Alien oft benutzen und die Meisterschaft (★ im Omnitrix-HUD) steigen sehen
+- [ ] Ins Weltall/Traverse Town/Nether reisen: „Neue Welt entdeckt“ mit EP
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

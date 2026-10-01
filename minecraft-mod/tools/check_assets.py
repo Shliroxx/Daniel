@@ -237,6 +237,43 @@ def check_arena(report: Report, lang: dict[str, str]) -> int:
     return len(files)
 
 
+HERO_ABILITY_CATEGORIES = {"combat", "keyblade", "omnitrix", "tech", "exploration"}
+HERO_MAX_LEVEL = 50
+
+
+def hero_ability_effects() -> set[str]:
+    """Effekt-Namen aus dem Java-Enum, damit JSON und Code nicht auseinanderlaufen."""
+    source = (ROOT / "src/main/java/com/santiq/kingdomomnitrix/progression/HeroAbilityEffect.java").read_text(encoding="utf-8")
+    body = source.split("implements StringIdentifiable {", 1)[1]
+    body = re.sub(r"/\*.*?\*/", "", body, flags=re.DOTALL).split(";", 1)[0]
+    return {name.lower() for name in re.findall(r"^\s*([A-Z_]+)\s*[,]?\s*$", body, re.MULTILINE)}
+
+
+def check_hero_abilities(report: Report, lang: dict[str, str]) -> int:
+    effects = hero_ability_effects()
+    files = sorted((DATA / MOD_ID / "hero_ability").glob("*.json"))
+    for path in files:
+        ability = load_json(path, report)
+        if not isinstance(ability, dict):
+            continue
+        key = f"hero_ability.{MOD_ID}.{path.stem}"
+        for needed in (key, key + ".desc"):
+            if needed not in lang:
+                report.error("Helden-Faehigkeit ohne Text: %s", needed)
+        if ability.get("category") not in HERO_ABILITY_CATEGORIES:
+            report.error("Helden-Faehigkeit %s: unbekannte Kategorie %s", path.stem, ability.get("category"))
+        if ability.get("effect") not in effects:
+            report.error("Helden-Faehigkeit %s: unbekannter Effekt %s (bekannt: %s)", path.stem, ability.get("effect"), ", ".join(sorted(effects)))
+        if not 1 <= int(ability.get("unlock_level", 1)) <= HERO_MAX_LEVEL:
+            report.error("Helden-Faehigkeit %s: unlock_level muss 1–%d sein", path.stem, HERO_MAX_LEVEL)
+        if not 0 <= int(ability.get("ap_cost", -1)) <= 20:
+            report.error("Helden-Faehigkeit %s: ap_cost muss 0–20 sein", path.stem)
+    for category in HERO_ABILITY_CATEGORIES:
+        if f"hero_ability.{MOD_ID}.category.{category}" not in lang:
+            report.error("Kategorie ohne Text: hero_ability.%s.category.%s", MOD_ID, category)
+    return len(files)
+
+
 def check_routes(report: Report, lang: dict[str, str]) -> int:
     files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
     for path in files:
@@ -330,13 +367,14 @@ def main(argv: list[str] | None = None) -> int:
     check_routes(report, lang)
     check_arena(report, lang)
     check_feature_order(report)
+    ability_count = check_hero_abilities(report, lang)
     quest_count = check_quests(report, lang, set(items), npcs)
 
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Uebersetzungen",
-             len(items), alien_count, spell_count, quest_count, len(npcs), len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Faehigkeiten, %d Uebersetzungen",
+             len(items), alien_count, spell_count, quest_count, len(npcs), ability_count, len(lang))
     return 0
 
 

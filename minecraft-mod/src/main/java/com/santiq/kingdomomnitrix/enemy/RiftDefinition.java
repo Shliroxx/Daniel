@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.enemy;
 
+import com.santiq.kingdomomnitrix.player.HeroData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -18,7 +19,7 @@ import net.minecraft.util.Identifier;
  */
 public record RiftDefinition(int minLevel, int weight, float eliteChance, List<List<Group>> waves, Rewards rewards) {
 	public static final Codec<RiftDefinition> CODEC = RecordCodecBuilder.<RiftDefinition>create(instance -> instance.group(
-			Codec.intRange(1, 99).optionalFieldOf("min_level", 1).forGetter(RiftDefinition::minLevel),
+			Codec.intRange(1, HeroData.MAX_LEVEL).optionalFieldOf("min_level", 1).forGetter(RiftDefinition::minLevel),
 			Codec.intRange(1, 1000).optionalFieldOf("weight", 10).forGetter(RiftDefinition::weight),
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("elite_chance", 0.05f).forGetter(RiftDefinition::eliteChance),
 			Group.CODEC.listOf().listOf().fieldOf("waves").forGetter(RiftDefinition::waves),

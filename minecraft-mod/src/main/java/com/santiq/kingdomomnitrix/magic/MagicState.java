@@ -25,12 +25,14 @@ public record MagicState(
 		Map<Identifier, Integer> levels,
 		Map<Identifier, Long> readyAt) {
 
-	public static final float MAX_MP = 100.0f;
+	/** Obergrenze fuer gespeicherte Werte; das echte Maximum haengt von der Heldenstufe ab ({@code ProgressionStats#maxMp}). */
+	public static final float MP_CAP = 1000.0f;
+	public static final float START_MP = 100.0f;
 
-	public static final MagicState DEFAULT = new MagicState(MAX_MP, 0L, 0L, Optional.empty(), Map.of(), Map.of());
+	public static final MagicState DEFAULT = new MagicState(START_MP, 0L, 0L, Optional.empty(), Map.of(), Map.of());
 
 	public static final Codec<MagicState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			Codec.FLOAT.lenientOptionalFieldOf("mp", MAX_MP).forGetter(MagicState::mp),
+			Codec.FLOAT.lenientOptionalFieldOf("mp", START_MP).forGetter(MagicState::mp),
 			Codec.LONG.lenientOptionalFieldOf("mp_stamp", 0L).forGetter(MagicState::mpStamp),
 			Codec.LONG.lenientOptionalFieldOf("charge_until", 0L).forGetter(MagicState::chargeUntil),
 			Identifier.CODEC.optionalFieldOf("selected").forGetter(MagicState::selected),
@@ -41,7 +43,7 @@ public record MagicState(
 	public static final PacketCodec<ByteBuf, MagicState> PACKET_CODEC = PacketCodecs.codec(CODEC);
 
 	public MagicState {
-		mp = Math.max(0.0f, Math.min(MAX_MP, mp));
+		mp = Math.max(0.0f, Math.min(MP_CAP, mp));
 		levels = Map.copyOf(levels);
 		readyAt = Map.copyOf(readyAt);
 	}
@@ -50,16 +52,16 @@ public record MagicState(
 		return now < chargeUntil;
 	}
 
-	/** Aktuelle MP; {@code regenPerSecond} haengt vom gehaltenen Keyblade ab (MP-Eile). */
-	public float currentMp(long now, float regenPerSecond) {
+	/** Aktuelle MP; {@code regenPerSecond} haengt von Keyblade und Faehigkeiten ab, {@code maxMp} von der Heldenstufe. */
+	public float currentMp(long now, float regenPerSecond, float maxMp) {
 		if (isCharging(now)) {
 			return 0.0f;
 		}
 		if (chargeUntil > 0 && mpStamp < chargeUntil) {
-			// Ladezeit vorbei: voll, danach Regeneration ab Ende der Ladezeit (bleibt bei MAX).
-			return MAX_MP;
+			// Ladezeit vorbei: voll, danach Regeneration ab Ende der Ladezeit (bleibt beim Maximum).
+			return maxMp;
 		}
-		return Math.min(MAX_MP, mp + regenPerSecond * Math.max(0L, now - mpStamp) / 20.0f);
+		return Math.min(maxMp, mp + regenPerSecond * Math.max(0L, now - mpStamp) / 20.0f);
 	}
 
 	/** Fortschritt der MP-Ladezeit (0–1), 1 wenn keine laeuft. */

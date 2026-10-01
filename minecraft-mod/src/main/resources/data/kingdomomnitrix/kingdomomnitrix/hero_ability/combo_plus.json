@@ -1,0 +1,8 @@
+{
+  "category": "combat",
+  "unlock_level": 3,
+  "ap_cost": 2,
+  "sort_order": 10,
+  "effect": "combo_plus",
+  "value": 1
+}

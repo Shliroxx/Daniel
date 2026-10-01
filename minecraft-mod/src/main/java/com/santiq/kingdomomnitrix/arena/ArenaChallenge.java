@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.arena;
 
+import com.santiq.kingdomomnitrix.player.HeroData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -16,7 +17,7 @@ import net.minecraft.util.Identifier;
 public record ArenaChallenge(int minLevel, int sortOrder, float eliteChance, int timeLimit,
 		List<List<RiftDefinition.Group>> waves, QuestDefinition.Rewards rewards) {
 	public static final Codec<ArenaChallenge> CODEC = RecordCodecBuilder.<ArenaChallenge>create(instance -> instance.group(
-			Codec.intRange(1, 99).optionalFieldOf("min_level", 1).forGetter(ArenaChallenge::minLevel),
+			Codec.intRange(1, HeroData.MAX_LEVEL).optionalFieldOf("min_level", 1).forGetter(ArenaChallenge::minLevel),
 			Codec.INT.optionalFieldOf("sort_order", 0).forGetter(ArenaChallenge::sortOrder),
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("elite_chance", 0.0f).forGetter(ArenaChallenge::eliteChance),
 			Codec.intRange(0, 3600).optionalFieldOf("time_limit", 0).forGetter(ArenaChallenge::timeLimit),

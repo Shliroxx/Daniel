@@ -23,13 +23,14 @@ import net.minecraft.util.math.MathHelper;
  */
 public record HeroData(int level, int experience, int bolts, Set<Identifier> unlockedAliens, Set<String> storyFlags) {
 	public static final int MIN_LEVEL = 1;
-	public static final int MAX_LEVEL = 99;
+	public static final int MAX_LEVEL = 50;
 	public static final int MAX_BOLTS = 9_999_999;
 
 	public static final HeroData DEFAULT = new HeroData(MIN_LEVEL, 0, 0, Set.of(), Set.of());
 
 	public static final Codec<HeroData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-			Codec.intRange(MIN_LEVEL, MAX_LEVEL).lenientOptionalFieldOf("level", MIN_LEVEL).forGetter(HeroData::level),
+			// ohne Bereichspruefung: alte Staende mit Stufe > 50 werden im Konstruktor auf 50 gekappt statt auf 1 zurueckzufallen
+			Codec.INT.lenientOptionalFieldOf("level", MIN_LEVEL).forGetter(HeroData::level),
 			Codec.intRange(0, Integer.MAX_VALUE).lenientOptionalFieldOf("experience", 0).forGetter(HeroData::experience),
 			Codec.intRange(0, MAX_BOLTS).lenientOptionalFieldOf("bolts", 0).forGetter(HeroData::bolts),
 			Identifier.CODEC.listOf().<Set<Identifier>>xmap(Set::copyOf, List::copyOf)

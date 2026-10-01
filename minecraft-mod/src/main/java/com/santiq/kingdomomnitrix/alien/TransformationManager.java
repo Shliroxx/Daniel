@@ -1,6 +1,10 @@
 package com.santiq.kingdomomnitrix.alien;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
+import com.santiq.kingdomomnitrix.progression.ProgressionStats;
 import com.santiq.kingdomomnitrix.ability.AbilityContext;
 import com.santiq.kingdomomnitrix.ability.AbilityRegistry;
 import com.santiq.kingdomomnitrix.ability.AlienAbility;
@@ -150,7 +154,8 @@ public final class TransformationManager {
 			return Result.NO_SPACE;
 		}
 
-		update(player, s -> s.transformed(alienId, alien, now));
+		int duration = durationTicks(player, alienId, alien);
+		update(player, s -> s.transformed(alienId, alien, now, duration));
 		applyAttributes(player, alien);
 		playTransformEffects(world, player, alien, true);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.transformed", alienName(alienId).formatted(Formatting.BOLD))
@@ -167,7 +172,8 @@ public final class TransformationManager {
 		ServerWorld world = player.getServerWorld();
 		long now = world.getTime();
 		Optional<AlienDefinition> alien = activeDefinition(player);
-		int recharge = alien.map(AlienDefinition::rechargeTicks).orElse(0);
+		float quickRecharge = Math.min(0.75f, ProgressionManager.value(player, HeroAbilityEffect.QUICK_RECHARGE));
+		int recharge = Math.round(alien.map(AlienDefinition::rechargeTicks).orElse(0) * (1.0f - quickRecharge));
 		long rechargeUntil = now + (timeout ? recharge : recharge / 2);
 
 		if (!hasSpaceFor(player, 1.0f)) {
@@ -224,10 +230,20 @@ public final class TransformationManager {
 			return Result.FAILED;
 		}
 		update(player, s -> {
-			TransformationState next = s.afterAbility(slotIndex, energy - slot.energy(), now, slot.cooldown());
+			long cooldown = Math.round(slot.cooldown() * (1.0f - AlienMasteryManager.get(player).cooldownReduction(alienId)));
+			TransformationState next = s.afterAbility(slotIndex, energy - slot.energy(), now, cooldown);
 			return context.invulnerabilityTicks() > 0 ? next.withInvulnerableUntil(now + context.invulnerabilityTicks()) : next;
 		});
+		AlienMasteryManager.add(player, alienId, AlienMasteryManager.PER_ABILITY);
 		return Result.SUCCESS;
+	}
+
+	/** Verwandlungsdauer mit Boni aus Heldenstufe, Faehigkeit „Verlaengerte Verwandlung“ und Alien-Meisterschaft. */
+	public static int durationTicks(PlayerEntity player, Identifier alienId, AlienDefinition alien) {
+		float bonus = ProgressionStats.omnitrixDurationBonus(HeroDataAccess.get(player).level())
+				+ ProgressionManager.value(player, HeroAbilityEffect.EXTENDED_TRANSFORMATION)
+				+ AlienMasteryManager.get(player).durationBonus(alienId);
+		return Math.round(alien.durationTicks() * (1.0f + bonus));
 	}
 
 	// --- Ablauf ---------------------------------------------------------------------------------

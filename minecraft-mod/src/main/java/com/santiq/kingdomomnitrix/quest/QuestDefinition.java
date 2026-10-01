@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.quest;
 
+import com.santiq.kingdomomnitrix.player.HeroData;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -33,7 +34,7 @@ public record QuestDefinition(Text title, Category category, int sortOrder, Give
 			Giver.CODEC.fieldOf("giver").forGetter(QuestDefinition::giver),
 			Dialog.CODEC.fieldOf("dialog").forGetter(QuestDefinition::dialog),
 			Identifier.CODEC.listOf().optionalFieldOf("requires", List.of()).forGetter(QuestDefinition::requires),
-			Codec.intRange(1, 99).optionalFieldOf("min_level", 1).forGetter(QuestDefinition::minLevel),
+			Codec.intRange(1, HeroData.MAX_LEVEL).optionalFieldOf("min_level", 1).forGetter(QuestDefinition::minLevel),
 			Objective.CODEC.listOf().fieldOf("objectives").forGetter(QuestDefinition::objectives),
 			Rewards.CODEC.optionalFieldOf("rewards", Rewards.NONE).forGetter(QuestDefinition::rewards),
 			Codec.BOOL.optionalFieldOf("repeatable", false).forGetter(QuestDefinition::repeatable)

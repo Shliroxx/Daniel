@@ -1,6 +1,8 @@
 package com.santiq.kingdomomnitrix.magic;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeDefinition;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeDefinition.Passive;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
@@ -76,18 +78,33 @@ public final class MagicManager {
 
 	/** MP-Regeneration pro Sekunde mit dem gerade gehaltenen Keyblade (MP-Eile). */
 	public static float regenPerSecond(PlayerEntity player) {
-		float haste = heldKeyblade(player, player.getWorld().getRegistryManager()).map(def -> def.passive(Passive.MP_HASTE)).orElse(0.0f);
-		return BASE_REGEN_PER_SECOND * (1.0f + haste);
+		return BASE_REGEN_PER_SECOND * (1.0f + haste(player));
 	}
 
 	public static int chargeTicks(PlayerEntity player) {
-		float haste = heldKeyblade(player, player.getWorld().getRegistryManager()).map(def -> def.passive(Passive.MP_HASTE)).orElse(0.0f);
-		return Math.max(40, Math.round(CHARGE_TICKS / (1.0f + haste)));
+		return Math.max(40, Math.round(CHARGE_TICKS / (1.0f + haste(player))));
+	}
+
+	/** MP-Eile aus Keyblade-Passiv und Helden-Faehigkeit addiert. */
+	private static float haste(PlayerEntity player) {
+		float keyblade = heldKeyblade(player, player.getWorld().getRegistryManager()).map(def -> def.passive(Passive.MP_HASTE)).orElse(0.0f);
+		return keyblade + ProgressionManager.value(player, HeroAbilityEffect.MP_HASTE);
+	}
+
+	/** Maximale MP nach Heldenstufe. */
+	public static float maxMp(PlayerEntity player) {
+		return ProgressionManager.maxMp(player);
+	}
+
+	/** Aktuelle MP des Spielers (Server und Client). */
+	public static float currentMp(PlayerEntity player) {
+		return get(player).currentMp(player.getWorld().getTime(), regenPerSecond(player), maxMp(player));
 	}
 
 	private static float magicFactor(ServerPlayerEntity player, KeybladeDefinition keyblade) {
 		float magic = KeybladeItem.magic(keyblade, KeybladeItem.level(player.getMainHandStack()));
-		return 1.0f + magic * MAGIC_PER_POINT + keyblade.passive(Passive.MAGIC_BOOST);
+		return 1.0f + magic * MAGIC_PER_POINT + keyblade.passive(Passive.MAGIC_BOOST)
+				+ ProgressionManager.value(player, HeroAbilityEffect.MAGIC_BOOST);
 	}
 
 	// --- Aktionen -------------------------------------------------------------------------------
@@ -132,7 +149,7 @@ public final class MagicManager {
 		}
 		int level = Math.min(state.level(spellId.get()), spell.get().maxLevel());
 		SpellDefinition.Level data = spell.get().level(level);
-		float mp = state.currentMp(now, regenPerSecond(player));
+		float mp = state.currentMp(now, regenPerSecond(player), maxMp(player));
 		boolean creative = player.getAbilities().creativeMode;
 		// Wie in Kingdom Hearts II: Solange noch MP da sind, gelingt der Zauber; der letzte leert die Leiste.
 		if (!creative && mp < MIN_MP_TO_CAST) {
@@ -171,9 +188,10 @@ public final class MagicManager {
 		if (state.isCharging(now)) {
 			return;
 		}
-		float mp = state.currentMp(now, regenPerSecond(player));
-		if (mp < MagicState.MAX_MP) {
-			update(player, s -> s.withMp(Math.min(MagicState.MAX_MP, mp + MP_PER_MELEE_HIT), now));
+		float max = maxMp(player);
+		float mp = state.currentMp(now, regenPerSecond(player), max);
+		if (mp < max) {
+			update(player, s -> s.withMp(Math.min(max, mp + MP_PER_MELEE_HIT), now));
 		}
 	}
 
@@ -203,6 +221,7 @@ public final class MagicManager {
 
 	public static void refill(ServerPlayerEntity player) {
 		long now = player.getWorld().getTime();
-		update(player, state -> new MagicState(MagicState.MAX_MP, now, 0L, state.selected(), state.levels(), java.util.Map.of()));
+		float max = maxMp(player);
+		update(player, state -> new MagicState(max, now, 0L, state.selected(), state.levels(), java.util.Map.of()));
 	}
 }

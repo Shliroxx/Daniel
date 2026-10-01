@@ -8,6 +8,7 @@ import com.santiq.kingdomomnitrix.arena.ArenaManager;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.weapon.TerminalService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -41,6 +42,23 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenNpcDialogPayload.ID, OpenNpcDialogPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenArenaPayload.ID, OpenArenaPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ArenaStartPayload.ID, ArenaStartPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ToggleHeroAbilityPayload.ID, ToggleHeroAbilityPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(ToggleHeroAbilityPayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			if (!player.isAlive()) {
+				return;
+			}
+			String key = switch (ProgressionManager.toggle(player, payload.ability())) {
+				case LOCKED -> "message.kingdomomnitrix.ability_locked";
+				case NO_AP -> "message.kingdomomnitrix.ability_no_ap";
+				case UNKNOWN -> "message.kingdomomnitrix.ability_unknown";
+				default -> null;
+			};
+			if (key != null) {
+				player.sendMessage(Text.translatable(key).formatted(Formatting.RED), true);
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(ArenaStartPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();

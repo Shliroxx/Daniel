@@ -13,6 +13,10 @@ import com.santiq.kingdomomnitrix.weapon.WeaponRegistry;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
+import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
+import com.santiq.kingdomomnitrix.progression.ExperienceSources;
+import com.santiq.kingdomomnitrix.progression.HeroAbilityRegistry;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import com.santiq.kingdomomnitrix.networking.ModNetworking;
 import com.santiq.kingdomomnitrix.registry.ModComponents;
@@ -64,6 +68,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		NpcRegistry.register();
 		SpaceRouteRegistry.register();
 		ArenaRegistry.register();
+		HeroAbilityRegistry.register();
 		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();
@@ -74,6 +79,9 @@ public class KingdomOmnitrix implements ModInitializer {
 		ModScreenHandlers.register();
 		GadgetManager.register();
 		QuestManager.register();
+		ProgressionManager.register();
+		AlienMasteryManager.register();
+		ExperienceSources.register();
 		ModFeatures.register();
 		SpaceTravel.register();
 		ArenaManager.register();

@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.6.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.7.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -86,6 +86,21 @@ oder im Arena-Terminal den **Platin-Pokal** wählen (ab Heldenstufe 8).
 - Erster Sieg: **Omega-Schlüssel** (neues Keyblade), Orichalcum, Raritanium, 800 Bolts. Danach jederzeit wiederholbar
   für Raritanium und Bolts. Mit mehreren Spielern hat er mehr Leben.
 
+### Heldenstufe und Fähigkeiten
+Helden-EP gibt es für Quests, besiegte **Herzlose** (Elite ×3), Bosse, Arena, Dunkelheitsrisse, **Entdeckungen**
+(erster Besuch im Nether, Ende, Weltall, Traverse Town und in den Traverse-Town-Biomen) und Meisterschafts-Aufstiege.
+Höchststufe **50**; jeder Aufstieg heilt komplett.
+- **Automatisch pro Stufe:** +1 Herz alle 5 Stufen, +0,04 Angriff, +2 MP (100 → 198), +1 % Omnitrix-Dauer
+- **Heldenmenü [K]** (wie die Fähigkeitenliste in Kingdom Hearts): Fähigkeiten werden ab einer Stufe frei und kosten
+  **AP** (2 + eine je zwei Stufen, Stufe 50 = 27). Klick legt an/ab. 14 Fähigkeiten in fünf Ästen:
+  Kampf (Combo-Plus, Luftcombo-Plus, Zweite Chance, Luftrolle-Plus), Keyblade (MP-Eile, EP-Boost, Magie-Boost),
+  Omnitrix (Lange Verwandlung, Schnellladung), Technik (Bolt-Bonus, Nanotech-Heilung),
+  Erkunden (Schnelllauf, Hochsprung, Gleiten).
+- **Alien-Meisterschaft ★1–10:** jedes Alien lernt durch Benutzen (Schaden als Alien, Fähigkeiten, Zeit).
+  Je Stufe +5 % Verwandlungsdauer und −3 % Abklingzeit der Fähigkeiten; Anzeige im Omnitrix-HUD und im Heldenmenü.
+- Alles bleibt optional: Combo, Ausweichen und Blocken gibt es ohne Fähigkeiten. Neue Fähigkeiten:
+  JSON in `data/<namespace>/kingdomomnitrix/hero_ability/` (Effekt aus der Liste in `HeroAbilityEffect`).
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -142,7 +157,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.6.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.7.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -166,8 +181,10 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero debug [spieler]` | zeigt alle Heldendaten |
 | `/hero bolts add <anzahl> [spieler]` | bucht Bolts (negativ = abbuchen) |
 | `/hero bolts set <anzahl> [spieler]` | setzt das Bolt-Konto |
-| `/hero level set <stufe> [spieler]` | setzt die Stufe (1–99) |
-| `/hero xp add <menge> [spieler]` | gibt Erfahrung, steigt automatisch auf |
+| `/hero level set <stufe> [spieler]` | setzt die Stufe (1–50) |
+| `/hero xp add <menge> [spieler]` | gibt Erfahrung wie im Spiel (Aufstieg, Heilung, neue Fähigkeiten) |
+| `/hero ability toggle <id> [spieler]` · `/hero ability clear [spieler]` | Fähigkeit an/ab (prüft Stufe und AP) · alle ablegen |
+| `/hero mastery <alien> <stufe> [spieler]` | setzt die Alien-Meisterschaft (1–10) |
 | `/hero alien unlock\|lock <id> [spieler]` | schaltet ein Alien frei oder sperrt es |
 | `/hero flag set\|clear <flag> [spieler]` | setzt oder löscht ein Story-Flag |
 | `/hero reset [spieler]` | setzt alle Heldendaten zurück |
@@ -184,7 +201,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.6.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.7.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.

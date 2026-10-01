@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.player;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import java.util.function.UnaryOperator;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
@@ -40,11 +41,14 @@ public final class HeroDataAccess {
 	/** Gibt Helden-EP und meldet jeden Stufenaufstieg mit Nachricht und Klang. */
 	public static HeroData grantExperience(ServerPlayerEntity player, int amount) {
 		int before = get(player).level();
-		HeroData after = update(player, data -> data.addExperience(amount));
+		int boosted = ProgressionManager.boostedExperience(player, amount);
+		HeroData after = update(player, data -> data.addExperience(boosted));
 		if (after.level() > before) {
+			player.setHealth(player.getMaxHealth()); // Stufenaufstieg heilt wie in Kingdom Hearts
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.level_up", after.level()).formatted(Formatting.GOLD, Formatting.BOLD), false);
 			player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
 					SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.2f);
+			ProgressionManager.announceUnlocks(player, before, after.level());
 		}
 		return after;
 	}
@@ -58,6 +62,9 @@ public final class HeroDataAccess {
 		}
 		if (!after.equals(before)) {
 			player.setAttached(HERO_DATA, after);
+			if (after.level() != before.level()) {
+				ProgressionManager.onLevelChanged(player, before.level(), after.level());
+			}
 		}
 		return after;
 	}

@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.hud;
 
+import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AbilitySlot;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
@@ -71,6 +72,11 @@ public final class OmnitrixHud {
 		}
 	}
 
+	private static int masteryLevel(Identifier alienId) {
+		var player = net.minecraft.client.MinecraftClient.getInstance().player;
+		return player != null ? AlienMasteryManager.get(player).level(alienId) : 1;
+	}
+
 	private static void renderTransformed(DrawContext context, TextRenderer font, TransformationState state,
 			Identifier alienId, AlienDefinition alien, long now) {
 		int height = PADDING + font.fontHeight + 3 + BAR_HEIGHT + 2 + BAR_HEIGHT + 4 + SLOT_SIZE + PADDING;
@@ -83,14 +89,15 @@ public final class OmnitrixHud {
 		int innerWidth = WIDTH - PADDING * 2 - 2;
 		int cy = y + PADDING;
 		long remaining = state.remainingTicks(now);
-		Text name = TransformationManager.alienName(alienId).withColor(alien.color()).formatted(Formatting.BOLD);
+		Text name = TransformationManager.alienName(alienId).withColor(alien.color()).formatted(Formatting.BOLD)
+				.append(Text.literal(" ★" + masteryLevel(alienId)).formatted(Formatting.GOLD));
 		context.drawTextWithShadow(font, name, cx, cy, 0xFFFFFFFF);
 		String seconds = remaining / 20 + "s";
 		context.drawTextWithShadow(font, seconds, x + WIDTH - PADDING - font.getWidth(seconds), cy,
 				remaining < WARNING_TICKS ? TIMER_WARNING_COLOR : 0xFFDDDDDD);
 		cy += font.fontHeight + 3;
 
-		float timeFraction = (float) remaining / Math.max(1, alien.durationTicks());
+		float timeFraction = (float) remaining / state.totalTicks();
 		bar(context, cx, cy, innerWidth, timeFraction, remaining < WARNING_TICKS ? TIMER_WARNING_COLOR : TIMER_COLOR);
 		cy += BAR_HEIGHT + 2;
 		float energy = state.currentEnergy(alien, now);

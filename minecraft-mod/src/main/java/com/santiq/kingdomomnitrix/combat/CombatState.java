@@ -14,7 +14,7 @@ final class CombatState {
 	long guardStartTick;
 
 	long dodgeReadyTick;
-	boolean airDodgeUsed;
+	int airDodgesUsed;
 	long invulnerableUntil;
 
 	int lockTargetId = -1;
