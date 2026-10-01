@@ -23,6 +23,10 @@ Doku: https://code.claude.com/docs/en/claude-code-on-the-web
 - [ ] `dl.cloudsmith.io` — GeckoLib (Alien-Körper, Mobs, Bosse)
 - [ ] `maven.kosmx.dev` — playerAnimator (ab Phase 4: Keyblade-Combos, Dodge)
 
+**Letzter Versuch (2026-10-01, nach deiner Bitte erneut):** alle 8 Hosts weiterhin gesperrt. Auch Ausweich-Spiegel
+(Quilt, Architectury, JitPack, Aliyun, Modrinth, SpongePowered, TerraformersMC) sind gesperrt. Es gibt keinen legalen
+Ersatzweg für die Minecraft-Dateien, daher bleibt nur die Freigabe. Gilt sie in der laufenden Sitzung nicht, eine neue Sitzung starten.
+
 Bereits erreichbar (nichts zu tun): `services.gradle.org`, `plugins.gradle.org`, `repo.maven.apache.org`, `pypi.org`, GitHub.
 
 ---
