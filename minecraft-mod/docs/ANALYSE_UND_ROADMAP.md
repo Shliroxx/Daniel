@@ -53,6 +53,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Alien-Aussehen | echter, animierter Alien-Körper (GeckoLib), für alle sichtbar |
 | Alien-Freischaltung | DNA-Proben von Gegnern (Quellen pro Alien im JSON) |
 | Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
+| Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
 
@@ -85,7 +86,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | HUD / UI | nur Actionbar-Texte und Tooltips | TODO | **NEU** |
 | Lock-On, Combos, Dodge, Guard | nicht vorhanden | TODO | **NEU** |
 | Sounds | nur Vanilla-Sounds, keine `sounds.json` | PLACEHOLDER | **NEU** (Sound-Architektur) |
-| Advancements, Befehle, Quests, Dialoge, NPCs, Welten, Bosse, Party, Progression | nicht vorhanden | TODO | **NEU** |
+| Advancements, Befehle, Quests, Dialoge, NPCs, Welten, Bosse, Progression | nicht vorhanden | TODO | **NEU** |
 
 ### Begründungen im Einzelnen
 
@@ -175,7 +176,6 @@ com.santiq.kingdomomnitrix
 ├── cutscene/                       Cutscene-Skript (JSON): Kamera, Text, Fade, Teleport, Sound
 ├── npc/                            NPC-Entity, Händler, Shop-Definitionen
 ├── world/                          Dimensionen, Portale, Weltkarte, Hub-Strukturen
-├── party/                          Begleiter-Entity, KI, Befehle
 ├── progression/                    Level, Erfahrung, Werte, Fähigkeiten-Punkte
 ├── command/                        /hero … (nur OP)
 └── client/                         nur im Client-Source-Set
@@ -229,7 +229,7 @@ Die Vertical Slice ist der erste Meilenstein. Alles danach baut auf ihr auf.
 | HUD | HP, MP, Level, Bolts, Alien, Munition, Quest, Lock-On | skalierbar, abschaltbar |
 | Speichern | gesamter `HeroData`-Zustand | Neustart- und Rejoin-Test |
 
-**Bewusst nicht in der Vertical Slice:** Party, Welten außer Hub, Cutscene-Kamera (nur Text + Fade), Diamondhead/Grey Matter, Endgame-Waffen.
+**Bewusst nicht in der Vertical Slice:** Welten außer Hub, Cutscene-Kamera (nur Text + Fade), Diamondhead/Grey Matter, Endgame-Waffen.
 
 ---
 
@@ -253,7 +253,7 @@ Jede Phase endet mit `./gradlew build` grün (siehe Abschnitt 0), einem Testprot
 | 12 | Welten | Hub-Dimension, Portal-Block, Hub-Struktur | 11 |
 | 13 | Bosse | Phasen-Automat, 1 Boss, Arena | 4, 7 |
 | — | **Vertical Slice abgenommen** | Abnahme nach Abschnitt 3 mit 2 Spielern auf Dedicated Server | 3–13 |
-| 14 | Party | Begleiter-Entity, Sora-/Ratchet-/Clank-artig | VS |
+| ~~14~~ | ~~Party~~ | gestrichen (Entscheidung SANTIQ): keine Begleiter | — |
 | 15 | Progression | Level, Werte, Fähigkeiten-Punkte, Fähigkeiten-Liste | VS |
 | 16 | UI | Inventar-Tabs, Weltkarte, Feinschliff aller Screens | VS |
 | 17 | VFX | Partikel-Presets, Spuren, Aufprall, Verwandlungssequenz | VS |
