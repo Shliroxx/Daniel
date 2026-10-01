@@ -350,7 +350,21 @@ def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
         forge_side.putpixel((x, y), gold)
     for x, y in [(7, 4), (8, 4), (6, 5), (9, 5), (5, 7), (10, 7), (6, 9), (9, 9), (7, 10), (8, 10), (7, 7), (8, 7), (7, 8), (8, 8)]:
         forge_top.putpixel((x, y), glow)
-    return {"bolt_crate": side, "bolt_crate_top": top,
+    term_side, term_top = Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16))
+    metal, metal_dark, screen, screen_dark = hexc("8C96A3"), hexc("3A3F47"), hexc("4FC3FF"), hexc("1B4F72")
+    for y in range(16):
+        for x in range(16):
+            edge = x in (0, 15) or y in (0, 15)
+            term_side.putpixel((x, y), metal_dark if edge else metal)
+            term_top.putpixel((x, y), metal_dark if edge else metal)
+    for y in range(3, 9):
+        for x in range(3, 13):
+            term_side.putpixel((x, y), screen if (x + y) % 5 else screen_dark)
+    for x, y in [(5, 11), (7, 11), (9, 11), (11, 11)]:
+        term_side.putpixel((x, y), hexc("FFD84A"))
+    for x, y in [(7, 5), (8, 5), (6, 6), (9, 6), (6, 7), (9, 7), (7, 8), (8, 8)]:
+        term_top.putpixel((x, y), hexc("FFD84A"))
+    return {"bolt_crate": side, "bolt_crate_top": top, "weapon_terminal": term_side, "weapon_terminal_top": term_top,
             "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
 
 

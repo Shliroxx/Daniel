@@ -9,6 +9,7 @@ import com.santiq.kingdomomnitrix.command.HeroCommand;
 import com.santiq.kingdomomnitrix.enemy.RiftRegistry;
 import com.santiq.kingdomomnitrix.enemy.RiftSpawner;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeRegistry;
+import com.santiq.kingdomomnitrix.weapon.WeaponRegistry;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -46,6 +47,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		KeybladeRegistry.register();
 		SpellRegistry.register();
 		RiftRegistry.register();
+		WeaponRegistry.register();
 		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();

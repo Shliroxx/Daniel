@@ -5,6 +5,7 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
+import com.santiq.kingdomomnitrix.weapon.TerminalService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -30,6 +31,15 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(LockOnPayload.ID, LockOnPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(CombatAnimationPayload.ID, CombatAnimationPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(SelectSpellPayload.ID, SelectSpellPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenTerminalPayload.ID, OpenTerminalPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(TerminalActionPayload.ID, (payload, context) -> {
+			TerminalService.Action[] actions = TerminalService.Action.values();
+			if (payload.action() >= 0 && payload.action() < actions.length && canAct(context.player())) {
+				TerminalService.handle(context.player(), actions[payload.action()], payload.weapon(), payload.terminal());
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(SelectSpellPayload.ID, (payload, context) ->
 				MagicManager.select(context.player(), payload.spell()));

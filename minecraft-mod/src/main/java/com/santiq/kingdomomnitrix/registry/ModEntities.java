@@ -9,6 +9,7 @@ import com.santiq.kingdomomnitrix.enemy.ShadowHeartless;
 import com.santiq.kingdomomnitrix.enemy.SoldierHeartless;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeEntity;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
+import com.santiq.kingdomomnitrix.weapon.WrenchProjectileEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -39,6 +40,10 @@ public final class ModEntities {
 	public static final EntityType<HeroProjectileEntity> HERO_PROJECTILE = register("hero_projectile",
 			EntityType.Builder.<HeroProjectileEntity>create(HeroProjectileEntity::new, SpawnGroup.MISC)
 					.dimensions(0.25f, 0.25f).maxTrackingRange(4).trackingTickInterval(10));
+
+	public static final EntityType<WrenchProjectileEntity> WRENCH_PROJECTILE = register("wrench_projectile",
+			EntityType.Builder.<WrenchProjectileEntity>create(WrenchProjectileEntity::new, SpawnGroup.MISC)
+					.dimensions(0.5f, 0.5f).maxTrackingRange(6).trackingTickInterval(2));
 
 	public static final EntityType<FusionGrenadeEntity> FUSION_GRENADE = register("fusion_grenade",
 			EntityType.Builder.<FusionGrenadeEntity>create(FusionGrenadeEntity::new, SpawnGroup.MISC)

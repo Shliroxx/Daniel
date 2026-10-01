@@ -12,6 +12,9 @@ import com.santiq.kingdomomnitrix.client.magic.MagicHud;
 import com.santiq.kingdomomnitrix.client.magic.MagicInput;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
 import com.santiq.kingdomomnitrix.networking.OpenOmnitrixPayload;
+import com.santiq.kingdomomnitrix.networking.OpenTerminalPayload;
+import com.santiq.kingdomomnitrix.client.weapon.WeaponHud;
+import com.santiq.kingdomomnitrix.client.weapon.WeaponTerminalScreen;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
@@ -45,12 +48,14 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.DARKNESS_RIFT, EmptyEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.WRENCH_PROJECTILE, context -> new FlyingItemEntityRenderer<>(context, 1.5f, false));
 
 		ModKeyBindings.register();
 		HeroStatusHud.register();
 		OmnitrixHud.register();
 		LockOnHud.register();
 		MagicHud.register();
+		WeaponHud.register();
 		CombatAnimations.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);
@@ -62,6 +67,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			MagicInput.reset();
 		});
 
+		ClientPlayNetworking.registerGlobalReceiver(OpenTerminalPayload.ID, (payload, context) ->
+				context.client().setScreen(new WeaponTerminalScreen(payload.pos())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenOmnitrixPayload.ID, (payload, context) -> {
 			if (context.client().currentScreen == null) {
 				OmnitrixWheelScreen.openFromItem(context.client());

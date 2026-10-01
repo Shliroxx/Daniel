@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.keyblade;
 
 import com.santiq.kingdomomnitrix.keyblade.KeybladeDefinition.UpgradeCost;
+import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModComponents;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import java.util.ArrayList;
@@ -26,8 +27,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /**
- * Keyblade-Schmiede: Rechtsklick mit einem Keyblade hebt es um eine Stufe an, wenn Bolts und Materialien
- * im Inventar sind. Danach (und bei fehlendem Material) zeigt sie die Kosten der naechsten Stufe.
+ * Keyblade-Schmiede: Rechtsklick mit einem Keyblade hebt es um eine Stufe an, wenn das Bolt-Konto reicht
+ * und die Materialien im Inventar sind. Danach (und bei fehlendem Material) zeigt sie die Kosten der naechsten Stufe.
  * Im Kreativmodus kostenlos. (Schleichen umgeht in Minecraft die Block-Interaktion, daher kein Schleich-Modus.)
  */
 public class KeybladeForgeBlock extends Block {
@@ -65,7 +66,7 @@ public class KeybladeForgeBlock extends Block {
 		}
 		UpgradeCost cost = definition.upgrades().get(level - 1);
 		boolean free = player.getAbilities().creativeMode;
-		List<ItemStack> missing = free ? List.of() : missing(player.getInventory(), cost);
+		List<ItemStack> missing = free ? List.of() : missing(player, player.getInventory(), cost);
 		if (!missing.isEmpty()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.forge.missing", describe(cost)).formatted(Formatting.RED), false);
 			world.playSound(null, pos, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.BLOCKS, 0.4f, 1.6f);
@@ -73,6 +74,9 @@ public class KeybladeForgeBlock extends Block {
 		}
 		if (!free) {
 			consume(player.getInventory(), cost);
+			if (player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer && cost.bolts() > 0) {
+				HeroDataAccess.update(serverPlayer, data -> data.addBolts(-cost.bolts()));
+			}
 		}
 		stack.set(ModComponents.KEYBLADE_LEVEL, level + 1);
 		serverWorld.spawnParticles(ParticleTypes.ENCHANT, pos.getX() + 0.5, pos.getY() + 1.2, pos.getZ() + 0.5, 40, 0.4, 0.3, 0.4, 0.5);
@@ -90,15 +94,15 @@ public class KeybladeForgeBlock extends Block {
 
 	private static List<ItemStack> requirements(UpgradeCost cost) {
 		List<ItemStack> needed = new ArrayList<>();
-		if (cost.bolts() > 0) {
-			needed.add(new ItemStack(ModItems.BOLT, cost.bolts()));
-		}
 		cost.items().forEach(item -> needed.add(item.copy()));
 		return needed;
 	}
 
-	private static List<ItemStack> missing(PlayerInventory inventory, UpgradeCost cost) {
+	private static List<ItemStack> missing(PlayerEntity player, PlayerInventory inventory, UpgradeCost cost) {
 		List<ItemStack> missing = new ArrayList<>();
+		if (!HeroDataAccess.get(player).canAfford(cost.bolts())) {
+			missing.add(new ItemStack(ModItems.BOLT, cost.bolts()));
+		}
 		for (ItemStack needed : requirements(cost)) {
 			if (count(inventory, needed) < needed.getCount()) {
 				missing.add(needed);
@@ -135,13 +139,18 @@ public class KeybladeForgeBlock extends Block {
 
 	private static Text describe(UpgradeCost cost) {
 		MutableText text = Text.empty();
-		List<ItemStack> needed = requirements(cost);
-		for (int i = 0; i < needed.size(); i++) {
-			if (i > 0) {
+		boolean first = true;
+		if (cost.bolts() > 0) {
+			text.append(Text.translatable("message.kingdomomnitrix.forge.bolts", cost.bolts()));
+			first = false;
+		}
+		for (ItemStack needed : requirements(cost)) {
+			if (!first) {
 				text.append(", ");
 			}
-			text.append(needed.get(i).getCount() + "× ").append(needed.get(i).getName());
+			text.append(needed.getCount() + "× ").append(needed.getName());
+			first = false;
 		}
-		return needed.isEmpty() ? Text.translatable("message.kingdomomnitrix.forge.free") : text;
+		return first ? Text.translatable("message.kingdomomnitrix.forge.free") : text;
 	}
 }

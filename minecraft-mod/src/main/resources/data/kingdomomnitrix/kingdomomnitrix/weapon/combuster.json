@@ -1,0 +1,54 @@
+{
+  "item": "kingdomomnitrix:combuster",
+  "price": 250,
+  "ammo_price": 2,
+  "sort_order": 1,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 40,
+      "stats": {
+        "damage": 5,
+        "fire_delay": 5,
+        "speed": 2.6
+      }
+    },
+    {
+      "price": 400,
+      "max_ammo": 50,
+      "stats": {
+        "damage": 6,
+        "fire_delay": 4,
+        "speed": 2.8
+      }
+    },
+    {
+      "price": 900,
+      "max_ammo": 60,
+      "stats": {
+        "damage": 7,
+        "fire_delay": 4,
+        "speed": 3.0
+      }
+    },
+    {
+      "price": 1800,
+      "max_ammo": 75,
+      "stats": {
+        "damage": 8.5,
+        "fire_delay": 3,
+        "speed": 3.2
+      }
+    },
+    {
+      "price": 3500,
+      "max_ammo": 90,
+      "stats": {
+        "damage": 10,
+        "fire_delay": 3,
+        "speed": 3.4,
+        "explosion": 1.2
+      }
+    }
+  ]
+}

@@ -378,6 +378,22 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Spawns in Mod-Dimensionen | TODO → Phase 12 | |
 | Eigene Herzlosen-Sounds | TODO → Phase 18 | aktuell Endermiten-Sounds |
 
+### Phase 8 — Ratchet & Clank (Waffen, Bolts, Terminal)
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Bolts als Konto (`HeroData.bolts`): aufgehobene Bolts wandern automatisch aufs Konto | IMPLEMENTED | im Client getestet (1.500 gutgeschrieben) |
+| Waffen-Definitionen als JSON (Preis, Munitionspreis, Stufen mit Werten) | IMPLEMENTED | `data/kingdomomnitrix/kingdomomnitrix/weapon/*.json` |
+| Waffenzustand am Item (Stufe, Munition) + Haltbarkeitsleiste = Munition | IMPLEMENTED | |
+| Waffen-Terminal: Kaufen, Aufrüsten (nur hier), Munition nachfüllen; Server prüft Abstand und Konto | IMPLEMENTED | Kauf + Aufrüsten getestet; Nachfüllen nur im Code geprüft |
+| Combuster: Dauerfeuer bei gehaltener Rechtsklick-Taste, Rückstoß, Explosiv-Schüsse auf Stufe 5 | IMPLEMENTED | Feuern getestet |
+| Fusionsgranate: Wurf, Explosion ohne Blockschaden | IMPLEMENTED | Wurf + Munitionsverbrauch getestet |
+| OmniWrench: Nahkampf-Combo + Bumerang-Wurf, löst Hebel/Knöpfe aus, zerschlägt Bolt-Kisten | IMPLEMENTED | Hebel per Wurf getestet |
+| Waffen auch per Crafting (Entscheidung SANTIQ) | IMPLEMENTED | |
+| Waffen-HUD (Name, Stufe, Munition) am rechten Rand | IMPLEMENTED | |
+| Weitere Waffen (Blaster, Pyrocitor …) | TODO → später, rein per JSON + Item-Klasse | |
+| Eigene Waffen-Sounds/Modelle | PLACEHOLDER | Vanilla-Sounds, generierte Texturen |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

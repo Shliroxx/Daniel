@@ -49,6 +49,7 @@ public final class ModItemGroup {
 						entries.add(ModItems.HELI_PACK);
 						entries.add(ModItems.BOLT);
 						entries.add(ModItems.BOLT_CRATE);
+						entries.add(ModItems.WEAPON_TERMINAL);
 					})
 					.build());
 

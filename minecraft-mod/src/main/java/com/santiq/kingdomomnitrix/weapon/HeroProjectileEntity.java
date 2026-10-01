@@ -27,6 +27,8 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 
 	/** Schaden statt des Standardwerts der Art (z. B. Zauberstufe × Magiekraft); nur serverseitig, &lt; 0 = Standard. */
 	private float damageOverride = -1.0f;
+	/** Sprengkraft beim Aufprall (0 = keine); Explosion ohne Blockschaden. Nur serverseitig. */
+	private float explosionPower;
 
 	public enum Kind {
 		FIRE(5.0f, true, ParticleTypes.FLAME),
@@ -74,6 +76,11 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		projectile.setVelocity(dx, dy, dz, speed, divergence);
 		world.spawnEntity(projectile);
 		return projectile;
+	}
+
+	public HeroProjectileEntity withExplosion(float power) {
+		this.explosionPower = Math.max(0.0f, power);
+		return this;
 	}
 
 	public HeroProjectileEntity withDamage(float damage) {
@@ -147,6 +154,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	protected void onCollision(HitResult hitResult) {
 		super.onCollision(hitResult);
 		if (getWorld() instanceof ServerWorld serverWorld) {
+			if (explosionPower > 0.0f) {
+				serverWorld.createExplosion(this, getX(), getY(), getZ(), explosionPower, World.ExplosionSourceType.NONE);
+			}
 			serverWorld.spawnParticles(getKind().particle, getX(), getY(), getZ(), 8, 0.15, 0.15, 0.15, 0.05);
 			discard();
 		}

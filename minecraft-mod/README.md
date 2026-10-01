@@ -136,8 +136,9 @@ src/main/java/com/santiq/kingdomomnitrix/      Server + gemeinsamer Code
   ability/                  Fähigkeits-Typen (AbilityRegistry, BuiltinAbilities)
   networking/               Pakete Client ↔ Server
   keyblade/  magic/         Schlüsselschwert, Zauber (Prototyp, Phasen 4–6)
-  weapon/  gadget/          R&C-Waffen, Geschosse, Heli-Pack (Prototyp, Phasen 8–9)
-  enemy/                    Herzlose (Prototyp, Phase 7)
+  weapon/                   R&C-Waffen, Bolt-Konto, Waffen-Terminal (Phase 8)
+  gadget/                   Heli-Pack (Prototyp, Phase 9)
+  enemy/                    Herzlose, Dunkelheitsrisse (Phase 7)
   item/  util/              Hi-Potion, Hilfsklassen
 src/client/java/com/santiq/kingdomomnitrix/client/   nur Client (eigenes Source-Set)
   hud/                      Status-Panel, Omnitrix-HUD

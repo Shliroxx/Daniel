@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeForgeBlock;
+import com.santiq.kingdomomnitrix.weapon.WeaponTerminalBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.MapColor;
@@ -24,6 +25,15 @@ public final class ModBlocks {
 					.strength(3.5f, 6.0f)
 					.requiresTool()
 					.sounds(BlockSoundGroup.ANVIL)));
+
+	/** Waffen-Terminal: Waffen kaufen, aufwerten, Munition auffuellen (Bolt-Konto). */
+	public static final Block WEAPON_TERMINAL = Registry.register(Registries.BLOCK, KingdomOmnitrix.id("weapon_terminal"),
+			new WeaponTerminalBlock(AbstractBlock.Settings.create()
+					.mapColor(MapColor.LIGHT_BLUE)
+					.strength(3.0f, 6.0f)
+					.requiresTool()
+					.luminance(state -> 7)
+					.sounds(BlockSoundGroup.METAL)));
 
 	private ModBlocks() {
 	}

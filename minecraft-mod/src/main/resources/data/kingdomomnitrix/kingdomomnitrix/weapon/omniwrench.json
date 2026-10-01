@@ -1,0 +1,53 @@
+{
+  "item": "kingdomomnitrix:omniwrench",
+  "price": 150,
+  "ammo_price": 0,
+  "sort_order": 0,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 0,
+      "stats": {
+        "damage": 5,
+        "throw_damage": 7,
+        "range": 12
+      }
+    },
+    {
+      "price": 300,
+      "max_ammo": 0,
+      "stats": {
+        "damage": 6.5,
+        "throw_damage": 9,
+        "range": 14
+      }
+    },
+    {
+      "price": 700,
+      "max_ammo": 0,
+      "stats": {
+        "damage": 8,
+        "throw_damage": 11,
+        "range": 16
+      }
+    },
+    {
+      "price": 1500,
+      "max_ammo": 0,
+      "stats": {
+        "damage": 10,
+        "throw_damage": 14,
+        "range": 18
+      }
+    },
+    {
+      "price": 3000,
+      "max_ammo": 0,
+      "stats": {
+        "damage": 13,
+        "throw_damage": 18,
+        "range": 22
+      }
+    }
+  ]
+}

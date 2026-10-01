@@ -1,13 +1,12 @@
 package com.santiq.kingdomomnitrix.weapon;
 
-import com.santiq.kingdomomnitrix.registry.ModItems;
+import com.santiq.kingdomomnitrix.combat.ComboProfile;
+import com.santiq.kingdomomnitrix.combat.ComboWeapon;
 import java.util.List;
-import net.minecraft.entity.LivingEntity;
+import java.util.Optional;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -16,34 +15,43 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
-/** OmniWrench 8000: Nahkampf-Schraubenschluessel, Rechtsklick wirft eine Kopie als Geschoss. */
-public class OmniWrenchItem extends SwordItem {
-	private static final int THROW_DELAY_TICKS = 30;
+/**
+ * OmniWrench 8000: Nahkampf mit Combo (wie Keyblades), Rechtsklick wirft den Schluessel als Bumerang.
+ * Der geworfene Schluessel trifft Gegner auf Hin- und Rueckweg, betaetigt Knoepfe und Hebel und
+ * zerschlaegt Bolt-Kisten.
+ */
+public class OmniWrenchItem extends WeaponItem implements ComboWeapon {
+	public OmniWrenchItem(Settings settings) {
+		super(settings);
+	}
 
-	public OmniWrenchItem(ToolMaterial toolMaterial, Settings settings) {
-		super(toolMaterial, settings);
+	@Override
+	public ComboProfile comboProfile(RegistryWrapper.WrapperLookup registries, ItemStack stack) {
+		ComboProfile base = ComboProfile.DEFAULT;
+		float damage = levelData(registries, stack).map(level -> (float) level.stat("damage", 5)).orElse(5.0f);
+		return new ComboProfile(damage, 3, base.stepMultiplier(), base.finisherMultiplier(), base.heavyMultiplier(),
+				0.3, 7, 18, 0.0f, true);
 	}
 
 	@Override
 	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
 		ItemStack stack = user.getStackInHand(hand);
 		if (!world.isClient()) {
-			HeroProjectileEntity.shoot(world, user, ModItems.OMNIWRENCH, 1.6f, 0.0f);
+			Optional<WeaponDefinition.Level> level = levelData(world.getRegistryManager(), stack);
+			float damage = (float) level.map(l -> l.stat("throw_damage", 7)).orElse(7.0).doubleValue();
+			double range = level.map(l -> l.stat("range", 12)).orElse(12.0);
+			WrenchProjectileEntity wrench = new WrenchProjectileEntity(world, user, stack.copyWithCount(1), damage, range);
+			wrench.setVelocity(user, user.getPitch(), user.getYaw(), 0.0f, 1.6f, 0.0f);
+			world.spawnEntity(wrench);
 			world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.PLAYERS, 0.8f, 0.5f);
-			stack.damage(1, user, LivingEntity.getSlotForHand(hand));
-			user.getItemCooldownManager().set(this, THROW_DELAY_TICKS);
+			// Erst wieder werfen, wenn er zurueck ist (oder nach Ablauf der Flugzeit)
+			user.getItemCooldownManager().set(this, WrenchProjectileEntity.MAX_FLIGHT_TICKS);
 		}
 		return TypedActionResult.success(stack, world.isClient());
 	}
 
 	@Override
-	public boolean canRepair(ItemStack stack, ItemStack ingredient) {
-		return ingredient.isOf(ModItems.BOLT) || super.canRepair(stack, ingredient);
-	}
-
-	@Override
-	public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+	protected void appendUsage(List<Text> tooltip) {
 		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.omniwrench.usage").formatted(Formatting.DARK_GRAY));
-		super.appendTooltip(stack, context, tooltip, type);
 	}
 }
