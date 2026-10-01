@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.boss;
 
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -195,6 +197,12 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 	}
 
 	private int stunDuration = 60;
+	/** Mehr Spieler zu Kampfbeginn: +15 % Schaden je weiterem Spieler (wie alle Gegner, siehe PartyRules). */
+	private float damageFactor = 1.0f;
+
+	private float scaled(float damage) {
+		return damage * damageFactor;
+	}
 
 	private void updateFighters(ServerWorld world) {
 		fighters.clear();
@@ -214,7 +222,8 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 		scaled = true;
 		EntityAttributeInstance health = getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
 		if (health != null) {
-			health.setBaseValue(BASE_HEALTH * (1.0 + 0.5 * Math.max(0, fighters.size() - 1)));
+			health.setBaseValue(BASE_HEALTH * (1.0 + PartyRules.HEALTH_PER_MEMBER * Math.max(0, fighters.size() - 1)));
+			damageFactor = 1.0f + (float) PartyRules.DAMAGE_PER_MEMBER * Math.max(0, fighters.size() - 1);
 			setHealth(getMaxHealth());
 		}
 		taunt("spawn");
@@ -346,7 +355,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			PlayerEntity player = world.getPlayerByUuid(uuid);
 			if (player != null && !laserHit.contains(uuid) && distanceToSegment(player.getBoundingBox().getCenter(), from, to) < 1.3) {
 				laserHit.add(uuid);
-				player.damage(getDamageSources().mobAttack(this), phase == 1 ? 9.0f : 12.0f);
+				player.damage(getDamageSources().mobAttack(this), scaled(phase == 1 ? 9.0f : 12.0f));
 				player.setOnFireFor(3.0f);
 			}
 		}
@@ -438,7 +447,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			for (UUID uuid : fighters) {
 				PlayerEntity player = world.getPlayerByUuid(uuid);
 				if (player != null && player.squaredDistanceTo(this) < 5.5 * 5.5 && player.isOnGround()) {
-					player.damage(getDamageSources().mobAttack(this), phase == 1 ? 8.0f : 11.0f);
+					player.damage(getDamageSources().mobAttack(this), scaled(phase == 1 ? 8.0f : 11.0f));
 					Vec3d push = player.getPos().subtract(getPos()).normalize().multiply(1.4);
 					player.addVelocity(push.x, 0.6, push.z);
 					player.velocityModified = true;
@@ -470,7 +479,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 		for (UUID uuid : fighters) {
 			PlayerEntity player = world.getPlayerByUuid(uuid);
 			if (player != null && player.squaredDistanceTo(this) < 10 * 10) {
-				player.damage(getDamageSources().mobAttack(this), 18.0f);
+				player.damage(getDamageSources().mobAttack(this), scaled(18.0f));
 				Vec3d push = player.getPos().subtract(getPos()).normalize().multiply(2.0);
 				player.addVelocity(push.x, 0.8, push.z);
 				player.velocityModified = true;
@@ -515,7 +524,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 				PlayerEntity player = world.getPlayerByUuid(uuid);
 				if (player != null && player.isOnGround() && hazardSectors.contains(sectorOf(player.getPos()))
 						&& home.getSquaredDistance(player.getPos()) < ARENA_RADIUS * ARENA_RADIUS) {
-					player.damage(getDamageSources().lightningBolt(), 3.0f);
+					player.damage(getDamageSources().lightningBolt(), scaled(3.0f));
 				}
 			}
 		}

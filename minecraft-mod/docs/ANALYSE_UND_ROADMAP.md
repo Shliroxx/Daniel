@@ -57,6 +57,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | UI (Phase 16) | KH-Kommandomenü, Weltkarte, Inventar-Reiter, HUD aufräumen; Farben je System; HUD verschieb- und skalierbar; eigene Symbole |
 | VFX (Phase 17) | alle vier Bereiche (Verwandlung, Treffer/Combos, Magie, Waffen/Gadgets); immer voll; Bildschirm-Blitz und Vignette; eigene Partikel-Texturen |
 | Audio (Phase 18) | selbst erzeugte Sounds; alle vier Bereiche; keine Musik; Lautstärke über die Minecraft-Kategorien |
+| Multiplayer (Phase 19) | Gruppen bis 4 Spieler; je mehr Spieler in der Gruppe, desto stärker Herzlose, Arena-Gegner, Risse und Boss; geteilte Quests, EP und Belohnungen; PvP wie Minecraft-Einstellung (`pvp` in server.properties), in der Gruppe nie; Vita heilt Mitspieler; Schiff mit 2 Plätzen; Test mit 4 Clients |
 | Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
@@ -262,7 +263,7 @@ Jede Phase endet mit `./gradlew build` grün (siehe Abschnitt 0), einem Testprot
 | 16 | UI | Inventar-Tabs, Weltkarte, Feinschliff aller Screens | VS |
 | 17 | VFX | Partikel-Presets, Spuren, Aufprall, Verwandlungssequenz | VS |
 | 18 | Audio | `sounds.json`, eigene Sound-Events für alle Haken, Platzhalter-OGGs | VS |
-| 19 | Multiplayer | 2–4-Spieler-Tests, Boss-Sync, geteilte Quests | VS |
+| 19 | Multiplayer | Gruppen, Gegner-Skalierung, geteilte Quests/EP, PvP-Regeln, 4-Client-Test | ✅ 0.11.0 |
 | 20 | Optimierung | Profiling (Spark) mit 20/50 Gegnern, Boss, 4 Spielern | 19 |
 | 21 | Tests | GameTests (Fabric) für Kernregeln, QA-Checkliste | 20 |
 | 22 | Release | Versionierung, Modrinth-Paket, Changelog | 21 |
@@ -553,6 +554,23 @@ Lautstärke über die Minecraft-Kategorien.
 | Neu: Omnitrix-Warnpiepen (letzte 5 s), Klick im Alien-Rad, Treffer-Klang bei jedem Combo-Treffer, Start/Riss-Klang beim Weltwechsel | IMPLEMENTED | |
 | `check_assets.py` prüft Ereignisse, Dateien und Untertitel | IMPLEMENTED | |
 | Musik | gestrichen | Entscheidung SANTIQ |
+
+### Phase 19 — Multiplayer
+
+Entscheidung SANTIQ: je mehr Leute in der Gruppe, desto schwerer Boss und Gegner; geteilte Quests und Belohnungen; Gruppensystem;
+PvP wie die Minecraft-Einstellung; Vita heilt Mitspieler; Schiff mit 2 Plätzen; Test mit 4 Clients.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Gruppen (`/party invite|accept|leave|kick|list`), max. 4, Anführer, Einladung 60 s mit Klick-Annahme | IMPLEMENTED | 4 Clients getestet; Gruppe lebt bis Server-Neustart (nicht gespeichert) |
+| Gruppen-HUD (Name, Stufe, Lebensbalken, offline grau), im HUD-Editor verschiebbar | IMPLEMENTED | getestet |
+| Gegner-Skalierung: +50 % Leben, +15 % Schaden je weiterem Mitglied im Umkreis von 48 Blöcken (Herzlose, Arena, Risse, Nefarious) | IMPLEMENTED | Shadow 12 → 30 Leben bei 4 Spielern, Nefarious 1000 Leben bei 4 Kämpfern |
+| Geteilte Quest-Fortschritte und Herzlosen-EP an Mitglieder in Reichweite | IMPLEMENTED | Quest-Kill bei Tester3 gezählt |
+| Kein Schaden zwischen Gruppenmitgliedern (Nahkampf, Fähigkeiten, Zauber, Projektile); außerhalb der Gruppe gilt `pvp` | IMPLEMENTED | in der Gruppe 18,92 → 18,92; nach `/party kick` 18,92 → 11,84 |
+| Vita heilt Verbündete im Umkreis (Stufe 1: 3, 2: 4, 3: 6 Blöcke) | IMPLEMENTED | 11,84 → 18,8 |
+| Schiff mit 2 Plätzen (Pilot + Beifahrer) | IMPLEMENTED | zwei Spieler gleichzeitig an Bord getestet |
+| `pvp=false` im Spiel getestet | TODO | Logik nutzt `shouldDamagePlayer`; nur im Code geprüft |
+| `tools/multiplayer_test.sh` (bis 4 Clients, je eigener Xvfb-Bildschirm) | IMPLEMENTED | |
 
 ### Testumgebung (seit Phase 4)
 

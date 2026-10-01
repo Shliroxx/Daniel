@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.combat;
 
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -214,7 +216,8 @@ public final class CombatManager {
 	/** Lock-On-Ziel in Reichweite, sonst alle Lebewesen in einem 140°-Kegel vor dem Spieler. */
 	private static List<LivingEntity> targetsInFront(ServerPlayerEntity player, CombatState state, double reach) {
 		Entity locked = state.lockTargetId >= 0 ? player.getServerWorld().getEntityById(state.lockTargetId) : null;
-		if (locked instanceof LivingEntity living && living.isAlive() && player.squaredDistanceTo(living) <= (reach + 0.5) * (reach + 0.5)) {
+		if (locked instanceof LivingEntity living && living.isAlive() && player.squaredDistanceTo(living) <= (reach + 0.5) * (reach + 0.5)
+				&& PartyRules.canHarm(player, living)) {
 			return List.of(living);
 		}
 		Vec3d eye = player.getEyePos();
@@ -233,7 +236,8 @@ public final class CombatManager {
 	private static List<LivingEntity> livingAround(ServerPlayerEntity player, double radius) {
 		double radiusSq = radius * radius;
 		return player.getServerWorld().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
-				e -> e != player && e.isAlive() && !e.isSpectator() && e.squaredDistanceTo(player) <= radiusSq && !isOwnPet(player, e));
+				e -> e != player && e.isAlive() && !e.isSpectator() && e.squaredDistanceTo(player) <= radiusSq && !isOwnPet(player, e)
+						&& PartyRules.canHarm(player, e));
 	}
 
 	private static boolean isOwnPet(ServerPlayerEntity player, LivingEntity entity) {

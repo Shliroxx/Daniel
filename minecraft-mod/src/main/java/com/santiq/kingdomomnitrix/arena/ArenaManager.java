@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.arena;
 
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -290,8 +292,12 @@ public final class ArenaManager {
 			if (mob instanceof NefariousEntity boss) {
 				boss.setHome(session.center);
 			}
+			// je mehr Teilnehmer, desto staerker die Gegner (Entscheidung SANTIQ)
+			int group = Math.max(1, session.participants.size());
 			if (mob instanceof HeartlessEntity heartless) {
-				heartless.applyScaling(level, random.nextFloat() < session.challenge.eliteChance());
+				heartless.applyScaling(level, random.nextFloat() < session.challenge.eliteChance(), group);
+			} else if (!(mob instanceof NefariousEntity)) {
+				PartyRules.scale(mob, group);
 			}
 			session.participants.stream().findAny()
 					.map(uuid -> world.getServer().getPlayerManager().getPlayer(uuid))

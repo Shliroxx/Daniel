@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import net.minecraft.server.network.ServerPlayerEntity;
+
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import net.minecraft.entity.Entity;
@@ -142,6 +146,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	protected void onEntityHit(EntityHitResult entityHitResult) {
 		super.onEntityHit(entityHitResult);
 		Entity target = entityHitResult.getEntity();
+		if (getOwner() instanceof ServerPlayerEntity shooter && !PartyRules.canHarm(shooter, target)) {
+			return; // Mitspieler (Gruppe oder PvP aus): kein Schaden, keine Wirkung
+		}
 		Kind kind = getKind();
 		DamageSource source = kind.magic
 				? getDamageSources().indirectMagic(this, getOwner())

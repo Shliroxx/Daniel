@@ -33,10 +33,10 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route", "arena", "boss"))
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("party", "spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route", "arena", "boss"))
 # zusammengesetzte Schluessel des Kommandomenues (Zeilen attack/magic/items/omnitrix, leere Untermenues)
 DYNAMIC_KEYS = (f"hud.{MOD_ID}.command.", f"hud.{MOD_ID}.command.empty.")
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity|arena|boss)\.' + MOD_ID + r'[\w.]*)"')
+KEY_PATTERN = re.compile(r'"((?:party|message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity|arena|boss)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 

@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.quest;
 
+import com.santiq.kingdomomnitrix.party.PartyManager;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -229,7 +231,10 @@ public final class QuestManager {
 		if (victim == player) {
 			return;
 		}
-		advance(player, ObjectiveType.KILL, objective -> objective.matches(victim.getType()) ? 1 : 0);
+		// Gruppe: der Kill zaehlt fuer alle Mitglieder in der Naehe (Sammeln und Herstellen bleiben persoenlich)
+		for (ServerPlayerEntity member : PartyManager.nearbyMembers(player, PartyManager.SHARE_RADIUS)) {
+			advance(member, ObjectiveType.KILL, objective -> objective.matches(victim.getType()) ? 1 : 0);
+		}
 	}
 
 	/** Aufgerufen, wenn der Spieler Items herstellt (ItemStack#onCraftByPlayer). */

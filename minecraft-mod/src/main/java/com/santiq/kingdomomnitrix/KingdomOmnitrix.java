@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix;
 
+import com.santiq.kingdomomnitrix.party.PartyManager;
+
+import com.santiq.kingdomomnitrix.party.PartyCommand;
+
 import com.santiq.kingdomomnitrix.ability.AbilityRegistry;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaDrops;
@@ -96,6 +100,8 @@ public class KingdomOmnitrix implements ModInitializer {
 		RiftSpawner.register();
 		ModNetworking.register();
 		HeroCommand.register();
+		PartyManager.register();
+		PartyCommand.register();
 		registerEvents();
 		LOGGER.info("Kingdom Omnitrix geladen.");
 	}

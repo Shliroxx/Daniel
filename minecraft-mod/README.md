@@ -132,6 +132,14 @@ mit Untertiteln auf Deutsch und Englisch. Lautstärke über die normalen Minecra
 - **Gegner & Boss:** Herzlose (Laute, Treffer, „Herz wird befreit“ beim Besiegen, Erscheinen), Nefarious-Mech (Laser laden/feuern, Raketen, Stampfer, Überladung, Treffer, Explosion)
 - Eigene Aufnahmen: gleichnamige `.ogg` in `assets/kingdomomnitrix/sounds/` ablegen und in `KEEP` im Generator eintragen.
 
+### Mehrspieler und Gruppe
+- `/party invite <Spieler>` · `/party accept` · `/party leave` · `/party kick <Spieler>` · `/party list` — bis zu 4 Spieler
+- Je mehr Gruppenmitglieder in der Nähe (48 Blöcke), desto stärker die Gegner: +50 % Leben und +15 % Schaden pro weiterem Mitglied (Herzlose, Arena, Risse, Dr. Nefarious)
+- Quest-Fortschritt und Herzlosen-EP werden mit Mitgliedern in der Nähe geteilt
+- Gruppenmitglieder können sich nicht verletzen; sonst gilt die Server-Einstellung `pvp`
+- Vita heilt auch Mitspieler im Umkreis; das Raumschiff hat zwei Plätze
+- Gruppen-HUD links mit Stufe und Leben jedes Mitglieds
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.

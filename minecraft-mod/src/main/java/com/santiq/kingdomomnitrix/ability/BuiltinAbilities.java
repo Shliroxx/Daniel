@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -96,7 +98,7 @@ final class BuiltinAbilities {
 		double speed = ctx.param("speed", 2.6);
 
 		Box path = player.getBoundingBox().stretch(look.multiply(distance)).expand(0.6);
-		for (LivingEntity target : ctx.world().getEntitiesByClass(LivingEntity.class, path, e -> e != player && e.isAlive())) {
+		for (LivingEntity target : ctx.world().getEntitiesByClass(LivingEntity.class, path, e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
 			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
 			target.takeKnockback(0.6, -look.x, -look.z);
 		}
@@ -123,7 +125,7 @@ final class BuiltinAbilities {
 		double range = ctx.param("range", 3.0);
 		float damage = (float) ctx.param("damage", 8.0);
 		Box area = player.getBoundingBox().stretch(look.multiply(range)).expand(1.0, 0.5, 1.0);
-		List<LivingEntity> targets = ctx.world().getEntitiesByClass(LivingEntity.class, area, e -> e != player && e.isAlive());
+		List<LivingEntity> targets = ctx.world().getEntitiesByClass(LivingEntity.class, area, e -> e != player && e.isAlive() && PartyRules.canHarm(player, e));
 		if (targets.isEmpty()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
@@ -166,6 +168,9 @@ final class BuiltinAbilities {
 			return false;
 		}
 		LivingEntity target = found.get();
+		if (!PartyRules.canHarm(player, target)) {
+			return false;
+		}
 		double maxWidth = ctx.param("max_width", 2.0);
 		if (target.getWidth() > maxWidth) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.too_heavy").formatted(Formatting.GRAY), true);
@@ -230,7 +235,7 @@ final class BuiltinAbilities {
 		ServerPlayerEntity player = ctx.player();
 		double radiusSq = radius * radius;
 		return ctx.world().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
-				e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= radiusSq);
+				e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= radiusSq && PartyRules.canHarm(player, e));
 	}
 
 	/** Blickrichtung ohne Neigung; faellt bei senkrechtem Blick auf die Koerperausrichtung zurueck. */

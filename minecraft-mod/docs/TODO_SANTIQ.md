@@ -121,6 +121,11 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Herzlose und Dr. Nefarious
 - [ ] Welche Sounds klingen schlecht? Die kann ich neu einstellen oder du ersetzt sie durch eigene Aufnahmen
 
+### Phase 19 — Mehrspieler (mit Freunden)
+- [ ] Gruppe bilden (`/party invite`, Klick auf [Annehmen]) und zusammen Herzlose jagen — sind sie zu viert zu stark/zu schwach?
+- [ ] Dr. Nefarious zu zweit oder dritt
+- [ ] Server mit `pvp=false` starten und prüfen, dass niemand Schaden nimmt
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

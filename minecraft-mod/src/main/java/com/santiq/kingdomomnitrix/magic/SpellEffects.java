@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.magic;
 
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -131,7 +133,7 @@ public final class SpellEffects {
 				ctx.world().spawnEntity(bolt);
 			}
 			Box area = new Box(point, point).expand(radius);
-			for (LivingEntity victim : ctx.world().getEntitiesByClass(LivingEntity.class, area, e -> e != caster && e.isAlive() && !isFriend(caster, e))) {
+			for (LivingEntity victim : ctx.world().getEntitiesByClass(LivingEntity.class, area, e -> e != caster && e.isAlive() && PartyRules.canHarm(caster, e))) {
 				victim.timeUntilRegen = 0;
 				victim.damage(ctx.world().getDamageSources().indirectMagic(caster, caster), damage);
 			}
@@ -165,11 +167,9 @@ public final class SpellEffects {
 		return true;
 	}
 
+	/** Verbuendete (Gruppe, Team, bei ausgeschaltetem PvP alle Spieler, eigene Tiere) — siehe {@link PartyRules}. */
 	private static boolean isFriend(ServerPlayerEntity caster, LivingEntity entity) {
-		if (entity instanceof PlayerEntity) {
-			return !caster.shouldDamagePlayer((PlayerEntity) entity) || entity.isTeammate(caster);
-		}
-		return entity instanceof TameableEntity tameable && tameable.isTamed() && caster.equals(tameable.getOwner());
+		return PartyRules.isAlly(caster, entity);
 	}
 
 	private static void sound(SpellContext ctx, SoundEvent sound, float volume, float pitch) {

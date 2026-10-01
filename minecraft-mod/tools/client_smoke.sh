@@ -44,8 +44,12 @@ case "${1:-}" in
 		mkdir -p run-server
 		echo "eula=true" > run-server/eula.txt
 		[ -f run-server/server.properties ] || printf 'online-mode=false\nallow-flight=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nenforce-secure-profile=false\n' > run-server/server.properties
-		# Testspieler "Tester" als OP (Offline-UUID = MD5-UUID von "OfflinePlayer:Tester")
-		python3 -c 'import hashlib,uuid,json;b=bytearray(hashlib.md5(b"OfflinePlayer:Tester").digest());b[6]=b[6]&0x0f|0x30;b[8]=b[8]&0x3f|0x80;print(json.dumps([{"uuid":str(uuid.UUID(bytes=bytes(b))),"name":"Tester","level":4,"bypassesPlayerLimit":False}]))' > run-server/ops.json
+		# Testspieler Tester, Tester2 … Tester4 als OP (Offline-UUID = MD5-UUID von "OfflinePlayer:<Name>")
+		python3 -c 'import hashlib,uuid,json
+def op(n):
+    b=bytearray(hashlib.md5(("OfflinePlayer:"+n).encode()).digest());b[6]=b[6]&0x0f|0x30;b[8]=b[8]&0x3f|0x80
+    return {"uuid":str(uuid.UUID(bytes=bytes(b))),"name":n,"level":4,"bypassesPlayerLimit":False}
+print(json.dumps([op(n) for n in ["Tester","Tester2","Tester3","Tester4"]]))' > run-server/ops.json
 		rm -rf run-server/logs
 		nohup ./gradlew runServer --no-daemon --args="nogui" > "${OUT%.log}-server.log" 2>&1 &
 		for _ in $(seq 1 90); do

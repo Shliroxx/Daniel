@@ -45,6 +45,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(ArenaStartPayload.ID, ArenaStartPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ToggleHeroAbilityPayload.ID, ToggleHeroAbilityPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(CommandActionPayload.ID, CommandActionPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(PartySyncPayload.ID, PartySyncPayload.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(CommandActionPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();

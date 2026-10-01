@@ -3,6 +3,7 @@ build/
 out/
 run/
 run-server/
+run-client*/
 *.iml
 .idea/
 

@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import net.minecraft.server.network.ServerPlayerEntity;
+
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import com.santiq.kingdomomnitrix.registry.ModItems;
@@ -96,6 +100,9 @@ public class WrenchProjectileEntity extends ThrownItemEntity {
 	protected void onEntityHit(EntityHitResult entityHitResult) {
 		Entity target = entityHitResult.getEntity();
 		if (target == getOwner() || !hitThisPass.add(target.getId()) || getWorld().isClient()) {
+			return;
+		}
+		if (getOwner() instanceof ServerPlayerEntity thrower && !PartyRules.canHarm(thrower, target)) {
 			return;
 		}
 		target.damage(getDamageSources().thrown(this, getOwner()), damage);

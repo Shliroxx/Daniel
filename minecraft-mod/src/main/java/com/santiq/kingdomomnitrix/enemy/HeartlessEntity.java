@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.enemy;
 
+import net.minecraft.server.network.ServerPlayerEntity;
+
+import com.santiq.kingdomomnitrix.party.PartyRules;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -65,6 +69,15 @@ public abstract class HeartlessEntity extends HostileEntity implements GeoEntity
 
 	// --- Skalierung -----------------------------------------------------------------------------
 
+	/** Passt Leben und Schaden an Spielerstufe und Gruppengroesse an; einmal pro Herzlosem. */
+	public void applyScaling(int playerLevel, boolean elite, int groupSize) {
+		boolean first = !scaled;
+		applyScaling(playerLevel, elite);
+		if (first) {
+			PartyRules.scale(this, groupSize);
+		}
+	}
+
 	/** Passt Leben und Schaden an die Spielerstufe an; einmal pro Herzlosem. */
 	public void applyScaling(int playerLevel, boolean elite) {
 		if (scaled) {
@@ -103,7 +116,8 @@ public abstract class HeartlessEntity extends HostileEntity implements GeoEntity
 		// Spawn-Ei, /summon, Mod-Dimensionen: Staerke nach dem naechsten Spieler. Risse (EVENT) skalieren selbst.
 		PlayerEntity nearest = spawnReason == SpawnReason.EVENT ? null : world.getClosestPlayer(this, 64);
 		if (nearest != null) {
-			applyScaling(com.santiq.kingdomomnitrix.player.HeroDataAccess.get(nearest).level(), false);
+			int group = nearest instanceof ServerPlayerEntity player ? PartyRules.groupSize(player) : 1;
+			applyScaling(com.santiq.kingdomomnitrix.player.HeroDataAccess.get(nearest).level(), false, group);
 		}
 		return data;
 	}

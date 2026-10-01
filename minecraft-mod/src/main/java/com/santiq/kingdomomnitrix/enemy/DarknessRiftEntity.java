@@ -169,7 +169,7 @@ public class DarknessRiftEntity extends Entity {
 			return;
 		}
 		if (entity instanceof HeartlessEntity heartless) {
-			heartless.applyScaling(level, random.nextFloat() < rift.eliteChance());
+			heartless.applyScaling(level, random.nextFloat() < rift.eliteChance(), Math.max(1, participants.size()));
 		}
 		if (entity instanceof net.minecraft.entity.mob.MobEntity mob) {
 			mob.setPersistent();

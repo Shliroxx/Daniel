@@ -12,6 +12,7 @@ import com.santiq.kingdomomnitrix.client.command.CommandMenu;
 import com.santiq.kingdomomnitrix.client.hud.HudManager;
 import com.santiq.kingdomomnitrix.client.menu.MenuTabs;
 import com.santiq.kingdomomnitrix.client.space.ShipHud;
+import com.santiq.kingdomomnitrix.client.party.PartyHud;
 import com.santiq.kingdomomnitrix.client.ui.UiDraw;
 import com.santiq.kingdomomnitrix.client.vfx.ModParticleFactories;
 import com.santiq.kingdomomnitrix.client.vfx.ScreenEffects;
@@ -100,6 +101,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		HudManager.register(OmnitrixHud.INSTANCE);
 		HudManager.register(GadgetHud.INSTANCE);
 		HudManager.register(ShipHud.INSTANCE);
+		HudManager.register(PartyHud.INSTANCE);
+		PartyHud.register();
 		HudManager.registerLayer();
 		CommandMenu.register();
 		LockOnHud.register();
@@ -138,6 +141,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			ShipClient.reset();
 			CommandMenu.INSTANCE.reset();
 			ScreenEffects.reset();
+			PartyHud.reset();
 		});
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenArenaPayload.ID, (payload, context) ->

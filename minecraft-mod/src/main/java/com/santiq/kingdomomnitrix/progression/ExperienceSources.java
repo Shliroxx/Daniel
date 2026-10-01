@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.progression;
 
+import com.santiq.kingdomomnitrix.party.PartyManager;
+
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
@@ -53,7 +55,10 @@ public final class ExperienceSources {
 	public static void register() {
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (entity instanceof HeartlessEntity heartless && source.getAttacker() instanceof ServerPlayerEntity player) {
-				HeroDataAccess.grantExperience(player, heartlessExperience(heartless, HeroDataAccess.get(player).level()));
+				// Gruppe: alle Mitglieder in der Naehe bekommen die vollen EP (nach ihrer eigenen Stufe)
+				for (ServerPlayerEntity member : PartyManager.nearbyMembers(player, PartyManager.SHARE_RADIUS)) {
+					HeroDataAccess.grantExperience(member, heartlessExperience(heartless, HeroDataAccess.get(member).level()));
+				}
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(ExperienceSources::tick);
