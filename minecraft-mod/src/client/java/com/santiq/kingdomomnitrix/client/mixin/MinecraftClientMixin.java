@@ -19,6 +19,7 @@ public abstract class MinecraftClientMixin {
 	@Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
 	private void kingdomomnitrix$replaceAttack(CallbackInfoReturnable<Boolean> cir) {
 		if (CombatInput.holdsComboWeapon((MinecraftClient) (Object) this)) {
+			CombatInput.onAttackPressed();
 			cir.setReturnValue(false);
 		}
 	}

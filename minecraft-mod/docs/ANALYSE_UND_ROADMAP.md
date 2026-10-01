@@ -310,6 +310,27 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 
 **Test-Rezept:** `/hero dna kingdomomnitrix:heatblast` → Probe rechtsklicken (Omnitrix im Inventar) → `G` → Heatblast → `R`/`V`/`B`.
 
+### Phase 4 — Kampf
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Leichte Combo (3 Schläge, Finisher als Flächenschlag) | IMPLEMENTED | im Client getestet: Treffer, Kill, Bolt-Drop, Advancement |
+| Luftcombo (Schweben, Finisher nach unten) | IMPLEMENTED | Logik fertig, Spielgefühl noch zu testen |
+| Schwerer Angriff (Linksklick halten) | IMPLEMENTED | |
+| Ausweichen (Alt) mit Unverwundbarkeit, 1× in der Luft | IMPLEMENTED | |
+| Blocken (X) mit perfektem Block + Betäubung | IMPLEMENTED | |
+| Lock-On (Z): Auswahl, Wechsel, Lösen (Schleichen+Z), Kamera folgt, Umrandung, HUD | IMPLEMENTED | im Client getestet |
+| Kampfanimationen (playerAnimator, Jar-in-Jar) | PROTOTYPE | 9 Animationen, Platzhalter-Bewegungen |
+| `ComboWeapon`-Schnittstelle | IMPLEMENTED | Keyblade nutzt sie; Werte pro Waffe in Phase 5 |
+| Schnelle Klicks unter 1 Tick | behoben | wurden anfangs verschluckt (im Client-Test gefunden) |
+| Skilltree-Anbindung (Combo Plus, Air Combo …) | TODO → Phase 15 | laut `DESIGN_PROGRESSION.md` |
+
+### Testumgebung (seit Phase 4)
+
+- `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅
+- Client auf Xvfb: Status-HUD, Omnitrix-HUD, DNA-Freischaltung, Alien-Rad, Heatblast-Körper (GeckoLib), Feuerexplosion, Lock-On, Combo ✅ (Screenshots)
+- `tools/client_smoke.sh` für wiederholbare Client-Tests
+
 ---
 
 ## 5. Risiken

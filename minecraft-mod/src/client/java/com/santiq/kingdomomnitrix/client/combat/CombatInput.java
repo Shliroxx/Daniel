@@ -21,6 +21,8 @@ public final class CombatInput {
 
 	private static int attackHeldTicks;
 	private static boolean heavyFired;
+	/** Klick, der zwischen zwei Ticks gedrueckt und schon wieder losgelassen wurde. */
+	private static boolean pendingClick;
 	private static boolean guardSent;
 
 	private CombatInput() {
@@ -54,21 +56,28 @@ public final class CombatInput {
 		ClientLockOn.tick(client);
 	}
 
+	/** Vom {@code MinecraftClientMixin} gemeldet, sobald Minecraft einen Linksklick verarbeiten wuerde. */
+	public static void onAttackPressed() {
+		pendingClick = true;
+	}
+
 	private static void handleAttack(MinecraftClient client, boolean active) {
 		boolean pressed = active && client.options.attackKey.isPressed();
 		if (pressed) {
 			attackHeldTicks++;
+			pendingClick = false;
 			if (!heavyFired && attackHeldTicks >= HEAVY_HOLD_TICKS) {
 				heavyFired = true;
 				ClientPlayNetworking.send(new ComboAttackPayload(true));
 			}
 			return;
 		}
-		if (attackHeldTicks > 0 && !heavyFired && active) {
+		if ((attackHeldTicks > 0 || pendingClick) && !heavyFired && active) {
 			ClientPlayNetworking.send(new ComboAttackPayload(false));
 		}
 		attackHeldTicks = 0;
 		heavyFired = false;
+		pendingClick = false;
 	}
 
 	private static void handleGuard(boolean wanted) {
@@ -97,6 +106,7 @@ public final class CombatInput {
 	public static void reset() {
 		attackHeldTicks = 0;
 		heavyFired = false;
+		pendingClick = false;
 		guardSent = false;
 	}
 }

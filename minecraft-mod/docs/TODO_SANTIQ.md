@@ -7,27 +7,14 @@ Abhaken mit `[x]`, sobald erledigt.
 
 ---
 
-## 1. Netzwerk der Cloud-Umgebung freigeben (wichtigster Punkt)
+## 1. Netzwerk der Cloud-Umgebung — ✅ erledigt
 
-Ohne diese Freigaben kann Claude die Mod nicht selbst bauen und testen. Der Nachweis läuft dann nur über GitHub Actions.
+Seit 2026-10-01 13:00 sind Fabric, Mojang und playerAnimator erreichbar. Claude baut jetzt lokal,
+startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildschirm an (Screenshots).
 
-Wo: claude.ai/code → Umgebungs-Menü in der Titelleiste der Sitzung → **Edit** → **Network access** → die Hosts unter *Allowed domains* eintragen (oder eine breitere Zugriffsstufe wählen). Danach eine **neue Sitzung** starten, falls die Änderung nicht sofort greift.
-Doku: https://code.claude.com/docs/en/claude-code-on-the-web
-
-- [ ] `maven.fabricmc.net` — Fabric Loom, Loader, Fabric API, Yarn-Mappings
-- [ ] `meta.fabricmc.net` — Fabric-Versionsinfos
-- [ ] `piston-meta.mojang.com` — Minecraft-Versionsliste
-- [ ] `piston-data.mojang.com` — Minecraft-Client/-Server-Jars
-- [ ] `libraries.minecraft.net` — Minecraft-Bibliotheken
-- [ ] `resources.download.minecraft.net` — Minecraft-Assets (für `runClient`/GameTests)
-- [ ] `dl.cloudsmith.io` — GeckoLib (Alien-Körper, Mobs, Bosse)
-- [ ] `maven.kosmx.dev` — playerAnimator (ab Phase 4: Keyblade-Combos, Dodge)
-
-**Letzter Versuch (2026-10-01, nach deiner Bitte erneut):** alle 8 Hosts weiterhin gesperrt. Auch Ausweich-Spiegel
-(Quilt, Architectury, JitPack, Aliyun, Modrinth, SpongePowered, TerraformersMC) sind gesperrt. Es gibt keinen legalen
-Ersatzweg für die Minecraft-Dateien, daher bleibt nur die Freigabe. Gilt sie in der laufenden Sitzung nicht, eine neue Sitzung starten.
-
-Bereits erreichbar (nichts zu tun): `services.gradle.org`, `plugins.gradle.org`, `repo.maven.apache.org`, `pypi.org`, GitHub.
+- [x] `maven.fabricmc.net`, `meta.fabricmc.net`, `piston-meta.mojang.com`, `piston-data.mojang.com`,
+      `libraries.minecraft.net`, `resources.download.minecraft.net`, `maven.kosmx.dev`
+- [ ] Optional: `api.minecraftservices.com`, `sessionserver.mojang.com` — nur für Chat-Signaturen/Skins im Test-Client, nicht nötig
 
 ---
 
@@ -35,9 +22,10 @@ Bereits erreichbar (nichts zu tun): `services.gradle.org`, `plugins.gradle.org`,
 
 - [ ] **Java 21** — https://adoptium.net (Temurin 21, „JDK“). Nur nötig, wenn du selbst baust (`Mod bauen.bat`).
 - [ ] **Minecraft Java Edition 1.21.1**
-- [ ] **Fabric Loader ≥ 0.17** für 1.21.1 — https://fabricmc.net/use/installer/
+- [ ] **Fabric Loader ≥ 0.17 (empfohlen 0.19.3)** für 1.21.1 — https://fabricmc.net/use/installer/
 - [ ] **Fabric API** für 1.21.1 (≥ 0.116) — https://modrinth.com/mod/fabric-api → in den `mods`-Ordner
 - [ ] **GeckoLib** für 1.21.1 (≥ 4.9) — https://modrinth.com/mod/geckolib → in den `mods`-Ordner
+- playerAnimator ist in Kingdom Omnitrix eingebettet — nichts extra zu installieren
 - [ ] **Kingdom Omnitrix** — die `.jar` aus dem letzten grünen GitHub-Lauf: Repository → *Actions* → Workflow **Mod bauen** → neuester grüner Lauf → *Artifacts* → `kingdomomnitrix` (ZIP entpacken, die Datei **ohne** `-sources` in `mods`)
 - [ ] Für einen Server: dieselben vier Mods (Fabric API, GeckoLib, Kingdom Omnitrix) auch in den `mods`-Ordner des Servers
 
@@ -82,3 +70,4 @@ Bereits erreichbar (nichts zu tun): `services.gradle.org`, `plugins.gradle.org`,
 | Gradle | 9.7.1 (über den Wrapper heruntergeladen) | Build |
 | Python + Pillow | 3 / 12.3 | Textur- und Modell-Generatoren, Asset-Check |
 | GitHub Actions „Mod bauen“ | — | echter Build bei jedem Push, liefert die `.jar` |
+| Xvfb, Mesa, xdotool, ImageMagick | — | Client auf virtuellem Bildschirm starten, steuern, Screenshots (`tools/client_smoke.sh`) |
