@@ -1,5 +1,5 @@
 @echo off
-REM Baut den Heroverse-Mod. Ergebnis: build\libs\heroverse-<version>.jar
+REM Baut Kingdom Omnitrix. Ergebnis: build\libs\kingdomomnitrix-<version>.jar
 REM Benoetigt Java 21 (z. B. https://adoptium.net).
 cd /d "%~dp0"
 where java >nul 2>nul

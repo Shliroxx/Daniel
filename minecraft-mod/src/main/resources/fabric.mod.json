@@ -1,21 +1,21 @@
 {
 	"schemaVersion": 1,
-	"id": "heroverse",
+	"id": "kingdomomnitrix",
 	"version": "${version}",
-	"name": "Heroverse Crossover",
-	"description": "Kingdom Hearts, Ben 10 und Ratchet & Clank in Minecraft: Schluesselschwert mit Zaubern, Omnitrix mit fuenf Aliens, Herzlose, Bolts, Combuster, OmniWrench und Fusionsgranaten.",
-	"authors": ["Daniel"],
+	"name": "Kingdom Omnitrix",
+	"description": "Action-Adventure-Fan-Mod: Kingdom Hearts, Ben 10 und Ratchet & Clank in Minecraft. Keyblades und Magie, Omnitrix-Transformationen, Herzlose, Bolts, Waffen und Gadgets.",
+	"authors": ["SANTIQ"],
 	"license": "MIT",
-	"icon": "assets/heroverse/icon.png",
+	"icon": "assets/kingdomomnitrix/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": ["com.daniel.heroverse.Heroverse"],
-		"client": ["com.daniel.heroverse.client.HeroverseClient"]
+		"main": ["com.santiq.kingdomomnitrix.KingdomOmnitrix"],
+		"client": ["com.santiq.kingdomomnitrix.client.KingdomOmnitrixClient"]
 	},
 	"depends": {
 		"fabricloader": ">=0.16.0",
 		"minecraft": "~1.21.1",
 		"java": ">=21",
-		"fabric-api": "*"
+		"fabric-api": ">=0.116.0"
 	}
 }

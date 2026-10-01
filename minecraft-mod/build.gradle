@@ -9,6 +9,18 @@ base {
 	archivesName = project.archives_base_name
 }
 
+loom {
+	// Client-Code liegt in src/client/java und kann so nie auf einem Dedicated Server geladen werden.
+	splitEnvironmentSourceSets()
+
+	mods {
+		"kingdomomnitrix" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"

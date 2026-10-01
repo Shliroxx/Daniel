@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Erzeugt alle Texturen des Heroverse-Mods als Pixel-Art-PNGs.
+"""Erzeugt alle Texturen von Kingdom Omnitrix als Pixel-Art-PNGs.
 
 Die Bilder entstehen aus ASCII-Rastern und einfachen Formen, damit sie ohne
 Grafikprogramm reproduzierbar sind. Aufruf aus dem Ordner minecraft-mod/:
@@ -23,7 +23,7 @@ except ImportError:  # pragma: no cover - Hinweis fuer den Nutzer
     sys.exit("Pillow fehlt: pip install pillow")
 
 LOG = logging.getLogger("textures")
-DEFAULT_ROOT = Path(__file__).resolve().parent.parent / "src" / "main" / "resources" / "assets" / "heroverse"
+DEFAULT_ROOT = Path(__file__).resolve().parent.parent / "src" / "main" / "resources" / "assets" / "kingdomomnitrix"
 
 Color = tuple[int, int, int, int]
 
@@ -339,7 +339,7 @@ def build_all(rng: random.Random) -> dict[str, Image.Image]:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="assets/heroverse-Ordner (Standard: %(default)s)")
+    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="assets/kingdomomnitrix-Ordner (Standard: %(default)s)")
     parser.add_argument("--seed", type=int, default=1337, help="Zufalls-Seed fuer Holz- und Schattenrauschen")
     parser.add_argument("--check", action="store_true", help="nur pruefen, ob alle Texturen vorhanden sind")
     parser.add_argument("-v", "--verbose", action="store_true", help="jede Datei protokollieren")

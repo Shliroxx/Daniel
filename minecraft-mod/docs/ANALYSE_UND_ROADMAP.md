@@ -42,6 +42,17 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 
 ---
 
+## Entscheidungen (2026-10-01)
+
+| Frage | Entscheidung |
+|---|---|
+| Build-Prüfung | Hosts werden freigegeben; zusätzlich baut GitHub Actions bei jedem Push |
+| Mod-ID / Paket | `kingdomomnitrix` / `com.santiq.kingdomomnitrix` |
+| Bibliotheken | GeckoLib + playerAnimator — eingebunden in der Phase, die sie zuerst nutzt (3 bzw. 4) |
+| Ablauf | Phase für Phase, nach jeder Phase Prüfung durch SANTIQ |
+
+---
+
 ## 1. Bestandsaufnahme: jedes System bewertet
 
 ### Übersicht
@@ -77,7 +88,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 
 **Fabric-Setup — KEEP.** Die Versionen passen zu 1.21.1. Ändern:
 - Paket `com.daniel.heroverse` → `com.santiq.kingdomomnitrix`.
-- Mod-ID bleibt `heroverse`, oder `kingdomomnitrix`. **Diese Entscheidung muss vor Phase 2 fallen.** Ein späterer Wechsel macht alle Welten und Items ungültig.
+- Mod-ID: **entschieden → `kingdomomnitrix`** (umgesetzt in Phase 2).
 - `loom { splitEnvironmentSourceSets() }` einführen. Dann kann Client-Code nicht mehr versehentlich auf einem Dedicated Server landen. Der Compiler erzwingt die Trennung.
 
 **Aliens — REPLACE.** `item/Alien.java:22` ist ein `enum`, Fähigkeiten hängen an einem `switch` (`Alien.java:82`).
@@ -226,7 +237,7 @@ Jede Phase endet mit `./gradlew build` grün (siehe Abschnitt 0), einem Testprot
 | # | Phase | Ergebnis | Hängt ab von |
 |---|---|---|---|
 | 1 | Analyse | dieses Dokument | — |
-| 2 | Architektur | Paket-Umbau, Split Source Sets, CI-Build-Workflow, `HeroData`-Attachment mit Codec, Payload-Grundgerüst, JSON-Loader + Sync, `/hero debug` | Build-Zugang |
+| 2 | Architektur | Paket-Umbau, Split Source Sets, CI-Build-Workflow, `HeroData`-Attachment mit Codec und Sync, Status-HUD, `/hero`-Befehle | Build-Zugang |
 | 3 | Omnitrix | `AlienDefinition` + `AbilityType`-Registry, `TransformationManager`, Rad-Screen, Tasten, HUD-Baustein, Heatblast/XLR8/Vierarm mit je 3 Fähigkeiten, Platzprüfung bei Größe, `/hero transform` | 2 |
 | 4 | Kampf | Angriffs-Pipeline, Combo-Graph, Dodge mit Unverwundbarkeits-Fenster, Guard, Lock-On (Auswahl, Wechsel, UI, Entfernung), Treffer-Feedback | 2 |
 | 5 | Keyblades | `KeybladeDefinition`, 2 Keyblades, Stufen, Finisher | 4 |
@@ -250,6 +261,27 @@ Jede Phase endet mit `./gradlew build` grün (siehe Abschnitt 0), einem Testprot
 | 22 | Release | Versionierung, Modrinth-Paket, Changelog | 21 |
 
 Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween Town, Sci-Fi-Planet, Dark World), Waffen bis RYNO-artig, Advancements, Cutscene-Kamera.
+
+---
+
+## Phasenstatus
+
+### Phase 2 — Architektur (abgeschlossen bis auf den Build-Nachweis)
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Paket `com.santiq.kingdomomnitrix`, Mod-ID `kingdomomnitrix` | IMPLEMENTED | alle Klassen, Assets, Daten, Übersetzungen umgezogen |
+| Client-Source-Set (`splitEnvironmentSourceSets`) | IMPLEMENTED | Client-Code in `src/client/java` |
+| Paketstruktur nach Zielarchitektur | IMPLEMENTED | Prototyp-Systeme in `alien/ keyblade/ magic/ weapon/ gadget/ enemy/` |
+| `HeroData` (Stufe, EP, Bolts, Aliens, Story-Flags) | IMPLEMENTED | Attachment: persistent, beim Tod kopiert, an eigenen Client synchronisiert, robuster Codec |
+| Status-HUD (Stufe, EP-Balken, Bolts) | PROTOTYPE | funktionsfähig; Gestaltung folgt in Phase 16 |
+| `/hero debug · reset · bolts · level · xp · alien · flag` | IMPLEMENTED | OP-Stufe 2, optional mit Zielspieler |
+| CI-Build `.github/workflows/mod-build.yml` | IMPLEMENTED | Ressourcen-Check, Textur-Check, `./gradlew build`, Jar als Artefakt |
+| `tools/check_assets.py` | IMPLEMENTED | JSON, Übersetzungen, Modelle, Texturen, Rezepte, Loot |
+| Netzwerk-Payloads (C2S-Absichten) | TODO → Phase 3 | erster Bedarf: Alien-Rad und Fähigkeiten-Tasten |
+| JSON-Definitionen (Aliens usw.) | TODO → Phase 3 | über Fabric `DynamicRegistries.registerSynced`: wird mit der Welt geladen und automatisch an Clients gesendet; kein eigener Loader nötig |
+| Bolt-Konto statt Bolt-Items | TODO → Phase 8 | Datenfeld existiert bereits |
+| `./gradlew build` | **UNVERIFIED** | lokal gesperrt; Nachweis über den CI-Lauf auf GitHub |
 
 ---
 

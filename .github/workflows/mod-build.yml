@@ -1,0 +1,63 @@
+# Baut die Minecraft-Mod (minecraft-mod/) bei jeder Aenderung daran und prueft ihre Ressourcen.
+# Ergebnis: die fertige .jar als Artefakt des Workflow-Laufs.
+
+name: Mod bauen
+
+on:
+  push:
+    paths:
+      - 'minecraft-mod/**'
+      - '.github/workflows/mod-build.yml'
+  pull_request:
+    paths:
+      - 'minecraft-mod/**'
+      - '.github/workflows/mod-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mod-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: minecraft-mod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Ressourcen pruefen (Uebersetzungen, Modelle, Rezepte, Loot)
+        run: python tools/check_assets.py
+
+      - name: Texturen pruefen
+        run: |
+          pip install --quiet pillow
+          python tools/generate_textures.py --check
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Mod bauen
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace --no-daemon
+
+      - name: Mod-Datei hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdomomnitrix
+          path: minecraft-mod/build/libs/*.jar
+          if-no-files-found: error
