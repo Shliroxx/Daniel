@@ -12,7 +12,12 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import com.santiq.kingdomomnitrix.util.MaterialCost;
+import java.util.List;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Formatting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -74,7 +79,13 @@ public class WeaponTerminalScreen extends Screen {
 								? Text.translatable("tooltip.kingdomomnitrix.weapon.max")
 								: Text.translatable("screen.kingdomomnitrix.terminal.upgrade", state.level() + 1, price),
 						b -> send(TerminalService.Action.UPGRADE, weaponId)).dimensions(left + WIDTH - 130, y, 130, 20).build();
-				button.active = !max && (creative || bolts >= price);
+				List<ItemStack> materials = max ? List.of() : definition.get().level(state.level() + 1).items();
+				boolean hasMaterials = creative || MaterialCost.missing(client.player.getInventory(), materials).isEmpty();
+				button.active = !max && hasMaterials && (creative || bolts >= price);
+				if (!materials.isEmpty()) {
+					button.setTooltip(Tooltip.of(Text.translatable("screen.kingdomomnitrix.terminal.materials", MaterialCost.describe(materials))
+							.formatted(hasMaterials ? Formatting.GREEN : Formatting.RED)));
+				}
 			}
 			addDrawableChild(button);
 		}

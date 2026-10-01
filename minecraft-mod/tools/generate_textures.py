@@ -444,6 +444,93 @@ def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
             "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
 
 
+def stone_base(rng: random.Random, light: str, dark: str, mid: str) -> Image.Image:
+    img = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            roll = rng.random()
+            img.putpixel((x, y), hexc(dark) if roll < 0.18 else hexc(light) if roll > 0.85 else hexc(mid))
+    return img
+
+
+def ore_textures(rng: random.Random) -> dict[str, Image.Image]:
+    """Erze: Steinuntergrund mit farbigen Adern (je Erz eigene Form, damit sie unterscheidbar bleiben)."""
+    stone = ("9A9A9A", "6E6E6E", "828282")
+    deepslate = ("5A5A63", "36363E", "48484F")
+    veins = {
+        "raritanium_ore": (stone, ("9EE8FF", "38B8E8", "1E6E9E"), [(3, 3), (4, 3), (3, 4), (10, 5), (11, 5), (11, 6), (6, 10), (7, 10), (7, 11), (12, 12), (12, 11)]),
+        "mythril_ore": (stone, ("E8F4FF", "A8C8E8", "6888B0"), [(2, 6), (3, 6), (3, 7), (8, 2), (9, 2), (9, 3), (12, 8), (13, 8), (5, 12), (6, 12), (6, 13), (10, 13)]),
+        "deepslate_mythril_ore": (deepslate, ("E8F4FF", "A8C8E8", "6888B0"), [(2, 6), (3, 6), (3, 7), (8, 2), (9, 2), (9, 3), (12, 8), (13, 8), (5, 12), (6, 12), (6, 13), (10, 13)]),
+        "orichalcum_ore": (deepslate, ("FFE9A8", "F0B84A", "B07A1A"), [(4, 4), (5, 4), (5, 5), (4, 5), (10, 9), (11, 9), (11, 10), (10, 10), (7, 12)]),
+    }
+    out = {}
+    for name, (base, (hi, mid, lo), spots) in veins.items():
+        img = stone_base(rng, *base)
+        for x, y in spots:
+            img.putpixel((x, y), hexc(mid))
+            for nx, ny, color in ((x + 1, y + 1, lo), (x - 1, y, hi)):
+                if 0 <= nx < 16 and 0 <= ny < 16:
+                    img.putpixel((nx, ny), hexc(color))
+        out[name] = img
+    return out
+
+
+def material_textures() -> dict[str, Image.Image]:
+    t: dict[str, Image.Image] = {}
+    t["raritanium"] = from_ascii([
+        "",
+        "",
+        ".......W........",
+        "......WCc.......",
+        ".....WCCcc......",
+        "....WCCCCcc.....",
+        "...WCCCCCCcc....",
+        "...CCCCCCCccd...",
+        "....CCCCCccd....",
+        ".....CCCccd.....",
+        "......Ccd.......",
+        ".......d........",
+    ], {"W": hexc("E8FBFF"), "C": hexc("4FD0FF"), "c": hexc("2A9AD0"), "d": hexc("17607F")})
+    t["mythril_shard"] = from_ascii([
+        "",
+        "..........W.....",
+        ".........WMm....",
+        "........WMMm....",
+        ".......WMMm.....",
+        "......WMMm......",
+        ".....WMMm.......",
+        "....WMMm........",
+        "...WMMm.........",
+        "...MMm..........",
+        "...mm...........",
+    ], {"W": hexc("FFFFFF"), "M": hexc("BFD8F0"), "m": hexc("7894B4")})
+    t["orichalcum"] = from_ascii([
+        "",
+        "",
+        "....kkkkkkkk....",
+        "...kYYYYYYYyk...",
+        "..kYWYYYYYYyyk..",
+        "..kYYYYYYYYyyk..",
+        "..kYYYYYYYyyyk..",
+        "...kyyyyyyyyk...",
+        "....kkkkkkkk....",
+    ], {"k": hexc("6B4A0E"), "Y": hexc("F5C542"), "y": hexc("C9921A"), "W": hexc("FFF6D0")})
+    t["aphelion"] = from_ascii([
+        "",
+        "",
+        "......PP........",
+        ".....PGGP.......",
+        "....PPPPPP......",
+        "W..PPPPPPPP..W..",
+        "WWWWPPPPPPPPWWWW",
+        ".WWWWPPPPPPWWWW.",
+        "....PPPPPPPP....",
+        "....kOk..kOk....",
+        "....kok..kok....",
+    ], {"P": hexc("6A4FB3"), "G": hexc("7FD4FF"), "W": hexc("E4E4EE"), "k": hexc("3A3550"), "O": hexc("FF9A2E"), "o": hexc("FFD27A")})
+    return t
+
+
 def mod_icon(items: dict[str, Image.Image]) -> Image.Image:
     icon = Image.new("RGBA", (64, 64), hexc("14161F"))
     for (name, (x, y)) in {"kingdom_key": (0, 0), "omnitrix": (32, 0), "bolt": (0, 32), "combuster": (32, 32)}.items():
@@ -456,6 +543,8 @@ def build_all(rng: random.Random) -> dict[str, Image.Image]:
     items = item_textures()
     out: dict[str, Image.Image] = {f"textures/item/{k}.png": v for k, v in items.items()}
     out.update({f"textures/block/{k}.png": v for k, v in crate_textures(rng).items()})
+    out.update({f"textures/block/{k}.png": v for k, v in ore_textures(rng).items()})
+    out.update({f"textures/item/{k}.png": v for k, v in material_textures().items()})
     out["icon.png"] = mod_icon(items)
     return out
 

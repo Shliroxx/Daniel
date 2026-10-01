@@ -5,6 +5,9 @@ import com.santiq.kingdomomnitrix.keyblade.KeybladeForgeBlock;
 import com.santiq.kingdomomnitrix.weapon.WeaponTerminalBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
+import net.minecraft.block.ExperienceDroppingBlock;
+import net.minecraft.block.enums.NoteBlockInstrument;
+import net.minecraft.util.math.intprovider.UniformIntProvider;
 import net.minecraft.block.MapColor;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -34,6 +37,27 @@ public final class ModBlocks {
 					.requiresTool()
 					.luminance(state -> 7)
 					.sounds(BlockSoundGroup.METAL)));
+
+	// --- Erze (Phase 12): Asteroiden im All und die Mod-Welten ----------------------------------
+
+	/** Raritanium (Ratchet & Clank): in Asteroiden und tief in Traverse Town. */
+	public static final Block RARITANIUM_ORE = ore("raritanium_ore", MapColor.STONE_GRAY, 3.0f, BlockSoundGroup.STONE, 3, 7, 5);
+	/** Mythril (Kingdom Hearts): haeufig in Traverse Town. */
+	public static final Block MYTHRIL_ORE = ore("mythril_ore", MapColor.STONE_GRAY, 3.0f, BlockSoundGroup.STONE, 2, 5, 3);
+	public static final Block DEEPSLATE_MYTHRIL_ORE = ore("deepslate_mythril_ore", MapColor.DEEPSLATE_GRAY, 4.5f, BlockSoundGroup.DEEPSLATE, 2, 5, 3);
+	/** Orichalcum (Kingdom Hearts): sehr selten, tief im Gestein. */
+	public static final Block ORICHALCUM_ORE = ore("orichalcum_ore", MapColor.DEEPSLATE_GRAY, 5.0f, BlockSoundGroup.DEEPSLATE, 5, 10, 9);
+
+	private static Block ore(String name, MapColor color, float hardness, BlockSoundGroup sound, int minXp, int maxXp, int light) {
+		return Registry.register(Registries.BLOCK, KingdomOmnitrix.id(name),
+				new ExperienceDroppingBlock(UniformIntProvider.create(minXp, maxXp), AbstractBlock.Settings.create()
+						.mapColor(color)
+						.instrument(NoteBlockInstrument.BASEDRUM)
+						.strength(hardness, 3.0f)
+						.requiresTool()
+						.luminance(state -> light)
+						.sounds(sound)));
+	}
 
 	private ModBlocks() {
 	}

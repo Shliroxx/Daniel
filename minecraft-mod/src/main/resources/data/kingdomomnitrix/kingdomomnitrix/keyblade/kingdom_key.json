@@ -44,6 +44,10 @@
         {
           "id": "minecraft:diamond",
           "count": 2
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 4
         }
       ]
     },
@@ -56,6 +60,10 @@
         },
         {
           "id": "minecraft:netherite_scrap",
+          "count": 1
+        },
+        {
+          "id": "kingdomomnitrix:orichalcum",
           "count": 1
         }
       ]

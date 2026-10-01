@@ -33,6 +33,10 @@
         {
           "id": "minecraft:amethyst_shard",
           "count": 6
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 3
         }
       ]
     },
@@ -46,6 +50,10 @@
         {
           "id": "minecraft:diamond",
           "count": 3
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 8
         }
       ]
     },
@@ -59,6 +67,10 @@
         {
           "id": "minecraft:nether_star",
           "count": 1
+        },
+        {
+          "id": "kingdomomnitrix:orichalcum",
+          "count": 2
         }
       ]
     }

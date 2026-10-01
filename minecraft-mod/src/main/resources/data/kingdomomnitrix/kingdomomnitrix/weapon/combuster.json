@@ -38,7 +38,13 @@
         "damage": 8.5,
         "fire_delay": 3,
         "speed": 3.2
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
     },
     {
       "price": 3500,
@@ -48,7 +54,13 @@
         "fire_delay": 3,
         "speed": 3.4,
         "explosion": 1.2
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
     }
   ]
 }

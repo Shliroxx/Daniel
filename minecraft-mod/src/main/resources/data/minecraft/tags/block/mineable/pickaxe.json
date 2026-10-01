@@ -2,6 +2,10 @@
   "replace": false,
   "values": [
     "kingdomomnitrix:keyblade_forge",
-    "kingdomomnitrix:weapon_terminal"
+    "kingdomomnitrix:weapon_terminal",
+    "kingdomomnitrix:raritanium_ore",
+    "kingdomomnitrix:mythril_ore",
+    "kingdomomnitrix:deepslate_mythril_ore",
+    "kingdomomnitrix:orichalcum_ore"
   ]
 }

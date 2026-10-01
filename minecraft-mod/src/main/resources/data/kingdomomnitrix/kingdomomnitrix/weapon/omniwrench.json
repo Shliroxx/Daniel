@@ -38,7 +38,13 @@
         "damage": 10,
         "throw_damage": 14,
         "range": 18
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
     },
     {
       "price": 3000,
@@ -47,7 +53,13 @@
         "damage": 13,
         "throw_damage": 18,
         "range": 22
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
     }
   ]
 }

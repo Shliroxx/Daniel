@@ -8,6 +8,7 @@ import com.santiq.kingdomomnitrix.enemy.LargeBodyHeartless;
 import com.santiq.kingdomomnitrix.enemy.ShadowHeartless;
 import com.santiq.kingdomomnitrix.enemy.SoldierHeartless;
 import com.santiq.kingdomomnitrix.npc.NpcEntity;
+import com.santiq.kingdomomnitrix.space.ShipEntity;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeEntity;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import com.santiq.kingdomomnitrix.weapon.WrenchProjectileEntity;
@@ -15,12 +16,16 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRe
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.SpawnLocationTypes;
+import net.minecraft.entity.SpawnRestriction;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.world.Heightmap;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 
 /**
  * Alle Entities. Herzlose spawnen nicht natuerlich in der Oberwelt, sondern aus Dunkelheitsrissen
- * ({@link com.santiq.kingdomomnitrix.enemy.RiftSpawner}) und spaeter in den Mod-Dimensionen (Entscheidung SANTIQ).
+ * ({@link com.santiq.kingdomomnitrix.enemy.RiftSpawner}) und in den Mod-Welten (Entscheidung SANTIQ).
  */
 public final class ModEntities {
 	public static final EntityType<ShadowHeartless> SHADOW = register("shadow",
@@ -53,6 +58,9 @@ public final class ModEntities {
 	public static final EntityType<NpcEntity> NPC = register("npc",
 			EntityType.Builder.<NpcEntity>create(NpcEntity::new, SpawnGroup.MISC).dimensions(0.6f, 1.95f).maxTrackingRange(10));
 
+	public static final EntityType<ShipEntity> SHIP = register("aphelion",
+			EntityType.Builder.<ShipEntity>create(ShipEntity::new, SpawnGroup.MISC).dimensions(3.0f, 1.4f).maxTrackingRange(10));
+
 	private ModEntities() {
 	}
 
@@ -63,6 +71,12 @@ public final class ModEntities {
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(SHADOW, ShadowHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(NPC, NpcEntity.createAttributes());
+		// Natuerliche Spawns (nur in Mod-Welten wie Traverse Town, die Biome listen sie): im Dunkeln, Bodentypen auf festem Grund.
+		SpawnRestriction.register(SHADOW, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
+		SpawnRestriction.register(SOLDIER, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
+		SpawnRestriction.register(LARGE_BODY, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
+		SpawnRestriction.register(AIR_SOLDIER, SpawnLocationTypes.UNRESTRICTED, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
+		SpawnRestriction.register(DARKBALL, SpawnLocationTypes.UNRESTRICTED, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
 		FabricDefaultAttributeRegistry.register(SOLDIER, SoldierHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(LARGE_BODY, LargeBodyHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(AIR_SOLDIER, AirSoldierHeartless.createAttributes());

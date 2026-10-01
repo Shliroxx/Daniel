@@ -5,6 +5,8 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ItemStackCraftMixin",
+		"LevelPropertiesMixin",
+		"LivingEntityAccessor",
 		"ServerPlayNetworkHandlerAccessor"
 	],
 	"injectors": {

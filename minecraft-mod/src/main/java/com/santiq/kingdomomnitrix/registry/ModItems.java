@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.gadget.SwingshotItem;
 import com.santiq.kingdomomnitrix.quest.QuestBookItem;
+import com.santiq.kingdomomnitrix.space.ShipItem;
 import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
@@ -69,6 +70,16 @@ public final class ModItems {
 	public static final Item SWINGSHOT = register("swingshot", new SwingshotItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item WEAPON_TERMINAL = register("weapon_terminal", new BlockItem(ModBlocks.WEAPON_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item BOLT_CRATE = register("bolt_crate", new BlockItem(ModBlocks.BOLT_CRATE, new Item.Settings()));
+
+	// --- Raumfahrt und Erze (Phase 12) ---------------------------------------------------------
+	public static final Item APHELION = register("aphelion", new ShipItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
+	public static final Item RARITANIUM_ORE = register("raritanium_ore", new BlockItem(ModBlocks.RARITANIUM_ORE, new Item.Settings()));
+	public static final Item MYTHRIL_ORE = register("mythril_ore", new BlockItem(ModBlocks.MYTHRIL_ORE, new Item.Settings()));
+	public static final Item DEEPSLATE_MYTHRIL_ORE = register("deepslate_mythril_ore", new BlockItem(ModBlocks.DEEPSLATE_MYTHRIL_ORE, new Item.Settings()));
+	public static final Item ORICHALCUM_ORE = register("orichalcum_ore", new BlockItem(ModBlocks.ORICHALCUM_ORE, new Item.Settings().rarity(Rarity.UNCOMMON)));
+	public static final Item RARITANIUM = register("raritanium", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
+	public static final Item MYTHRIL_SHARD = register("mythril_shard", new Item(new Item.Settings()));
+	public static final Item ORICHALCUM = register("orichalcum", new Item(new Item.Settings().rarity(Rarity.RARE)));
 
 	// --- Geschoss-Darstellung (nicht im Kreativ-Tab) ---
 	public static final Item FIRE_ORB = register("fire_orb", new Item(new Item.Settings()));

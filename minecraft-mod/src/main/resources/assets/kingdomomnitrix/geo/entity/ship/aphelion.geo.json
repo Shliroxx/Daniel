@@ -1,0 +1,291 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.kingdomomnitrix.ship_aphelion",
+        "texture_width": 256,
+        "texture_height": 128,
+        "visible_bounds_width": 6,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "hull",
+          "pivot": [
+            0,
+            8,
+            0
+          ],
+          "parent": "root",
+          "cubes": [
+            {
+              "origin": [
+                -6,
+                4,
+                -30
+              ],
+              "size": [
+                12,
+                8,
+                52
+              ],
+              "uv": [
+                0,
+                0
+              ]
+            },
+            {
+              "origin": [
+                -4,
+                5,
+                -40
+              ],
+              "size": [
+                8,
+                6,
+                10
+              ],
+              "uv": [
+                128,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "name": "cockpit",
+          "pivot": [
+            0,
+            12,
+            -15
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                12,
+                -24
+              ],
+              "size": [
+                8,
+                4,
+                14
+              ],
+              "uv": [
+                128,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_wing",
+          "pivot": [
+            6,
+            7,
+            8
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                6,
+                6,
+                -2
+              ],
+              "size": [
+                20,
+                2,
+                22
+              ],
+              "uv": [
+                0,
+                64
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_wing",
+          "pivot": [
+            -6,
+            7,
+            8
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                -26,
+                6,
+                -2
+              ],
+              "size": [
+                20,
+                2,
+                22
+              ],
+              "uv": [
+                0,
+                64
+              ],
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "fin",
+          "pivot": [
+            0,
+            12,
+            16
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                -1,
+                12,
+                10
+              ],
+              "size": [
+                2,
+                10,
+                12
+              ],
+              "uv": [
+                88,
+                64
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_engine",
+          "pivot": [
+            4.5,
+            7.5,
+            27
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                2,
+                5,
+                22
+              ],
+              "size": [
+                5,
+                5,
+                10
+              ],
+              "uv": [
+                128,
+                40
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_engine",
+          "pivot": [
+            -4.5,
+            7.5,
+            27
+          ],
+          "parent": "hull",
+          "cubes": [
+            {
+              "origin": [
+                -7,
+                5,
+                22
+              ],
+              "size": [
+                5,
+                5,
+                10
+              ],
+              "uv": [
+                128,
+                40
+              ],
+              "mirror": true
+            }
+          ]
+        },
+        {
+          "name": "left_glow",
+          "pivot": [
+            4.5,
+            7.5,
+            32
+          ],
+          "parent": "left_engine",
+          "cubes": [
+            {
+              "origin": [
+                2.5,
+                5.5,
+                32
+              ],
+              "size": [
+                4,
+                4,
+                1
+              ],
+              "uv": [
+                128,
+                60
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_glow",
+          "pivot": [
+            -4.5,
+            7.5,
+            32
+          ],
+          "parent": "right_engine",
+          "cubes": [
+            {
+              "origin": [
+                -6.5,
+                5.5,
+                32
+              ],
+              "size": [
+                4,
+                4,
+                1
+              ],
+              "uv": [
+                128,
+                60
+              ],
+              "mirror": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -34,7 +34,13 @@
       "stats": {
         "power": 3.8,
         "cooldown": 14
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
     },
     {
       "price": 4000,
@@ -42,7 +48,13 @@
       "stats": {
         "power": 4.5,
         "cooldown": 12
-      }
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
     }
   ]
 }

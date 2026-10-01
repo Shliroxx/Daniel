@@ -33,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -208,6 +208,40 @@ def translate_keys(node: object) -> list[str]:
     return []
 
 
+def check_feature_order(report: Report) -> None:
+    """Minecraft bricht das Laden ab, wenn zwei Biome einer Dimension Features in widerspruechlicher Reihenfolge haben."""
+    biome_dir = DATA / "worldgen" / "biome"
+    groups: dict[str, list[Path]] = {}
+    for path in biome_dir.rglob("*.json"):
+        groups.setdefault(path.parent.name, []).append(path)
+    for group, paths in groups.items():
+        before: dict[tuple[int, str, str], str] = {}
+        for path in paths:
+            biome = load_json(path, report)
+            if not isinstance(biome, dict):
+                continue
+            for step, features in enumerate(biome.get("features", [])):
+                for i, first in enumerate(features):
+                    for second in features[i + 1:]:
+                        if (step, second, first) in before:
+                            report.error("Feature-Reihenfolge widerspruechlich (%s): %s vor %s in %s, umgekehrt in %s",
+                                         group, first, second, path.stem, before[(step, second, first)])
+                        before.setdefault((step, first, second), path.stem)
+
+
+def check_routes(report: Report, lang: dict[str, str]) -> int:
+    files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
+    for path in files:
+        route = load_json(path, report)
+        if not isinstance(route, dict):
+            continue
+        if f"route.{MOD_ID}.{path.stem}" not in lang:
+            report.error("Weltraumriss ohne Namen: route.%s.%s", MOD_ID, path.stem)
+        if len(route.get("position", [])) != 3:
+            report.error("Weltraumriss %s: position braucht 3 Zahlen", path.stem)
+    return len(files)
+
+
 def check_npcs(report: Report, lang: dict[str, str]) -> set[str]:
     npcs = set()
     for path in sorted((DATA / MOD_ID / "npc").glob("*.json")):
@@ -285,6 +319,8 @@ def main(argv: list[str] | None = None) -> int:
     alien_count = check_aliens(report, java_sources(), lang)
     spell_count = check_spells(report, lang)
     npcs = check_npcs(report, lang)
+    check_routes(report, lang)
+    check_feature_order(report)
     quest_count = check_quests(report, lang, set(items), npcs)
 
     if report.errors:

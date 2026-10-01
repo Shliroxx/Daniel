@@ -6,6 +6,8 @@ import java.util.Optional;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import com.santiq.kingdomomnitrix.util.MaterialCost;
+import java.util.List;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -69,8 +71,18 @@ public final class TerminalService {
 			return;
 		}
 		WeaponDefinition.Level next = definition.level(state.level() + 1);
+		boolean creative = player.getAbilities().creativeMode;
+		List<ItemStack> missing = creative ? List.of() : MaterialCost.missing(player.getInventory(), next.items());
+		if (!missing.isEmpty()) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.terminal.missing_items", MaterialCost.describe(missing))
+					.formatted(Formatting.RED), true);
+			return;
+		}
 		if (!charge(player, next.price())) {
 			return;
+		}
+		if (!creative) {
+			MaterialCost.consume(player.getInventory(), next.items());
 		}
 		// Aufstieg fuellt das Magazin (wie in Ratchet & Clank)
 		WeaponItem.setState(stack, new WeaponState(state.level() + 1, next.maxAmmo(), next.maxAmmo()));

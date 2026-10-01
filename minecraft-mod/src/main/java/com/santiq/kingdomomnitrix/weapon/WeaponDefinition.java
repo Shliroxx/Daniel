@@ -5,6 +5,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
 /**
@@ -43,16 +44,19 @@ public record WeaponDefinition(Identifier item, int price, int ammoPrice, int so
 	 * @param price    Preis fuer den Aufstieg auf diese Stufe (Stufe 1: ignoriert)
 	 * @param maxAmmo  Magazin (0 = keine Munition, z. B. Nahkampf)
 	 * @param stats    Zahlenwerte fuer das Item (damage, fire_delay, speed, radius, knockback …)
+	 * @param items    zusaetzliche Materialien fuer den Aufstieg (z. B. Raritanium), werden aus dem Inventar genommen
 	 */
-	public record Level(int price, int maxAmmo, Map<String, Double> stats) {
+	public record Level(int price, int maxAmmo, Map<String, Double> stats, List<ItemStack> items) {
 		public static final Codec<Level> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.intRange(0, 1_000_000).optionalFieldOf("price", 0).forGetter(Level::price),
 				Codec.intRange(0, 10_000).optionalFieldOf("max_ammo", 0).forGetter(Level::maxAmmo),
-				Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("stats", Map.of()).forGetter(Level::stats)
+				Codec.unboundedMap(Codec.STRING, Codec.DOUBLE).optionalFieldOf("stats", Map.of()).forGetter(Level::stats),
+				ItemStack.CODEC.listOf().optionalFieldOf("items", List.of()).forGetter(Level::items)
 		).apply(instance, Level::new));
 
 		public Level {
 			stats = Map.copyOf(stats);
+			items = List.copyOf(items);
 		}
 
 		public double stat(String key, double fallback) {

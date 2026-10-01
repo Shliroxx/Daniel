@@ -62,6 +62,14 @@ public final class ModItemGroup {
 						entries.add(ModItems.BOLT);
 						entries.add(ModItems.BOLT_CRATE);
 						entries.add(ModItems.WEAPON_TERMINAL);
+						entries.add(ModItems.APHELION);
+						entries.add(ModItems.RARITANIUM_ORE);
+						entries.add(ModItems.MYTHRIL_ORE);
+						entries.add(ModItems.DEEPSLATE_MYTHRIL_ORE);
+						entries.add(ModItems.ORICHALCUM_ORE);
+						entries.add(ModItems.RARITANIUM);
+						entries.add(ModItems.MYTHRIL_SHARD);
+						entries.add(ModItems.ORICHALCUM);
 					})
 					.build());
 

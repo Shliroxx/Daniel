@@ -21,6 +21,13 @@ import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
 import com.santiq.kingdomomnitrix.client.quest.QuestBookScreen;
 import com.santiq.kingdomomnitrix.client.npc.NpcDialogScreen;
 import com.santiq.kingdomomnitrix.client.npc.NpcRenderer;
+import com.santiq.kingdomomnitrix.client.space.ShipClient;
+import com.santiq.kingdomomnitrix.client.space.ShipRenderer;
+import com.santiq.kingdomomnitrix.client.space.SpaceDimensionEffects;
+import com.santiq.kingdomomnitrix.client.space.SpaceRifts;
+import com.santiq.kingdomomnitrix.client.space.SpaceSkyRenderer;
+import com.santiq.kingdomomnitrix.space.SpaceTravel;
+import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import com.santiq.kingdomomnitrix.networking.OpenNpcDialogPayload;
 import com.santiq.kingdomomnitrix.networking.OpenQuestBookPayload;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
@@ -64,6 +71,11 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.NPC, NpcRenderer::new);
+		EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
+		DimensionRenderingRegistry.registerDimensionEffects(KingdomOmnitrix.id("space"), new SpaceDimensionEffects());
+		DimensionRenderingRegistry.registerSkyRenderer(SpaceTravel.SPACE, new SpaceSkyRenderer());
+		DimensionRenderingRegistry.registerCloudRenderer(SpaceTravel.SPACE, context -> {
+		});
 		EntityRendererRegistry.register(ModEntities.WRENCH_PROJECTILE, context -> new FlyingItemEntityRenderer<>(context, 1.5f, false));
 
 		ModKeyBindings.register();
@@ -73,6 +85,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		MagicHud.register();
 		WeaponHud.register();
 		GadgetHud.register();
+		ShipClient.register();
 		HandledScreens.register(ModScreenHandlers.GADGET_BELT, GadgetScreen::new);
 		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
 				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
@@ -81,6 +94,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(MagicInput::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(GadgetInput::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(ShipClient::tick);
+		WorldRenderEvents.AFTER_ENTITIES.register(SpaceRifts::render);
 		WorldRenderEvents.AFTER_ENTITIES.register(SwingshotRopes::render);
 		WorldRenderEvents.START.register(context -> ClientLockOn.updateCamera(MinecraftClient.getInstance()));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
@@ -89,6 +104,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			MagicInput.reset();
 			GadgetInput.reset();
 			SwingshotRopes.reset();
+			ShipClient.reset();
 		});
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenNpcDialogPayload.ID, (payload, context) ->
