@@ -11,6 +11,9 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
+import com.santiq.kingdomomnitrix.magic.SpellDefinition;
+import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
@@ -37,6 +40,8 @@ import net.minecraft.util.Identifier;
 public final class HeroCommand {
 	private static final int PERMISSION_LEVEL = 2;
 	private static final String TARGET = "target";
+	private static final SuggestionProvider<ServerCommandSource> SPELL_SUGGESTIONS = (ctx, builder) ->
+			CommandSource.suggestIdentifiers(SpellRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
@@ -101,6 +106,16 @@ public final class HeroCommand {
 				.then(CommandManager.literal("dna")
 						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 								(ctx, target) -> giveDna(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "alien")))))
+				.then(CommandManager.literal("spell")
+						.then(CommandManager.argument("spell", IdentifierArgumentType.identifier()).suggests(SPELL_SUGGESTIONS)
+								.then(targeted(CommandManager.argument("level", IntegerArgumentType.integer(1, 10)),
+										(ctx, target) -> spellLevel(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "spell"),
+												IntegerArgumentType.getInteger(ctx, "level"))))))
+				.then(targeted(CommandManager.literal("mp"), (ctx, target) -> {
+					MagicManager.refill(target);
+					ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mp", target.getDisplayName()), true);
+					return 1;
+				}))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),
@@ -139,6 +154,17 @@ public final class HeroCommand {
 		ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.transform.failed",
 				target.getDisplayName(), result.name().toLowerCase(java.util.Locale.ROOT)));
 		return 0;
+	}
+
+	private static int spellLevel(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, Identifier spellId, int level) {
+		if (!MagicManager.setLevel(target, spellId, level)) {
+			ctx.getSource().sendError(Text.literal("Unbekannter Zauber: " + spellId));
+			return 0;
+		}
+		int actual = MagicManager.get(target).level(spellId);
+		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.spell", target.getDisplayName(),
+				Text.translatable(SpellDefinition.translationKey(spellId, actual)), actual), true);
+		return 1;
 	}
 
 	private static int giveDna(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, Identifier alienId) {

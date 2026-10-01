@@ -1,6 +1,8 @@
 package com.santiq.kingdomomnitrix.client.hud;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
+import com.santiq.kingdomomnitrix.magic.MagicState;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
@@ -14,7 +16,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
- * Status-Panel oben links: Stufe, Erfahrungsbalken und Bolt-Konto.
+ * Status-Panel oben links: Stufe, Erfahrungsbalken, Bolt-Konto und MP.
  * Liest nur den synchronisierten {@link HeroData}-Stand, sendet nichts.
  */
 public final class HeroStatusHud {
@@ -28,8 +30,19 @@ public final class HeroStatusHud {
 	private static final int BAR_FILL = 0xFF4FC3FF;
 	private static final int LEVEL_COLOR = 0xFFFFD84A;
 	private static final int BOLT_COLOR = 0xFFE0C060;
+	private static final int MP_COLOR = 0xFF3D7BFF;
+	private static final int MP_CHARGE_COLOR = 0xFFE040FB;
 
 	private HeroStatusHud() {
+	}
+
+	private static int height(TextRenderer font) {
+		return PADDING + font.fontHeight + 2 + BAR_HEIGHT + 3 + font.fontHeight + 2 + BAR_HEIGHT + PADDING;
+	}
+
+	/** Unterkante des Panels, damit andere HUD-Teile darunter andocken koennen. */
+	public static int bottom(TextRenderer font) {
+		return MARGIN + height(font);
 	}
 
 	public static void register() {
@@ -50,7 +63,7 @@ public final class HeroStatusHud {
 		Text boltText = Text.translatable("hud.kingdomomnitrix.bolts", String.format("%,d", data.bolts()));
 		int width = Math.max(font.getWidth(levelText), font.getWidth(boltText)) + PADDING * 2;
 		width = Math.max(width, 80);
-		int height = PADDING + font.fontHeight + 2 + BAR_HEIGHT + 3 + font.fontHeight + PADDING;
+		int height = height(font);
 
 		int x = MARGIN;
 		int y = MARGIN;
@@ -69,5 +82,18 @@ public final class HeroStatusHud {
 		}
 
 		context.drawTextWithShadow(font, boltText, x + PADDING, barY + BAR_HEIGHT + 3, BOLT_COLOR);
+
+		// MP (wie Kingdom Hearts immer sichtbar); waehrend der Aufladung violett
+		int mpY = barY + BAR_HEIGHT + 3 + font.fontHeight + 2;
+		long now = player.getWorld().getTime();
+		MagicState magic = MagicManager.get(player);
+		boolean charging = magic.isCharging(now);
+		float mpFraction = charging ? magic.chargeProgress(now, MagicManager.chargeTicks(player))
+				: magic.currentMp(now, MagicManager.regenPerSecond(player)) / MagicState.MAX_MP;
+		context.fill(x + PADDING, mpY, x + PADDING + barWidth, mpY + BAR_HEIGHT, BAR_BACKGROUND);
+		int mpFilled = Math.round(barWidth * Math.min(1.0f, Math.max(0.0f, mpFraction)));
+		if (mpFilled > 0) {
+			context.fill(x + PADDING, mpY, x + PADDING + mpFilled, mpY + BAR_HEIGHT, charging ? MP_CHARGE_COLOR : MP_COLOR);
+		}
 	}
 }

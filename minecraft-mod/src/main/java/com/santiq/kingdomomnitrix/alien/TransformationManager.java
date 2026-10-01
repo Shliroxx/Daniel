@@ -42,12 +42,11 @@ import org.joml.Vector3f;
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class TransformationManager {
-	public static final AttachmentType<TransformationState> STATE = AttachmentRegistry.<TransformationState>builder()
+	public static final AttachmentType<TransformationState> STATE = AttachmentRegistry.create(KingdomOmnitrix.id("transformation"), builder -> builder
 			.persistent(TransformationState.CODEC)
 			.initializer(() -> TransformationState.EMPTY)
 			.copyOnDeath()
-			.syncWith(TransformationState.PACKET_CODEC, AttachmentSyncPredicate.all())
-			.buildAndRegister(KingdomOmnitrix.id("transformation"));
+			.syncWith(TransformationState.PACKET_CODEC, AttachmentSyncPredicate.all()));
 
 	/** Feste Modifier-IDs, damit Boni beim Zurueckverwandeln sicher entfernt werden, auch wenn sich das JSON geaendert hat. */
 	private static final int MAX_ATTRIBUTE_BONUSES = 16;

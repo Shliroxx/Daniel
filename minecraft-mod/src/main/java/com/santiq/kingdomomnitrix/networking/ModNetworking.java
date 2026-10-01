@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -28,6 +29,10 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(GuardPayload.ID, GuardPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(LockOnPayload.ID, LockOnPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(CombatAnimationPayload.ID, CombatAnimationPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SelectSpellPayload.ID, SelectSpellPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(SelectSpellPayload.ID, (payload, context) ->
+				MagicManager.select(context.player(), payload.spell()));
 
 		ServerPlayNetworking.registerGlobalReceiver(ComboAttackPayload.ID, (payload, context) ->
 				CombatManager.attack(context.player(), payload.heavy() ? CombatManager.Attack.HEAVY : CombatManager.Attack.LIGHT));

@@ -7,6 +7,8 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.command.HeroCommand;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeRegistry;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
+import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import com.santiq.kingdomomnitrix.networking.ModNetworking;
@@ -40,6 +42,8 @@ public class KingdomOmnitrix implements ModInitializer {
 		ModComponents.register();
 		AlienRegistry.register();
 		KeybladeRegistry.register();
+		SpellRegistry.register();
+		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();
 		ModBlocks.register();

@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.combat;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.networking.CombatAnimationPayload;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -189,6 +190,7 @@ public final class CombatManager {
 		}
 		EnchantmentHelper.onTargetDamaged(world, target, source, stack);
 		player.onAttacking(target);
+		MagicManager.onMeleeHit(player);
 		if (critical) {
 			player.addCritParticles(target);
 			world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.8f, 1.0f);

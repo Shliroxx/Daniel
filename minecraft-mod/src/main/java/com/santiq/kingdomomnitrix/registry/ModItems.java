@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
+import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
 import com.santiq.kingdomomnitrix.weapon.CombusterItem;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeItem;
 import com.santiq.kingdomomnitrix.weapon.OmniWrenchItem;
@@ -28,6 +29,7 @@ public final class ModItems {
 	public static final Item KINGDOM_KEY = register("kingdom_key", keyblade(Rarity.RARE));
 	public static final Item OATHKEEPER = register("oathkeeper", keyblade(Rarity.EPIC));
 	public static final Item KEYBLADE_FORGE = register("keyblade_forge", new BlockItem(ModBlocks.KEYBLADE_FORGE, new Item.Settings().rarity(Rarity.UNCOMMON)));
+	public static final Item SPELL_CRYSTAL = register("spell_crystal", new SpellCrystalItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
 	public static final Item HEART = register("heart", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item HI_POTION = register("hi_potion", new HiPotionItem(new Item.Settings().maxCount(16)));
 	public static final Item PAOPU_FRUIT = register("paopu_fruit", new Item(new Item.Settings()

@@ -33,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -180,6 +180,22 @@ def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
     return len(files)
 
 
+def check_spells(report: Report, lang: dict[str, str]) -> int:
+    files = sorted((DATA / MOD_ID / "spell").glob("*.json"))
+    for path in files:
+        spell = load_json(path, report)
+        if not isinstance(spell, dict):
+            continue
+        levels = spell.get("levels", [])
+        if not levels:
+            report.error("Zauber %s hat keine Stufen", path.stem)
+        for level in range(1, len(levels) + 1):
+            key = f"spell.{MOD_ID}.{path.stem}.{level}"
+            if key not in lang:
+                report.error("Zauberstufe ohne Namen: %s", key)
+    return len(files)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", action="store_true", help="ausfuehrliche Ausgabe")
@@ -195,11 +211,12 @@ def main(argv: list[str] | None = None) -> int:
     check_recipes(report, set(items))
     check_loot(report, set(items))
     alien_count = check_aliens(report, java_sources(), lang)
+    spell_count = check_spells(report, lang)
 
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Uebersetzungen", len(items), alien_count, len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Uebersetzungen", len(items), alien_count, spell_count, len(lang))
     return 0
 
 

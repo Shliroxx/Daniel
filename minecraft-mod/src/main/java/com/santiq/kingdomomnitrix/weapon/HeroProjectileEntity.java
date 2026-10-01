@@ -25,6 +25,9 @@ import net.minecraft.world.World;
 public class HeroProjectileEntity extends ThrownItemEntity {
 	private static final int MAX_AGE_TICKS = 80;
 
+	/** Schaden statt des Standardwerts der Art (z. B. Zauberstufe × Magiekraft); nur serverseitig, &lt; 0 = Standard. */
+	private float damageOverride = -1.0f;
+
 	public enum Kind {
 		FIRE(5.0f, true, ParticleTypes.FLAME),
 		ICE(4.0f, true, ParticleTypes.SNOWFLAKE),
@@ -58,6 +61,11 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		projectile.setVelocity(owner, owner.getPitch(), owner.getYaw(), 0.0f, speed, divergence);
 		world.spawnEntity(projectile);
 		return projectile;
+	}
+
+	public HeroProjectileEntity withDamage(float damage) {
+		this.damageOverride = damage;
+		return this;
 	}
 
 	public Kind getKind() {
@@ -106,7 +114,7 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		DamageSource source = kind.magic
 				? getDamageSources().indirectMagic(this, getOwner())
 				: getDamageSources().thrown(this, getOwner());
-		target.damage(source, kind.damage);
+		target.damage(source, damageOverride >= 0.0f ? damageOverride : kind.damage);
 		if (kind == Kind.FIRE) {
 			target.setOnFireFor(5.0f);
 		}

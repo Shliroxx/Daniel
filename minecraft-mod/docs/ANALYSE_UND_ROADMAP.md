@@ -340,6 +340,24 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Bolts als Kosten | PROTOTYPE | heute Bolt-Items im Inventar; ab Phase 8 Bolt-Konto |
 | 3D-Modelle für Keyblades | TODO | aktuell 2D-Pixel-Texturen |
 
+### Phase 6 — Magie
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Zauber als JSON (`data/<ns>/kingdomomnitrix/spell/*.json`), 3 Stufen je Zauber | IMPLEMENTED | Feuer/Feura/Feuga, Eis/Eisra/Eisga, Blitz/Blitzra/Blitzga, Vita/Vitra/Vitga |
+| Zaubereffekte als Registry (`SpellEffects`) | IMPLEMENTED | neue Zauber = JSON, neue Wirkung = eine Java-Methode |
+| Nur mit Keyblade; Magiekraft + Magie-Boost verstärken | IMPLEMENTED | Entscheidung SANTIQ |
+| MP im KH-Stil: Regeneration, +MP durch Nahkampftreffer, letzter Zauber leert, MP-Ladezeit | IMPLEMENTED | im Client getestet |
+| MP-Eile (Keyblade-Passiv) | IMPLEMENTED | schnellere Regeneration und kürzere Ladezeit |
+| Zauberwahl: M halten + Mausrad, M tippen = nächster | IMPLEMENTED | im Client getestet |
+| Rechtsklick wirkt den aktiven Zauber | IMPLEMENTED | im Client getestet |
+| Zauberleiste (MP, Stufen, Kosten, Abklingzeit) + MP im Status-Panel | IMPLEMENTED | Position im Test korrigiert (lag auf dem Chat) |
+| Magie-Kristalle (Zauberstufe +1), Drop vom Schatten (4 %) | IMPLEMENTED | weitere Quellen: Dungeons/Bosse (Phasen 12–13) |
+| Stufe 2/3: mehrere Geschosse, Mehrfachblitz, Gruppenheilung | IMPLEMENTED | |
+| `/hero spell <zauber> <stufe>`, `/hero mp` | IMPLEMENTED | |
+| Aero, Gravity, Reflect, Stop | TODO | nach der Vertical Slice |
+| Eigene VFX/Sounds für Zauber | PROTOTYPE | Vanilla-Partikel und -Sounds; Phase 17/18 |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

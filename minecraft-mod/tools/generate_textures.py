@@ -269,6 +269,21 @@ def item_textures() -> dict[str, Image.Image]:
         ".......WW.......",
     ], {"k": hexc("2B2B2B"), "S": hexc("8C96A3"), "W": hexc("DDEEFF"), "G": hexc("39FF14"), "g": hexc("0E7A0E")})
 
+    t["spell_crystal"] = from_ascii([
+        "",
+        ".......W........",
+        "......WMC.......",
+        ".....WMMCC......",
+        "....WMMMCCC.....",
+        "...WMMMMCCCc....",
+        "...MMMMMCCCc....",
+        "...MMMMMCCcc....",
+        "....MMMCCcc.....",
+        ".....MMCcc......",
+        "......MCc.......",
+        ".......c........",
+    ], {"W": hexc("FFFFFF"), "M": hexc("B388FF"), "C": hexc("7C4DFF"), "c": hexc("4527A0")})
+
     t["fire_orb"] = orb("FFF3B0", "FF9A1F", "D9380B")
     t["ice_orb"] = orb("FFFFFF", "9BE7FF", "3A8DDB")
     t["plasma_shot"] = orb("FFFFFF", "FF66E0", "8A2BE2")

@@ -3,6 +3,8 @@ package com.santiq.kingdomomnitrix.registry;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
+import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
+import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import java.util.Comparator;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.item.ItemGroup;
@@ -22,6 +24,11 @@ public final class ModItemGroup {
 						entries.add(ModItems.OATHKEEPER);
 						entries.add(ModItems.KEYBLADE_FORGE);
 						entries.add(ModItems.HEART);
+						context.lookup().getOptionalWrapper(SpellRegistry.KEY).ifPresent(spells ->
+								spells.streamKeys()
+										.map(key -> key.getValue())
+										.sorted(Comparator.comparing(Identifier::toString))
+										.forEach(spellId -> entries.add(SpellCrystalItem.create(spellId))));
 						entries.add(ModItems.HI_POTION);
 						entries.add(ModItems.PAOPU_FRUIT);
 						entries.add(ModItems.SHADOW_SPAWN_EGG);

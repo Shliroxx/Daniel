@@ -1,0 +1,31 @@
+{
+  "effect": "kingdomomnitrix:cure",
+  "color": "#7CFC00",
+  "sort_order": 3,
+  "levels": [
+    {
+      "mp_cost": 30,
+      "cooldown": 100,
+      "params": {
+        "heal": 6,
+        "radius": 0
+      }
+    },
+    {
+      "mp_cost": 36,
+      "cooldown": 100,
+      "params": {
+        "heal": 10,
+        "radius": 4
+      }
+    },
+    {
+      "mp_cost": 42,
+      "cooldown": 100,
+      "params": {
+        "heal": 16,
+        "radius": 6
+      }
+    }
+  ]
+}

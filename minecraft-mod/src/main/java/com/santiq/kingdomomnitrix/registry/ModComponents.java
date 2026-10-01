@@ -20,6 +20,11 @@ public final class ModComponents {
 			KingdomOmnitrix.id("keyblade_level"),
 			ComponentType.<Integer>builder().codec(Codec.intRange(1, 99)).packetCodec(PacketCodecs.VAR_INT).build());
 
+	/** Zauber, den ein Magie-Kristall aufwertet. */
+	public static final ComponentType<Identifier> SPELL = Registry.register(Registries.DATA_COMPONENT_TYPE,
+			KingdomOmnitrix.id("spell"),
+			ComponentType.<Identifier>builder().codec(Identifier.CODEC).packetCodec(Identifier.PACKET_CODEC).build());
+
 	private ModComponents() {
 	}
 

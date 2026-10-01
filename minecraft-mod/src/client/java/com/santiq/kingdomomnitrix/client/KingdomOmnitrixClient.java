@@ -7,6 +7,8 @@ import com.santiq.kingdomomnitrix.client.hud.HeroStatusHud;
 import com.santiq.kingdomomnitrix.client.hud.LockOnHud;
 import com.santiq.kingdomomnitrix.client.hud.OmnitrixHud;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
+import com.santiq.kingdomomnitrix.client.magic.MagicHud;
+import com.santiq.kingdomomnitrix.client.magic.MagicInput;
 import com.santiq.kingdomomnitrix.client.render.ShadowRenderer;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
 import com.santiq.kingdomomnitrix.networking.OpenOmnitrixPayload;
@@ -31,13 +33,16 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		HeroStatusHud.register();
 		OmnitrixHud.register();
 		LockOnHud.register();
+		MagicHud.register();
 		CombatAnimations.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(MagicInput::tick);
 		WorldRenderEvents.START.register(context -> ClientLockOn.updateCamera(MinecraftClient.getInstance()));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			ClientLockOn.reset();
 			CombatInput.reset();
+			MagicInput.reset();
 		});
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenOmnitrixPayload.ID, (payload, context) -> {

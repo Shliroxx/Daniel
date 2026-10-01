@@ -3,9 +3,8 @@ package com.santiq.kingdomomnitrix.keyblade;
 import com.santiq.kingdomomnitrix.combat.ComboProfile;
 import com.santiq.kingdomomnitrix.combat.ComboWeapon;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeDefinition.Passive;
-import com.santiq.kingdomomnitrix.magic.Spell;
+import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.registry.ModComponents;
-import com.santiq.kingdomomnitrix.util.ItemData;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -14,7 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -25,12 +24,11 @@ import net.minecraft.world.World;
  * Keyblade. Werte kommen aus der {@link KeybladeRegistry} (JSON) und der Stufe am Stack.
  * <ul>
  *     <li>Linksklick: Combo · Halten: schwerer Angriff · Blocken (siehe {@link ComboWeapon})</li>
- *     <li>Rechtsklick: Zauber · Schleichen + Rechtsklick: Zauber wechseln (Prototyp bis Phase 6)</li>
+ *     <li>Rechtsklick: aktiven Zauber wirken · Magie-Taste halten + Mausrad: Zauber wechseln</li>
  * </ul>
  * Keyblades sind unzerstoerbar und werden an der Keyblade-Schmiede aufgewertet.
  */
 public class KeybladeItem extends Item implements ComboWeapon {
-	private static final String SPELL_KEY = "spell";
 	private static final int ENCHANTABILITY = 15;
 
 	public KeybladeItem(Settings settings) {
@@ -81,30 +79,21 @@ public class KeybladeItem extends Item implements ComboWeapon {
 		return stack.getCount() == 1;
 	}
 
-	// --- Zauber (Prototyp bis Phase 6) --------------------------------------------------------------
+	// --- Magie -------------------------------------------------------------------------------------
 
-	public static Spell getSpell(ItemStack stack) {
-		return Spell.byIndex(ItemData.getInt(stack, SPELL_KEY));
-	}
-
+	/** Rechtsklick wirkt den aktiven Zauber (Auswahl: Magie-Taste halten + Mausrad). */
 	@Override
 	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
 		ItemStack stack = user.getStackInHand(hand);
-		if (!(world instanceof ServerWorld serverWorld)) {
+		if (hand != Hand.MAIN_HAND) {
+			return TypedActionResult.pass(stack);
+		}
+		if (!(user instanceof ServerPlayerEntity player)) {
 			return TypedActionResult.success(stack, true);
 		}
-		if (user.isSneaking()) {
-			Spell next = getSpell(stack).next();
-			ItemData.putInt(stack, SPELL_KEY, next.ordinal());
-			user.sendMessage(Text.translatable("message.kingdomomnitrix.spell_selected", next.displayName()), true);
-			return TypedActionResult.success(stack, false);
-		}
-		Spell spell = getSpell(stack);
-		if (!spell.cast(serverWorld, user)) {
-			return TypedActionResult.fail(stack);
-		}
-		user.getItemCooldownManager().set(this, spell.cooldownTicks());
-		return TypedActionResult.success(stack, false);
+		return MagicManager.castSelected(player) == MagicManager.Result.SUCCESS
+				? TypedActionResult.success(stack, false)
+				: TypedActionResult.fail(stack);
 	}
 
 	// --- Tooltip --------------------------------------------------------------------------------
@@ -131,7 +120,6 @@ public class KeybladeItem extends Item implements ComboWeapon {
 				}
 			}
 		}
-		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.spell", getSpell(stack).displayName()).formatted(Formatting.GRAY));
 		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.kingdom_key.usage").formatted(Formatting.DARK_GRAY));
 		super.appendTooltip(stack, context, tooltip, type);
 	}

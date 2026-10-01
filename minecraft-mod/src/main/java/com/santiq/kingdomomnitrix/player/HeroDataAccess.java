@@ -14,12 +14,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class HeroDataAccess {
-	public static final AttachmentType<HeroData> HERO_DATA = AttachmentRegistry.<HeroData>builder()
+	public static final AttachmentType<HeroData> HERO_DATA = AttachmentRegistry.create(KingdomOmnitrix.id("hero_data"), builder -> builder
 			.persistent(HeroData.CODEC)
 			.initializer(() -> HeroData.DEFAULT)
 			.copyOnDeath()
-			.syncWith(HeroData.PACKET_CODEC, AttachmentSyncPredicate.targetOnly())
-			.buildAndRegister(KingdomOmnitrix.id("hero_data"));
+			.syncWith(HeroData.PACKET_CODEC, AttachmentSyncPredicate.targetOnly()));
 
 	private HeroDataAccess() {
 	}
