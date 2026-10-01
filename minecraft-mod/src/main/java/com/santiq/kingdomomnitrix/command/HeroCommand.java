@@ -16,6 +16,8 @@ import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.SpellDefinition;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroData;
+import com.santiq.kingdomomnitrix.quest.QuestManager;
+import com.santiq.kingdomomnitrix.quest.QuestRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
 import java.util.Optional;
@@ -44,6 +46,8 @@ public final class HeroCommand {
 	private static final String TARGET = "target";
 	private static final SuggestionProvider<ServerCommandSource> SPELL_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(SpellRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
+	private static final SuggestionProvider<ServerCommandSource> QUEST_SUGGESTIONS = (ctx, builder) ->
+			CommandSource.suggestIdentifiers(QuestRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
@@ -122,6 +126,27 @@ public final class HeroCommand {
 						.executes(ctx -> openRift(ctx, Optional.empty()))
 						.then(CommandManager.argument("rift", IdentifierArgumentType.identifier())
 								.executes(ctx -> openRift(ctx, Optional.of(IdentifierArgumentType.getIdentifier(ctx, "rift"))))))
+				.then(CommandManager.literal("quest")
+						.then(CommandManager.literal("start")
+								.then(targeted(CommandManager.argument("quest", IdentifierArgumentType.identifier()).suggests(QUEST_SUGGESTIONS),
+										(ctx, target) -> questResult(ctx, target, QuestManager.accept(target, IdentifierArgumentType.getIdentifier(ctx, "quest"))))))
+						.then(CommandManager.literal("complete")
+								.then(targeted(CommandManager.argument("quest", IdentifierArgumentType.identifier()).suggests(QUEST_SUGGESTIONS),
+										(ctx, target) -> questResult(ctx, target, QuestManager.forceComplete(target, IdentifierArgumentType.getIdentifier(ctx, "quest"))))))
+						.then(CommandManager.literal("reset")
+								.then(targeted(CommandManager.literal("all"), (ctx, target) -> {
+									QuestManager.resetAll(target);
+									ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.quest_reset_all", target.getDisplayName()), true);
+									return 1;
+								}))
+								.then(targeted(CommandManager.argument("quest", IdentifierArgumentType.identifier()).suggests(QUEST_SUGGESTIONS),
+										(ctx, target) -> {
+											Identifier quest = IdentifierArgumentType.getIdentifier(ctx, "quest");
+											QuestManager.reset(target, quest);
+											ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.quest_reset", quest.toString(), target.getDisplayName()), true);
+											return 1;
+										})))
+						.then(targeted(CommandManager.literal("list"), HeroCommand::listQuests)))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),
@@ -133,6 +158,27 @@ public final class HeroCommand {
 										(ctx, target) -> change(ctx, target,
 												data -> data.withFlag(StringArgumentType.getString(ctx, "flag"), false),
 												"commands.kingdomomnitrix.flag"))))));
+	}
+
+	private static int questResult(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, QuestManager.Result result) {
+		if (result == QuestManager.Result.SUCCESS) {
+			ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.quest_done", target.getDisplayName()), true);
+			return 1;
+		}
+		ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.quest_failed", result.name()));
+		return 0;
+	}
+
+	private static int listQuests(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target) {
+		var registries = ctx.getSource().getRegistryManager();
+		for (Identifier id : QuestRegistry.sortedIds(registries)) {
+			QuestRegistry.get(registries, id).ifPresent(quest -> {
+				QuestManager.Status status = QuestManager.status(target, id, quest);
+				ctx.getSource().sendFeedback(() -> Text.literal(status.name() + "  ").formatted(Formatting.GRAY)
+						.append(Text.literal(id.toString()).formatted(Formatting.WHITE)), false);
+			});
+		}
+		return 1;
 	}
 
 	/** Haengt an einen Knoten zwei Ausfuehrungen: fuer sich selbst und fuer {@code <target>}. */

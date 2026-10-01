@@ -415,6 +415,21 @@ Jetzt Eisennuggets/Kupfer; `check_assets.py` verbietet Bolts als Zutat. Tastenko
 (Blocken X → Feststelltaste, Gadget C → Y); die Mod warnt beim Einloggen vor doppelt belegten Tasten.
 Neu: `tools/client_smoke.sh server|join` startet einen Dedicated Server und verbindet den Test-Client (Mehrspieler-Test).
 
+### Phase 10 — Quests
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Quests als JSON (synchronisierte Registry): Titel, Kategorie, Auftraggeber mit Symbol, Dialog (Angebot/Fortschritt/Abschluss), Voraussetzungen, Mindeststufe, wiederholbar | IMPLEMENTED | 7 Beispiel-Quests (3 Story, 2 Neben, 2 Kopfgeld) |
+| Ziele: Besiegen (Entity oder Tag), Herstellen (über `ItemStack#onCraftByPlayer`), Bringen (Inventar, wird abgezogen) | IMPLEMENTED | alle drei im Client getestet |
+| Belohnung: Bolts, Helden-EP mit Stufenaufstieg-Meldung, Items mit Komponenten | IMPLEMENTED | getestet |
+| Quest-Buch im NPC-Stil mit Tracker-Reiter (Entscheidung SANTIQ: Tracker im Buch, kein HUD) | IMPLEMENTED | Annehmen/Abgeben/Aufgeben getestet |
+| Fortschritt als Attachment (gespeichert, beim Tod behalten, nur an den Spieler synchronisiert); Server prüft jede Aktion | IMPLEMENTED | |
+| Quest-Buch beim ersten Einloggen, Rezept | IMPLEMENTED | |
+| `/hero quest start/complete/reset/list` | IMPLEMENTED | |
+| `check_assets.py` prüft Quests (Übersetzungen, Voraussetzungen, Items, Tags) | IMPLEMENTED | |
+| Ziel-Typen „Ort erreichen“, „mit NPC reden“, „Boss“ | TODO → Phasen 11–13 | brauchen NPCs, Welten, Bosse |
+| Quests von NPCs annehmen | TODO → Phase 11 | Dialog-Struktur ist schon vorbereitet |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅

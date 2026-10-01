@@ -60,6 +60,16 @@ Neue Aliens: JSON-Datei in `data/<namespace>/kingdomomnitrix/alien/` + Übersetz
 Waffenstufe und Munition stehen im Waffen-HUD am rechten Rand. Gadgets liegen im **Gadget-Gürtel** (**H** öffnet ihn,
 oder Rechtsklick mit dem Gadget). Beim Tod fallen Gadgets wie normale Items (außer mit `keepInventory`).
 
+### Quests
+Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
+Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
+
+- Reiter **Tracker**: laufende Quests mit Fortschrittsbalken · **Aufträge**: verfügbare und gesperrte · **Erledigt**
+- Ziel-Typen: **Besiegen** (Mob oder Tag, z. B. alle Herzlosen), **Herstellen** (Werkbank, Ofen …), **Bringen** (Items im Inventar, werden beim Abgeben abgezogen)
+- Belohnungen: Bolts, Helden-EP (mit Stufenaufstieg) und Items, auch mit Komponenten (Magie-Kristall, DNA-Probe)
+- Story-Quests schalten weitere frei; Kopfgelder sind wiederholbar
+- Neue Quests: JSON-Datei in `data/<namespace>/kingdomomnitrix/quest/` (Beispiele im Mod) + Übersetzungen
+
 ## Rezepte (Werkbank)
 
 ```
@@ -79,6 +89,7 @@ Eisen Redstone Eisen  Nugget TNT  Nugget      Nugget Redstone Nugget  .     Kett
 Eisen .    .          .     Nugget .          .      Nugget   .       Eisen Redstone .
 
 Bolt-Kiste: 8 Bretter um 1 Eisennugget
+Quest-Buch (formlos): Buch + Goldnugget + Feder
 Hi-Potion (formlos): Glasflasche + glitzernde Melonenscheibe + Zucker
 Paopu-Frucht (formlos): Apfel + Glowstonestaub + Herz
 ```
@@ -126,6 +137,9 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero transform <alien> [spieler]` | verwandelt sofort (ohne Freischaltung/Nachladen) |
 | `/hero revert [spieler]` | verwandelt zurück |
 | `/hero dna <alien> [spieler]` | gibt eine DNA-Probe |
+| `/hero quest start\|complete <quest> [spieler]` | startet eine Quest bzw. schließt sie sofort mit Belohnung ab |
+| `/hero quest reset <quest>\|all [spieler]` | setzt Quest-Fortschritt zurück |
+| `/hero quest list [spieler]` | zeigt alle Quests mit Status |
 
 ## Installieren
 

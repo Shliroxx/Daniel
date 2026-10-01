@@ -5,6 +5,7 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
+import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.weapon.TerminalService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -35,6 +36,22 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenTerminalPayload.ID, OpenTerminalPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenQuestBookPayload.ID, OpenQuestBookPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(QuestActionPayload.ID, QuestActionPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(QuestActionPayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			if (!canAct(player)) {
+				return;
+			}
+			QuestManager.Result result = switch (payload.action()) {
+				case QuestActionPayload.ACCEPT -> QuestManager.accept(player, payload.quest());
+				case QuestActionPayload.ABANDON -> QuestManager.abandon(player, payload.quest());
+				case QuestActionPayload.TURN_IN -> QuestManager.turnIn(player, payload.quest());
+				default -> QuestManager.Result.UNKNOWN;
+			};
+			reportQuest(player, result);
+		});
 		PayloadTypeRegistry.playC2S().register(SwingshotPayload.ID, SwingshotPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(SwingshotStatePayload.ID, SwingshotStatePayload.CODEC);
 
@@ -95,6 +112,19 @@ public final class ModNetworking {
 
 	private static boolean canAct(ServerPlayerEntity player) {
 		return player.isAlive() && !player.isSpectator();
+	}
+
+	private static void reportQuest(ServerPlayerEntity player, QuestManager.Result result) {
+		String key = switch (result) {
+			case LOCKED -> "message.kingdomomnitrix.quest_locked";
+			case TOO_MANY -> "message.kingdomomnitrix.quest_too_many";
+			case NOT_READY -> "message.kingdomomnitrix.quest_not_ready";
+			case UNKNOWN -> "message.kingdomomnitrix.quest_unknown";
+			default -> null;
+		};
+		if (key != null) {
+			player.sendMessage(Text.translatable(key, QuestManager.MAX_ACTIVE).formatted(Formatting.RED), true);
+		}
 	}
 
 	/** Rueckmeldung in der Actionbar fuer Ergebnisse, die der Spieler sonst nicht bemerken wuerde. */

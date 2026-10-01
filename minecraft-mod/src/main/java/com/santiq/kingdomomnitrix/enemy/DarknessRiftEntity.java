@@ -213,7 +213,7 @@ public class DarknessRiftEntity extends Entity {
 		ExperienceOrbEntity.spawn(world, getPos(), 20 + 5 * wave);
 		for (UUID uuid : participants) {
 			if (world.getEntity(uuid) instanceof ServerPlayerEntity player) {
-				HeroDataAccess.update(player, data -> data.addExperience(rewards.experience()));
+				HeroDataAccess.grantExperience(player, rewards.experience());
 				player.sendMessage(Text.translatable("message.kingdomomnitrix.rift_closed", rewards.experience())
 						.formatted(Formatting.LIGHT_PURPLE), false);
 			}

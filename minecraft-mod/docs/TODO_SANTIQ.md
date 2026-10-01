@@ -67,6 +67,13 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Optionen → Steuerung → Kategorie „Kingdom Omnitrix“: keine rot markierten (doppelt belegten) Tasten. Die Mod meldet doppelte Belegungen beim Einloggen im Chat.
 - [ ] Mit einem zweiten Spieler: Der sieht das Swingshot-Seil
 
+### Phase 10 — Quests
+- [ ] Neue Welt: Quest-Buch liegt im Inventar, Rechtsklick öffnet es
+- [ ] „Das Erwachen“ annehmen, nachts 5 Herzlose aus einem Riss besiegen (oder `/hero rift`), im Buch abgeben
+- [ ] „Eine Uhr aus dem All“: Omnitrix herstellen → Quest bereit → DNA-Probe als Belohnung
+- [ ] Kopfgeld „Untote“ zweimal hintereinander erledigen (wiederholbar)
+- [ ] Texte und Belohnungen: zu viel/zu wenig? Eigene Quest-Ideen an Claude
+
 ---
 
 ## 5. Entscheidungen, die noch offen sind

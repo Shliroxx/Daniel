@@ -21,6 +21,8 @@ import com.santiq.kingdomomnitrix.registry.ModItemGroup;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModScreenHandlers;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
+import com.santiq.kingdomomnitrix.quest.QuestManager;
+import com.santiq.kingdomomnitrix.quest.QuestRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.mob.Monster;
@@ -50,6 +52,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		SpellRegistry.register();
 		RiftRegistry.register();
 		WeaponRegistry.register();
+		QuestRegistry.register();
 		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();
@@ -58,6 +61,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		ModItemGroup.register();
 		ModScreenHandlers.register();
 		GadgetManager.register();
+		QuestManager.register();
 		TransformationManager.register();
 		DnaDrops.register();
 		CombatManager.register();

@@ -1,0 +1,50 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.awakening.title"
+  },
+  "category": "story",
+  "sort_order": 0,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.yen_sid"
+    },
+    "icon": "kingdomomnitrix:kingdom_key"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.awakening.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.awakening.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.awakening.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.awakening.complete.1"
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "type": "kill",
+      "target": "#kingdomomnitrix:heartless",
+      "count": 5
+    }
+  ],
+  "rewards": {
+    "bolts": 150,
+    "experience": 80,
+    "items": [
+      {
+        "id": "kingdomomnitrix:hi_potion",
+        "count": 2
+      }
+    ]
+  }
+}

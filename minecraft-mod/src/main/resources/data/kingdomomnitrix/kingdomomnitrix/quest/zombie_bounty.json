@@ -1,0 +1,56 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.zombie_bounty.title"
+  },
+  "category": "bounty",
+  "sort_order": 0,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.max"
+    },
+    "icon": "minecraft:rotten_flesh"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.zombie_bounty.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.zombie_bounty.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.zombie_bounty.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.zombie_bounty.complete.1"
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "type": "kill",
+      "target": "minecraft:zombie",
+      "count": 10
+    },
+    {
+      "type": "collect",
+      "target": "minecraft:rotten_flesh",
+      "count": 16
+    }
+  ],
+  "rewards": {
+    "bolts": 120,
+    "experience": 40,
+    "items": [
+      {
+        "id": "minecraft:iron_nugget",
+        "count": 9
+      }
+    ]
+  },
+  "repeatable": true
+}

@@ -4,6 +4,7 @@
 	"package": "com.santiq.kingdomomnitrix.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
+		"ItemStackCraftMixin",
 		"ServerPlayNetworkHandlerAccessor"
 	],
 	"injectors": {

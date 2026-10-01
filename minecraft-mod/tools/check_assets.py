@@ -33,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -198,6 +198,54 @@ def check_spells(report: Report, lang: dict[str, str]) -> int:
     return len(files)
 
 
+def translate_keys(node: object) -> list[str]:
+    """Alle {"translate": ...}-Schluessel in einem JSON-Baum."""
+    if isinstance(node, dict):
+        found = [node["translate"]] if isinstance(node.get("translate"), str) else []
+        return found + [k for v in node.values() for k in translate_keys(v)]
+    if isinstance(node, list):
+        return [k for v in node for k in translate_keys(v)]
+    return []
+
+
+def check_quests(report: Report, lang: dict[str, str], items: set[str]) -> int:
+    files = sorted((DATA / MOD_ID / "quest").glob("*.json"))
+    known = {f"{MOD_ID}:{p.stem}" for p in files}
+    entity_tags = {f"{MOD_ID}:{p.stem}" for p in (DATA / "tags" / "entity_type").glob("*.json")}
+    for path in files:
+        quest = load_json(path, report)
+        if not isinstance(quest, dict):
+            continue
+        for key in translate_keys(quest):
+            if key not in lang:
+                report.error("Quest %s: Uebersetzung fehlt: %s", path.stem, key)
+        for required in quest.get("requires", []):
+            if required not in known:
+                report.error("Quest %s setzt unbekannte Quest %s voraus", path.stem, required)
+        objectives = quest.get("objectives", [])
+        if not 1 <= len(objectives) <= 6:
+            report.error("Quest %s braucht 1 bis 6 Ziele", path.stem)
+        for objective in objectives:
+            kind, target = objective.get("type"), objective.get("target", "")
+            if kind not in ("kill", "craft", "collect"):
+                report.error("Quest %s: unbekannter Zieltyp %s", path.stem, kind)
+            namespace, _, name = target.lstrip("#").partition(":")
+            if namespace != MOD_ID:
+                continue
+            if target.startswith("#"):
+                if kind == "kill" and target[1:] not in entity_tags:
+                    report.error("Quest %s: unbekannter Entity-Tag %s", path.stem, target)
+            elif kind != "kill" and name not in items:
+                report.error("Quest %s: unbekanntes Item %s", path.stem, target)
+        reward_items = quest.get("rewards", {}).get("items", [])
+        icon = quest.get("giver", {}).get("icon", "")
+        for item in [r.get("id", "") for r in reward_items] + [icon]:
+            namespace, _, name = item.partition(":")
+            if namespace == MOD_ID and name not in items:
+                report.error("Quest %s: unbekanntes Item %s", path.stem, item)
+    return len(files)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", action="store_true", help="ausfuehrliche Ausgabe")
@@ -214,11 +262,13 @@ def main(argv: list[str] | None = None) -> int:
     check_loot(report, set(items))
     alien_count = check_aliens(report, java_sources(), lang)
     spell_count = check_spells(report, lang)
+    quest_count = check_quests(report, lang, set(items))
 
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Uebersetzungen", len(items), alien_count, spell_count, len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d Uebersetzungen",
+             len(items), alien_count, spell_count, quest_count, len(lang))
     return 0
 
 

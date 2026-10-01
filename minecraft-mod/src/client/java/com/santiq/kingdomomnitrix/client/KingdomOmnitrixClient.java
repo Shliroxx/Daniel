@@ -18,6 +18,8 @@ import com.santiq.kingdomomnitrix.client.gadget.GadgetHud;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetInput;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
 import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
+import com.santiq.kingdomomnitrix.client.quest.QuestBookScreen;
+import com.santiq.kingdomomnitrix.networking.OpenQuestBookPayload;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
 import com.santiq.kingdomomnitrix.registry.ModItems;
@@ -85,6 +87,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			SwingshotRopes.reset();
 		});
 
+		ClientPlayNetworking.registerGlobalReceiver(OpenQuestBookPayload.ID, (payload, context) -> QuestBookScreen.open(context.client()));
 		ClientPlayNetworking.registerGlobalReceiver(SwingshotStatePayload.ID, (payload, context) -> SwingshotRopes.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTerminalPayload.ID, (payload, context) ->
 				context.client().setScreen(new WeaponTerminalScreen(payload.pos())));

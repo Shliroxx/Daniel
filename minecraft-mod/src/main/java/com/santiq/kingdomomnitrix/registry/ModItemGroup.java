@@ -46,6 +46,7 @@ public final class ModItemGroup {
 						entries.add(ModItems.OMNIWRENCH);
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);
+						entries.add(ModItems.QUEST_BOOK);
 						entries.add(ModItems.HELI_PACK);
 						ItemStack jet = new ItemStack(ModItems.HELI_PACK);
 						jet.set(ModComponents.JET_MODE, true);
