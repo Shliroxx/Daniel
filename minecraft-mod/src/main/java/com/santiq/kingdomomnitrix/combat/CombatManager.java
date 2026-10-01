@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.combat;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
 import com.santiq.kingdomomnitrix.registry.ModParticles;
@@ -161,9 +163,9 @@ public final class CombatManager {
 		Vfx.slash(world, player, step, airborne);
 		if (finisher) {
 			Vfx.finisher(world, player);
-			sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 1.0f, 0.8f);
+			sound(world, player, ModSounds.COMBAT_FINISHER, 1.0f, 1.0f);
 		} else {
-			sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, 1.2f + step * 0.15f);
+			sound(world, player, ModSounds.COMBAT_SWING, 0.8f, 1.0f + step * 0.08f);
 		}
 	}
 
@@ -179,7 +181,7 @@ public final class CombatManager {
 			}
 		}
 		Vfx.slash(world, player, 1, false);
-		sound(world, player, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 0.7f);
+		sound(world, player, ModSounds.COMBAT_SWING, 1.0f, 0.7f);
 	}
 
 	/**
@@ -200,8 +202,10 @@ public final class CombatManager {
 		player.onAttacking(target);
 		MagicManager.onMeleeHit(player);
 		Vfx.hit(world, target, stack.getItem() instanceof KeybladeItem, critical);
+		world.playSound(null, target.getX(), target.getY(), target.getZ(), ModSounds.COMBAT_HIT, SoundCategory.PLAYERS, 0.8f,
+				0.9f + world.random.nextFloat() * 0.2f);
 		if (critical) {
-			world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.8f, 1.0f);
+			world.playSound(null, target.getX(), target.getY(), target.getZ(), ModSounds.COMBAT_FINISHER, SoundCategory.PLAYERS, 0.5f, 1.5f);
 		}
 		stack.damage(1, player, EquipmentSlot.MAINHAND);
 		return true;
@@ -270,7 +274,7 @@ public final class CombatManager {
 		}
 		ServerWorld world = player.getServerWorld();
 		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.1, player.getZ(), 8, 0.3, 0.05, 0.3, 0.02);
-		sound(world, player, SoundEvents.ENTITY_PHANTOM_FLAP, 0.6f, 1.6f);
+		sound(world, player, ModSounds.COMBAT_DODGE, 0.8f, 1.0f);
 		broadcastAnimation(player, "dodge");
 	}
 
@@ -334,7 +338,7 @@ public final class CombatManager {
 		}
 		Vfx.burst(world, perfect ? ModParticles.KEYBLADE_SPARK : ModParticles.HIT_SPARK,
 				player.getPos().add(player.getRotationVec(1.0f).multiply(0.6)).add(0, player.getHeight() * 0.6, 0), perfect ? 16 : 3, perfect ? 0.35 : 0.05);
-		sound(world, player, SoundEvents.ITEM_SHIELD_BLOCK, 1.0f, perfect ? 1.6f : 1.0f);
+		sound(world, player, ModSounds.COMBAT_GUARD, 1.0f, perfect ? 1.4f : 1.0f);
 		return false;
 	}
 

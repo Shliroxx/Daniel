@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.entity.player.PlayerEntity;
@@ -38,7 +40,7 @@ public class FusionGrenadeItem extends WeaponItem {
 			FusionGrenadeEntity grenade = new FusionGrenadeEntity(world, user, power);
 			grenade.setVelocity(user, user.getPitch(), user.getYaw(), -10.0f, 1.2f, 1.0f);
 			world.spawnEntity(grenade);
-			world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.PLAYERS, 0.6f, 0.6f);
+			world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.WEAPON_THROW, SoundCategory.PLAYERS, 0.6f, 0.6f);
 			user.getItemCooldownManager().set(this, cooldown);
 		}
 		return TypedActionResult.success(stack, world.isClient());

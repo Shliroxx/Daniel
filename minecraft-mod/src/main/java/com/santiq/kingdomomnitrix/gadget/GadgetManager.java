@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.registry.ModParticles;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
@@ -187,13 +189,13 @@ public final class GadgetManager {
 		player.fallDistance = 0.0f;
 		ServerWorld world = player.getServerWorld();
 		if (jet) {
-			sound(player, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, 0.7f, 1.3f);
+			sound(player, ModSounds.GADGET_JET, 0.8f, 1.0f);
 			world.spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.8, player.getZ(), 12, 0.2, 0.2, 0.2, 0.02);
 			Vfx.directed(world, ModParticles.MUZZLE_FLASH, player.getPos().add(player.getRotationVec(1.0f).multiply(-0.5)).add(0, 0.9, 0),
 					player.getRotationVec(1.0f).multiply(-0.1));
 			world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 0.6, player.getZ(), 8, 0.2, 0.2, 0.2, 0.02);
 		} else {
-			sound(player, SoundEvents.ENTITY_BREEZE_JUMP, 0.7f, 1.4f);
+			sound(player, ModSounds.GADGET_HELI, 0.8f, 1.0f);
 			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 8, 0.3, 0.05, 0.3, 0.02);
 			Vfx.rotorWind(world, player);
 		}
@@ -226,8 +228,8 @@ public final class GadgetManager {
 		Vfx.burst(world, ModParticles.HIT_SPARK, hit.getPos(), 2, 0.05);
 		Vfx.burst(world, ModParticles.KEYBLADE_SPARK, hit.getPos(), 6, 0.2);
 		player.fallDistance = 0.0f;
-		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_FISHING_BOBBER_THROW, SoundCategory.PLAYERS, 0.9f, 0.7f);
-		world.playSound(null, anchor.x, anchor.y, anchor.z, SoundEvents.BLOCK_CHAIN_PLACE, SoundCategory.PLAYERS, 1.0f, 1.2f);
+		world.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.GADGET_SWINGSHOT, SoundCategory.PLAYERS, 0.9f, 0.7f);
+		world.playSound(null, anchor.x, anchor.y, anchor.z, ModSounds.GADGET_ATTACH, SoundCategory.PLAYERS, 1.0f, 1.0f);
 		broadcast(player, new SwingshotStatePayload(player.getId(), true, hit.getPos().x, hit.getPos().y, hit.getPos().z));
 	}
 

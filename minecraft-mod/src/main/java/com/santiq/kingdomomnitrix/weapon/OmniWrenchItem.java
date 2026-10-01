@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.combat.ComboProfile;
 import com.santiq.kingdomomnitrix.combat.ComboWeapon;
 import java.util.List;
@@ -43,7 +45,7 @@ public class OmniWrenchItem extends WeaponItem implements ComboWeapon {
 			WrenchProjectileEntity wrench = new WrenchProjectileEntity(world, user, stack.copyWithCount(1), damage, range);
 			wrench.setVelocity(user, user.getPitch(), user.getYaw(), 0.0f, 1.6f, 0.0f);
 			world.spawnEntity(wrench);
-			world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_SNOWBALL_THROW, SoundCategory.PLAYERS, 0.8f, 0.5f);
+			world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.WEAPON_THROW, SoundCategory.PLAYERS, 0.8f, 0.5f);
 			// Erst wieder werfen, wenn er zurueck ist (oder nach Ablauf der Flugzeit)
 			user.getItemCooldownManager().set(this, WrenchProjectileEntity.MAX_FLIGHT_TICKS);
 		}

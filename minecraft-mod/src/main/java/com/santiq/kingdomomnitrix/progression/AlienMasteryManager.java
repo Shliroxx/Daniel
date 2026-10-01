@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.progression;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -86,8 +88,8 @@ public final class AlienMasteryManager {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.mastery_up", TransformationManager.alienName(alien).formatted(Formatting.BOLD),
 					newLevel, Math.round(after.durationBonus(alien) * 100), Math.round(after.cooldownReduction(alien) * 100))
 					.formatted(Formatting.GREEN), false);
-			player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_POWER_SELECT,
-					SoundCategory.PLAYERS, 0.7f, 1.8f);
+			player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.HERO_DISCOVERY,
+					SoundCategory.PLAYERS, 0.9f, 1.0f);
 			HeroDataAccess.grantExperience(player, HERO_EXPERIENCE_PER_LEVEL * newLevel);
 		}
 	}

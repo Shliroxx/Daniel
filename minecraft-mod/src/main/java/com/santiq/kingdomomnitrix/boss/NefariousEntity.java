@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.boss;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.world.TraverseTown;
@@ -294,7 +296,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			startAttack(Attack.OVERLOAD);
 			triggerAnim(CONTROLLER, "overload");
 			taunt("overload");
-			sound(world, SoundEvents.BLOCK_BEACON_POWER_SELECT, 1.5f, 0.6f);
+			sound(world, ModSounds.BOSS_OVERLOAD, 1.5f, 1.0f);
 			return;
 		}
 		if (distance < 5) {
@@ -306,12 +308,12 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			laserTarget = target.getEyePos();
 			laserHit.clear();
 			triggerAnim(CONTROLLER, "laser");
-			sound(world, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.2f, 1.5f);
+			sound(world, ModSounds.BOSS_LASER_CHARGE, 1.3f, 1.0f);
 		} else {
 			startAttack(Attack.ROCKETS);
 			prepareRockets(world);
 			triggerAnim(CONTROLLER, "rockets");
-			sound(world, SoundEvents.BLOCK_DISPENSER_LAUNCH, 1.0f, 0.6f);
+			sound(world, ModSounds.BOSS_ROCKET, 1.0f, 0.8f);
 		}
 	}
 
@@ -336,7 +338,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			return;
 		}
 		if (attackTicks == charge) {
-			sound(world, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 1.4f, 1.6f);
+			sound(world, ModSounds.BOSS_LASER_FIRE, 1.5f, 1.0f);
 		}
 		line(world, from, to, ORANGE, 0.25);
 		world.spawnParticles(ParticleTypes.END_ROD, to.x, to.y, to.z, 4, 0.2, 0.2, 0.2, 0.05);
@@ -399,7 +401,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 				}
 			}
 			if (attackTicks == impact - 12) {
-				sound(world, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.2f, 0.7f);
+				sound(world, ModSounds.BOSS_ROCKET, 1.2f, 1.0f);
 			}
 			return;
 		}
@@ -431,7 +433,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			return;
 		}
 		if (attackTicks == impact) {
-			sound(world, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.0f, 0.6f);
+			sound(world, ModSounds.BOSS_STOMP, 1.6f, 1.0f);
 			world.spawnParticles(ParticleTypes.EXPLOSION, getX(), getY() + 0.2, getZ(), 6, 2.5, 0.1, 2.5, 0.0);
 			for (UUID uuid : fighters) {
 				PlayerEntity player = world.getPlayerByUuid(uuid);
@@ -459,7 +461,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 				ring(world, getPos(), 9.0 * attackTicks / blast + 1, ORANGE);
 			}
 			if (attackTicks % 20 == 0) {
-				sound(world, SoundEvents.BLOCK_BEACON_AMBIENT, 2.0f, 0.5f + attackTicks / 70.0f);
+				sound(world, ModSounds.BOSS_LASER_CHARGE, 1.6f, 0.6f + attackTicks / 100.0f);
 			}
 			return;
 		}
@@ -490,7 +492,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 				List<Integer> all = new ArrayList<>(List.of(0, 1, 2, 3));
 				java.util.Collections.shuffle(all, new java.util.Random(random.nextLong()));
 				hazardSectors.addAll(all.subList(0, phase == 3 ? 3 : 2));
-				sound(world, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.2f, 1.6f);
+				sound(world, ModSounds.BOSS_OVERLOAD, 1.0f, 1.3f);
 			}
 			return;
 		}
@@ -567,7 +569,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			Vec3d hit = corePosition();
 			if (core) {
 				world.spawnParticles(ParticleTypes.CRIT, hit.x, hit.y, hit.z, 10, 0.3, 0.3, 0.3, 0.3);
-				sound(world, SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, 0.8f, 1.6f);
+				sound(world, ModSounds.BOSS_HURT, 1.0f, 1.3f);
 			} else if (multiplier < 1.0f) {
 				sound(world, SoundEvents.BLOCK_ANVIL_LAND, 0.4f, 1.8f);
 			}
@@ -703,17 +705,17 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
-		return SoundEvents.ENTITY_IRON_GOLEM_HURT;
+		return ModSounds.BOSS_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound() {
-		return SoundEvents.ENTITY_IRON_GOLEM_DEATH;
+		return ModSounds.BOSS_DEATH;
 	}
 
 	@Override
 	protected void playStepSound(BlockPos pos, net.minecraft.block.BlockState state) {
-		playSound(SoundEvents.ENTITY_IRON_GOLEM_STEP, 1.0f, 0.6f);
+		playSound(ModSounds.BOSS_STOMP, 0.35f, 1.6f);
 	}
 
 	@Override

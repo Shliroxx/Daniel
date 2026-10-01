@@ -1,0 +1,284 @@
+{
+  "omnitrix.transform": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.transform",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_transform"
+    ]
+  },
+  "omnitrix.revert": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.revert",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_revert"
+    ]
+  },
+  "omnitrix.beep": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.beep",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_beep"
+    ]
+  },
+  "omnitrix.select": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.select",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_select"
+    ]
+  },
+  "alien.fire": {
+    "subtitle": "subtitles.kingdomomnitrix.alien.fire",
+    "sounds": [
+      "kingdomomnitrix:alien_fire_1",
+      "kingdomomnitrix:alien_fire_2"
+    ]
+  },
+  "alien.slam": {
+    "subtitle": "subtitles.kingdomomnitrix.alien.slam",
+    "sounds": [
+      "kingdomomnitrix:alien_slam"
+    ]
+  },
+  "alien.dash": {
+    "subtitle": "subtitles.kingdomomnitrix.alien.dash",
+    "sounds": [
+      "kingdomomnitrix:alien_dash_1",
+      "kingdomomnitrix:alien_dash_2"
+    ]
+  },
+  "alien.crystal": {
+    "subtitle": "subtitles.kingdomomnitrix.alien.crystal",
+    "sounds": [
+      "kingdomomnitrix:alien_crystal_1",
+      "kingdomomnitrix:alien_crystal_2"
+    ]
+  },
+  "combat.swing": {
+    "subtitle": "subtitles.kingdomomnitrix.combat.swing",
+    "sounds": [
+      "kingdomomnitrix:combat_swing_1",
+      "kingdomomnitrix:combat_swing_2",
+      "kingdomomnitrix:combat_swing_3"
+    ]
+  },
+  "combat.hit": {
+    "subtitle": "subtitles.kingdomomnitrix.combat.hit",
+    "sounds": [
+      "kingdomomnitrix:combat_hit_1",
+      "kingdomomnitrix:combat_hit_2"
+    ]
+  },
+  "combat.finisher": {
+    "subtitle": "subtitles.kingdomomnitrix.combat.finisher",
+    "sounds": [
+      "kingdomomnitrix:combat_finisher"
+    ]
+  },
+  "combat.guard": {
+    "subtitle": "subtitles.kingdomomnitrix.combat.guard",
+    "sounds": [
+      "kingdomomnitrix:combat_guard"
+    ]
+  },
+  "combat.dodge": {
+    "subtitle": "subtitles.kingdomomnitrix.combat.dodge",
+    "sounds": [
+      "kingdomomnitrix:combat_dodge"
+    ]
+  },
+  "magic.fire": {
+    "subtitle": "subtitles.kingdomomnitrix.magic.fire",
+    "sounds": [
+      "kingdomomnitrix:magic_fire"
+    ]
+  },
+  "magic.blizzard": {
+    "subtitle": "subtitles.kingdomomnitrix.magic.blizzard",
+    "sounds": [
+      "kingdomomnitrix:magic_blizzard"
+    ]
+  },
+  "magic.thunder": {
+    "subtitle": "subtitles.kingdomomnitrix.magic.thunder",
+    "sounds": [
+      "kingdomomnitrix:magic_thunder"
+    ]
+  },
+  "magic.cure": {
+    "subtitle": "subtitles.kingdomomnitrix.magic.cure",
+    "sounds": [
+      "kingdomomnitrix:magic_cure"
+    ]
+  },
+  "magic.mp_empty": {
+    "subtitle": "subtitles.kingdomomnitrix.magic.mp_empty",
+    "sounds": [
+      "kingdomomnitrix:magic_mp_empty"
+    ]
+  },
+  "hero.discovery": {
+    "subtitle": "subtitles.kingdomomnitrix.hero.discovery",
+    "sounds": [
+      "kingdomomnitrix:hero_discovery"
+    ]
+  },
+  "hero.level_up": {
+    "subtitle": "subtitles.kingdomomnitrix.hero.level_up",
+    "sounds": [
+      "kingdomomnitrix:hero_level_up"
+    ]
+  },
+  "weapon.combuster": {
+    "subtitle": "subtitles.kingdomomnitrix.weapon.combuster",
+    "sounds": [
+      "kingdomomnitrix:weapon_combuster_1",
+      "kingdomomnitrix:weapon_combuster_2"
+    ]
+  },
+  "weapon.empty": {
+    "subtitle": "subtitles.kingdomomnitrix.weapon.empty",
+    "sounds": [
+      "kingdomomnitrix:weapon_empty"
+    ]
+  },
+  "weapon.throw": {
+    "subtitle": "subtitles.kingdomomnitrix.weapon.throw",
+    "sounds": [
+      "kingdomomnitrix:weapon_throw"
+    ]
+  },
+  "weapon.bolt": {
+    "subtitle": "subtitles.kingdomomnitrix.weapon.bolt",
+    "sounds": [
+      "kingdomomnitrix:weapon_bolt_1",
+      "kingdomomnitrix:weapon_bolt_2"
+    ]
+  },
+  "weapon.buy": {
+    "subtitle": "subtitles.kingdomomnitrix.weapon.buy",
+    "sounds": [
+      "kingdomomnitrix:weapon_buy"
+    ]
+  },
+  "gadget.heli": {
+    "subtitle": "subtitles.kingdomomnitrix.gadget.heli",
+    "sounds": [
+      "kingdomomnitrix:gadget_heli"
+    ]
+  },
+  "gadget.jet": {
+    "subtitle": "subtitles.kingdomomnitrix.gadget.jet",
+    "sounds": [
+      "kingdomomnitrix:gadget_jet"
+    ]
+  },
+  "gadget.swingshot": {
+    "subtitle": "subtitles.kingdomomnitrix.gadget.swingshot",
+    "sounds": [
+      "kingdomomnitrix:gadget_swingshot"
+    ]
+  },
+  "gadget.attach": {
+    "subtitle": "subtitles.kingdomomnitrix.gadget.attach",
+    "sounds": [
+      "kingdomomnitrix:gadget_attach"
+    ]
+  },
+  "ship.launch": {
+    "subtitle": "subtitles.kingdomomnitrix.ship.launch",
+    "sounds": [
+      "kingdomomnitrix:ship_launch"
+    ]
+  },
+  "ship.ai": {
+    "subtitle": "subtitles.kingdomomnitrix.ship.ai",
+    "sounds": [
+      "kingdomomnitrix:ship_ai"
+    ]
+  },
+  "world.rift": {
+    "subtitle": "subtitles.kingdomomnitrix.world.rift",
+    "sounds": [
+      "kingdomomnitrix:world_rift"
+    ]
+  },
+  "arena.round": {
+    "subtitle": "subtitles.kingdomomnitrix.arena.round",
+    "sounds": [
+      "kingdomomnitrix:arena_round"
+    ]
+  },
+  "arena.victory": {
+    "subtitle": "subtitles.kingdomomnitrix.arena.victory",
+    "sounds": [
+      "kingdomomnitrix:arena_victory"
+    ]
+  },
+  "heartless.ambient": {
+    "subtitle": "subtitles.kingdomomnitrix.heartless.ambient",
+    "sounds": [
+      "kingdomomnitrix:heartless_ambient_1",
+      "kingdomomnitrix:heartless_ambient_2",
+      "kingdomomnitrix:heartless_ambient_3"
+    ]
+  },
+  "heartless.hurt": {
+    "subtitle": "subtitles.kingdomomnitrix.heartless.hurt",
+    "sounds": [
+      "kingdomomnitrix:heartless_hurt_1",
+      "kingdomomnitrix:heartless_hurt_2"
+    ]
+  },
+  "heartless.death": {
+    "subtitle": "subtitles.kingdomomnitrix.heartless.death",
+    "sounds": [
+      "kingdomomnitrix:heartless_death"
+    ]
+  },
+  "heartless.spawn": {
+    "subtitle": "subtitles.kingdomomnitrix.heartless.spawn",
+    "sounds": [
+      "kingdomomnitrix:heartless_spawn"
+    ]
+  },
+  "boss.laser_charge": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.laser_charge",
+    "sounds": [
+      "kingdomomnitrix:boss_laser_charge"
+    ]
+  },
+  "boss.laser_fire": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.laser_fire",
+    "sounds": [
+      "kingdomomnitrix:boss_laser_fire"
+    ]
+  },
+  "boss.rocket": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.rocket",
+    "sounds": [
+      "kingdomomnitrix:boss_rocket"
+    ]
+  },
+  "boss.stomp": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.stomp",
+    "sounds": [
+      "kingdomomnitrix:boss_stomp"
+    ]
+  },
+  "boss.overload": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.overload",
+    "sounds": [
+      "kingdomomnitrix:boss_overload"
+    ]
+  },
+  "boss.hurt": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.hurt",
+    "sounds": [
+      "kingdomomnitrix:boss_hurt_1",
+      "kingdomomnitrix:boss_hurt_2"
+    ]
+  },
+  "boss.death": {
+    "subtitle": "subtitles.kingdomomnitrix.boss.death",
+    "sounds": [
+      "kingdomomnitrix:boss_death"
+    ]
+  }
+}

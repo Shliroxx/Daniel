@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.progression;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.ArrayList;
@@ -263,8 +265,8 @@ public final class ProgressionManager {
 		}
 		SECOND_CHANCE_READY.put(player.getUuid(), now + Math.round(cooldownSeconds * 20));
 		player.setHealth(2.0f);
-		player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_POWER_SELECT,
-				SoundCategory.PLAYERS, 1.0f, 1.6f);
+		player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.MAGIC_CURE,
+				SoundCategory.PLAYERS, 1.0f, 1.3f);
 		player.getServerWorld().spawnParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getBodyY(0.5), player.getZ(),
 				30, 0.4, 0.6, 0.4, 0.3);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.second_chance").formatted(Formatting.GOLD, Formatting.BOLD), true);

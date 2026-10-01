@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.9.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.10.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -123,6 +123,15 @@ Eigene Partikel (`tools/generate_particles.py`, 14 Arten, animiert, leuchtend), 
 - **Technik:** Mündungsfeuer und Plasma-Spur (Combuster), Explosion der Fusionsgranate, Rotor-Wind beim Gleiten, Düsenglut am Heli-Jet, Funken am Swingshot-Haken
 - **Bildschirm:** pulsierende rote Vignette bei wenig Leben (unter 30 %)
 
+### Sounds
+45 eigene Sound-Ereignisse (57 Dateien), synthetisch erzeugt mit `tools/generate_sounds.py` (rechtefrei, numpy + ffmpeg),
+mit Untertiteln auf Deutsch und Englisch. Lautstärke über die normalen Minecraft-Regler (Spieler, Feindselige Kreaturen …).
+- **Omnitrix & Aliens:** Verwandlung, Abschalten, Warnpiepen in den letzten 5 Sekunden, Klick im Alien-Rad, Feuer, Bodenschlag, Sprint, Kristalle
+- **Kampf & Magie:** Schwung, Treffer, Finisher, Blocken, Ausweichen, Feuer/Eis/Donner/Vita, keine MP, Stufenaufstieg, Entdeckung
+- **Technik & Welten:** Combuster, leer, Wurf, Bolts, Terminal-Kauf, Heli-Pack/-Jet, Swingshot, Raumschiff-Start, Bord-KI, Weltraumriss, Arena-Runde und Sieg
+- **Gegner & Boss:** Herzlose (Laute, Treffer, „Herz wird befreit“ beim Besiegen, Erscheinen), Nefarious-Mech (Laser laden/feuern, Raketen, Stampfer, Überladung, Treffer, Explosion)
+- Eigene Aufnahmen: gleichnamige `.ogg` in `assets/kingdomomnitrix/sounds/` ablegen und in `KEEP` im Generator eintragen.
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -179,7 +188,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.9.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.10.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -190,6 +199,7 @@ python tools/check_assets.py          # Übersetzungen, Modelle, Texturen, Rezep
 python tools/generate_textures.py --check
 python tools/generate_icons.py --check     # GUI-Symbole
 python tools/generate_particles.py --check # Partikel
+python tools/generate_sounds.py --check    # Sounds (Erzeugen braucht numpy + ffmpeg)
 ```
 
 ## Heldendaten, HUD und Befehle
@@ -225,7 +235,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.9.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.10.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.

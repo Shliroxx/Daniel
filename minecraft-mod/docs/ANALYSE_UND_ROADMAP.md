@@ -56,6 +56,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Progression (Phase 15) | Stufe 50; Werte automatisch + neue Fähigkeiten pro Stufe; KH-Fähigkeitenliste mit AP; EP auch aus Herzlosen/Bossen, Erkunden, Alien-Meisterschaft |
 | UI (Phase 16) | KH-Kommandomenü, Weltkarte, Inventar-Reiter, HUD aufräumen; Farben je System; HUD verschieb- und skalierbar; eigene Symbole |
 | VFX (Phase 17) | alle vier Bereiche (Verwandlung, Treffer/Combos, Magie, Waffen/Gadgets); immer voll; Bildschirm-Blitz und Vignette; eigene Partikel-Texturen |
+| Audio (Phase 18) | selbst erzeugte Sounds; alle vier Bereiche; keine Musik; Lautstärke über die Minecraft-Kategorien |
 | Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
@@ -538,6 +539,20 @@ Entscheidung SANTIQ: Verwandlung, Treffer & Combos, Magie, Waffen & Gadgets; Eff
 | Gadgets: Rotor-Wind beim Gleiten/Doppelsprung, Düsenglut, Swingshot-Funken | IMPLEMENTED | im Code geprüft |
 | Bildschirm: grüner/roter Blitz mit Vignette beim (Rück-)Verwandeln, rote Puls-Vignette bei wenig Leben | IMPLEMENTED | getestet |
 | Boss- und Herzlosen-Effekte auf eigene Partikel umstellen | TODO → Abschluss-Überarbeitung | nutzen noch Vanilla-Partikel |
+
+### Phase 18 — Audio
+
+Entscheidung SANTIQ: Sounds selbst erzeugen; Omnitrix & Aliens, Kampf & Magie, Technik & Welten, Gegner & Boss; keine Musik;
+Lautstärke über die Minecraft-Kategorien.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Synthesizer `tools/generate_sounds.py` (Oszillatoren, Rauschen, Filter, Hüllkurven, Hall, Lautheit −16 dBFS), OGG über ffmpeg | IMPLEMENTED | reproduzierbar (Seed je Datei); `--check` läuft ohne numpy/ffmpeg in der CI |
+| 45 Sound-Ereignisse / 57 Dateien, `sounds.json`, Untertitel DE/EN | PLACEHOLDER | synthetisch, nicht von Hand gestaltet; im Spiel nicht angehört (Testumgebung ohne Audiogerät) |
+| `ModSounds` und Ersatz aller Vanilla-Platzhalter in Omnitrix, Aliens, Kampf, Magie, Waffen, Gadgets, Raumschiff, Arena, Herzlosen, Boss | IMPLEMENTED | Minecraft lädt alle Dateien ohne Warnung; `/playsound` findet die Ereignisse |
+| Neu: Omnitrix-Warnpiepen (letzte 5 s), Klick im Alien-Rad, Treffer-Klang bei jedem Combo-Treffer, Start/Riss-Klang beim Weltwechsel | IMPLEMENTED | |
+| `check_assets.py` prüft Ereignisse, Dateien und Untertitel | IMPLEMENTED | |
+| Musik | gestrichen | Entscheidung SANTIQ |
 
 ### Testumgebung (seit Phase 4)
 

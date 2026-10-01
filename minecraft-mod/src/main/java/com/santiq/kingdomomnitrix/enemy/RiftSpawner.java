@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.enemy;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import java.util.Optional;
@@ -78,7 +80,7 @@ public final class RiftSpawner {
 		rift.configure(chosen.get(), level);
 		rift.refreshPositionAndAngles(ground.getX() + 0.5, ground.getY(), ground.getZ() + 0.5, 0.0f, 0.0f);
 		world.spawnEntity(rift);
-		world.playSound(null, ground, SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.HOSTILE, 0.6f, 0.7f);
+		world.playSound(null, ground, ModSounds.WORLD_RIFT, SoundCategory.HOSTILE, 0.8f, 0.6f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.rift_opened").formatted(Formatting.DARK_PURPLE), false);
 		return Optional.of(rift);
 	}

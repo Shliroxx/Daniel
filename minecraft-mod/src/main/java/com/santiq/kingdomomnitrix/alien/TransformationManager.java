@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.alien;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
@@ -57,6 +59,7 @@ public final class TransformationManager {
 	private static final int MAX_ATTRIBUTE_BONUSES = 16;
 	private static final Identifier SCALE_MODIFIER = KingdomOmnitrix.id("alien_scale");
 	private static final int AURA_INTERVAL_TICKS = 5;
+	private static final int WARNING_TICKS = 100;
 
 	public enum Result {
 		SUCCESS, NO_OMNITRIX, UNKNOWN_ALIEN, LOCKED, RECHARGING, ALREADY_TRANSFORMED, NO_SPACE,
@@ -270,6 +273,11 @@ public final class TransformationManager {
 				}
 				continue;
 			}
+			// Omnitrix-Warnpiepen in den letzten 5 Sekunden (wie in der Serie), nur fuer den Traeger
+			long remaining = state.remainingTicks(now);
+			if (remaining <= WARNING_TICKS && remaining % 20 == 0) {
+				player.playSoundToPlayer(ModSounds.OMNITRIX_BEEP, SoundCategory.PLAYERS, 0.6f, remaining <= 40 ? 1.25f : 1.0f);
+			}
 			if (player.isOnFire() && alien.get().isImmuneTo(player.getDamageSources().onFire())) {
 				player.extinguish();
 			}
@@ -363,8 +371,8 @@ public final class TransformationManager {
 			Vfx.revert(world, player);
 		}
 		world.playSound(null, player.getX(), player.getY(), player.getZ(),
-				transforming ? SoundEvents.BLOCK_BEACON_POWER_SELECT : SoundEvents.BLOCK_BEACON_DEACTIVATE,
-				SoundCategory.PLAYERS, 1.0f, transforming ? 1.5f : 1.2f);
+				transforming ? ModSounds.OMNITRIX_TRANSFORM : ModSounds.OMNITRIX_REVERT,
+				SoundCategory.PLAYERS, 1.0f, 1.0f);
 	}
 
 	private static void spawnAura(ServerPlayerEntity player, AlienDefinition alien) {

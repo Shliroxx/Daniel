@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.progression;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -93,8 +95,8 @@ public final class ExperienceSources {
 		HeroDataAccess.update(player, data -> data.withFlag(flag, true));
 		player.sendMessage(Text.translatable(world ? "message.kingdomomnitrix.discovered_world" : "message.kingdomomnitrix.discovered_biome",
 				name.formatted(Formatting.BOLD), experience).formatted(Formatting.LIGHT_PURPLE), false);
-		player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME,
-				SoundCategory.PLAYERS, 1.0f, world ? 0.8f : 1.2f);
+		player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.HERO_DISCOVERY,
+				SoundCategory.PLAYERS, 1.0f, world ? 0.8f : 1.1f);
 		HeroDataAccess.grantExperience(player, experience);
 	}
 }

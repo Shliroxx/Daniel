@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.enemy;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import net.minecraft.entity.EntityData;
 import net.minecraft.entity.EntityType;
@@ -137,7 +139,7 @@ public abstract class HeartlessEntity extends HostileEntity implements GeoEntity
 			if (age == 1) {
 				triggerAnim(CONTROLLER, "emerge");
 				world.spawnParticles(ParticleTypes.SQUID_INK, getX(), getY() + 0.1, getZ(), 20, getWidth() * 0.6, 0.05, getWidth() * 0.6, 0.02);
-				playSound(SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON, 0.6f, 1.6f);
+				playSound(ModSounds.HEARTLESS_SPAWN, 0.8f, 1.0f);
 			}
 			if (isElite() && age % 10 == 0) {
 				world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, getX(), getBodyY(0.5), getZ(), 1, getWidth() * 0.4, getHeight() * 0.3, getWidth() * 0.4, 0.0);
@@ -166,17 +168,17 @@ public abstract class HeartlessEntity extends HostileEntity implements GeoEntity
 
 	@Override
 	protected SoundEvent getAmbientSound() {
-		return SoundEvents.ENTITY_ENDERMITE_AMBIENT;
+		return ModSounds.HEARTLESS_AMBIENT;
 	}
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
-		return SoundEvents.ENTITY_ENDERMITE_HURT;
+		return ModSounds.HEARTLESS_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound() {
-		return SoundEvents.ENTITY_ENDERMITE_DEATH;
+		return ModSounds.HEARTLESS_DEATH;
 	}
 
 	// --- GeckoLib -------------------------------------------------------------------------------

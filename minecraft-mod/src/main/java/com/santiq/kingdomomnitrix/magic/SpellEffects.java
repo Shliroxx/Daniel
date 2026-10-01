@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.magic;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.util.Targeting;
@@ -81,7 +83,7 @@ public final class SpellEffects {
 			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.FIRE_ORB,
 					(float) ctx.param("speed", 1.8), (float) ctx.param("spread", 0.5)).withDamage(damage);
 		}
-		sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 0.8f, 1.3f - ctx.level() * 0.1f);
+		sound(ctx, ModSounds.MAGIC_FIRE, 0.9f, 1.1f - ctx.level() * 0.1f);
 		return true;
 	}
 
@@ -92,7 +94,7 @@ public final class SpellEffects {
 			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.ICE_ORB,
 					(float) ctx.param("speed", 1.5), (float) ctx.param("spread", 7.0)).withDamage(damage);
 		}
-		sound(ctx, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, 0.8f, 1.4f);
+		sound(ctx, ModSounds.MAGIC_BLIZZARD, 0.9f, 1.0f);
 		return true;
 	}
 
@@ -134,6 +136,7 @@ public final class SpellEffects {
 				victim.damage(ctx.world().getDamageSources().indirectMagic(caster, caster), damage);
 			}
 			Vfx.thunderStrike(ctx.world(), point);
+			ctx.world().playSound(null, point.x, point.y, point.z, ModSounds.MAGIC_THUNDER, net.minecraft.sound.SoundCategory.PLAYERS, 1.2f, 1.0f);
 		}
 		return true;
 	}
@@ -158,7 +161,7 @@ public final class SpellEffects {
 			Vfx.cure(ctx.world(), target);
 		}
 		Vfx.ring(ctx.world(), ModParticles.CURE_LEAF, caster.getPos().add(0, 0.2, 0), 0.6, 12 + ctx.level() * 4, 0.12 + radius * 0.03);
-		sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 0.9f + ctx.level() * 0.1f);
+		sound(ctx, ModSounds.MAGIC_CURE, 1.0f, 0.95f + ctx.level() * 0.05f);
 		return true;
 	}
 

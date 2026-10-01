@@ -20,7 +20,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.sound.SoundEvents;
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -102,6 +103,15 @@ public class OmnitrixWheelScreen extends Screen {
 	}
 
 	private void updateHover(double mouseX, double mouseY) {
+		int before = hovered;
+		hoverAt(mouseX, mouseY);
+		// Omnitrix-Klick beim Weiterdrehen auf ein anderes Alien
+		if (hovered != before && hovered >= 0 && client != null) {
+			client.getSoundManager().play(PositionedSoundInstance.master(ModSounds.OMNITRIX_SELECT, 1.0f, 0.5f));
+		}
+	}
+
+	private void hoverAt(double mouseX, double mouseY) {
 		double dx = mouseX - centerX();
 		double dy = mouseY - centerY();
 		double distance = Math.sqrt(dx * dx + dy * dy);
@@ -298,7 +308,7 @@ public class OmnitrixWheelScreen extends Screen {
 		}
 		if (!entry.get().unlocked()) {
 			if (client != null && client.player != null) {
-				client.player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), 0.6f, 0.5f);
+				client.player.playSound(ModSounds.MAGIC_MP_EMPTY, 0.6f, 1.0f);
 			}
 			hovered = -1;
 			return;

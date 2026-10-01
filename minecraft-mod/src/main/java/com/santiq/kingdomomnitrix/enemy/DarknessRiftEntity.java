@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.enemy;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
@@ -146,7 +148,7 @@ public class DarknessRiftEntity extends Entity {
 				spawnMember(world, type.get(), rift);
 			}
 		}
-		world.playSound(null, getBlockPos(), SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 0.5f, 1.6f);
+		world.playSound(null, getBlockPos(), ModSounds.HEARTLESS_SPAWN, SoundCategory.HOSTILE, 1.0f, 0.8f);
 		for (ServerPlayerEntity player : bossBar.getPlayers()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.rift_wave", wave + 1, rift.waves().size())
 					.formatted(Formatting.DARK_PURPLE), true);
@@ -219,7 +221,7 @@ public class DarknessRiftEntity extends Entity {
 			}
 		}
 		world.spawnParticles(ParticleTypes.END_ROD, getX(), getY() + 1.5, getZ(), 60, 1.0, 1.0, 1.0, 0.15);
-		world.playSound(null, getBlockPos(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 0.8f, 1.0f);
+		world.playSound(null, getBlockPos(), ModSounds.ARENA_VICTORY, SoundCategory.PLAYERS, 0.8f, 1.0f);
 		close(world, true);
 	}
 

@@ -311,6 +311,31 @@ def check_particles(report: Report) -> int:
     return len(names)
 
 
+def check_sounds(report: Report, lang: dict[str, str]) -> int:
+    """Jedes registrierte Sound-Ereignis braucht einen Eintrag in sounds.json, Dateien und einen Untertitel."""
+    source = (ROOT / "src/main/java/com/santiq/kingdomomnitrix/registry/ModSounds.java").read_text(encoding="utf-8")
+    events = re.findall(r'register\("([a-z0-9_.]+)"\)', source)
+    sounds = load_json(ASSETS / "sounds.json", report)
+    if not isinstance(sounds, dict):
+        report.error("sounds.json fehlt")
+        return 0
+    for event in events:
+        entry = sounds.get(event)
+        if not isinstance(entry, dict):
+            report.error("Sound ohne Eintrag in sounds.json: %s", event)
+            continue
+        if entry.get("subtitle") not in lang:
+            report.error("Sound %s: Untertitel fehlt in der Sprachdatei (%s)", event, entry.get("subtitle"))
+        for sound in entry.get("sounds", []):
+            name = sound if isinstance(sound, str) else sound.get("name", "")
+            path = name.split(":", 1)[1]
+            if not (ASSETS / "sounds" / f"{path}.ogg").is_file():
+                report.error("Sound %s: Datei fehlt: sounds/%s.ogg", event, path)
+    for event in sorted(set(sounds) - set(events)):
+        report.error("sounds.json enthaelt nicht registriertes Ereignis: %s", event)
+    return len(events)
+
+
 def check_routes(report: Report, lang: dict[str, str]) -> int:
     files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
     for path in files:
@@ -407,6 +432,7 @@ def main(argv: list[str] | None = None) -> int:
     ability_count = check_hero_abilities(report, lang)
     check_icons(report)
     particle_count = check_particles(report)
+    sound_count = check_sounds(report, lang)
     for row in ("attack", "magic", "items", "omnitrix"):
         if f"hud.{MOD_ID}.command.{row}" not in lang:
             report.error("Kommandomenue-Zeile ohne Text: hud.%s.command.%s", MOD_ID, row)
@@ -418,8 +444,8 @@ def main(argv: list[str] | None = None) -> int:
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Faehigkeiten, %d Partikel, %d Uebersetzungen",
-             len(items), alien_count, spell_count, quest_count, len(npcs), ability_count, particle_count, len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Faehigkeiten, %d Partikel, %d Sounds, %d Uebersetzungen",
+             len(items), alien_count, spell_count, quest_count, len(npcs), ability_count, particle_count, sound_count, len(lang))
     return 0
 
 

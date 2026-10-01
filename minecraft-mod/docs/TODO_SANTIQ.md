@@ -114,6 +114,13 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Feuer, Eis, Donner, Vita und den Combuster ausprobieren
 - [ ] Mit wenig Leben die rote Vignette prüfen
 
+### Phase 18 — Sounds (bitte mit Kopfhörern anhören — Claude konnte sie nicht hören)
+- [ ] Verwandeln, Rückverwandeln, Warnpiepen kurz vor Ablauf
+- [ ] Keyblade-Combo, Zauber, Stufenaufstieg
+- [ ] Combuster, Heli-Pack, Swingshot, Raumschiff-Start
+- [ ] Herzlose und Dr. Nefarious
+- [ ] Welche Sounds klingen schlecht? Die kann ich neu einstellen oder du ersetzt sie durch eigene Aufnahmen
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

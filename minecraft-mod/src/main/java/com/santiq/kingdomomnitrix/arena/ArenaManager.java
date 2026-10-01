@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.arena;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.boss.NefariousEntity;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
@@ -166,7 +168,7 @@ public final class ArenaManager {
 		SESSIONS.put(key, session);
 		session.startTick = world.getTime();
 		announce(world, session.participants, ArenaChallenge.name(challengeId).copy().formatted(Formatting.GOLD),
-				Text.translatable("arena.kingdomomnitrix.get_ready").formatted(Formatting.YELLOW), SoundEvents.EVENT_RAID_HORN.value());
+				Text.translatable("arena.kingdomomnitrix.get_ready").formatted(Formatting.YELLOW), ModSounds.ARENA_ROUND);
 		return Result.STARTED;
 	}
 
@@ -266,7 +268,7 @@ public final class ArenaManager {
 				? Text.translatable("arena.kingdomomnitrix.final_round").formatted(Formatting.RED)
 				: Text.translatable("arena.kingdomomnitrix.round", wave + 1).formatted(Formatting.GOLD);
 		announce(world, session.participants, title, enemies(session.alive.size()).formatted(Formatting.GRAY),
-				SoundEvents.ENTITY_EVOKER_PREPARE_SUMMON);
+				ModSounds.ARENA_ROUND);
 	}
 
 	private static void spawn(ServerWorld world, Session session, EntityType<?> type, int level, Random random) {
@@ -345,7 +347,7 @@ public final class ArenaManager {
 				}
 			}
 			announce(world, session.joined, Text.translatable("arena.kingdomomnitrix.victory").formatted(Formatting.GOLD),
-					Text.literal(formatTime(ticks)).formatted(Formatting.YELLOW), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE);
+					Text.literal(formatTime(ticks)).formatted(Formatting.YELLOW), ModSounds.ARENA_VICTORY);
 		} else {
 			announce(world, session.joined, Text.translatable("arena.kingdomomnitrix.defeat").formatted(Formatting.RED),
 					Text.translatable("arena.kingdomomnitrix.defeat_hint").formatted(Formatting.GRAY), SoundEvents.ENTITY_WITHER_DEATH);

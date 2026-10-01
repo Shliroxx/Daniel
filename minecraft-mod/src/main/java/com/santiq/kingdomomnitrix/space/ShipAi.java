@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.space;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -17,7 +19,7 @@ public final class ShipAi {
 				.append(Text.literal(" "))
 				.append(Text.translatable("ship.kingdomomnitrix.ai." + key, args).formatted(Formatting.WHITE));
 		player.sendMessage(message, false);
-		player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), SoundCategory.NEUTRAL, 0.5f, 1.6f);
+		player.playSoundToPlayer(ModSounds.SHIP_AI, SoundCategory.NEUTRAL, 0.7f, 1.0f);
 	}
 
 	/** Meldung an alle Spieler im Schiff. */

@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.player;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import java.util.function.UnaryOperator;
@@ -47,7 +49,7 @@ public final class HeroDataAccess {
 			player.setHealth(player.getMaxHealth()); // Stufenaufstieg heilt wie in Kingdom Hearts
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.level_up", after.level()).formatted(Formatting.GOLD, Formatting.BOLD), false);
 			player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
-					SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.2f);
+					ModSounds.HERO_LEVEL_UP, SoundCategory.PLAYERS, 0.9f, 1.0f);
 			ProgressionManager.announceUnlocks(player, before, after.level());
 		}
 		return after;

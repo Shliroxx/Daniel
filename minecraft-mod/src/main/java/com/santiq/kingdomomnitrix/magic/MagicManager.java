@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.magic;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
@@ -154,7 +156,7 @@ public final class MagicManager {
 		// Wie in Kingdom Hearts II: Solange noch MP da sind, gelingt der Zauber; der letzte leert die Leiste.
 		if (!creative && mp < MIN_MP_TO_CAST) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_mp").formatted(Formatting.RED), true);
-			world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.PLAYERS, 0.4f, 1.8f);
+			world.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.MAGIC_MP_EMPTY, SoundCategory.PLAYERS, 0.6f, 1.0f);
 			return Result.NO_MP;
 		}
 

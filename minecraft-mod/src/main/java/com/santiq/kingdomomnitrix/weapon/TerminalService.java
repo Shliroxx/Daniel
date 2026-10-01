@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import java.util.Optional;
@@ -162,6 +164,6 @@ public final class TerminalService {
 
 	private static void success(ServerPlayerEntity player, Text message) {
 		player.sendMessage(message.copy().formatted(Formatting.GREEN), false);
-		player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.BLOCKS, 0.8f, 0.9f);
+		player.playSoundToPlayer(ModSounds.WEAPON_BUY, SoundCategory.BLOCKS, 0.9f, 1.0f);
 	}
 }

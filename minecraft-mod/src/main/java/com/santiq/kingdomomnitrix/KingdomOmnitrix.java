@@ -21,6 +21,7 @@ import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import com.santiq.kingdomomnitrix.networking.ModNetworking;
 import com.santiq.kingdomomnitrix.registry.ModComponents;
 import com.santiq.kingdomomnitrix.registry.ModParticles;
+import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import com.santiq.kingdomomnitrix.registry.ModItemGroup;
 import com.santiq.kingdomomnitrix.registry.ModItems;
@@ -61,6 +62,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		HeroDataAccess.register();
 		ModComponents.register();
 		ModParticles.register();
+		ModSounds.register();
 		AlienRegistry.register();
 		KeybladeRegistry.register();
 		SpellRegistry.register();

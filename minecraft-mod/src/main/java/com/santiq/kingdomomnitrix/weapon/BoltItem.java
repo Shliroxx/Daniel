@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.player.HeroData;
@@ -42,8 +44,8 @@ public class BoltItem extends Item {
 		int deposited = Math.min(space, taken + bonus);
 		HeroDataAccess.update(player, data -> data.addBolts(deposited));
 		stack.decrement(taken);
-		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
-				SoundCategory.PLAYERS, 0.4f, 1.6f + world.getRandom().nextFloat() * 0.3f);
+		world.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.WEAPON_BOLT,
+				SoundCategory.PLAYERS, 0.5f, 0.9f + world.getRandom().nextFloat() * 0.2f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.bolts_gained", deposited, before.bolts() + deposited)
 				.formatted(Formatting.GOLD), true);
 	}

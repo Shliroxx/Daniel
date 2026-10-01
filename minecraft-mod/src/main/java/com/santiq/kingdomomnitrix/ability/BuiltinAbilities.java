@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.util.Targeting;
@@ -54,7 +56,7 @@ final class BuiltinAbilities {
 		for (int i = 0; i < count; i++) {
 			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.FIRE_ORB, speed, spread);
 		}
-		sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 1.0f, 0.8f);
+		sound(ctx, ModSounds.ALIEN_FIRE, 1.0f, 1.0f);
 		return true;
 	}
 
@@ -69,7 +71,7 @@ final class BuiltinAbilities {
 		}
 		ctx.world().spawnParticles(ParticleTypes.FLAME, player.getX(), player.getBodyY(0.5), player.getZ(),
 				60, radius * 0.4, 0.6, radius * 0.4, 0.15);
-		sound(ctx, SoundEvents.ITEM_FIRECHARGE_USE, 1.2f, 0.7f);
+		sound(ctx, ModSounds.ALIEN_FIRE, 1.2f, 0.75f);
 		return true;
 	}
 
@@ -80,7 +82,7 @@ final class BuiltinAbilities {
 		double forward = ctx.param("forward", 0.6);
 		launch(player, look.x * forward, up, look.z * forward);
 		ctx.world().spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 30, 0.3, 0.1, 0.3, 0.08);
-		sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 0.8f, 1.4f);
+		sound(ctx, ModSounds.ALIEN_FIRE, 0.8f, 1.3f);
 		return true;
 	}
 
@@ -100,7 +102,7 @@ final class BuiltinAbilities {
 		}
 		launch(player, look.x * speed, 0.1, look.z * speed);
 		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.2, player.getZ(), 16, 0.3, 0.1, 0.3, 0.05);
-		sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.8f, 1.6f);
+		sound(ctx, ModSounds.ALIEN_DASH, 0.9f, 1.1f);
 		return true;
 	}
 
@@ -111,7 +113,7 @@ final class BuiltinAbilities {
 		launch(player, -look.x * power, 0.25, -look.z * power);
 		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 12));
 		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getBodyY(0.5), player.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
-		sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 0.8f, 1.8f);
+		sound(ctx, ModSounds.ALIEN_DASH, 0.8f, 1.4f);
 		return true;
 	}
 
@@ -130,7 +132,7 @@ final class BuiltinAbilities {
 			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
 			ctx.world().spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 3, 0.3, 0.3, 0.3, 0.0);
 		}
-		sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.9f);
+		sound(ctx, ModSounds.COMBAT_SWING, 1.0f, 1.5f);
 		return true;
 	}
 
@@ -151,7 +153,7 @@ final class BuiltinAbilities {
 			target.velocityModified = true;
 		}
 		ctx.world().spawnParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 6, radius * 0.4, 0.2, radius * 0.4, 0.0);
-		sound(ctx, SoundEvents.ENTITY_IRON_GOLEM_ATTACK, 1.2f, 0.6f);
+		sound(ctx, ModSounds.ALIEN_SLAM, 1.2f, 0.9f);
 		return true;
 	}
 
@@ -174,7 +176,7 @@ final class BuiltinAbilities {
 		target.damage(ctx.world().getDamageSources().playerAttack(player), (float) ctx.param("damage", 4.0));
 		target.setVelocity(look.x * power, Math.max(0.4, look.y * power + 0.4), look.z * power);
 		target.velocityModified = true;
-		sound(ctx, SoundEvents.ENTITY_IRON_GOLEM_ATTACK, 1.0f, 1.0f);
+		sound(ctx, ModSounds.WEAPON_THROW, 1.0f, 0.7f);
 		return true;
 	}
 
@@ -185,7 +187,7 @@ final class BuiltinAbilities {
 		double forward = ctx.param("forward", 1.2);
 		launch(player, look.x * forward, up, look.z * forward);
 		ctx.world().spawnParticles(ParticleTypes.POOF, player.getX(), player.getY(), player.getZ(), 15, 0.4, 0.05, 0.4, 0.02);
-		sound(ctx, SoundEvents.ENTITY_IRON_GOLEM_STEP, 1.2f, 0.6f);
+		sound(ctx, ModSounds.ALIEN_SLAM, 1.0f, 1.2f);
 		return true;
 	}
 
@@ -198,7 +200,7 @@ final class BuiltinAbilities {
 		for (int i = 0; i < count; i++) {
 			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.CRYSTAL_SHARD, speed, spread);
 		}
-		sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 1.0f, 1.2f);
+		sound(ctx, ModSounds.ALIEN_CRYSTAL, 1.0f, 1.0f);
 		return true;
 	}
 
@@ -218,7 +220,7 @@ final class BuiltinAbilities {
 				String.format("%.1f", target.getMaxHealth()),
 				String.format("%.0f", target.getAttributeValue(EntityAttributes.GENERIC_ARMOR)),
 				String.format("%.1f", attack)).formatted(Formatting.GRAY), false);
-		sound(ctx, SoundEvents.BLOCK_BEACON_AMBIENT, 0.6f, 2.0f);
+		sound(ctx, ModSounds.SHIP_AI, 0.7f, 1.2f);
 		return true;
 	}
 

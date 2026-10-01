@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.space;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.mixin.ServerPlayNetworkHandlerAccessor;
 import java.util.HashMap;
@@ -129,6 +131,7 @@ public final class SpaceTravel {
 		ship.setHomeWorld(world.getRegistryKey().getValue());
 		ShipEntity moved = teleport(ship, space, exit);
 		if (moved != null) {
+			playShipSound(moved, ModSounds.SHIP_LAUNCH);
 			ShipAi.sayToCrew(moved, "space_entered");
 		}
 	}
@@ -148,6 +151,7 @@ public final class SpaceTravel {
 		if (moved != null) {
 			moved.setHomeWorld(destination.getRegistryKey().getValue());
 			moved.announcedRoute = null;
+			playShipSound(moved, ModSounds.WORLD_RIFT);
 			ShipAi.sayToCrew(moved, "arrival", SpaceRoute.name(routeId));
 		}
 	}
@@ -171,6 +175,11 @@ public final class SpaceTravel {
 		world.getChunk(x >> 4, z >> 4);
 		int ground = world.getTopY(Heightmap.Type.MOTION_BLOCKING, x, z);
 		return Math.min(ground + 30, world.getTopY() - ATMOSPHERE_MARGIN - 24);
+	}
+
+	/** Klang fuer die Besatzung nach einem Weltwechsel (am Schiff, damit Mitreisende ihn ebenfalls hoeren). */
+	private static void playShipSound(ShipEntity ship, net.minecraft.sound.SoundEvent sound) {
+		ship.getWorld().playSound(null, ship.getX(), ship.getY(), ship.getZ(), sound, net.minecraft.sound.SoundCategory.NEUTRAL, 1.0f, 1.0f);
 	}
 
 	private static ShipEntity teleport(ShipEntity ship, ServerWorld target, Vec3d pos) {

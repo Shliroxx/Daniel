@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.registry.ModSounds;
+
 import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import java.util.List;
@@ -33,7 +35,7 @@ public class CombusterItem extends WeaponItem {
 		if (!hasAmmo(user, stack)) {
 			if (!world.isClient()) {
 				user.sendMessage(Text.translatable("message.kingdomomnitrix.no_ammo").formatted(Formatting.RED), true);
-				world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.BLOCK_DISPENSER_FAIL, SoundCategory.PLAYERS, 0.8f, 1.2f);
+				world.playSound(null, user.getX(), user.getY(), user.getZ(), ModSounds.WEAPON_EMPTY, SoundCategory.PLAYERS, 0.8f, 1.0f);
 			}
 			return TypedActionResult.fail(stack);
 		}
@@ -80,7 +82,7 @@ public class CombusterItem extends WeaponItem {
 		if (world instanceof net.minecraft.server.world.ServerWorld serverWorld) {
 			Vfx.muzzle(serverWorld, player);
 		}
-		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_FIREWORK_ROCKET_BLAST, SoundCategory.PLAYERS, 0.6f, 1.8f);
+		world.playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.WEAPON_COMBUSTER, SoundCategory.PLAYERS, 0.7f, 0.95f + world.random.nextFloat() * 0.1f);
 	}
 
 	@Override
