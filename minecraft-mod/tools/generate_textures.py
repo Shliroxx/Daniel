@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+"""Erzeugt alle Texturen des Heroverse-Mods als Pixel-Art-PNGs.
+
+Die Bilder entstehen aus ASCII-Rastern und einfachen Formen, damit sie ohne
+Grafikprogramm reproduzierbar sind. Aufruf aus dem Ordner minecraft-mod/:
+
+    python tools/generate_textures.py            # schreibt nach src/main/resources/...
+    python tools/generate_textures.py --check    # prueft nur, ob alle Dateien existieren
+
+Benoetigt Pillow (pip install pillow).
+"""
+from __future__ import annotations
+
+import argparse
+import logging
+import random
+import sys
+from pathlib import Path
+
+try:
+    from PIL import Image
+except ImportError:  # pragma: no cover - Hinweis fuer den Nutzer
+    sys.exit("Pillow fehlt: pip install pillow")
+
+LOG = logging.getLogger("textures")
+DEFAULT_ROOT = Path(__file__).resolve().parent.parent / "src" / "main" / "resources" / "assets" / "heroverse"
+
+Color = tuple[int, int, int, int]
+
+
+def hexc(value: str, alpha: int = 255) -> Color:
+    value = value.lstrip("#")
+    return int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16), alpha
+
+
+def from_ascii(rows: list[str], palette: dict[str, Color], size: int = 16) -> Image.Image:
+    """Baut ein Bild aus einem ASCII-Raster. '.' ist transparent, Zeilen werden aufgefuellt."""
+    if len(rows) > size:
+        raise ValueError(f"{len(rows)} Zeilen, erlaubt sind {size}")
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    for y, row in enumerate(rows):
+        if len(row) > size:
+            raise ValueError(f"Zeile {y} hat {len(row)} Zeichen: {row!r}")
+        for x, ch in enumerate(row):
+            if ch == ".":
+                continue
+            if ch not in palette:
+                raise KeyError(f"Zeichen {ch!r} fehlt in der Palette (Zeile {y})")
+            img.putpixel((x, y), palette[ch])
+    return img
+
+
+def orb(core: str, mid: str, rim: str) -> Image.Image:
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    for y in range(16):
+        for x in range(16):
+            d = ((x - 7.5) ** 2 + (y - 7.5) ** 2) ** 0.5
+            if d < 2.5:
+                img.putpixel((x, y), hexc(core))
+            elif d < 4.5:
+                img.putpixel((x, y), hexc(mid))
+            elif d < 6.0:
+                img.putpixel((x, y), hexc(rim, 200))
+    return img
+
+
+def item_textures() -> dict[str, Image.Image]:
+    t: dict[str, Image.Image] = {}
+
+    t["kingdom_key"] = from_ascii([
+        "..........SSSS..",
+        "..........S.SS..",
+        "..........SSS.S.",
+        "..........SS....",
+        ".........Ss.....",
+        "........Ss......",
+        ".......Ss.......",
+        "......Ss........",
+        ".....Ss.........",
+        "..Y.Ss..........",
+        ".YyYs...........",
+        "..YyY...........",
+        ".BYYyY..........",
+        "BB..Y...........",
+        "B.K.............",
+        ".KK.............",
+    ], {"S": hexc("D6DAE3"), "s": hexc("8A8F9C"), "Y": hexc("F2C230"), "y": hexc("A87F12"),
+        "B": hexc("2A3F9A"), "K": hexc("C0C0C8")})
+
+    t["heart"] = from_ascii([
+        "",
+        "",
+        "...RRR...RRR....",
+        "..RPPPR.RPPPR...",
+        ".RPWPPPRPPPPPR..",
+        ".RPWPPPPPPPPPR..",
+        ".RPPPPPPPPPPPR..",
+        ".RPPPPPPPPPPPR..",
+        "..RPPPPPPPPPR...",
+        "...RPPPPPPPR....",
+        "....RPPPPPR.....",
+        ".....RPPPR......",
+        "......RPR.......",
+        ".......R........",
+    ], {"R": hexc("6A1B6E"), "P": hexc("D94FB8"), "W": hexc("FFD6F2")})
+
+    t["hi_potion"] = from_ascii([
+        "",
+        "......CCC.......",
+        "......WGW.......",
+        "......WGW.......",
+        ".....WGGGW......",
+        "....WGGGGGW.....",
+        "...WGLLLLLGW....",
+        "...WLLLLLLLW....",
+        "...WLlLLLLLW....",
+        "...WLLLLLlLW....",
+        "...WLLLLLLLW....",
+        "....WLLLLLW.....",
+        ".....WWWWW......",
+    ], {"C": hexc("8B5A2B"), "W": hexc("DDEEFF"), "G": hexc("BFD9E8", 160),
+        "L": hexc("3FCF6A"), "l": hexc("B6FFC9")})
+
+    t["paopu_fruit"] = from_ascii([
+        ".......g........",
+        "......gg........",
+        ".......Y........",
+        "......YYY.......",
+        ".....YYOYY......",
+        ".YYYYYYOYYYYYY..",
+        "..YYYYOOOYYYY...",
+        "...YYYYOYYYY....",
+        "....YYYYYYY.....",
+        "....YYYYYYY.....",
+        "...YYYY.YYYY....",
+        "...YYY...YYY....",
+        "..YY.......YY...",
+    ], {"g": hexc("3E8E3E"), "Y": hexc("F7D23E"), "O": hexc("E89A1C")})
+
+    t["omnitrix"] = from_ascii([
+        "",
+        ".....bbbbbb.....",
+        ".....bbbbbb.....",
+        "....DDDDDDDD....",
+        "...DkkkkkkkkD...",
+        "...DkGGGGGGkD...",
+        "...DkkGGGGkkD...",
+        "...DkkkGGkkkD...",
+        "...DkkkGGkkkD...",
+        "...DkkGGGGkkD...",
+        "...DkGGGGGGkD...",
+        "...DkkkkkkkkD...",
+        "....DDDDDDDD....",
+        ".....bbbbbb.....",
+        ".....bbbbbb.....",
+    ], {"b": hexc("2B2B2B"), "D": hexc("BFC5CC"), "k": hexc("111111"), "G": hexc("39FF14")})
+
+    t["bolt"] = from_ascii([
+        "",
+        "",
+        ".....HHHHHH.....",
+        "....HhhhhhhH....",
+        "...HhhHHHHhhH...",
+        "..HhhH....HhhH..",
+        "..HhH......HhH..",
+        "..HhH......HhH..",
+        "..HhH......HhH..",
+        "..HhhH....HhhH..",
+        "...HhhHHHHhhH...",
+        "....HhhhhhhH....",
+        ".....HHHHHH.....",
+    ], {"H": hexc("7A6A3A"), "h": hexc("E0C060")})
+
+    t["combuster"] = from_ascii([
+        "",
+        "",
+        "",
+        "..OOOOOOOOOOOO..",
+        ".OGGGGGGGGGGGGOM",
+        ".OGrrGGGGGGGGGGM",
+        ".OGGGGGGGGGGGOOM",
+        "..OOOOGGGOOOO...",
+        ".....OGGO.......",
+        ".....OGGO.......",
+        "....OGGO........",
+        "....OOOO........",
+    ], {"O": hexc("3A3F47"), "G": hexc("8C96A3"), "r": hexc("FF7A1A"), "M": hexc("FFB347")})
+
+    t["fusion_grenade"] = from_ascii([
+        "",
+        ".......kk.......",
+        "......kSSk......",
+        "....kkkkkkkk....",
+        "...kGGGGGGGGk...",
+        "..kGGWGGGGGGGk..",
+        "..kGWGGGGGGGGk..",
+        "..kOOOOOOOOOOk..",
+        "..kOBOOOOOOBOk..",
+        "..kOOOOOOOOOOk..",
+        "..kGGGGGGGGGGk..",
+        "...kGGGGGGGGk...",
+        "....kkkkkkkk....",
+    ], {"k": hexc("1E1E24"), "S": hexc("B0B0B0"), "G": hexc("7D8590"), "W": hexc("D8DEE6"),
+        "O": hexc("F28C28"), "B": hexc("4FC3FF")})
+
+    t["heli_pack"] = from_ascii([
+        "",
+        ".RRRRRRRRRRRRRR.",
+        ".......kk.......",
+        ".......kk.......",
+        "....kkkkkkkk....",
+        "...kSSSSSSSSk...",
+        "...kSyySSyySk...",
+        "...kSSSSSSSSk...",
+        "...kSSSSSSSSk...",
+        "...kSSGGGGSSk...",
+        "...kSSSSSSSSk...",
+        "....kkkkkkkk....",
+    ], {"R": hexc("6E7781"), "k": hexc("2E3338"), "S": hexc("B7C1CC"), "y": hexc("7CFC00"),
+        "G": hexc("5B6670")})
+
+    # OmniWrench: diagonaler Griff, Maulschluessel-Kopf oben rechts.
+    wrench = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+    handle, grip, head, head_dark = hexc("8E99A6"), hexc("2F5DA8"), hexc("C9D1DA"), hexc("6B7580")
+    for i in range(10):
+        x, y = 1 + i, 14 - i
+        wrench.putpixel((x, y), grip if i < 4 else handle)
+        wrench.putpixel((x + 1, y), head_dark)
+    for y in range(0, 6):
+        for x in range(10, 16):
+            if x >= 13 and y <= 2:
+                continue  # Maul-Oeffnung
+            wrench.putpixel((x, y), head if (x + y) % 5 else head_dark)
+    t["omniwrench"] = wrench
+
+    t["fire_orb"] = orb("FFF3B0", "FF9A1F", "D9380B")
+    t["ice_orb"] = orb("FFFFFF", "9BE7FF", "3A8DDB")
+    t["plasma_shot"] = orb("FFFFFF", "FF66E0", "8A2BE2")
+    t["crystal_shard"] = from_ascii([
+        "",
+        "",
+        ".......W........",
+        "......WCC.......",
+        ".....WCCCC......",
+        ".....CCCCd......",
+        "....WCCCCCd.....",
+        "....CCCCCdd.....",
+        "....CCCCCdd.....",
+        ".....CCCdd......",
+        ".....CCCdd......",
+        "......Cdd.......",
+        ".......d........",
+    ], {"W": hexc("E8FFF0"), "C": hexc("5CF2A0"), "d": hexc("1E9E5E")})
+    return t
+
+
+def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
+    wood_light, wood_dark, metal, metal_dark = hexc("E8963A"), hexc("B5651D"), hexc("C9CDD3"), hexc("6F757D")
+    side = Image.new("RGBA", (16, 16))
+    top = Image.new("RGBA", (16, 16))
+    for y in range(16):
+        for x in range(16):
+            base = wood_light if (y // 4) % 2 == 0 else wood_dark
+            jitter = rng.randint(-12, 12)
+            px = tuple(max(0, min(255, c + jitter)) for c in base[:3]) + (255,)
+            side.putpixel((x, y), px)
+            top.putpixel((x, y), px)
+    for img in (side, top):
+        for i in range(16):
+            for edge in (0, 15):
+                img.putpixel((i, edge), metal_dark)
+                img.putpixel((edge, i), metal_dark)
+        for i in range(1, 15):
+            img.putpixel((i, i), metal)
+            img.putpixel((i, 15 - i), metal)
+    # Bolt-Symbol auf der Seite
+    for x, y in [(6, 6), (7, 6), (8, 6), (9, 6), (6, 9), (7, 9), (8, 9), (9, 9), (6, 7), (6, 8), (9, 7), (9, 8)]:
+        side.putpixel((x, y), hexc("FFD84A"))
+    return {"bolt_crate": side, "bolt_crate_top": top}
+
+
+def shadow_texture(rng: random.Random) -> Image.Image:
+    """64x64 im Zombie-Layout: komplett schwarz-violett, gelbe Augen vorne am Kopf."""
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    regions = [(0, 0, 32, 16), (0, 16, 56, 32), (16, 48, 48, 64)]
+    for x0, y0, x1, y1 in regions:
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                shade = rng.randint(8, 26)
+                img.putpixel((x, y), (shade, shade // 2, shade + 10, 255))
+    for x, y in [(9, 11), (10, 11), (9, 12), (10, 12), (13, 11), (14, 11), (13, 12), (14, 12)]:
+        img.putpixel((x, y), hexc("FFE14D"))
+    return img
+
+
+def effect_icon(color: str) -> Image.Image:
+    img = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
+    ring, fill = hexc("1A1A1A"), hexc(color)
+    for y in range(18):
+        for x in range(18):
+            d = ((x - 8.5) ** 2 + (y - 8.5) ** 2) ** 0.5
+            if d < 7.0:
+                img.putpixel((x, y), fill)
+            elif d < 8.5:
+                img.putpixel((x, y), ring)
+    # Sanduhr-Symbol des Omnitrix
+    for row, (a, b) in enumerate([(5, 12), (6, 11), (7, 10), (8, 9), (8, 9), (7, 10), (6, 11), (5, 12)]):
+        for x in range(a, b + 1):
+            img.putpixel((x, 5 + row), ring)
+    return img
+
+
+ALIEN_COLORS = {
+    "heatblast": "FF6A00",
+    "xlr8": "1E90FF",
+    "four_arms": "C0392B",
+    "diamondhead": "2ECC71",
+    "grey_matter": "95A5A6",
+}
+
+
+def mod_icon(items: dict[str, Image.Image]) -> Image.Image:
+    icon = Image.new("RGBA", (64, 64), hexc("14161F"))
+    for (name, (x, y)) in {"kingdom_key": (0, 0), "omnitrix": (32, 0), "bolt": (0, 32), "combuster": (32, 32)}.items():
+        tile = items[name].resize((32, 32), Image.NEAREST)
+        icon.alpha_composite(tile, (x, y))
+    return icon
+
+
+def build_all(rng: random.Random) -> dict[str, Image.Image]:
+    items = item_textures()
+    out: dict[str, Image.Image] = {f"textures/item/{k}.png": v for k, v in items.items()}
+    out.update({f"textures/block/{k}.png": v for k, v in crate_textures(rng).items()})
+    out["textures/entity/shadow.png"] = shadow_texture(rng)
+    out.update({f"textures/mob_effect/{k}.png": effect_icon(c) for k, c in ALIEN_COLORS.items()})
+    out["icon.png"] = mod_icon(items)
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT, help="assets/heroverse-Ordner (Standard: %(default)s)")
+    parser.add_argument("--seed", type=int, default=1337, help="Zufalls-Seed fuer Holz- und Schattenrauschen")
+    parser.add_argument("--check", action="store_true", help="nur pruefen, ob alle Texturen vorhanden sind")
+    parser.add_argument("-v", "--verbose", action="store_true", help="jede Datei protokollieren")
+    args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(message)s")
+
+    textures = build_all(random.Random(args.seed))
+    if args.check:
+        missing = [p for p in textures if not (args.root / p).is_file()]
+        for p in missing:
+            LOG.error("fehlt: %s", p)
+        LOG.info("%d/%d Texturen vorhanden", len(textures) - len(missing), len(textures))
+        return 1 if missing else 0
+
+    for rel, img in textures.items():
+        target = args.root / rel
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            img.save(target)
+        except OSError as exc:
+            LOG.error("konnte %s nicht schreiben: %s", target, exc)
+            return 1
+        LOG.debug("geschrieben: %s", target)
+    LOG.info("%d Texturen nach %s geschrieben", len(textures), args.root)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
