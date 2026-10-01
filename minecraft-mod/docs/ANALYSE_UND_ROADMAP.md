@@ -54,6 +54,7 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Alien-Freischaltung | DNA-Proben von Gegnern (Quellen pro Alien im JSON) |
 | Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
 | Progression (Phase 15) | Stufe 50; Werte automatisch + neue Fähigkeiten pro Stufe; KH-Fähigkeitenliste mit AP; EP auch aus Herzlosen/Bossen, Erkunden, Alien-Meisterschaft |
+| UI (Phase 16) | KH-Kommandomenü, Weltkarte, Inventar-Reiter, HUD aufräumen; Farben je System; HUD verschieb- und skalierbar; eigene Symbole |
 | Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
 
 ---
@@ -501,6 +502,24 @@ Höchststufe 50; EP zusätzlich aus Herzlosen & Bossen, Erkunden und Alien-Nutzu
 | Alien-Meisterschaft ★1–10 (Schaden, Todesstoß, Fähigkeiten, Zeit), +5 % Dauer / −3 % Abklingzeit je Stufe, Helden-EP beim Aufstieg | IMPLEMENTED | ★1→★2 und Dauer 60 s → 87 s getestet |
 | Combos länger als 3 Schläge wechseln die beiden Schlag-Animationen ab | IMPLEMENTED | |
 | Fähigkeits-Symbole, eigene Sounds | TODO → Phase 16/18 | Text-Liste und Vanilla-Klänge |
+
+### Phase 16 — UI
+
+Entscheidung SANTIQ: KH-Kommandomenü, Weltkarte, Inventar-Reiter und HUD aufräumen; Stil je nach System;
+HUD mit Position und Größe anpassbar; eigene Symbole statt Text.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Farbschema je System (`UiTheme`) und gemeinsame Zeichenhilfen (Panel, Leisten, Symbole) | IMPLEMENTED | alle HUDs und neuen Menüs |
+| 38 Symbole (14 Helden-Fähigkeiten, 4 Zauber, 11 Alien-Fähigkeiten, Kommandomenü, Reiter) aus `tools/generate_icons.py` | PLACEHOLDER | Pixel-Art aus ASCII-Rastern; `check_assets` prüft Vollständigkeit, CI prüft Generator |
+| HUD-Rahmen: Elemente mit Bezugspunkt/Versatz/Größe/Sichtbarkeit, Datei `config/kingdomomnitrix-hud.json` | IMPLEMENTED | getestet (verschieben, 120 %, ausblenden, gespeichert, im Spiel angewendet) |
+| HUD-Editor (ziehen, Mausrad, Rechtsklick, Zurücksetzen), Platzhalter für gerade inaktive Anzeigen | IMPLEMENTED | getestet |
+| Status, Omnitrix (jetzt mit Fähigkeits-Symbolen), Waffe, Gadgets, Cockpit als HUD-Elemente | IMPLEMENTED | Zauberleiste ist im Kommandomenü aufgegangen |
+| KH-Kommandomenü: Angriff, Magie (Zauber wirken), Items (sofort benutzen, Tag `command_items`), Omnitrix (verwandeln/zurück) | IMPLEMENTED | Feuer, Hi-Potion (13→21 Leben), Verwandlung in XLR8 getestet |
+| Menü-Reiter im Inventar (Überleben + Kreativ) und in Held, Aliens, Quests, Karte | IMPLEMENTED | getestet |
+| Aliens-Seite (Meisterschaft, Dauer mit Boni, Fähigkeiten, DNA-Quellen gesperrter Aliens) | IMPLEMENTED | getestet |
+| Weltkarte (Galaxie mit Rissen, entdeckt/unentdeckt, Standort, Nether/Ende) | IMPLEMENTED | getestet |
+| Controller-Steuerung des Kommandomenüs | TODO | offen (Entscheidung Controlify, TODO_SANTIQ) |
 
 ### Testumgebung (seit Phase 4)
 

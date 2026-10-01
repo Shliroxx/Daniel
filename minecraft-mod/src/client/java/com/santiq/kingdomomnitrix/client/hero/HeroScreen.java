@@ -1,6 +1,11 @@
 package com.santiq.kingdomomnitrix.client.hero;
 
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.client.menu.MenuTab;
+import com.santiq.kingdomomnitrix.client.menu.MenuTabs;
+import com.santiq.kingdomomnitrix.client.ui.Icons;
+import com.santiq.kingdomomnitrix.client.ui.UiDraw;
+import com.santiq.kingdomomnitrix.client.ui.UiTheme;
 import com.santiq.kingdomomnitrix.networking.ToggleHeroAbilityPayload;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -33,7 +38,6 @@ import net.minecraft.util.Identifier;
  * Attachments und der Faehigkeiten-Registry; der Server prueft jede Aenderung.
  */
 public class HeroScreen extends Screen {
-	private static final int PANEL = 0xE0101420;
 	private static final int ROW_BACK = 0x80202838;
 	private static final int ROW_HOVER = 0xA0303C58;
 	private static final int TEXT = 0xFFFFFFFF;
@@ -42,7 +46,7 @@ public class HeroScreen extends Screen {
 	private static final int AP_FILL = 0xFF4AB8FF;
 	private static final int AP_BACK = 0xFF26303C;
 	private static final int GOLD = 0xFFFFC94A;
-	private static final int ROW = 13;
+	private static final int ROW = 18;
 	private static final int HEADER = 50;
 	private static final int FOOTER = 24;
 
@@ -62,10 +66,11 @@ public class HeroScreen extends Screen {
 
 	@Override
 	protected void init() {
-		panelWidth = Math.min(width - 16, 320);
+		panelWidth = Math.min(width - MenuTabs.RESERVED - 8, 320);
 		panelHeight = Math.min(height - 12, 232);
-		left = (width - panelWidth) / 2;
+		left = MenuTabs.RESERVED + (width - MenuTabs.RESERVED - panelWidth) / 2;
 		top = (height - panelHeight) / 2;
+		MenuTabs.addTo(this, MenuTab.HERO, this::addDrawableChild);
 	}
 
 	private DynamicRegistryManager registries() {
@@ -110,8 +115,7 @@ public class HeroScreen extends Screen {
 		if (player == null || registries == null) {
 			return;
 		}
-		context.fill(left, top, left + panelWidth, top + panelHeight, PANEL);
-		context.drawBorder(left, top, panelWidth, panelHeight, 0xFF3A4A66);
+		UiDraw.panel(context, left, top, panelWidth, panelHeight, UiTheme.HERO);
 
 		HeroData data = HeroDataAccess.get(player);
 		int level = data.level();
@@ -173,22 +177,26 @@ public class HeroScreen extends Screen {
 			boolean on = equipped.isEquipped(id);
 			context.fill(left + 6, y, left + panelWidth - 6, y + ROW - 1, row + scroll == hovered ? ROW_HOVER : ROW_BACK);
 			context.fill(left + 6, y, left + 8, y + ROW - 1, unlocked ? ability.category().color() : TEXT_LOCKED);
-			// Kaestchen wie im KH-Menue
+			// Kaestchen wie im KH-Menue, daneben das Symbol (gesperrt abgedunkelt)
 			int box = left + 12;
-			context.drawBorder(box, y + 2, 8, 8, unlocked ? 0xFFB0B8C4 : TEXT_LOCKED);
+			context.drawBorder(box, y + 4, 8, 8, unlocked ? 0xFFB0B8C4 : TEXT_LOCKED);
 			if (on) {
-				context.fill(box + 2, y + 4, box + 6, y + 8, ability.category().color());
+				context.fill(box + 2, y + 6, box + 6, y + 10, ability.category().color());
 			}
-			context.drawTextWithShadow(textRenderer, HeroAbilityDefinition.name(id), left + 25, y + 3, unlocked ? (on ? TEXT : TEXT_SOFT) : TEXT_LOCKED);
+			UiDraw.icon(context, Icons.heroAbility(id), Icons.FALLBACK, left + 24, y, UiDraw.ICON_SIZE);
+			if (!unlocked) {
+				context.fill(left + 24, y, left + 40, y + 16, 0xA0101420);
+			}
+			context.drawTextWithShadow(textRenderer, HeroAbilityDefinition.name(id), left + 44, y + 5, unlocked ? (on ? TEXT : TEXT_SOFT) : TEXT_LOCKED);
 			Text right = unlocked
 					? Text.literal(ability.apCost() + " AP")
 					: Text.translatable("screen.kingdomomnitrix.hero.locked", ability.unlockLevel());
 			int rightX = left + panelWidth - 10 - textRenderer.getWidth(right);
-			context.drawTextWithShadow(textRenderer, right, rightX, y + 3, unlocked ? (on ? AP_FILL : TEXT_SOFT) : TEXT_LOCKED);
+			context.drawTextWithShadow(textRenderer, right, rightX, y + 5, unlocked ? (on ? AP_FILL : TEXT_SOFT) : TEXT_LOCKED);
 			// Kategorie in fester Spalte vor der rechten Angabe; laengere Angaben (gesperrt) schieben sie nach links
 			Text category = Text.translatable(ability.category().translationKey());
 			int categoryX = Math.min(left + panelWidth - 10 - 52, rightX - 8) - textRenderer.getWidth(category);
-			context.drawTextWithShadow(textRenderer, category, categoryX, y + 3, unlocked ? ability.category().color() & 0x9FFFFFFF : TEXT_LOCKED);
+			context.drawTextWithShadow(textRenderer, category, categoryX, y + 5, unlocked ? ability.category().color() & 0x9FFFFFFF : TEXT_LOCKED);
 		}
 		if (maxScroll() > 0) {
 			int trackTop = listTop();

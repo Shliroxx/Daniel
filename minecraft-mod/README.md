@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.7.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.8.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -17,7 +17,7 @@ Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 |---|---|
 | **Königsschlüssel**, **Oathkeeper** (Keyblades) | Kampfwaffen mit Combo-System, Werte und Passiv-Fähigkeiten aus JSON (`data/<ns>/kingdomomnitrix/keyblade/`) |
 | **Keyblade-Schmiede** | Rechtsklick mit einem Keyblade: Upgrade gegen Bolts vom Konto + Materialien |
-| Zauber **Feuer, Eis, Donner, Vita** | Rechtsklick mit Keyblade wirkt den gewählten Zauber (kostet MP); **M + Mausrad** wählt. Stufen 1–3 über **Magie-Kristalle** |
+| Zauber **Feuer, Eis, Donner, Vita** | Rechtsklick mit Keyblade oder **Kommandomenü → Magie** wirkt den Zauber (kostet MP); **M + Mausrad** wählt. Stufen 1–3 über **Magie-Kristalle** |
 | **Herzlose** | Schatten, Soldat, Großkörper, Luftsoldat, Dunkelball — erscheinen nur aus **Dunkelheitsrissen** (nachts, 3 Wellen, Belohnung). Gamerule `kingdomomnitrixDarknessRifts` schaltet Risse ab |
 | **Hi-Potion**, **Paopu-Frucht** | Heilung bzw. Regeneration + Absorption |
 
@@ -101,6 +101,20 @@ Höchststufe **50**; jeder Aufstieg heilt komplett.
 - Alles bleibt optional: Combo, Ausweichen und Blocken gibt es ohne Fähigkeiten. Neue Fähigkeiten:
   JSON in `data/<namespace>/kingdomomnitrix/hero_ability/` (Effekt aus der Liste in `HeroAbilityEffect`).
 
+### Menüs und HUD
+Farben je System: Held blau-gold, Keyblade gold, Omnitrix grün, Technik blau-orange, Erkunden violett; eigene Symbole
+für alle Fähigkeiten, Zauber und Alien-Fähigkeiten (`tools/generate_icons.py`).
+- **Kommandomenü** (wie Kingdom Hearts, Standard links oben): Angriff · Magie · Items · Omnitrix. **↑/↓** wählen,
+  **→** öffnet bzw. führt aus, **←** zurück. Magie wirkt den gewählten Zauber (Keyblade in der Hand), Items benutzt
+  Hi-Potion, Paopu-Frucht, Goldäpfel, Tränke und Honig sofort aus dem Inventar (Tag `#kingdomomnitrix:command_items`),
+  Omnitrix verwandelt bzw. verwandelt zurück. Sichtbar mit Keyblade/Waffe in der Hand oder mit Omnitrix.
+- **Menü-Reiter** links im Inventar (auch Kreativ) und in jedem Mod-Menü: Inventar · Held & Fähigkeiten · Aliens ·
+  Quests · Weltkarte · HUD anpassen.
+- **Aliens:** alle Aliens mit Meisterschaft, Dauer mit allen Boni, Nachladezeit, Fähigkeiten; gesperrte zeigen, wer DNA fallen lässt.
+- **Weltkarte:** die Galaxie mit allen Weltraumrissen; unentdeckte Welten bleiben „???“, „Du bist hier“-Markierung, im All mit Schiffsposition.
+- **HUD anpassen:** jede Anzeige (Status, Kommandomenü, Waffe, Omnitrix, Gadgets, Cockpit) ziehen, mit dem Mausrad
+  vergrößern/verkleinern (50–200 %), mit Rechtsklick ausblenden. Gespeichert in `config/kingdomomnitrix-hud.json`.
+
 ### Quests
 Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
 Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
@@ -157,7 +171,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.7.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.8.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -166,6 +180,7 @@ Vor dem Bauen lassen sich die Ressourcen schnell prüfen:
 ```
 python tools/check_assets.py          # Übersetzungen, Modelle, Texturen, Rezepte, Loot
 python tools/generate_textures.py --check
+python tools/generate_icons.py --check     # GUI-Symbole
 ```
 
 ## Heldendaten, HUD und Befehle
@@ -201,7 +216,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.7.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.8.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.
@@ -223,7 +238,8 @@ src/main/java/com/santiq/kingdomomnitrix/      Server + gemeinsamer Code
   enemy/                    Herzlose, Dunkelheitsrisse (Phase 7)
   item/  util/              Hi-Potion, Hilfsklassen
 src/client/java/com/santiq/kingdomomnitrix/client/   nur Client (eigenes Source-Set)
-  hud/                      Status-Panel, Omnitrix-HUD
+  hud/                      HUD-Elemente, Anordnung (HudManager, HudLayout), Status-Panel, Omnitrix
+  ui/ menu/ command/        Farben/Symbole, Menü-Reiter, Aliens, Weltkarte, HUD-Editor, Kommandomenü
   input/                    Tastenbelegung
   screen/                   Alien-Rad
   render/                   Renderer, Alien-Körper (GeckoLib)

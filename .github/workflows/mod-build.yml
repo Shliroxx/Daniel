@@ -48,6 +48,7 @@ jobs:
           python tools/generate_npc_models.py --check
           python tools/generate_ship_models.py --check
           python tools/generate_boss_models.py --check
+          python tools/generate_icons.py --check
 
       - uses: actions/setup-java@v4
         with:

@@ -1,34 +1,30 @@
 package com.santiq.kingdomomnitrix.client.hud;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.client.ui.UiDraw;
+import com.santiq.kingdomomnitrix.client.ui.UiTheme;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.magic.MagicState;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 /**
- * Status-Panel oben links: Stufe, Erfahrungsbalken, Bolt-Konto und MP.
+ * Status-Panel (Standard oben links): Heldenstufe, EP-Balken, Bolt-Konto und MP-Leiste (waehrend der MP-Ladezeit violett).
  * Liest nur den synchronisierten {@link HeroData}-Stand, sendet nichts.
  */
-public final class HeroStatusHud {
-	public static final Identifier LAYER_ID = KingdomOmnitrix.id("hero_status");
+public final class HeroStatusHud implements HudElement {
+	public static final HeroStatusHud INSTANCE = new HeroStatusHud();
+	private static final Identifier ID = KingdomOmnitrix.id("hero_status");
 
-	private static final int MARGIN = 4;
-	private static final int PADDING = 3;
+	private static final int PADDING = 4;
 	private static final int BAR_HEIGHT = 3;
-	private static final int PANEL_COLOR = 0x90101420;
-	private static final int BAR_BACKGROUND = 0xFF2A2F3A;
-	private static final int BAR_FILL = 0xFF4FC3FF;
-	private static final int LEVEL_COLOR = 0xFFFFD84A;
+	private static final int MIN_WIDTH = 84;
 	private static final int BOLT_COLOR = 0xFFE0C060;
 	private static final int MP_COLOR = 0xFF3D7BFF;
 	private static final int MP_CHARGE_COLOR = 0xFFE040FB;
@@ -36,64 +32,88 @@ public final class HeroStatusHud {
 	private HeroStatusHud() {
 	}
 
-	private static int height(TextRenderer font) {
-		return PADDING + font.fontHeight + 2 + BAR_HEIGHT + 3 + font.fontHeight + 2 + BAR_HEIGHT + PADDING;
+	@Override
+	public Identifier id() {
+		return ID;
 	}
 
-	/** Unterkante des Panels, damit andere HUD-Teile darunter andocken koennen. */
-	public static int bottom(TextRenderer font) {
-		return MARGIN + height(font);
+	@Override
+	public Text name() {
+		return Text.translatable("hud.kingdomomnitrix.element.hero_status");
 	}
 
-	public static void register() {
-		HudLayerRegistrationCallback.EVENT.register(drawer ->
-				drawer.attachLayerAfter(IdentifiedLayer.HOTBAR_AND_BARS, IdentifiedLayer.of(LAYER_ID, HeroStatusHud::render)));
+	@Override
+	public HudAnchor defaultAnchor() {
+		return HudAnchor.TOP_LEFT;
 	}
 
-	private static void render(DrawContext context, RenderTickCounter tickCounter) {
-		MinecraftClient client = MinecraftClient.getInstance();
+	@Override
+	public int defaultX() {
+		return 4;
+	}
+
+	@Override
+	public int defaultY() {
+		return 4;
+	}
+
+	@Override
+	public boolean isActive(MinecraftClient client) {
+		return client.player != null;
+	}
+
+	private static Text levelText(HeroData data) {
+		return Text.translatable("hud.kingdomomnitrix.level", data.level());
+	}
+
+	private static Text boltText(HeroData data) {
+		return Text.translatable("hud.kingdomomnitrix.bolts", String.format("%,d", data.bolts()));
+	}
+
+	@Override
+	public int width(MinecraftClient client) {
+		if (client.player == null) {
+			return MIN_WIDTH;
+		}
+		HeroData data = HeroDataAccess.get(client.player);
+		TextRenderer font = client.textRenderer;
+		return Math.max(MIN_WIDTH, Math.max(font.getWidth(levelText(data)), font.getWidth(boltText(data))) + PADDING * 2 + 2);
+	}
+
+	@Override
+	public int height(MinecraftClient client) {
+		int font = client.textRenderer.fontHeight;
+		return PADDING + font + 2 + BAR_HEIGHT + 3 + font + 2 + BAR_HEIGHT + PADDING;
+	}
+
+	@Override
+	public void render(DrawContext context, MinecraftClient client, float tickDelta) {
 		ClientPlayerEntity player = client.player;
-		if (player == null || client.options.hudHidden || client.inGameHud.getDebugHud().shouldShowDebugHud()) {
+		if (player == null) {
 			return;
 		}
 		HeroData data = HeroDataAccess.get(player);
 		TextRenderer font = client.textRenderer;
+		int width = width(client);
+		UiDraw.hudPanel(context, 0, 0, width, height(client), UiTheme.HERO);
 
-		Text levelText = Text.translatable("hud.kingdomomnitrix.level", data.level());
-		Text boltText = Text.translatable("hud.kingdomomnitrix.bolts", String.format("%,d", data.bolts()));
-		int width = Math.max(font.getWidth(levelText), font.getWidth(boltText)) + PADDING * 2;
-		width = Math.max(width, 80);
-		int height = height(font);
-
-		int x = MARGIN;
-		int y = MARGIN;
-		context.fill(x, y, x + width, y + height, PANEL_COLOR);
-
-		int textY = y + PADDING;
-		context.drawTextWithShadow(font, levelText, x + PADDING, textY, LEVEL_COLOR);
-
+		int x = PADDING + 2;
+		int barWidth = width - x - PADDING;
+		int textY = PADDING;
+		context.drawTextWithShadow(font, levelText(data), x, textY, UiTheme.HERO.highlight());
 		int barY = textY + font.fontHeight + 2;
-		int barWidth = width - PADDING * 2;
-		context.fill(x + PADDING, barY, x + PADDING + barWidth, barY + BAR_HEIGHT, BAR_BACKGROUND);
 		float progress = data.isMaxLevel() ? 1.0f : (float) data.experience() / HeroData.experienceToNext(data.level());
-		int filled = Math.round(barWidth * Math.min(1.0f, Math.max(0.0f, progress)));
-		if (filled > 0) {
-			context.fill(x + PADDING, barY, x + PADDING + filled, barY + BAR_HEIGHT, BAR_FILL);
-		}
+		UiDraw.bar(context, x, barY, barWidth, BAR_HEIGHT, progress, UiTheme.HERO.accent());
 
-		context.drawTextWithShadow(font, boltText, x + PADDING, barY + BAR_HEIGHT + 3, BOLT_COLOR);
+		context.drawTextWithShadow(font, boltText(data), x, barY + BAR_HEIGHT + 3, BOLT_COLOR);
 
-		// MP (wie Kingdom Hearts immer sichtbar); waehrend der Aufladung violett
+		// MP wie in Kingdom Hearts immer sichtbar; waehrend der Aufladung violett
 		int mpY = barY + BAR_HEIGHT + 3 + font.fontHeight + 2;
 		long now = player.getWorld().getTime();
 		MagicState magic = MagicManager.get(player);
 		boolean charging = magic.isCharging(now);
 		float mpFraction = charging ? magic.chargeProgress(now, MagicManager.chargeTicks(player))
-				: magic.currentMp(now, MagicManager.regenPerSecond(player), MagicManager.maxMp(player)) / MagicManager.maxMp(player);
-		context.fill(x + PADDING, mpY, x + PADDING + barWidth, mpY + BAR_HEIGHT, BAR_BACKGROUND);
-		int mpFilled = Math.round(barWidth * Math.min(1.0f, Math.max(0.0f, mpFraction)));
-		if (mpFilled > 0) {
-			context.fill(x + PADDING, mpY, x + PADDING + mpFilled, mpY + BAR_HEIGHT, charging ? MP_CHARGE_COLOR : MP_COLOR);
-		}
+				: MagicManager.currentMp(player) / MagicManager.maxMp(player);
+		UiDraw.bar(context, x, mpY, barWidth, BAR_HEIGHT, mpFraction, charging ? MP_CHARGE_COLOR : MP_COLOR);
 	}
 }

@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.client.quest;
 
+import com.santiq.kingdomomnitrix.client.menu.MenuTab;
+import com.santiq.kingdomomnitrix.client.menu.MenuTabs;
 import com.santiq.kingdomomnitrix.networking.QuestActionPayload;
 import com.santiq.kingdomomnitrix.quest.QuestDefinition;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
@@ -69,9 +71,10 @@ public class QuestBookScreen extends Screen {
 
 	@Override
 	protected void init() {
-		panelWidth = Math.min(width - 16, 380);
+		panelWidth = Math.min(width - MenuTabs.RESERVED - 8, 380);
 		panelHeight = Math.min(height - 16, 230);
-		left = (width - panelWidth) / 2;
+		left = MenuTabs.RESERVED + (width - MenuTabs.RESERVED - panelWidth) / 2;
+		MenuTabs.addTo(this, MenuTab.QUESTS, this::addDrawableChild);
 		top = (height - panelHeight) / 2;
 		listWidth = Math.max(110, panelWidth * 38 / 100);
 

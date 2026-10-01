@@ -34,6 +34,8 @@ LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
 DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc", "ship", "route", "arena", "boss"))
+# zusammengesetzte Schluessel des Kommandomenues (Zeilen attack/magic/items/omnitrix, leere Untermenues)
+DYNAMIC_KEYS = (f"hud.{MOD_ID}.command.", f"hud.{MOD_ID}.command.empty.")
 KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog|ship|route|block|entity|arena|boss)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
@@ -80,7 +82,7 @@ def check_lang(report: Report, source: str) -> dict[str, str]:
     for key in sorted(b - a):
         report.error("Schluessel nur in %s: %s", LANGS[1], key)
     for key in sorted(set(KEY_PATTERN.findall(source))):
-        if key.startswith(DYNAMIC_PREFIXES) and key.endswith("."):
+        if (key.startswith(DYNAMIC_PREFIXES) and key.endswith(".")) or key in DYNAMIC_KEYS:
             continue
         if key not in langs[LANGS[0]]:
             report.error("Code verwendet unbekannten Schluessel: %s", key)
@@ -274,6 +276,25 @@ def check_hero_abilities(report: Report, lang: dict[str, str]) -> int:
     return len(files)
 
 
+def check_icons(report: Report) -> None:
+    """Jede Faehigkeit, jeder Zauber und jeder Alien-Faehigkeits-Typ braucht ein Symbol (tools/generate_icons.py)."""
+    icons = ASSETS / "textures" / "gui" / "icon"
+    wanted = [f"hero_ability/{p.stem}" for p in (DATA / MOD_ID / "hero_ability").glob("*.json")]
+    wanted += [f"spell/{p.stem}" for p in (DATA / MOD_ID / "spell").glob("*.json")]
+    for path in (DATA / MOD_ID / "alien").glob("*.json"):
+        alien = load_json(path, report)
+        if isinstance(alien, dict):
+            for ability in alien.get("abilities", []):
+                kind = str(ability.get("type", ""))
+                if kind.startswith(MOD_ID + ":"):
+                    wanted.append("alien_ability/" + kind.split(":", 1)[1])
+    wanted += [f"command/{name}" for name in ("attack", "magic", "items", "omnitrix")]
+    wanted += [f"menu/{name}" for name in ("hero", "aliens", "quests", "map", "hud")]
+    for name in sorted(set(wanted)):
+        if not (icons / f"{name}.png").is_file():
+            report.error("Symbol fehlt: textures/gui/icon/%s.png (tools/generate_icons.py ergaenzen)", name)
+
+
 def check_routes(report: Report, lang: dict[str, str]) -> int:
     files = sorted((DATA / MOD_ID / "space_route").glob("*.json"))
     for path in files:
@@ -368,6 +389,13 @@ def main(argv: list[str] | None = None) -> int:
     check_arena(report, lang)
     check_feature_order(report)
     ability_count = check_hero_abilities(report, lang)
+    check_icons(report)
+    for row in ("attack", "magic", "items", "omnitrix"):
+        if f"hud.{MOD_ID}.command.{row}" not in lang:
+            report.error("Kommandomenue-Zeile ohne Text: hud.%s.command.%s", MOD_ID, row)
+    for row in ("magic", "items", "omnitrix"):
+        if f"hud.{MOD_ID}.command.empty.{row}" not in lang:
+            report.error("Kommandomenue ohne Leer-Text: hud.%s.command.empty.%s", MOD_ID, row)
     quest_count = check_quests(report, lang, set(items), npcs)
 
     if report.errors:

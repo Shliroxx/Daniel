@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.magic;
 
+import com.santiq.kingdomomnitrix.client.command.CommandMenu;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
@@ -65,7 +66,7 @@ public final class MagicInput {
 		int index = current.map(spells::indexOf).orElse(-1);
 		Identifier next = spells.get(Math.floorMod(index + direction, spells.size()));
 		ClientPlayNetworking.send(new SelectSpellPayload(next));
-		MagicHud.flashSelection(next);
+		CommandMenu.INSTANCE.flashSpell(next);
 	}
 
 	public static void reset() {

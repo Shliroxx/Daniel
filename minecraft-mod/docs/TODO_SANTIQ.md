@@ -102,6 +102,12 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Ein Alien oft benutzen und die Meisterschaft (★ im Omnitrix-HUD) steigen sehen
 - [ ] Ins Weltall/Traverse Town/Nether reisen: „Neue Welt entdeckt“ mit EP
 
+### Phase 16 — UI
+- [ ] Kommandomenü mit den Pfeiltasten bedienen: Zauber, Hi-Potion, Verwandlung — fühlt es sich wie Kingdom Hearts an?
+- [ ] Inventar öffnen (E): Reiter links durchklicken (Held, Aliens, Quests, Karte)
+- [ ] „HUD anpassen“: Anzeigen verschieben, größer machen, ausblenden — und dein Lieblings-Layout festlegen
+- [ ] Gefallen dir die Symbole? Welche sollen als Erstes von Hand (Blockbench/Aseprite) neu gezeichnet werden?
+
 ---
 
 ### Vergleich mit Referenz-Mods (docs/VERGLEICH_REFERENZMODS.md)

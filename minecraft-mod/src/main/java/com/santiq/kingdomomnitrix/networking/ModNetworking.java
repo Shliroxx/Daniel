@@ -7,6 +7,7 @@ import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.arena.ArenaManager;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
+import com.santiq.kingdomomnitrix.item.CommandItems;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.weapon.TerminalService;
@@ -43,6 +44,32 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenArenaPayload.ID, OpenArenaPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ArenaStartPayload.ID, ArenaStartPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ToggleHeroAbilityPayload.ID, ToggleHeroAbilityPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CommandActionPayload.ID, CommandActionPayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(CommandActionPayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			if (!canAct(player)) {
+				return;
+			}
+			String key = null;
+			if (payload.action() == CommandActionPayload.CAST_SPELL) {
+				MagicManager.select(player, payload.target());
+				key = switch (MagicManager.castSelected(player)) {
+					case NO_KEYBLADE -> "message.kingdomomnitrix.command_need_keyblade";
+					case UNKNOWN_SPELL, NO_SPELLS -> "message.kingdomomnitrix.command_unknown";
+					default -> null; // MP, Ladezeit und Abklingzeit meldet der MagicManager selbst
+				};
+			} else if (payload.action() == CommandActionPayload.USE_ITEM) {
+				key = switch (CommandItems.use(player, payload.target())) {
+					case MISSING -> "message.kingdomomnitrix.command_item_missing";
+					case NOT_ALLOWED -> "message.kingdomomnitrix.command_unknown";
+					default -> null;
+				};
+			}
+			if (key != null) {
+				player.sendMessage(Text.translatable(key).formatted(Formatting.RED), true);
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(ToggleHeroAbilityPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();

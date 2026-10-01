@@ -8,7 +8,15 @@ import com.santiq.kingdomomnitrix.client.hud.HeroStatusHud;
 import com.santiq.kingdomomnitrix.client.hud.LockOnHud;
 import com.santiq.kingdomomnitrix.client.hud.OmnitrixHud;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
-import com.santiq.kingdomomnitrix.client.magic.MagicHud;
+import com.santiq.kingdomomnitrix.client.command.CommandMenu;
+import com.santiq.kingdomomnitrix.client.hud.HudManager;
+import com.santiq.kingdomomnitrix.client.menu.MenuTabs;
+import com.santiq.kingdomomnitrix.client.space.ShipHud;
+import com.santiq.kingdomomnitrix.client.ui.UiDraw;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
 import com.santiq.kingdomomnitrix.client.magic.MagicInput;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
 import com.santiq.kingdomomnitrix.networking.OpenOmnitrixPayload;
@@ -83,13 +91,28 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.WRENCH_PROJECTILE, context -> new FlyingItemEntityRenderer<>(context, 1.5f, false));
 
 		ModKeyBindings.register();
-		HeroStatusHud.register();
-		OmnitrixHud.register();
+		// HUD: alle Anzeigen ueber den HudManager (verschieb- und skalierbar, Reihenfolge = Zeichenreihenfolge)
+		HudManager.register(HeroStatusHud.INSTANCE);
+		HudManager.register(CommandMenu.INSTANCE);
+		HudManager.register(WeaponHud.INSTANCE);
+		HudManager.register(OmnitrixHud.INSTANCE);
+		HudManager.register(GadgetHud.INSTANCE);
+		HudManager.register(ShipHud.INSTANCE);
+		HudManager.registerLayer();
+		CommandMenu.register();
 		LockOnHud.register();
-		MagicHud.register();
-		WeaponHud.register();
-		GadgetHud.register();
-		ShipClient.register();
+		MenuTabs.register();
+		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+			@Override
+			public net.minecraft.util.Identifier getFabricId() {
+				return KingdomOmnitrix.id("ui_icons");
+			}
+
+			@Override
+			public void reload(ResourceManager manager) {
+				UiDraw.clearCache();
+			}
+		});
 		HandledScreens.register(ModScreenHandlers.GADGET_BELT, GadgetScreen::new);
 		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
 				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
@@ -109,6 +132,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			GadgetInput.reset();
 			SwingshotRopes.reset();
 			ShipClient.reset();
+			CommandMenu.INSTANCE.reset();
 		});
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenArenaPayload.ID, (payload, context) ->

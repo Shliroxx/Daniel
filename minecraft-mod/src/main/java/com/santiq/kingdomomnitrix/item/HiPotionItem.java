@@ -6,6 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -33,14 +34,20 @@ public class HiPotionItem extends Item {
 			}
 			return TypedActionResult.fail(stack);
 		}
-		if (world instanceof ServerWorld serverWorld) {
-			user.heal(HEAL_AMOUNT);
-			serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, user.getX(), user.getBodyY(0.6), user.getZ(), 10, 0.4, 0.5, 0.4, 0.0);
-			world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ENTITY_WITCH_DRINK, SoundCategory.PLAYERS, 1.0f, 1.2f);
+		if (user instanceof ServerPlayerEntity player) {
+			heal(player);
 			user.getItemCooldownManager().set(this, USE_DELAY_TICKS);
 		}
 		stack.decrementUnlessCreative(1, user);
 		return TypedActionResult.success(stack, world.isClient());
+	}
+
+	/** Heilwirkung mit Partikeln und Klang (auch aus dem Kommandomenue). */
+	public static void heal(ServerPlayerEntity player) {
+		ServerWorld world = player.getServerWorld();
+		player.heal(HEAL_AMOUNT);
+		world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getBodyY(0.6), player.getZ(), 10, 0.4, 0.5, 0.4, 0.0);
+		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITCH_DRINK, SoundCategory.PLAYERS, 1.0f, 1.2f);
 	}
 
 	@Override
