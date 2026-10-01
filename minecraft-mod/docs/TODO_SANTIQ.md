@@ -74,6 +74,12 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Kopfgeld „Untote“ zweimal hintereinander erledigen (wiederholbar)
 - [ ] Texte und Belohnungen: zu viel/zu wenig? Eigene Quest-Ideen an Claude
 
+### Phase 11 — NPCs
+- [ ] Kreativ-Tab: „NPC: Meister Yen Sid“ auf den Boden setzen → „!“ über dem Kopf
+- [ ] Rechtsklick (mit leerer Hand, nah dran) → Gespräch, Leertaste blättert, Auftrag annehmen
+- [ ] Quest erfüllen → „?“ erscheint → beim NPC abgeben
+- [ ] Gefallen dir Aussehen und Sprüche der drei? Wünsche für weitere NPCs
+
 ---
 
 ## 5. Entscheidungen, die noch offen sind

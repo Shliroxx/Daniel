@@ -8,7 +8,8 @@
     "name": {
       "translate": "quest.kingdomomnitrix.giver.yen_sid"
     },
-    "icon": "kingdomomnitrix:keyblade_forge"
+    "icon": "kingdomomnitrix:keyblade_forge",
+    "npc": "kingdomomnitrix:yen_sid"
   },
   "dialog": {
     "offer": [

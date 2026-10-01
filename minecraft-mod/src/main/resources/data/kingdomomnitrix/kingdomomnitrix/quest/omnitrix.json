@@ -8,7 +8,8 @@
     "name": {
       "translate": "quest.kingdomomnitrix.giver.max"
     },
-    "icon": "kingdomomnitrix:omnitrix"
+    "icon": "kingdomomnitrix:omnitrix",
+    "npc": "kingdomomnitrix:max"
   },
   "dialog": {
     "offer": [

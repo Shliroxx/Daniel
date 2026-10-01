@@ -8,7 +8,8 @@
     "name": {
       "translate": "quest.kingdomomnitrix.giver.max"
     },
-    "icon": "minecraft:rotten_flesh"
+    "icon": "minecraft:rotten_flesh",
+    "npc": "kingdomomnitrix:max"
   },
   "dialog": {
     "offer": [

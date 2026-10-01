@@ -33,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability", "passive", "quest", "gadget", "npc"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item|passive|quest|gadget|container|npc|dialog)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -208,7 +208,26 @@ def translate_keys(node: object) -> list[str]:
     return []
 
 
-def check_quests(report: Report, lang: dict[str, str], items: set[str]) -> int:
+def check_npcs(report: Report, lang: dict[str, str]) -> set[str]:
+    npcs = set()
+    for path in sorted((DATA / MOD_ID / "npc").glob("*.json")):
+        npc = load_json(path, report)
+        if not isinstance(npc, dict):
+            continue
+        npcs.add(f"{MOD_ID}:{path.stem}")
+        if f"npc.{MOD_ID}.{path.stem}" not in lang:
+            report.error("NPC ohne Namen: npc.%s.%s", MOD_ID, path.stem)
+        for key in translate_keys(npc):
+            if key not in lang:
+                report.error("NPC %s: Uebersetzung fehlt: %s", path.stem, key)
+        model = npc.get("model", path.stem)
+        for rel in (f"geo/entity/npc/{model}.geo.json", f"animations/entity/npc/{model}.animation.json", f"textures/entity/npc/{model}.png"):
+            if not (ASSETS / rel).is_file():
+                report.error("NPC %s: Datei fehlt: %s", path.stem, rel)
+    return npcs
+
+
+def check_quests(report: Report, lang: dict[str, str], items: set[str], npcs: set[str]) -> int:
     files = sorted((DATA / MOD_ID / "quest").glob("*.json"))
     known = {f"{MOD_ID}:{p.stem}" for p in files}
     entity_tags = {f"{MOD_ID}:{p.stem}" for p in (DATA / "tags" / "entity_type").glob("*.json")}
@@ -237,6 +256,9 @@ def check_quests(report: Report, lang: dict[str, str], items: set[str]) -> int:
                     report.error("Quest %s: unbekannter Entity-Tag %s", path.stem, target)
             elif kind != "kill" and name not in items:
                 report.error("Quest %s: unbekanntes Item %s", path.stem, target)
+        npc = quest.get("giver", {}).get("npc")
+        if npc is not None and npc not in npcs:
+            report.error("Quest %s: unbekannter NPC %s", path.stem, npc)
         reward_items = quest.get("rewards", {}).get("items", [])
         icon = quest.get("giver", {}).get("icon", "")
         for item in [r.get("id", "") for r in reward_items] + [icon]:
@@ -262,13 +284,14 @@ def main(argv: list[str] | None = None) -> int:
     check_loot(report, set(items))
     alien_count = check_aliens(report, java_sources(), lang)
     spell_count = check_spells(report, lang)
-    quest_count = check_quests(report, lang, set(items))
+    npcs = check_npcs(report, lang)
+    quest_count = check_quests(report, lang, set(items), npcs)
 
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d Uebersetzungen",
-             len(items), alien_count, spell_count, quest_count, len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Zauber, %d Quests, %d NPCs, %d Uebersetzungen",
+             len(items), alien_count, spell_count, quest_count, len(npcs), len(lang))
     return 0
 
 

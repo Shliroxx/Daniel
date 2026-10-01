@@ -23,6 +23,7 @@ import com.santiq.kingdomomnitrix.registry.ModScreenHandlers;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.quest.QuestRegistry;
+import com.santiq.kingdomomnitrix.npc.NpcRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.entity.mob.Monster;
@@ -53,6 +54,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		RiftRegistry.register();
 		WeaponRegistry.register();
 		QuestRegistry.register();
+		NpcRegistry.register();
 		MagicManager.register();
 		AbilityRegistry.registerBuiltins();
 		ModEntities.register();

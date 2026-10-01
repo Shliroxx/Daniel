@@ -295,6 +295,26 @@ def item_textures() -> dict[str, Image.Image]:
     ], {"k": hexc("2A1A0C"), "B": hexc("7A3B1E"), "G": hexc("C9A227"), "Y": hexc("F3D36B"), "K": hexc("8A1C1C"),
         "p": hexc("EFE4C8"), "R": hexc("C0392B")})
 
+    t["npc_spawner"] = from_ascii([
+        "",
+        "......kkkk......",
+        ".....kSSSSk.....",
+        ".....kSeSek.....",
+        ".....kSSSSk.....",
+        "......kkkk......",
+        "....kBBBBBBk....",
+        "...kBBBBBBBBk...",
+        "...kBkBBBBkBk...",
+        "...kSkBBBBkSk...",
+        ".....kBBBBk.....",
+        ".....kBkkBk.....",
+        ".....kBk.kBk....",
+        "...GGGGGGGGGG...",
+        "..GgggggggggggG.",
+        "...GGGGGGGGGG...",
+    ], {"k": hexc("1E1E24"), "S": hexc("E3B98F"), "e": hexc("1E1E24"), "B": hexc("2A3F8F"),
+        "G": hexc("C9A227"), "g": hexc("8A6D1A")})
+
     # OmniWrench: diagonaler Griff, Maulschluessel-Kopf oben rechts.
     wrench = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     handle, grip, head, head_dark = hexc("8E99A6"), hexc("2F5DA8"), hexc("C9D1DA"), hexc("6B7580")

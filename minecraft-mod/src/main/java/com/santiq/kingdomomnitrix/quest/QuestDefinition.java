@@ -61,11 +61,12 @@ public record QuestDefinition(Text title, Category category, int sortOrder, Give
 		}
 	}
 
-	/** Auftraggeber: Name und ein Item als Portraet. */
-	public record Giver(Text name, Identifier icon) {
+	/** Auftraggeber: Name, ein Item als Portraet und optional der NPC, der die Quest auch persoenlich vergibt. */
+	public record Giver(Text name, Identifier icon, java.util.Optional<Identifier> npc) {
 		public static final Codec<Giver> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				TextCodecs.CODEC.fieldOf("name").forGetter(Giver::name),
-				Identifier.CODEC.optionalFieldOf("icon", Identifier.ofVanilla("book")).forGetter(Giver::icon)
+				Identifier.CODEC.optionalFieldOf("icon", Identifier.ofVanilla("book")).forGetter(Giver::icon),
+				Identifier.CODEC.optionalFieldOf("npc").forGetter(Giver::npc)
 		).apply(instance, Giver::new));
 
 		public ItemStack iconStack() {

@@ -31,6 +31,11 @@ public final class ModComponents {
 			KingdomOmnitrix.id("weapon_state"),
 			ComponentType.<WeaponState>builder().codec(WeaponState.CODEC).packetCodec(WeaponState.PACKET_CODEC).build());
 
+	/** NPC, den ein NPC-Setzer erzeugt. */
+	public static final ComponentType<Identifier> NPC = Registry.register(Registries.DATA_COMPONENT_TYPE,
+			KingdomOmnitrix.id("npc"),
+			ComponentType.<Identifier>builder().codec(Identifier.CODEC).packetCodec(Identifier.PACKET_CODEC).build());
+
 	/** Heli-Pack im Heli-Jet-Modus. */
 	public static final ComponentType<Boolean> JET_MODE = Registry.register(Registries.DATA_COMPONENT_TYPE,
 			KingdomOmnitrix.id("jet_mode"),

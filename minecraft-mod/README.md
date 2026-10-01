@@ -70,6 +70,14 @@ Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Kn
 - Story-Quests schalten weitere frei; Kopfgelder sind wiederholbar
 - Neue Quests: JSON-Datei in `data/<namespace>/kingdomomnitrix/quest/` (Beispiele im Mod) + Übersetzungen
 
+### NPCs
+**Meister Yen Sid**, **Max Tennyson** und **Clank** stehen als Figuren in der Welt (NPC-Setzer aus dem Kreativ-Tab oder
+`/hero npc spawn <npc>`). Über dem Kopf zeigt ein gelbes **!** einen neuen Auftrag, ein goldenes **?** eine Quest zum Abgeben.
+Rechtsklick öffnet das Gespräch: Text läuft Buchstabe für Buchstabe ein (Klick/Leertaste = weiter), danach Antworten wie
+*Auftrag annehmen*, *Wie läuft es?*, *Abgeben* oder *Tschüss*. NPCs sind unverwundbar und verschwinden nicht;
+entfernen mit Schleichen + Schlag im Kreativmodus oder `/kill`. Neue NPCs: JSON in `data/<namespace>/kingdomomnitrix/npc/`
++ Modell unter `entity/npc/`; Quests verweisen über `giver.npc` auf ihren NPC.
+
 ## Rezepte (Werkbank)
 
 ```
@@ -140,6 +148,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero quest start\|complete <quest> [spieler]` | startet eine Quest bzw. schließt sie sofort mit Belohnung ab |
 | `/hero quest reset <quest>\|all [spieler]` | setzt Quest-Fortschritt zurück |
 | `/hero quest list [spieler]` | zeigt alle Quests mit Status |
+| `/hero npc spawn <npc>` | stellt einen NPC an deiner Position auf |
 
 ## Installieren
 

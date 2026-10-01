@@ -8,7 +8,8 @@
     "name": {
       "translate": "quest.kingdomomnitrix.giver.yen_sid"
     },
-    "icon": "kingdomomnitrix:heart"
+    "icon": "kingdomomnitrix:heart",
+    "npc": "kingdomomnitrix:yen_sid"
   },
   "dialog": {
     "offer": [

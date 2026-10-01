@@ -53,6 +53,13 @@ public final class QuestRegistry {
 		return manager.getOptional(KEY).flatMap(registry -> registry.getOrEmpty(id));
 	}
 
+	/** Quests, die ein bestimmter NPC persoenlich vergibt ({@code giver.npc}), in Anzeige-Reihenfolge. */
+	public static List<Identifier> byNpc(DynamicRegistryManager manager, Identifier npcId) {
+		return sortedIds(manager).stream()
+				.filter(id -> get(manager, id).flatMap(quest -> quest.giver().npc()).filter(npcId::equals).isPresent())
+				.toList();
+	}
+
 	public static List<Identifier> sortedIds(DynamicRegistryManager manager) {
 		return manager.getOptional(KEY).map(registry -> registry.getIds().stream()
 				.sorted(Comparator.<Identifier>comparingInt(id -> registry.getOrEmpty(id).map(q -> q.category().ordinal()).orElse(0))

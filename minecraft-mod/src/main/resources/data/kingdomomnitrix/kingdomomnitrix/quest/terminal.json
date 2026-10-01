@@ -8,7 +8,8 @@
     "name": {
       "translate": "quest.kingdomomnitrix.giver.clank"
     },
-    "icon": "kingdomomnitrix:bolt"
+    "icon": "kingdomomnitrix:bolt",
+    "npc": "kingdomomnitrix:clank"
   },
   "dialog": {
     "offer": [

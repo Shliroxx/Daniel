@@ -7,6 +7,7 @@ import com.santiq.kingdomomnitrix.enemy.DarknessRiftEntity;
 import com.santiq.kingdomomnitrix.enemy.LargeBodyHeartless;
 import com.santiq.kingdomomnitrix.enemy.ShadowHeartless;
 import com.santiq.kingdomomnitrix.enemy.SoldierHeartless;
+import com.santiq.kingdomomnitrix.npc.NpcEntity;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeEntity;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import com.santiq.kingdomomnitrix.weapon.WrenchProjectileEntity;
@@ -49,6 +50,9 @@ public final class ModEntities {
 			EntityType.Builder.<FusionGrenadeEntity>create(FusionGrenadeEntity::new, SpawnGroup.MISC)
 					.dimensions(0.25f, 0.25f).maxTrackingRange(4).trackingTickInterval(10));
 
+	public static final EntityType<NpcEntity> NPC = register("npc",
+			EntityType.Builder.<NpcEntity>create(NpcEntity::new, SpawnGroup.MISC).dimensions(0.6f, 1.95f).maxTrackingRange(10));
+
 	private ModEntities() {
 	}
 
@@ -58,6 +62,7 @@ public final class ModEntities {
 
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(SHADOW, ShadowHeartless.createAttributes());
+		FabricDefaultAttributeRegistry.register(NPC, NpcEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(SOLDIER, SoldierHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(LARGE_BODY, LargeBodyHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(AIR_SOLDIER, AirSoldierHeartless.createAttributes());

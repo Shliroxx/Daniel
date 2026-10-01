@@ -17,6 +17,10 @@ import com.santiq.kingdomomnitrix.magic.SpellDefinition;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.quest.QuestManager;
+import com.santiq.kingdomomnitrix.npc.NpcDefinition;
+import com.santiq.kingdomomnitrix.npc.NpcRegistry;
+import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
+import net.minecraft.util.math.BlockPos;
 import com.santiq.kingdomomnitrix.quest.QuestRegistry;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
@@ -48,6 +52,8 @@ public final class HeroCommand {
 			CommandSource.suggestIdentifiers(SpellRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> QUEST_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(QuestRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
+	private static final SuggestionProvider<ServerCommandSource> NPC_SUGGESTIONS = (ctx, builder) ->
+			CommandSource.suggestIdentifiers(NpcRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
@@ -126,6 +132,10 @@ public final class HeroCommand {
 						.executes(ctx -> openRift(ctx, Optional.empty()))
 						.then(CommandManager.argument("rift", IdentifierArgumentType.identifier())
 								.executes(ctx -> openRift(ctx, Optional.of(IdentifierArgumentType.getIdentifier(ctx, "rift"))))))
+				.then(CommandManager.literal("npc")
+						.then(CommandManager.literal("spawn")
+								.then(CommandManager.argument("npc", IdentifierArgumentType.identifier()).suggests(NPC_SUGGESTIONS)
+										.executes(HeroCommand::spawnNpc))))
 				.then(CommandManager.literal("quest")
 						.then(CommandManager.literal("start")
 								.then(targeted(CommandManager.argument("quest", IdentifierArgumentType.identifier()).suggests(QUEST_SUGGESTIONS),
@@ -158,6 +168,23 @@ public final class HeroCommand {
 										(ctx, target) -> change(ctx, target,
 												data -> data.withFlag(StringArgumentType.getString(ctx, "flag"), false),
 												"commands.kingdomomnitrix.flag"))))));
+	}
+
+	private static int spawnNpc(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+		Identifier id = IdentifierArgumentType.getIdentifier(ctx, "npc");
+		ServerCommandSource source = ctx.getSource();
+		if (NpcRegistry.get(source.getRegistryManager(), id).isEmpty()) {
+			source.sendError(Text.translatable("message.kingdomomnitrix.npc_unknown", id.toString()));
+			return 0;
+		}
+		BlockPos pos = BlockPos.ofFloored(source.getPosition());
+		float yaw = source.getRotation().y + 180.0f;
+		if (NpcSpawnItem.spawn(source.getWorld(), id, pos, yaw) == null) {
+			source.sendError(Text.translatable("message.kingdomomnitrix.npc_unknown", id.toString()));
+			return 0;
+		}
+		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.npc_spawned", NpcDefinition.name(id)), true);
+		return 1;
 	}
 
 	private static int questResult(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, QuestManager.Result result) {

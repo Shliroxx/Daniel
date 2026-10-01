@@ -37,6 +37,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenQuestBookPayload.ID, OpenQuestBookPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenNpcDialogPayload.ID, OpenNpcDialogPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(QuestActionPayload.ID, QuestActionPayload.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(QuestActionPayload.ID, (payload, context) -> {

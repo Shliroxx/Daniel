@@ -19,6 +19,9 @@ import com.santiq.kingdomomnitrix.client.gadget.GadgetInput;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
 import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
 import com.santiq.kingdomomnitrix.client.quest.QuestBookScreen;
+import com.santiq.kingdomomnitrix.client.npc.NpcDialogScreen;
+import com.santiq.kingdomomnitrix.client.npc.NpcRenderer;
+import com.santiq.kingdomomnitrix.networking.OpenNpcDialogPayload;
 import com.santiq.kingdomomnitrix.networking.OpenQuestBookPayload;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
@@ -60,6 +63,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.DARKNESS_RIFT, EmptyEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.NPC, NpcRenderer::new);
 		EntityRendererRegistry.register(ModEntities.WRENCH_PROJECTILE, context -> new FlyingItemEntityRenderer<>(context, 1.5f, false));
 
 		ModKeyBindings.register();
@@ -87,6 +91,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			SwingshotRopes.reset();
 		});
 
+		ClientPlayNetworking.registerGlobalReceiver(OpenNpcDialogPayload.ID, (payload, context) ->
+				NpcDialogScreen.open(context.client(), payload.entityId(), payload.npc()));
 		ClientPlayNetworking.registerGlobalReceiver(OpenQuestBookPayload.ID, (payload, context) -> QuestBookScreen.open(context.client()));
 		ClientPlayNetworking.registerGlobalReceiver(SwingshotStatePayload.ID, (payload, context) -> SwingshotRopes.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTerminalPayload.ID, (payload, context) ->

@@ -5,6 +5,8 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
 import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
+import com.santiq.kingdomomnitrix.npc.NpcRegistry;
+import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import java.util.Comparator;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.item.ItemGroup;
@@ -47,6 +49,11 @@ public final class ModItemGroup {
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);
 						entries.add(ModItems.QUEST_BOOK);
+						context.lookup().getOptionalWrapper(NpcRegistry.KEY).ifPresent(npcs ->
+								npcs.streamKeys()
+										.map(key -> key.getValue())
+										.sorted(Comparator.comparing(Identifier::toString))
+										.forEach(npcId -> entries.add(NpcSpawnItem.create(npcId))));
 						entries.add(ModItems.HELI_PACK);
 						ItemStack jet = new ItemStack(ModItems.HELI_PACK);
 						jet.set(ModComponents.JET_MODE, true);

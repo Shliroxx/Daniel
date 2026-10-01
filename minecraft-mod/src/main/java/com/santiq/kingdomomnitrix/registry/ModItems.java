@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.gadget.SwingshotItem;
 import com.santiq.kingdomomnitrix.quest.QuestBookItem;
+import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
 import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
@@ -63,6 +64,7 @@ public final class ModItems {
 	public static final Item COMBUSTER = register("combuster", new CombusterItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item FUSION_GRENADE = register("fusion_grenade", new FusionGrenadeItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item HELI_PACK = register("heli_pack", new HeliPackItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
+	public static final Item NPC_SPAWNER = register("npc_spawner", new NpcSpawnItem(new Item.Settings().maxCount(16)));
 	public static final Item QUEST_BOOK = register("quest_book", new QuestBookItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item SWINGSHOT = register("swingshot", new SwingshotItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item WEAPON_TERMINAL = register("weapon_terminal", new BlockItem(ModBlocks.WEAPON_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));

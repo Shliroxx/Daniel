@@ -430,6 +430,20 @@ Neu: `tools/client_smoke.sh server|join` startet einen Dedicated Server und verb
 | Ziel-Typen „Ort erreichen“, „mit NPC reden“, „Boss“ | TODO → Phasen 11–13 | brauchen NPCs, Welten, Bosse |
 | Quests von NPCs annehmen | TODO → Phase 11 | Dialog-Struktur ist schon vorbereitet |
 
+### Phase 11 — NPCs
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| NPCs als JSON (synchronisierte Registry): Begrüßung, Abschied, Hitbox, Modell | IMPLEMENTED | Yen Sid, Max Tennyson, Clank |
+| `NpcEntity`: steht still, schaut Spieler an, winkt, unverwundbar, verschwindet nie, NPC-ID gespeichert | IMPLEMENTED | Unverwundbarkeit getestet |
+| GeckoLib-Modelle (idle, walk, talk, wave) | PLACEHOLDER | `tools/generate_npc_models.py`, in Blockbench verfeinerbar; im Client sichtbar |
+| Quest-Markierung über dem Kopf („!“ neu, „?“ abgeben) | IMPLEMENTED | getestet, wechselt nach dem Abgeben |
+| Dialog-Fenster: Schreibmaschinen-Text, Namensschild, Antworten (annehmen, Stand, abgeben, tschüss) | IMPLEMENTED | Entscheidung SANTIQ; Annehmen und Abgeben getestet |
+| Quests verweisen per `giver.npc` auf ihren NPC | IMPLEMENTED | |
+| Aufstellen per NPC-Setzer (Kreativ-Tab) und `/hero npc spawn` | IMPLEMENTED | Entscheidung SANTIQ; feste Orte kommen mit der Hub-Welt (Phase 12) |
+| Händler | TODO → später | nicht gewählt |
+| Eigene Stimmen/Sounds | TODO → Phase 18 | aktuell Dorfbewohner-Laut |
+
 ### Testumgebung (seit Phase 4)
 
 - `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅
