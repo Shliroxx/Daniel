@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.2.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.3.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -23,18 +23,25 @@ Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 | **Paopu-Frucht** | Nahrung: Regeneration II + Absorption II |
 
 ### Ben 10 — das Omnitrix
-- **Schleichen + Rechtsklick**: Alien wählen
-- **Rechtsklick**: verwandeln (60 Sekunden)
-- In Alien-Form **Rechtsklick**: Spezialfähigkeit · **Schleichen + Rechtsklick**: zurückverwandeln
-- Danach lädt die Uhr 15 Sekunden nach.
 
-| Alien | Körper | Fähigkeit |
-|---|---|---|
-| **Heatblast** | Immun gegen Feuer und Lava, +2 Angriff | Feuerstoß |
-| **XLR8** | +120 % Tempo, steigt ganze Blöcke hoch, kein Fallschaden | Sprint-Dash in Blickrichtung |
-| **Vierarm** | 1,5× so groß, +6 Angriff, +5 Herzen, kaum Rückstoß | Bodenschlag: Schaden + Wegschleudern im Umkreis von 5 Blöcken |
-| **Diamondhead** | +12 Rüstung, +6 Härte, immun gegen Geschosse | Kristallsplitter-Salve (5 Stück) |
-| **Grey Matter** | 0,3× so groß, schneller, kaum Fallschaden | Analyse: zeigt Leben, Rüstung und Angriff des anvisierten Wesens |
+Das Omnitrix muss nur im Inventar liegen.
+
+- **DNA-Proben** schalten Aliens frei. Gegner lassen sie fallen (siehe Tabelle); Rechtsklick auf die Probe speichert das Alien.
+- **G** (oder Rechtsklick mit dem Omnitrix) öffnet das **Alien-Rad**: Alien mit der Maus wählen und klicken, die Taste loslassen oder 1–9 drücken. Die Mitte verwandelt zurück.
+- **R / V / B** lösen die drei Fähigkeiten des Aliens aus (kosten Energie, haben Abklingzeiten).
+- Eine Verwandlung dauert 60 Sekunden. Danach lädt das Omnitrix nach (bei vorzeitiger Rückverwandlung nur halb so lang).
+- Das HUD unten rechts zeigt Alien, Restzeit, Energie und die Fähigkeiten.
+- Verwandelte Spieler sehen für alle wie das Alien aus (animierter Körper).
+
+| Alien | Körper | R | V | B | DNA von |
+|---|---|---|---|---|---|
+| **Heatblast** | immun gegen Feuer/Lava, +3 Angriff | Feuerstoß | Feuerexplosion (Umkreis) | Flammenschub (Sprung) | Lohe, Magmawürfel |
+| **XLR8** | +60 % Tempo, kein Fallschaden, schnelle Schläge | Sturmangriff (Dash mit Schaden) | Ausweichen (kurz unverwundbar) | Schlaghagel | Schatten, Ozelot |
+| **Vierarm** | 1,4× groß, +6 Angriff, +5 Herzen, kaum Rückstoß | Bodenschlag | Werfen | Riesensprung | Eisengolem, Verwüster |
+| **Diamondhead** *(Prototyp)* | +12 Rüstung, immun gegen Geschosse | Kristallsalve | – | – | Wächter |
+| **Grey Matter** *(Prototyp)* | 0,3× groß, schnell | Analyse | – | – | Silberfischchen |
+
+Neue Aliens: JSON-Datei in `data/<namespace>/kingdomomnitrix/alien/` + Übersetzung + Körper-Dateien.
 
 ### Ratchet & Clank
 | Ding | Was es tut |
@@ -73,7 +80,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.2.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.3.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -102,12 +109,15 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero alien unlock\|lock <id> [spieler]` | schaltet ein Alien frei oder sperrt es |
 | `/hero flag set\|clear <flag> [spieler]` | setzt oder löscht ein Story-Flag |
 | `/hero reset [spieler]` | setzt alle Heldendaten zurück |
+| `/hero transform <alien> [spieler]` | verwandelt sofort (ohne Freischaltung/Nachladen) |
+| `/hero revert [spieler]` | verwandelt zurück |
+| `/hero dna <alien> [spieler]` | gibt eine DNA-Probe |
 
 ## Installieren
 
-1. [Fabric Loader](https://fabricmc.net/use/installer/) für Minecraft **1.21.1** installieren.
-2. [Fabric API](https://modrinth.com/mod/fabric-api) (Version für 1.21.1) in den `mods`-Ordner legen.
-3. `kingdomomnitrix-0.2.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
+2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
+3. `kingdomomnitrix-0.3.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.
@@ -120,18 +130,24 @@ src/main/java/com/santiq/kingdomomnitrix/      Server + gemeinsamer Code
   player/                   HeroData (gespeichert + synchronisiert), HeroDataAccess
   command/                  /hero-Befehle
   registry/                 Items, Block, Entities, Statuseffekte, Kreativ-Tab
-  alien/                    Omnitrix, Aliens, Alien-Effekt (Prototyp, wird in Phase 3 ersetzt)
+  alien/                    Omnitrix, AlienDefinition, AlienRegistry, TransformationManager, DNA
+  ability/                  Fähigkeits-Typen (AbilityRegistry, BuiltinAbilities)
+  networking/               Pakete Client ↔ Server
   keyblade/  magic/         Schlüsselschwert, Zauber (Prototyp, Phasen 4–6)
   weapon/  gadget/          R&C-Waffen, Geschosse, Heli-Pack (Prototyp, Phasen 8–9)
   enemy/                    Herzlose (Prototyp, Phase 7)
   item/  util/              Hi-Potion, Hilfsklassen
 src/client/java/com/santiq/kingdomomnitrix/client/   nur Client (eigenes Source-Set)
-  hud/                      Status-Panel
-  render/                   Renderer
+  hud/                      Status-Panel, Omnitrix-HUD
+  input/                    Tastenbelegung
+  screen/                   Alien-Rad
+  render/                   Renderer, Alien-Körper (GeckoLib)
+  mixin/                    Spielermodell durch Alien-Körper ersetzen
 src/main/resources/
   assets/kingdomomnitrix/   Modelle, Texturen, Übersetzungen (de_de, en_us)
   data/kingdomomnitrix/     Rezepte, Loot-Tabellen
 tools/generate_textures.py  erzeugt alle Texturen neu (pip install pillow)
+tools/generate_alien_models.py  erzeugt Alien-Körper (Geometrie, Animation, Textur)
 tools/check_assets.py       prüft alle Ressourcen auf Lücken
 docs/ANALYSE_UND_ROADMAP.md Bestandsaufnahme, Architektur, Roadmap
 ```
@@ -140,9 +156,8 @@ docs/ANALYSE_UND_ROADMAP.md Bestandsaufnahme, Architektur, Roadmap
 
 | Was | Wo |
 |---|---|
-| Verwandlungsdauer / Nachladezeit | `OmnitrixItem.TRANSFORM_TICKS`, `RECHARGE_TICKS` |
-| Alien-Körperwerte | `ModEffects.register()` |
-| Alien-Fähigkeiten, Abklingzeiten | `Alien.java` |
+| Alien-Werte, Dauer, Nachladen, Energie, Fähigkeiten, DNA-Quellen | `data/kingdomomnitrix/kingdomomnitrix/alien/*.json` |
+| Verhalten der Fähigkeits-Typen | `ability/BuiltinAbilities.java` |
 | Zauber-Schaden, Abklingzeiten | `Spell.java` |
 | Geschoss-Schaden | `HeroProjectileEntity.Kind` |
 | Magazin, Bolts pro Nachladen | `CombusterItem.MAGAZINE`, `AMMO_PER_BOLT` |

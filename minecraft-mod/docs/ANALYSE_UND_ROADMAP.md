@@ -50,6 +50,9 @@ Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestel
 | Mod-ID / Paket | `kingdomomnitrix` / `com.santiq.kingdomomnitrix` |
 | Bibliotheken | GeckoLib + playerAnimator — eingebunden in der Phase, die sie zuerst nutzt (3 bzw. 4) |
 | Ablauf | Phase für Phase, nach jeder Phase Prüfung durch SANTIQ |
+| Alien-Aussehen | echter, animierter Alien-Körper (GeckoLib), für alle sichtbar |
+| Alien-Freischaltung | DNA-Proben von Gegnern (Quellen pro Alien im JSON) |
+| Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
 
 ---
 
@@ -282,6 +285,30 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | JSON-Definitionen (Aliens usw.) | TODO → Phase 3 | über Fabric `DynamicRegistries.registerSynced`: wird mit der Welt geladen und automatisch an Clients gesendet; kein eigener Loader nötig |
 | Bolt-Konto statt Bolt-Items | TODO → Phase 8 | Datenfeld existiert bereits |
 | `./gradlew build` | **UNVERIFIED** | lokal gesperrt; Nachweis über den CI-Lauf auf GitHub |
+
+### Phase 3 — Omnitrix
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Alien-Definitionen als JSON (`data/<ns>/kingdomomnitrix/alien/*.json`) | IMPLEMENTED | Fabric-`DynamicRegistries`, automatisch an Clients synchronisiert; neues Alien = neue Datei |
+| Fähigkeits-Typen (`AbilityRegistry`) | IMPLEMENTED | 11 Typen, Parameter aus JSON, Fehler einer Fähigkeit stürzen den Server nicht ab |
+| `TransformationManager` | IMPLEMENTED | Dauer, Nachladen (Timeout voll, manuell halb), Energie, Abklingzeiten, Attribute, Größe mit Platzprüfung, Immunitäten, Unverwundbarkeit beim Ausweichen, Tod beendet die Verwandlung |
+| Zustand speichern + Multiplayer | IMPLEMENTED | Attachment, persistent, an alle Clients; Energie/Zeit ohne Tick-Pakete |
+| Heatblast, XLR8, Vierarm (je 3 Fähigkeiten) | IMPLEMENTED | Werte im JSON, Balancing offen |
+| Diamondhead, Grey Matter | PROTOTYPE | je 1 Fähigkeit; Kristallwand/-schild, Hacken, Rätsel folgen nach der Vertical Slice |
+| Alien-Rad (G) | IMPLEMENTED | Maus/Klick, Taste loslassen, Ziffern 1–9; gesperrte Aliens als „?“ |
+| Fähigkeiten-Tasten R / V / B | IMPLEMENTED | in den Steuerungsoptionen änderbar |
+| Omnitrix-HUD | IMPLEMENTED | Alien, Restzeit, Energie, 3 Slots mit Taste und Abklingzeit, Nachladeanzeige |
+| DNA-Proben + Drops | IMPLEMENTED | Quellen und Chancen pro Alien im JSON; Freischalten per Rechtsklick |
+| Alien-Körper (GeckoLib) | PROTOTYPE | Ersatz des Spielermodells, Idle/Walk, Kopf folgt Blick; Modelle/Texturen sind PLACEHOLDER |
+| Verwandlungs-Effekt | PROTOTYPE | Partikel (Omnitrix-Grün + Alienfarbe), Blitz, Sound; eigene Sounds folgen in Phase 18 |
+| `/hero transform · revert · dna` | IMPLEMENTED | mit Alien-Vorschlägen |
+| Controller-Unterstützung | TODO | Tastatur/Maus fertig; Controller über Controlify-Kompatibilität nach der Vertical Slice |
+| Fehlverwandlung (falsches Alien) | TODO | bewusst offen; braucht Designentscheidung (Spaß vs. Frust) |
+| Erste-Person-Arme des Aliens | TODO | in der Ego-Ansicht sieht man noch die Spielerarme |
+| Alte Statuseffekt-Lösung | entfernt | behebt: Milch beendet Verwandlung, zweites Omnitrix umgeht Nachladen, Vierarm erstickt |
+
+**Test-Rezept:** `/hero dna kingdomomnitrix:heatblast` → Probe rechtsklicken (Omnitrix im Inventar) → `G` → Heatblast → `R`/`V`/`B`.
 
 ---
 
