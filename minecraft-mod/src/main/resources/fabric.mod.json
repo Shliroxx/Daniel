@@ -23,7 +23,8 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": ">=0.116.0",
-		"geckolib": ">=4.9.0"
+		"geckolib": ">=4.9.0",
+		"playeranimator": ">=2.0.0"
 	},
 	"mixins": [
 		{

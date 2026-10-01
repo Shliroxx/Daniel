@@ -43,6 +43,7 @@ jobs:
           pip install --quiet pillow
           python tools/generate_textures.py --check
           python tools/generate_alien_models.py --check
+          python tools/generate_player_animations.py --check
 
       - uses: actions/setup-java@v4
         with:

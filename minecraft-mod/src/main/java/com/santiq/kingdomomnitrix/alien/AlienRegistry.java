@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
@@ -22,6 +23,8 @@ public final class AlienRegistry {
 
 	public static void register() {
 		DynamicRegistries.registerSynced(KEY, AlienDefinition.CODEC);
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> KingdomOmnitrix.LOGGER.info("{} Aliens aus Datenpaketen geladen: {}",
+				sortedIds(server.getRegistryManager()).size(), sortedIds(server.getRegistryManager())));
 	}
 
 	public static Optional<Registry<AlienDefinition>> registry(DynamicRegistryManager manager) {
