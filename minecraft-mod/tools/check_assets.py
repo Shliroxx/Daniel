@@ -9,6 +9,7 @@ Geprueft wird:
   * jedes Item hat einen Namen in beiden Sprachen
   * Rezepte verweisen nur auf existierende Mod-Items, Muster und Schluessel passen zusammen
   * Loot-Tabellen verweisen nur auf existierende Mod-Items
+  * Alien-Definitionen: Pflichtfelder, bekannte Faehigkeits-Typen, Namen und Faehigkeiten uebersetzt
 
 Aufruf aus dem Ordner minecraft-mod/:  python tools/check_assets.py [-v]
 Rueckgabe: 0 = alles in Ordnung, 1 = Fehler gefunden (Details im Log).
@@ -32,8 +33,8 @@ JAVA_DIRS = [ROOT / "src" / "main" / "java", ROOT / "src" / "client" / "java"]
 LANGS = ("de_de", "en_us")
 
 # Praefixe, an die der Code zur Laufzeit eine ID anhaengt ("spell.kingdomomnitrix." + id).
-DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien"))
-KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|hud|commands|itemGroup|effect|key|category)\.' + MOD_ID + r'[\w.]*)"')
+DYNAMIC_PREFIXES = tuple(f"{kind}.{MOD_ID}." for kind in ("spell", "alien", "ability"))
+KEY_PATTERN = re.compile(r'"((?:message|tooltip|spell|alien|ability|hud|commands|itemGroup|effect|key|category|screen|item)\.' + MOD_ID + r'[\w.]*)"')
 ITEM_PATTERN = re.compile(r'register\("([a-z0-9_]+)",')
 
 
@@ -142,6 +143,37 @@ def check_loot(report: Report, items: set[str]) -> None:
                     report.error("Loot-Tabelle %s verweist auf unbekanntes Item %s", path.relative_to(DATA), entry["name"])
 
 
+ABILITY_PATTERN = re.compile(r'AbilityRegistry\.register\(KingdomOmnitrix\.id\("([a-z0-9_]+)"\)')
+
+
+def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
+    abilities = set(ABILITY_PATTERN.findall(source))
+    alien_dir = DATA / MOD_ID / "alien"
+    files = sorted(alien_dir.glob("*.json"))
+    if not files:
+        report.error("keine Alien-Definitionen in %s", alien_dir.relative_to(ROOT))
+    for path in files:
+        alien = load_json(path, report)
+        if not isinstance(alien, dict):
+            continue
+        name = path.stem
+        for field in ("color", "duration", "recharge", "abilities", "model"):
+            if field not in alien:
+                report.error("Alien %s: Pflichtfeld %s fehlt", name, field)
+        if f"alien.{MOD_ID}.{name}" not in lang:
+            report.error("Alien %s hat keinen Namen in der Uebersetzung", name)
+        slots = alien.get("abilities", [])
+        if not 1 <= len(slots) <= 3:
+            report.error("Alien %s: 1 bis 3 Faehigkeiten erlaubt, gefunden %d", name, len(slots))
+        for slot in slots:
+            namespace, _, ability = str(slot.get("type", "")).partition(":")
+            if namespace == MOD_ID and ability not in abilities:
+                report.error("Alien %s: unbekannter Faehigkeits-Typ %s", name, slot.get("type"))
+            if f"ability.{namespace}.{ability}" not in lang:
+                report.error("Faehigkeit %s hat keinen Namen in der Uebersetzung", slot.get("type"))
+    return len(files)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", action="store_true", help="ausfuehrliche Ausgabe")
@@ -156,11 +188,12 @@ def main(argv: list[str] | None = None) -> int:
     check_items(report, items, lang)
     check_recipes(report, set(items))
     check_loot(report, set(items))
+    alien_count = check_aliens(report, java_sources(), lang)
 
     if report.errors:
         LOG.error("%d Fehler gefunden", report.errors)
         return 1
-    LOG.info("Ressourcen in Ordnung: %d Items, %d Uebersetzungen", len(items), len(lang))
+    LOG.info("Ressourcen in Ordnung: %d Items, %d Aliens, %d Uebersetzungen", len(items), alien_count, len(lang))
     return 0
 
 

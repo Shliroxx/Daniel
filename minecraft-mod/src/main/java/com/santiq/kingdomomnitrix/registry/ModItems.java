@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
@@ -42,6 +43,7 @@ public final class ModItems {
 
 	// --- Ben 10 ---
 	public static final Item OMNITRIX = register("omnitrix", new OmnitrixItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
+	public static final Item DNA_SAMPLE = register("dna_sample", new DnaSampleItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
 
 	// --- Ratchet & Clank ---
 	public static final Item BOLT = register("bolt", new Item(new Item.Settings()));

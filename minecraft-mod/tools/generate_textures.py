@@ -233,6 +233,22 @@ def item_textures() -> dict[str, Image.Image]:
             wrench.putpixel((x, y), head if (x + y) % 5 else head_dark)
     t["omniwrench"] = wrench
 
+    t["dna_sample"] = from_ascii([
+        "",
+        "......kkkk......",
+        "......kSSk......",
+        ".......WW.......",
+        "......WGGW......",
+        ".....WGgGGW.....",
+        ".....WGGgGW.....",
+        ".....WGgGGW.....",
+        ".....WGGgGW.....",
+        ".....WGgGGW.....",
+        ".....WGGgGW.....",
+        "......WGGW......",
+        ".......WW.......",
+    ], {"k": hexc("2B2B2B"), "S": hexc("8C96A3"), "W": hexc("DDEEFF"), "G": hexc("39FF14"), "g": hexc("0E7A0E")})
+
     t["fire_orb"] = orb("FFF3B0", "FF9A1F", "D9380B")
     t["ice_orb"] = orb("FFFFFF", "9BE7FF", "3A8DDB")
     t["plasma_shot"] = orb("FFFFFF", "FF66E0", "8A2BE2")
@@ -293,32 +309,6 @@ def shadow_texture(rng: random.Random) -> Image.Image:
     return img
 
 
-def effect_icon(color: str) -> Image.Image:
-    img = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
-    ring, fill = hexc("1A1A1A"), hexc(color)
-    for y in range(18):
-        for x in range(18):
-            d = ((x - 8.5) ** 2 + (y - 8.5) ** 2) ** 0.5
-            if d < 7.0:
-                img.putpixel((x, y), fill)
-            elif d < 8.5:
-                img.putpixel((x, y), ring)
-    # Sanduhr-Symbol des Omnitrix
-    for row, (a, b) in enumerate([(5, 12), (6, 11), (7, 10), (8, 9), (8, 9), (7, 10), (6, 11), (5, 12)]):
-        for x in range(a, b + 1):
-            img.putpixel((x, 5 + row), ring)
-    return img
-
-
-ALIEN_COLORS = {
-    "heatblast": "FF6A00",
-    "xlr8": "1E90FF",
-    "four_arms": "C0392B",
-    "diamondhead": "2ECC71",
-    "grey_matter": "95A5A6",
-}
-
-
 def mod_icon(items: dict[str, Image.Image]) -> Image.Image:
     icon = Image.new("RGBA", (64, 64), hexc("14161F"))
     for (name, (x, y)) in {"kingdom_key": (0, 0), "omnitrix": (32, 0), "bolt": (0, 32), "combuster": (32, 32)}.items():
@@ -332,7 +322,6 @@ def build_all(rng: random.Random) -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {f"textures/item/{k}.png": v for k, v in items.items()}
     out.update({f"textures/block/{k}.png": v for k, v in crate_textures(rng).items()})
     out["textures/entity/shadow.png"] = shadow_texture(rng)
-    out.update({f"textures/mob_effect/{k}.png": effect_icon(c) for k, c in ALIEN_COLORS.items()})
     out["icon.png"] = mod_icon(items)
     return out
 

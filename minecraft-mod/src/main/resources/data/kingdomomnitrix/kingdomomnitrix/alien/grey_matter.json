@@ -1,0 +1,39 @@
+{
+  "color": "#95A5A6",
+  "sort_order": 4,
+  "duration": 1200,
+  "recharge": 300,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 0.3,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.25,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:scan",
+      "energy": 5,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:silverfish",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:grey_matter",
+  "prototype": true
+}

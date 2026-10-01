@@ -1,0 +1,64 @@
+{
+  "color": "#FF6A00",
+  "sort_order": 0,
+  "duration": 1200,
+  "recharge": 400,
+  "max_energy": 100,
+  "energy_regen": 6,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 8.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fire"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:fire_blast",
+      "energy": 10,
+      "cooldown": 12,
+      "params": {
+        "speed": 2.2
+      }
+    },
+    {
+      "type": "kingdomomnitrix:fire_burst",
+      "energy": 35,
+      "cooldown": 80,
+      "params": {
+        "radius": 4.5,
+        "damage": 7.0,
+        "fire_seconds": 5.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:flame_boost",
+      "energy": 20,
+      "cooldown": 40,
+      "params": {
+        "up": 1.25,
+        "forward": 0.7
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:blaze",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:magma_cube",
+      "chance": 0.08
+    }
+  ],
+  "model": "kingdomomnitrix:heatblast"
+}

@@ -1,12 +1,16 @@
 package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.AlienRegistry;
+import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
+import java.util.Comparator;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public final class ModItemGroup {
 	public static final ItemGroup MAIN = Registry.register(Registries.ITEM_GROUP, KingdomOmnitrix.id("main"),
@@ -20,6 +24,12 @@ public final class ModItemGroup {
 						entries.add(ModItems.PAOPU_FRUIT);
 						entries.add(ModItems.SHADOW_SPAWN_EGG);
 						entries.add(ModItems.OMNITRIX);
+						// Eine DNA-Probe pro Alien aus den geladenen Datenpaketen (nur in einer Welt verfuegbar).
+						context.lookup().getOptionalWrapper(AlienRegistry.KEY).ifPresent(aliens ->
+								aliens.streamKeys()
+										.map(key -> key.getValue())
+										.sorted(Comparator.comparing(Identifier::toString))
+										.forEach(alienId -> entries.add(DnaSampleItem.create(alienId))));
 						entries.add(ModItems.OMNIWRENCH);
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);

@@ -6,14 +6,21 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.santiq.kingdomomnitrix.alien.AlienRegistry;
+import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
+import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.IdentifierArgumentType;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -25,12 +32,13 @@ import net.minecraft.util.Identifier;
  * Entwickler- und Admin-Befehle unter {@code /hero}. Nur ab Berechtigungsstufe 2 (OP).
  * Jeder Unterbefehl wirkt auf den Ausfuehrenden oder auf einen optional angegebenen Spieler.
  *
- * <p>Weitere Unterbefehle (transform, weapon, keyblade, quest, boss, world) kommen mit der
- * jeweiligen Phase hinzu.</p>
+ * <p>Weitere Unterbefehle (weapon, keyblade, quest, boss, world) kommen mit der jeweiligen Phase hinzu.</p>
  */
 public final class HeroCommand {
 	private static final int PERMISSION_LEVEL = 2;
 	private static final String TARGET = "target";
+	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
+			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
 	@FunctionalInterface
 	private interface PlayerAction {
@@ -75,15 +83,24 @@ public final class HeroCommand {
 												"commands.kingdomomnitrix.level")))))
 				.then(CommandManager.literal("alien")
 						.then(CommandManager.literal("unlock")
-								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()),
+								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 										(ctx, target) -> change(ctx, target,
 												data -> data.unlockAlien(IdentifierArgumentType.getIdentifier(ctx, "alien")),
 												"commands.kingdomomnitrix.alien"))))
 						.then(CommandManager.literal("lock")
-								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()),
+								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 										(ctx, target) -> change(ctx, target,
 												data -> data.lockAlien(IdentifierArgumentType.getIdentifier(ctx, "alien")),
 												"commands.kingdomomnitrix.alien")))))
+				.then(CommandManager.literal("transform")
+						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
+								(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
+										IdentifierArgumentType.getIdentifier(ctx, "alien"), true)))))
+				.then(targeted(CommandManager.literal("revert"),
+						(ctx, target) -> transformResult(ctx, target, TransformationManager.revert(target, false))))
+				.then(CommandManager.literal("dna")
+						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
+								(ctx, target) -> giveDna(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "alien")))))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),
@@ -113,6 +130,31 @@ public final class HeroCommand {
 		return 1;
 	}
 
+	private static int transformResult(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target,
+			TransformationManager.Result result) {
+		if (result == TransformationManager.Result.SUCCESS) {
+			ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.transform.success", target.getDisplayName()), true);
+			return 1;
+		}
+		ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.transform.failed",
+				target.getDisplayName(), result.name().toLowerCase(java.util.Locale.ROOT)));
+		return 0;
+	}
+
+	private static int giveDna(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target, Identifier alienId) {
+		if (AlienRegistry.get(ctx.getSource().getRegistryManager(), alienId).isEmpty()) {
+			ctx.getSource().sendError(Text.translatable("message.kingdomomnitrix.unknown_alien"));
+			return 0;
+		}
+		ItemStack stack = DnaSampleItem.create(alienId);
+		if (!target.getInventory().insertStack(stack)) {
+			target.dropItem(stack, false);
+		}
+		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.dna", target.getDisplayName(),
+				TransformationManager.alienName(alienId)), true);
+		return 1;
+	}
+
 	private static int debug(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target) {
 		HeroData data = HeroDataAccess.get(target);
 		String nextXp = data.isMaxLevel() ? "MAX" : String.valueOf(HeroData.experienceToNext(data.level()));
@@ -123,6 +165,11 @@ public final class HeroCommand {
 				data.level(), data.experience(), nextXp, data.bolts()), false);
 		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.aliens", joinIds(data.unlockedAliens())), false);
 		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.flags", joinSorted(data.storyFlags())), false);
+		TransformationState state = TransformationManager.get(target);
+		long now = target.getWorld().getTime();
+		source.sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.debug.omnitrix",
+				state.activeAlien().map(Identifier::toString).orElse("-"),
+				state.remainingTicks(now) / 20, state.rechargeRemaining(now) / 20), false);
 		return 1;
 	}
 

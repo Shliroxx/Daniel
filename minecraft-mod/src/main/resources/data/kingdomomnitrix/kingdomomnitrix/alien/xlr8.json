@@ -1,0 +1,70 @@
+{
+  "color": "#1E90FF",
+  "sort_order": 1,
+  "duration": 1200,
+  "recharge": 400,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.6,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.step_height",
+      "amount": 0.65,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_speed",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:dash_strike",
+      "energy": 15,
+      "cooldown": 20,
+      "params": {
+        "distance": 8.0,
+        "damage": 5.0,
+        "speed": 2.6
+      }
+    },
+    {
+      "type": "kingdomomnitrix:blur_dodge",
+      "energy": 10,
+      "cooldown": 25,
+      "params": {
+        "power": 1.6,
+        "invulnerable_ticks": 12
+      }
+    },
+    {
+      "type": "kingdomomnitrix:rapid_strikes",
+      "energy": 25,
+      "cooldown": 50,
+      "params": {
+        "range": 3.0,
+        "damage": 9.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "kingdomomnitrix:shadow",
+      "chance": 0.06
+    },
+    {
+      "entity": "minecraft:ocelot",
+      "chance": 0.5
+    }
+  ],
+  "model": "kingdomomnitrix:xlr8"
+}
