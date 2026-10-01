@@ -27,6 +27,7 @@
 		"playeranimator": ">=2.0.0"
 	},
 	"mixins": [
+		"kingdomomnitrix.mixins.json",
 		{
 			"config": "kingdomomnitrix.client.mixins.json",
 			"environment": "client"

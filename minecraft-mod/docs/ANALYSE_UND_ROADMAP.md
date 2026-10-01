@@ -318,7 +318,7 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Luftcombo (Schweben, Finisher nach unten) | IMPLEMENTED | Logik fertig, Spielgefühl noch zu testen |
 | Schwerer Angriff (Linksklick halten) | IMPLEMENTED | |
 | Ausweichen (Alt) mit Unverwundbarkeit, 1× in der Luft | IMPLEMENTED | |
-| Blocken (X) mit perfektem Block + Betäubung | IMPLEMENTED | |
+| Blocken (Feststelltaste, vorher X — kollidierte mit Vanilla „Hotbar laden") mit perfektem Block + Betäubung | IMPLEMENTED | |
 | Lock-On (Z): Auswahl, Wechsel, Lösen (Schleichen+Z), Kamera folgt, Umrandung, HUD | IMPLEMENTED | im Client getestet |
 | Kampfanimationen (playerAnimator, Jar-in-Jar) | PROTOTYPE | 9 Animationen, Platzhalter-Bewegungen |
 | `ComboWeapon`-Schnittstelle | IMPLEMENTED | Keyblade nutzt sie; Werte pro Waffe in Phase 5 |
@@ -393,6 +393,27 @@ Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween
 | Waffen-HUD (Name, Stufe, Munition) am rechten Rand | IMPLEMENTED | |
 | Weitere Waffen (Blaster, Pyrocitor …) | TODO → später, rein per JSON + Item-Klasse | |
 | Eigene Waffen-Sounds/Modelle | PLACEHOLDER | Vanilla-Sounds, generierte Texturen |
+
+### Phase 9 — Gadgets
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Gadget-Gürtel (Rücken- + Werkzeug-Platz) als Attachment, gespeichert, an alle synchronisiert; Menü (**H**) und Rechtsklick-Ausrüsten | IMPLEMENTED | Entscheidung SANTIQ: eigener Slot; im Client + Dedicated Server getestet |
+| Heli-Pack: Doppelsprung, Gleiten bei gehaltener Sprungtaste, kein Fallschaden beim Gleiten | IMPLEMENTED | getestet: 30 Blöcke Gleitflug ohne Schaden, Doppelsprung ≈ 2,8 Blöcke |
+| Heli-Jet (Modus, **J**): bis zu 2 Schübe nach vorn in der Luft, schneller Sinkflug | IMPLEMENTED | Entscheidung SANTIQ: Pack wechselbar; getestet: ≈ 8,5 Blöcke pro Schub |
+| Swingshot: Haken an jedem festen Block (24 Blöcke), Zug, Hängen bis 10 s, Absprung | IMPLEMENTED | Entscheidung SANTIQ: jeder feste Block; Server prüft Reichweite + Sichtlinie |
+| Swingshot-Seil für alle Spieler in Sichtweite | IMPLEMENTED | eigenes Seil im Client gesehen; Sicht eines zweiten Spielers nicht getestet |
+| Kein Anti-Fly-Kick beim Hängen/Hochziehen (Accessor auf den Schwebe-Zähler) | IMPLEMENTED | auf Dedicated Server ohne `allow-flight` getestet (8 s hängen) |
+| Gadgets fallen beim Tod (außer `keepInventory`) | IMPLEMENTED | nur im Code geprüft |
+| Erhalt per Crafting | IMPLEMENTED | Entscheidung SANTIQ |
+| Gadget-HUD links neben der Hotbar mit Tastenhinweis | IMPLEMENTED | |
+| Heli-Pack am Rücken sichtbar (3D-Modell) | TODO → Phase 18 (Grafik) | |
+| Weitere Gadgets (Magnetstiefel, Hydro-Displacer …) | TODO → später | Schnittstelle `Gadget` + Platz reichen |
+
+Behoben in Phase 9: Waffen- und Heli-Pack-Rezepte nutzten Bolt-Items, die seit Phase 8 sofort aufs Konto wandern → nie herstellbar.
+Jetzt Eisennuggets/Kupfer; `check_assets.py` verbietet Bolts als Zutat. Tastenkonflikte mit Vanilla behoben
+(Blocken X → Feststelltaste, Gadget C → Y); die Mod warnt beim Einloggen vor doppelt belegten Tasten.
+Neu: `tools/client_smoke.sh server|join` startet einen Dedicated Server und verbindet den Test-Client (Mehrspieler-Test).
 
 ### Testumgebung (seit Phase 4)
 

@@ -31,6 +31,11 @@ public final class ModComponents {
 			KingdomOmnitrix.id("weapon_state"),
 			ComponentType.<WeaponState>builder().codec(WeaponState.CODEC).packetCodec(WeaponState.PACKET_CODEC).build());
 
+	/** Heli-Pack im Heli-Jet-Modus. */
+	public static final ComponentType<Boolean> JET_MODE = Registry.register(Registries.DATA_COMPONENT_TYPE,
+			KingdomOmnitrix.id("jet_mode"),
+			ComponentType.<Boolean>builder().codec(Codec.BOOL).packetCodec(PacketCodecs.BOOL).build());
+
 	private ModComponents() {
 	}
 

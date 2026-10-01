@@ -1,52 +1,58 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.registry.ModComponents;
 import java.util.List;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
 /**
- * Clanks Heli-Pack: in der Zweithand gehalten bremst er jeden Fall zu einem Gleitflug ab.
- * Schleichen schaltet ihn aus. Laeuft auf Client und Server, weil die Spielerbewegung clientseitig ist.
+ * Clanks Rucken-Gadget mit zwei Modi, umschaltbar per Taste:
+ * Heli-Pack (Doppelsprung, Gleiten bei gehaltener Sprungtaste) und Heli-Jet (Schub-Sprints in der Luft, schnellerer Sinkflug).
+ * Wirkt nur im Ruecken-Platz des Gadget-Guertels. Die Bewegung rechnet der Client (Spielerbewegung ist clientseitig),
+ * der Server prueft Ausruestung und Modus, setzt die Fallhoehe zurueck und spielt Effekte ab.
  */
-public class HeliPackItem extends Item {
-	private static final double MAX_FALL_SPEED = -0.12;
-	private static final double GLIDE_BOOST = 1.04;
-	private static final double MAX_HORIZONTAL_SPEED = 0.6;
-
+public class HeliPackItem extends Item implements Gadget {
 	public HeliPackItem(Settings settings) {
 		super(settings);
 	}
 
+	public static boolean isJet(ItemStack stack) {
+		return Boolean.TRUE.equals(stack.get(ModComponents.JET_MODE));
+	}
+
 	@Override
-	public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-		if (!(entity instanceof PlayerEntity player)) {
-			return;
+	public GadgetSlot gadgetSlot() {
+		return GadgetSlot.BACK;
+	}
+
+	@Override
+	public Text getName(ItemStack stack) {
+		return Text.translatable(isJet(stack) ? "item.kingdomomnitrix.heli_jet" : getTranslationKey());
+	}
+
+	@Override
+	public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+		ItemStack stack = user.getStackInHand(hand);
+		if (!world.isClient() && user instanceof ServerPlayerEntity player) {
+			GadgetManager.equipFromHand(player, hand);
 		}
-		if (player.getOffHandStack() != stack) {
-			return;
-		}
-		if (player.isOnGround() || player.isSneaking() || player.getAbilities().flying || player.isTouchingWater() || player.isFallFlying()) {
-			return;
-		}
-		Vec3d velocity = player.getVelocity();
-		if (velocity.y >= MAX_FALL_SPEED) {
-			return;
-		}
-		double boost = velocity.horizontalLength() < MAX_HORIZONTAL_SPEED ? GLIDE_BOOST : 1.0;
-		player.setVelocity(velocity.x * boost, MAX_FALL_SPEED, velocity.z * boost);
-		player.fallDistance = 0.0f;
+		return TypedActionResult.success(stack, world.isClient());
 	}
 
 	@Override
 	public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.heli_pack.usage").formatted(Formatting.DARK_GRAY));
+		tooltip.add(Text.translatable(isJet(stack) ? "tooltip.kingdomomnitrix.heli_jet.usage" : "tooltip.kingdomomnitrix.heli_pack.usage")
+				.formatted(Formatting.GRAY));
+		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.heli_pack.mode").formatted(Formatting.DARK_GRAY));
+		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.gadget.equip").formatted(Formatting.DARK_GRAY));
 		super.appendTooltip(stack, context, tooltip, type);
 	}
 }

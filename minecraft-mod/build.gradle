@@ -13,6 +13,13 @@ loom {
 	// Client-Code liegt in src/client/java und kann so nie auf einem Dedicated Server geladen werden.
 	splitEnvironmentSourceSets()
 
+	runs {
+		// Eigener Ordner, damit Client und Dedicated Server gleichzeitig laufen koennen (Mehrspieler-Test)
+		server {
+			runDir "run-server"
+		}
+	}
+
 	mods {
 		"kingdomomnitrix" {
 			sourceSet sourceSets.main

@@ -14,6 +14,16 @@ import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
 import com.santiq.kingdomomnitrix.networking.OpenOmnitrixPayload;
 import com.santiq.kingdomomnitrix.networking.OpenTerminalPayload;
 import com.santiq.kingdomomnitrix.client.weapon.WeaponHud;
+import com.santiq.kingdomomnitrix.client.gadget.GadgetHud;
+import com.santiq.kingdomomnitrix.client.gadget.GadgetInput;
+import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
+import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
+import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
+import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
+import com.santiq.kingdomomnitrix.registry.ModItems;
+import com.santiq.kingdomomnitrix.registry.ModScreenHandlers;
+import net.minecraft.client.gui.screen.ingame.HandledScreens;
+import net.minecraft.client.item.ModelPredicateProviderRegistry;
 import com.santiq.kingdomomnitrix.client.weapon.WeaponTerminalScreen;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
@@ -56,17 +66,26 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		LockOnHud.register();
 		MagicHud.register();
 		WeaponHud.register();
+		GadgetHud.register();
+		HandledScreens.register(ModScreenHandlers.GADGET_BELT, GadgetScreen::new);
+		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
+				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
 		CombatAnimations.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(MagicInput::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(GadgetInput::tick);
+		WorldRenderEvents.AFTER_ENTITIES.register(SwingshotRopes::render);
 		WorldRenderEvents.START.register(context -> ClientLockOn.updateCamera(MinecraftClient.getInstance()));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			ClientLockOn.reset();
 			CombatInput.reset();
 			MagicInput.reset();
+			GadgetInput.reset();
+			SwingshotRopes.reset();
 		});
 
+		ClientPlayNetworking.registerGlobalReceiver(SwingshotStatePayload.ID, (payload, context) -> SwingshotRopes.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTerminalPayload.ID, (payload, context) ->
 				context.client().setScreen(new WeaponTerminalScreen(payload.pos())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenOmnitrixPayload.ID, (payload, context) -> {

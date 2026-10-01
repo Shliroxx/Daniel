@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.3.0-alpha
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.5.0-alpha
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
@@ -15,14 +15,15 @@ Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 ### Kingdom Hearts
 | Ding | Was es tut |
 |---|---|
-| **Königsschlüssel** (Schlüsselschwert) | Starkes Schwert (Netherit-Stufe). **Rechtsklick** wirkt den gewählten Zauber, **Schleichen + Rechtsklick** wechselt ihn. Reparatur am Amboss mit Herzen. |
-| Zauber **Feuer** | Feuerkugel, setzt Ziele in Brand (1 s Abklingzeit) |
-| Zauber **Eis** | Drei Eiskugeln im Fächer, verlangsamen und frieren ein (1,5 s) |
-| Zauber **Donner** | Blitz auf das anvisierte Ziel bzw. den anvisierten Block, 10 Schaden im Umkreis von 3 Blöcken, ohne Brandschaden an der Welt (4 s) |
-| Zauber **Vita** | Heilt 4 Herzen (10 s) |
-| **Schatten** (Herzloser) | Feindlicher Mob, erscheint nachts in der Oberwelt, verbrennt nicht im Tageslicht. Lässt zu 50 % ein **Herz** fallen. |
-| **Hi-Potion** | Heilt sofort 4 Herzen |
-| **Paopu-Frucht** | Nahrung: Regeneration II + Absorption II |
+| **Königsschlüssel**, **Oathkeeper** (Keyblades) | Kampfwaffen mit Combo-System, Werte und Passiv-Fähigkeiten aus JSON (`data/<ns>/kingdomomnitrix/keyblade/`) |
+| **Keyblade-Schmiede** | Rechtsklick mit einem Keyblade: Upgrade gegen Bolts vom Konto + Materialien |
+| Zauber **Feuer, Eis, Donner, Vita** | Rechtsklick mit Keyblade wirkt den gewählten Zauber (kostet MP); **M + Mausrad** wählt. Stufen 1–3 über **Magie-Kristalle** |
+| **Herzlose** | Schatten, Soldat, Großkörper, Luftsoldat, Dunkelball — erscheinen nur aus **Dunkelheitsrissen** (nachts, 3 Wellen, Belohnung). Gamerule `kingdomomnitrixDarknessRifts` schaltet Risse ab |
+| **Hi-Potion**, **Paopu-Frucht** | Heilung bzw. Regeneration + Absorption |
+
+**Kampf mit Keyblade/OmniWrench:** Linksklick = Combo (letzter Schlag Finisher), Linksklick halten = schwerer Schlag,
+in der Luft = Luft-Combo, **Linke Alt** = Ausweichen, **Feststelltaste** halten = Blocken (perfekter Block betäubt),
+**Z** = Ziel erfassen (Kamera folgt). MP laden sich mit der Zeit und durch Treffer auf; ist die Leiste leer, startet die MP-Ladezeit.
 
 ### Ben 10 — das Omnitrix
 
@@ -48,30 +49,41 @@ Neue Aliens: JSON-Datei in `data/<namespace>/kingdomomnitrix/alien/` + Übersetz
 ### Ratchet & Clank
 | Ding | Was es tut |
 |---|---|
-| **Bolts** | Währung und Munition. Jedes von einem Spieler besiegte Monster lässt 1–4 Bolts fallen. |
-| **Bolt-Kiste** | Zerbricht sofort, gibt 3–8 Bolts |
-| **OmniWrench 8000** | Schwert (Diamant-Stufe), **Rechtsklick** wirft den Schraubenschlüssel (8 Schaden) |
-| **Combuster** | Plasma-Blaster, 39 Schuss. Leer? Lädt automatisch mit 1 Bolt aus dem Inventar nach (+8 Schuss) oder am Amboss mit Bolts. Zerbricht nie. |
-| **Fusionsgranate** | Werfen, explodiert beim Aufprall — verletzt Gegner, zerstört keine Blöcke |
-| **Heli-Pack** | In der **Zweithand**: Gleitflug statt Fallen, kein Fallschaden. Schleichen schaltet ab. |
+| **Bolts** | Währung. Aufgehobene Bolts landen sofort auf dem **Bolt-Konto** (Status-Panel oben links). Monster lassen 1–4 fallen, Bolt-Kisten 3–8 |
+| **Waffen-Terminal** | Rechtsklick: Waffen kaufen, **aufrüsten (nur hier)**, Munition nachfüllen — bezahlt vom Bolt-Konto |
+| **OmniWrench 8000** | Nahkampf-Combo; **Rechtsklick** wirft ihn als Bumerang — trifft Gegner, legt Hebel/Knöpfe um, zerschlägt Bolt-Kisten |
+| **Combuster** | Rechtsklick halten = Dauerfeuer (Plasma). Stufe 5: explosive Schüsse ohne Blockschaden |
+| **Fusionsgranate** | Wurf, Explosion ohne Blockschaden |
+| **Heli-Pack / Heli-Jet** | Rücken-Gadget, **J** wechselt den Modus. Heli: Sprungtaste in der Luft = Doppelsprung, halten = Gleiten. Jet: Sprungtaste in der Luft = Schub nach vorn (2×), halten = Sinkflug. Kein Fallschaden beim Gleiten |
+| **Swingshot** | Werkzeug-Gadget: **Y** schießt den Haken an jeden festen Block (24 Blöcke) und zieht dich hin. Am Ziel hängst du (bis 10 s): Springen = Absprung, Schleichen oder Y = loslassen |
+
+Waffenstufe und Munition stehen im Waffen-HUD am rechten Rand. Gadgets liegen im **Gadget-Gürtel** (**H** öffnet ihn,
+oder Rechtsklick mit dem Gadget). Beim Tod fallen Gadgets wie normale Items (außer mit `keepInventory`).
 
 ## Rezepte (Werkbank)
 
 ```
-Königsschlüssel       Omnitrix              OmniWrench 8000
-.  .  Herz            Eisen Smaragd Eisen   .     Bolt  Bolt
-.  Goldblock .        Smaragd Diamant Smaragd   .     Eisen Bolt
-Stock .  .            Eisen Smaragd Eisen   Eisen .     .
+Königsschlüssel       Oathkeeper              Omnitrix
+.     .    Herz       .     Amethyst Herz     Eisen   Smaragd Eisen
+.  Goldblock .        .     Königs-  Amethyst Smaragd Diamant Smaragd
+Stock .    .          Quarz schlüssel .       Eisen   Smaragd Eisen
 
-Combuster             Fusionsgranate (x4)   Heli-Pack
-Bolt Bolt Lohenstaub  .    Bolt .           Eisen Feder    Eisen
-Eisen Redstone Eisen  Bolt TNT  Bolt        Bolt  Redstone Bolt
-Eisen .    .          .    Bolt .           .     Bolt     .
+Keyblade-Schmiede     Waffen-Terminal         OmniWrench 8000
+Gold  Herz  Gold      Eisen Glasscheibe Eisen  .     Nugget Nugget
+Eisen Amboss Eisen    Redstone Diamant Redstone .    Eisen  Nugget
+Eisen Eisen Eisen     Eisen Eisen Eisen        Eisen .      .
+
+Combuster             Fusionsgranate          Heli-Pack               Swingshot
+Kupfer Kupfer Lohenstaub  .     Nugget .      Eisen  Feder    Eisen   .     .     Haken
+Eisen Redstone Eisen  Nugget TNT  Nugget      Nugget Redstone Nugget  .     Kette .
+Eisen .    .          .     Nugget .          .      Nugget   .       Eisen Redstone .
 
 Bolt-Kiste: 8 Bretter um 1 Eisennugget
 Hi-Potion (formlos): Glasflasche + glitzernde Melonenscheibe + Zucker
 Paopu-Frucht (formlos): Apfel + Glowstonestaub + Herz
 ```
+
+Bolts sind bewusst keine Zutat: sie landen sofort auf dem Konto. (Nugget = Eisennugget, Haken = Haken der Stolperdrahtfalle.)
 
 Alles ist außerdem im eigenen Kreativ-Tab **Kingdom Omnitrix**.
 
@@ -82,7 +94,7 @@ Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
 - **Windows**: Doppelklick auf `Mod bauen.bat`
 - **Linux/macOS**: `./gradlew build`
 
-Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.3.0-alpha.jar`.
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.5.0-alpha.jar`.
 
 Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
 
@@ -119,7 +131,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 
 1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
 2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
-3. `kingdomomnitrix-0.3.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+3. `kingdomomnitrix-0.5.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
 4. Minecraft mit dem Fabric-Profil starten.
 
 Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.

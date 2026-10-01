@@ -120,6 +120,8 @@ def check_recipes(report: Report, items: set[str]) -> None:
             continue
         name = path.stem
         ingredients = list(recipe.get("key", {}).values()) if "key" in recipe else recipe.get("ingredients", [])
+        if f"{MOD_ID}:bolt" in ingredient_items(ingredients):
+            report.error("Rezept %s nutzt Bolts als Zutat - Bolts landen sofort auf dem Konto und sind nie im Inventar", name)
         for item in ingredient_items(ingredients) + [recipe.get("result", {}).get("id", "")]:
             namespace, _, item_path = item.partition(":")
             if namespace == MOD_ID and item_path not in items:

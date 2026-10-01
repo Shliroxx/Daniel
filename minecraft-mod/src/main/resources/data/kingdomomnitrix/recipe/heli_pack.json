@@ -3,8 +3,8 @@
   "category": "equipment",
   "pattern": [
     "IFI",
-    "BRB",
-    " B "
+    "NRN",
+    " N "
   ],
   "key": {
     "I": {
@@ -13,8 +13,8 @@
     "F": {
       "item": "minecraft:feather"
     },
-    "B": {
-      "item": "kingdomomnitrix:bolt"
+    "N": {
+      "item": "minecraft:iron_nugget"
     },
     "R": {
       "item": "minecraft:redstone"

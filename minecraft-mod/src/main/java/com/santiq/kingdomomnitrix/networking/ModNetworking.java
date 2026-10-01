@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
+import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.weapon.TerminalService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -33,6 +34,23 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(SelectSpellPayload.ID, SelectSpellPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenTerminalPayload.ID, OpenTerminalPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SwingshotPayload.ID, SwingshotPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(SwingshotStatePayload.ID, SwingshotStatePayload.CODEC);
+
+		ServerPlayNetworking.registerGlobalReceiver(GadgetActionPayload.ID, (payload, context) -> {
+			GadgetManager.Action[] actions = GadgetManager.Action.values();
+			if (payload.action() >= 0 && payload.action() < actions.length && canAct(context.player())) {
+				GadgetManager.handle(context.player(), actions[payload.action()]);
+			}
+		});
+		ServerPlayNetworking.registerGlobalReceiver(SwingshotPayload.ID, (payload, context) -> {
+			if (payload.active() && canAct(context.player())) {
+				GadgetManager.startSwing(context.player(), payload.anchor());
+			} else if (!payload.active()) {
+				GadgetManager.stopSwing(context.player(), true);
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(TerminalActionPayload.ID, (payload, context) -> {
 			TerminalService.Action[] actions = TerminalService.Action.values();

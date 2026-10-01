@@ -53,6 +53,20 @@ startet einen Dedicated Server und spielt den Client auf einem virtuellen Bildsc
 - [ ] Mit einem zweiten Spieler: Der sieht dein Alien und die Partikel
 - [ ] Rückmeldung an Claude: was fehlt, was sich falsch anfühlt, welche Werte zu stark/zu schwach sind
 
+### Phase 4–7 — Kampf, Keyblades, Magie, Herzlose
+- [ ] Keyblade: Combo (Linksklick), schwerer Schlag (halten), Luft-Combo, Ausweichen (**Linke Alt**), Blocken (**Feststelltaste**, früher X), Lock-On (**Z**)
+- [ ] Zauber mit Rechtsklick, Auswahl mit **M + Mausrad**, MP-Ladezeit wenn die Leiste leer ist
+- [ ] `/hero rift` → 3 Wellen Herzlose, Belohnung am Ende
+
+### Phase 8 + 9 — Ratchet & Clank: Waffen und Gadgets
+- [ ] Bolts aufheben → landen auf dem Konto; Waffen-Terminal: Combuster kaufen, aufrüsten, Munition nachfüllen
+- [ ] OmniWrench werfen (Rechtsklick) auf einen Hebel; Fusionsgranate werfen
+- [ ] Heli-Pack + Swingshot herstellen, mit Rechtsklick ausrüsten (oder **H** → Gadget-Gürtel)
+- [ ] Heli-Pack: in der Luft Sprungtaste = Doppelsprung, halten = Gleiten. **J** → Heli-Jet: Sprungtaste in der Luft = Schub
+- [ ] Swingshot: **Y** auf einen Block → hinziehen, hängen, Springen = Absprung
+- [ ] Optionen → Steuerung → Kategorie „Kingdom Omnitrix“: keine rot markierten (doppelt belegten) Tasten. Die Mod meldet doppelte Belegungen beim Einloggen im Chat.
+- [ ] Mit einem zweiten Spieler: Der sieht das Swingshot-Seil
+
 ---
 
 ## 5. Entscheidungen, die noch offen sind

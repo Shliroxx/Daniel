@@ -2,5 +2,13 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "kingdomomnitrix:item/heli_pack"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "kingdomomnitrix:jet": 1
+      },
+      "model": "kingdomomnitrix:item/heli_jet"
+    }
+  ]
 }

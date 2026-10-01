@@ -239,6 +239,42 @@ def item_textures() -> dict[str, Image.Image]:
     ], {"R": hexc("6E7781"), "k": hexc("2E3338"), "S": hexc("B7C1CC"), "y": hexc("7CFC00"),
         "G": hexc("5B6670")})
 
+    t["heli_jet"] = from_ascii([
+        "",
+        "",
+        "....kkkkkkkk....",
+        "...kSSSSSSSSk...",
+        "...kSyySSyySk...",
+        "...kSSSSSSSSk...",
+        ".kkkSSSSSSSSkkk.",
+        ".kTkSSGGGGSSkTk.",
+        ".kTkSSSSSSSSkTk.",
+        ".kTk.kkkkkk.kTk.",
+        ".kOk........kOk.",
+        "..F..........F..",
+        "..f..........f..",
+    ], {"k": hexc("2E3338"), "S": hexc("B7C1CC"), "y": hexc("7CFC00"), "G": hexc("5B6670"),
+        "T": hexc("8E99A6"), "O": hexc("F28C28"), "F": hexc("FFD84A"), "f": hexc("FF7A1A", 180)})
+
+    t["swingshot"] = from_ascii([
+        "............kk..",
+        "...........kHHk.",
+        "..........kHk.H.",
+        ".........cHk....",
+        "........c.......",
+        ".......c........",
+        "......c.........",
+        "....kkkk........",
+        "...kBBBBk.......",
+        "..kBGGGBk.......",
+        "..kBGGBBk.......",
+        "..kkBBkk........",
+        "...kRRk.........",
+        "...kRRk.........",
+        "....kk..........",
+    ], {"k": hexc("1E1E24"), "H": hexc("D8DEE6"), "c": hexc("8E99A6"), "B": hexc("2F5DA8"),
+        "G": hexc("4FC3FF"), "R": hexc("6B7580")})
+
     # OmniWrench: diagonaler Griff, Maulschluessel-Kopf oben rechts.
     wrench = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
     handle, grip, head, head_dark = hexc("8E99A6"), hexc("2F5DA8"), hexc("C9D1DA"), hexc("6B7580")

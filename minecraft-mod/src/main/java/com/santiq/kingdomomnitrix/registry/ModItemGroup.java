@@ -47,6 +47,10 @@ public final class ModItemGroup {
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);
 						entries.add(ModItems.HELI_PACK);
+						ItemStack jet = new ItemStack(ModItems.HELI_PACK);
+						jet.set(ModComponents.JET_MODE, true);
+						entries.add(jet);
+						entries.add(ModItems.SWINGSHOT);
 						entries.add(ModItems.BOLT);
 						entries.add(ModItems.BOLT_CRATE);
 						entries.add(ModItems.WEAPON_TERMINAL);

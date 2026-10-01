@@ -11,6 +11,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import org.lwjgl.glfw.GLFW;
 
 /** Tastenbelegung (in den Minecraft-Steuerungsoptionen unter "Kingdom Omnitrix" aenderbar). */
@@ -24,9 +27,16 @@ public final class ModKeyBindings {
 			register("key.kingdomomnitrix.ability_3", GLFW.GLFW_KEY_B),
 	};
 	public static final KeyBinding DODGE = register("key.kingdomomnitrix.dodge", GLFW.GLFW_KEY_LEFT_ALT);
-	public static final KeyBinding GUARD = register("key.kingdomomnitrix.guard", GLFW.GLFW_KEY_X);
+	public static final KeyBinding GUARD = register("key.kingdomomnitrix.guard", GLFW.GLFW_KEY_CAPS_LOCK);
 	public static final KeyBinding LOCK_ON = register("key.kingdomomnitrix.lock_on", GLFW.GLFW_KEY_Z);
 	public static final KeyBinding MAGIC = register("key.kingdomomnitrix.magic", GLFW.GLFW_KEY_M);
+	public static final KeyBinding GADGET_BELT = register("key.kingdomomnitrix.gadget_belt", GLFW.GLFW_KEY_H);
+	public static final KeyBinding USE_GADGET = register("key.kingdomomnitrix.use_gadget", GLFW.GLFW_KEY_Y);
+	public static final KeyBinding PACK_MODE = register("key.kingdomomnitrix.pack_mode", GLFW.GLFW_KEY_J);
+
+	private static final KeyBinding[] OWN = {OPEN_OMNITRIX, ABILITIES[0], ABILITIES[1], ABILITIES[2], DODGE, GUARD, LOCK_ON, MAGIC,
+			GADGET_BELT, USE_GADGET, PACK_MODE};
+	private static boolean conflictsChecked;
 
 	private ModKeyBindings() {
 	}
@@ -46,6 +56,10 @@ public final class ModKeyBindings {
 		if (client.player == null) {
 			return;
 		}
+		if (!conflictsChecked) {
+			conflictsChecked = true;
+			warnAboutConflicts(client);
+		}
 		while (OPEN_OMNITRIX.wasPressed()) {
 			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
 				OmnitrixWheelScreen.open(client);
@@ -55,6 +69,26 @@ public final class ModKeyBindings {
 			while (ABILITIES[slot].wasPressed()) {
 				if (client.currentScreen == null && TransformationManager.get(client.player).isTransformed()) {
 					ClientPlayNetworking.send(new AbilityRequestPayload(slot));
+				}
+			}
+		}
+	}
+
+	/**
+	 * Minecraft leitet einen Tastendruck nur an EINE Belegung weiter. Doppelt belegte Tasten fuehren dazu,
+	 * dass eine der beiden Funktionen stumm bleibt; darum wird das im Log und im Chat gemeldet.
+	 */
+	private static void warnAboutConflicts(MinecraftClient client) {
+		for (KeyBinding own : OWN) {
+			if (own.isUnbound()) {
+				continue;
+			}
+			for (KeyBinding other : client.options.allKeys) {
+				if (other != own && own.equals(other)) {
+					KingdomOmnitrix.LOGGER.warn("Taste {} ist doppelt belegt: {} und {}", own.getBoundKeyLocalizedText().getString(),
+							own.getTranslationKey(), other.getTranslationKey());
+					client.player.sendMessage(Text.translatable("message.kingdomomnitrix.key_conflict", own.getBoundKeyLocalizedText(),
+							Text.translatable(own.getTranslationKey()), Text.translatable(other.getTranslationKey())).formatted(Formatting.YELLOW), false);
 				}
 			}
 		}

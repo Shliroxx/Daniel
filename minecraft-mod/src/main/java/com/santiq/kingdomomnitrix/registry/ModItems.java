@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
+import com.santiq.kingdomomnitrix.gadget.SwingshotItem;
 import com.santiq.kingdomomnitrix.item.HiPotionItem;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeItem;
 import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
@@ -61,6 +62,7 @@ public final class ModItems {
 	public static final Item COMBUSTER = register("combuster", new CombusterItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item FUSION_GRENADE = register("fusion_grenade", new FusionGrenadeItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item HELI_PACK = register("heli_pack", new HeliPackItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
+	public static final Item SWINGSHOT = register("swingshot", new SwingshotItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item WEAPON_TERMINAL = register("weapon_terminal", new BlockItem(ModBlocks.WEAPON_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item BOLT_CRATE = register("bolt_crate", new BlockItem(ModBlocks.BOLT_CRATE, new Item.Settings()));
 
