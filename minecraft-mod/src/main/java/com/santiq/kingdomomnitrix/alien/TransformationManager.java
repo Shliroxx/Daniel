@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixMalfunction;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixOs;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
@@ -205,8 +206,7 @@ public final class TransformationManager {
 		applyAttributes(player, alien);
 		player.setHealth(player.getMaxHealth());
 		playTransformEffects(world, player, alien, true);
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.transformed", alienName(alienId).formatted(Formatting.BOLD))
-				.withColor(alien.color()), true);
+		OmnitrixOs.send(player, OmnitrixOs.Event.TRANSFORMED, alienName(alienId).withColor(alien.color()).formatted(Formatting.BOLD), alienId);
 		return Result.SUCCESS;
 	}
 
@@ -234,8 +234,9 @@ public final class TransformationManager {
 		update(player, s -> s.reverted(rechargeUntil));
 		restoreHumanHealth(player, state);
 		alien.ifPresent(a -> playTransformEffects(world, player, a, false));
-		player.sendMessage(Text.translatable(timeout ? "message.kingdomomnitrix.timeout" : "message.kingdomomnitrix.reverted")
-				.formatted(timeout ? Formatting.RED : Formatting.GREEN), true);
+		OmnitrixOs.send(player, timeout ? OmnitrixOs.Event.TIMEOUT : OmnitrixOs.Event.REVERTED,
+				Text.translatable("holo.kingdomomnitrix.os.recharge_in", (rechargeUntil - now + 19) / 20),
+				Optional.empty(), state.activeAlien());
 		return Result.SUCCESS;
 	}
 
@@ -301,8 +302,7 @@ public final class TransformationManager {
 		// Anteil der Alien-Lebenspunkte bleibt erhalten (kein Vollheilen durch Wechseln)
 		player.setHealth(Math.max(1.0f, player.getMaxHealth() * healthShare));
 		playTransformEffects(world, player, alien, true);
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.quick_change", alienName(alienId).formatted(Formatting.BOLD))
-				.withColor(alien.color()), true);
+		OmnitrixOs.send(player, OmnitrixOs.Event.QUICK_CHANGE, alienName(alienId).withColor(alien.color()).formatted(Formatting.BOLD), alienId);
 		AlienMasteryManager.add(player, alienId, AlienMasteryManager.PER_ABILITY);
 		return Result.SUCCESS;
 	}
@@ -320,7 +320,8 @@ public final class TransformationManager {
 		restoreHumanHealth(player, before);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2, false, false, true));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0, false, false, true));
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.dna_shock").formatted(Formatting.RED), true);
+		OmnitrixOs.send(player, OmnitrixOs.Event.DNA_SHOCK, Text.translatable("holo.kingdomomnitrix.os.dna_shock_body"),
+				Optional.of(Text.translatable("holo.kingdomomnitrix.os.hint.human_health")), before.activeAlien());
 		OmnitrixCore.cue(player, com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.DNA_SHOCK);
 		return true;
 	}
@@ -359,8 +360,9 @@ public final class TransformationManager {
 		}
 		OmnitrixCore.onFailsafe(player);
 		update(player, s -> s.withInvulnerableUntil(player.getWorld().getTime() + 20));
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.failsafe", alienName(chosen).formatted(Formatting.BOLD))
-				.formatted(Formatting.GOLD), true);
+		OmnitrixOs.send(player, OmnitrixOs.Event.EMERGENCY, alienName(chosen).formatted(Formatting.BOLD),
+				Optional.of(Text.translatable("holo.kingdomomnitrix.os.hint.failsafe",
+						OmnitrixCore.profile(player).failsafeCooldownSeconds() / 60)), Optional.of(chosen));
 		return true;
 	}
 
@@ -434,10 +436,11 @@ public final class TransformationManager {
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			TransformationState state = get(player);
+			long now = player.getWorld().getTime();
 			if (!state.isTransformed()) {
+				announceDeviceReady(player, state, now);
 				continue;
 			}
-			long now = player.getWorld().getTime();
 			Optional<AlienDefinition> alien = activeDefinition(player);
 			if (alien.isEmpty()) {
 				// Alien wurde aus dem Datenpaket entfernt: sauber beenden.
@@ -456,7 +459,7 @@ public final class TransformationManager {
 			if (state.remainingTicks(now) <= 0) {
 				// Ohne Platz bleibt die Verwandlung bestehen, bis der Spieler ins Freie geht.
 				if (revert(player, true) == Result.NO_SPACE && now % 20 == 0) {
-					player.sendMessage(Text.translatable("message.kingdomomnitrix.need_space").formatted(Formatting.RED), true);
+					OmnitrixOs.send(player, OmnitrixOs.Event.NEED_SPACE, Text.translatable("message.kingdomomnitrix.need_space"));
 				}
 				continue;
 			}
@@ -477,6 +480,20 @@ public final class TransformationManager {
 			if (now % AURA_INTERVAL_TICKS == 0) {
 				spawnAura(player, alien.get());
 			}
+		}
+	}
+
+	/** Omnitrix OS: Nachladezeit vorbei („BEREIT“), Ueberhitzung abgekuehlt („ABGEKUEHLT“) — genau einmal im Tick des Endes. */
+	private static void announceDeviceReady(ServerPlayerEntity player, TransformationState state, long now) {
+		if (!OmnitrixItem.hasOmnitrix(player)) {
+			return;
+		}
+		if (state.rechargeUntil() == now && now > 0) {
+			OmnitrixOs.send(player, OmnitrixOs.Event.READY, Text.translatable("holo.kingdomomnitrix.os.ready_body"));
+		}
+		if (OmnitrixCore.state(player).overheatedUntil() == now && now > 0) {
+			OmnitrixOs.send(player, OmnitrixOs.Event.COOLED, Text.translatable("holo.kingdomomnitrix.os.cooled_body"));
+			OmnitrixCore.cue(player, com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.READY);
 		}
 	}
 

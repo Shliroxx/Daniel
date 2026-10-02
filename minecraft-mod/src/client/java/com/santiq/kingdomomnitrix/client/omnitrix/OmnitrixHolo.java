@@ -29,26 +29,77 @@ public final class OmnitrixHolo {
 	private static final int BOTTOM_OFFSET = 74;
 
 	/** Eine Meldung: Titel (klein, Akzentfarbe), Hauptzeile, optionale Fusszeile, optional Alien-Symbol. */
-	public record Message(Text title, Text body, Optional<Text> footer, Optional<Identifier> alien, int color, long durationMs) {
+	public record Message(Text title, Text body, Optional<Text> footer, Optional<Identifier> alien, int color, long durationMs,
+			int priority) {
+		/** Meldung mit mittlerem Vorrang (Client-Meldungen wie Smart Choice, Meisterschaft). */
+		public Message(Text title, Text body, Optional<Text> footer, Optional<Identifier> alien, int color, long durationMs) {
+			this(title, body, footer, alien, color, durationMs, 2);
+		}
 	}
+
+	/** So lange bleibt eine Meldung mindestens stehen, bevor eine unwichtigere sie ersetzen darf. */
+	private static final long MIN_HOLD_MS = 1200L;
+	/** Laenger wartende Meldungen sind veraltet und entfallen. */
+	private static final long MAX_WAIT_MS = 2000L;
 
 	private static Message current;
 	private static long shownAt;
+	private static Message pending;
+	private static long pendingSince;
 
 	private OmnitrixHolo() {
 	}
 
 	public static void register() {
 		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
-				com.santiq.kingdomomnitrix.networking.OmnitrixHoloPayload.ID, (payload, context) -> show(new Message(payload.title(),
-						payload.body(), payload.footer(), payload.alien(), payload.color(), Math.max(500, payload.durationMs()))));
+				com.santiq.kingdomomnitrix.networking.OmnitrixHoloPayload.ID, (payload, context) -> receive(context.client(), payload));
 		HudLayerRegistrationCallback.EVENT.register(drawer ->
 				drawer.attachLayerAfter(IdentifiedLayer.CHAT, IdentifiedLayer.of(LAYER_ID, OmnitrixHolo::render)));
 	}
 
+	/** Server-Meldung: als Hologramm oder (Spieler-Einstellung) schlicht in der Aktionsleiste. */
+	private static void receive(MinecraftClient client, com.santiq.kingdomomnitrix.networking.OmnitrixHoloPayload payload) {
+		if (!OmnitrixFeedback.settings().holoMessages) {
+			client.inGameHud.setOverlayMessage(payload.body().copy().withColor(payload.style().color()), false);
+			return;
+		}
+		show(new Message(payload.title(), payload.body(), payload.footer(), payload.alien(), payload.style().color(),
+				Math.max(500, payload.style().durationMs()), payload.style().priority()));
+	}
+
+	/**
+	 * Meldung zeigen. Eine wichtigere, die noch keine {@link #MIN_HOLD_MS} zu sehen war, wird nicht verdraengt — die neue
+	 * wartet kurz und erscheint danach (oder entfaellt, wenn sie veraltet ist).
+	 */
 	public static void show(Message message) {
+		long now = System.currentTimeMillis();
+		if (current != null && now - shownAt < Math.min(MIN_HOLD_MS, current.durationMs()) && current.priority() > message.priority()) {
+			if (pending == null || message.priority() >= pending.priority()) {
+				pending = message;
+				pendingSince = now;
+			}
+			return;
+		}
 		current = message;
-		shownAt = System.currentTimeMillis();
+		shownAt = now;
+	}
+
+	/** Wartende Meldung nachziehen, sobald die aktuelle lange genug stand oder vorbei ist. */
+	private static void promotePending(long now) {
+		if (pending == null) {
+			return;
+		}
+		if (now - pendingSince > MAX_WAIT_MS) {
+			pending = null;
+			return;
+		}
+		boolean currentDone = current == null || now - shownAt >= current.durationMs();
+		boolean currentHeld = current != null && now - shownAt >= MIN_HOLD_MS && current.priority() <= pending.priority();
+		if (currentDone || currentHeld) {
+			current = pending;
+			shownAt = now;
+			pending = null;
+		}
 	}
 
 	/** Kurzform ohne Symbol und Fusszeile. */
@@ -59,6 +110,7 @@ public final class OmnitrixHolo {
 	/** Meldung sofort ausblenden (z. B. Smart Choice bestaetigt). */
 	public static void clear() {
 		current = null;
+		pending = null;
 	}
 
 	public static boolean isShowing(Message message) {
@@ -67,6 +119,7 @@ public final class OmnitrixHolo {
 
 	private static void render(DrawContext context, RenderTickCounter tickCounter) {
 		MinecraftClient client = MinecraftClient.getInstance();
+		promotePending(System.currentTimeMillis());
 		Message message = current;
 		if (message == null || client.player == null || client.options.hudHidden) {
 			return;

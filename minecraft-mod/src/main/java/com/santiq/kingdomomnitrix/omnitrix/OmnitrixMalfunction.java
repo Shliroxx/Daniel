@@ -2,7 +2,6 @@ package com.santiq.kingdomomnitrix.omnitrix;
 
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
-import com.santiq.kingdomomnitrix.networking.OmnitrixHoloPayload;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import java.util.ArrayList;
@@ -10,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -24,8 +22,6 @@ import net.minecraft.world.GameRules;
 public final class OmnitrixMalfunction {
 	public static final GameRules.Key<GameRules.BooleanRule> ENABLED = GameRuleRegistry.register(
 			"kingdomomnitrixOmnitrixMalfunctions", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
-	private static final int COLOR = 0xFF5A3C;
-	private static final int HOLO_MS = 4200;
 	/** Mindest-Restzeit, die eine Zeitdrift uebrig laesst. */
 	private static final long MIN_REMAINING = 100L;
 
@@ -112,12 +108,7 @@ public final class OmnitrixMalfunction {
 	}
 
 	private static void holo(ServerPlayerEntity player, Text body, Optional<Identifier> alien) {
-		if (ServerPlayNetworking.canSend(player, OmnitrixHoloPayload.ID)) {
-			ServerPlayNetworking.send(player, new OmnitrixHoloPayload(Text.translatable("holo.kingdomomnitrix.malfunction"), body,
-					Optional.of(Text.translatable("holo.kingdomomnitrix.malfunction.hint")), alien, COLOR, HOLO_MS));
-		} else {
-			player.sendMessage(body.copy().formatted(Formatting.RED), true);
-		}
+		OmnitrixOs.send(player, OmnitrixOs.Event.MALFUNCTION, body, Optional.of(Text.translatable("holo.kingdomomnitrix.malfunction.hint")), alien);
 		OmnitrixCore.cue(player, OmnitrixCue.MALFUNCTION);
 	}
 }

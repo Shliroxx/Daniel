@@ -278,3 +278,39 @@ Ripjaws + Meldung + Klang (`docs/screenshots/fehlfunktion_falsches_alien.png`); 
 Schutz: Master Control, Spielregel aus, ★10 — jeweils korrekt Heatblast trotz 95 % Hitze. Tests `MalfunctionsTest`
 (Schwelle, Anstieg, Meisterschaft, Master Control, abgeschaltet). Nicht geprueft: Fehlgriff beim Schnellwechsel im Spiel
 (gleicher Code-Pfad, nur im Test-Lauf der Verwandlung bestaetigt).
+
+## 12. Phase I — Omnitrix OS (2026-10-02)
+
+Alle Geraete-Meldungen kommen jetzt als Hologramm-Karte (Titel, Zeile, Hinweis, Alien-Symbol) statt verstreuter
+Aktionsleisten-Texte. Ein Katalog (`OmnitrixOs.Event`) legt Farbe, Dauer und Vorrang je Ereignis fest:
+
+| Ereignis | Titel | Zeile / Hinweis | Vorrang |
+|---|---|---|---|
+| Verwandelt / Schnellwechsel | DNA AKTIV / SCHNELLWECHSEL | Alien (Symbol) | 1 |
+| Zurueck / Zeit abgelaufen | RUECKVERWANDLUNG / ZEIT ABGELAUFEN | „Bereit in N s“ | 1 / 2 |
+| Nachladezeit vorbei | OMNITRIX BEREIT | „Verwandlung moeglich“ | 0 |
+| Laedt nach (Anfrage) | LAEDT NACH | „Bereit in N s“ | 1 |
+| Abgelehnt / zu heiss | VERWEIGERT | Grund · „Zurueckverwandelt abkuehlen lassen“ | 2 |
+| Kein Platz | KEIN PLATZ | — | 2 |
+| Warnschwelle | WARNUNG · TEMPERATUR | „Hitze 80 %“ · „Bald zurueckverwandeln“ | 3 |
+| Ueberhitzung | UEBERHITZT | „Gesperrt fuer 12 s“ · „Abkuehlen in Menschenform“ | 4 |
+| Abgekuehlt | ABGEKUEHLT | „Temperatur normal“ | 1 |
+| Sperre / entsperrt | GESPERRT / ENTSPERRT | Dauer | 3 / 1 |
+| Master Control an/aus | MASTER CONTROL | — | 3 |
+| DNA-Schock | DNA-SCHOCK | „Alien besiegt“ · „Menschen-Lebenspunkte bleiben“ | 4 |
+| Notfall-Verwandlung | NOTFALL-VERWANDLUNG | Alien · „Wieder bereit in 10 min“ | 5 |
+| Fehlfunktion | FEHLFUNKTION | siehe Phase H | 4 |
+
+**Vorrang:** eine wichtigere Meldung bleibt mindestens 1,2 s stehen; eine unwichtigere wartet so lange und entfaellt,
+wenn sie laenger als 2 s warten muesste (veraltet). Ablaeufe senden die wichtigere zuletzt (Ueberhitzung nach „Zeit
+abgelaufen“, Notfall nach „DNA aktiv“). Faehigkeits-Meldungen (gesperrt, keine Energie) bleiben bewusst in der
+Aktionsleiste — sie kommen im Kampf oft und sollen das Hologramm nicht ueberdecken.
+
+**Spieler-Option:** `config/kingdomomnitrix-omnitrix.json` → `"holoMessages": false` zeigt die Zeilen schlicht in der
+Aktionsleiste. Ohne Mod-Client (Server-Befehl, Vanilla-Client) ebenso.
+
+**Im Spiel geprueft:** DNA AKTIV · Heatblast (mit Symbol), WARNUNG · Hitze 80 %, UEBERHITZT · Gesperrt fuer 12 s,
+RUECKVERWANDLUNG · Bereit in 10 s, LAEDT NACH · Bereit in 4 s (ueber die Tastatur angefordert)
+(`docs/screenshots/omnitrix_os_meldungen.png`). Tests `OmnitrixOsTest` (alle Titel in beiden Sprachen, Vorrang
+kritischer Meldungen). Nicht im Spiel geprueft: ABGEKUEHLT, BEREIT, ENTSPERRT, MASTER CONTROL (gleicher Weg, nur
+Text/Farbe verschieden).

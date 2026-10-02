@@ -11,19 +11,31 @@ import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Identifier;
 
 /**
- * Server → Client: Omnitrix-Hologramm-Meldung (Omnitrix OS) mit Titel, Hauptzeile, optionaler Fusszeile und Alien-Symbol.
- * Fuer Ereignisse, die nur der Server kennt (Fehlfunktion, Notfall-Verwandlung, Sperre …).
+ * Server → Client: Omnitrix-Hologramm-Meldung (Omnitrix OS) mit Titel, Hauptzeile, optionaler Fusszeile, Alien-Symbol
+ * und Darstellung ({@link Style}). Fuer Ereignisse, die nur der Server kennt (Verwandlung, Hitze, Fehlfunktion …).
  */
-public record OmnitrixHoloPayload(Text title, Text body, Optional<Text> footer, Optional<Identifier> alien, int color, int durationMs)
+public record OmnitrixHoloPayload(Text title, Text body, Optional<Text> footer, Optional<Identifier> alien, Style style)
 		implements CustomPayload {
 	public static final CustomPayload.Id<OmnitrixHoloPayload> ID = new CustomPayload.Id<>(KingdomOmnitrix.id("omnitrix_holo"));
+
+	/**
+	 * Darstellung: Akzentfarbe, Anzeigedauer und Vorrang (hoeher verdraengt niedriger; eine niedrigere Meldung wartet,
+	 * bis die wichtigere eine Weile zu sehen war).
+	 */
+	public record Style(int color, int durationMs, int priority) {
+		public static final PacketCodec<RegistryByteBuf, Style> CODEC = PacketCodec.tuple(
+				PacketCodecs.INTEGER, Style::color,
+				PacketCodecs.VAR_INT, Style::durationMs,
+				PacketCodecs.VAR_INT, Style::priority,
+				Style::new);
+	}
+
 	public static final PacketCodec<RegistryByteBuf, OmnitrixHoloPayload> CODEC = PacketCodec.tuple(
 			TextCodecs.REGISTRY_PACKET_CODEC, OmnitrixHoloPayload::title,
 			TextCodecs.REGISTRY_PACKET_CODEC, OmnitrixHoloPayload::body,
 			PacketCodecs.optional(TextCodecs.REGISTRY_PACKET_CODEC), OmnitrixHoloPayload::footer,
 			PacketCodecs.optional(Identifier.PACKET_CODEC), OmnitrixHoloPayload::alien,
-			PacketCodecs.INTEGER, OmnitrixHoloPayload::color,
-			PacketCodecs.VAR_INT, OmnitrixHoloPayload::durationMs,
+			Style.CODEC, OmnitrixHoloPayload::style,
 			OmnitrixHoloPayload::new);
 
 	@Override

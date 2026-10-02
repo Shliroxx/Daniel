@@ -238,6 +238,17 @@ public final class ModNetworking {
 	/** Rueckmeldung in der Actionbar fuer Ergebnisse, die der Spieler sonst nicht bemerken wuerde. */
 	private static void report(ServerPlayerEntity player, Result result) {
 		long now = player.getWorld().getTime();
+		// Geraete-Zustaende ueber Omnitrix OS (Hologramm), der Rest bleibt in der Aktionsleiste
+		if (result == Result.RECHARGING) {
+			com.santiq.kingdomomnitrix.omnitrix.OmnitrixOs.send(player, com.santiq.kingdomomnitrix.omnitrix.OmnitrixOs.Event.RECHARGING,
+					Text.translatable("holo.kingdomomnitrix.os.recharge_in", (TransformationManager.get(player).rechargeRemaining(now) + 19) / 20));
+			return;
+		}
+		if (result == Result.NO_SPACE) {
+			com.santiq.kingdomomnitrix.omnitrix.OmnitrixOs.send(player, com.santiq.kingdomomnitrix.omnitrix.OmnitrixOs.Event.NEED_SPACE,
+					Text.translatable("message.kingdomomnitrix.need_space"));
+			return;
+		}
 		Text message = switch (result) {
 			case NO_OMNITRIX -> Text.translatable("message.kingdomomnitrix.need_omnitrix");
 			case LOCKED -> Text.translatable("message.kingdomomnitrix.locked");

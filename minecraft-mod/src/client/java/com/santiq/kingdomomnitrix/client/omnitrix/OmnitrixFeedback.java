@@ -55,6 +55,8 @@ public final class OmnitrixFeedback {
 		public float fovEffects = 1.0f;
 		public float screenFlash = 1.0f;
 		public float volume = 1.0f;
+		/** Omnitrix-OS-Meldungen als Hologramm (false = schlicht in der Aktionsleiste). */
+		public boolean holoMessages = true;
 	}
 
 	private static final Map<OmnitrixCue, Effect> EFFECTS = new EnumMap<>(OmnitrixCue.class);

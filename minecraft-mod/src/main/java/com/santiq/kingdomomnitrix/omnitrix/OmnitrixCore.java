@@ -255,7 +255,9 @@ public final class OmnitrixCore {
 			case OVERHEATED -> Text.translatable("message.kingdomomnitrix.omnitrix_overheated", seconds(device.overheatedUntil() - now));
 			case TOO_HOT -> Text.translatable("message.kingdomomnitrix.omnitrix_too_hot");
 		};
-		player.sendMessage(text.formatted(Formatting.RED), true);
+		OmnitrixOs.send(player, refusal == Refusal.LOCKED ? OmnitrixOs.Event.LOCKED : OmnitrixOs.Event.REFUSED, text,
+				refusal == Refusal.TOO_HOT ? Optional.of(Text.translatable("holo.kingdomomnitrix.os.hint.cool_down")) : Optional.empty(),
+				Optional.empty());
 		cue(player, OmnitrixCue.ERROR);
 	}
 
@@ -289,7 +291,8 @@ public final class OmnitrixCore {
 		}
 		if (heat >= profile.heatWarning() && !device.warned()) {
 			update(player, s -> s.withWarned(true));
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.omnitrix_warning").formatted(Formatting.GOLD), true);
+			OmnitrixOs.send(player, OmnitrixOs.Event.WARNING, Text.translatable("holo.kingdomomnitrix.os.heat", Math.round(heat * 100)),
+					Optional.of(Text.translatable("holo.kingdomomnitrix.os.hint.revert_soon")), Optional.empty());
 			cue(player, OmnitrixCue.WARNING);
 		}
 		return false;
@@ -300,7 +303,8 @@ public final class OmnitrixCore {
 		long now = player.getWorld().getTime();
 		OmnitrixProfile profile = profile(player);
 		update(player, s -> s.withHeat(now, true, profile, 0.0f).withOverheatedUntil(now + profile.overheatLockSeconds() * 20L));
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.omnitrix_overheat").formatted(Formatting.RED), true);
+		OmnitrixOs.send(player, OmnitrixOs.Event.OVERHEAT, Text.translatable("holo.kingdomomnitrix.os.locked_for", profile.overheatLockSeconds()),
+				Optional.of(Text.translatable("holo.kingdomomnitrix.os.hint.cooling")), Optional.empty());
 		cue(player, OmnitrixCue.OVERHEAT);
 	}
 
@@ -309,6 +313,9 @@ public final class OmnitrixCore {
 		long now = player.getWorld().getTime();
 		update(player, s -> s.withLockedUntil(ticks > 0 ? now + ticks : 0L));
 		cue(player, ticks > 0 ? OmnitrixCue.LOCK : OmnitrixCue.READY);
+		OmnitrixOs.send(player, ticks > 0 ? OmnitrixOs.Event.LOCKED : OmnitrixOs.Event.UNLOCKED, ticks > 0
+				? Text.translatable("holo.kingdomomnitrix.os.locked_for", seconds(ticks))
+				: Text.translatable("holo.kingdomomnitrix.os.unlocked_body"));
 	}
 
 	public static void setMasterControl(ServerPlayerEntity player, boolean enabled) {
@@ -316,6 +323,8 @@ public final class OmnitrixCore {
 		if (enabled) {
 			cue(player, OmnitrixCue.MASTER_CONTROL);
 		}
+		OmnitrixOs.send(player, OmnitrixOs.Event.MASTER_CONTROL, Text.translatable(enabled
+				? "holo.kingdomomnitrix.os.master_control_on" : "holo.kingdomomnitrix.os.master_control_off"));
 	}
 
 	public static void setProfile(ServerPlayerEntity player, Identifier profile) {
