@@ -225,6 +225,24 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
 - Naechste: Texturen mit Tonstufen statt Flachfarben (classic-Flaechen wirken noch flach), Glut-Animation,
   Ego-Arm-Modelle, Faehigkeits-VFX (Kristallsaeulen, Bodenschlag), Animationen an die neue Anatomie anpassen.
 
+## ALIEN-EVOLUTION-IMPORT 1:1 (2026-10-02)
+- SANTIQ-Feedback auf die Nachbauten: Arme nicht verbunden, Gesicht/Koerper passen nicht, Heatblast nicht erkennbar →
+  Entscheidung: AE-Modelle 1:1 uebernehmen (Erlaubnis laut SANTIQ, Credits in `CREDITS.md`).
+- **`tools/import_alienevo.py --jar <AlienEvo.jar>`**: Geometrie je Uniform (classic = AE prototype, evo = default,
+  ultimate = 10k), Knochen auf unsere Animations-Namen abgebildet (body/head/…_forearm/…_shin/tail_N/…_lower_arm),
+  Faehigkeits-Requisiten (Schwert, Schild, Kugel) entfernt, Omnitrix-Abzeichen (prototype) mit gruener Leuchtfarbe
+  eingebaut, Texturen aus den AE-Ebenen mit Codex-Standardpaletten eingefaerbt (inkl. `_ext`-Paletten), Glow-Ebene
+  zusaetzlich als Leuchtmaske, Ego-Arme aus den Arm-Wuerfeln, Groesse wie AE (Heatblast/XLR8 1,1 · Vierarm 2,0 ·
+  Diamondhead 1,35 · Grey Matter 0,25). CI prueft mit `--check` nur die Vollstaendigkeit (Jar nicht im Repo).
+- Renderer: `alien_render/<alien>.json` `"uniform_models": true` → `<alien>_<uniform>.geo.json` je Uniform.
+- `generate_alien_models.py` schreibt die fuenf importierten Aliens nicht mehr (nur noch mit `--legacy`).
+- `render_geo.py`: Drehrichtung y/z an GeckoLib angeglichen (gespiegelte x-Achse) — vorher standen gedrehte Teile
+  (z. B. Diamondhead-Schulterkristalle) falsch ab.
+- Im Spiel geprueft: alle 5 Aliens classic (`docs/screenshots/ae_import_alle_aliens.png`), Heatblast classic/evo/
+  ultimate per Omnitrix + U (`docs/screenshots/ae_import_heatblast_uniformen.png`), keine Fehler im Log.
+- Offen: AE-eigene Animationen (Idle/Lauf/Faehigkeiten) statt unserer generierten, 8-Frame-Glut-Animation (aktuell
+  Frame 0), Abzeichen-Zustaende (rot bei Abklingzeit) ueber die AE-Overlays.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +

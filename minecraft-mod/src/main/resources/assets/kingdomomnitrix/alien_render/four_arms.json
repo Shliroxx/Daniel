@@ -1,8 +1,10 @@
 {
-  "scale": 1.3,
+  "scale": 2.0,
   "uniforms": [
     "classic",
     "evo",
     "ultimate"
-  ]
+  ],
+  "uniform_models": true,
+  "source": "Alien Evolution (Habb and Stephen)"
 }

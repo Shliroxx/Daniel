@@ -60,7 +60,7 @@ def bone_transforms(bones: list[dict]) -> dict[str, tuple[np.ndarray, np.ndarray
         pivot = np.array(bone.get("pivot", [0, 0, 0]), dtype=float)
         # Bedrock speichert x/y-Rotation mit umgekehrtem Vorzeichen gegenueber der Darstellung
         rx, ry, rz = bone.get("rotation", [0, 0, 0])
-        local = rot_matrix(-rx, -ry, rz)
+        local = rot_matrix(-rx, ry, -rz)
         # p' = R (p - pivot) + pivot
         offset = pivot - local @ pivot
         parent = bone.get("parent")
@@ -125,7 +125,7 @@ def cube_faces(cube: dict, tex_w: int, tex_h: int) -> list[Face]:
     # Cube-eigene Rotation um den Cube-Pivot
     if "rotation" in cube:
         rx, ry, rz = cube["rotation"]
-        m = rot_matrix(-rx, -ry, rz)
+        m = rot_matrix(-rx, ry, -rz)
         p = np.array(cube.get("pivot", [0, 0, 0]), dtype=float)
         for f in faces:
             f.corners = (f.corners - p) @ m.T + p

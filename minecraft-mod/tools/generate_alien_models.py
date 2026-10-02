@@ -1392,8 +1392,14 @@ def grey_matter() -> Alien:
     return alien
 
 
-def build_aliens() -> list[Alien]:
-    return [heatblast(), xlr8(), four_arms(), diamondhead(), grey_matter()]
+# Diese Aliens kommen inzwischen 1:1 aus Alien Evolution (tools/import_alienevo.py) — der Generator darf ihre Dateien
+# nicht mehr ueberschreiben. Die Bauplaene bleiben als Referenz/Fallback (--legacy).
+IMPORTED = {"heatblast", "xlr8", "four_arms", "diamondhead", "grey_matter"}
+
+
+def build_aliens(legacy: bool = False) -> list[Alien]:
+    aliens = [heatblast(), xlr8(), four_arms(), diamondhead(), grey_matter()]
+    return aliens if legacy else [a for a in aliens if a.name not in IMPORTED]
 
 
 # --- Geometrie ------------------------------------------------------------------------------------
@@ -1736,12 +1742,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--only", help="nur dieses Alien schreiben (z. B. heatblast)")
     parser.add_argument("--preview", type=Path, help="vergroesserte Textur-Vorschau in diesen Ordner schreiben")
     parser.add_argument("--seed", type=int, default=4242, help="Zufalls-Seed fuer Rauschen und Risse")
+    parser.add_argument("--legacy", action="store_true",
+                        help="auch die eigenen Bauplaene der importierten Aliens schreiben (ueberschreibt den AE-Import)")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(message)s")
 
     try:
-        aliens = build_aliens()
+        aliens = build_aliens(args.legacy)
     except ValueError as exc:
         LOG.error("%s", exc)
         return 1

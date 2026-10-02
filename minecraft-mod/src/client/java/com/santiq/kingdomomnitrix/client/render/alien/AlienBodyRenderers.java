@@ -185,6 +185,11 @@ public final class AlienBodyRenderers {
 			public Identifier getTextureResource(AlienBodyAnimatable animatable) {
 				return uniformTexture(model, super.getTextureResource(animatable), currentUniform);
 			}
+
+			@Override
+			public Identifier getModelResource(AlienBodyAnimatable animatable) {
+				return uniformModel(model, super.getModelResource(animatable), currentUniform);
+			}
 		});
 		float scale = renderScale(model);
 		if (scale != 1.0f) {
@@ -199,6 +204,7 @@ public final class AlienBodyRenderers {
 
 	private static final Map<Identifier, Float> SCALES = new HashMap<>();
 	private static final Map<Identifier, java.util.List<String>> UNIFORMS = new HashMap<>();
+	private static final Map<Identifier, Boolean> UNIFORM_MODELS = new HashMap<>();
 	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
 	private static String currentUniform = AlienUniforms.CLASSIC;
 
@@ -214,6 +220,19 @@ public final class AlienBodyRenderers {
 		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - 4) + "_" + uniform + ".png");
 	}
 
+	/**
+	 * Geometrie einer Uniform: {@code <name>_<uniform>.geo.json}, wenn {@code alien_render} {@code "uniform_models": true}
+	 * setzt (importierte Alien-Evolution-Modelle haben je Uniform eigene Geometrie), sonst die Grundgeometrie.
+	 */
+	public static Identifier uniformModel(Identifier model, Identifier base, String uniform) {
+		if (AlienUniforms.CLASSIC.equals(uniform) || !uniformsOf(model).contains(uniform)
+				|| !UNIFORM_MODELS.getOrDefault(model, false)) {
+			return base;
+		}
+		String path = base.getPath();
+		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - ".geo.json".length()) + "_" + uniform + ".geo.json");
+	}
+
 	/** Uniformen eines Modells laut {@code alien_render/<name>.json} ({"uniforms": ["classic", "evo", …]}). */
 	public static java.util.List<String> uniformsOf(Identifier model) {
 		return UNIFORMS.computeIfAbsent(model, m -> {
@@ -224,6 +243,7 @@ public final class AlienBodyRenderers {
 			}
 			try (var reader = resource.get().getReader()) {
 				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
+				UNIFORM_MODELS.put(m, json.has("uniform_models") && json.get("uniform_models").getAsBoolean());
 				if (!json.has("uniforms")) {
 					return java.util.List.of(AlienUniforms.CLASSIC);
 				}

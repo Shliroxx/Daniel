@@ -47,6 +47,7 @@ jobs:
           python tools/sample_reference.py four_arms --check
           python tools/sample_reference.py diamondhead --check
           python tools/generate_alien_models.py --check
+          python tools/import_alienevo.py --check
           python tools/generate_item_models.py --check
           python tools/generate_player_animations.py --check
           python tools/generate_heartless_models.py --check
