@@ -1127,61 +1127,76 @@ def xlr8() -> Alien:
     return alien
 
 
-# Fellzacken an der Aussenseite der Arme (y, z, Hoehe, Farbe) — die zottelige Silhouette der Vorlage
-FA_TUFTS_UPPER = ((19.5, -1.5, 1, "clean:#C8141E"), (21, 0.5, 2, "clean:#9C1414"), (22.5, -2, 1, "clean:#E02028"),
-                  (23.5, 1.5, 1, "clean:#9C1414"))
-FA_TUFTS_FIST = ((13.5, 0, 1, "clean:#9C1414"), (15, -2, 2, "clean:#C8141E"), (16.5, 1.5, 1, "clean:#E02028"),
-                 (17.5, -0.5, 1, "clean:#9C1414"))
-FA_TUFTS_LOWER = ((19, -2.5, 1, "clean:#C8141E"), (21, -1, 2, "clean:#9C1414"))
+FOUR_ARMS_UNIFORMS = {
+    # Original-Serie: rote Haut, weisses Hemd mit schwarzem Mittelstreifen, schwarze Hose, schwarze Baender
+    "classic": {"SKIN": "#C8141E", "SKIN_DARK": "#8A0E14", "SHIRT": "#E8ECEF", "STRIPE": "#1A1A1E", "SLEEVE": "#E8ECEF",
+                "STRAP": "#E8ECEF", "BAND": "#1A1A1E", "BELT": "#1A1A1E", "PANTS": "#1E1E22", "FOOT": "#C8141E"},
+    # Alien-Evolution-Look: ganz rot, goldene X-Gurte und Baender, dunkle Hose
+    "evo": {"SKIN": "#BE2E30", "SKIN_DARK": "#8A1B28", "SHIRT": "#BE2E30", "STRIPE": "#BE2E30", "SLEEVE": "#BE2E30",
+            "STRAP": "#E8A23A", "BAND": "#E8A23A", "BELT": "#4F1320", "PANTS": "#8A1B28", "FOOT": "#E8A23A"},
+    # Ultimate: schwarzer Anzug mit weissem Streifen und weissen Schultern
+    "ultimate": {"SKIN": "#C8141E", "SKIN_DARK": "#8A0E14", "SHIRT": "#18181C", "STRIPE": "#E8ECEF", "SLEEVE": "#E8ECEF",
+                 "STRAP": "#18181C", "BAND": "#E8ECEF", "BELT": "#E8ECEF", "PANTS": "#18181C", "FOOT": "#18181C"},
+}
 
 
 def four_arms() -> Alien:
-    """Vierarm (Tetramand), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
-
-    Masse aus TetramandOS (tools/sample_reference.py four_arms), Einheiten = 1/16 Block: kleiner Kopf 6 mit vier
-    gelben Augen, Hemd-Oberkoerper 12x13x6 mit schwarzem Mittelstreifen, schwarze Hose 10x4, Beine 5x12, rote Fuesse,
-    oberes Armpaar mit weissem Aermel (6x7), Fellarm und Faust, unteres Armpaar 4/5 breit, tiefer und weiter innen."""
-    ref = "four_arms/"
+    """Vierarm (Tetramand) nach Alien Evolution (Erlaubnis laut SANTIQ, Fanprojekt): breite, leicht vorgekippte Brust
+    ueber schmaler Taille, kleiner Kopf mit vier Augen und Nackenflosse, wuchtige Schultern, Unterarme mit Baendern
+    und Fellflossen, zweites Armpaar am Rumpf, kraeftige Beine. Einheiten = 1/16 Block, vorn = -z; Farben ueber
+    Rollen, drei Uniformen. Darstellung 1,3-fach (Spielergroesse ca. 2,5 Bloecke)."""
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 15, 0), [
-                 Part((-5, 15, -3), (10, 4, 6), "ref:" + ref + "pelvis"),
-                 Part((-6, 19, -3), (12, 13, 6), "ref:" + ref + "torso|plainback"),
-             ])]
-    bones += limb_pair(
-        arm=[((-12.5, 25, -3), (6, 7, 6), "ref:" + ref + "sleeve_r"),                               # weisser Aermel
-             ((-12, 19, -2.5), (5, 6, 5), "ref:" + ref + "arm_r@0,0,12,10"),
-             *[((-13, y, z), (1, h, 1), c) for y, z, h, c in FA_TUFTS_UPPER]],                        # Fellzacken
-        forearm=[((-12.5, 12, -3), (6, 7, 6), "ref:" + ref + "arm_r@0,10,12,10"),
-                 *[((-13.5, y, z), (1, h, 1), c) for y, z, h, c in FA_TUFTS_FIST]],
-        leg=[((-5.3, 9, -2.5), (5, 6, 5), "ref:" + ref + "leg_r@0,0,10,12")],
-        shin=[((-5.3, 3, -2.5), (5, 6, 5), "ref:" + ref + "leg_r@0,12,10,12"),
-              ((-5.5, 0, -3.5), (5, 3, 6), "ref:" + ref + "foot_r")],
-        shoulder=(7, 30), elbow=(9.5, 19), hip=(2.8, 15), knee=(2.8, 9))
+             Bone("body", "root", (0, 13, 0), [
+                 Part((-3.5, 12, -2), (7, 3, 5), "role:PANTS"),                                         # Becken
+                 Part((-4, 15, -2.5), (8, 6, 6), "role:SKIN"),                                          # Bauch
+                 Part((-4, 14.5, -2.5), (8, 1, 6), "role:BELT", inflate=0.3),                           # Guertel
+             ]),
+             Bone("chest", "body", (0, 21, 0.5), [
+                 Part((-6, 21, -3), (12, 7, 7), "role:SHIRT"),                                          # Brust
+                 Part((-1, 21, -3.2), (2, 7, 1), "role:STRIPE"),                                        # Mittelstreifen
+                 Part((-6, 24, -3.4), (12, 1, 1), "role:STRAP", rotation=(0, 0, 32), pivot=(0, 24.5, -3)),   # X-Gurt
+                 Part((-6, 24, -3.5), (12, 1, 1), "role:STRAP", rotation=(0, 0, -32), pivot=(0, 24.5, -3)),
+                 Part((-1.5, 23.5, -3.8), (3, 3, 1), "clean:#141414", detail="badge6"),                 # Omnitrix
+                 Part((-3, 28, -1.5), (6, 1, 4), "role:SKIN"),                                          # Nacken
+             ], rotation=(-8, 0, 0)),
+             Bone("head", "chest", (0, 29, 0), [
+                 Part((-2, 29, -2), (4, 5, 4), "role:SKIN", detail="four_eyes"),
+                 Part((-2, 28.5, -2.4), (4, 1, 2), "role:SKIN_DARK"),                                   # Kiefer
+                 Part((-0.5, 31, 1.5), (1, 3, 2), "role:SKIN_DARK", rotation=(55, 0, 0), pivot=(0, 31, 2)),  # Nackenflosse
+             ]),
+             ]
     for side_name, side in (("right", -1), ("left", 1)):
-        mirror = side > 0
-        lower = f"ref:{ref}lower_{'r' if side < 0 else 'l'}"
         bones += [
-            # unteres Armpaar wie in der Vorlage VOR der Rumpfkante: sichtbarer Fell-Oberarm, Unterarm, Faust
-            Bone(f"{side_name}_lower_arm", "body", (5.5 * side, 24, -1.5), [
-                Part((mirror_x(-7.5, 4, side), 18, -3.8), (4, 6, 4), lower + "@0,0,10,6", mirror=mirror),
-                *[Part((mirror_x(-8.5, 1, side), y, z), (1, h, 1), c, mirror=mirror) for y, z, h, c in FA_TUFTS_LOWER]],
-                rotation=(0, 0, 4 * -side)),
-            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (5.5 * side, 18, -1.5), [
-                Part((mirror_x(-8, 5, side), 11, -4.3), (5, 7, 5), lower + "@0,6,10,8", mirror=mirror)]),
+            Bone(f"{side_name}_arm", "chest", (5.5 * side, 26, 0.5), side_parts([
+                ((-10, 22, -2.5), (5, 5, 5), "role:SLEEVE", {"rotation": (12, 0, -17), "pivot": (-7.5, 24.5, 0)}),  # Schulter
+                ((-10, 17, -1.5), (4, 6, 4), "role:SKIN", {"rotation": (8, 0, 20), "pivot": (-7.5, 22, 0)}),      # Bizeps
+            ], side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (8.5 * side, 18, 0.5), side_parts([
+                ((-11.5, 11, -1.5), (4, 7, 4), "role:SKIN"),                                            # Unterarm
+                ((-11.5, 12, -1.5), (4, 2, 4), "role:BAND", {"inflate": 0.3}),                          # Armband
+                ((-12.5, 13, 0), (1, 4, 1), "role:SKIN_DARK", {"rotation": (0, 0, -15), "pivot": (-12, 15, 0.5)}),  # Flossen
+                ((-12.5, 14, -1.5), (1, 3, 1), "role:SKIN_DARK", {"rotation": (0, 0, -15), "pivot": (-12, 15, -1)}),
+                ((-11.5, 7.5, -2), (4, 4, 5), "role:SKIN", {"inflate": 0.2}),                           # Faust
+            ], side)),
+            Bone(f"{side_name}_lower_arm", "body", (4.5 * side, 20.5, 0.5), side_parts([
+                ((-8, 15.5, -1.5), (4, 5, 4), "role:SKIN", {"rotation": (7, 0, 15), "pivot": (-5, 20.5, 0)}),
+            ], side)),
+            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (6.5 * side, 16, 0.5), side_parts([
+                ((-9, 9.5, -1.5), (4, 6, 4), "role:SKIN"),
+                ((-9, 10.5, -1.5), (4, 2, 4), "role:BAND", {"inflate": 0.3}),
+                ((-9, 6.5, -2), (4, 3, 4), "role:SKIN", {"inflate": 0.2}),                               # Faust
+            ], side)),
+            Bone(f"{side_name}_leg", "root", (2 * side, 13, 0.5), side_parts([
+                ((-4, 7, -1.5), (4, 7, 4), "role:PANTS", {"rotation": (-5, 0, 3), "pivot": (-2, 13, 0.5)}),   # Oberschenkel
+            ], side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (2.2 * side, 7.5, 0.5), side_parts([
+                ((-4, 1.5, -1.5), (3, 6, 3), "role:PANTS", {"inflate": 0.1}),                           # Wade
+                ((-4, 6, -1.5), (3, 1, 3), "role:BAND", {"inflate": 0.35}),                              # Knieband
+                ((-4.5, 0, -2.5), (4, 2, 5), "role:FOOT"),                                              # Fuss
+            ], side)),
         ]
-    for bone in bones:
-        if bone.name.startswith("left_") and "lower" not in bone.name:
-            for part in bone.cubes:
-                part.material = part.material.replace("sleeve_r", "sleeve_l").replace("arm_r", "arm_l") \
-                    .replace("leg_r", "leg_l").replace("foot_r", "foot_l")
-        if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)                    # abgespreizt wie Vorlage
-    bones.append(Bone("head", "body", (0, 32, 0), [
-        Part((-3, 32, -3), (6, 6, 6), "clean:#C8141E", detail="ref:" + ref + "head"),
-        Part((-2.5, 31, -3.4), (5, 1, 1), "clean:#1E1E22"),                                         # Kragen vorn
-    ]))
-    alien = Alien("four_arms", (96, 96), bones, "#C0392B", style="heavy", glow=True, density=2, render_scale=0.82,
-                  arms=("ref:four_arms/arm_full", "ref:four_arms/arm_full"))
+    alien = Alien("four_arms", (128, 128), bones, "#C0392B", style="heavy", glow=True, density=2, render_scale=1.3,
+                  arms=("role:SKIN", "role:SKIN"), uniforms=FOUR_ARMS_UNIFORMS)
     pack_uvs(alien)
     return alien
 
