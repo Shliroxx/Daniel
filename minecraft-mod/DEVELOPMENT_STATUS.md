@@ -27,6 +27,13 @@ Ab jetzt gilt: Qualität vor Menge. Keine neuen Inhalte, bevor Aliens, Keyblades
 ---
 
 ## STILVORGABE ALIENS (Entscheidung SANTIQ, 2026-10-02, endgültig)
+**1:1-Nachbau nach Alien Evolution** (Erlaubnis des Autors laut SANTIQ, Fanprojekt; siehe
+`tools/reference/README.md`). Technik: doppelte Texturdichte (PNG 2× so groß wie in der .geo.json angegeben),
+Vorderseiten aus der Vorlage abgetastet, Seiten/Rücken mit der Vorlagen-Palette, Farben fürs Spiel-Licht
+angehoben, Proportionen der Vorlage (Heatblast Kopf : Rumpf : Beine = 8 : 16 : 14, Darstellungsgröße 0,84 über
+`assets/kingdomomnitrix/alien_render/<alien>.json`). Stand: **Heatblast fertig (Rework 1)**, XLR8, Vierarm,
+Diamondhead, Grey Matter folgen nach demselben Verfahren.
+
 **Würfelstil auf Alien-Evolution-Niveau.** Der zwischenzeitliche Cartoon-Renderer (runde Netze) wurde verworfen
 und entfernt. Ziel: detaillierte Würfelmodelle (viele Teile, schräge Teile, Brocken, Krallen, Zungen) mit
 handgemalt wirkender Schattierung (Lichtverlauf, Glanzkante, Kontaktschatten, Pixel-Cluster in drei Tönen).
@@ -122,6 +129,9 @@ Reihenfolge = Abarbeitungsreihenfolge.
 13. [ ] **World-Rework** — Traverse Town (NBT-Strukturen), Arena, Weltraum.
 
 ## BUGS
+- BEHOBEN: Leere Leuchtmaske ließ GeckoLib abstürzen → Generator schreibt Masken nur mit Pixeln.
+- BEHOBEN: Absturz im Alien-Renderer hinterließ Matrizen auf dem Stapel („Pose stack not empty“, schwarzes Bild)
+  → Rückfall räumt den Stapel auf.
 - BEHOBEN: Andere Spieler sahen jedes Alien nur in `idle`, auch beim Laufen — GeckoLibs `isMoving()` nutzt die
   Geschwindigkeit, die der Client für fremde Spieler nicht kennt. Jetzt: Gliedmaßen-Animator + Positionsänderung.
 - PRÜFEN: Herzlose, NPCs und Boss nutzen ebenfalls `isMoving()` (bei Mobs synchronisiert der Server die

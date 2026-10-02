@@ -140,10 +140,15 @@ public final class AlienBodyRenderers {
 		if (FAILED.contains(model)) {
 			return false;
 		}
+		MatrixStack.Entry saved = matrices.peek();
 		try {
 			RENDERERS.computeIfAbsent(model, AlienBodyRenderers::create).render(player, yaw, tickDelta, matrices, vertexConsumers, renderLight);
 			return true;
 		} catch (RuntimeException e) {
+			// Abbruch mitten im Zeichnen laesst Matrizen auf dem Stapel — aufraeumen, sonst bricht der ganze Frame ab
+			while (!matrices.isEmpty() && matrices.peek() != saved) {
+				matrices.pop();
+			}
 			FAILED.add(model);
 			KingdomOmnitrix.LOGGER.error("Alien-Koerper {} konnte nicht gezeichnet werden, nutze Spielermodell", model, e);
 			return false;
@@ -166,10 +171,30 @@ public final class AlienBodyRenderers {
 		Identifier assetPath = Identifier.of(model.getNamespace(), "alien/" + model.getPath());
 		GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> renderer =
 				new GeoReplacedEntityRenderer<>(context, new DefaultedEntityGeoModel<>(assetPath, true), new AlienBodyAnimatable());
+		float scale = renderScale(model);
+		if (scale != 1.0f) {
+			renderer.withScale(scale);
+		}
 		Identifier glowmask = Identifier.of(model.getNamespace(), "textures/entity/alien/" + model.getPath() + "_glowmask.png");
 		if (MinecraftClient.getInstance().getResourceManager().getResource(glowmask).isPresent()) {
 			renderer.addRenderLayer(new AutoGlowingGeoLayer<>(renderer));
 		}
 		return renderer;
+	}
+
+	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. */
+	private static float renderScale(Identifier model) {
+		Identifier file = Identifier.of(model.getNamespace(), "alien_render/" + model.getPath() + ".json");
+		var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
+		if (resource.isEmpty()) {
+			return 1.0f;
+		}
+		try (var reader = resource.get().getReader()) {
+			float scale = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject().get("scale").getAsFloat();
+			return scale > 0.05f && scale < 5.0f ? scale : 1.0f;
+		} catch (java.io.IOException | RuntimeException e) {
+			KingdomOmnitrix.LOGGER.error("Darstellungsgroesse {} unlesbar, nutze 1", file, e);
+			return 1.0f;
+		}
 	}
 }
