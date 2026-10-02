@@ -87,3 +87,34 @@ und Arena-Terminal mit Bildschirm (Leuchtmaske), Bolt-Kiste im R&C-Stil.
 
 Wie Heatblast/XLR8/Vierarm/Diamondhead (Vorlage `GalvanOS.png`, Galvan ist dort sehr nah gerendert — Maßstab über
 Augen/Anzugbreite bestimmen).
+
+---
+
+## VIDEO-ANALYSE ALIEN EVOLUTION (2026-10-02)
+
+Quellen (von SANTIQ vorgegeben): „Alien Evolution Full Showcase!! Ben 10 Mod“ (Lovernite, 16:55,
+youtube.com/watch?v=XDcQr4Rocfw) und „Minecraft Mod Review | ALIEN EVOLUTION“ (K.Overlegen, 0:59,
+youtube.com/shorts/5u6ZCdhwywQ). Ausgewertet über `youtube-for-ai-agents` (InnerTube, ANDROID-Client):
+103 bzw. 61 Storyboard-Bilder (160×90, alle 10 s bzw. 1 s). Video-Download aus der Cloud blockiert YouTube
+(„Sign in to confirm you're not a bot“), Untertitel gibt es keine — die Analyse beruht nur auf Standbildern.
+Bilder bleiben lokal (Urheberrecht der Kanäle), hier nur die Erkenntnisse.
+
+**Was AE besser macht als wir (sichtbar in den Bildern):**
+1. **Omnitrix am linken Handgelenk in Ego-Sicht** — dickes 3D-Gerät, Sanduhr leuchtet grün (emissiv), beim
+   Aktivieren klappt das Zifferblatt hoch. Taucht in fast jeder Ego-Szene auf → Markenzeichen. (= Auftrag 2)
+2. **Verwandlungsblitz füllt den ganzen Bildschirm** grün-gelb, danach steht das Alien im Partikelnebel.
+3. **Fähigkeiten mit großen Welt-Effekten:** Diamondhead lässt meterhohe Kristallsäulen/-wände aus dem Boden
+   wachsen; Vierarm-Klatschen mit weißer Druckwelle und Staub; XLR8 rennt über Wasser mit Gischt; Heatblast
+   Feuerbälle mit Explosion; Upgrade/Ultra-T mit grünen Schaltkreis-Linien über dem Körper; Wildmutt mit
+   schwarzer Sicht und grünen Umrissen (Echo-Sicht).
+4. **Alien-Größen** deutlich über dem Spieler (Vierarm, Diamondhead ~1,3×), kleine Aliens klein (Grey Matter).
+5. **Galvan-Maschinen** als Blöcke mit leuchtenden grünen Tasten-Panelen (emissiv), Bildschirm-Displays.
+6. **Omnitrix-Menü im Inventar** mit Alien-Silhouetten als Kacheln (Playlist).
+
+**Neue Aufträge (Priorität):**
+- **A2 Omnitrix 3D am Handgelenk** (Ego + Third-Person), Sanduhr-Leuchtmaske, Animation beim Rad-Öffnen.
+- **A8 Verwandlungsblitz** als Vollbild-Overlay (0,4 s, grün → weiß → aus) zusätzlich zum Körper-Leuchten.
+- **A9 Fähigkeits-VFX in der Welt:** Diamondhead-Kristallsäulen (temporäre Display-Entities, wachsen + zerfallen),
+  Vierarm-Druckwelle (Ring-Partikel + Staub), XLR8-Gischt auf Wasser.
+- **A10 Alien-Größen** an AE angleichen (render scale + Hitbox prüfen).
+- **A11 Terminals/Schmiede** mit emissiven Panelen (Leuchtmaske, Blockmodell statt Würfel).
