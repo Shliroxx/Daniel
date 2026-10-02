@@ -118,7 +118,32 @@ def heatblast(src: Image.Image) -> dict[str, Image.Image]:
     return out
 
 
-ALIENS = {"heatblast": heatblast}
+def xlr8(src: Image.Image) -> dict[str, Image.Image]:
+    """XLR8 (Kineceleran), Vorlage KineceleranOS: ~24,5 px pro Einheit, Texel 12,25 px (doppelte Dichte)."""
+    out = {
+        "head": rect(src, 227, 14, 423, 196, 16, 16),
+        "torso": inpaint(inpaint(rect(src, 218, 210, 432, 574, 20, 30), (7, 9, 13, 15)), (0, 12, 2, 19)),
+        "pad_r": rect(src, 105, 212, 204, 336, 8, 10),
+        "pad_l": rect(src, 446, 212, 545, 336, 8, 10),
+        # Arme: Bild-rechts (ohne verdeckenden Schwanz) fuer beide Seiten
+        "arm_upper": outline(src, 336, 490, 470, 640, 8, 12),
+        "hand": outline(src, 490, 650, 500, 640, 10, 8),
+        "thigh_r": outline(src, 574, 760, 165, 300, 10, 15),
+        "thigh_l": outline(src, 574, 760, 355, 495, 10, 15),
+        "shin_r": outline(src, 760, 910, 165, 300, 8, 12),
+        "shin_l": outline(src, 760, 910, 355, 495, 8, 12),
+        "foot_r": outline(src, 910, 1000, 130, 290, 10, 7),
+        "foot_l": outline(src, 910, 1000, 360, 520, 10, 7),
+    }
+    upper = out["arm_upper"].resize((10, 24), Image.NEAREST)
+    full = Image.new("RGBA", (10, 32))
+    full.paste(upper, (0, 0))
+    full.paste(out["hand"], (0, 24))
+    out["arm_full"] = full
+    return out
+
+
+ALIENS = {"heatblast": heatblast, "xlr8": xlr8}
 
 
 def main(argv: list[str] | None = None) -> int:

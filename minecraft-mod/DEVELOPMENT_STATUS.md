@@ -94,8 +94,22 @@ leere Leuchtmaske ließ GeckoLib abstürzen; Matrix-Stapel nach Render-Absturz; 
 - Ego-Sicht nutzt die Armform des Spielermodells (4 breit), nicht die breiten Fäuste des Alien-Modells.
 - Angriffs-/Lauf-Animation nur kurz geprüft; Hitzeflimmern nicht umgesetzt (in Vanilla-Shadern nicht sinnvoll).
 
-**Nächster konkreter Visual-Polish-Schritt:** XLR8 nach demselben Verfahren (Vorlage `KineceleranOS.png`
-abtasten, Proportionen messen, Helm/Visier/Schwanz aus der Silhouette), danach Vierarm, Diamondhead, Grey Matter.
+**Nächster konkreter Visual-Polish-Schritt:** ~~XLR8~~ (erledigt, siehe unten), dann Vierarm, Diamondhead,
+Grey Matter nach demselben Verfahren.
+
+## XLR8 — 1:1 REFERENCE REWORK (2026-10-02)
+- Vorlage `tools/reference/source/xlr8.png` (KineceleranOS) vermessen (~24,5 px/Einheit), 13 Teile abgetastet
+  (`tools/sample_reference.py xlr8`): Helm-Front, Rumpf (Logo und überdeckende Armkante ausgefüllt),
+  Schulterpolster, Arm, Krallenhand, Oberschenkel, Schienbeine, Krallenfüße, Ego-Arm.
+- Geometrie nach Maß: Kopf 8, Rumpf 10×15×5, Schulterpolster 5×5×6, Oberarm 4×6, Unterarm 4×5 mit heller Flosse,
+  Hand 5×4 mit Krallen, Oberschenkel 5×8, Schienbein 4×6, Fuß 6×3×7 mit Ferse, Schwanz (schwarz/türkis).
+- Rücken des Rumpfs aus den Seitenspalten statt gespiegelt (`|plainback`) — sonst trug XLR8 das Brustpaneel hinten.
+- Transparente Vorlagenpixel werden mit der Durchschnittsfarbe der jeweiligen Vorlage gefüllt (vorher fest
+  Heatblast-Bordeaux → rote Kanten auf XLR8s Schulterpolstern).
+- Grüne Augen leuchten; Ego-Sicht zeigt XLR8-Arme (`xlr8_arms.png`).
+- Offen: Schwanzseiten generisch gestreift (Vorlage zeigt ihn nur teilweise), Ego-Hand liegt teils unter dem
+  Omnitrix-HUD (HUD-Position prüfen), Sprint-Animation nach dem Umbau nicht erneut gefilmt.
+
 
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
@@ -133,7 +147,7 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 | Spieler (Mensch) | 50 (Vanilla) | 50 | 45 (playerAnimator Combo) | 55 | 50 | 50 | 50 | POLISH NEEDED |
 | Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
 | Heatblast | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn, doppelte Dichte) | 50 | 55 (Glut, Funken) | 50 | 50 | 68 | FINAL POLISH (echte Rückseite) |
-| XLR8 | 50 | 60 (Anzug mit Brustpaneel, Helm mit Gesichtsplatte) | 50 | 35 | 45 | 45 | 52 | POLISH NEEDED |
+| XLR8 | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn) | 50 | 40 | 45 | 45 | 66 | FINAL POLISH (Schwanz, Sprint) |
 | Vierarm | 55 (4 Arme sichtbar, breit) | 55 (Hemd, Fellarme, 4 Augen) | 45 (schwerer Gang) | 35 | 45 | 40 | 50 | POLISH NEEDED |
 | Diamondhead | 55 (Kristallarme, Schulterkristalle) | 55 (Kristallbänder, Anzug schwarz/weiß) | 45 | 35 | 45 | 40 | 50 | POLISH NEEDED |
 | Grey Matter | 50 (großer Kopf, Augen) | 55 | 45 (flinker Gang) | 30 | 45 | 35 | 48 | POLISH NEEDED |

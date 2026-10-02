@@ -297,9 +297,9 @@ def paint_flat(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise
 
 
 # XLR8: schwarzer Glanzpanzer mit blauer Lichtkante, blauer Anzug mit Nahtlinien, leuchtendes Visier
-ARMOR = rgb("#15171F")
+ARMOR = rgb("#25252A")
 ARMOR_RIM = rgb("#3D7BFF")
-SUIT = rgb("#1F5BD6")
+SUIT = rgb("#56C4D6")
 SUIT_SEAM = rgb("#123A8F")
 VISOR_LOW = rgb("#1C6DFF")
 VISOR_HIGH = rgb("#9FE9FF")
@@ -517,7 +517,9 @@ def ingame(color: Color, saturation: float = 1.2, value: float = 1.06) -> Color:
 def is_hot(color: Color) -> bool:
     """Gelbe und orange Glut leuchtet (Leuchtmaske) — sonst dunkelt das Seitenlicht von Minecraft das Blassgelb der
     Vorlage zu Khaki ab. Dunkelrot und Bordeaux bleiben normal beleuchtet."""
-    return color[0] > 225 and color[1] > 140
+    yellow = color[0] > 225 and color[1] > 140
+    green_eye = color[1] > 200 and color[0] < 210 and color[2] < 120
+    return yellow or green_eye
 
 
 def load_reference(spec: str) -> Image.Image:
@@ -642,14 +644,18 @@ def paint_show_detail(canvas: Canvas, cube: Part, front: Face) -> bool:
 
 
 def paint_ref_material(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
-    """Material "ref:<name>[@x,y,b,h]": Vorderseite = Vorlage, Rueckseite = gespiegelt, Seiten = Randspalten der
-    Vorlage gestreckt, oben/unten = oberste/unterste Zeile. Seiten werden leicht abgedunkelt (Tiefe)."""
-    img = load_reference(cube.material[4:])
+    """Material "ref:<name>[@x,y,b,h][|plainback]": Vorderseite = Vorlage, Rueckseite = gespiegelt (oder mit
+    "|plainback" aus den Randspalten, z. B. wenn vorn ein Brustpaneel ist), Seiten = Randspalten gestreckt,
+    oben/unten = oberste/unterste Zeile. Transparente Vorlagenpixel bekommen die Durchschnittsfarbe der Vorlage."""
+    spec, _, option = cube.material[4:].partition("|")
+    img = load_reference(spec)
     w, h = img.size
+    opaque = [px[:3] for px in img.get_flattened_data() if px[3] >= 128]
+    fallback = tuple(sum(c[i] for c in opaque) // len(opaque) for i in range(3)) if opaque else (60, 60, 60)
     if face.name == "north":
         src = img
     elif face.name == "south":
-        src = img.transpose(Image.FLIP_LEFT_RIGHT)
+        src = img.crop((0, 0, max(1, w // 4), h)) if option == "plainback" else img.transpose(Image.FLIP_LEFT_RIGHT)
     elif face.name == "east":
         src = img.crop((0, 0, max(1, w // 3), h))
     elif face.name == "west":
@@ -664,7 +670,7 @@ def paint_ref_material(canvas: Canvas, face: Face, cube: Part, rng: random.Rando
         for px in range(face.w):
             r, g, b, a = src.getpixel((px, py))
             if a < 128:
-                r, g, b = PYRO_SOURCE_RGB[4] if PYRO_SOURCE_RGB else (120, 40, 50)
+                r, g, b = fallback
             base = ingame((r, g, b))
             hot = is_hot(base) and face.name != "down"
             canvas.put(face.x + px, face.y + py, base if hot else scale(base, shade), glow=hot)
@@ -993,44 +999,51 @@ def heatblast() -> Alien:
 
 
 def xlr8() -> Alien:
-    """XLR8 (Kineceleran): schwarzer Anzug mit weissem Brustpaneel und Guertel, grosse Schulterpolster, tuerkise
-    Arme mit Flossen und Streifen, Krallenhaende, Knieschuetzer, tuerkise Schienbeine mit Krallenfuessen, Helm mit
-    Gesichtsplatte, Kamm und Nackenflosse, gestreifter Schwanz."""
-    dark = "clean:#1C1C20"
+    """XLR8 (Kineceleran), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+
+    Masse aus dem Vorlagen-Render (tools/sample_reference.py xlr8), Einheiten = 1/16 Block:
+    Kopf 8 (schwarzer Helm, tuerkise Gesichtsplatte, gruene Augen), Rumpf 10x15 mit weissem Mittelpaneel und
+    Guertel, Schulterpolster 5x5x6, Oberarm 4x6, Unterarm 4x5 mit heller Flosse, Krallenhand 5x4, Oberschenkel
+    5x8, Schienbein 4x6, Krallenfuss 6x3x7 mit Ferse, Schwanz in drei Gliedern."""
+    ref = "xlr8/"
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 12, 0), [
-                 Part((-4, 12, -2), (8, 12, 4), "panel"),
-                 Part((-2.5, 17.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
-                 Part((-4.5, 13.5, -2.5), (9, 1, 5), "clean:#8F96A3"),                                    # Guertel
-                 Part((-3.5, 15, 1.8), (7, 8, 1), "clean:#2A2A2E"),                                       # Rueckenplatte
-             ], rotation=(6, 0, 0))]
+             Bone("body", "root", (0, 17, 0), [
+                 Part((-5, 17, -2.5), (10, 15, 5), "ref:" + ref + "torso|plainback"),
+                 Part((-1.5, 25.5, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
+             ], rotation=(4, 0, 0))]
     bones += limb_pair(
-        arm=[((-8, 18, -2), (4, 6, 4), "clean:#56C4D6"),
-             ((-9, 21, -3), (5, 3, 6), "clean:#2A2A2E"),                                                  # Schulterpolster
-             ((-9.2, 20, -2.5), (1, 1, 5), "clean:#56C4D6")],                                             # Polsterkante
-        forearm=[((-8, 12, -2), (4, 6, 4), "clean:#56C4D6"),
-                 ((-8.25, 15, -2.25), (4, 1, 4), "clean:#3D9BB0", {"inflate": 0.1}),                     # Armstreifen
-                 ((-9, 12.5, -0.5), (1, 5, 2), "clean:#3D9BB0"),                                          # Flosse aussen
-                 ((-8.25, 9, -2.25), (4, 3, 4), dark, {"inflate": 0.25}),                                 # Hand
-                 ((-8, 8, -2.5), (1, 1, 1), "clean:#D9E3E8"), ((-6, 8, -2.5), (1, 1, 1), "clean:#D9E3E8")],  # Krallen
-        leg=[((-4, 6, -2), (4, 6, 4), "clean:#232327")],
-        shin=[((-4, 1, -2), (4, 5, 4), "clean:#56C4D6"),
-              ((-4.3, 4.5, -2.6), (4, 2, 1), "clean:#2A2A2E"),                                            # Knieschutz
-              ((-4, 0, -3.5), (4, 1, 5), dark),                                                           # Fuss
-              ((-4, 0, -4.5), (1, 1, 1), "clean:#D9E3E8"), ((-1, 0, -4.5), (1, 1, 1), "clean:#D9E3E8")],  # Zehenkrallen
-        elbow=(6, 18))
+        arm=[((-9, 25, -2), (4, 6, 4), "ref:" + ref + "arm_upper"),
+             ((-10, 27, -3), (5, 5, 6), "ref:" + ref + "pad_r")],                                    # Schulterpolster
+        forearm=[((-9, 20, -2), (4, 5, 4), "ref:" + ref + "arm_upper"),
+                 ((-10, 20, -0.5), (1, 5, 2), "clean:#8FF0F5", {"rotation": (0, 0, 8), "pivot": (-10, 22, 0)}),  # Flosse
+                 ((-9.5, 16, -2.5), (5, 4, 5), "ref:" + ref + "hand"),
+                 ((-9.5, 15, -3), (1, 1, 1), "clean:#D9E3E8"), ((-7.5, 15, -3), (1, 1, 1), "clean:#D9E3E8"),
+                 ((-5.5, 15, -3), (1, 1, 1), "clean:#D9E3E8")],                                     # Krallen
+        leg=[((-5, 9, -2.5), (5, 8, 5), "ref:" + ref + "thigh_r")],
+        shin=[((-4.5, 3, -2), (4, 6, 4), "ref:" + ref + "shin_r"),
+              ((-5, 0, -4), (6, 3, 7), "ref:" + ref + "foot_r"),
+              ((-4.5, 0, 2), (4, 2, 2), "clean:#202024")],                                          # Ferse
+        shoulder=(5, 30), elbow=(7, 25), hip=(2.6, 17), knee=(2.6, 9))
+    for bone in bones:
+        if bone.name.startswith("left_"):
+            for part in bone.cubes:
+                part.material = part.material.replace("pad_r", "pad_l").replace("thigh_r", "thigh_l") \
+                    .replace("shin_r", "shin_l").replace("foot_r", "foot_l")
+        if bone.name in ("right_arm", "left_arm"):
+            bone.rotation = (0, 0, 6 if bone.name == "right_arm" else -6)
     bones += [
-        Bone("head", "body", (0, 24, 0), [
-            Part((-4, 24, -4), (8, 8, 8), "clean:#1C1C20", detail="xlr8_face"),
-            Part((-1, 32, -3), (2, 1, 6), "clean:#2A2A2E"),                                               # Helmkamm
-            Part((-1, 28, 4), (2, 4, 2), "clean:#2A2A2E", rotation=(-20, 0, 0), pivot=(0, 30, 4)),       # Nackenflosse
-            Part((-4.4, 25, -3), (1, 3, 4), "clean:#2A2A2E"), Part((3.4, 25, -3), (1, 3, 4), "clean:#2A2A2E"),  # Wangen
-        ], rotation=(-6, 0, 0)),
-        Bone("tail_1", "body", (0, 13, 2), [Part((-1.5, 11.5, 2), (3, 3, 5), "stripe")], rotation=(-12, 0, 0)),
-        Bone("tail_2", "tail_1", (0, 13, 7), [Part((-1, 12, 7), (2, 2, 5), "stripe")], rotation=(-6, 0, 0)),
-        Bone("tail_3", "tail_2", (0, 13, 12), [Part((-0.5, 12.5, 12), (1, 1, 5), "stripe")], rotation=(-4, 0, 0)),
+        Bone("head", "body", (0, 32, 0), [
+            Part((-4, 32, -4), (8, 8, 8), "clean:#1C1C20", detail="ref:" + ref + "head"),
+            Part((-1, 40, -3), (2, 1, 6), "clean:#2A2A2E"),                                          # Helmkamm
+        ], rotation=(-4, 0, 0)),
+        Bone("tail_1", "body", (0, 18, 2.5), [Part((-1.5, 16.5, 2.5), (3, 3, 6), "stripe")], rotation=(-14, 0, 0)),
+        Bone("tail_2", "tail_1", (0, 18, 8.5), [Part((-1, 17, 8.5), (2, 2, 6), "stripe")], rotation=(-8, 0, 0)),
+        Bone("tail_3", "tail_2", (0, 18, 14.5), [Part((-0.5, 17.5, 14.5), (1, 1, 6), "stripe")], rotation=(-5, 0, 0)),
     ]
-    return finish("xlr8", bones, "#1E90FF", "fast")
+    alien = Alien("xlr8", (96, 96), bones, "#1E90FF", style="fast", glow=True, density=2, render_scale=0.85,
+                  arms=("ref:xlr8/arm_full", "ref:xlr8/arm_full"))
+    pack_uvs(alien)
+    return alien
 
 
 def four_arms() -> Alien:
