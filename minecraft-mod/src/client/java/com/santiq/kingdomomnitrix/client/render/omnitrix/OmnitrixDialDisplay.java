@@ -1,5 +1,8 @@
 package com.santiq.kingdomomnitrix.client.render.omnitrix;
 
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
+
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +50,7 @@ public final class OmnitrixDialDisplay {
 		OmnitrixController.Entry entry = local ? OmnitrixController.focused().orElse(null) : null;
 		boolean unlocked = entry == null || entry.unlocked();
 		float confirm = local && OmnitrixController.phase() == OmnitrixPhase.CONFIRMING
-				? MathHelper.clamp(OmnitrixController.phaseTime() / 0.42f, 0.0f, 1.0f) : 0.0f;
+				? MathHelper.clamp(OmnitrixController.phaseTime() / OmnitrixController.confirmTime(), 0.0f, 1.0f) : 0.0f;
 		float time = (System.nanoTime() % 1_000_000_000_000L) / 1.0e9f;
 		// Kern-Dreh beim Weiterschalten: Rest der Rad-Feder als Viertel-Drehung
 		float twist = local ? OmnitrixController.twist() * MathHelper.HALF_PI : 0.0f;
@@ -65,7 +68,15 @@ public final class OmnitrixDialDisplay {
 		float r;
 		float g;
 		float b;
-		if (!unlocked) {
+		// Geraete-Zustand geht vor: gesperrt grau, ueberhitzt rot, Warnung gelb (blinkt mit dem Zustands-Puls)
+		var player = net.minecraft.client.MinecraftClient.getInstance().player;
+		OmnitrixStatus device = local && player != null ? OmnitrixCore.status(player) : OmnitrixStatus.READY;
+		if (device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || device == OmnitrixStatus.WARNING) {
+			float light = 0.45f + 0.55f * device.light(time) / Math.max(0.01f, device.brightness());
+			r = ((device.color() >> 16) & 0xFF) / 255.0f * light;
+			g = ((device.color() >> 8) & 0xFF) / 255.0f * light;
+			b = (device.color() & 0xFF) / 255.0f * light;
+		} else if (!unlocked) {
 			r = 0.32f;
 			g = 0.38f;
 			b = 0.32f;

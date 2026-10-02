@@ -43,6 +43,18 @@ EVENTS: dict[str, tuple[str, int]] = {
     "omnitrix.revert": ("omnitrix_revert", 1),
     "omnitrix.beep": ("omnitrix_beep", 1),
     "omnitrix.select": ("omnitrix_select", 1),
+    "omnitrix.activate": ("omnitrix_activate", 1),
+    "omnitrix.open": ("omnitrix_open", 1),
+    "omnitrix.navigate": ("omnitrix_navigate", 2),
+    "omnitrix.confirm": ("omnitrix_confirm", 1),
+    "omnitrix.cancel": ("omnitrix_cancel", 1),
+    "omnitrix.error": ("omnitrix_error", 1),
+    "omnitrix.warning": ("omnitrix_warning", 1),
+    "omnitrix.overheat": ("omnitrix_overheat", 1),
+    "omnitrix.ready": ("omnitrix_ready", 1),
+    "omnitrix.unlock": ("omnitrix_unlock", 1),
+    "omnitrix.lock": ("omnitrix_lock", 1),
+    "omnitrix.master_control": ("omnitrix_master_control", 1),
     "alien.fire": ("alien_fire", 2),
     "alien.slam": ("alien_slam", 1),
     "alien.dash": ("alien_dash", 2),
@@ -259,6 +271,89 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
     def omnitrix_select():
         return osc(sweep(1100, 1500, 0.08), 0.08) * adsr(0.08, 0.004, 0.05)
 
+    def omnitrix_activate():
+        # Geraet erwacht: tiefer Puls, Servo-Surren nach oben, heller Ping
+        s = 0.55
+        pulse = thump(0.25, 140, 60, 12) * 0.7
+        servo = lowpass(osc(sweep(220, 880, 0.3, 0.8), 0.3, "saw"), 1800) * adsr(0.3, 0.02, 0.1) * 0.35
+        ping = bell(1975, 0.3, 9.0) * 0.5
+        return reverb(mix(s, pulse, at(servo, 0.05, s), at(ping, 0.28, s)), 0.2)
+
+    def omnitrix_open():
+        # Gehaeuse oeffnet sich: mechanisches Klacken, Druckluft, Kern faehrt aus
+        s = 0.5
+        clack = metal(0.12, 900, 30) * 0.5
+        hiss = bandpass(noise(0.3), 2500, 7000) * adsr(0.3, 0.01, 0.25) * 0.3
+        rise = osc(sweep(400, 1200, 0.25), 0.25, "tri") * adsr(0.25, 0.02, 0.1) * 0.3
+        return mix(s, clack, at(hiss, 0.04, s), at(rise, 0.12, s))
+
+    def omnitrix_navigate(v):
+        # Rastung des Rads: kurzes Klicken mit Tonhoehe je Variante
+        base = 1350 if v == 0 else 1550
+        click = metal(0.05, base * 0.7, 80) * 0.35
+        tick = osc(sweep(base, base * 1.15, 0.04), 0.04) * adsr(0.04, 0.002, 0.03) * 0.5
+        return mix(0.07, click, tick)
+
+    def omnitrix_confirm():
+        # Auswahl bestaetigt: Energieaufbau (steigender Ton) mit Doppelpiep
+        s = 0.5
+        charge = lowpass(osc(sweep(300, 2200, 0.42, 1.6), 0.42, "saw"), sweep(800, 7000, 0.42)) * adsr(0.42, 0.02, 0.05) * 0.4
+        beeps = at(omnitrix_beep() * 0.6, 0.0, s) + at(omnitrix_beep() * 0.6, 0.16, s)
+        return mix(s, charge, beeps)
+
+    def omnitrix_cancel():
+        s = 0.3
+        down = osc(sweep(1200, 500, 0.18), 0.18, "tri") * adsr(0.18, 0.005, 0.1) * 0.5
+        clack = metal(0.1, 700, 35) * 0.35
+        return mix(s, down, at(clack, 0.12, s))
+
+    def omnitrix_error():
+        # tiefer Doppel-Buzz (verweigert)
+        s = 0.42
+        buzz = lowpass(osc(165, 0.14, "square"), 1400) * adsr(0.14, 0.005, 0.03)
+        return mix(s, buzz * 0.7, at(buzz * 0.7, 0.2, s))
+
+    def omnitrix_warning():
+        # Warnung: drei steigende, harte Pieptoene
+        s = 0.6
+        out = np.zeros(n(s))
+        for i, f in enumerate((1500, 1750, 2050)):
+            out += at(osc(f, 0.1, "square") * adsr(0.1, 0.004, 0.03) * 0.6, i * 0.16, s)
+        return out
+
+    def omnitrix_overheat():
+        # Ueberhitzung: Alarm-Sirene, Funkenknistern, Abschalt-Abfall
+        s = 1.4
+        siren = osc(1200 + 350 * osc(5.5, 0.9), 0.9, "square") * adsr(0.9, 0.01, 0.2) * 0.35
+        sparks = crackle(1.0, 90) * 0.25
+        down = lowpass(osc(sweep(900, 60, 0.6, 0.6), 0.6, "saw"), sweep(3000, 200, 0.6)) * adsr(0.6, 0.01, 0.3) * 0.5
+        return reverb(mix(s, siren, sparks, at(down, 0.8, s)), 0.25)
+
+    def omnitrix_ready():
+        # wieder bereit: zwei aufsteigende Glockentoene
+        s = 0.6
+        return reverb(mix(s, bell(notes["E6"], 0.5, 6.0) * 0.5, at(bell(notes["G6"], 0.45, 6.0) * 0.5, 0.12, s)), 0.2)
+
+    def omnitrix_unlock():
+        # neue DNA: Scan-Sweep und Akkord
+        s = 1.1
+        scan = osc(sweep(600, 2400, 0.5) + 30 * osc(23, 0.5), 0.5, "tri") * adsr(0.5, 0.05, 0.1) * 0.3
+        return reverb(mix(s, scan, at(arpeggio(["C6", "E6", "G6"], 0.09, 0.6, 4.0) * 0.5, 0.45, s)), 0.35)
+
+    def omnitrix_lock():
+        s = 0.5
+        bolt = metal(0.18, 380, 22) * 0.6
+        low = thump(0.3, 120, 50, 10) * 0.6
+        return mix(s, bolt, at(low, 0.04, s))
+
+    def omnitrix_master_control():
+        # Master Control: tiefer Akkord, Schimmer, langer Hall
+        s = 2.0
+        pad_ = chord([130.8, 196.0, 261.6, 392.0], 1.6, "saw")
+        body = lowpass(pad_, sweep(400, 5000, 1.6)) * adsr(1.6, 0.4, 0.8) * 0.35
+        shimmer = osc(sweep(1600, 3200, 1.4), 1.4) * adsr(1.4, 0.6, 0.6) * 0.12
+        return reverb(mix(s, body, at(shimmer, 0.3, s), at(bell(notes["C6"], 1.2, 2.5) * 0.4, 0.5, s)), 0.5, 1.4)
+
     def alien_fire(v):
         s = 0.6
         roar = lowpass(noise(s), sweep(800, 3500 + v * 600, s)) * adsr(s, 0.04, 0.35)
@@ -462,6 +557,11 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
     designs: dict[str, Callable[[], object]] = {
         "omnitrix_transform": omnitrix_transform, "omnitrix_revert": omnitrix_revert,
         "omnitrix_beep": omnitrix_beep, "omnitrix_select": omnitrix_select,
+        "omnitrix_activate": omnitrix_activate, "omnitrix_open": omnitrix_open,
+        "omnitrix_confirm": omnitrix_confirm, "omnitrix_cancel": omnitrix_cancel, "omnitrix_error": omnitrix_error,
+        "omnitrix_warning": omnitrix_warning, "omnitrix_overheat": omnitrix_overheat, "omnitrix_ready": omnitrix_ready,
+        "omnitrix_unlock": omnitrix_unlock, "omnitrix_lock": omnitrix_lock,
+        "omnitrix_master_control": omnitrix_master_control,
         "alien_slam": alien_slam, "combat_finisher": combat_finisher, "combat_guard": combat_guard,
         "combat_dodge": combat_dodge, "magic_fire": magic_fire, "magic_blizzard": magic_blizzard,
         "magic_thunder": magic_thunder, "magic_cure": magic_cure, "magic_mp_empty": magic_mp_empty,
@@ -474,7 +574,7 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         "boss_stomp": boss_stomp, "boss_overload": boss_overload, "boss_death": boss_death,
     }
     variant_designs = {
-        "alien_fire": alien_fire, "alien_dash": alien_dash, "alien_crystal": alien_crystal, "combat_swing": combat_swing,
+        "omnitrix_navigate": omnitrix_navigate, "alien_fire": alien_fire, "alien_dash": alien_dash, "alien_crystal": alien_crystal, "combat_swing": combat_swing,
         "combat_hit": combat_hit, "weapon_combuster": weapon_combuster, "weapon_bolt": weapon_bolt,
         "heartless_ambient": heartless_ambient, "heartless_hurt": heartless_hurt, "boss_hurt": boss_hurt,
     }

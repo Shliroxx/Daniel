@@ -95,8 +95,9 @@ MATERIALS: dict[str, Material] = {
     "omni_bezel": Material("#30343E", "#6A7180", "#9AA2B2", "#C8CEDA", "#F2F5FA", "metal"),
     "omni_light": Material("#0A5A1E", "#1EC84A", "#39FF6A", "#A8FFC0", "#F0FFF4", "glow"),
     "omni_dial_x": Material("#050607", "#0C0E12", "#121519", "#2A2F38", "#39FF6A", "dial_x"),
-    "omni_glow_x": Material("#000000", "#000000", "#000000", "#000000", "#39FF6A", "glowmask_x"),
-    "omni_glow_full": Material("#2AE05A", "#2AE05A", "#39FF6A", "#7DFF9C", "#C8FFD6", "glowfull"),
+    # Leuchtteile weiss: der Renderer faerbt sie je Geraete-Zustand (OmnitrixStatus: gruen, gelb, rot, grau …)
+    "omni_glow_x": Material("#000000", "#000000", "#000000", "#000000", "#FFFFFF", "glowmask_x"),
+    "omni_glow_full": Material("#C8C8C8", "#C8C8C8", "#FFFFFF", "#FFFFFF", "#FFFFFF", "glowfull"),
 }
 
 

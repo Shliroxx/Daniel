@@ -7,6 +7,8 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.client.ui.Icons;
 import com.santiq.kingdomomnitrix.client.ui.UiDraw;
@@ -59,6 +61,8 @@ public final class OmnitrixHud implements HudElement {
 		return HudAnchor.TOP_RIGHT;
 	}
 
+	private static final int HEAT_HEIGHT = 2;
+
 	@Override
 	public int defaultX() {
 		return -4;
@@ -96,9 +100,9 @@ public final class OmnitrixHud implements HudElement {
 	@Override
 	public int height(MinecraftClient client) {
 		int font = client.textRenderer.fontHeight;
-		return transformed(client)
+		return (transformed(client)
 				? PADDING + font + 3 + BAR_HEIGHT + 2 + BAR_HEIGHT + 4 + SLOT_SIZE + PADDING
-				: PADDING + font * 2 + 2 + PADDING;
+				: PADDING + font * 2 + 2 + PADDING) + HEAT_HEIGHT + 2;
 	}
 
 	@Override
@@ -125,8 +129,32 @@ public final class OmnitrixHud implements HudElement {
 		if (state.isTransformed() && alien.isPresent()) {
 			renderTransformed(context, client, state, shownId.get(), alien.get(), now);
 		} else {
-			renderIdle(context, client.textRenderer, state, shownId, alien, now);
+			renderIdle(context, client.textRenderer, player, state, shownId, alien, now);
 		}
+		renderHeat(context, player, height(client));
+	}
+
+	/** Hitze-Leiste am unteren Rand: gruen → gelb (Warnschwelle) → rot; blinkt bei Warnung und Ueberhitzung. */
+	private static void renderHeat(DrawContext context, ClientPlayerEntity player, int panelHeight) {
+		float heat = OmnitrixCore.heat(player);
+		OmnitrixStatus status = OmnitrixCore.status(player);
+		float warning = OmnitrixCore.profile(player).heatWarning();
+		int x = PADDING + 2;
+		int width = WIDTH - x - PADDING;
+		int y = panelHeight - PADDING - HEAT_HEIGHT;
+		int color;
+		if (status == OmnitrixStatus.OVERHEATED || heat >= warning) {
+			boolean on = (System.currentTimeMillis() / 250) % 2 == 0;
+			color = on ? 0xFFFF2A1A : 0xFF8A1A10;
+		} else if (heat >= warning * 0.6f) {
+			color = 0xFFFFC21A;
+		} else {
+			color = 0xFF39FF14;
+		}
+		UiDraw.bar(context, x, y, width, HEAT_HEIGHT, status == OmnitrixStatus.OVERHEATED ? 1.0f : heat, color);
+		// Markierung der Warnschwelle
+		int mark = x + Math.round(width * warning);
+		context.fill(mark, y - 1, mark + 1, y + HEAT_HEIGHT + 1, 0xC0FFFFFF);
 	}
 
 	private static void renderTransformed(DrawContext context, MinecraftClient client, TransformationState state,
@@ -175,7 +203,7 @@ public final class OmnitrixHud implements HudElement {
 		context.getMatrices().pop();
 	}
 
-	private static void renderIdle(DrawContext context, TextRenderer font, TransformationState state,
+	private static void renderIdle(DrawContext context, TextRenderer font, ClientPlayerEntity player, TransformationState state,
 			Optional<Identifier> selectedId, Optional<AlienDefinition> alien, long now) {
 		Text selected = selectedId.isPresent() && alien.isPresent()
 				? TransformationManager.alienName(selectedId.get()).withColor(alien.get().color())
@@ -183,7 +211,13 @@ public final class OmnitrixHud implements HudElement {
 		context.drawTextWithShadow(font, selected, PADDING + 2, PADDING, UiTheme.TEXT);
 
 		long recharge = state.rechargeRemaining(now);
-		Text status = recharge > 0
+		OmnitrixStatus device = OmnitrixCore.status(player);
+		var core = OmnitrixCore.state(player);
+		Text status = device == OmnitrixStatus.LOCKED
+				? Text.translatable("hud.kingdomomnitrix.omnitrix_locked", (core.lockedUntil() - now + 19) / 20).formatted(Formatting.GRAY)
+				: device == OmnitrixStatus.OVERHEATED
+				? Text.translatable("hud.kingdomomnitrix.omnitrix_overheated", (core.overheatedUntil() - now + 19) / 20).formatted(Formatting.RED)
+				: recharge > 0
 				? Text.translatable("hud.kingdomomnitrix.recharging", (recharge + 19) / 20).formatted(Formatting.RED)
 				: Text.translatable("hud.kingdomomnitrix.ready", KeyBindingHelper.getBoundKeyOf(ModKeyBindings.OPEN_OMNITRIX).getLocalizedText())
 						.formatted(Formatting.GREEN);

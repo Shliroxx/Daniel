@@ -13,6 +13,8 @@ import org.joml.Vector3f;
 
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
+import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
@@ -131,12 +133,25 @@ public final class OmnitrixWrist {
 		return pose;
 	}
 
-	/** Leuchtstaerke der Sanduhr: Grundglimmen, offen heller, Schlag voll; Abklingzeit gedimmt und blinkend */
-	private static float glow(AbstractClientPlayerEntity player) {
-		if (player == MinecraftClient.getInstance().player && OmnitrixController.phase() == OmnitrixPhase.COOLDOWN) {
-			return 0.15f + 0.15f * (MathHelper.sin(System.nanoTime() / 1.0e9f * 6.0f) * 0.5f + 0.5f);
+	/**
+	 * Licht der Sanduhr als Farbe (r, g, b, bereits mit Helligkeit): Farbe und Puls aus dem Geraete-Zustand
+	 * ({@link OmnitrixStatus}), dazu Energie beim Oeffnen und der Licht-Puls der Rueckmeldungen.
+	 */
+	private static float[] glow(AbstractClientPlayerEntity player) {
+		boolean local = player == MinecraftClient.getInstance().player;
+		OmnitrixStatus status = OmnitrixController.displayStatus(player);
+		float seconds = (System.nanoTime() % 1_000_000_000_000L) / 1.0e9f;
+		float energy = local ? OmnitrixController.energy() : OmnitrixRemote.energy(player);
+		float brightness = Math.max(status.light(seconds), 0.35f + energy * 0.65f);
+		if (status == OmnitrixStatus.LOCKED || status == OmnitrixStatus.OVERHEATED || status == OmnitrixStatus.COOLDOWN) {
+			brightness = status.light(seconds);
 		}
-		return MathHelper.clamp(0.5f + OmnitrixRemote.energy(player) * 0.5f, 0.0f, 1.0f);
+		if (local) {
+			brightness = Math.min(1.0f, brightness + OmnitrixFeedback.currentLight() * 0.6f);
+		}
+		int color = status.color();
+		return new float[] {((color >> 16) & 0xFF) / 255.0f * brightness, ((color >> 8) & 0xFF) / 255.0f * brightness,
+				(color & 0xFF) / 255.0f * brightness};
 	}
 
 	/**
@@ -155,7 +170,7 @@ public final class OmnitrixWrist {
 		}
 		boolean slim = player.getSkinTextures().model() == SkinTextures.Model.SLIM;
 		float coreLift = OmnitrixRemote.lift(player) * CORE_LIFT;
-		float glow = glow(player);
+		float[] glow = glow(player);
 
 		matrices.push();
 		model.leftArm.rotate(matrices);
@@ -176,7 +191,7 @@ public final class OmnitrixWrist {
 		if (glowModel != null && glowModel != missing) {
 			var eyes = consumers.getBuffer(RenderLayer.getEyes(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE));
 			// Kern-Leuchten faehrt mit, Eck-Leuchten liegen am Gehaeuse (Hub dort unsichtbar klein)
-			renderer.render(matrices.peek(), eyes, null, glowModel, glow, glow, glow, 0xF000F0, OverlayTexture.DEFAULT_UV);
+			renderer.render(matrices.peek(), eyes, null, glowModel, glow[0], glow[1], glow[2], 0xF000F0, OverlayTexture.DEFAULT_UV);
 		}
 		// Auswahlmodus: Raute mit Alien-Silhouette auf dem Kern (eigener Spieler: gewaehltes Alien; andere: leere Raute)
 		float show = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
@@ -247,7 +262,7 @@ public final class OmnitrixWrist {
 			return;
 		}
 		float press = switch (phase) {
-			case CONFIRMING -> MathHelper.clamp(OmnitrixController.phaseTime() / 0.42f, 0.0f, 1.0f) * 0.02f;
+			case CONFIRMING -> MathHelper.clamp(OmnitrixController.phaseTime() / OmnitrixController.confirmTime(), 0.0f, 1.0f) * 0.02f;
 			case IMPACT -> 0.02f + MathHelper.sin(Math.min(1.0f, OmnitrixController.phaseTime() / 0.18f) * MathHelper.PI) * 0.06f;
 			default -> 0.0f;
 		};

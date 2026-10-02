@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
@@ -63,7 +64,7 @@ public final class TransformationManager {
 
 	public enum Result {
 		SUCCESS, NO_OMNITRIX, UNKNOWN_ALIEN, LOCKED, RECHARGING, ALREADY_TRANSFORMED, NO_SPACE,
-		NOT_TRANSFORMED, NO_SUCH_ABILITY, ON_COOLDOWN, NO_ENERGY, FAILED
+		NOT_TRANSFORMED, NO_SUCH_ABILITY, ON_COOLDOWN, NO_ENERGY, FAILED, DEVICE_REFUSED
 	}
 
 	private TransformationManager() {
@@ -151,6 +152,11 @@ public final class TransformationManager {
 			if (state.rechargeRemaining(now) > 0) {
 				return Result.RECHARGING;
 			}
+			Optional<OmnitrixCore.Refusal> refusal = OmnitrixCore.checkTransform(player);
+			if (refusal.isPresent()) {
+				OmnitrixCore.refuse(player, refusal.get());
+				return Result.DEVICE_REFUSED;
+			}
 		} else if (state.isTransformed()) {
 			removeAttributes(player);
 		}
@@ -160,6 +166,7 @@ public final class TransformationManager {
 
 		int duration = durationTicks(player, alienId, alien);
 		update(player, s -> s.transformed(alienId, alien, now, duration));
+		OmnitrixCore.onTransform(player);
 		applyAttributes(player, alien);
 		playTransformEffects(world, player, alien, true);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.transformed", alienName(alienId).formatted(Formatting.BOLD))
@@ -177,14 +184,16 @@ public final class TransformationManager {
 		long now = world.getTime();
 		Optional<AlienDefinition> alien = activeDefinition(player);
 		float quickRecharge = Math.min(0.75f, ProgressionManager.value(player, HeroAbilityEffect.QUICK_RECHARGE));
-		int recharge = Math.round(alien.map(AlienDefinition::rechargeTicks).orElse(0) * (1.0f - quickRecharge));
-		long rechargeUntil = now + (timeout ? recharge : recharge / 2);
+		int recharge = Math.round(alien.map(AlienDefinition::rechargeTicks).orElse(0) * (1.0f - quickRecharge)
+				* OmnitrixCore.cooldownFactor(player));
+		long rechargeUntil = now + (timeout ? recharge : Math.round(recharge * OmnitrixCore.profile(player).manualRevertCooldown()));
 
 		if (!hasSpaceFor(player, 1.0f)) {
 			// Kleines Alien in engem Gang: Die Rueckverwandlung wuerde den Spieler ersticken lassen.
 			return Result.NO_SPACE;
 		}
 		removeAttributes(player);
+		OmnitrixCore.onRevert(player);
 		update(player, s -> s.reverted(rechargeUntil));
 		alien.ifPresent(a -> playTransformEffects(world, player, a, false));
 		player.sendMessage(Text.translatable(timeout ? "message.kingdomomnitrix.timeout" : "message.kingdomomnitrix.reverted")
@@ -247,7 +256,7 @@ public final class TransformationManager {
 		float bonus = ProgressionStats.omnitrixDurationBonus(HeroDataAccess.get(player).level())
 				+ ProgressionManager.value(player, HeroAbilityEffect.EXTENDED_TRANSFORMATION)
 				+ AlienMasteryManager.get(player).durationBonus(alienId);
-		return Math.round(alien.durationTicks() * (1.0f + bonus));
+		return Math.round(alien.durationTicks() * (1.0f + bonus) * OmnitrixCore.durationFactor(player));
 	}
 
 	// --- Ablauf ---------------------------------------------------------------------------------
@@ -264,6 +273,13 @@ public final class TransformationManager {
 				// Alien wurde aus dem Datenpaket entfernt: sauber beenden.
 				removeAttributes(player);
 				update(player, s -> s.reverted(now));
+				continue;
+			}
+			// Omnitrix-Hitze: Warnung, bei voller Hitze Zwangs-Rueckverwandlung und Sperre
+			if (OmnitrixCore.tickTransformed(player)) {
+				if (revert(player, true) == Result.SUCCESS) {
+					OmnitrixCore.overheat(player);
+				}
 				continue;
 			}
 			if (state.remainingTicks(now) <= 0) {

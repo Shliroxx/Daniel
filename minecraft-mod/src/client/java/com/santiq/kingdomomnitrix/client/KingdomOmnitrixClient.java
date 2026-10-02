@@ -115,6 +115,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixWrist.register();
 		AlienAmbientVfx.register();
 		com.santiq.kingdomomnitrix.client.vfx.TransformBubble.register();
+		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {

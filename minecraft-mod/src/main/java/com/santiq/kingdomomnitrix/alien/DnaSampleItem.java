@@ -65,6 +65,7 @@ public class DnaSampleItem extends Item {
 		}
 		HeroDataAccess.update(player, data -> data.unlockAlien(alienId));
 		TransformationManager.select(player, alienId);
+		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.onUnlock(player);
 		stack.decrementUnlessCreative(1, player);
 		player.getServerWorld().spawnParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getBodyY(0.5), player.getZ(),
 				30, 0.5, 0.7, 0.5, 0.1);

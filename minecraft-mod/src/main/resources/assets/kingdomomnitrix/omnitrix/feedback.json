@@ -1,0 +1,19 @@
+{
+  "_doc": "Omnitrix-Rueckmeldungen je Cue (OmnitrixCue). sound: Sound-Ereignis (leer = keiner, z. B. wenn der Server den Klang fuer alle spielt); light: Licht-Puls am Geraet 0..1; flash/flash_strength: Bildschirmblitz; shake/shake_ticks: Kamera-Stoss; fov/fov_ticks: FOV-Impuls (+0.05 = 5 % weiter). Staerke je Spieler: config/kingdomomnitrix-omnitrix.json",
+  "activate": {"sound": "kingdomomnitrix:omnitrix.activate", "volume": 0.7, "light": 0.8, "shake": 0.15, "shake_ticks": 4},
+  "open": {"sound": "kingdomomnitrix:omnitrix.open", "volume": 0.6, "light": 0.6},
+  "navigate": {"sound": "kingdomomnitrix:omnitrix.navigate", "volume": 0.45, "pitch_jitter": 0.04, "light": 0.35},
+  "select": {"sound": "kingdomomnitrix:omnitrix.select", "volume": 0.25, "pitch": 1.7, "light": 0.5},
+  "confirm": {"sound": "kingdomomnitrix:omnitrix.confirm", "volume": 0.75, "light": 1.0, "fov": -0.04, "fov_ticks": 9},
+  "cancel": {"sound": "kingdomomnitrix:omnitrix.cancel", "volume": 0.5},
+  "transform": {"sound": "", "light": 1.0, "shake": 0.6, "shake_ticks": 8, "fov": 0.08, "fov_ticks": 12},
+  "detransform": {"sound": "", "light": 0.8, "shake": 0.3, "shake_ticks": 6, "fov": -0.05, "fov_ticks": 10},
+  "error": {"sound": "kingdomomnitrix:omnitrix.error", "volume": 0.7, "light": 0.6, "shake": 0.12, "shake_ticks": 4},
+  "warning": {"sound": "kingdomomnitrix:omnitrix.warning", "volume": 0.8, "light": 1.0, "flash": "#FFC21A", "flash_strength": 0.25},
+  "cooldown": {"sound": "kingdomomnitrix:omnitrix.cancel", "volume": 0.3, "pitch": 0.8},
+  "ready": {"sound": "kingdomomnitrix:omnitrix.ready", "volume": 0.6, "light": 0.9},
+  "overheat": {"sound": "kingdomomnitrix:omnitrix.overheat", "volume": 0.9, "light": 1.0, "flash": "#FF2A1A", "flash_strength": 0.6, "shake": 0.7, "shake_ticks": 12, "fov": -0.06, "fov_ticks": 14},
+  "unlock": {"sound": "kingdomomnitrix:omnitrix.unlock", "volume": 0.8, "light": 1.0, "flash": "#39FF14", "flash_strength": 0.3},
+  "lock": {"sound": "kingdomomnitrix:omnitrix.lock", "volume": 0.7, "light": 0.4, "shake": 0.2, "shake_ticks": 5},
+  "master_control": {"sound": "kingdomomnitrix:omnitrix.master_control", "volume": 0.9, "light": 1.0, "flash": "#B8FF5A", "flash_strength": 0.5, "shake": 0.3, "shake_ticks": 10, "fov": 0.06, "fov_ticks": 20}
+}

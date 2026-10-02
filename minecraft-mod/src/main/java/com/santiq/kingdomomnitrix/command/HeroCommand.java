@@ -1,7 +1,10 @@
 package com.santiq.kingdomomnitrix.command;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -128,6 +131,40 @@ public final class HeroCommand {
 										IdentifierArgumentType.getIdentifier(ctx, "alien"), true)))))
 				.then(targeted(CommandManager.literal("revert"),
 						(ctx, target) -> transformResult(ctx, target, TransformationManager.revert(target, false))))
+				.then(CommandManager.literal("omnitrix")
+						.then(targeted(CommandManager.literal("status"), HeroCommand::omnitrixStatus))
+						.then(CommandManager.literal("use")
+								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
+										(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
+												IdentifierArgumentType.getIdentifier(ctx, "alien"), false)))))
+						.then(CommandManager.literal("heat")
+								.then(targeted(CommandManager.argument("value", FloatArgumentType.floatArg(0.0f, 1.0f)), (ctx, target) -> {
+									OmnitrixCore.setHeat(target, FloatArgumentType.getFloat(ctx, "value"));
+									return omnitrixStatus(ctx, target);
+								})))
+						.then(CommandManager.literal("lock")
+								.then(targeted(CommandManager.argument("seconds", IntegerArgumentType.integer(0, 3600)), (ctx, target) -> {
+									OmnitrixCore.lock(target, IntegerArgumentType.getInteger(ctx, "seconds") * 20L);
+									return omnitrixStatus(ctx, target);
+								})))
+						.then(CommandManager.literal("master_control")
+								.then(targeted(CommandManager.argument("enabled", BoolArgumentType.bool()), (ctx, target) -> {
+									OmnitrixCore.setMasterControl(target, BoolArgumentType.getBool(ctx, "enabled"));
+									return omnitrixStatus(ctx, target);
+								})))
+						.then(CommandManager.literal("profile")
+								.then(targeted(CommandManager.argument("profile", IdentifierArgumentType.identifier())
+										.suggests((ctx, builder) -> CommandSource.suggestIdentifiers(ctx.getSource().getRegistryManager()
+												.getOptional(OmnitrixCore.PROFILES).map(r -> r.getIds()).orElse(java.util.Set.of()), builder)),
+										(ctx, target) -> {
+											Identifier id = IdentifierArgumentType.getIdentifier(ctx, "profile");
+											if (!OmnitrixCore.hasProfile(ctx.getSource().getRegistryManager(), id)) {
+												ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.omnitrix.no_profile", id.toString()));
+												return 0;
+											}
+											OmnitrixCore.setProfile(target, id);
+											return omnitrixStatus(ctx, target);
+										}))))
 				.then(CommandManager.literal("dna")
 						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 								(ctx, target) -> giveDna(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "alien")))))
@@ -285,6 +322,14 @@ public final class HeroCommand {
 		HeroData after = HeroDataAccess.update(target, operation);
 		ctx.getSource().sendFeedback(() -> Text.translatable(feedbackKey, target.getDisplayName(),
 				after.level(), after.bolts(), after.unlockedAliens().size(), after.storyFlags().size()), true);
+		return 1;
+	}
+
+	private static int omnitrixStatus(CommandContext<ServerCommandSource> ctx, ServerPlayerEntity target) {
+		var device = OmnitrixCore.state(target);
+		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.omnitrix.status", target.getDisplayName(),
+				OmnitrixCore.status(target).name().toLowerCase(java.util.Locale.ROOT), Math.round(OmnitrixCore.heat(target) * 100),
+				device.profile().toString(), device.masterControl() ? "on" : "off"), false);
 		return 1;
 	}
 

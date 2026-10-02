@@ -30,6 +30,7 @@ public final class ScreenEffects {
 	private static int flashColor;
 	private static long flashStart = Long.MIN_VALUE / 2;
 	private static long lastEnd = Long.MAX_VALUE;
+	private static float flashStrength = 1.0f;
 
 	private ScreenEffects() {
 	}
@@ -66,8 +67,14 @@ public final class ScreenEffects {
 	}
 
 	public static void flash(int rgb, long now) {
+		flash(rgb, now, 1.0f);
+	}
+
+	/** Blitz mit Staerke 0..1 (Omnitrix-Rueckmeldungen nutzen schwaechere Blitze). */
+	public static void flash(int rgb, long now, float strength) {
 		flashColor = rgb;
 		flashStart = now;
+		flashStrength = MathHelper.clamp(strength, 0.0f, 1.0f);
 	}
 
 	private static void render(DrawContext context, RenderTickCounter tickCounter) {
@@ -83,9 +90,9 @@ public final class ScreenEffects {
 		// Blitz: kurz hell, dann ausblendend; die Vignette in derselben Farbe haelt etwas laenger
 		float flash = 1.0f - (time - flashStart) / FLASH_TICKS;
 		if (flash > 0.0f) {
-			int alpha = Math.round(MathHelper.clamp(flash * flash * 0.55f, 0.0f, 1.0f) * 255);
+			int alpha = Math.round(MathHelper.clamp(flash * flash * 0.55f * flashStrength, 0.0f, 1.0f) * 255);
 			context.fill(0, 0, width, height, alpha << 24 | flashColor);
-			vignette(context, width, height, flashColor, Math.min(1.0f, flash * 1.4f));
+			vignette(context, width, height, flashColor, Math.min(1.0f, flash * 1.4f) * flashStrength);
 		}
 
 		// wenig Leben: rote Vignette, pulsiert schneller je weniger Leben

@@ -8,21 +8,23 @@ import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.client.render.alien.AlienBodyRenderers;
+import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixScreen;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
 import com.santiq.kingdomomnitrix.networking.OmnitrixPhasePayload;
 import com.santiq.kingdomomnitrix.networking.RevertRequestPayload;
 import com.santiq.kingdomomnitrix.networking.SetUniformPayload;
 import com.santiq.kingdomomnitrix.networking.TransformRequestPayload;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
-import com.santiq.kingdomomnitrix.registry.ModSounds;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -41,7 +43,8 @@ public final class OmnitrixController {
 	// Phasendauern in Sekunden
 	private static final float ACTIVATING_TIME = 0.22f;
 	private static final float OPENING_TIME = 0.34f;
-	private static final float CONFIRMING_TIME = 0.42f;
+	/** Energieaufbau nach dem Bestaetigen — aus dem Geraete-Profil (Master Control: fast sofort) */
+	private static float confirmTime = 0.42f;
 	private static final float IMPACT_TIME = 0.28f;
 	private static final float TRANSFORMATION_TIMEOUT = 1.5f;
 	private static final float REVERT_TIME = 0.6f;
@@ -156,14 +159,14 @@ public final class OmnitrixController {
 		display = target;
 		velocity = 0.0f;
 		setPhase(OmnitrixPhase.ACTIVATING);
-		play(ModSounds.OMNITRIX_BEEP, 1.5f, 0.5f);
+		OmnitrixFeedback.play(OmnitrixCue.ACTIVATE);
 		client.setScreen(new OmnitrixScreen());
 	}
 
 	/** Rad schliessen ohne Auswahl (Esc, Rechtsklick). */
 	public static void cancel() {
 		if (phase.isArmRaised() && phase != OmnitrixPhase.IMPACT && phase != OmnitrixPhase.CONFIRMING) {
-			play(ModSounds.OMNITRIX_SELECT, 0.6f, 0.4f);
+			OmnitrixFeedback.play(OmnitrixCue.CANCEL);
 			setPhase(basePhase());
 		}
 	}
@@ -175,7 +178,7 @@ public final class OmnitrixController {
 		}
 		target += steps;
 		setPhase(OmnitrixPhase.ROTATING);
-		play(ModSounds.OMNITRIX_SELECT, 1.25f + 0.1f * MathHelper.clamp(steps, -2, 2), 0.35f);
+		OmnitrixFeedback.play(OmnitrixCue.NAVIGATE);
 	}
 
 	/** Direkt zu einem Eintrag drehen (Zifferntasten); dreht den kuerzeren Weg. */
@@ -200,13 +203,13 @@ public final class OmnitrixController {
 		}
 		List<String> available = AlienBodyRenderers.uniformsOf(entry.get().alien().model());
 		if (available.size() < 2) {
-			denyStart = System.nanoTime();
+			refuseInput();
 			return;
 		}
 		String current = AlienUniforms.get(client.player, entry.get().id());
 		String next = available.get((Math.max(0, available.indexOf(current)) + 1) % available.size());
 		ClientPlayNetworking.send(new SetUniformPayload(entry.get().id(), next));
-		play(ModSounds.OMNITRIX_SELECT, 0.9f, 0.5f);
+		OmnitrixFeedback.play(OmnitrixCue.SELECT);
 	}
 
 	/** Auswahl bestaetigen: verwandeln (oder zurueckverwandeln, wenn schon verwandelt). */
@@ -220,6 +223,7 @@ public final class OmnitrixController {
 		if (state.isTransformed()) {
 			ClientPlayNetworking.send(RevertRequestPayload.INSTANCE);
 			setPhase(OmnitrixPhase.REVERT);
+			OmnitrixFeedback.play(OmnitrixCue.DETRANSFORM);
 			client.setScreen(null);
 			return;
 		}
@@ -227,14 +231,51 @@ public final class OmnitrixController {
 		if (entry.isEmpty()) {
 			return;
 		}
-		if (!entry.get().unlocked() || state.rechargeRemaining(player.getWorld().getTime()) > 0) {
-			denyStart = System.nanoTime();
-			play(ModSounds.MAGIC_MP_EMPTY, 0.7f, 0.6f);
+		// Geraet verweigert sofort sichtbar: gesperrt, ueberhitzt, zu heiss, Nachladen oder fehlende DNA
+		OmnitrixStatus device = OmnitrixCore.status(player);
+		boolean tooHot = OmnitrixCore.heat(player) + OmnitrixCore.profile(player).heatPerTransform()
+				* OmnitrixCore.state(player).heatFactor(OmnitrixCore.profile(player)) >= 1.0f;
+		if (!entry.get().unlocked() || state.rechargeRemaining(player.getWorld().getTime()) > 0
+				|| device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || tooHot) {
+			refuseInput();
 			return;
 		}
 		pending = entry.get().id();
+		confirmTime = OmnitrixCore.confirmSeconds(player);
 		setPhase(OmnitrixPhase.CONFIRMING);
-		play(ModSounds.OMNITRIX_BEEP, 1.0f, 0.7f);
+		OmnitrixFeedback.play(OmnitrixCue.CONFIRM);
+	}
+
+	/**
+	 * Sichtbarer Geraete-Zustand: Sperre und Ueberhitzung vom Server gehen vor, sonst legt der eigene Spieler seine
+	 * Bedien-Phase darueber (aktiviert, Auswahl, Verwandlung); andere Spieler zeigen ihren geteilten Zustand.
+	 */
+	public static OmnitrixStatus displayStatus(net.minecraft.entity.player.PlayerEntity player) {
+		OmnitrixStatus base = OmnitrixCore.status(player);
+		if (base == OmnitrixStatus.LOCKED || base == OmnitrixStatus.OVERHEATED || base == OmnitrixStatus.IDLE) {
+			return base;
+		}
+		boolean local = player == MinecraftClient.getInstance().player;
+		if (local) {
+			return switch (phase) {
+				case ACTIVATING, OPENING -> OmnitrixStatus.ACTIVE;
+				case SELECTING, ROTATING, ALIEN_SELECTED -> OmnitrixStatus.SELECTING;
+				case CONFIRMING, IMPACT, TRANSFORMATION -> OmnitrixStatus.TRANSFORMING;
+				default -> base;
+			};
+		}
+		return OmnitrixRemote.lift(player) > 0.5f ? OmnitrixStatus.SELECTING : base;
+	}
+
+	/** Geraet verweigert: Zifferblatt wackelt, Fehlerklang. */
+	private static void refuseInput() {
+		denyStart = System.nanoTime();
+		OmnitrixFeedback.play(OmnitrixCue.ERROR);
+	}
+
+	/** Energieaufbau-Dauer der laufenden Bestaetigung (Sekunden). */
+	public static float confirmTime() {
+		return confirmTime;
 	}
 
 	/** Einmal pro Bild: Phasen weiterschalten, Werte nachfuehren. */
@@ -260,7 +301,7 @@ public final class OmnitrixController {
 			display = target;
 			velocity = 0.0f;
 			setPhase(OmnitrixPhase.ALIEN_SELECTED);
-			play(ModSounds.OMNITRIX_SELECT, 1.7f, 0.2f);
+			OmnitrixFeedback.play(OmnitrixCue.SELECT);
 		}
 
 		float targetRaise = phase.isArmRaised() ? 1.0f : 0.0f;
@@ -269,7 +310,7 @@ public final class OmnitrixController {
 		float targetEnergy = switch (phase) {
 			case OPENING -> MathHelper.clamp(phaseTime() / OPENING_TIME, 0.0f, 1.0f) * 0.7f;
 			case SELECTING, ROTATING, ALIEN_SELECTED -> 0.7f;
-			case CONFIRMING -> 0.7f + 0.3f * MathHelper.clamp(phaseTime() / CONFIRMING_TIME, 0.0f, 1.0f);
+			case CONFIRMING -> 0.7f + 0.3f * MathHelper.clamp(phaseTime() / confirmTime, 0.0f, 1.0f);
 			case IMPACT -> 1.0f;
 			default -> 0.0f;
 		};
@@ -287,7 +328,7 @@ public final class OmnitrixController {
 			case ACTIVATING -> {
 				if (t >= ACTIVATING_TIME) {
 					setPhase(OmnitrixPhase.OPENING);
-					play(ModSounds.OMNITRIX_SELECT, 0.7f, 0.5f);
+					OmnitrixFeedback.play(OmnitrixCue.OPEN);
 				}
 			}
 			case OPENING -> {
@@ -301,7 +342,7 @@ public final class OmnitrixController {
 				}
 			}
 			case CONFIRMING -> {
-				if (t >= CONFIRMING_TIME) {
+				if (t >= confirmTime) {
 					setPhase(OmnitrixPhase.IMPACT);
 					if (pending != null) {
 						ClientPlayNetworking.send(new TransformRequestPayload(pending));
@@ -319,6 +360,7 @@ public final class OmnitrixController {
 			case TRANSFORMATION -> {
 				if (transformed) {
 					setPhase(OmnitrixPhase.ACTIVE_ALIEN);
+					OmnitrixFeedback.play(OmnitrixCue.TRANSFORM);
 				} else if (t >= TRANSFORMATION_TIMEOUT) {
 					setPhase(basePhase());
 				}
@@ -331,6 +373,7 @@ public final class OmnitrixController {
 			default -> {
 				if (wasTransformed && !transformed) {
 					setPhase(OmnitrixPhase.REVERT);
+					OmnitrixFeedback.play(OmnitrixCue.DETRANSFORM);
 				} else {
 					OmnitrixPhase base = basePhase();
 					if (base != phase) {
@@ -376,12 +419,5 @@ public final class OmnitrixController {
 	private static float approach(float value, float target, float dt, float speed) {
 		float next = value + (target - value) * Math.min(1.0f, dt * speed);
 		return Math.abs(next - target) < 0.002f ? target : next;
-	}
-
-	private static void play(SoundEvent sound, float pitch, float volume) {
-		ClientPlayerEntity player = MinecraftClient.getInstance().player;
-		if (player != null) {
-			player.playSound(sound, volume, pitch);
-		}
 	}
 }

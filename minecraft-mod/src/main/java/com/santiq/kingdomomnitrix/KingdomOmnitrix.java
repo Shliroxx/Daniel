@@ -95,6 +95,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		SpaceTravel.register();
 		ArenaManager.register();
 		TraverseTown.register();
+		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.register();
 		TransformationManager.register();
 		DnaDrops.register();
 		CombatManager.register();

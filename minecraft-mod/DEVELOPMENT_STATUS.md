@@ -260,7 +260,15 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
     `abzeichen_warnung`, `heatblast_glut_frames` in `docs/screenshots/`.
   - Nicht im Bild geprueft: rote Kugel beim Zeitablauf (gleicher Code-Pfad wie Verwandeln, Farbe aus Restzeit).
 
-## COMPLETED
+## OMNITRIX CORE OVERHAUL (2026-10-02) — Fokus: OMNITRIX FIRST
+- Neue Prioritaet laut SANTIQ: nur noch Omnitrix, keine Story/Dimensionen/Quests. Bestand, Architektur und Fahrplan:
+  `docs/OMNITRIX_CORE.md`.
+- Schritt 1 (groesste Schwachstelle: kein Geraete-Kern): `OmnitrixCore` mit Profil-Registry (`omnitrix_profile`:
+  prototype, recalibrated), synchronisiertem Geraete-Zustand (Hitze, Ueberhitzung, Sperre, Master Control),
+  `OmnitrixStatus`/`AlienStatus`, Ueberhitzungs-Ablauf, `/hero omnitrix …`.
+- Rueckmeldungen zentral: `OmnitrixCue` → `OmnitrixFeedback` (feedback.json + Spieler-Config), 12 neue Klaenge,
+  FOV-Impuls (Mixin), Licht am Geraet und Zifferblatt je Zustand, HUD-Hitzeleiste.
+
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +
   Fähigkeiten, KH-Kommandomenü + HUD-Editor, eigene Partikel, 45 eigene Sounds, Gruppen bis 4 Spieler.

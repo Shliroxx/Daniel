@@ -23,6 +23,79 @@
       "kingdomomnitrix:omnitrix_select"
     ]
   },
+  "omnitrix.activate": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.activate",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_activate"
+    ]
+  },
+  "omnitrix.open": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.open",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_open"
+    ]
+  },
+  "omnitrix.navigate": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.navigate",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_navigate_1",
+      "kingdomomnitrix:omnitrix_navigate_2"
+    ]
+  },
+  "omnitrix.confirm": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.confirm",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_confirm"
+    ]
+  },
+  "omnitrix.cancel": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.cancel",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_cancel"
+    ]
+  },
+  "omnitrix.error": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.error",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_error"
+    ]
+  },
+  "omnitrix.warning": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.warning",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_warning"
+    ]
+  },
+  "omnitrix.overheat": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.overheat",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_overheat"
+    ]
+  },
+  "omnitrix.ready": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.ready",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_ready"
+    ]
+  },
+  "omnitrix.unlock": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.unlock",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_unlock"
+    ]
+  },
+  "omnitrix.lock": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.lock",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_lock"
+    ]
+  },
+  "omnitrix.master_control": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.master_control",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_master_control"
+    ]
+  },
   "alien.fire": {
     "subtitle": "subtitles.kingdomomnitrix.alien.fire",
     "sounds": [
