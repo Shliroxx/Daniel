@@ -62,7 +62,7 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 | Spieler (Mensch) | 50 (Vanilla) | 50 | 45 (playerAnimator Combo) | 55 | 50 | 50 | 50 | POLISH NEEDED |
 | Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
 | Heatblast | 55 (46 Würfel, Gelenke) | 50 (Material + Leuchtmaske) | 50 (12 Animationen) | 50 | 50 | 50 | 52 | FINAL POLISH |
-| XLR8 | 15 | 10 | 15 | 35 | 45 | 40 | 18 | MODEL/TEXTURE/ANIMATION REWORK |
+| XLR8 | 55 (Raptor-Haltung, Helm-Schnauze, Schwanzkette, Radfüße) | 50 (Glanzpanzer, Anzugnähte, Visier leuchtet) | 50 (Raptor-Sprint, unruhiges Idle) | 35 | 45 | 45 | 50 | FINAL POLISH |
 | Vierarm | 20 (4 Arme) | 10 | 15 | 35 | 45 | 40 | 20 | MODEL/TEXTURE/ANIMATION REWORK |
 | Diamondhead | 20 (Kristallkopf) | 15 | 15 | 35 | 45 | 40 | 22 | MODEL/TEXTURE/ANIMATION REWORK |
 | Grey Matter | 15 | 10 | 15 | 30 | 45 | 35 | 18 | MODEL/TEXTURE/ANIMATION REWORK |
@@ -88,7 +88,7 @@ Reihenfolge = Abarbeitungsreihenfolge.
    ein → Aufprall (Bodenring, Kamera-Stoß) → bereit. Rückverwandlung: rotes Pulsieren → Körper schrumpft → Mensch.
 2. [x] **Heatblast** (Rework 1; FINAL POLISH offen) — MODEL (Magma-Gesteinsplatten, Flammenkopf aus Knochen, schlanke Silhouette), TEXTURE (128er,
    Risse + Leuchtmaske), ANIMATION (idle, walk, run, jump/fall, attack, ability, hit, transform), VFX (Flammen am Kopf).
-3. [ ] **XLR8** — MODEL (Visier-Helm, Schwanz, Raptor-Beine, vorgebeugt), TEXTURE, ANIMATION (Sprint-Pose).
+3. [x] **XLR8** (Rework 1; offen: Geschwindigkeits-Streifen/Nachbild beim Sprint, Visier-Animation) — MODEL (Visier-Helm, Schwanz, Raptor-Beine, vorgebeugt), TEXTURE, ANIMATION (Sprint-Pose).
 4. [ ] **Vierarm** — MODEL (massiv, breite Schultern, 4 Augen), TEXTURE, ANIMATION (schwerer Gang, Bodenschlag).
 5. [ ] **Diamondhead** — MODEL (Kristallkanten, Schulter-Kristalle), TEXTURE (Facetten), ANIMATION.
 6. [ ] **Grey Matter** — MODEL (klein, großer Kopf, große Augen), TEXTURE, ANIMATION (flink, hüpfend).
@@ -102,6 +102,10 @@ Reihenfolge = Abarbeitungsreihenfolge.
 13. [ ] **World-Rework** — Traverse Town (NBT-Strukturen), Arena, Weltraum.
 
 ## BUGS
+- BEHOBEN: Andere Spieler sahen jedes Alien nur in `idle`, auch beim Laufen — GeckoLibs `isMoving()` nutzt die
+  Geschwindigkeit, die der Client für fremde Spieler nicht kennt. Jetzt: Gliedmaßen-Animator + Positionsänderung.
+- PRÜFEN: Herzlose, NPCs und Boss nutzen ebenfalls `isMoving()` (bei Mobs synchronisiert der Server die
+  Geschwindigkeit normalerweise) — beim Herzlosen-Rework im Beobachter-Bild kontrollieren.
 - Grey Matter: Größe 0.3 per Attribut — im Third-Person-Bild wirkt er trotzdem gleich groß (Kamera skaliert mit).
   Prüfen, ob der GeckoLib-Körper die Skalierung bekommt.
 - Raumschiff-Einstieg spielt noch `BLOCK_PISTON_EXTEND` (Vanilla) — PLACEHOLDER.
@@ -120,16 +124,19 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
-**XLR8 MODEL/TEXTURE/ANIMATION REWORK** nach dem Heatblast-Muster in `tools/generate_alien_models.py`
-(neue Funktion `xlr8()`, Materialien: Panzerplatten blau/schwarz, Visier mit Leuchtmaske, Schwanz aus 3 Knochen,
-vorgebeugte Raptor-Haltung, Sprint-Animation mit flachem Oberkörper). Danach `tools/visual_audit.sh … aliens`.
+**Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,
+Stil `heavy`: massiver Oberkörper, breite Schultern, 4 Arme mit Unterarmen, 4 Augen, schwerer Gang mit Gewichts-
+verlagerung, Bodenschlag-Animation). Seitenansicht über Beobachter-Client prüfen (siehe Testhinweis unten).
+
+**Testhinweis Seitenansicht:** `tools/multiplayer_test.sh add 2`, Tester2 unsichtbar seitlich platzieren
+(`/tp Tester2 8.5 -59.4 0.5 90 0`), Tester läuft entlang z; Bilder aus Client 2 (`import -window`).
 
 ## NEXT 5 TASKS
-1. Vierarm
-2. Heatblast FINAL POLISH (Rückansicht, Lauf-Check)
-3. Diamondhead
-4. Grey Matter (inkl. Größen-Bug)
-5. Shadow + Soldier (Herzlosen-Rework Teil 1)
+1. Heatblast FINAL POLISH (Rückansicht, Lauf-Check von der Seite)
+2. Diamondhead
+3. Grey Matter (inkl. Größen-Bug)
+4. Shadow + Soldier (Herzlosen-Rework Teil 1)
+5. XLR8 FINAL POLISH (Sprint-VFX)
 
 ## LONG TERM
 - Omnitrix am Arm, 3D-Keyblades, Heli-Pack am Rücken
@@ -145,5 +152,6 @@ vorgebeugte Raptor-Haltung, Sprint-Animation mit flachem Oberkörper). Danach `t
 
 ## LAST VERIFIED
 - 0.11.0-alpha: Dedicated Server + 2–4 Clients (Gruppe, Friendly-Fire, Vita auf Mitspieler, Schiff zu zweit, Skalierung)
+- XLR8 Rework 1 im Spiel: Front, Seite (Beobachter-Client), Sprint-Bildserie
 - Heatblast Rework 1 im Spiel: Front, Nahansicht, Verwandlungs-Bildserie, Schlag + Feuerexplosion (`build/visual_audit/after/`)
 - Visual Audit Baseline: alle 5 Aliens (Front/Seite/Ego), 5 Herzlose — `build/visual_audit/before/contact_sheet.png`

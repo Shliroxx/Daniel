@@ -49,6 +49,11 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	public static final int REVERT_TICKS = 8;
 	private static final int ABILITY_TICKS = 12;
 	private static final int TRANSITION_TICKS = 3;
+	/** Bloecke pro Tick, ab denen die Laufpose gilt (normales Gehen: ~0,22) */
+	private static final double RUN_SPEED = 0.3;
+	/** Mindestbewegung fuer Gehen (Bloecke pro Tick bzw. Gliedmaßen-Tempo) */
+	private static final double MOVE_SPEED = 0.02;
+	private static final float MOVE_LIMB_SPEED = 0.1f;
 
 	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 	/** zuletzt gestartete Aktion je Spieler (Entity-ID) */
@@ -85,8 +90,8 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 		if (!player.isOnGround() && !player.isClimbing() && !player.isTouchingWater() && !player.hasVehicle()) {
 			return state.setAndContinue(player.getVelocity().y > 0.05 ? JUMP : FALL);
 		}
-		if (state.isMoving()) {
-			return state.setAndContinue(player.isSprinting() ? RUN : WALK);
+		if (isMoving(player)) {
+			return state.setAndContinue(isFast(player) ? RUN : WALK);
 		}
 		return state.setAndContinue(IDLE);
 	}
@@ -148,6 +153,26 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 			}
 		}
 		return best;
+	}
+
+	/**
+	 * Bewegung aus Gliedmaßen-Animator und Positionsaenderung. GeckoLibs {@code isMoving()} nutzt die Geschwindigkeit,
+	 * die der Client fuer fremde Spieler nicht kennt — andere Spieler saehen ein laufendes Alien sonst nur stehen.
+	 */
+	private static boolean isMoving(PlayerEntity player) {
+		double dx = player.getX() - player.prevX;
+		double dz = player.getZ() - player.prevZ;
+		return player.limbAnimator.getSpeed() > MOVE_LIMB_SPEED || dx * dx + dz * dz > MOVE_SPEED * MOVE_SPEED;
+	}
+
+	/**
+	 * Laufpose bei Sprint oder hoher tatsaechlicher Geschwindigkeit. Fuer fremde Spieler kennt der Client keine
+	 * Geschwindigkeit, nur die Positionsaenderung pro Tick — die gilt deshalb fuer alle gleich.
+	 */
+	private static boolean isFast(PlayerEntity player) {
+		double dx = player.getX() - player.prevX;
+		double dz = player.getZ() - player.prevZ;
+		return player.isSprinting() || dx * dx + dz * dz > RUN_SPEED * RUN_SPEED;
 	}
 
 	private static PlayerEntity player(AnimationState<AlienBodyAnimatable> state) {

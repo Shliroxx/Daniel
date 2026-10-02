@@ -136,7 +136,7 @@ class Alien:
     texture_size: tuple[int, int]
     bones: list[Bone]
     accent: str
-    style: str = "normal"   # normal | heat (bestimmt Animations-Charakter)
+    style: str = "normal"   # normal | heat | fast (bestimmt Animations-Charakter)
     glow: bool = False      # Leuchtmaske schreiben
 
 
@@ -291,12 +291,90 @@ def paint_flat(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise
             canvas.put(face.x + px, face.y + py, color)
 
 
+# XLR8: schwarzer Glanzpanzer mit blauer Lichtkante, blauer Anzug mit Nahtlinien, leuchtendes Visier
+ARMOR = rgb("#15171F")
+ARMOR_RIM = rgb("#3D7BFF")
+SUIT = rgb("#1F5BD6")
+SUIT_SEAM = rgb("#123A8F")
+VISOR_LOW = rgb("#1C6DFF")
+VISOR_HIGH = rgb("#9FE9FF")
+WHEEL = rgb("#2A2D36")
+
+
+def paint_armor(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    shade = FACE_SHADE[face.name]
+    for py in range(face.h):
+        for px in range(face.w):
+            n = noise(face.x + px, face.y + py)
+            color = scale(ARMOR, shade * (0.85 + 0.35 * n))
+            if face.w > 2 and face.h > 2:
+                if py == 0 or px == 0:
+                    color = mix(color, ARMOR_RIM, 0.55 if face.name != "down" else 0.2)   # Lichtkante
+                elif py == face.h - 1 or px == face.w - 1:
+                    color = scale(color, 0.6)
+            if face.name in ("up", "north") and (px + py) % 7 == 0 and n > 0.6:
+                color = mix(color, (200, 220, 255), 0.35)                                  # Glanzpunkt
+            canvas.put(face.x + px, face.y + py, color)
+
+
+def paint_suit(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    shade = FACE_SHADE[face.name]
+    for py in range(face.h):
+        for px in range(face.w):
+            n = noise(face.x + px, face.y + py)
+            color = scale(SUIT, shade * (0.88 + 0.25 * n))
+            if face.name not in ("up", "down") and face.w >= 4 and px in (1, face.w - 2):
+                color = SUIT_SEAM                                                         # Nahtlinie
+            canvas.put(face.x + px, face.y + py, color)
+
+
+def paint_visor(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    for py in range(face.h):
+        for px in range(face.w):
+            t = 1.0 - (py + 0.5) / max(1, face.h)
+            color = mix(VISOR_LOW, VISOR_HIGH, t * 0.8 + 0.2 * noise(face.x + px, face.y + py))
+            if face.name == "north" and py == 0 and px in (1, 2):
+                color = (235, 250, 255)                                                   # Spiegelung
+            canvas.put(face.x + px, face.y + py, color, glow=True)
+
+
+def paint_stripe(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    """Schwanzsegment: schwarz mit blauem Ring am vorderen Ende (Seiten laufen entlang z)."""
+    shade = FACE_SHADE[face.name]
+    for py in range(face.h):
+        for px in range(face.w):
+            along = px if face.name in ("east", "west") else py if face.name in ("up", "down") else -1
+            ring = along in (0, 1) if face.name in ("east", "up") else along in (face.w - 2, face.w - 1) \
+                if face.name == "west" else along in (face.h - 2, face.h - 1) if face.name == "down" else False
+            color = scale(SUIT, shade) if ring else scale(ARMOR, shade * (0.9 + 0.3 * noise(face.x + px, face.y + py)))
+            canvas.put(face.x + px, face.y + py, color)
+
+
+def paint_wheel(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    shade = FACE_SHADE[face.name]
+    for py in range(face.h):
+        for px in range(face.w):
+            color = scale(WHEEL, shade)
+            if face.name in ("east", "west"):
+                cx, cy = (face.w - 1) / 2, (face.h - 1) / 2
+                r = math.hypot(px - cx, py - cy)
+                if r < 0.8:
+                    color = VISOR_LOW                                                     # Nabe
+                    canvas.put(face.x + px, face.y + py, color, glow=True)
+                    continue
+                color = scale(color, 1.3 if r > 1.2 else 0.8)
+            elif py % 2 == 0:
+                color = scale(color, 1.35)                                                # Lauffläche
+            canvas.put(face.x + px, face.y + py, color)
+
+
 def painter(material: str) -> Callable[[Canvas, Face, Cube, random.Random, Noise], None]:
     if material.startswith("flat:"):
         return paint_flat
     if material in ROCK:
         return paint_rock
-    return {"magma": paint_magma, "flame": paint_flame}[material]
+    return {"magma": paint_magma, "flame": paint_flame, "armor": paint_armor, "suit": paint_suit, "visor": paint_visor,
+            "stripe": paint_stripe, "wheel": paint_wheel}[material]
 
 
 def paint_detail(canvas: Canvas, cube: Part, front: Face) -> None:
@@ -551,14 +629,61 @@ def heatblast() -> Alien:
     return alien
 
 
-def build_aliens() -> list[Alien]:
-    aliens = [heatblast()]
+def xlr8() -> Alien:
+    """XLR8: schlanker Raptor — vorgebeugt, Helm mit Visier, Raederfuesse, langer gestreifter Schwanz."""
+    bones = [Bone("root", None, (0, 0, 0)),
+             Bone("body", "root", (0, 12, 0), [
+                 Part((-3, 10.5, -2), (6, 3, 4), "armor"),                        # Becken
+                 Part((-3, 13.5, -1.5), (6, 4, 3), "suit"),                       # Taille
+                 Part((-3.5, 17, -2), (7, 5, 4), "suit"),                         # Brust
+                 Part((-4, 17.5, -2.8), (8, 4, 1), "armor"),                      # Brustpanzer
+                 Part((-2, 17.5, -3.5), (4, 4, 1), "armor", detail="omnitrix_badge"),
+                 Part((-3.5, 15, 2), (7, 7, 1), "armor"),                          # Rueckenpanzer
+                 Part((-0.5, 14.5, 2.8), (1, 8, 1), "suit"),                       # Rueckenkamm
+                 Part((-1.5, 21.5, -2), (3, 2, 3), "suit"),                        # Hals
+             ], rotation=(14, 0, 0))]
+    for side, s in (("right", -1), ("left", 1)):
+        mirror = side == "left"
+        sx = lambda x, w: x if s < 0 else -x - w  # noqa: E731
+        bones += [
+            Bone(f"{side}_arm", "body", (4.5 * s, 21, 0), [
+                Part((sx(-7, 3), 19, -2), (3, 3, 4), "armor", mirror=mirror),      # Schulterpanzer
+                Part((sx(-6.5, 2), 15, -1), (2, 5, 2), "suit", mirror=mirror),     # Oberarm
+            ]),
+            Bone(f"{side}_forearm", f"{side}_arm", (5.5 * s, 15.5, 0), [
+                Part((sx(-6.5, 2), 10.5, -1), (2, 5, 2), "armor", inflate=0.25, mirror=mirror),
+                Part((sx(-6.5, 2), 8.5, -1.5), (2, 2, 3), "armor", mirror=mirror),  # Hand
+                Part((sx(-6.5, 2), 8, -3), (2, 1, 2), "visor", mirror=mirror),      # Klauen (leuchtend)
+            ]),
+            Bone(f"{side}_leg", "root", (2 * s, 11, 0), [
+                Part((sx(-3.5, 3), 6.5, -1.5), (3, 5, 3), "suit", mirror=mirror),     # Oberschenkel
+                Part((sx(-3.75, 3), 7.5, -2.3), (3, 3, 1), "armor", mirror=mirror),   # Schenkelpanzer
+            ]),
+            Bone(f"{side}_shin", f"{side}_leg", (2 * s, 7, 0), [
+                Part((sx(-3.5, 3), 2, -0.5), (3, 5, 2), "armor", mirror=mirror),       # Schienbein (nach hinten versetzt)
+                Part((sx(-3.5, 3), 0, -3.5), (3, 1, 3), "armor", mirror=mirror),       # Zehenplatte
+                Part((sx(-3.75, 3), 0, -1), (3, 3, 3), "wheel", inflate=0.2, mirror=mirror),  # Radfuss
+            ]),
+        ]
+    bones += [
+        Bone("head", "body", (0, 23, -1), [
+            Part((-2.5, 23.5, -3.5), (5, 4, 6), "armor"),                          # Helmkuppel
+            Part((-2, 23, -6), (4, 3, 3), "armor"),                                # Schnauze
+            Part((-2.5, 24.4, -6.3), (5, 2, 4), "visor", inflate=0.12),           # Visier, um die Seiten gezogen
+            Part((-1.5, 22, -5.5), (3, 1, 3), "suit"),                             # Kiefer
+            Part((-0.5, 27.2, -2.5), (1, 2, 6), "armor", rotation=(-12, 0, 0), pivot=(0, 27.5, 0)),  # Kammflosse
+        ], rotation=(-14, 0, 0)),
+        Bone("tail_1", "body", (0, 12.5, 2.5), [Part((-1.5, 11, 2.5), (3, 3, 5), "stripe")], rotation=(-10, 0, 0)),
+        Bone("tail_2", "tail_1", (0, 12.5, 7.5), [Part((-1, 11.5, 7.5), (2, 2, 5), "stripe")], rotation=(-6, 0, 0)),
+        Bone("tail_3", "tail_2", (0, 12.5, 12.5), [Part((-0.5, 12, 12.5), (1, 1, 5), "stripe")], rotation=(-4, 0, 0)),
+    ]
+    alien = Alien("xlr8", (64, 64), bones, "#1E90FF", style="fast", glow=True)
+    pack_uvs(alien)
+    return alien
 
-    # XLR8: schlank, Visier, Schwanz (PLACEHOLDER bis zum Rework)
-    b = humanoid("#1B3C8C", "#14213D", "#0B1A3A", head_detail="visor")
-    b.append(Bone("visor", "head", (0, 28, -4), [Part((-4, 26, -6), (8, 3, 2), "flat:#7FD4FF", (32, 0))]))
-    b.append(Bone("tail", "body", (0, 13, 2), [Part((-1, 12, 2), (2, 2, 9), "flat:#1B3C8C", (0, 32))]))
-    aliens.append(Alien("xlr8", (64, 64), b, "#1E90FF"))
+
+def build_aliens() -> list[Alien]:
+    aliens = [heatblast(), xlr8()]
 
     # Vierarm: breiter Rumpf, vier Arme, vier Augen (128x64)
     b = [
@@ -660,7 +785,16 @@ def build_animations(alien: Alien) -> dict:
     heavy_limbs = {"right_forearm", "left_forearm"} <= names
     knees = {"right_shin", "left_shin"} <= names
     flames = "flame_base" in names
+    tail = [n for n in ("tail_1", "tail_2", "tail_3") if n in names]
+    fast = alien.style == "fast"
     A: dict[str, dict] = {}
+
+    def tail_tracks(length: float, sway: float, lift: float = 0.0) -> dict:
+        """Schwanz schwingt als Kette: jedes Glied etwas spaeter und staerker."""
+        return {name: {"rotation": keys(*[(round(length * k / 4, 3),
+                                             [lift * (i + 1) * 0.5, sway * (0.6 + 0.4 * i) * math.sin(2 * math.pi * k / 4 - i * 0.9), 0],
+                                             "easeinoutsine") for k in range(5)])}
+                for i, name in enumerate(tail)}
 
     # idle — Atmen, leicht schwebende Arme, Flammen
     idle = {
@@ -675,6 +809,13 @@ def build_animations(alien: Alien) -> dict:
         idle["left_forearm"] = {"rotation": keys((0, [FWD * 12, 0, 0]))}
     if flames:
         idle.update(flame_tracks(1.2))
+    if tail:
+        idle.update(tail_tracks(2.4, 6))
+    if fast:
+        # unruhig: wippt auf den Zehen, Kopf zuckt
+        idle["root"] = {"position": loop(0.8, 0.25, axis=1, offset=0.25)}
+        idle["head"] = {"rotation": keys((0, [0, 0, 0]), (0.9, [0, 12, 0], "easeoutquad"), (1.3, [0, 12, 0]),
+                                         (1.6, [0, -8, 0], "easeoutquad"), (2.4, [0, 0, 0], "easeinoutsine"))}
     A["idle"] = anim(2.4, idle)
 
     # walk — Gegengleich, Knie beugen sich in der Schwungphase, Koerper wippt
@@ -702,10 +843,19 @@ def build_animations(alien: Alien) -> dict:
         if flames:
             g.update(flame_tracks(length, 1.4))
             g["flame_base"]["rotation"] = keys((0, [lean * 0.8, 0, 0]))   # Flamme weht nach hinten
+        if tail:
+            g.update(tail_tracks(length, 8 if lean < 20 else 4, lift=-lean * 0.4))   # beim Sprint gestreckt
         return g
 
-    A["walk"] = anim(0.9, gait(0.9, 32, 34, 3, 0.4))
-    A["run"] = anim(0.55, gait(0.55, 55, 52, 16, 0.8))
+    if fast:
+        A["walk"] = anim(0.6, gait(0.6, 22, 38, 8, 0.5))
+        A["run"] = anim(0.3, gait(0.3, 0, 70, 32, 0.9))
+        # Sprint: Arme flach nach hinten gelegt (aerodynamisch), Kopf nach vorn
+        A["run"]["bones"]["right_arm"] = {"rotation": keys((0, [FWD * -55, 0, 8]))}
+        A["run"]["bones"]["left_arm"] = {"rotation": keys((0, [FWD * -55, 0, -8]))}
+    else:
+        A["walk"] = anim(0.9, gait(0.9, 32, 34, 3, 0.4))
+        A["run"] = anim(0.55, gait(0.55, 55, 52, 16, 0.8))
     if heavy_limbs:
         A["run"]["bones"]["right_forearm"] = {"rotation": keys((0, [FWD * 70, 0, 0]))}
         A["run"]["bones"]["left_forearm"] = {"rotation": keys((0, [FWD * 70, 0, 0]))}
