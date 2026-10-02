@@ -247,8 +247,18 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
   Hauptknochen haengen wie in AE einzeln an root. Unsere generierten Lauf-/Idle-/Schlag-Animationen sind fuer die
   importierten Aliens weg; XLR8 spielt AEs Schwanz-Animation, Verwandeln/Zurueckverwandeln skaliert nur root.
   Im Spiel geprueft: Stehen, Laufen, Schleichen, Schlag (`docs/screenshots/ae_pose_heatblast.png`).
-- Offen: AE-Faehigkeits-Posen (Feuer-Nova, Bodenschlag, Kristallschwert …), 8-Frame-Glut-Animation (aktuell Frame 0),
-  Abzeichen-Zustaende (rot bei Abklingzeit) ueber die AE-Overlays.
+- **Verwandlungen verbessert (SANTIQ: beides, classic bleibt Standard, Optik 1:1 / Effekte besser):**
+  - `TransformBubble`: AEs „transform bubble“ (rotierende Blitze mit Leuchtsaum) als Welt-Effekt fuer alle Spieler —
+    18 Blitze aus der Brust, Leuchthuelle, Bodenring beim Aufprall; gruen beim Verwandeln, weiss-gruen beim
+    Zurueckverwandeln, rot bei Zeitablauf (Bildschirmblitz ebenso). Grober Dust-Partikelnebel reduziert.
+  - Glut wie AE: alle 8 Frames je Uniform (`<alien>[_<uniform>]_f<i>.png`), Wechsel alle 2 Ticks.
+  - Abzeichen-Warnung: AEs Timeout-Abzeichen (rot) blinkt in den letzten 10 s (`_warn`-Texturen).
+  - XLR8-Visier: AE `mask_on/mask_off` beim Sprinten (neuer Controller `sprint`).
+  - Faehigkeits-Posen direkt aus den AE-Skripten geparst (`parse_poses`, Palladium-Semantik + AE-Easing):
+    Heatblast Feuer-Nova/Feuer-Surfen, Vierarm Erdschlag/Faustschlag, Diamondhead Kristallstacheln, XLR8
+    Sprungtritt/Gleiten. Im Spiel geprueft: Screenshots `verwandlung_blitzkugel`, `ae_faehigkeitsposen`,
+    `abzeichen_warnung`, `heatblast_glut_frames` in `docs/screenshots/`.
+  - Nicht im Bild geprueft: rote Kugel beim Zeitablauf (gleicher Code-Pfad wie Verwandeln, Farbe aus Restzeit).
 
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,

@@ -362,9 +362,9 @@ public final class TransformationManager {
 	private static void playTransformEffects(ServerWorld world, ServerPlayerEntity player, AlienDefinition alien, boolean transforming) {
 		Vector3f color = colorVector(alien.color());
 		world.spawnParticles(new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.6f),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 50, 0.6, 0.9, 0.6, 0.0);
+				player.getX(), player.getBodyY(0.5), player.getZ(), 14, 0.6, 0.9, 0.6, 0.0);
 		world.spawnParticles(new DustParticleEffect(color, 1.2f),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.5, 0.8, 0.5, 0.0);
+				player.getX(), player.getBodyY(0.5), player.getZ(), 8, 0.5, 0.8, 0.5, 0.0);
 		if (transforming) {
 			Vfx.transform(world, player);
 		} else {

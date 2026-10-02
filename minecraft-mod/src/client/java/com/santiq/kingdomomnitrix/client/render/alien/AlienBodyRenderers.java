@@ -75,6 +75,7 @@ public final class AlienBodyRenderers {
 		UNIFORMS.clear();
 		UNIFORM_MODELS.clear();
 		POSES.clear();
+		TEXTURE_ANIM.clear();
 		AlienPose.reload(newContext);
 		AlienArms.clearCache();
 	}
@@ -154,6 +155,10 @@ public final class AlienBodyRenderers {
 			return false;
 		}
 		MatrixStack.Entry saved = matrices.peek();
+		currentAge = player.age;
+		long remaining = state.remainingTicks(player.getWorld().getTime());
+		currentWarn = state.isTransformed() && remaining > 0 && remaining <= WARN_TICKS
+				&& (player.age / WARN_BLINK) % 2 == 0;
 		currentUniform = state.activeAlien().map(id -> AlienUniforms.get(player, id))
 				.or(() -> Optional.ofNullable(REVERT_UNIFORM.get(player.getId())))
 				.orElse(AlienUniforms.CLASSIC);
@@ -188,7 +193,7 @@ public final class AlienBodyRenderers {
 		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true) {
 			@Override
 			public Identifier getTextureResource(AlienBodyAnimatable animatable) {
-				return uniformTexture(model, super.getTextureResource(animatable), currentUniform);
+				return animatedTexture(model, uniformTexture(model, super.getTextureResource(animatable), currentUniform));
 			}
 
 			@Override
@@ -198,10 +203,10 @@ public final class AlienBodyRenderers {
 
 			@Override
 			public void setCustomAnimations(AlienBodyAnimatable animatable, long instanceId, AnimationState<AlienBodyAnimatable> state) {
-				float[] swing = poseOf(model);
-				if (swing != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
+				AlienPose.Info info = poseOf(model);
+				if (info != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
 					// wie AE: Koerper folgt der Spielerpose (inkl. Kopf) — die Standard-Kopfdrehung entfaellt
-					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), swing[0], swing[1]);
+					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), info);
 				} else {
 					super.setCustomAnimations(animatable, instanceId, state);
 				}
@@ -221,7 +226,13 @@ public final class AlienBodyRenderers {
 	private static final Map<Identifier, Float> SCALES = new HashMap<>();
 	private static final Map<Identifier, java.util.List<String>> UNIFORMS = new HashMap<>();
 	private static final Map<Identifier, Boolean> UNIFORM_MODELS = new HashMap<>();
-	private static final Map<Identifier, Optional<float[]>> POSES = new HashMap<>();
+	private static final Map<Identifier, Optional<AlienPose.Info>> POSES = new HashMap<>();
+	private static final Map<Identifier, int[]> TEXTURE_ANIM = new HashMap<>();
+	/** Abzeichen blinkt rot in den letzten 10 s (Serien-Piepen kommt vom Server) */
+	public static final int WARN_TICKS = 200;
+	private static final int WARN_BLINK = 5;
+	private static long currentAge;
+	private static boolean currentWarn;
 	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
 	private static String currentUniform = AlienUniforms.CLASSIC;
 
@@ -251,10 +262,10 @@ public final class AlienBodyRenderers {
 	}
 
 	/**
-	 * Schwung-Faktoren {arme, beine}, wenn das Modell der Spielerpose folgt ({@code "vanilla_pose": true} in
-	 * {@code alien_render}), sonst {@code null} (eigene Animationen fuer alle Knochen).
+	 * Pose-Angaben (Schwung-Faktoren, Faehigkeits-Posen), wenn das Modell der Spielerpose folgt
+	 * ({@code "vanilla_pose": true} in {@code alien_render}), sonst {@code null} (eigene Animationen fuer alle Knochen).
 	 */
-	static float[] poseOf(Identifier model) {
+	static AlienPose.Info poseOf(Identifier model) {
 		return POSES.computeIfAbsent(model, m -> {
 			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
 			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
@@ -268,12 +279,49 @@ public final class AlienBodyRenderers {
 				}
 				float arms = json.has("arm_swing") ? json.get("arm_swing").getAsFloat() : 1.0f;
 				float legs = json.has("leg_swing") ? json.get("leg_swing").getAsFloat() : 1.0f;
-				return Optional.of(new float[] {MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f)});
+				return Optional.of(new AlienPose.Info(MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f),
+						AlienPose.parseAbilities(json)));
 			} catch (java.io.IOException | RuntimeException e) {
 				KingdomOmnitrix.LOGGER.error("Pose-Angaben {} unlesbar, nutze Modell-Animationen", file, e);
 				return Optional.empty();
 			}
 		}).orElse(null);
+	}
+
+	/**
+	 * Glut-Frame und Warnzustand: {@code <textur>_f<i>.png} (alle 2 Ticks, wie AE) und {@code _warn} (Abzeichen rot,
+	 * blinkt in den letzten {@link #WARN_TICKS} Ticks vor dem Zeitablauf), wenn {@code alien_render} sie ankuendigt.
+	 */
+	static Identifier animatedTexture(Identifier model, Identifier texture) {
+		int[] anim = textureAnimOf(model);
+		int frame = anim[0] > 1 ? (int) ((currentAge / 2) % anim[0]) : 0;
+		boolean warn = anim[1] == 1 && currentWarn;
+		if (frame == 0 && !warn) {
+			return texture;
+		}
+		String path = texture.getPath();
+		return Identifier.of(texture.getNamespace(), path.substring(0, path.length() - 4)
+				+ (frame > 0 ? "_f" + frame : "") + (warn ? "_warn" : "") + ".png");
+	}
+
+	/** {Glut-Frames, Warn-Texturen 0/1} aus {@code alien_render}; fehlt die Angabe: {1, 0}. */
+	private static int[] textureAnimOf(Identifier model) {
+		return TEXTURE_ANIM.computeIfAbsent(model, m -> {
+			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
+			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
+			if (resource.isEmpty()) {
+				return new int[] {1, 0};
+			}
+			try (var reader = resource.get().getReader()) {
+				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
+				int frames = json.has("glow_frames") ? MathHelper.clamp(json.get("glow_frames").getAsInt(), 1, 64) : 1;
+				boolean warn = json.has("warn_textures") && json.get("warn_textures").getAsBoolean();
+				return new int[] {frames, warn ? 1 : 0};
+			} catch (java.io.IOException | RuntimeException e) {
+				KingdomOmnitrix.LOGGER.error("Textur-Animation {} unlesbar, nutze Grundtextur", file, e);
+				return new int[] {1, 0};
+			}
+		});
 	}
 
 	/** Uniformen eines Modells laut {@code alien_render/<name>.json} ({"uniforms": ["classic", "evo", …]}). */

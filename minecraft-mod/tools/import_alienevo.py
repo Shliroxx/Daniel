@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import math
 import logging
 import re
 import sys
@@ -67,14 +68,26 @@ class Spec:
     arm_swing: float = 1.0     # Armschwung relativ zum Spieler (AE-Skript: rotateX(xRot * -k) → 1 - k)
     leg_swing: float = 1.0
     loops: tuple[str, ...] = ()  # AE-Daueranimationen (laufen immer, z. B. XLR8-Schwanz)
+    script: str | None = None    # AE-Animationsskript (kubejs_scripts/<script>.js) mit den Faehigkeits-Posen
+    poses: tuple[str | None, ...] = ()  # je Faehigkeits-Slot der AE-Posen-Name (registerForPower) oder None
+    sprint: tuple[str, str] | None = None  # AE-Animationen beim Sprinten an/aus (XLR8-Visier)
 
 
 ALIENS = {
-    "heatblast": Spec("1", "pyronite", "pyronite.json", 1.1, "heat", "#FF6A00", arm_swing=0.8, leg_swing=0.6),
+    # Faehigkeiten: fire_blast, fire_burst (→ AE Feuer-Nova), flame_boost (→ AE Feuer-Surfen)
+    "heatblast": Spec("1", "pyronite", "pyronite.json", 1.1, "heat", "#FF6A00", arm_swing=0.8, leg_swing=0.6,
+                      script="pyronite", poses=(None, "alienevo/nova", "alienevo/surf")),
+    # dash_strike (→ Sprungtritt), blur_dodge (→ Gleiten), rapid_strikes (Spielerschlag)
     "xlr8": Spec("4", "kineceleran", "kineceleran.json", 1.1, "fast", "#1E90FF",
-                 loops=("xlr8.json:animation.xlr8.tail",)),
-    "four_arms": Spec("6", "tetramand", "tetramand.json", 2.0, "heavy", "#C0392B", extra="tetramand_arms"),
-    "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6),
+                 loops=("xlr8.json:animation.xlr8.tail",), script="kineceleran",
+                 poses=("alienevo_aliens/kick_dash", "skate", None),
+                 sprint=("xlr8.json:animation.xlr8.mask_on", "xlr8.json:animation.xlr8.mask_off")),
+    # ground_slam (→ Erdschlag), throw (→ Faustschlag), mighty_leap
+    "four_arms": Spec("6", "tetramand", "tetramand.json", 2.0, "heavy", "#C0392B", extra="tetramand_arms",
+                      script="tetramand", poses=("earth/smash", "tetramand/punch", None)),
+    # crystal_volley (→ Kristallstacheln)
+    "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6,
+                        script="petrosapien", poses=("diamond/spikes",)),
     "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6),
 }
 
@@ -134,7 +147,19 @@ def layers_of(jar: Jar, spec: Spec) -> list[dict]:
     return data["layers"] if data.get("type") == "palladium:compound" else [data]
 
 
-def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict) -> tuple[Image.Image, Image.Image]:
+def glow_frames(jar: Jar, spec: Spec) -> int:
+    """Anzahl Glut-Frames (AE: Ebene mit #I, alle 2 Ticks naechster Frame, 8 Frames)."""
+    for layer in layers_of(jar, spec):
+        tex = layer.get("texture")
+        if isinstance(tex, dict) and "/aliens/" in tex["base"] and "#I" in tex["base"]:
+            frames = 0
+            while jar.has(jar.asset(tex["base"].replace("#UNIFORM", "default").replace("#I", str(frames)))):
+                frames += 1
+            return max(1, frames)
+    return 1
+
+
+def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict, frame: int = 0) -> tuple[Image.Image, Image.Image]:
     """Farbtextur (alle Ebenen inkl. Glow) und Leuchtmaske (nur Glow-Ebenen) einer Uniform."""
     color = glow = None
     # Leuchtebenen zuletzt (im Spiel emissiv ueber der Haut)
@@ -144,7 +169,7 @@ def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict) -> tupl
         model_base = model.get("base", "") if isinstance(model, dict) else str(model)
         if not isinstance(tex, dict) or "/aliens/" not in tex["base"] or "badge" in model_base or spec.species not in model_base:
             continue
-        name = jar.asset(tex["base"].replace("#UNIFORM", ae_uniform).replace("#I", "0"))
+        name = jar.asset(tex["base"].replace("#UNIFORM", ae_uniform).replace("#I", str(frame)))
         if not jar.has(name):
             LOG.debug("Ebene fehlt: %s", name)
             continue
@@ -175,8 +200,24 @@ def _over(base: Image.Image, top: Image.Image) -> Image.Image:
     return result
 
 
-def badge_parts(jar: Jar, spec: Spec) -> tuple[dict, Image.Image, Image.Image] | None:
-    """Omnitrix-Abzeichen (prototype) mit Standardfarben: Geometrie, Farbtextur, Leuchttextur."""
+def _with_badge(color: Image.Image, glow: Image.Image, badge: tuple[dict, Image.Image, Image.Image],
+                k: tuple[float, float]) -> tuple[Image.Image, Image.Image]:
+    """Abzeichen-Pixel in Alien-Texturdichte unter die Alien-Textur haengen (UVs: transform_bones/_shift_uv)."""
+    bgeo, bcolor, bglow = badge
+    bw, bh = bgeo["description"].get("texture_width", 16), bgeo["description"].get("texture_height", 16)
+    target = (max(1, round(bw * k[0])), max(1, round(bh * k[1])))
+    sheet = Image.new("RGBA", (max(color.width, target[0]), color.height + target[1]), (0, 0, 0, 0))
+    sheet.paste(color, (0, 0))
+    sheet.alpha_composite(bcolor.resize(target, Image.NEAREST), (0, color.height))
+    gsheet = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    gsheet.paste(glow, (0, 0))
+    gsheet.alpha_composite(bglow.resize(target, Image.NEAREST), (0, color.height))
+    return sheet, gsheet
+
+
+def badge_parts(jar: Jar, spec: Spec, state: str = "default") -> tuple[dict, Image.Image, Image.Image] | None:
+    """Omnitrix-Abzeichen (prototype): Geometrie, Farbtextur, Leuchttextur. state „default“ (gruen) oder
+    „timeout“ (AE: rot, bei uns Warnblinken kurz vor Ablauf)."""
     folder = f"assets/alienevo/geo/aliens/alien_{spec.number}"
     geo_name = f"{folder}/badge_prototype.geo.json"
     if not jar.has(geo_name):
@@ -188,7 +229,9 @@ def badge_parts(jar: Jar, spec: Spec) -> tuple[dict, Image.Image, Image.Image] |
         overlay = f"assets/alienevo/textures/models/badge/prototype/{part}/{part}_0.png"
         if jar.has(overlay):
             color = _over(color, jar.image(overlay))
-    glow = recolor(jar.image("assets/alienevo/textures/models/badge/badge_glow_default_prototype.png"), BADGE_GLOW)
+    glow = jar.image(f"assets/alienevo/textures/models/badge/badge_glow_{state}_prototype.png")
+    if state == "default":
+        glow = recolor(glow, BADGE_GLOW)
     return jar.json(geo_name)["minecraft:geometry"][0], _over(color, glow), glow
 
 
@@ -377,6 +420,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         if spec.extra:
             extra_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.extra}_{ae}.geo.json"
             extra = jar.json(extra_name)["minecraft:geometry"][0] if jar.has(extra_name) else None
+        frames = glow_frames(jar, spec)
         color, glow = build_texture(jar, spec, ae, palettes)
         desc = geo["description"]
         tw, th = desc.get("texture_width", 64), desc.get("texture_height", 64)
@@ -389,24 +433,25 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         badge_dv = th
         scale_uv = (1.0, 1.0)
         if badge:
-            bgeo, bcolor, bglow = badge
+            bgeo = badge[0]
             bw, bh = bgeo["description"].get("texture_width", 16), bgeo["description"].get("texture_height", 16)
-            scale_uv = (bcolor.width / bw / kx, bcolor.height / bh / ky)
-            scale_uv = (1 / scale_uv[0], 1 / scale_uv[1]) if scale_uv != (1.0, 1.0) else scale_uv
-            # Abzeichen-Pixel in Alien-Texturdichte unter die Alien-Textur haengen
-            target = (max(1, round(bw * kx)), max(1, round(bh * ky)))
-            sheet = Image.new("RGBA", (max(color.width, target[0]), color.height + target[1]), (0, 0, 0, 0))
-            sheet.paste(color, (0, 0))
-            sheet.alpha_composite(bcolor.resize(target, Image.NEAREST), (0, color.height))
-            gsheet = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
-            gsheet.paste(glow, (0, 0))
-            gsheet.alpha_composite(bglow.resize(target, Image.NEAREST), (0, color.height))
-            color, glow = sheet, gsheet
-            scale_uv = (1.0, 1.0)
-            th_new = th + bh
-            tw_new = max(tw, bw)
+            th_new, tw_new = th + bh, max(tw, bw)
         else:
             th_new, tw_new = th, tw
+        # je Glut-Frame und Abzeichen-Zustand eine Textur: <name>[_<uniform>][_f<i>][_warn].png (+ _glowmask)
+        for frame in range(frames):
+            fcolor, fglow = (color, glow) if frame == 0 else build_texture(jar, spec, ae, palettes, frame)
+            for state, tag in (("default", ""), ("timeout", "_warn")):
+                parts = badge_parts(jar, spec, state) if badge else None
+                c, g = (_with_badge(fcolor, fglow, parts, (kx, ky)) if parts else (fcolor, fglow))
+                stem = f"{name}{suffix}{f'_f{frame}' if frame else ''}{tag}"
+                files[base / f"{stem}.png"] = c
+                # immer schreiben (auch leer): die Leuchtebene sucht je Textur ihre Maske
+                files[base / f"{stem}_glowmask.png"] = g
+                if frame == 0 and not tag:
+                    sheet_color = c
+                if not badge:
+                    break
         bones = transform_bones(geo, extra, badge[0] if badge else None, badge_dv, scale_uv)
         new_geo = {"format_version": "1.12.0", "minecraft:geometry": [{
             "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}", "texture_width": tw_new,
@@ -414,10 +459,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
                             "visible_bounds_offset": [0, 1.75, 0]},
             "bones": bones}]}
         files[geo_dir / f"{name}{suffix}.geo.json"] = new_geo
-        files[base / f"{name}{suffix}.png"] = color
-        # immer schreiben (auch leer): die Leuchtebene sucht je Uniform ihre Maske
-        files[base / f"{name}{suffix}_glowmask.png"] = glow
-        files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, color, (tw_new, th_new))
+        files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, sheet_color, (tw_new, th_new))
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
@@ -425,8 +467,109 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         "scale": spec.scale, "uniforms": list(UNIFORMS), "uniform_models": True,
         # Hauptknochen folgen der Spielerpose (wie AE); Schwung-Faktoren aus den AE-Animationsskripten
         "vanilla_pose": True, "arm_swing": spec.arm_swing, "leg_swing": spec.leg_swing,
+        # Faehigkeits-Posen je Slot (aus dem AE-Skript, siehe parse_poses); null = nur Spielerpose
+        "ability_poses": [parse_poses(jar, spec.script).get(p) if spec.script and p else None for p in spec.poses],
+        # Glut-Frames (alle 2 Ticks, wie AE) und Warn-Texturen (Abzeichen rot) — Dateinamen siehe build()
+        "glow_frames": glow_frames(jar, spec), "warn_textures": badge is not None,
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
+
+
+POSE_OPS = re.compile(r"^(set|move|rotate)([XYZ])(Rot)?(Degrees)?$")
+PALLADIUM_PARTS = {"head", "chest", "body", "right_arm", "left_arm", "right_leg", "left_leg"}
+
+
+def _number(expr: str) -> float | None:
+    """Konstanter Ausdruck aus dem AE-Skript („-57.5 * -1“, „-2 - 2.5“); alles mit Spielwerten → None."""
+    expr = expr.strip()
+    if not expr or not re.fullmatch(r"[0-9.+\-*/ ()]+", expr):
+        return None
+    try:
+        return float(eval(expr, {"__builtins__": {}}, {}))  # nur Zahlen und Rechenzeichen (Regex oben)
+    except (SyntaxError, ZeroDivisionError, TypeError):
+        return None
+
+
+def _calls(chain: str) -> list[tuple[str, str]]:
+    """.name(args) .name(args) … mit verschachtelten Klammern in den Argumenten."""
+    calls, i = [], 0
+    while True:
+        m = re.compile(r"\s*\.(\w+)\(").match(chain, i)
+        if not m:
+            return calls
+        depth, j = 1, m.end()
+        while j < len(chain) and depth:
+            depth += {"(": 1, ")": -1}.get(chain[j], 0)
+            j += 1
+        calls.append((m.group(1), chain[m.end():j - 1]))
+        i = j
+
+
+def _strip_first_person(body: str) -> str:
+    """Bloecke „if (… builder.isFirstPerson()) { … }“ (nicht „!builder…“) entfernen — nur Third-Person-Posen."""
+    out, i = [], 0
+    pattern = re.compile(r"if\s*\([^{]*?(?<!!)builder\.isFirstPerson\(\)\)\s*\{")
+    while True:
+        m = pattern.search(body, i)
+        if not m:
+            out.append(body[i:])
+            return "".join(out)
+        out.append(body[i:m.start()])
+        depth, j = 1, m.end()
+        while j < len(body) and depth:
+            depth += {"{": 1, "}": -1}.get(body[j], 0)
+            j += 1
+        i = j
+
+
+def parse_poses(jar: Jar, script: str) -> dict[str, dict]:
+    """AE-Posen aus einem Palladium-Animationsskript: {name: {"ease": …, "parts": {teil: [[op, achse, wert], …]}}}.
+
+    Palladium-Semantik: set* setzt Lage (Pixel, Modellraum des Spielers) bzw. Drehung absolut, move*/rotate*
+    addieren; animate(ease, t) blendet von der normalen Spielerpose zur Zielpose. Operationen mit Spielwerten
+    (builder.getModel()…, Math.sin) werden ausgelassen."""
+    text = jar.zip.read(f"assets/alienevo/kubejs_scripts/{script}.js").decode()
+    poses: dict[str, dict] = {}
+    for m in re.finditer(r"registerForPower\('([^']+)'", text):
+        start = text.index("{", m.end())
+        depth, j = 1, start + 1
+        while j < len(text) and depth:
+            depth += {"{": 1, "}": -1}.get(text[j], 0)
+            j += 1
+        body = text[start:j]
+        # mehrere Zeitgeber in einem Block (z. B. Faustschlag rechts/links): nur der erste gehoert zur Pose
+        timers = [t.start() for t in re.finditer(r"getAnimationTimerAbilityValue|abilityUtil\.isEnabled", body)]
+        if len(timers) > 1:
+            body = body[:timers[1]]
+        body = _strip_first_person(body)
+        parts: dict[str, list] = {}
+        ease = "in_out_cubic"
+        for g in re.finditer(r"builder\.get\('(\w+)'\)", body):
+            part = g.group(1)
+            if part not in PALLADIUM_PARTS:
+                continue
+            for name, args in _calls(body[g.end():]):
+                if name == "animate":
+                    e = args.split(",")[0].strip().strip("'\"")
+                    ease = re.sub(r"(?<!^)([A-Z])", r"_\1", e.removeprefix("ease")).lower()
+                    continue
+                op = POSE_OPS.match(name)
+                value = _number(args)
+                if not op or value is None:
+                    continue
+                kind = {"set": "set", "move": "move", "rotate": "rotate"}[op.group(1)]
+                if op.group(3) is None and kind == "rotate":
+                    kind = "rotate"  # rotateX(rad)
+                rot = op.group(3) is not None or kind == "rotate"
+                if rot and op.group(4) is None:
+                    value = math.degrees(value)
+                if not rot:
+                    parts.setdefault(part, []).append([kind + "_pos", op.group(2).lower(), round(value, 4)])
+                else:
+                    parts.setdefault(part, []).append([("set" if kind == "set" else "add") + "_rot", op.group(2).lower(), round(value, 4)])
+        if parts:
+            poses[m.group(1)] = {"ease": ease, "parts": parts}
+    return poses
 
 
 def ae_bone_name(name: str) -> str:
@@ -460,6 +603,17 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
     for key in ("transform", "revert"):
         anim = deepcopy(generated[key])
         anim["bones"] = {"root": {k: v for k, v in anim["bones"]["root"].items() if k == "scale"}}
+        animations[key] = anim
+    # Sprinten: AE-Animation an/aus (XLR8: Visier schliesst sich), sonst leer — der Controller braucht beide Namen
+    for key, index in (("sprint_on", 0), ("sprint_off", 1)):
+        anim = {"loop": "hold_on_last_frame", "animation_length": 0.05, "bones": {}}
+        if spec.sprint:
+            file, name_ = spec.sprint[index].split(":", 1)
+            source = deepcopy(jar.json(f"assets/alienevo/animations/{file}")["animations"][name_])
+            source["bones"] = {ae_bone_name(b): t for b, t in source.get("bones", {}).items()
+                               if ae_bone_name(b) in present and ae_bone_name(b) not in MAIN_BONES}
+            source["loop"] = "hold_on_last_frame"
+            anim = source
         animations[key] = anim
     # Schlag, Treffer und Faehigkeiten zeigt die Spielerpose (Armschwung); die Controller brauchen die Namen trotzdem
     for key in ("attack", "hit", "ability_0", "ability_1", "ability_2"):

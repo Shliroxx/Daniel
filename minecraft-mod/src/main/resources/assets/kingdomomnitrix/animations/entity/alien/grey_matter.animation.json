@@ -77,6 +77,16 @@
       "animation_length": 1.0,
       "bones": {}
     },
+    "sprint_off": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.05,
+      "bones": {}
+    },
+    "sprint_on": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.05,
+      "bones": {}
+    },
     "transform": {
       "loop": "hold_on_last_frame",
       "animation_length": 1.4,

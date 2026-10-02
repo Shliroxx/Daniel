@@ -114,6 +114,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		AlienBodyRenderers.register();
 		com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixWrist.register();
 		AlienAmbientVfx.register();
+		com.santiq.kingdomomnitrix.client.vfx.TransformBubble.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {
@@ -136,6 +137,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(ShipClient::tick);
 		WorldRenderEvents.AFTER_ENTITIES.register(SpaceRifts::render);
 		WorldRenderEvents.AFTER_ENTITIES.register(SwingshotRopes::render);
+		WorldRenderEvents.AFTER_ENTITIES.register(com.santiq.kingdomomnitrix.client.vfx.TransformBubble::render);
 		WorldRenderEvents.START.register(context -> ClientLockOn.updateCamera(MinecraftClient.getInstance()));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			ClientLockOn.reset();

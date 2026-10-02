@@ -9,5 +9,8 @@
   "vanilla_pose": true,
   "arm_swing": 0.6,
   "leg_swing": 0.6,
+  "ability_poses": [],
+  "glow_frames": 1,
+  "warn_textures": true,
   "source": "Alien Evolution (Habb and Stephen)"
 }

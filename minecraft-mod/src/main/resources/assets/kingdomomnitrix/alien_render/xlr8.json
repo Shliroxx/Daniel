@@ -9,5 +9,175 @@
   "vanilla_pose": true,
   "arm_swing": 1.0,
   "leg_swing": 1.0,
+  "ability_poses": [
+    {
+      "ease": "out_sine",
+      "parts": {
+        "body": [
+          [
+            "set_rot",
+            "x",
+            57.5
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            57.5
+          ],
+          [
+            "set_rot",
+            "y",
+            0.0
+          ],
+          [
+            "set_rot",
+            "z",
+            0.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            7.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -17.0
+          ],
+          [
+            "set_rot",
+            "z",
+            1.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            59.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -24.0
+          ],
+          [
+            "set_rot",
+            "z",
+            -43.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -11.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -73.0
+          ],
+          [
+            "set_rot",
+            "z",
+            5.0
+          ]
+        ],
+        "left_leg": [
+          [
+            "set_pos",
+            "x",
+            0.0
+          ],
+          [
+            "set_pos",
+            "y",
+            11.0
+          ],
+          [
+            "set_pos",
+            "z",
+            1.0
+          ],
+          [
+            "set_rot",
+            "x",
+            19.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -38.0
+          ],
+          [
+            "set_rot",
+            "z",
+            -8.0
+          ]
+        ],
+        "right_leg": [
+          [
+            "set_pos",
+            "x",
+            -4.5
+          ],
+          [
+            "set_pos",
+            "z",
+            -2.4
+          ],
+          [
+            "set_rot",
+            "x",
+            21.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -75.0
+          ],
+          [
+            "set_rot",
+            "z",
+            -26.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_quad",
+      "parts": {
+        "body": [
+          [
+            "add_rot",
+            "x",
+            -11.4592
+          ]
+        ],
+        "left_leg": [
+          [
+            "set_rot",
+            "x",
+            0.0
+          ]
+        ],
+        "right_leg": [
+          [
+            "set_rot",
+            "x",
+            0.0
+          ]
+        ]
+      }
+    },
+    null
+  ],
+  "glow_frames": 1,
+  "warn_textures": true,
   "source": "Alien Evolution (Habb and Stephen)"
 }

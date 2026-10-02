@@ -29,6 +29,7 @@ public final class ScreenEffects {
 	private static boolean known;
 	private static int flashColor;
 	private static long flashStart = Long.MIN_VALUE / 2;
+	private static long lastEnd = Long.MAX_VALUE;
 
 	private ScreenEffects() {
 	}
@@ -50,10 +51,15 @@ public final class ScreenEffects {
 		if (player == null || client.world == null) {
 			return;
 		}
-		Optional<Identifier> alien = TransformationManager.get(player).activeAlien();
-		// erster Stand nach dem Einloggen ist kein Wechsel
+		var state = TransformationManager.get(player);
+		Optional<Identifier> alien = state.activeAlien();
+		long now = client.world.getTime();
+		// erster Stand nach dem Einloggen ist kein Wechsel; Zurueckverwandeln: rot nur bei Zeitablauf (wie AE)
 		if (known && !alien.equals(lastAlien)) {
-			flash(alien.isPresent() ? 0x39FF14 : 0xFF3A2A, client.world.getTime());
+			flash(alien.isPresent() ? 0x39FF14 : (now >= lastEnd - 2 ? 0xFF3A2A : 0xB8FFA0), now);
+		}
+		if (alien.isPresent()) {
+			lastEnd = state.endTick();
 		}
 		lastAlien = alien;
 		known = true;

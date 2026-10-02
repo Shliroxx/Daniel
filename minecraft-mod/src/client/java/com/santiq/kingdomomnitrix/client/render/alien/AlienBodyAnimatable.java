@@ -39,6 +39,8 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	public static final RawAnimation REVERT = RawAnimation.begin().thenPlayAndHold("revert");
 	public static final RawAnimation ATTACK = RawAnimation.begin().thenPlayAndHold("attack");
 	public static final RawAnimation HIT = RawAnimation.begin().thenPlayAndHold("hit");
+	public static final RawAnimation SPRINT_ON = RawAnimation.begin().thenPlayAndHold("sprint_on");
+	public static final RawAnimation SPRINT_OFF = RawAnimation.begin().thenPlayAndHold("sprint_off");
 	private static final RawAnimation[] ABILITIES = {
 			RawAnimation.begin().thenPlayAndHold("ability_0"),
 			RawAnimation.begin().thenPlayAndHold("ability_1"),
@@ -68,6 +70,13 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
 		controllers.add(new AnimationController<>(this, "body", TRANSITION_TICKS, this::body));
 		controllers.add(new AnimationController<>(this, "action", 1, this::action));
+		controllers.add(new AnimationController<>(this, "sprint", 0, this::sprint));
+	}
+
+	/** Sprinten an/aus (AE: XLR8-Visier schliesst sich); Aliens ohne eigene Animation haben leere Eintraege. */
+	private PlayState sprint(AnimationState<AlienBodyAnimatable> state) {
+		PlayerEntity player = player(state);
+		return state.setAndContinue(player != null && player.isSprinting() ? SPRINT_ON : SPRINT_OFF);
 	}
 
 	private PlayState body(AnimationState<AlienBodyAnimatable> state) {
@@ -139,8 +148,13 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	 * Faehigkeit, die gerade benutzt wurde: {@code afterAbility} setzt den Energie-Zeitstempel auf „jetzt“ und die
 	 * Bereitschaft des Slots in die Zukunft — der Slot mit der spaetesten Bereitschaft ist der zuletzt benutzte.
 	 */
-	private static int recentAbility(TransformationState transformation, long now) {
-		if (transformation.energyStamp() <= transformation.startTick() || now - transformation.energyStamp() > ABILITY_TICKS) {
+	static int recentAbility(TransformationState transformation, long now) {
+		return recentAbility(transformation, now, ABILITY_TICKS);
+	}
+
+	/** wie oben, mit eigenem Zeitfenster (Posen laufen laenger als die Aktions-Animation) */
+	static int recentAbility(TransformationState transformation, long now, int window) {
+		if (transformation.energyStamp() <= transformation.startTick() || now - transformation.energyStamp() > window) {
 			return -1;
 		}
 		int best = -1;
