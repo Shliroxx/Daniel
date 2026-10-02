@@ -1046,49 +1046,62 @@ def xlr8() -> Alien:
     return alien
 
 
+# Fellzacken an der Aussenseite der Arme (y, z, Hoehe, Farbe) — die zottelige Silhouette der Vorlage
+FA_TUFTS_UPPER = ((19.5, -1.5, 1, "clean:#C8141E"), (21, 0.5, 2, "clean:#9C1414"), (22.5, -2, 1, "clean:#E02028"),
+                  (23.5, 1.5, 1, "clean:#9C1414"))
+FA_TUFTS_FIST = ((13.5, 0, 1, "clean:#9C1414"), (15, -2, 2, "clean:#C8141E"), (16.5, 1.5, 1, "clean:#E02028"),
+                 (17.5, -0.5, 1, "clean:#9C1414"))
+FA_TUFTS_LOWER = ((20, 0, 1, "clean:#C8141E"), (21.5, 1.5, 2, "clean:#9C1414"))
+
+
 def four_arms() -> Alien:
-    """Vierarm (Tetramand): breiter Oberkoerper mit weissem Hemd, schwarzem Mittelstreifen und Guertel, schwarze
-    Hose, vier rote Arme mit Fellbueschen, Muskelschultern, roter Kopf mit Stirnwulst und vier gelben Augen."""
-    tuft = "clean:#9C1414"
+    """Vierarm (Tetramand), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+
+    Masse aus TetramandOS (tools/sample_reference.py four_arms), Einheiten = 1/16 Block: kleiner Kopf 6 mit vier
+    gelben Augen, Hemd-Oberkoerper 12x13x6 mit schwarzem Mittelstreifen, schwarze Hose 10x4, Beine 5x12, rote Fuesse,
+    oberes Armpaar mit weissem Aermel (6x7), Fellarm und Faust, unteres Armpaar 4/5 breit, tiefer und weiter innen."""
+    ref = "four_arms/"
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 12, 0), [
-                 Part((-6, 12, -3), (12, 12, 6), "shirt"),
-                 Part((-6.5, 22, -3.5), (13, 2, 7), "clean:#EEEEEE"),                                     # Schulterkante
-                 Part((-6.5, 12, -3.5), (13, 1, 7), "clean:#1E1E22"),                                     # Guertel
-                 Part((-1, 12, -3.8), (2, 1, 1), "clean:#C8A23A"),                                        # Schnalle
-                 Part((-2, 24, -2), (4, 1, 4), "clean:#C8141E"),                                          # Nacken
+             Bone("body", "root", (0, 15, 0), [
+                 Part((-5, 15, -3), (10, 4, 6), "ref:" + ref + "pelvis"),
+                 Part((-6, 19, -3), (12, 13, 6), "ref:" + ref + "torso|plainback"),
              ])]
     bones += limb_pair(
-        arm=[((-12, 17, -2.5), (5, 7, 5), "fur"),
-             ((-12.5, 21, -3), (6, 3, 6), "fur"),                                                         # Muskelschulter
-             ((-13, 18, -1), (1, 2, 2), tuft), ((-13, 20.5, 0.5), (1, 2, 2), tuft)],                      # Fellbueschel
-        forearm=[((-12, 11, -2.5), (5, 6, 5), "fur"),
-                 ((-13, 13, -1), (1, 2, 2), tuft), ((-12, 9, -2), (5, 2, 4), "clean:#3A0A0E")],
-        leg=[((-5, 6, -2.5), (5, 6, 5), "clean:#1E1E22")],
-        shin=[((-5, 2, -2.5), (5, 4, 5), "clean:#1E1E22"),
-              ((-5, 0, -3.5), (5, 2, 6), "clean:#C8141E"),                                                # rote Fuesse
-              ((-5, 0, -4), (1, 1, 1), "clean:#3A0A0E"), ((-2, 0, -4), (1, 1, 1), "clean:#3A0A0E")],     # Zehen
-        shoulder=(7, 22), elbow=(9.5, 17), hip=(2.5, 12), knee=(2.5, 6))
+        arm=[((-12.5, 25, -3), (6, 7, 6), "ref:" + ref + "sleeve_r"),                               # weisser Aermel
+             ((-12, 19, -2.5), (5, 6, 5), "ref:" + ref + "arm_r@0,0,12,10"),
+             *[((-13, y, z), (1, h, 1), c) for y, z, h, c in FA_TUFTS_UPPER]],                        # Fellzacken
+        forearm=[((-12.5, 12, -3), (6, 7, 6), "ref:" + ref + "arm_r@0,10,12,10"),
+                 *[((-13.5, y, z), (1, h, 1), c) for y, z, h, c in FA_TUFTS_FIST]],
+        leg=[((-5.3, 9, -2.5), (5, 6, 5), "ref:" + ref + "leg_r@0,0,10,12")],
+        shin=[((-5.3, 3, -2.5), (5, 6, 5), "ref:" + ref + "leg_r@0,12,10,12"),
+              ((-5.5, 0, -3.5), (5, 3, 6), "ref:" + ref + "foot_r")],
+        shoulder=(7, 30), elbow=(9.5, 19), hip=(2.8, 15), knee=(2.8, 9))
     for side_name, side in (("right", -1), ("left", 1)):
         mirror = side > 0
+        lower = f"ref:{ref}lower_{'r' if side < 0 else 'l'}"
         bones += [
-            Bone(f"{side_name}_lower_arm", "body", (6 * side, 16.5, 1), [
-                Part((mirror_x(-10, 4, side), 12, -1), (4, 5, 4), "fur", mirror=mirror),
-                Part((mirror_x(-11, 1, side), 13, 0), (1, 2, 2), tuft, mirror=mirror)],
-                rotation=(0, 0, 8 * -side)),
-            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (8 * side, 12, 1), [
-                Part((mirror_x(-10, 4, side), 7, -1), (4, 5, 4), "fur", mirror=mirror),
-                Part((mirror_x(-10, 4, side), 5, -0.5), (4, 2, 3), "clean:#3A0A0E", mirror=mirror)]),
+            Bone(f"{side_name}_lower_arm", "body", (6 * side, 24, 1), [
+                Part((mirror_x(-9.5, 4, side), 19, -1), (4, 5, 4), lower + "@0,0,10,6"),
+                *[Part((mirror_x(-10.5, 1, side), y, z), (1, h, 1), c, mirror=mirror) for y, z, h, c in FA_TUFTS_LOWER]],
+                rotation=(0, 0, 6 * -side)),
+            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (7.5 * side, 19, 1), [
+                Part((mirror_x(-10, 5, side), 12, -1.5), (5, 7, 5), lower + "@0,6,10,8")]),
         ]
     for bone in bones:
+        if bone.name.startswith("left_") and "lower" not in bone.name:
+            for part in bone.cubes:
+                part.material = part.material.replace("sleeve_r", "sleeve_l").replace("arm_r", "arm_l") \
+                    .replace("leg_r", "leg_l").replace("foot_r", "foot_l")
         if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)
-    bones.append(Bone("head", "body", (0, 24, 0), [
-        Part((-3, 24, -3), (6, 7, 6), "clean:#C8141E", detail="tetra_face"),
-        Part((-3, 29.5, -3.4), (6, 1, 1), "clean:#9C1414"),                                              # Stirnwulst
-        Part((-2, 31, -2), (4, 1, 4), "clean:#C8141E"),                                                   # Kopfwoelbung
+            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)                    # abgespreizt wie Vorlage
+    bones.append(Bone("head", "body", (0, 32, 0), [
+        Part((-3, 32, -3), (6, 6, 6), "clean:#C8141E", detail="ref:" + ref + "head"),
+        Part((-2.5, 31, -3.4), (5, 1, 1), "clean:#1E1E22"),                                         # Kragen vorn
     ]))
-    return finish("four_arms", bones, "#C0392B", "heavy")
+    alien = Alien("four_arms", (96, 96), bones, "#C0392B", style="heavy", glow=True, density=2, render_scale=0.82,
+                  arms=("ref:four_arms/arm_full", "ref:four_arms/arm_full"))
+    pack_uvs(alien)
+    return alien
 
 
 def diamondhead() -> Alien:

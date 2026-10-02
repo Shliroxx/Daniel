@@ -97,6 +97,17 @@ leere Leuchtmaske ließ GeckoLib abstürzen; Matrix-Stapel nach Render-Absturz; 
 **Nächster konkreter Visual-Polish-Schritt:** ~~XLR8~~ (erledigt, siehe unten), dann Vierarm, Diamondhead,
 Grey Matter nach demselben Verfahren.
 
+## VIERARM — 1:1 REFERENCE REWORK (2026-10-02)
+- Vorlage `tools/reference/source/four_arms.png` (TetramandOS, Kopf oben angeschnitten), ~21,3 px/Einheit,
+  14 Teile abgetastet (`tools/sample_reference.py four_arms`); vom inneren Armpaar verdeckte Rumpfkanten mit der
+  Hemdfarbe aufgefüllt.
+- Geometrie nach Maß: Kopf 6 (vier gelbe, leuchtende Augen), Hemd-Oberkörper 12×13×6 mit schwarzem Mittelstreifen,
+  Hose 10×4, Beine 5×12, rote Füße, oberes Armpaar mit weißem Ärmel 6×7 + Fellarm + Faust (10° abgespreizt),
+  unteres Armpaar tiefer und weiter innen, Fellzacken an allen Armen (zottelige Silhouette der Vorlage).
+- Ego-Arme `four_arms_arms.png` (Ärmel + Fellarm). Darstellungsgröße 0,82 (zusätzlich Alien-Skalierung 1,4).
+- Offen: Arme in der Vorlage etwas länger (Fäuste tiefer); Seiten des Hemds grau statt weiß (Schattierung);
+  Kopf in der Vorlage angeschnitten — Oberseite frei gestaltet.
+
 ## XLR8 — 1:1 REFERENCE REWORK (2026-10-02)
 - Vorlage `tools/reference/source/xlr8.png` (KineceleranOS) vermessen (~24,5 px/Einheit), 13 Teile abgetastet
   (`tools/sample_reference.py xlr8`): Helm-Front, Rumpf (Logo und überdeckende Armkante ausgefüllt),
@@ -148,7 +159,7 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 | Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
 | Heatblast | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn, doppelte Dichte) | 50 | 55 (Glut, Funken) | 50 | 50 | 68 | FINAL POLISH (echte Rückseite) |
 | XLR8 | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn) | 50 | 40 | 45 | 45 | 66 | FINAL POLISH (Schwanz, Sprint) |
-| Vierarm | 55 (4 Arme sichtbar, breit) | 55 (Hemd, Fellarme, 4 Augen) | 45 (schwerer Gang) | 35 | 45 | 40 | 50 | POLISH NEEDED |
+| Vierarm | 68 (Vorlagen-Silhouette, Fellzacken) | 72 (Vorlage 1:1 vorn) | 45 (schwerer Gang) | 35 | 45 | 40 | 64 | FINAL POLISH (Armlänge) |
 | Diamondhead | 55 (Kristallarme, Schulterkristalle) | 55 (Kristallbänder, Anzug schwarz/weiß) | 45 | 35 | 45 | 40 | 50 | POLISH NEEDED |
 | Grey Matter | 50 (großer Kopf, Augen) | 55 | 45 (flinker Gang) | 30 | 45 | 35 | 48 | POLISH NEEDED |
 | Omnitrix (Item/Arm) | 30 (2D-Icon, nicht am Arm) | 60 | – | 50 | 55 | 50 | 40 | MODEL REWORK |

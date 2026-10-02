@@ -89,6 +89,14 @@ def inpaint(img: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
     return img
 
 
+def fill_columns(img: Image.Image, x0: int, x1: int, y0: int, y1: int, source_x: int) -> Image.Image:
+    """Spalten x0..x1 (Zeilen y0..y1) mit der Spalte source_x ueberschreiben — fuer verdeckte Rumpfkanten."""
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            img.putpixel((x, y), img.getpixel((source_x, y)))
+    return img
+
+
 def heatblast(src: Image.Image) -> dict[str, Image.Image]:
     out = {
         # Flammen ueber dem Kopf: 20 Spalten (inkl. Seitenflammen-Spalten), 12 Zeilen = 6 Einheiten
@@ -143,7 +151,31 @@ def xlr8(src: Image.Image) -> dict[str, Image.Image]:
     return out
 
 
-ALIENS = {"heatblast": heatblast, "xlr8": xlr8}
+def four_arms(src: Image.Image) -> dict[str, Image.Image]:
+    """Vierarm (Tetramand), Vorlage TetramandOS (Kopf oben angeschnitten): ~21,3 px pro Einheit, Texel ~10,6 px."""
+    out = {
+        "head": rect(src, 264, 0, 366, 96, 10, 9),
+        "torso": fill_columns(fill_columns(rect(src, 187, 96, 443, 384, 24, 26), 0, 5, 12, 26, 5), 19, 24, 12, 26, 18),
+        "pelvis": rect(src, 225, 384, 405, 468, 18, 8),
+        "sleeve_r": rect(src, 96, 140, 186, 256, 12, 14),
+        "sleeve_l": rect(src, 445, 140, 535, 256, 12, 14),
+        "arm_r": outline(src, 264, 482, 0, 160, 12, 20),
+        "arm_l": outline(src, 264, 482, 470, 631, 12, 20),
+        "lower_r": outline(src, 384, 522, 118, 230, 10, 14),
+        "lower_l": outline(src, 384, 522, 400, 518, 10, 14),
+        "leg_r": outline(src, 470, 720, 200, 305, 10, 24),
+        "leg_l": outline(src, 470, 720, 320, 430, 10, 24),
+        "foot_r": rect(src, 194, 720, 288, 773, 10, 5),
+        "foot_l": rect(src, 342, 720, 436, 773, 10, 5),
+    }
+    full = Image.new("RGBA", (12, 34))
+    full.paste(out["sleeve_r"].resize((12, 14), Image.NEAREST), (0, 0))
+    full.paste(out["arm_r"], (0, 14))
+    out["arm_full"] = full
+    return out
+
+
+ALIENS = {"heatblast": heatblast, "xlr8": xlr8, "four_arms": four_arms}
 
 
 def main(argv: list[str] | None = None) -> int:
