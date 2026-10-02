@@ -1201,39 +1201,75 @@ def four_arms() -> Alien:
     return alien
 
 
-def diamondhead() -> Alien:
-    """Diamondhead (Petrosapien), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+DIAMONDHEAD_UNIFORMS = {
+    # Original-Serie: gruene Kristalle, Anzug halb schwarz (rechts) / halb weiss (links)
+    "classic": {"CRYSTAL": "#5FD89A", "CRYSTAL_DARK": "#2E9A63", "SUIT_R": "#18181C", "SUIT_L": "#E8ECEF",
+                "LEG_R": "#18181C", "LEG_L": "#E8ECEF", "EYE": "#FFE14D"},
+    # Alien-Evolution-Look: tuerkise Kristalle, dunkelvioletter Anzug
+    "evo": {"CRYSTAL": "#86D6C2", "CRYSTAL_DARK": "#58A980", "SUIT_R": "#2E2643", "SUIT_L": "#2E2643",
+            "LEG_R": "#221A31", "LEG_L": "#221A31", "EYE": "#B3FF40"},
+    # Ultimate: gruene Kristalle, schwarzer Anzug, weisse Beine
+    "ultimate": {"CRYSTAL": "#5FD89A", "CRYSTAL_DARK": "#2E9A63", "SUIT_R": "#18181C", "SUIT_L": "#18181C",
+                 "LEG_R": "#E8ECEF", "LEG_L": "#E8ECEF", "EYE": "#FFE14D"},
+}
 
-    Masse aus PetrosapienOS (tools/sample_reference.py diamondhead), Einheiten = 1/16 Block: Kristallkopf 7 mit
-    Kamm, Schulterspitzen 3x5x3, Anzug 8x16x5 (halb schwarz, halb weiss), riesige Kristall-Oberarme 8x8x7,
-    Kristall-Unterarme 7x13x7, Beine 4x11 (rechts schwarz, links weiss), Fuesse 5x3x6."""
-    ref = "diamondhead/"
+
+def diamondhead() -> Alien:
+    """Diamondhead (Petrosapien) nach Alien Evolution (Erlaubnis laut SANTIQ, Fanprojekt): Rauten-Kristallkopf mit
+    Kamm, breite Brust ueber schmalerem Unterleib, Kristallstacheln am Ruecken, schraeg abstehende Schulterkristalle,
+    riesige Kristall-Unterarme, Anzug in zwei Haelften (Uniform classic: schwarz/weiss). Einheiten = 1/16 Block,
+    vorn = -z; drei Uniformen; Darstellung 1,15-fach."""
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 14, 0), [
-                 Part((-4, 14, -2.5), (8, 16, 5), "ref:" + ref + "torso"),
-                 Part((0.6, 23.5, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
-             ])]
-    bones += limb_pair(
-        arm=[((-13, 21, -4), (9, 10, 8), "ref:" + ref + "upper_r"),                                  # Schulterkristall
-             ((-8.5, 30, -1.5), (3, 7, 3), "ref:" + ref + "spike", {"rotation": (0, 0, 30), "pivot": (-7, 30, 0)})],
-        forearm=[((-12, 8, -3.5), (7, 12, 7), "ref:" + ref + "fore_r")],
-        leg=[((-4, 8, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,0,8,12")],
-        shin=[((-4, 3, -2), (4, 5, 4), "ref:" + ref + "leg_r@0,12,8,10"),
-              ((-4.5, 0, -3.5), (5, 3, 6), "ref:" + ref + "foot_r")],
-        shoulder=(6, 29), elbow=(8.5, 21), hip=(2, 14), knee=(2, 8))
-    for bone in bones:
-        if bone.name.startswith("left_"):
-            for part in bone.cubes:
-                part.material = part.material.replace("upper_r", "upper_l").replace("fore_r", "fore_l") \
-                    .replace("leg_r", "leg_l").replace("foot_r", "foot_l")
-        if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 8 if bone.name == "right_arm" else -8)
-    bones.append(Bone("head", "body", (0, 28, 0), [
-        Part((-3.5, 28, -4), (7, 7, 7), "ref:" + ref + "head@1,8,5,5", detail="ref:" + ref + "head"),
-        Part((-1.5, 35, -2), (3, 2, 3), "ref:" + ref + "crest"),                                     # Kopfkamm
-    ]))
-    alien = Alien("diamondhead", (96, 96), bones, "#2ECC71", style="normal", glow=True, density=2, render_scale=0.85,
-                  arms=("ref:diamondhead/arm_full", "ref:diamondhead/arm_full"))
+             Bone("body", "root", (0, 15, 0), [
+                 Part((-4, 15, -2), (4, 6, 6), "role:SUIT_R"),                                          # Unterleib rechts
+                 Part((0, 15, -2), (4, 6, 6), "role:SUIT_L"),                                           # Unterleib links
+             ]),
+             Bone("chest", "body", (0, 21, 0.5), [
+                 Part((-6, 21, -3), (6, 7, 8), "role:SUIT_R"),                                          # Brust rechts
+                 Part((0, 21, -3), (6, 7, 8), "role:SUIT_L"),                                           # Brust links
+                 Part((1, 24, -3.8), (3, 3, 1), "clean:#141414", detail="badge6"),                      # Omnitrix
+                 Part((-3, 27, -2), (6, 3, 6), "role:CRYSTAL_DARK", rotation=(0, 45, 0), pivot=(0, 28, 1)),  # Hals
+                 *side_parts([
+                     ((-3, 22, 3), (2, 2, 5), "role:CRYSTAL", {"rotation": (22.5, -12.5, 0), "pivot": (-2, 23, 4)}),
+                     ((-3, 18.5, 2), (2, 2, 4), "role:CRYSTAL", {"rotation": (22.5, -12.5, 0), "pivot": (-2, 19.5, 3.5)}),
+                     ((-5, 27, 2.5), (2, 3, 9), "role:CRYSTAL", {"rotation": (40, -8, -12), "pivot": (-4.5, 28.5, 4)}),
+                 ], -1),
+                 *side_parts([
+                     ((-3, 22, 3), (2, 2, 5), "role:CRYSTAL", {"rotation": (22.5, -12.5, 0), "pivot": (-2, 23, 4)}),
+                     ((-3, 18.5, 2), (2, 2, 4), "role:CRYSTAL", {"rotation": (22.5, -12.5, 0), "pivot": (-2, 19.5, 3.5)}),
+                     ((-5, 27, 2.5), (2, 3, 9), "role:CRYSTAL", {"rotation": (40, -8, -12), "pivot": (-4.5, 28.5, 4)}),
+                 ], 1),                                                                                  # Rueckenstacheln
+             ], rotation=(-5, 0, 0)),
+             Bone("head", "chest", (0, 29.5, 0), [
+                 Part((-2, 29.5, -2), (4, 4, 4), "role:CRYSTAL", rotation=(0, 45, 0), pivot=(0, 31.5, 0)),   # Rautenkopf
+                 Part((-2, 33.5, -2), (4, 1, 4), "role:CRYSTAL_DARK", inflate=0.3, rotation=(0, 45, 0),
+                      pivot=(0, 34, 0)),                                                                 # Kamm
+                 Part((-1, 32, 1), (2, 2, 4), "role:CRYSTAL_DARK", rotation=(15, 0, 0), pivot=(0, 33, 1)),  # Hinterkamm
+                 Part((-1.8, 31.3, -2.9), (1, 1, 1), "role:EYE"), Part((0.8, 31.3, -2.9), (1, 1, 1), "role:EYE"),  # Augen
+             ]),
+             ]
+    for side_name, side in (("right", -1), ("left", 1)):
+        suit, leg = ("role:SUIT_R", "role:LEG_R") if side < 0 else ("role:SUIT_L", "role:LEG_L")
+        bones += [
+            Bone(f"{side_name}_arm", "chest", (6.5 * side, 26, 0.5), side_parts([
+                ((-14, 25, -3), (7, 5, 7), "role:CRYSTAL", {"rotation": (0, 0, -35), "pivot": (-7, 26, 0.5)}),  # Schulterkristall
+                ((-10, 17.5, -2), (5, 8, 5), "role:CRYSTAL_DARK"),                                       # Oberarm
+            ], side), rotation=(2.5, 0, 10 * -side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (7.5 * side, 18, 0.5), side_parts([
+                ((-10.5, 8.5, -2.5), (6, 10, 6), "role:CRYSTAL", {"inflate": 0.15}),                    # Kristall-Unterarm
+                ((-10, 4.5, -2), (5, 4, 5), "role:CRYSTAL_DARK"),                                        # Hand
+                ((-9, 8, -3.3), (3, 3, 1), "role:CRYSTAL_DARK"),                                         # Kristallsplitter
+            ], side), rotation=(-12, 0, 0)),
+            Bone(f"{side_name}_leg", "root", (2.4 * side, 15, 0.5), side_parts([
+                ((-4.4, 8.5, -1.5), (4, 7, 4), leg, {"inflate": 0.1}),                                   # Oberschenkel
+            ], side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (2.4 * side, 9, 0.5), side_parts([
+                ((-4.4, 2, -1.5), (4, 7, 4), leg),                                                      # Wade
+                ((-4.9, 0, -3), (5, 3, 7), suit),                                                        # Fuss
+            ], side)),
+        ]
+    alien = Alien("diamondhead", (128, 128), bones, "#2ECC71", style="heavy", glow=True, density=2, render_scale=1.15,
+                  arms=("role:CRYSTAL", "role:CRYSTAL"), uniforms=DIAMONDHEAD_UNIFORMS)
     pack_uvs(alien)
     return alien
 
