@@ -37,7 +37,10 @@ Reserved“, Kopieren nicht erlaubt). Abgeleitete Regeln aus den öffentlichen V
    kantige Kristalle, Grey Matter klein).
 4. **Leuchten gezielt:** Augen, Omnitrix, Energie (Feuer, Kristall-Kanten) über Leuchtmaske.
 5. **Omnitrix als 3D-Gerät** am Handgelenk in der Ego-Sicht (Ziffernblatt mit Sanduhr und Alien-Silhouette).
-Heatblast und XLR8 (Rework 1) werden auf diesen Stil nachgezogen (Texturen ohne Rauschen, Konturen).
+Design-Referenz (von SANTIQ vorgegeben): die Original-Serien-Varianten im Alien-Evolution-Wiki
+(alienevolution.wiki.gg). Umgesetzt mit eigener Geometrie und eigenen Pixeln (`tools/generate_alien_models.py`,
+Serien-Design-Maler: `lava`, `fur`, `crystal`, `split`, `panel`, `shirt`, `clean:#…`, Gesichter + Omnitrix-Logo).
+Stand 2026-10-02: alle 5 Aliens im Serien-Design (`docs/screenshots/aliens_serien_design.png`).
 
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
@@ -74,11 +77,11 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 |---|---|---|---|---|---|---|---|---|
 | Spieler (Mensch) | 50 (Vanilla) | 50 | 45 (playerAnimator Combo) | 55 | 50 | 50 | 50 | POLISH NEEDED |
 | Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
-| Heatblast | 55 (46 Würfel, Gelenke) | 50 (Material + Leuchtmaske) | 50 (12 Animationen) | 50 | 50 | 50 | 52 | FINAL POLISH |
-| XLR8 | 55 (Raptor-Haltung, Helm-Schnauze, Schwanzkette, Radfüße) | 50 (Glanzpanzer, Anzugnähte, Visier leuchtet) | 50 (Raptor-Sprint, unruhiges Idle) | 35 | 45 | 45 | 50 | FINAL POLISH |
-| Vierarm | 20 (4 Arme) | 10 | 15 | 35 | 45 | 40 | 20 | MODEL/TEXTURE/ANIMATION REWORK |
-| Diamondhead | 20 (Kristallkopf) | 15 | 15 | 35 | 45 | 40 | 22 | MODEL/TEXTURE/ANIMATION REWORK |
-| Grey Matter | 15 | 10 | 15 | 30 | 45 | 35 | 18 | MODEL/TEXTURE/ANIMATION REWORK |
+| Heatblast | 55 | 60 (Glutflecken, Flammengesicht, Logo) | 50 | 50 | 50 | 50 | 55 | POLISH NEEDED (Seiten-/Rückansicht prüfen) |
+| XLR8 | 50 | 60 (Anzug mit Brustpaneel, Helm mit Gesichtsplatte) | 50 | 35 | 45 | 45 | 52 | POLISH NEEDED |
+| Vierarm | 55 (4 Arme sichtbar, breit) | 55 (Hemd, Fellarme, 4 Augen) | 45 (schwerer Gang) | 35 | 45 | 40 | 50 | POLISH NEEDED |
+| Diamondhead | 55 (Kristallarme, Schulterkristalle) | 55 (Kristallbänder, Anzug schwarz/weiß) | 45 | 35 | 45 | 40 | 50 | POLISH NEEDED |
+| Grey Matter | 50 (großer Kopf, Augen) | 55 | 45 (flinker Gang) | 30 | 45 | 35 | 48 | POLISH NEEDED |
 | Omnitrix (Item/Arm) | 30 (2D-Icon, nicht am Arm) | 60 | – | 50 | 55 | 50 | 40 | MODEL REWORK |
 | Keyblades (Kingdom Key, Oathkeeper, Omega) | 35 (flaches Sprite in der Hand) | 60 | 45 | 55 | 50 | 55 | 45 | MODEL REWORK |
 | Waffen/Gadgets (Combuster, Omniwrench, Heli-Pack …) | 35 | 55 | 30 | 50 | 50 | 50 | 40 | MODEL REWORK |
@@ -137,8 +140,9 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
-**Stilwechsel „sauber wie AlienEvo“:** Material-Maler in `tools/generate_alien_models.py` auf flache Farben +
-Konturen umstellen (Heatblast, XLR8 nachziehen), danach **Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,
+**Serien-Design Feinschliff:** Seiten- und Rückansicht aller 5 Aliens über den Beobachter-Client prüfen
+(Rückseiten der Anzüge, Schwanz XLR8, Kristall-Rücken Diamondhead), danach Omnitrix als 3D-Gerät am Handgelenk.
+Danach (aus altem Plan) **Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,
 Stil `heavy`: massiver Oberkörper, breite Schultern, 4 Arme mit Unterarmen, 4 Augen, schwerer Gang mit Gewichts-
 verlagerung, Bodenschlag-Animation). Seitenansicht über Beobachter-Client prüfen (siehe Testhinweis unten).
 

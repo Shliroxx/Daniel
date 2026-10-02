@@ -136,7 +136,7 @@ class Alien:
     texture_size: tuple[int, int]
     bones: list[Bone]
     accent: str
-    style: str = "normal"   # normal | heat | fast (bestimmt Animations-Charakter)
+    style: str = "normal"   # normal | heat | fast | heavy | small (bestimmt Animations-Charakter)
     glow: bool = False      # Leuchtmaske schreiben
 
 
@@ -368,9 +368,166 @@ def paint_wheel(canvas: Canvas, face: Face, cube: Part, rng: random.Random, nois
             canvas.put(face.x + px, face.y + py, color)
 
 
+# --- Serien-Design (Stilvorgabe SANTIQ: saubere Farbflaechen, Serien-Kostuem) ----------------------
+# Flaechen mit 3-Ton-Pixel-Dither statt Rauschen; Muster ueber Modellkoordinaten, damit sie ueber
+# Wuerfelgrenzen weiterlaufen. Material-Schreibweise: "clean:#rrggbb", "lava", "fur", "crystal", "split",
+# "panel", "shirt", "flame".
+
+CLEAN_SHADE = {"up": 1.06, "down": 0.74, "east": 0.9, "north": 1.0, "west": 0.9, "south": 0.86}
+BADGE_K = rgb("#141414")
+BADGE_W = rgb("#F2F2F2")
+
+
+def dither(seed: int, x: float, y: float) -> float:
+    """1.0 / heller / dunkler Pixel (70 / 20 / 10 %) — die weiche Koernung der Vorlagen ohne Rauschen."""
+    h = (zlib.crc32(f"{seed}:{x:.1f}:{y:.1f}".encode()) & 0xFFFF) / 0xFFFF
+    return 1.08 if h < 0.2 else 0.9 if h > 0.9 else 1.0
+
+
+def model_xy(face: Face, cube: Part, px: int, py: int) -> tuple[float, float, float]:
+    """Ungefaehre Modellkoordinate (x, y, z) eines Texturpixels — fuer durchgehende Muster."""
+    ox, oy, oz = cube.origin
+    w, h, d = cube.size
+    if face.name == "north":
+        return ox + w - px - 0.5, oy + h - py - 0.5, oz
+    if face.name == "south":
+        return ox + px + 0.5, oy + h - py - 0.5, oz + d
+    if face.name == "east":
+        return ox, oy + h - py - 0.5, oz + px + 0.5
+    if face.name == "west":
+        return ox + w, oy + h - py - 0.5, oz + d - px - 0.5
+    if face.name == "up":
+        return ox + w - px - 0.5, oy + h, oz + py + 0.5
+    return ox + w - px - 0.5, oy, oz + py + 0.5
+
+
+def paint_design(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    mat = cube.material
+    shade = CLEAN_SHADE[face.name]
+    seed = zlib.crc32(mat.encode()) ^ (face.x * 131 + face.y)
+    blobs = Noise(97)
+    for py in range(face.h):
+        for px in range(face.w):
+            mx, my, mz = model_xy(face, cube, px, py)
+            glow = False
+            if mat.startswith("clean:"):
+                base = rgb(mat[6:])
+            elif mat == "lava":
+                # dunkelrotes Gestein mit gelb-orangen Glutflecken (Flecken laufen ueber den ganzen Koerper)
+                n = blobs(mx * 1.15 + mz * 0.7, my * 1.05)
+                if n > 0.6:
+                    base, glow = (rgb("#FFD24A") if n > 0.66 else rgb("#FFA22E")), True
+                else:
+                    base = rgb("#7A1D1D") if n > 0.38 else rgb("#5E1414")
+            elif mat == "fur":
+                # Vierarm-Arme: rotes Fell mit senkrechten Straehnen
+                stripe = ((int(mx * 2 + mz * 3) % 5) == 0)
+                base = rgb("#8E0E16") if stripe else rgb("#D21C24") if (int(my) + int(mx)) % 3 else rgb("#E9363C")
+            elif mat == "crystal":
+                # Diamondhead: hellgruene Facetten in schraegen Baendern
+                band = (mx + my * 0.8 + mz) % 6
+                base = rgb("#D4FFE6") if band < 0.9 else rgb("#9BF0BE") if band < 2.6 else rgb("#6FD69B")
+            elif mat == "split":
+                # Diamondhead-Anzug: rechte Koerperhaelfte schwarz, linke weiss
+                base = rgb("#2A2A2E") if mx < 0 else rgb("#EDEDED")
+            elif mat == "panel":
+                # XLR8-Anzug: schwarz, weisses Brustpaneel vorn, grauer Guertelstreifen
+                base = rgb("#232327")
+                if face.name == "north" and abs(mx) < 2.6 and my > 14.0:
+                    base = rgb("#EDEDED")
+                if abs(my - 14.5) < 0.6 and face.name != "up":
+                    base = rgb("#8F96A3")
+            elif mat == "shirt":
+                # Vierarm-Hemd: weiss mit schwarzem Mittelstreifen und schwarzem Saum
+                base = rgb("#EEEEEE")
+                if abs(mx) < 1.0 and face.name in ("north", "south"):
+                    base = rgb("#1E1E22")
+                if my < cube.origin[1] + 1.0:
+                    base = rgb("#1E1E22")
+            else:
+                raise ValueError(f"unbekanntes Design-Material: {mat}")
+            factor = shade * dither(seed, px, py)
+            color = scale(base, factor if not glow else min(1.0, factor + 0.08))
+            canvas.put(face.x + px, face.y + py, color, glow=glow)
+
+
+def put_pattern(canvas: Canvas, fx: int, fy: int, rows: tuple[str, ...], palette: dict[str, Color],
+                glow: str = "") -> None:
+    """Zeichnet ein Pixelmuster; '.' bleibt unveraendert. Zeichen in `glow` leuchten."""
+    for dy, row in enumerate(rows):
+        for dx, ch in enumerate(row):
+            if ch != ".":
+                canvas.put(fx + dx, fy + dy, palette[ch], glow=ch in glow)
+
+
+def paint_show_detail(canvas: Canvas, cube: Part, front: Face) -> bool:
+    """Gesichter und Omnitrix-Logo der Serien-Designs. True, wenn das Detail bekannt war."""
+    fx, fy, w, h = front.x, front.y, front.w, front.h
+    d = cube.detail
+    if d == "badge":
+        # Omnitrix-Logo: schwarzes Feld, weisses X (Sanduhr) — 5x5 mittig
+        put_pattern(canvas, fx + (w - 5) // 2, fy + (h - 5) // 2,
+                    ("KKKKK", "KWKWK", "KKWKK", "KWKWK", "KKKKK"), {"K": BADGE_K, "W": BADGE_W})
+        return True
+    if d == "pyro_face":
+        # Flammengesicht: dunkelrote Brauen und Augenhoehlen, helle Pupillen, offener Mund mit Glut
+        put_pattern(canvas, fx + (w - 8) // 2, fy + max(0, h - 8), (
+            "........",
+            "RR....RR",
+            "RWR..RWR",
+            ".RR..RR.",
+            "........",
+            "..RRRR..",
+            "..RYYR..",
+            "...RR...")[-h:], {"R": rgb("#7A1414"), "W": rgb("#FFF6D0"), "Y": rgb("#FFB43A")}, glow="WY")
+        return True
+    if d == "xlr8_face":
+        # schwarzer Helm, tuerkise Gesichtsplatte mit gruenen Augen, schwarzer Mund
+        put_pattern(canvas, fx, fy, (
+            "KKKKKKKK",
+            "KCCCCCCK",
+            "GGCCCCGG",
+            "GGCCCCGG",
+            "KCCCCCCK",
+            "KKCCCCKK",
+            "KKKKKKKK",
+            "KKKKKKKK")[:h], {"K": rgb("#18181C"), "C": rgb("#4FB6C9"), "G": rgb("#9BFF2E")}, glow="G")
+        return True
+    if d == "tetra_face":
+        # Vierarm: vier gelbe Augen, schwarzer Mund
+        put_pattern(canvas, fx + (w - 6) // 2, fy, (
+            "......",
+            "YY..YY",
+            "......",
+            "YY..YY",
+            "......",
+            ".KKKK.")[:h], {"Y": rgb("#FFC21A"), "K": rgb("#1A0606")}, glow="Y")
+        return True
+    if d == "petro_face":
+        # Diamondhead: schmale gelbe Augen, kantige Wangen
+        put_pattern(canvas, fx + (w - 6) // 2, fy, (
+            "......",
+            "......",
+            "YY..YY",
+            "KY..YK",
+            "......",
+            ".KKKK.")[:h], {"Y": rgb("#FFD21E"), "K": rgb("#2E6B4A")}, glow="Y")
+        return True
+    if d == "galvan_eye":
+        # Grey Matter: grosses gelbes Auge mit schwarzer Schlitzpupille und schwarzem Rahmen
+        rows = ["K" * w] + ["K" + "Y" * (w - 2) + "K"] * (h - 2) + ["K" * w]
+        mid = h // 2
+        rows[mid] = "K" + "Y" + "K" * (w - 4) + "Y" + "K"
+        put_pattern(canvas, fx, fy, tuple(rows), {"Y": rgb("#FFF4A3"), "K": rgb("#151515")}, glow="Y")
+        return True
+    return False
+
+
 def painter(material: str) -> Callable[[Canvas, Face, Cube, random.Random, Noise], None]:
     if material.startswith("flat:"):
         return paint_flat
+    if material.startswith("clean:") or material in ("lava", "fur", "crystal", "split", "panel", "shirt"):
+        return paint_design
     if material in ROCK:
         return paint_rock
     return {"magma": paint_magma, "flame": paint_flame, "armor": paint_armor, "suit": paint_suit, "visor": paint_visor,
@@ -478,7 +635,7 @@ def build_textures(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
             faces = faces_of(cube)
             for face in faces:
                 paint(canvas, face, cube, rng, noise)
-            if cube.detail:
+            if cube.detail and not paint_show_detail(canvas, cube, faces[3]):
                 paint_detail(canvas, cube, faces[3])
     return canvas.color, canvas.glow
 
@@ -551,166 +708,188 @@ def build_texture(alien: Alien, rng: random.Random) -> Image.Image:
 
 # --- Aliens ---------------------------------------------------------------------------------------
 
-def humanoid(skin: str, head: str, legs: str, *, body_uv=(16, 16), head_cube: Part | None = None,
-             head_detail: str = "eyes") -> list[Bone]:
-    """Grundgeruest im Spieler-Layout (64x64), Fuesse auf y=0, Kopf bis y=32."""
-    skin, head, legs = f"flat:{skin}", f"flat:{head}", f"flat:{legs}"
-    return [
-        Bone("root", None, (0, 0, 0)),
-        Bone("body", "root", (0, 24, 0), [Part((-4, 12, -2), (8, 12, 4), skin, body_uv, "omnitrix_dot")]),
-        Bone("head", "body", (0, 24, 0), [head_cube or Part((-4, 24, -4), (8, 8, 8), head, (0, 0), head_detail)]),
-        Bone("right_arm", "body", (-5, 22, 0), [Part((-8, 12, -2), (4, 12, 4), skin, (40, 16))]),
-        Bone("left_arm", "body", (5, 22, 0), [Part((4, 12, -2), (4, 12, 4), skin, (40, 16), mirror=True)]),
-        Bone("right_leg", "root", (-1.9, 12, 0), [Part((-3.9, 0, -2), (4, 12, 4), legs, (0, 16))]),
-        Bone("left_leg", "root", (1.9, 12, 0), [Part((-0.1, 0, -2), (4, 12, 4), legs, (0, 16), mirror=True)]),
-    ]
+def mirror_x(x: float, w: float, side: int) -> float:
+    """Wuerfel-Ursprung fuer die linke Seite (+x) aus der rechten Seite (-x) spiegeln."""
+    return x if side < 0 else -x - w
+
+
+def limb_pair(arm: list[tuple], forearm: list[tuple], leg: list[tuple], shin: list[tuple], *,
+              shoulder: tuple[float, float] = (5, 22), elbow: tuple[float, float] = (6, 17.5),
+              hip: tuple[float, float] = (2, 12), knee: tuple[float, float] = (2, 6)) -> list[Bone]:
+    """Arme und Beine mit Ellbogen/Knie fuer beide Seiten. Eintraege: (origin, size, material[, extra-kwargs])."""
+    def parts(entries: list[tuple], side: int) -> list[Part]:
+        result = []
+        for entry in entries:
+            (x, y, z), size, material = entry[0], entry[1], entry[2]
+            extra = dict(entry[3]) if len(entry) > 3 else {}
+            if "rotation" in extra and side > 0:
+                rx, ry, rz = extra["rotation"]
+                extra["rotation"] = (rx, -ry, -rz)
+                px, py_, pz = extra["pivot"]
+                extra["pivot"] = (-px, py_, pz)
+            result.append(Part((mirror_x(x, size[0], side), y, z), size, material, mirror=side > 0, **extra))
+        return result
+
+    bones = []
+    for side_name, side in (("right", -1), ("left", 1)):
+        bones += [
+            Bone(f"{side_name}_arm", "body", (shoulder[0] * side, shoulder[1], 0), parts(arm, side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (elbow[0] * side, elbow[1], 0), parts(forearm, side)),
+            Bone(f"{side_name}_leg", "root", (hip[0] * side, hip[1], 0), parts(leg, side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (knee[0] * side, knee[1], 0), parts(shin, side)),
+        ]
+    return bones
+
+
+def finish(name: str, bones: list[Bone], accent: str, style: str, size: tuple[int, int] = (128, 64)) -> Alien:
+    alien = Alien(name, size, bones, accent, style=style, glow=True)
+    pack_uvs(alien)
+    return alien
 
 
 def heatblast() -> Alien:
-    """Heatblast: schlanker Koerper aus Magmagestein, Platten mit gluehenden Rissen, Kopf als lodernde Flamme."""
+    """Heatblast (Pyronite): dunkelrotes Gestein mit Glutflecken, gelbes Flammengesicht, lodernder Flammenkopf,
+    breite Faeuste, Omnitrix-Logo auf der Brust."""
     bones = [Bone("root", None, (0, 0, 0)),
              Bone("body", "root", (0, 12, 0), [
-                 Part((-3.5, 10.5, -2), (7, 3, 4), "rock_dark"),                 # Becken
-                 Part((-3, 13, -1.5), (6, 4, 3), "magma"),                      # Taille (Glut zwischen den Platten)
-                 Part((-4.5, 17, -2.5), (9, 7, 5), "rock"),                     # Brustkorb
-                 Part((-2, 19, -3.7), (4, 4, 1), "rock_dark", detail="omnitrix_badge"),  # Omnitrix-Symbol
-                 Part((-4, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, 8, 0), pivot=(-2, 20, -3)),
-                 Part((0, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, -8, 0), pivot=(2, 20, -3)),
-                 Part((-2.5, 14, -2.2), (5, 2, 1), "rock_dark"),                # Bauchplatte
-                 Part((-3.5, 16.5, 2.2), (7, 7, 1), "rock_dark"),               # Rueckenplatte
-                 Part((-1, 17, 3), (2, 6, 1), "magma"),                         # Glutnaht am Ruecken
-                 Part((-1.5, 24, -1.5), (3, 1, 3), "magma"),                    # Hals
+                 Part((-4, 12, -2), (8, 12, 4), "lava"),
+                 Part((-2.5, 18.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
+                 Part((-3, 23.4, -2.4), (6, 1, 5), "clean:#5E1414"),                        # Halsring
              ])]
-    for side, s in (("right", -1), ("left", 1)):
-        mirror = side == "left"
-        sx = lambda x, w: x if s < 0 else -x - w  # noqa: E731 — x-Spiegelung fuer Wuerfel-Ursprung
-        bones += [
-            Bone(f"{side}_arm", "body", (5.5 * s, 22.5, 0), [
-                Part((sx(-9, 5), 20.5, -2.5), (5, 4, 5), "rock_light", rotation=(0, 0, -12 * s), pivot=(6.5 * s, 22.5, 0),
-                     mirror=mirror),                                            # Schulterpanzer
-                Part((sx(-7.5, 3), 16, -1.5), (3, 6, 3), "rock", mirror=mirror),  # Oberarm
-            ]),
-            Bone(f"{side}_forearm", f"{side}_arm", (6 * s, 16.5, 0), [
-                Part((sx(-7.75, 3), 11, -1.75), (3, 6, 3), "rock_dark", inflate=0.3, mirror=mirror),   # Armschiene
-                Part((sx(-7.5, 3), 8.5, -1.5), (3, 3, 3), "magma", mirror=mirror),                    # gluehende Faust
-            ]),
-            Bone(f"{side}_leg", "root", (2 * s, 11, 0), [
-                Part((sx(-3.6, 3), 5.5, -1.5), (3, 6, 3), "rock", mirror=mirror),                     # Oberschenkel
-                Part((sx(-3.85, 3), 5, -2.3), (3, 2, 1), "rock_light", inflate=0.2, mirror=mirror),   # Knieplatte
-            ]),
-            Bone(f"{side}_shin", f"{side}_leg", (2 * s, 5.5, 0), [
-                Part((sx(-3.6, 3), 1.5, -1.5), (3, 4, 3), "rock_dark", mirror=mirror),                # Schienbein
-                Part((sx(-3.6, 3), 3, -1.2), (3, 2, 2), "magma", inflate=-0.1, mirror=mirror),        # Glutfuge
-                Part((sx(-4.1, 4), 0, -3.2), (4, 2, 5), "rock", mirror=mirror),                       # Fuss
-            ]),
-        ]
+    bones += limb_pair(
+        arm=[((-8, 18, -2), (4, 6, 4), "lava")],
+        forearm=[((-8.5, 10.5, -2.5), (5, 7, 5), "lava")],                                   # breite Faust
+        leg=[((-4, 6, -2), (4, 6, 4), "lava")],
+        shin=[((-4, 0, -2), (4, 6, 4), "lava")],
+        elbow=(6, 18))
     bones += [
-        Bone("head", "body", (0, 25, 0), [
-            Part((-3.5, 25, -3.5), (7, 5, 6), "face", detail="heat_face"),     # Gesicht
-            Part((-2.5, 24.5, -3.8), (5, 1, 1), "magma"),                      # Kinnglut
+        Bone("head", "body", (0, 24, 0), [Part((-4, 24, -4), (8, 8, 8), "clean:#FFC23F", detail="pyro_face")]),
+        Bone("flame_base", "head", (0, 32, 0), [
+            Part((-4, 32, -4), (8, 2, 8), "flame"),
+            Part((-3.5, 33.5, -3), (7, 2, 7), "flame"),
         ]),
-        Bone("flame_base", "head", (0, 29.5, 1), [
-            Part((-4, 29.5, -2.5), (8, 3, 7), "flame"),                                   # Krone
-            Part((-3, 29, -3.9), (6, 2, 2), "flame"),                                     # Stirnflamme
-            Part((-5.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, 14), pivot=(-4.2, 27, 0)),
-            Part((3.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, -14), pivot=(4.2, 27, 0), mirror=True),
-            Part((-3, 25.5, 2.4), (6, 6, 2), "flame"),                                    # Hinterkopf
-        ]),
-        Bone("flame_mid", "flame_base", (0, 32, 2), [
-            Part((-3, 32, -0.5), (6, 4, 5), "flame"),
-            Part((-4.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, 22), pivot=(-3.2, 33, 1.5)),
-            Part((2.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, -22), pivot=(3.2, 33, 1.5), mirror=True),
-        ], rotation=(-20, 0, 0)),
-        Bone("flame_tip", "flame_mid", (0, 35.5, 3), [Part((-2, 35.5, 1), (4, 4, 4), "flame")], rotation=(-18, 0, 0)),
-        Bone("flame_spike", "flame_tip", (0, 39, 4), [Part((-1, 39, 2), (2, 3, 2), "flame")], rotation=(-22, 0, 0)),
+        Bone("flame_mid", "flame_base", (0, 35, 0.5), [Part((-2.5, 35, -1.5), (5, 3, 5), "flame")], rotation=(-8, 0, 0)),
+        Bone("flame_tip", "flame_mid", (0, 38, 1), [Part((-1.5, 38, -0.5), (3, 3, 3), "flame")], rotation=(-10, 0, 0)),
+        Bone("flame_spike", "flame_tip", (0, 41, 1.5), [Part((-0.5, 41, 0.5), (1, 2, 1), "flame")], rotation=(-12, 0, 0)),
     ]
-    alien = Alien("heatblast", (128, 64), bones, "#FF6A00", style="heat", glow=True)
-    pack_uvs(alien)
-    return alien
+    return finish("heatblast", bones, "#FF6A00", "heat")
 
 
 def xlr8() -> Alien:
-    """XLR8: schlanker Raptor — vorgebeugt, Helm mit Visier, Raederfuesse, langer gestreifter Schwanz."""
+    """XLR8 (Kineceleran): schwarzer Anzug mit weissem Brustpaneel, tuerkise Arme und Schienbeine, schwarzer Helm
+    mit tuerkiser Gesichtsplatte und gruenen Augen, langer Schwanz."""
     bones = [Bone("root", None, (0, 0, 0)),
              Bone("body", "root", (0, 12, 0), [
-                 Part((-3, 10.5, -2), (6, 3, 4), "armor"),                        # Becken
-                 Part((-3, 13.5, -1.5), (6, 4, 3), "suit"),                       # Taille
-                 Part((-3.5, 17, -2), (7, 5, 4), "suit"),                         # Brust
-                 Part((-4, 17.5, -2.8), (8, 4, 1), "armor"),                      # Brustpanzer
-                 Part((-2, 17.5, -3.5), (4, 4, 1), "armor", detail="omnitrix_badge"),
-                 Part((-3.5, 15, 2), (7, 7, 1), "armor"),                          # Rueckenpanzer
-                 Part((-0.5, 14.5, 2.8), (1, 8, 1), "suit"),                       # Rueckenkamm
-                 Part((-1.5, 21.5, -2), (3, 2, 3), "suit"),                        # Hals
-             ], rotation=(14, 0, 0))]
-    for side, s in (("right", -1), ("left", 1)):
-        mirror = side == "left"
-        sx = lambda x, w: x if s < 0 else -x - w  # noqa: E731
-        bones += [
-            Bone(f"{side}_arm", "body", (4.5 * s, 21, 0), [
-                Part((sx(-7, 3), 19, -2), (3, 3, 4), "armor", mirror=mirror),      # Schulterpanzer
-                Part((sx(-6.5, 2), 15, -1), (2, 5, 2), "suit", mirror=mirror),     # Oberarm
-            ]),
-            Bone(f"{side}_forearm", f"{side}_arm", (5.5 * s, 15.5, 0), [
-                Part((sx(-6.5, 2), 10.5, -1), (2, 5, 2), "armor", inflate=0.25, mirror=mirror),
-                Part((sx(-6.5, 2), 8.5, -1.5), (2, 2, 3), "armor", mirror=mirror),  # Hand
-                Part((sx(-6.5, 2), 8, -3), (2, 1, 2), "visor", mirror=mirror),      # Klauen (leuchtend)
-            ]),
-            Bone(f"{side}_leg", "root", (2 * s, 11, 0), [
-                Part((sx(-3.5, 3), 6.5, -1.5), (3, 5, 3), "suit", mirror=mirror),     # Oberschenkel
-                Part((sx(-3.75, 3), 7.5, -2.3), (3, 3, 1), "armor", mirror=mirror),   # Schenkelpanzer
-            ]),
-            Bone(f"{side}_shin", f"{side}_leg", (2 * s, 7, 0), [
-                Part((sx(-3.5, 3), 2, -0.5), (3, 5, 2), "armor", mirror=mirror),       # Schienbein (nach hinten versetzt)
-                Part((sx(-3.5, 3), 0, -3.5), (3, 1, 3), "armor", mirror=mirror),       # Zehenplatte
-                Part((sx(-3.75, 3), 0, -1), (3, 3, 3), "wheel", inflate=0.2, mirror=mirror),  # Radfuss
-            ]),
-        ]
+                 Part((-4, 12, -2), (8, 12, 4), "panel"),
+                 Part((-2.5, 17.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
+             ], rotation=(6, 0, 0))]
+    bones += limb_pair(
+        arm=[((-8, 18, -2), (4, 6, 4), "clean:#56C4D6"),
+             ((-8.5, 21, -2.5), (5, 3, 5), "clean:#2A2A2E")],                               # Schulterpolster
+        forearm=[((-8, 12, -2), (4, 6, 4), "clean:#56C4D6"),
+                 ((-9, 13, -0.5), (1, 5, 2), "clean:#3D9BB0"),                              # Flosse aussen
+                 ((-8.25, 9, -2.25), (4, 3, 4), "clean:#1C1C20", {"inflate": 0.25})],       # Hand
+        leg=[((-4, 6, -2), (4, 6, 4), "clean:#232327")],
+        shin=[((-4, 1, -2), (4, 5, 4), "clean:#56C4D6"),
+              ((-4, 0, -3.5), (4, 1, 5), "clean:#1C1C20")],                                 # Krallenfuss
+        elbow=(6, 18))
     bones += [
-        Bone("head", "body", (0, 23, -1), [
-            Part((-2.5, 23.5, -3.5), (5, 4, 6), "armor"),                          # Helmkuppel
-            Part((-2, 23, -6), (4, 3, 3), "armor"),                                # Schnauze
-            Part((-2.5, 24.4, -6.3), (5, 2, 4), "visor", inflate=0.12),           # Visier, um die Seiten gezogen
-            Part((-1.5, 22, -5.5), (3, 1, 3), "suit"),                             # Kiefer
-            Part((-0.5, 27.2, -2.5), (1, 2, 6), "armor", rotation=(-12, 0, 0), pivot=(0, 27.5, 0)),  # Kammflosse
-        ], rotation=(-14, 0, 0)),
-        Bone("tail_1", "body", (0, 12.5, 2.5), [Part((-1.5, 11, 2.5), (3, 3, 5), "stripe")], rotation=(-10, 0, 0)),
-        Bone("tail_2", "tail_1", (0, 12.5, 7.5), [Part((-1, 11.5, 7.5), (2, 2, 5), "stripe")], rotation=(-6, 0, 0)),
-        Bone("tail_3", "tail_2", (0, 12.5, 12.5), [Part((-0.5, 12, 12.5), (1, 1, 5), "stripe")], rotation=(-4, 0, 0)),
+        Bone("head", "body", (0, 24, 0), [
+            Part((-4, 24, -4), (8, 8, 8), "clean:#1C1C20", detail="xlr8_face"),
+            Part((-1, 32, -3), (2, 1, 6), "clean:#2A2A2E"),                                 # Helmkamm
+        ], rotation=(-6, 0, 0)),
+        Bone("tail_1", "body", (0, 13, 2), [Part((-1.5, 11.5, 2), (3, 3, 5), "stripe")], rotation=(-12, 0, 0)),
+        Bone("tail_2", "tail_1", (0, 13, 7), [Part((-1, 12, 7), (2, 2, 5), "stripe")], rotation=(-6, 0, 0)),
+        Bone("tail_3", "tail_2", (0, 13, 12), [Part((-0.5, 12.5, 12), (1, 1, 5), "stripe")], rotation=(-4, 0, 0)),
     ]
-    alien = Alien("xlr8", (64, 64), bones, "#1E90FF", style="fast", glow=True)
-    pack_uvs(alien)
-    return alien
+    return finish("xlr8", bones, "#1E90FF", "fast")
+
+
+def four_arms() -> Alien:
+    """Vierarm (Tetramand): breiter Oberkoerper mit weissem Hemd und schwarzem Mittelstreifen, schwarze Hose, vier
+    rote Fellarme (oberes Paar nach aussen gestellt, unteres Paar tiefer und leicht nach hinten), roter Kopf mit
+    vier gelben Augen."""
+    bones = [Bone("root", None, (0, 0, 0)),
+             Bone("body", "root", (0, 12, 0), [
+                 Part((-6, 12, -3), (12, 12, 6), "shirt"),
+                 Part((-6.5, 22, -3.5), (13, 2, 7), "clean:#EEEEEE"),                       # Schulterkante
+             ])]
+    bones += limb_pair(
+        arm=[((-12, 17, -2.5), (5, 7, 5), "fur")],
+        forearm=[((-12, 11, -2.5), (5, 6, 5), "fur"),
+                 ((-12, 9, -2), (5, 2, 4), "clean:#3A0A0E")],                               # Faust
+        leg=[((-5, 6, -2.5), (5, 6, 5), "clean:#1E1E22")],
+        shin=[((-5, 2, -2.5), (5, 4, 5), "clean:#1E1E22"),
+              ((-5, 0, -3.5), (5, 2, 6), "clean:#C8141E")],                                 # rote Fuesse
+        shoulder=(7, 22), elbow=(9.5, 17), hip=(2.5, 12), knee=(2.5, 6))
+    for side_name, side in (("right", -1), ("left", 1)):
+        mirror = side > 0
+        bones += [
+            Bone(f"{side_name}_lower_arm", "body", (6 * side, 16.5, 1), [
+                Part((mirror_x(-10, 4, side), 12, -1), (4, 5, 4), "fur", mirror=mirror)],
+                rotation=(0, 0, 8 * -side)),
+            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (8 * side, 12, 1), [
+                Part((mirror_x(-10, 4, side), 7, -1), (4, 5, 4), "fur", mirror=mirror),
+                Part((mirror_x(-10, 4, side), 5, -0.5), (4, 2, 3), "clean:#3A0A0E", mirror=mirror)]),
+        ]
+    # oberes Armpaar leicht nach aussen gestellt, damit beide Paare sichtbar sind
+    for bone in bones:
+        if bone.name in ("right_arm", "left_arm"):
+            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)
+    bones.append(Bone("head", "body", (0, 24, 0), [Part((-3, 24, -3), (6, 7, 6), "clean:#C8141E", detail="tetra_face")]))
+    return finish("four_arms", bones, "#C0392B", "heavy")
+
+
+def diamondhead() -> Alien:
+    """Diamondhead (Petrosapien): Kristallkopf mit Kamm, grosse Kristallarme, Schulterkristalle,
+    Anzug halb schwarz, halb weiss."""
+    bones = [Bone("root", None, (0, 0, 0)),
+             Bone("body", "root", (0, 12, 0), [
+                 Part((-4, 12, -2), (8, 12, 4), "split"),
+                 Part((-1, 18.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
+             ])]
+    bones += limb_pair(
+        arm=[((-10, 16, -3), (6, 8, 6), "crystal"),
+             ((-8.5, 23, -1.5), (3, 7, 3), "crystal", {"rotation": (0, 0, 22), "pivot": (-7, 23, 0)})],  # Schulterkristall
+        forearm=[((-10.5, 8, -3.5), (7, 8, 7), "crystal")],
+        leg=[((-4, 6, -2), (4, 6, 4), "split")],
+        shin=[((-4, 0, -2), (4, 6, 4), "split")],
+        shoulder=(5, 22), elbow=(7, 16))
+    bones.append(Bone("head", "body", (0, 24, 0), [
+        Part((-3.5, 24, -3.5), (7, 7, 7), "crystal", detail="petro_face"),
+        Part((-1, 31, -2), (2, 3, 4), "crystal"),                                            # Kopfkamm
+    ]))
+    return finish("diamondhead", bones, "#2ECC71", "normal")
+
+
+def grey_matter() -> Alien:
+    """Grey Matter (Galvan): grosser grauer Kopf mit zwei grossen gelben Augen, weisser Anzug mit schwarzem
+    Mittelstreifen, schwarze Armbaender, grosse graue Haende."""
+    bones = [Bone("root", None, (0, 0, 0)),
+             Bone("body", "root", (0, 12, 0), [Part((-3.5, 12, -2), (7, 10, 4), "shirt")])]
+    bones += limb_pair(
+        arm=[((-6.5, 16, -1.5), (3, 6, 3), "clean:#EEEEEE")],
+        forearm=[((-6.5, 11, -1.5), (3, 5, 3), "clean:#EEEEEE"),
+                 ((-6.5, 14, -1.5), (3, 1, 3), "clean:#1E1E22", {"inflate": 0.2}),            # Armband
+                 ((-7.5, 7, -2.5), (5, 5, 5), "clean:#A9B3B5")],                              # grosse Hand
+        leg=[((-3.5, 6, -1.5), (3, 6, 3), "clean:#EEEEEE")],
+        shin=[((-3.5, 1, -1.5), (3, 5, 3), "clean:#2A2A2E"),
+              ((-4, 0, -2.5), (4, 1, 4), "clean:#A9B3B5")],
+        shoulder=(3.5, 21), elbow=(5, 16))
+    bones += [
+        Bone("head", "body", (0, 22, 0), [
+            Part((-5, 22, -4), (10, 8, 8), "clean:#A9B3B5"),
+            Part((-5.5, 27, -4.6), (4, 3, 1), "clean:#151515", detail="galvan_eye",
+                 rotation=(0, 0, 12), pivot=(-3.5, 28.5, -4.6)),
+            Part((1.5, 27, -4.6), (4, 3, 1), "clean:#151515", detail="galvan_eye",
+                 rotation=(0, 0, -12), pivot=(3.5, 28.5, -4.6)),
+        ]),
+    ]
+    return finish("grey_matter", bones, "#95A5A6", "small")
 
 
 def build_aliens() -> list[Alien]:
-    aliens = [heatblast(), xlr8()]
-
-    # Vierarm: breiter Rumpf, vier Arme, vier Augen (128x64)
-    b = [
-        Bone("root", None, (0, 0, 0)),
-        Bone("body", "root", (0, 24, 0), [Part((-5, 12, -2.5), (10, 12, 5), "flat:#B22A1E", (64, 0), "omnitrix_dot")]),
-        Bone("head", "body", (0, 24, 0), [Part((-4, 24, -4), (8, 8, 8), "flat:#C0392B", (0, 0), "four_eyes")]),
-        Bone("right_arm", "body", (-6, 23, 0), [Part((-10, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16))]),
-        Bone("left_arm", "body", (6, 23, 0), [Part((6, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16), mirror=True)]),
-        Bone("right_lower_arm", "body", (-5.5, 18, 0), [Part((-8.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32))]),
-        Bone("left_lower_arm", "body", (5.5, 18, 0), [Part((5.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32), mirror=True)]),
-        Bone("right_leg", "root", (-2.4, 12, 0), [Part((-4.9, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16))]),
-        Bone("left_leg", "root", (2.4, 12, 0), [Part((-0.1, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16), mirror=True)]),
-    ]
-    aliens.append(Alien("four_arms", (128, 64), b, "#C0392B"))
-
-    # Diamondhead: Kristallkoerper mit Kopf- und Schulterspitzen
-    b = humanoid("#2ECC71", "#58F0A0", "#1E9E5E")
-    b.append(Bone("crystal_crest", "head", (0, 32, 0), [Part((-2, 32, -2), (4, 6, 4), "flat:#A8FFD4", (32, 0))]))
-    b.append(Bone("right_spike", "right_arm", (-6, 24, 0), [Part((-7, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32))]))
-    b.append(Bone("left_spike", "left_arm", (6, 24, 0), [Part((5, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32), mirror=True)]))
-    aliens.append(Alien("diamondhead", (64, 64), b, "#2ECC71"))
-
-    # Grey Matter: grosser Kopf, grosse Augen (128x64)
-    b = humanoid("#95A5A6", "#A9B7B8", "#7F8C8D",
-                 head_cube=Part((-5, 24, -5), (10, 9, 10), "flat:#A9B7B8", (64, 0), "big_eyes"))
-    aliens.append(Alien("grey_matter", (128, 64), b, "#95A5A6"))
-    return aliens
+    return [heatblast(), xlr8(), four_arms(), diamondhead(), grey_matter()]
 
 
 # --- Geometrie ------------------------------------------------------------------------------------
@@ -853,6 +1032,14 @@ def build_animations(alien: Alien) -> dict:
         # Sprint: Arme flach nach hinten gelegt (aerodynamisch), Kopf nach vorn
         A["run"]["bones"]["right_arm"] = {"rotation": keys((0, [FWD * -55, 0, 8]))}
         A["run"]["bones"]["left_arm"] = {"rotation": keys((0, [FWD * -55, 0, -8]))}
+    elif alien.style == "heavy":
+        # schwer: langsamer, weit ausholender Gang mit deutlichem Auf und Ab
+        A["walk"] = anim(1.1, gait(1.1, 24, 30, 4, 0.9))
+        A["run"] = anim(0.7, gait(0.7, 40, 46, 12, 1.4))
+    elif alien.style == "small":
+        # klein und flink: kurze, schnelle Schritte
+        A["walk"] = anim(0.5, gait(0.5, 30, 40, 4, 0.5))
+        A["run"] = anim(0.32, gait(0.32, 50, 60, 14, 0.8))
     else:
         A["walk"] = anim(0.9, gait(0.9, 32, 34, 3, 0.4))
         A["run"] = anim(0.55, gait(0.55, 55, 52, 16, 0.8))
@@ -986,6 +1173,15 @@ def build_animations(alien: Alien) -> dict:
         "left_arm": {"rotation": keys((0, [0, 0, 0]), (0.12, [FWD * 40, 0, -30]))},
     }
     A["revert"] = anim(0.4, rv, "hold_on_last_frame")
+
+    # zweites Armpaar (Vierarm) bewegt sich wie das obere, leicht versetzt durch den eigenen Drehpunkt
+    if {"right_lower_arm", "left_lower_arm"} <= names:
+        for data in A.values():
+            for side in ("right", "left"):
+                if f"{side}_arm" in data["bones"]:
+                    data["bones"][f"{side}_lower_arm"] = json.loads(json.dumps(data["bones"][f"{side}_arm"]))
+                if f"{side}_forearm" in data["bones"]:
+                    data["bones"][f"{side}_lower_forearm"] = json.loads(json.dumps(data["bones"][f"{side}_forearm"]))
 
     # nur Knochen behalten, die das Modell hat
     for data in A.values():
