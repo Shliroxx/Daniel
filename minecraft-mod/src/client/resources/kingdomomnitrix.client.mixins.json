@@ -4,6 +4,7 @@
 	"package": "com.santiq.kingdomomnitrix.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"CameraMixin",
 		"IntegratedServerLoaderMixin",
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",

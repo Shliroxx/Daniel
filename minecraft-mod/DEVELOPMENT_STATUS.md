@@ -34,8 +34,19 @@ Ab jetzt gilt: Qualität vor Menge. Keine neuen Inhalte, bevor Aliens, Keyblades
   `tools/client_smoke.sh`, `tools/multiplayer_test.sh`, **neu** `tools/visual_audit.sh` (Screenshot-Kontaktbogen).
 
 ## IN PROGRESS
-- **Heatblast VISUAL REWORK** (Modell, Textur + Leuchtmaske, Animationen) und
-  **Verwandlungs-Sequenz** im Alien-Renderer (Aufbau → Blitz → Einblenden des Körpers → Bereit).
+- **Heatblast** — Rework 1 fertig (siehe unten), FINAL POLISH offen: Hinterkopf-Flamme in der Rückansicht noch
+  klotzig, Unterarme/Beine ohne eigene Gesteinsdetails, Lauf-/Sprint-Animation noch nicht im Bild geprüft.
+
+### Visual Polish Cycle 1 — erledigt
+- Alien-Generator neu: Materialien (Gestein mit Fasen + glühenden Rissen, Magma, Flamme mit Höhenverlauf und
+  gezackter Kante), automatische UV-Packung, Leuchtmaske (`_glowmask.png`), voller Animationssatz für alle Aliens:
+  idle, walk, run, jump, fall, attack, ability_0–2, hit, transform, revert.
+- Heatblast: 46 Würfel statt 8, eigenes Skelett mit Ellbogen und Knien, Schulterpanzer, Omnitrix-Abzeichen auf der
+  Brust, Flammenkopf aus 4 Knochen (flackert, weht beim Laufen nach hinten), Gesicht mit leuchtenden Augen.
+- Alien-Renderer: Zustands-Animationen (Lauf/Sprint/Sprung/Fall + überlagerte Schlag-/Fähigkeits-/Treffer-
+  Animationen, nur aus synchronisiertem Zustand), Leuchtschicht, Körper wächst bei der Verwandlung mit
+  Überschwingen und leuchtet kurz voll, Rückverwandlung lässt den Körper zusammenschrumpfen, Kamera-Stoß beim
+  Aufprall (`CameraShake` + `CameraMixin`, nur lokale Ansicht).
 
 ---
 
@@ -49,8 +60,8 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 | Asset | MODEL | TEXTURE | ANIMATION | VFX | SOUND INT. | GAMEPLAY FB | OVERALL | Status |
 |---|---|---|---|---|---|---|---|---|
 | Spieler (Mensch) | 50 (Vanilla) | 50 | 45 (playerAnimator Combo) | 55 | 50 | 50 | 50 | POLISH NEEDED |
-| Verwandlungs-Sequenz | – | – | 10 (Körper erscheint sofort) | 50 (Blitz, Helix) | 55 | 40 | 30 | VISUAL REWORK |
-| Heatblast | 15 | 10 | 15 (idle, walk) | 45 | 50 | 45 | 20 | MODEL/TEXTURE/ANIMATION REWORK |
+| Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
+| Heatblast | 55 (46 Würfel, Gelenke) | 50 (Material + Leuchtmaske) | 50 (12 Animationen) | 50 | 50 | 50 | 52 | FINAL POLISH |
 | XLR8 | 15 | 10 | 15 | 35 | 45 | 40 | 18 | MODEL/TEXTURE/ANIMATION REWORK |
 | Vierarm | 20 (4 Arme) | 10 | 15 | 35 | 45 | 40 | 20 | MODEL/TEXTURE/ANIMATION REWORK |
 | Diamondhead | 20 (Kristallkopf) | 15 | 15 | 35 | 45 | 40 | 22 | MODEL/TEXTURE/ANIMATION REWORK |
@@ -73,9 +84,9 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 ## VISUAL POLISH NEEDED — VISUAL BACKLOG
 Reihenfolge = Abarbeitungsreihenfolge.
 
-1. [ ] **Verwandlungs-Sequenz** — Aktivierung → Energieaufbau (Omnitrix-Ring) → Blitz → Körper wächst mit Überschwingen
+1. [x] **Verwandlungs-Sequenz** (Rework 1; offen: Omnitrix-Ring-Aufbau vor dem Blitz) — Aktivierung → Energieaufbau (Omnitrix-Ring) → Blitz → Körper wächst mit Überschwingen
    ein → Aufprall (Bodenring, Kamera-Stoß) → bereit. Rückverwandlung: rotes Pulsieren → Körper schrumpft → Mensch.
-2. [ ] **Heatblast** — MODEL (Magma-Gesteinsplatten, Flammenkopf aus Knochen, schlanke Silhouette), TEXTURE (128er,
+2. [x] **Heatblast** (Rework 1; FINAL POLISH offen) — MODEL (Magma-Gesteinsplatten, Flammenkopf aus Knochen, schlanke Silhouette), TEXTURE (128er,
    Risse + Leuchtmaske), ANIMATION (idle, walk, run, jump/fall, attack, ability, hit, transform), VFX (Flammen am Kopf).
 3. [ ] **XLR8** — MODEL (Visier-Helm, Schwanz, Raptor-Beine, vorgebeugt), TEXTURE, ANIMATION (Sprint-Pose).
 4. [ ] **Vierarm** — MODEL (massiv, breite Schultern, 4 Augen), TEXTURE, ANIMATION (schwerer Gang, Bodenschlag).
@@ -109,13 +120,13 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
-Heatblast-Rework abschließen (Generator `tools/generate_alien_models.py` → neues detailliertes Modell, 128er Textur +
-`_glowmask`, Animationen idle/walk/run/jump/attack/ability/transform), Alien-Renderer mit Zustands-Animationen,
-Leuchtschicht und Einwachs-Verwandlung. Test: `tools/visual_audit.sh build/visual_audit/after aliens`.
+**XLR8 MODEL/TEXTURE/ANIMATION REWORK** nach dem Heatblast-Muster in `tools/generate_alien_models.py`
+(neue Funktion `xlr8()`, Materialien: Panzerplatten blau/schwarz, Visier mit Leuchtmaske, Schwanz aus 3 Knochen,
+vorgebeugte Raptor-Haltung, Sprint-Animation mit flachem Oberkörper). Danach `tools/visual_audit.sh … aliens`.
 
 ## NEXT 5 TASKS
-1. XLR8 nach demselben Muster (Modell, Textur, Animationen, Sprint-Pose)
-2. Vierarm
+1. Vierarm
+2. Heatblast FINAL POLISH (Rückansicht, Lauf-Check)
 3. Diamondhead
 4. Grey Matter (inkl. Größen-Bug)
 5. Shadow + Soldier (Herzlosen-Rework Teil 1)
@@ -134,4 +145,5 @@ Leuchtschicht und Einwachs-Verwandlung. Test: `tools/visual_audit.sh build/visua
 
 ## LAST VERIFIED
 - 0.11.0-alpha: Dedicated Server + 2–4 Clients (Gruppe, Friendly-Fire, Vita auf Mitspieler, Schiff zu zweit, Skalierung)
+- Heatblast Rework 1 im Spiel: Front, Nahansicht, Verwandlungs-Bildserie, Schlag + Feuerexplosion (`build/visual_audit/after/`)
 - Visual Audit Baseline: alle 5 Aliens (Front/Seite/Ego), 5 Herzlose — `build/visual_audit/before/contact_sheet.png`
