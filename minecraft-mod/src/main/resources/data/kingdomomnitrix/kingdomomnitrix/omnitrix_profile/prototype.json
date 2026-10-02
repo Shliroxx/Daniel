@@ -18,5 +18,12 @@
   "quick_change_heat": 0.12,
   "quick_change_keep": 0.5,
   "failsafe_cooldown_seconds": 600,
-  "failsafe_heat": 0.9
+  "failsafe_heat": 0.9,
+  "malfunctions": {
+    "start_heat": 0.75,
+    "wrong_alien_chance": 0.35,
+    "drift_chance": 0.25,
+    "drift_seconds": 8,
+    "drift_interval_seconds": 10
+  }
 }

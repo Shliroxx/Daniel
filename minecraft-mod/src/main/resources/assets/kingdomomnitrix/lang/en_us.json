@@ -709,5 +709,10 @@
   "holo.kingdomomnitrix.mastery_perk.other": "Longer transformation, shorter cooldowns",
   "screen.kingdomomnitrix.aliens.unlock_at": "at ★%s",
   "screen.kingdomomnitrix.aliens.mastered": "MASTERED",
-  "screen.kingdomomnitrix.aliens.ability_short": "%s energy · %s s"
+  "screen.kingdomomnitrix.aliens.ability_short": "%s energy · %s s",
+  "subtitles.kingdomomnitrix.omnitrix.malfunction": "Omnitrix: malfunction",
+  "holo.kingdomomnitrix.malfunction": "MALFUNCTION",
+  "holo.kingdomomnitrix.malfunction.wrong_alien": "DNA selection disrupted: %s → %s",
+  "holo.kingdomomnitrix.malfunction.drift": "Time sync disrupted: −%s s",
+  "holo.kingdomomnitrix.malfunction.hint": "Lower the heat · mastery stabilises"
 }

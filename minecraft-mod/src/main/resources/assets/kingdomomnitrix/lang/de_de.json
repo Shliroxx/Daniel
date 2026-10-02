@@ -709,5 +709,10 @@
   "holo.kingdomomnitrix.mastery_perk.other": "Längere Verwandlung, kürzere Abklingzeiten",
   "screen.kingdomomnitrix.aliens.unlock_at": "ab ★%s",
   "screen.kingdomomnitrix.aliens.mastered": "GEMEISTERT",
-  "screen.kingdomomnitrix.aliens.ability_short": "%s Energie · %s s"
+  "screen.kingdomomnitrix.aliens.ability_short": "%s Energie · %s s",
+  "subtitles.kingdomomnitrix.omnitrix.malfunction": "Omnitrix: Fehlfunktion",
+  "holo.kingdomomnitrix.malfunction": "FEHLFUNKTION",
+  "holo.kingdomomnitrix.malfunction.wrong_alien": "DNA-Auswahl gestört: %s → %s",
+  "holo.kingdomomnitrix.malfunction.drift": "Zeitabgleich gestört: −%s s",
+  "holo.kingdomomnitrix.malfunction.hint": "Hitze senken · Meisterschaft stabilisiert"
 }

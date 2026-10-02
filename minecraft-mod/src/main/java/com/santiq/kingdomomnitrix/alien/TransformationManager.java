@@ -5,6 +5,7 @@ import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixMalfunction;
 import com.santiq.kingdomomnitrix.progression.AlienMasteryManager;
 import com.santiq.kingdomomnitrix.progression.HeroAbilityEffect;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
@@ -149,6 +150,10 @@ public final class TransformationManager {
 	 * nicht aber die Platzpruefung — sonst wuerde der Spieler ersticken.
 	 */
 	public static Result transform(ServerPlayerEntity player, Identifier alienId, boolean force) {
+		return transform(player, alienId, force, !force);
+	}
+
+	private static Result transform(ServerPlayerEntity player, Identifier alienId, boolean force, boolean mayMalfunction) {
 		ServerWorld world = player.getServerWorld();
 		long now = world.getTime();
 		Optional<AlienDefinition> found = AlienRegistry.get(world.getRegistryManager(), alienId);
@@ -174,6 +179,15 @@ public final class TransformationManager {
 			if (refusal.isPresent()) {
 				OmnitrixCore.refuse(player, refusal.get());
 				return Result.DEVICE_REFUSED;
+			}
+			// Fehlfunktion bei hoher Hitze: anderes freigeschaltetes Alien (laeuft durch alle Regeln, inkl. Platz)
+			Optional<Identifier> swapped = mayMalfunction ? OmnitrixMalfunction.wrongAlien(player, alienId) : Optional.empty();
+			if (swapped.isPresent()) {
+				Result result = transform(player, swapped.get(), false, false);
+				if (result == Result.SUCCESS) {
+					OmnitrixMalfunction.announceWrongAlien(player, alienId, swapped.get());
+					return result;
+				}
 			}
 		} else if (state.isTransformed()) {
 			removeAttributes(player);
@@ -237,6 +251,10 @@ public final class TransformationManager {
 	 * Restzeit (Profil), unter Master Control sofort, ohne Aufschlag und mit voller Dauer.
 	 */
 	public static Result quickChange(ServerPlayerEntity player, Identifier alienId) {
+		return quickChange(player, alienId, true);
+	}
+
+	private static Result quickChange(ServerPlayerEntity player, Identifier alienId, boolean mayMalfunction) {
 		TransformationState state = get(player);
 		if (!state.isTransformed()) {
 			return transform(player, alienId, false);
@@ -257,6 +275,14 @@ public final class TransformationManager {
 		if (refusal.isPresent()) {
 			OmnitrixCore.refuse(player, refusal.get());
 			return Result.DEVICE_REFUSED;
+		}
+		Optional<Identifier> swapped = mayMalfunction ? OmnitrixMalfunction.wrongAlien(player, alienId) : Optional.empty();
+		if (swapped.isPresent() && state.activeAlien().filter(swapped.get()::equals).isEmpty()) {
+			Result result = quickChange(player, swapped.get(), false);
+			if (result == Result.SUCCESS) {
+				OmnitrixMalfunction.announceWrongAlien(player, alienId, swapped.get());
+				return result;
+			}
 		}
 		AlienDefinition alien = found.get();
 		if (!hasSpaceFor(player, alien.scale())) {
@@ -443,6 +469,11 @@ public final class TransformationManager {
 				player.extinguish();
 			}
 			AlienTraitHandler.tick(player, alien.get(), now);
+			long drift = OmnitrixMalfunction.rollDrift(player, state.activeAlien().get(), now);
+			if (drift > 0L && remaining > OmnitrixMalfunction.minRemaining()) {
+				update(player, s -> s.shortened(now, drift, OmnitrixMalfunction.minRemaining()));
+				OmnitrixMalfunction.announceDrift(player, drift, state.activeAlien().get());
+			}
 			if (now % AURA_INTERVAL_TICKS == 0) {
 				spawnAura(player, alien.get());
 			}

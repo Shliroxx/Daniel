@@ -57,6 +57,7 @@ EVENTS: dict[str, tuple[str, int]] = {
     "omnitrix.master_control": ("omnitrix_master_control", 1),
     "omnitrix.emergency": ("omnitrix_emergency", 1),
     "omnitrix.dna_shock": ("omnitrix_dna_shock", 1),
+    "omnitrix.malfunction": ("omnitrix_malfunction", 1),
     "alien.fire": ("alien_fire", 2),
     "alien.slam": ("alien_slam", 1),
     "alien.dash": ("alien_dash", 2),
@@ -371,6 +372,15 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         glitch = osc(sweep(1800, 90, 0.7, 0.5) * (1 + 0.3 * np.sign(osc(23, 0.7, "square"))), 0.7, "square") * adsr(0.7, 0.005, 0.3) * 0.35
         return reverb(mix(s, glitch, crackle(0.6, 160) * 0.3, at(thump(0.35, 90, 35, 8) * 0.8, 0.5, s)), 0.25)
 
+    def omnitrix_malfunction():
+        # Fehlfunktion: stotterndes Signal (Tonhoehe springt), Knistern, eiernder Abwaerts-Ton
+        s = 1.0
+        stutter = np.zeros(n(s))
+        for i, f in enumerate((1400, 900, 1700, 620, 1250, 480)):
+            stutter += at(osc(f, 0.05, "square") * adsr(0.05, 0.002, 0.015) * 0.4, i * 0.075, s)
+        wobble = osc(sweep(900, 260, 0.5) + 70 * osc(31, 0.5), 0.5, "saw") * adsr(0.5, 0.01, 0.25) * 0.25
+        return reverb(mix(s, stutter, crackle(0.8, 260) * 0.22, at(lowpass(wobble, sweep(3000, 600, 0.5)), 0.42, s)), 0.25)
+
     def alien_fire(v):
         s = 0.6
         roar = lowpass(noise(s), sweep(800, 3500 + v * 600, s)) * adsr(s, 0.04, 0.35)
@@ -579,7 +589,7 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         "omnitrix_warning": omnitrix_warning, "omnitrix_overheat": omnitrix_overheat, "omnitrix_ready": omnitrix_ready,
         "omnitrix_unlock": omnitrix_unlock, "omnitrix_lock": omnitrix_lock,
         "omnitrix_master_control": omnitrix_master_control, "omnitrix_emergency": omnitrix_emergency,
-        "omnitrix_dna_shock": omnitrix_dna_shock,
+        "omnitrix_dna_shock": omnitrix_dna_shock, "omnitrix_malfunction": omnitrix_malfunction,
         "alien_slam": alien_slam, "combat_finisher": combat_finisher, "combat_guard": combat_guard,
         "combat_dodge": combat_dodge, "magic_fire": magic_fire, "magic_blizzard": magic_blizzard,
         "magic_thunder": magic_thunder, "magic_cure": magic_cure, "magic_mp_empty": magic_mp_empty,

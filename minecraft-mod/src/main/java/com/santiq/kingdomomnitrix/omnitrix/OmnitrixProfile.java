@@ -23,6 +23,7 @@ import net.minecraft.util.dynamic.Codecs;
  * @param quickChangeKeep        Anteil der Restzeit, der beim Schnellwechsel bleibt (Master Control: volle Dauer)
  * @param failsafeCooldownSeconds Abklingzeit der Notfall-Verwandlung
  * @param failsafeHeat           Hitze nach einer Notfall-Verwandlung
+ * @param malfunctions           Fehlfunktionen bei hoher Hitze ({@link Malfunctions})
  */
 public record OmnitrixProfile(
 		float heatPerTransform,
@@ -38,7 +39,8 @@ public record OmnitrixProfile(
 		float quickChangeHeat,
 		float quickChangeKeep,
 		int failsafeCooldownSeconds,
-		float failsafeHeat) {
+		float failsafeHeat,
+		Malfunctions malfunctions) {
 
 	/** Master Control: Endgame-Modus, freigeschaltet pro Spieler ({@link OmnitrixState#masterControl()}). */
 	public record MasterControl(float heatMultiplier, float cooldownMultiplier, float durationMultiplier, float confirmSeconds,
@@ -57,7 +59,7 @@ public record OmnitrixProfile(
 	private static final float DEFAULT_QUICK_CHANGE_HEAT = 0.12f;
 
 	public static final OmnitrixProfile DEFAULT = new OmnitrixProfile(0.22f, 0.004f, 0.02f, 0.75f, 12, 1.0f, 1.0f, 0.5f, 0.42f,
-			MasterControl.DEFAULT, 0.12f, 0.5f, 600, 0.9f);
+			MasterControl.DEFAULT, 0.12f, 0.5f, 600, 0.9f, Malfunctions.DEFAULT);
 
 	public static final Codec<OmnitrixProfile> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("heat_per_transform", DEFAULT.heatPerTransform()).forGetter(OmnitrixProfile::heatPerTransform),
@@ -73,6 +75,7 @@ public record OmnitrixProfile(
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("quick_change_heat", DEFAULT_QUICK_CHANGE_HEAT).forGetter(OmnitrixProfile::quickChangeHeat),
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("quick_change_keep", 0.5f).forGetter(OmnitrixProfile::quickChangeKeep),
 			Codec.intRange(0, 36_000).optionalFieldOf("failsafe_cooldown_seconds", 600).forGetter(OmnitrixProfile::failsafeCooldownSeconds),
-			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("failsafe_heat", 0.9f).forGetter(OmnitrixProfile::failsafeHeat)
+			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("failsafe_heat", 0.9f).forGetter(OmnitrixProfile::failsafeHeat),
+			Malfunctions.CODEC.optionalFieldOf("malfunctions", Malfunctions.DEFAULT).forGetter(OmnitrixProfile::malfunctions)
 	).apply(instance, OmnitrixProfile::new));
 }

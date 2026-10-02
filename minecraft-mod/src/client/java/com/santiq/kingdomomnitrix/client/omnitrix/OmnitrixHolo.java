@@ -39,6 +39,9 @@ public final class OmnitrixHolo {
 	}
 
 	public static void register() {
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.registerGlobalReceiver(
+				com.santiq.kingdomomnitrix.networking.OmnitrixHoloPayload.ID, (payload, context) -> show(new Message(payload.title(),
+						payload.body(), payload.footer(), payload.alien(), payload.color(), Math.max(500, payload.durationMs()))));
 		HudLayerRegistrationCallback.EVENT.register(drawer ->
 				drawer.attachLayerAfter(IdentifiedLayer.CHAT, IdentifiedLayer.of(LAYER_ID, OmnitrixHolo::render)));
 	}

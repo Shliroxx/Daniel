@@ -248,3 +248,33 @@ Erdbeben → 6,2, Albtraum → 8), Verstaerkungen/Kontrolle ohne Schaden wie vor
 **Offen:** keine eigenen Animationen/Posen fuer die neuen Faehigkeiten (Spielerpose + Partikel); Werte sind
 Erstbalance, nicht im Gruppenspiel erprobt. Bilder: `docs/screenshots/meisterschaft_hud_holo.png`,
 `docs/screenshots/alien_menue_6_faehigkeiten.png`.
+
+## 11. Phase H — Fehlfunktionen (2026-10-02)
+
+Selten, nachvollziehbar, nie bestrafend. Nur ab der Hitze-Schwelle, jede meldet sich mit Grund und Gegenmittel.
+
+| Fehlfunktion | Wann | Wirkung | Meldung |
+|---|---|---|---|
+| Falsches Alien | beim Verwandeln/Schnellwechsel | anderes freigeschaltetes Alien, in das das Geraet jetzt regulaer verwandeln koennte (Hitze, Platz) | „FEHLFUNKTION · DNA-Auswahl gestoert: Heatblast → Ripjaws · Hitze senken · Meisterschaft stabilisiert“ |
+| Zeitdrift | alle 10 s waehrend der Verwandlung | −8 s Restzeit (mindestens 5 s bleiben) | „Zeitabgleich gestoert: −8 s“ |
+
+**Wahrscheinlichkeit** (`Malfunctions.chance`): 0 unter `start_heat`; an der Schwelle ein Viertel, bei 100 % Hitze der
+Hoechstwert; je Meisterschaftsstufe des Ziel-Aliens −8 %. **Ausgeschlossen** mit Master Control, bei gemeistertem
+Alien (★10), im Profil abgeschaltet oder per `/gamerule kingdomomnitrixOmnitrixMalfunctions false`.
+
+| Profil | Schwelle | falsches Alien (max) | Zeitdrift (max) |
+|---|---|---|---|
+| Prototyp | 75 % | 35 % | 25 % je 10 s, −8 s |
+| Recalibrated | 85 % | 20 % | 12 % je 15 s, −5 s |
+
+Beispiel Prototyp, Meisterschaft ★1: bei 76 % Hitze ~10 % Fehlgriff — und mehr als ~78 % Hitze erlaubt ein
+Verwandeln ohnehin nicht (Aufschlag 22 %). Fehlgriffe kommen also vor allem beim Schnellwechsel unter Hitze vor.
+
+**Omnitrix OS (Grundlage Phase I):** `OmnitrixHoloPayload` — der Server schickt Hologramm-Meldungen (Titel, Zeile,
+Fusszeile, Alien-Symbol, Farbe, Dauer). Neuer Cue `MALFUNCTION` mit eigenem Glitch-Klang (stotterndes Signal, Knistern).
+
+**Im Spiel geprueft** (Test-Datenpaket nur in der Testwelt, Chance 100 % bei voller Hitze): Heatblast angefordert →
+Ripjaws + Meldung + Klang (`docs/screenshots/fehlfunktion_falsches_alien.png`); Zeitdrift: Restzeit 59 s → 40 s in 7 s.
+Schutz: Master Control, Spielregel aus, ★10 — jeweils korrekt Heatblast trotz 95 % Hitze. Tests `MalfunctionsTest`
+(Schwelle, Anstieg, Meisterschaft, Master Control, abgeschaltet). Nicht geprueft: Fehlgriff beim Schnellwechsel im Spiel
+(gleicher Code-Pfad, nur im Test-Lauf der Verwandlung bestaetigt).

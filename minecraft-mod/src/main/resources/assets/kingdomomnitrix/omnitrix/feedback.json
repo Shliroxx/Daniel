@@ -146,5 +146,16 @@
     "volume": 0.5,
     "pitch": 1.35,
     "light": 0.5
+  },
+  "malfunction": {
+    "sound": "kingdomomnitrix:omnitrix.malfunction",
+    "volume": 0.9,
+    "light": 0.6,
+    "flash": "#FF5A3C",
+    "flash_strength": 0.35,
+    "shake": 0.35,
+    "shake_ticks": 8,
+    "fov": 0.04,
+    "fov_ticks": 10
   }
 }

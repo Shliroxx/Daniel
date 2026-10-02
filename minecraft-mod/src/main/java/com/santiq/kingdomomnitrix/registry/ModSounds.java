@@ -30,6 +30,7 @@ public final class ModSounds {
 	public static final SoundEvent OMNITRIX_MASTER_CONTROL = register("omnitrix.master_control");
 	public static final SoundEvent OMNITRIX_EMERGENCY = register("omnitrix.emergency");
 	public static final SoundEvent OMNITRIX_DNA_SHOCK = register("omnitrix.dna_shock");
+	public static final SoundEvent OMNITRIX_MALFUNCTION = register("omnitrix.malfunction");
 	public static final SoundEvent ALIEN_FIRE = register("alien.fire");
 	public static final SoundEvent ALIEN_SLAM = register("alien.slam");
 	public static final SoundEvent ALIEN_DASH = register("alien.dash");

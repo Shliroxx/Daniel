@@ -51,6 +51,7 @@ public final class OmnitrixCore {
 	}
 
 	public static void register() {
+		OmnitrixMalfunction.register();
 		DynamicRegistries.registerSynced(PROFILES, OmnitrixProfile.CODEC);
 		ScanRule.register();
 	}

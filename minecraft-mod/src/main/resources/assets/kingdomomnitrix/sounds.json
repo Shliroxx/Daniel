@@ -108,6 +108,12 @@
       "kingdomomnitrix:omnitrix_dna_shock"
     ]
   },
+  "omnitrix.malfunction": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.malfunction",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_malfunction"
+    ]
+  },
   "alien.fire": {
     "subtitle": "subtitles.kingdomomnitrix.alien.fire",
     "sounds": [

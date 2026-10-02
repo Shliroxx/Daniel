@@ -133,4 +133,11 @@ public record TransformationState(
 		return new TransformationState(activeAlien, selectedAlien, startTick, endTick, rechargeUntil,
 				energy, energyStamp, abilityReadyAt, Math.max(invulnerableUntil, tick), humanHealth);
 	}
+
+	/** Restzeit um {@code ticks} kuerzen (Zeitdrift), mindestens {@code minRemaining} bleiben. */
+	public TransformationState shortened(long now, long ticks, long minRemaining) {
+		long end = Math.max(now + minRemaining, endTick - ticks);
+		return new TransformationState(activeAlien, selectedAlien, startTick, Math.min(endTick, end), rechargeUntil,
+				energy, energyStamp, abilityReadyAt, invulnerableUntil, humanHealth);
+	}
 }
