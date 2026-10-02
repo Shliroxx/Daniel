@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.hud;
 
+import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AbilitySlot;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
@@ -136,9 +137,9 @@ public final class OmnitrixHud implements HudElement {
 
 	/** Hitze-Leiste am unteren Rand: gruen → gelb (Warnschwelle) → rot; blinkt bei Warnung und Ueberhitzung. */
 	private static void renderHeat(DrawContext context, ClientPlayerEntity player, int panelHeight) {
-		float heat = OmnitrixCore.heat(player);
-		OmnitrixStatus status = OmnitrixCore.status(player);
-		float warning = OmnitrixCore.profile(player).heatWarning();
+		float heat = OmnitrixClientState.heat(player);
+		OmnitrixStatus status = OmnitrixClientState.status(player);
+		float warning = OmnitrixClientState.profile(player).heatWarning();
 		int x = PADDING + 2;
 		int width = WIDTH - x - PADDING;
 		int y = panelHeight - PADDING - HEAT_HEIGHT;
@@ -211,7 +212,7 @@ public final class OmnitrixHud implements HudElement {
 		context.drawTextWithShadow(font, selected, PADDING + 2, PADDING, UiTheme.TEXT);
 
 		long recharge = state.rechargeRemaining(now);
-		OmnitrixStatus device = OmnitrixCore.status(player);
+		OmnitrixStatus device = OmnitrixClientState.status(player);
 		var core = OmnitrixCore.state(player);
 		Text status = device == OmnitrixStatus.LOCKED
 				? Text.translatable("hud.kingdomomnitrix.omnitrix_locked", (core.lockedUntil() - now + 19) / 20).formatted(Formatting.GRAY)

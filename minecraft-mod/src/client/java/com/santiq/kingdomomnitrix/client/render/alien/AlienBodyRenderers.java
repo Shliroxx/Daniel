@@ -54,6 +54,8 @@ public final class AlienBodyRenderers {
 	private static final int GLOW_TICKS = 12;
 	/** Aufprall der Verwandlung (Koerper landet nach dem Wachsen) */
 	private static final int IMPACT_TICK = 6;
+	/** Aufraeumen der Animationsdaten alle 5 s */
+	private static final int PRUNE_INTERVAL = 100;
 	private static EntityRendererFactory.Context context;
 
 	private record Revert(Identifier model, long start) {
@@ -71,11 +73,8 @@ public final class AlienBodyRenderers {
 		context = newContext;
 		RENDERERS.clear();
 		FAILED.clear();
-		SCALES.clear();
-		UNIFORMS.clear();
-		UNIFORM_MODELS.clear();
-		POSES.clear();
-		TEXTURE_ANIM.clear();
+		INFO.clear();
+		TEXTURE_VARIANTS.clear();
 		AlienPose.reload(newContext);
 		AlienArms.clearCache();
 	}
@@ -85,6 +84,9 @@ public final class AlienBodyRenderers {
 		if (client.world == null) {
 			ACTIVE.clear();
 			REVERTING.clear();
+			if (!RENDERERS.isEmpty()) {
+				retainAnimationData(Set.of());
+			}
 			return;
 		}
 		long now = client.world.getTime();
@@ -111,6 +113,16 @@ public final class AlienBodyRenderers {
 		REVERTING.entrySet().removeIf(e -> !seen.contains(e.getKey()) || now - e.getValue().start() > AlienBodyAnimatable.REVERT_TICKS);
 		REVERT_UNIFORM.keySet().retainAll(REVERTING.keySet());
 		LAST_UNIFORM.keySet().retainAll(seen);
+		if (now % PRUNE_INTERVAL == 0) {
+			retainAnimationData(seen);
+		}
+	}
+
+	/** Animationsdaten verschwundener Spieler in allen Alien-Renderern verwerfen. */
+	private static void retainAnimationData(Set<Integer> players) {
+		for (GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> renderer : RENDERERS.values()) {
+			renderer.getAnimatable().retain(players);
+		}
 	}
 
 	static boolean isReverting(PlayerEntity player) {
@@ -223,11 +235,8 @@ public final class AlienBodyRenderers {
 		return renderer;
 	}
 
-	private static final Map<Identifier, Float> SCALES = new HashMap<>();
-	private static final Map<Identifier, java.util.List<String>> UNIFORMS = new HashMap<>();
-	private static final Map<Identifier, Boolean> UNIFORM_MODELS = new HashMap<>();
-	private static final Map<Identifier, Optional<AlienPose.Info>> POSES = new HashMap<>();
-	private static final Map<Identifier, int[]> TEXTURE_ANIM = new HashMap<>();
+	private static final Map<Identifier, AlienRenderInfo> INFO = new HashMap<>();
+	private static final Map<Identifier, Identifier[]> TEXTURE_VARIANTS = new HashMap<>();
 	/** Abzeichen blinkt rot in den letzten 10 s (Serien-Piepen kommt vom Server) */
 	public static final int WARN_TICKS = 200;
 	private static final int WARN_BLINK = 5;
@@ -236,12 +245,17 @@ public final class AlienBodyRenderers {
 	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
 	private static String currentUniform = AlienUniforms.CLASSIC;
 
+	/** Darstellungs-Angaben eines Modells (einmal pro Ressourcen-Neuladen gelesen). */
+	public static AlienRenderInfo info(Identifier model) {
+		return INFO.computeIfAbsent(model, AlienRenderInfo::load);
+	}
+
 	/**
 	 * Textur einer Uniform: {@code <name>_<uniform>.png}, wenn das Modell die Uniform in {@code alien_render} fuehrt,
 	 * sonst die Grundtextur (classic).
 	 */
 	public static Identifier uniformTexture(Identifier model, Identifier base, String uniform) {
-		if (AlienUniforms.CLASSIC.equals(uniform) || !uniformsOf(model).contains(uniform)) {
+		if (AlienUniforms.CLASSIC.equals(uniform) || !info(model).hasUniform(uniform)) {
 			return base;
 		}
 		String path = base.getPath();
@@ -253,8 +267,8 @@ public final class AlienBodyRenderers {
 	 * setzt (importierte Alien-Evolution-Modelle haben je Uniform eigene Geometrie), sonst die Grundgeometrie.
 	 */
 	public static Identifier uniformModel(Identifier model, Identifier base, String uniform) {
-		if (AlienUniforms.CLASSIC.equals(uniform) || !uniformsOf(model).contains(uniform)
-				|| !UNIFORM_MODELS.getOrDefault(model, false)) {
+		AlienRenderInfo info = info(model);
+		if (AlienUniforms.CLASSIC.equals(uniform) || !info.hasUniform(uniform) || !info.uniformModels()) {
 			return base;
 		}
 		String path = base.getPath();
@@ -266,26 +280,7 @@ public final class AlienBodyRenderers {
 	 * ({@code "vanilla_pose": true} in {@code alien_render}), sonst {@code null} (eigene Animationen fuer alle Knochen).
 	 */
 	static AlienPose.Info poseOf(Identifier model) {
-		return POSES.computeIfAbsent(model, m -> {
-			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
-			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
-			if (resource.isEmpty()) {
-				return Optional.empty();
-			}
-			try (var reader = resource.get().getReader()) {
-				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
-				if (!json.has("vanilla_pose") || !json.get("vanilla_pose").getAsBoolean()) {
-					return Optional.empty();
-				}
-				float arms = json.has("arm_swing") ? json.get("arm_swing").getAsFloat() : 1.0f;
-				float legs = json.has("leg_swing") ? json.get("leg_swing").getAsFloat() : 1.0f;
-				return Optional.of(new AlienPose.Info(MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f),
-						AlienPose.parseAbilities(json)));
-			} catch (java.io.IOException | RuntimeException e) {
-				KingdomOmnitrix.LOGGER.error("Pose-Angaben {} unlesbar, nutze Modell-Animationen", file, e);
-				return Optional.empty();
-			}
-		}).orElse(null);
+		return info(model).pose();
 	}
 
 	/**
@@ -293,78 +288,35 @@ public final class AlienBodyRenderers {
 	 * blinkt in den letzten {@link #WARN_TICKS} Ticks vor dem Zeitablauf), wenn {@code alien_render} sie ankuendigt.
 	 */
 	static Identifier animatedTexture(Identifier model, Identifier texture) {
-		int[] anim = textureAnimOf(model);
-		int frame = anim[0] > 1 ? (int) ((currentAge / 2) % anim[0]) : 0;
-		boolean warn = anim[1] == 1 && currentWarn;
+		AlienRenderInfo info = info(model);
+		int frame = info.glowFrames() > 1 ? (int) ((currentAge / 2) % info.glowFrames()) : 0;
+		boolean warn = info.warnTextures() && currentWarn;
 		if (frame == 0 && !warn) {
 			return texture;
 		}
-		String path = texture.getPath();
-		return Identifier.of(texture.getNamespace(), path.substring(0, path.length() - 4)
-				+ (frame > 0 ? "_f" + frame : "") + (warn ? "_warn" : "") + ".png");
-	}
-
-	/** {Glut-Frames, Warn-Texturen 0/1} aus {@code alien_render}; fehlt die Angabe: {1, 0}. */
-	private static int[] textureAnimOf(Identifier model) {
-		return TEXTURE_ANIM.computeIfAbsent(model, m -> {
-			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
-			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
-			if (resource.isEmpty()) {
-				return new int[] {1, 0};
+		// Namen je Textur einmal vorbereiten statt jedes Bild neue Identifier zu bauen
+		Identifier[] variants = TEXTURE_VARIANTS.computeIfAbsent(texture, base -> {
+			String path = base.getPath().substring(0, base.getPath().length() - 4);
+			Identifier[] all = new Identifier[info.glowFrames() * 2];
+			for (int f = 0; f < info.glowFrames(); f++) {
+				for (int w = 0; w < 2; w++) {
+					all[f * 2 + w] = f == 0 && w == 0 ? base : Identifier.of(base.getNamespace(),
+							path + (f > 0 ? "_f" + f : "") + (w == 1 ? "_warn" : "") + ".png");
+				}
 			}
-			try (var reader = resource.get().getReader()) {
-				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
-				int frames = json.has("glow_frames") ? MathHelper.clamp(json.get("glow_frames").getAsInt(), 1, 64) : 1;
-				boolean warn = json.has("warn_textures") && json.get("warn_textures").getAsBoolean();
-				return new int[] {frames, warn ? 1 : 0};
-			} catch (java.io.IOException | RuntimeException e) {
-				KingdomOmnitrix.LOGGER.error("Textur-Animation {} unlesbar, nutze Grundtextur", file, e);
-				return new int[] {1, 0};
-			}
+			return all;
 		});
+		int index = frame * 2 + (warn ? 1 : 0);
+		return index < variants.length ? variants[index] : texture;
 	}
 
 	/** Uniformen eines Modells laut {@code alien_render/<name>.json} ({"uniforms": ["classic", "evo", …]}). */
 	public static java.util.List<String> uniformsOf(Identifier model) {
-		return UNIFORMS.computeIfAbsent(model, m -> {
-			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
-			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
-			if (resource.isEmpty()) {
-				return java.util.List.of(AlienUniforms.CLASSIC);
-			}
-			try (var reader = resource.get().getReader()) {
-				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
-				UNIFORM_MODELS.put(m, json.has("uniform_models") && json.get("uniform_models").getAsBoolean());
-				if (!json.has("uniforms")) {
-					return java.util.List.of(AlienUniforms.CLASSIC);
-				}
-				java.util.List<String> list = new java.util.ArrayList<>();
-				json.getAsJsonArray("uniforms").forEach(e -> list.add(e.getAsString()));
-				return java.util.List.copyOf(list);
-			} catch (java.io.IOException | RuntimeException e) {
-				KingdomOmnitrix.LOGGER.error("Uniformen {} unlesbar, nutze classic", file, e);
-				return java.util.List.of(AlienUniforms.CLASSIC);
-			}
-		});
+		return info(model).uniforms();
 	}
 
-	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. Zwischengespeichert. */
+	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. */
 	public static float renderScale(Identifier model) {
-		return SCALES.computeIfAbsent(model, AlienBodyRenderers::readRenderScale);
-	}
-
-	private static float readRenderScale(Identifier model) {
-		Identifier file = Identifier.of(model.getNamespace(), "alien_render/" + model.getPath() + ".json");
-		var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
-		if (resource.isEmpty()) {
-			return 1.0f;
-		}
-		try (var reader = resource.get().getReader()) {
-			float scale = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject().get("scale").getAsFloat();
-			return scale > 0.05f && scale < 5.0f ? scale : 1.0f;
-		} catch (java.io.IOException | RuntimeException e) {
-			KingdomOmnitrix.LOGGER.error("Darstellungsgroesse {} unlesbar, nutze 1", file, e);
-			return 1.0f;
-		}
+		return info(model).scale();
 	}
 }

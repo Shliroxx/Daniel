@@ -9,7 +9,6 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.client.vfx.CameraShake;
 import com.santiq.kingdomomnitrix.client.vfx.ScreenEffects;
 import com.santiq.kingdomomnitrix.networking.OmnitrixCuePayload;
-import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
 import java.io.IOException;
@@ -135,7 +134,7 @@ public final class OmnitrixFeedback {
 			lastStatus = null;
 			return;
 		}
-		OmnitrixStatus status = OmnitrixCore.status(player);
+		OmnitrixStatus status = OmnitrixClientState.status(player);
 		if (lastStatus != null && status != lastStatus) {
 			if ((lastStatus == OmnitrixStatus.COOLDOWN || lastStatus == OmnitrixStatus.OVERHEATED || lastStatus == OmnitrixStatus.LOCKED)
 					&& (status == OmnitrixStatus.READY || status == OmnitrixStatus.MASTER_CONTROL)) {

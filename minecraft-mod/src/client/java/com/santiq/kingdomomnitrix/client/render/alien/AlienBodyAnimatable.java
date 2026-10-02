@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -15,7 +16,7 @@ import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.constant.DataTickets;
-import software.bernie.geckolib.util.GeckoLibUtil;
+import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceCache;
 
 /**
  * Animations-Traeger fuer einen Alien-Koerper, der das Spielermodell ersetzt.
@@ -57,7 +58,7 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	private static final double MOVE_SPEED = 0.02;
 	private static final float MOVE_LIMB_SPEED = 0.1f;
 
-	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+	private final PrunableCache cache = new PrunableCache(this);
 	/** zuletzt gestartete Aktion je Spieler (Entity-ID) */
 	private final Map<Integer, Long> lastTrigger = new HashMap<>();
 
@@ -197,5 +198,25 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	@Override
 	public AnimatableInstanceCache getAnimatableInstanceCache() {
 		return cache;
+	}
+
+	/**
+	 * Daten von Spielern verwerfen, die nicht mehr in der Welt sind (Entity-IDs wachsen ueber eine Sitzung — ohne
+	 * Aufraeumen wuerden Animationszustand und Ausloeser jedes je gesehenen Spielers liegen bleiben).
+	 */
+	public void retain(Set<Integer> entityIds) {
+		lastTrigger.keySet().retainAll(entityIds);
+		cache.retain(entityIds);
+	}
+
+	/** GeckoLibs Instanz-Cache fuer ersetzte Entities, ergaenzt um Aufraeumen nach Entity-ID. */
+	private static final class PrunableCache extends SingletonAnimatableInstanceCache {
+		PrunableCache(AlienBodyAnimatable animatable) {
+			super(animatable);
+		}
+
+		void retain(Set<Integer> entityIds) {
+			managers.keySet().removeIf(id -> !entityIds.contains((int) (long) id));
+		}
 	}
 }

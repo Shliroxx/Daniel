@@ -1,6 +1,6 @@
 package com.santiq.kingdomomnitrix.client.render.omnitrix;
 
-import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
 
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
@@ -70,7 +70,7 @@ public final class OmnitrixDialDisplay {
 		float b;
 		// Geraete-Zustand geht vor: gesperrt grau, ueberhitzt rot, Warnung gelb (blinkt mit dem Zustands-Puls)
 		var player = net.minecraft.client.MinecraftClient.getInstance().player;
-		OmnitrixStatus device = local && player != null ? OmnitrixCore.status(player) : OmnitrixStatus.READY;
+		OmnitrixStatus device = local && player != null ? OmnitrixClientState.status(player) : OmnitrixStatus.READY;
 		if (device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || device == OmnitrixStatus.WARNING) {
 			float light = 0.45f + 0.55f * device.light(time) / Math.max(0.01f, device.brightness());
 			r = ((device.color() >> 16) & 0xFF) / 255.0f * light;

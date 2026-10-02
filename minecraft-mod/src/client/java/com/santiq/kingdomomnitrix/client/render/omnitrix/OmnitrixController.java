@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.render.omnitrix;
 
+import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.AlienUniforms;
@@ -232,9 +233,9 @@ public final class OmnitrixController {
 			return;
 		}
 		// Geraet verweigert sofort sichtbar: gesperrt, ueberhitzt, zu heiss, Nachladen oder fehlende DNA
-		OmnitrixStatus device = OmnitrixCore.status(player);
-		boolean tooHot = OmnitrixCore.heat(player) + OmnitrixCore.profile(player).heatPerTransform()
-				* OmnitrixCore.state(player).heatFactor(OmnitrixCore.profile(player)) >= 1.0f;
+		OmnitrixStatus device = OmnitrixClientState.status(player);
+		boolean tooHot = OmnitrixClientState.heat(player) + OmnitrixClientState.profile(player).heatPerTransform()
+				* OmnitrixCore.state(player).heatFactor(OmnitrixClientState.profile(player)) >= 1.0f;
 		if (!entry.get().unlocked() || state.rechargeRemaining(player.getWorld().getTime()) > 0
 				|| device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || tooHot) {
 			refuseInput();
@@ -251,7 +252,7 @@ public final class OmnitrixController {
 	 * Bedien-Phase darueber (aktiviert, Auswahl, Verwandlung); andere Spieler zeigen ihren geteilten Zustand.
 	 */
 	public static OmnitrixStatus displayStatus(net.minecraft.entity.player.PlayerEntity player) {
-		OmnitrixStatus base = OmnitrixCore.status(player);
+		OmnitrixStatus base = OmnitrixClientState.status(player);
 		if (base == OmnitrixStatus.LOCKED || base == OmnitrixStatus.OVERHEATED || base == OmnitrixStatus.IDLE) {
 			return base;
 		}
