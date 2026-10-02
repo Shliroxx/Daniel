@@ -41,6 +41,7 @@ public final class OmnitrixHud implements HudElement {
 	private static final int SLOT_SIZE = 22;
 	private static final int ICON = 11;
 	private static final int SLOT_GAP = 4;
+	private static final int PER_ROW = 3;
 	private static final int TIMER_WARNING_COLOR = 0xFFFF5555;
 	private static final int ENERGY_COLOR = 0xFF4FC3FF;
 	private static final int WARNING_TICKS = 200;
@@ -99,11 +100,21 @@ public final class OmnitrixHud implements HudElement {
 		return WIDTH;
 	}
 
+	/** Reihen der Faehigkeits-Slots (je 3: R/V/B, darunter Shift + R/V/B). */
+	private static int slotRows(MinecraftClient client) {
+		if (client.player == null || client.world == null) {
+			return 1;
+		}
+		int count = shown(client, TransformationManager.get(client.player)).map(a -> a.abilities().size()).orElse(1);
+		return Math.max(1, (count + PER_ROW - 1) / PER_ROW);
+	}
+
 	@Override
 	public int height(MinecraftClient client) {
 		int font = client.textRenderer.fontHeight;
+		int rows = slotRows(client);
 		return (transformed(client)
-				? PADDING + font + 3 + BAR_HEIGHT + 2 + BAR_HEIGHT + 4 + SLOT_SIZE + PADDING
+				? PADDING + font + 3 + BAR_HEIGHT + 2 + BAR_HEIGHT + 4 + rows * SLOT_SIZE + (rows - 1) * SLOT_GAP + PADDING
 				: PADDING + font * 2 + 2 + PADDING) + HEAT_HEIGHT + 2;
 	}
 
@@ -196,14 +207,31 @@ public final class OmnitrixHud implements HudElement {
 		UiDraw.bar(context, cx, cy, innerWidth, BAR_HEIGHT, energy / alien.maxEnergy(), ENERGY_COLOR);
 		cy += BAR_HEIGHT + 4;
 
+
 		for (int i = 0; i < alien.abilities().size(); i++) {
-			drawSlot(context, font, cx + i * (SLOT_SIZE + SLOT_GAP), cy, i, alien.abilities().get(i), state, energy, now);
+			int col = i % PER_ROW;
+			int row = i / PER_ROW;
+			drawSlot(context, font, cx + col * (SLOT_SIZE + SLOT_GAP), cy + row * (SLOT_SIZE + SLOT_GAP), i,
+					alien.abilities().get(i), state, energy, now, mastery);
 		}
 	}
 
 	private static void drawSlot(DrawContext context, TextRenderer font, int x, int y, int index, AbilitySlot slot,
-			TransformationState state, float energy, long now) {
-		boolean affordable = energy >= slot.energy();
+			TransformationState state, float energy, long now, int mastery) {
+		if (!slot.unlocked(mastery)) {
+			// gesperrt: dunkles Feld, blasses Symbol, benoetigte Meisterschaftsstufe
+			context.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF151815);
+			context.drawBorder(x, y, SLOT_SIZE, SLOT_SIZE, 0xFF3A3A3A);
+			UiDraw.icon(context, Icons.alienAbility(slot.type()), Icons.command("omnitrix"), x + 3, y + 1, UiDraw.ICON_SIZE);
+			context.fill(x + 1, y + 1, x + SLOT_SIZE - 1, y + SLOT_SIZE - 1, 0xB0101010);
+			String need = "★" + slot.unlockLevel();
+			context.getMatrices().push();
+			context.getMatrices().translate(0, 0, 200);
+			context.drawTextWithShadow(font, need, x + (SLOT_SIZE - font.getWidth(need)) / 2, y + (SLOT_SIZE - font.fontHeight) / 2 + 1, 0xFFB08A2E);
+			context.getMatrices().pop();
+			return;
+		}
+		boolean affordable = energy >= com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
 		long cooldown = state.cooldownRemaining(index, now);
 		context.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, affordable ? 0xFF1E2A1E : 0xFF4A1E1E);
 		context.drawBorder(x, y, SLOT_SIZE, SLOT_SIZE, cooldown > 0 ? 0xFF555555 : UiTheme.OMNITRIX.border());
@@ -212,7 +240,12 @@ public final class OmnitrixHud implements HudElement {
 			int covered = (int) Math.ceil(SLOT_SIZE * (double) cooldown / slot.cooldown());
 			context.fill(x, y + SLOT_SIZE - covered, x + SLOT_SIZE, y + SLOT_SIZE, 0xA0000000);
 		}
-		Text key = KeyBindingHelper.getBoundKeyOf(ModKeyBindings.ABILITIES[index]).getLocalizedText();
+		Text base = KeyBindingHelper.getBoundKeyOf(ModKeyBindings.ABILITIES[index % PER_ROW]).getLocalizedText();
+		Text key = index < PER_ROW ? base : Text.literal("⇧").append(base);
+		if (slot.role() == AbilitySlot.Role.ULTIMATE) {
+			// Ultimate: goldener Rahmen
+			context.drawBorder(x - 1, y - 1, SLOT_SIZE + 2, SLOT_SIZE + 2, 0xFFFFC94A);
+		}
 		context.getMatrices().push();
 		context.getMatrices().translate(0, 0, 200);
 		context.drawTextWithShadow(font, key, x + SLOT_SIZE - font.getWidth(key) - 1, y + SLOT_SIZE - font.fontHeight + 1, 0xFFFFD84A);

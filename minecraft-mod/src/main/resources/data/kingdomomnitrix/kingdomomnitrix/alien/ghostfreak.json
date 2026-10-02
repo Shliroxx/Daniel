@@ -42,7 +42,9 @@
         "damage": 6.0,
         "pull": 1.2,
         "heal": 2.0
-      }
+      },
+      "role": "basic",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:phase_shift",
@@ -50,7 +52,9 @@
       "cooldown": 100,
       "params": {
         "ticks": 60
-      }
+      },
+      "role": "movement",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:haunting_scare",
@@ -60,6 +64,43 @@
         "radius": 8.0,
         "seconds": 6.0,
         "push": 1.2
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:possession",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "range": 6.0,
+        "seconds": 4.0,
+        "self_seconds": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:shadow_step",
+      "energy": 25,
+      "cooldown": 100,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "distance": 10.0,
+        "invulnerable_ticks": 10.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:nightmare",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 10.0,
+        "damage": 8.0,
+        "seconds": 6.0
       }
     }
   ],

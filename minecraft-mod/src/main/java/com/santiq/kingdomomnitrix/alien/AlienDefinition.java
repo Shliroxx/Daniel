@@ -55,7 +55,7 @@ public record AlienDefinition(
 		int failsafePriority,
 		AlienTraits traits) {
 
-	public static final int MAX_ABILITIES = 3;
+	public static final int MAX_ABILITIES = 6;
 	public static final float MIN_SCALE = 0.25f;
 	public static final float MAX_SCALE = 3.0f;
 
@@ -114,6 +114,9 @@ public record AlienDefinition(
 	private static DataResult<AlienDefinition> validate(AlienDefinition definition) {
 		if (definition.abilities.isEmpty() || definition.abilities.size() > MAX_ABILITIES) {
 			return DataResult.error(() -> "Ein Alien braucht 1 bis " + MAX_ABILITIES + " Faehigkeiten, hat aber " + definition.abilities.size());
+		}
+		if (definition.abilities.get(0).unlockLevel() != 1) {
+			return DataResult.error(() -> "Die erste Faehigkeit muss ab Meisterschaft 1 frei sein");
 		}
 		return DataResult.success(definition);
 	}

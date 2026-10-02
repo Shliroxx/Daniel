@@ -35,7 +35,9 @@
         "distance": 8.0,
         "damage": 5.0,
         "speed": 2.6
-      }
+      },
+      "role": "movement",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:blur_dodge",
@@ -44,7 +46,9 @@
       "params": {
         "power": 1.6,
         "invulnerable_ticks": 12
-      }
+      },
+      "role": "basic_2",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:rapid_strikes",
@@ -53,6 +57,46 @@
       "params": {
         "range": 3.0,
         "damage": 9.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:cyclone_run",
+      "energy": 30,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 4.5,
+        "damage": 5.0,
+        "pull": 0.8,
+        "seconds": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:time_slip",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "self_seconds": 8.0,
+        "seconds": 6.0,
+        "radius": 8.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:lightspeed_barrage",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 12.0,
+        "targets": 6.0,
+        "damage": 6.0,
+        "invulnerable_ticks": 20.0
       }
     }
   ],

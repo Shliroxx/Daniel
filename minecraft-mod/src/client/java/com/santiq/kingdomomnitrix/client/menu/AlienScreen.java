@@ -32,7 +32,7 @@ import net.minecraft.util.Identifier;
 public class AlienScreen extends Screen {
 	private static final int ROW = 20;
 	private static final int LIST_WIDTH = 120;
-	private static final int DETAIL_ICON = 64;
+	private static final int DETAIL_ICON = 44;
 
 	private int left;
 	private int top;
@@ -168,16 +168,37 @@ public class AlienScreen extends Screen {
 
 		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.abilities"), x, y, UiTheme.OMNITRIX.accent());
 		y += 11;
+		// zwei Spalten zu je drei (R/V/B, darunter Shift + R/V/B); gesperrte grau mit benoetigter Stufe
+		int column = (width - 4) / 2;
+		int top = y;
 		for (int i = 0; i < alien.abilities().size(); i++) {
 			AbilitySlot slot = alien.abilities().get(i);
-			UiDraw.icon(context, Icons.alienAbility(slot.type()), Icons.command("omnitrix"), x, y, UiDraw.ICON_SIZE);
-			context.drawTextWithShadow(textRenderer, Text.translatable(slot.translationKey()), x + 20, y + 1, UiTheme.TEXT);
-			long cooldown = Math.round(slot.cooldown() * (1.0f - mastery.cooldownReduction(id)));
-			Text info = Text.translatable("screen.kingdomomnitrix.aliens.ability_info", Math.round(slot.energy()),
-					String.format("%.1f", cooldown / 20.0f));
-			context.drawTextWithShadow(textRenderer, info, x + 20, y + 10, UiTheme.TEXT_SOFT);
-			y += 22;
+			int ax = x + (i / 3) * (column + 4);
+			int ay = top + (i % 3) * 22;
+			boolean open = slot.unlocked(level);
+			UiDraw.icon(context, Icons.alienAbility(slot.type()), Icons.command("omnitrix"), ax, ay, UiDraw.ICON_SIZE);
+			if (!open) {
+				context.fill(ax, ay, ax + UiDraw.ICON_SIZE, ay + UiDraw.ICON_SIZE, 0xB0101010);
+			}
+			Text abilityName = Text.translatable(slot.translationKey());
+			context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, abilityName, column - 20), ax + 19, ay + 1,
+					open ? (slot.role() == AbilitySlot.Role.ULTIMATE ? 0xFFFFC94A : UiTheme.TEXT) : UiTheme.TEXT_DISABLED);
+			Text info;
+			if (open) {
+				long cooldown = Math.round(slot.cooldown() * (1.0f - mastery.cooldownReduction(id)));
+				info = Text.translatable("screen.kingdomomnitrix.aliens.ability_short",
+						Math.round(AlienMastery.energyCost(slot.energy(), level)), String.format("%.1f", cooldown / 20.0f));
+			} else {
+				info = Text.translatable("screen.kingdomomnitrix.aliens.unlock_at", slot.unlockLevel());
+			}
+			context.getMatrices().push();
+			context.getMatrices().translate(ax + 19, ay + 11, 0.0f);
+			context.getMatrices().scale(0.8f, 0.8f, 1.0f);
+			context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, info, (int) ((column - 20) / 0.8f)), 0, 0,
+					open ? UiTheme.TEXT_SOFT : 0xFFB08A2E);
+			context.getMatrices().pop();
 		}
+		y = top + 3 * 22;
 		if (alien.prototype()) {
 			context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.prototype"), x, y, UiTheme.TEXT_DISABLED);
 		}

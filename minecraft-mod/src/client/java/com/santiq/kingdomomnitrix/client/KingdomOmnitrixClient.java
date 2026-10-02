@@ -119,6 +119,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.register();
 		com.santiq.kingdomomnitrix.client.omnitrix.AlienUnlockToast.register();
 		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixHolo.register();
+		com.santiq.kingdomomnitrix.client.omnitrix.MasteryHolo.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {

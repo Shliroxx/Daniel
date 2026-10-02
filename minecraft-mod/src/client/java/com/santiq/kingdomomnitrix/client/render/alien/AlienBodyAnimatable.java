@@ -125,7 +125,7 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 			key = player.age - (player.maxHurtTime - player.hurtTime);
 		} else if (slot >= 0) {
 			wanted = ABILITIES[Math.min(slot, ABILITIES.length - 1)];
-			key = transformation.energyStamp() * 4 + slot;
+			key = transformation.energyStamp() * 8 + slot;
 		} else if (player.handSwinging) {
 			wanted = ATTACK;
 			key = player.age - player.handSwingTicks;

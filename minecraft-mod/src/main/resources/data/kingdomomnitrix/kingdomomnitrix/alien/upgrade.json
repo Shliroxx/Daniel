@@ -39,7 +39,9 @@
       "params": {
         "range": 24.0,
         "damage": 7.0
-      }
+      },
+      "role": "basic",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:liquid_form",
@@ -47,7 +49,9 @@
       "cooldown": 80,
       "params": {
         "ticks": 40
-      }
+      },
+      "role": "movement",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:tech_upgrade",
@@ -57,6 +61,41 @@
         "repair": 0.25,
         "seconds": 20.0,
         "haste_level": 1
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:mace_fists",
+      "energy": 35,
+      "cooldown": 240,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "seconds": 12.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:system_override",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "range": 16.0,
+        "seconds": 6.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:plasma_cannon",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "range": 32.0,
+        "damage": 16.0,
+        "explosion": 2.0
       }
     }
   ],

@@ -31,7 +31,9 @@
         "speed": 1.8,
         "spread": 3.0,
         "damage": 3.0
-      }
+      },
+      "role": "basic",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:stink_cloud",
@@ -40,7 +42,9 @@
       "params": {
         "radius": 3.5,
         "ticks": 120
-      }
+      },
+      "role": "basic_2",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:wing_dash",
@@ -49,6 +53,45 @@
       "params": {
         "power": 1.8,
         "invulnerable_ticks": 8
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:slime_bomb",
+      "energy": 35,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "speed": 1.4,
+        "damage": 6.0,
+        "explosion": 1.6
+      }
+    },
+    {
+      "type": "kingdomomnitrix:updraft",
+      "energy": 30,
+      "cooldown": 160,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "radius": 5.0,
+        "launch": 1.2,
+        "damage": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:toxic_storm",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "clouds": 6.0,
+        "ring": 4.0,
+        "radius": 2.5,
+        "ticks": 160.0
       }
     }
   ],

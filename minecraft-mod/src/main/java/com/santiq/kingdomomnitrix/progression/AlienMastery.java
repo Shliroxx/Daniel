@@ -50,6 +50,43 @@ public record AlienMastery(Map<Identifier, Integer> experience) {
 		return levelFor(experience(alien));
 	}
 
+	// --- Meisterschafts-Boni (Phase G) -------------------------------------------------------------
+	// Stufe 1–10 je Alien. Faehigkeiten 4–6 schalten sich ueber unlock_level im Datenpaket frei (Standard 3/5/8).
+	/** Ab dieser Stufe kosten Faehigkeiten weniger Energie. */
+	public static final int LEVEL_ENERGY_DISCOUNT = 4;
+	public static final float ENERGY_DISCOUNT = 0.15f;
+	/** Ab dieser Stufe erzeugt das Verwandeln in dieses Alien weniger Hitze. */
+	public static final int LEVEL_TRANSFORM_HEAT = 6;
+	public static final float TRANSFORM_HEAT_FACTOR = 0.7f;
+	/** Ab dieser Stufe hat das Alien mehr Lebenspunkte. */
+	public static final int LEVEL_HEALTH = 7;
+	public static final float HEALTH_BONUS = 4.0f;
+	/** Ab dieser Stufe steigt die Hitze waehrend der Verwandlung nur halb so schnell. */
+	public static final int LEVEL_ACTIVE_HEAT = 9;
+	public static final float ACTIVE_HEAT_FACTOR = 0.5f;
+	/** Gemeistert: dieses Alien erzeugt keine Hitze mehr (Master Control fuer genau dieses Alien). */
+	public static final int LEVEL_MASTERED = MAX_LEVEL;
+
+	/** Energiekosten einer Faehigkeit bei dieser Meisterschaftsstufe. */
+	public static float energyCost(float base, int level) {
+		return level >= LEVEL_ENERGY_DISCOUNT ? base * (1.0f - ENERGY_DISCOUNT) : base;
+	}
+
+	/** Hitze-Faktor beim Verwandeln in das Alien. */
+	public static float transformHeatFactor(int level) {
+		return level >= LEVEL_MASTERED ? 0.0f : level >= LEVEL_TRANSFORM_HEAT ? TRANSFORM_HEAT_FACTOR : 1.0f;
+	}
+
+	/** Hitze-Faktor, solange das Alien aktiv ist. */
+	public static float activeHeatFactor(int level) {
+		return level >= LEVEL_MASTERED ? 0.0f : level >= LEVEL_ACTIVE_HEAT ? ACTIVE_HEAT_FACTOR : 1.0f;
+	}
+
+	/** Zusaetzliche Lebenspunkte des Aliens. */
+	public static float healthBonus(int level) {
+		return level >= LEVEL_HEALTH ? HEALTH_BONUS : 0.0f;
+	}
+
 	public float durationBonus(Identifier alien) {
 		return DURATION_PER_LEVEL * (level(alien) - 1);
 	}

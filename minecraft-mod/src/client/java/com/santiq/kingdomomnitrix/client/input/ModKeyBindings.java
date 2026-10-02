@@ -26,6 +26,10 @@ public final class ModKeyBindings {
 	public static final KeyBinding QUICK_SELECT = register("key.kingdomomnitrix.quick_select", GLFW.GLFW_KEY_X);
 	/** Smart-Wahl: verwandelt direkt in das Alien, das der Smart-Scan empfiehlt */
 	public static final KeyBinding SMART_SELECT = register("key.kingdomomnitrix.smart_select", GLFW.GLFW_KEY_N);
+	/**
+	 * Faehigkeiten 1–3; mit gehaltener Schleichen-Taste (Standard Shift) die Faehigkeiten 4–6. Eine eigene Belegung
+	 * auf Shift ginge nicht: Minecraft leitet eine Taste nur an eine Belegung weiter, Schleichen fiele weg.
+	 */
 	public static final KeyBinding[] ABILITIES = {
 			register("key.kingdomomnitrix.ability_1", GLFW.GLFW_KEY_R),
 			register("key.kingdomomnitrix.ability_2", GLFW.GLFW_KEY_V),
@@ -57,7 +61,7 @@ public final class ModKeyBindings {
 	}
 
 	public static void register() {
-		if (ABILITIES.length != AlienDefinition.MAX_ABILITIES) {
+		if (ABILITIES.length * 2 != AlienDefinition.MAX_ABILITIES) {
 			throw new IllegalStateException("Anzahl der Faehigkeiten-Tasten passt nicht zu MAX_ABILITIES");
 		}
 		ClientTickEvents.END_CLIENT_TICK.register(ModKeyBindings::tick);
@@ -97,10 +101,11 @@ public final class ModKeyBindings {
 				HeroScreen.open(client);
 			}
 		}
+		boolean second = client.options.sneakKey.isPressed();
 		for (int slot = 0; slot < ABILITIES.length; slot++) {
 			while (ABILITIES[slot].wasPressed()) {
 				if (client.currentScreen == null && TransformationManager.get(client.player).isTransformed()) {
-					ClientPlayNetworking.send(new AbilityRequestPayload(slot));
+					ClientPlayNetworking.send(new AbilityRequestPayload(second ? slot + ABILITIES.length : slot));
 				}
 			}
 		}

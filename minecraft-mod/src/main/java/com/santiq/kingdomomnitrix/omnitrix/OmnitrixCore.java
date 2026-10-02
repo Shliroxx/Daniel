@@ -142,6 +142,35 @@ public final class OmnitrixCore {
 
 	// --- Server: Pruefen und Wechsel melden -----------------------------------------------------
 
+	/** Meisterschaftsstufe eines Aliens (fuer Hitze-Faktoren). */
+	private static int mastery(ServerPlayerEntity player, Identifier alien) {
+		return com.santiq.kingdomomnitrix.progression.AlienMasteryManager.get(player).level(alien);
+	}
+
+	/** Kann das Geraet jetzt in dieses Alien verwandeln? Leer = ja (Meisterschaft senkt den Hitze-Aufschlag). */
+	public static Optional<Refusal> checkTransform(ServerPlayerEntity player, Identifier alien) {
+		long now = player.getWorld().getTime();
+		OmnitrixState device = state(player);
+		if (device.isLocked(now)) {
+			return Optional.of(Refusal.LOCKED);
+		}
+		if (device.isOverheated(now)) {
+			return Optional.of(Refusal.OVERHEATED);
+		}
+		OmnitrixProfile profile = profile(player);
+		float add = profile.heatPerTransform() * deviceFactor(device, profile)
+				* com.santiq.kingdomomnitrix.progression.AlienMastery.transformHeatFactor(mastery(player, alien));
+		if (add > 0.0f && heat(player) + add >= 1.0f) {
+			return Optional.of(Refusal.TOO_HOT);
+		}
+		return Optional.empty();
+	}
+
+	/** Master-Control-Faktor des Geraets (ohne Alien-Anteil). */
+	private static float deviceFactor(OmnitrixState device, OmnitrixProfile profile) {
+		return device.masterControl() ? profile.masterControl().heatMultiplier() : 1.0f;
+	}
+
 	/** Kann das Geraet jetzt verwandeln? Leer = ja. */
 	public static Optional<Refusal> checkTransform(ServerPlayerEntity player) {
 		long now = player.getWorld().getTime();
@@ -176,11 +205,14 @@ public final class OmnitrixCore {
 		return Optional.empty();
 	}
 
-	/** Schnellwechsel ausgefuehrt: Hitze-Aufschlag (Master Control: keiner). */
-	public static void onQuickChange(ServerPlayerEntity player) {
+	/** Schnellwechsel ausgefuehrt: Hitze bis jetzt festschreiben, Aufschlag (Master Control/gemeistert: keiner). */
+	public static void onQuickChange(ServerPlayerEntity player, Identifier alien) {
 		long now = player.getWorld().getTime();
 		OmnitrixProfile profile = profile(player);
-		update(player, s -> s.withHeat(now, true, profile, s.masterControl() ? 0.0f : profile.quickChangeHeat()));
+		int level = mastery(player, alien);
+		float add = profile.quickChangeHeat() * com.santiq.kingdomomnitrix.progression.AlienMastery.transformHeatFactor(level);
+		update(player, s -> s.withHeat(now, true, profile, s.masterControl() ? 0.0f : add)
+				.withAlienHeatFactor(com.santiq.kingdomomnitrix.progression.AlienMastery.activeHeatFactor(level)));
 	}
 
 	/** Notfall-Verwandlung moeglich? (Geraet nicht gesperrt, Abklingzeit vorbei) */
@@ -226,18 +258,21 @@ public final class OmnitrixCore {
 		cue(player, OmnitrixCue.ERROR);
 	}
 
-	/** Verwandlung gestartet: Hitze aufschlagen. */
-	public static void onTransform(ServerPlayerEntity player) {
+	/** Verwandlung gestartet: Hitze aufschlagen (Meisterschaft senkt Aufschlag und laufende Hitze des Aliens). */
+	public static void onTransform(ServerPlayerEntity player, Identifier alien) {
 		long now = player.getWorld().getTime();
 		OmnitrixProfile profile = profile(player);
-		update(player, s -> s.withHeat(now, false, profile, profile.heatPerTransform() * s.heatFactor(profile)));
+		int level = mastery(player, alien);
+		update(player, s -> s.withHeat(now, false, profile, profile.heatPerTransform() * deviceFactor(s, profile)
+						* com.santiq.kingdomomnitrix.progression.AlienMastery.transformHeatFactor(level))
+				.withAlienHeatFactor(com.santiq.kingdomomnitrix.progression.AlienMastery.activeHeatFactor(level)));
 	}
 
-	/** Rueckverwandlung: Hitze festschreiben (ab jetzt kuehlt das Geraet ab). */
+	/** Rueckverwandlung: Hitze festschreiben (ab jetzt kuehlt das Geraet ab), Alien-Faktor zuruecksetzen. */
 	public static void onRevert(ServerPlayerEntity player) {
 		long now = player.getWorld().getTime();
 		OmnitrixProfile profile = profile(player);
-		update(player, s -> s.withHeat(now, true, profile, 0.0f));
+		update(player, s -> s.withHeat(now, true, profile, 0.0f).withAlienHeatFactor(1.0f));
 	}
 
 	/**

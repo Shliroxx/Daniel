@@ -28,7 +28,9 @@
       "cooldown": 12,
       "params": {
         "speed": 2.2
-      }
+      },
+      "role": "basic",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:fire_burst",
@@ -38,7 +40,9 @@
         "radius": 4.5,
         "damage": 7.0,
         "fire_seconds": 5.0
-      }
+      },
+      "role": "basic_2",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:flame_boost",
@@ -47,6 +51,49 @@
       "params": {
         "up": 1.25,
         "forward": 0.7
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:inferno_wave",
+      "energy": 35,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 7.0,
+        "cone": 0.5,
+        "damage": 8.0,
+        "fire_seconds": 5.0,
+        "knockback": 0.6
+      }
+    },
+    {
+      "type": "kingdomomnitrix:flame_shield",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "seconds": 10.0,
+        "radius": 3.0,
+        "damage": 2.0,
+        "fire_seconds": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:supernova",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 9.0,
+        "damage": 16.0,
+        "fire_seconds": 8.0,
+        "knockback": 1.6,
+        "launch": 0.5
       }
     }
   ],

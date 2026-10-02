@@ -30,6 +30,64 @@
         "count": 5,
         "spread": 6.0,
         "speed": 2.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:crystal_blade",
+      "energy": 15,
+      "cooldown": 25,
+      "role": "basic_2",
+      "unlock_level": 1,
+      "params": {
+        "range": 4.0,
+        "damage": 9.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:mighty_leap",
+      "energy": 20,
+      "cooldown": 40,
+      "role": "movement",
+      "unlock_level": 1,
+      "params": {
+        "up": 1.1,
+        "forward": 1.3
+      }
+    },
+    {
+      "type": "kingdomomnitrix:spike_eruption",
+      "energy": 35,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 6.0,
+        "damage": 9.0,
+        "launch": 0.7
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_armor",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "seconds": 12.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_storm",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "count": 24.0,
+        "damage": 6.0,
+        "speed": 1.8
       }
     }
   ],

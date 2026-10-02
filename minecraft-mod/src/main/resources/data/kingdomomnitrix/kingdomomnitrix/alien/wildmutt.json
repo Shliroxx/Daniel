@@ -44,7 +44,9 @@
         "up": 0.55,
         "distance": 6.0,
         "damage": 7.0
-      }
+      },
+      "role": "movement",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:quill_burst",
@@ -55,7 +57,9 @@
         "speed": 2.4,
         "spread": 9.0,
         "damage": 4.0
-      }
+      },
+      "role": "basic",
+      "unlock_level": 1
     },
     {
       "type": "kingdomomnitrix:feral_roar",
@@ -64,6 +68,43 @@
       "params": {
         "radius": 16.0,
         "seconds": 8.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:savage_maul",
+      "energy": 30,
+      "cooldown": 100,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "range": 4.0,
+        "hits": 3.0,
+        "damage": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:scent_track",
+      "energy": 30,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "radius": 48.0,
+        "seconds": 20.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:primal_rampage",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "self_seconds": 12.0,
+        "seconds": 4.0,
+        "radius": 8.0
       }
     }
   ],

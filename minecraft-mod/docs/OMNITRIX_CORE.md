@@ -194,3 +194,57 @@ ueber das Ziel; mit `facing entity … feet` treffen alle.
 **Offen / ehrlich:** Faehigkeits-Posen (AE-Skripte) fuer die neuen Aliens noch nicht uebernommen (nur Spielerpose +
 Daueranimation); Klaenge nicht angehoert, nur technisch geprueft; Mehrspieler fuer die neuen Aliens nicht getestet.
 Bilder: `docs/screenshots/neue_aliens_phase_e.png`, `docs/screenshots/alien_symbole.png`.
+
+## 10. Phase F + G — sechs Faehigkeiten je Alien, Meisterschaft (2026-10-02)
+
+**Bedienung:** R / V / B = Faehigkeit 1–3, **Schleichen-Taste (Shift) + R / V / B = 4–6**. Shift ist die
+Schleichen-Belegung selbst (eine zweite Belegung auf Shift wuerde in Minecraft das Schleichen stilllegen).
+HUD: zwei Reihen, zweite Reihe mit ⇧ beschriftet, gesperrte Slots dunkel mit „★N“, ULTIMATE mit goldenem Rahmen.
+Alien-Menue: zwei Spalten, gesperrte grau mit „ab ★N“, Energie nach Meisterschafts-Rabatt.
+
+**Datenformat:** jeder Slot hat `role` (basic, basic_2, movement, special, utility, ultimate) und `unlock_level`.
+Regeln (Test `everyAlienHasSixRolesUnlockedInOrder`): 6 Slots, alle sechs Rollen, Slots 1–3 ab ★1, Stufen aufsteigend,
+Slot 6 = ULTIMATE. Standard: SPECIAL ★3, UTILITY ★5, ULTIMATE ★8. Weitere Tests: jeder Typ ist im Code registriert,
+hat Namen (de/en) und Symbol.
+
+| Alien | 4 SPECIAL (★3) | 5 UTILITY (★5) | 6 ULTIMATE (★8) |
+|---|---|---|---|
+| Heatblast | Infernowelle (Feuerkegel) | Flammenschild | Supernova |
+| XLR8 | Zyklonlauf (zieht heran) | Zeitsprung | Lichtgeschwindigkeits-Hagel (bis 6 Ziele) |
+| Vierarm | Donnerklatschen | Eisenhaut | Erdbeben |
+| Diamondhead | Stachelausbruch | Kristallpanzer | Kristallsturm (24 Splitter rundum) |
+| Grey Matter | Technikfalle | Notreparatur | Superhirn |
+| Wildmutt | Wildes Zerfleischen (3 Bisse) | Witterung (48 Bloecke) | Urwut |
+| Stinkfly | Schleimbombe | Aufwind | Giftsturm (Wolkenring) |
+| Ripjaws | Schwanzhieb | Hydroheilung | Flutwelle |
+| Upgrade | Keulenfaeuste | Systemuebernahme | Plasmakanone |
+| Ghostfreak | Besessenheit | Schattenschritt | Albtraum |
+
+Diamondhead und Grey Matter hatten nur eine Faehigkeit; neu dazu Kristallklinge + Kristallsprung bzw. Schwachstelle +
+Huschen. Code: `MasteryAbilities` — vier Bausteine (Flaeche/Kegel, Selbst, Ziel, Strahl) plus Sonderfaelle; alle Zahlen
+im Datenpaket.
+
+**Meisterschaft (★1–10 je Alien)**
+
+| Stufe | Wirkung |
+|---|---|
+| je Stufe | +5 % Verwandlungsdauer, −3 % Abklingzeit (bestand) |
+| ★3 / ★5 / ★8 | Faehigkeit 4 / 5 / 6 frei |
+| ★4 | Faehigkeiten −15 % Energie |
+| ★6 | Verwandeln in dieses Alien −30 % Hitze |
+| ★7 | +2 Herzen als dieses Alien |
+| ★9 | Hitze steigt waehrend der Verwandlung nur halb so schnell |
+| ★10 | **gemeistert:** dieses Alien erzeugt keine Hitze |
+
+Hitze: der Faktor des aktiven Aliens liegt im synchronisierten Geraetezustand (`alien_heat_factor`), damit Server,
+HUD und andere Spieler denselben Wert rechnen. Aufstieg: Hologramm „MEISTERSCHAFT ★N · Alien · Neu: …“ mit Klang.
+
+**Im Spiel geprueft:** ★1 → Slots 4–6 gesperrt (HUD „★3/★5/★8“, Server `ABILITY_LOCKED`); ★3 → Hologramm
+„MEISTERSCHAFT ★3 · Heatblast · Neu: Infernowelle“, Shift+R trifft (Zombie 20 → 12,1). Alle 30 neuen Slots aller 10 Aliens
+bei ★10 ausgeloest: 30 × `SUCCESS`; Schadens-Faehigkeiten treffen (z. B. Supernova 20 → 4,3, Plasmakanone → 0,5,
+Erdbeben → 6,2, Albtraum → 8), Verstaerkungen/Kontrolle ohne Schaden wie vorgesehen. Hitze Heatblast: ★1 23 %,
+★6 17 %, ★10 0 % (auch nach 8 s). Menue: zwei Spalten, Rabatt-Energie, gesperrte „ab ★8“.
+**Gefunden und behoben:** Infotexte im Menue liefen in die zweite Spalte (Kurzformat).
+**Offen:** keine eigenen Animationen/Posen fuer die neuen Faehigkeiten (Spielerpose + Partikel); Werte sind
+Erstbalance, nicht im Gruppenspiel erprobt. Bilder: `docs/screenshots/meisterschaft_hud_holo.png`,
+`docs/screenshots/alien_menue_6_faehigkeiten.png`.

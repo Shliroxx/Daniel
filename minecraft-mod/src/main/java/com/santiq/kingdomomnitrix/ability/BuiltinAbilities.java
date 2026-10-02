@@ -48,6 +48,7 @@ final class BuiltinAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_volley"), BuiltinAbilities::crystalVolley);
 		AbilityRegistry.register(KingdomOmnitrix.id("scan"), BuiltinAbilities::scan);
 		CreatureAbilities.register();
+		MasteryAbilities.register();
 	}
 
 	// --- Heatblast -------------------------------------------------------------------------------

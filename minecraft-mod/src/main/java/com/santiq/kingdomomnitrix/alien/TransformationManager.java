@@ -63,12 +63,13 @@ public final class TransformationManager {
 	/** Feste Modifier-IDs, damit Boni beim Zurueckverwandeln sicher entfernt werden, auch wenn sich das JSON geaendert hat. */
 	private static final int MAX_ATTRIBUTE_BONUSES = 16;
 	private static final Identifier SCALE_MODIFIER = KingdomOmnitrix.id("alien_scale");
+	private static final Identifier MASTERY_HEALTH_MODIFIER = KingdomOmnitrix.id("alien_mastery_health");
 	private static final int AURA_INTERVAL_TICKS = 5;
 	private static final int WARNING_TICKS = 100;
 
 	public enum Result {
 		SUCCESS, NO_OMNITRIX, UNKNOWN_ALIEN, LOCKED, RECHARGING, ALREADY_TRANSFORMED, NO_SPACE,
-		NOT_TRANSFORMED, NO_SUCH_ABILITY, ON_COOLDOWN, NO_ENERGY, FAILED, DEVICE_REFUSED
+		NOT_TRANSFORMED, NO_SUCH_ABILITY, ON_COOLDOWN, NO_ENERGY, FAILED, DEVICE_REFUSED, ABILITY_LOCKED
 	}
 
 	private TransformationManager() {
@@ -169,7 +170,7 @@ public final class TransformationManager {
 			if (state.rechargeRemaining(now) > 0) {
 				return Result.RECHARGING;
 			}
-			Optional<OmnitrixCore.Refusal> refusal = OmnitrixCore.checkTransform(player);
+			Optional<OmnitrixCore.Refusal> refusal = OmnitrixCore.checkTransform(player, alienId);
 			if (refusal.isPresent()) {
 				OmnitrixCore.refuse(player, refusal.get());
 				return Result.DEVICE_REFUSED;
@@ -186,7 +187,7 @@ public final class TransformationManager {
 		// Menschenform-Lebenspunkte einfrieren; das Alien startet mit vollen eigenen Lebenspunkten
 		float human = state.isTransformed() && state.humanHealth() > 0.0f ? state.humanHealth() : player.getHealth();
 		update(player, s -> s.transformed(alienId, alien, now, duration, human));
-		OmnitrixCore.onTransform(player);
+		OmnitrixCore.onTransform(player, alienId);
 		applyAttributes(player, alien);
 		player.setHealth(player.getMaxHealth());
 		playTransformEffects(world, player, alien, true);
@@ -269,7 +270,7 @@ public final class TransformationManager {
 		removeAttributes(player);
 		AlienTraitHandler.clear(player);
 		update(player, s -> s.quickChanged(alienId, alien, now, duration));
-		OmnitrixCore.onQuickChange(player);
+		OmnitrixCore.onQuickChange(player, alienId);
 		applyAttributes(player, alien);
 		// Anteil der Alien-Lebenspunkte bleibt erhalten (kein Vollheilen durch Wechseln)
 		player.setHealth(Math.max(1.0f, player.getMaxHealth() * healthShare));
@@ -354,11 +355,18 @@ public final class TransformationManager {
 		ServerWorld world = player.getServerWorld();
 		long now = world.getTime();
 		AbilitySlot slot = alien.abilities().get(slotIndex);
+		int mastery = AlienMasteryManager.get(player).level(alienId);
+		if (!slot.unlocked(mastery)) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.ability_locked", Text.translatable(slot.translationKey()),
+					slot.unlockLevel()).formatted(Formatting.GOLD), true);
+			return Result.ABILITY_LOCKED;
+		}
 		if (state.cooldownRemaining(slotIndex, now) > 0) {
 			return Result.ON_COOLDOWN;
 		}
 		float energy = state.currentEnergy(alien, now);
-		if (energy < slot.energy()) {
+		float cost = com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
+		if (energy < cost) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_energy").formatted(Formatting.RED), true);
 			return Result.NO_ENERGY;
 		}
@@ -380,7 +388,7 @@ public final class TransformationManager {
 		}
 		update(player, s -> {
 			long cooldown = Math.round(slot.cooldown() * (1.0f - AlienMasteryManager.get(player).cooldownReduction(alienId)));
-			TransformationState next = s.afterAbility(slotIndex, energy - slot.energy(), now, cooldown);
+			TransformationState next = s.afterAbility(slotIndex, energy - cost, now, cooldown);
 			return context.invulnerabilityTicks() > 0 ? next.withInvulnerableUntil(now + context.invulnerabilityTicks()) : next;
 		});
 		AlienMasteryManager.add(player, alienId, AlienMasteryManager.PER_ABILITY);
@@ -474,6 +482,14 @@ public final class TransformationManager {
 			}
 			instance.addTemporaryModifier(new EntityAttributeModifier(bonusId(i), bonus.amount(), bonus.operation()));
 		}
+		float masteryHealth = get(player).activeAlien()
+				.map(id -> com.santiq.kingdomomnitrix.progression.AlienMastery.healthBonus(AlienMasteryManager.get(player).level(id)))
+				.orElse(0.0f);
+		EntityAttributeInstance maxHealth = player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH);
+		if (masteryHealth > 0.0f && maxHealth != null) {
+			maxHealth.addTemporaryModifier(new EntityAttributeModifier(MASTERY_HEALTH_MODIFIER, masteryHealth,
+					EntityAttributeModifier.Operation.ADD_VALUE));
+		}
 		if (alien.scale() != 1.0f) {
 			EntityAttributeInstance scale = player.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
 			if (scale != null) {
@@ -493,6 +509,7 @@ public final class TransformationManager {
 				instance.removeModifier(bonusId(i));
 			}
 			instance.removeModifier(SCALE_MODIFIER);
+			instance.removeModifier(MASTERY_HEALTH_MODIFIER);
 		}
 		if (player.getHealth() > player.getMaxHealth()) {
 			player.setHealth(player.getMaxHealth());
