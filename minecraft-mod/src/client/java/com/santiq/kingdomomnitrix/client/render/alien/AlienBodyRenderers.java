@@ -5,7 +5,6 @@ import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
-import com.santiq.kingdomomnitrix.client.render.toon.ToonAlienRenderer;
 import com.santiq.kingdomomnitrix.client.vfx.CameraShake;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -165,9 +164,8 @@ public final class AlienBodyRenderers {
 
 	private static GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> create(Identifier model) {
 		Identifier assetPath = Identifier.of(model.getNamespace(), "alien/" + model.getPath());
-		// Cartoon-Renderer zeichnet das Netz aus toon/<alien>.bin, falls vorhanden; sonst die Wuerfel
 		GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> renderer =
-				new ToonAlienRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true), model);
+				new GeoReplacedEntityRenderer<>(context, new DefaultedEntityGeoModel<>(assetPath, true), new AlienBodyAnimatable());
 		Identifier glowmask = Identifier.of(model.getNamespace(), "textures/entity/alien/" + model.getPath() + "_glowmask.png");
 		if (MinecraftClient.getInstance().getResourceManager().getResource(glowmask).isPresent()) {
 			renderer.addRenderLayer(new AutoGlowingGeoLayer<>(renderer));

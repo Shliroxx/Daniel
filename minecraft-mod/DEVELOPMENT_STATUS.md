@@ -26,17 +26,11 @@ Ab jetzt gilt: Qualität vor Menge. Keine neuen Inhalte, bevor Aliens, Keyblades
 
 ---
 
-## STILVORGABE ALIENS — BEN-10-ZEICHENTRICK (Entscheidung SANTIQ, 2026-10-02, ersetzt die Würfel-Vorgabe)
-„Nicht wie Minecraft, im Stil von Ben 10“: Aliens sind runde Cartoon-Figuren statt Würfelkörper.
-- **Cartoon-Renderer** (`client/render/toon/`): GeckoLib liefert nur Skelett + Animation; gezeichnet werden
-  Dreiecksnetze je Knochen (`assets/kingdomomnitrix/toon/<alien>.bin`) mit Cel-Shading (3 harte Stufen, Licht
-  relativ zur Kamera), schwarzem Umriss (Inverted Hull) und leuchtenden Flächen (Glut, Augen, Omnitrix).
-- **Generator** `tools/generate_toon_meshes.py`: Ellipsoide, Kapseln, Kegel; Farbe pro Dreieck (scharfe
-  Farbgrenzen); Gesichter als eigene glatte Formen; Diamondhead bewusst facettiert (wenig Polygone).
-- Fehlt ein Netz, fällt der Renderer auf die Würfel der .geo.json zurück.
-- Bild: `docs/screenshots/aliens_cartoon.png`.
+## STILVORGABE ALIENS (Entscheidung SANTIQ, 2026-10-02, endgültig)
+**Würfelstil auf Alien-Evolution-Niveau.** Der zwischenzeitliche Cartoon-Renderer (runde Netze) wurde verworfen
+und entfernt. Ziel: detaillierte Würfelmodelle (viele Teile, schräge Teile, Brocken, Krallen, Zungen) mit
+handgemalt wirkender Schattierung (Lichtverlauf, Glanzkante, Kontaktschatten, Pixel-Cluster in drei Tönen).
 
-### Frühere Vorgabe (Würfel im Serien-Design, jetzt nur noch Rückfallebene)
 Ziel: Qualität und Wirkung wie **Alien Evolution** — aber eigene Modelle und Texturen (AlienEvo ist „All Rights
 Reserved“, Kopieren nicht erlaubt). Abgeleitete Regeln aus den öffentlichen Vorschaubildern:
 1. **Serien-Treue zuerst:** jedes Alien in seinem bekannten Serien-Outfit (Farbblöcke, Anzug, Omnitrix-Symbol
@@ -150,9 +144,8 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
-**Cartoon-Feinschliff:** Seiten-/Rückansicht und Laufanimation aller 5 im Spiel prüfen (Beobachter-Client),
-Gesichter nach Serie verfeinern (Heatblast-Flammenkopf größer, XLR8-Visier, Vierarm-Muskeln), Leistung mit
-4 verwandelten Spielern messen (~60k Dreiecke inkl. Umriss je Alien), dann Omnitrix als 3D-Gerät.
+**Detail-Runde 2 je Alien** (AlienEvo-Niveau): Seiten-/Rückansicht prüfen, Muskel-/Panzer-Schattierung
+pro Körperteil, Gesichter verfeinern; SANTIQ-Feedback pro Alien abwarten und einarbeitet.
 
 **Danach:**
 **Serien-Design Feinschliff:** Seiten- und Rückansicht aller 5 Aliens über den Beobachter-Client prüfen
