@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
+import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixController;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
@@ -54,6 +55,10 @@ public final class HudManager {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (editing || client.player == null || client.world == null || client.options.hudHidden
 				|| client.inGameHud.getDebugHud().shouldShowDebugHud()) {
+			return;
+		}
+		// Omnitrix gehoben: das Geraet und sein Hologramm-Rad haben die Buehne fuer sich
+		if (OmnitrixController.raise() > 0.2f) {
 			return;
 		}
 		float tickDelta = tickCounter.getTickDelta(false);

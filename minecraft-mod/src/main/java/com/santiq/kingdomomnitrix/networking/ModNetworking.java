@@ -12,6 +12,7 @@ import com.santiq.kingdomomnitrix.magic.MagicManager;
 import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.weapon.TerminalService;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -28,6 +29,8 @@ public final class ModNetworking {
 	public static void register() {
 		PayloadTypeRegistry.playS2C().register(OpenOmnitrixPayload.ID, OpenOmnitrixPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TransformRequestPayload.ID, TransformRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(OmnitrixPhasePayload.ID, OmnitrixPhasePayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OmnitrixPhaseSyncPayload.ID, OmnitrixPhaseSyncPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ComboAttackPayload.ID, ComboAttackPayload.CODEC);
@@ -163,6 +166,19 @@ public final class ModNetworking {
 			}
 			TransformationManager.select(player, payload.alien());
 			report(player, TransformationManager.transform(player, payload.alien(), false));
+		});
+		ServerPlayNetworking.registerGlobalReceiver(OmnitrixPhasePayload.ID, (payload, context) -> {
+			// nur sichtbare Zustaende weitergeben; reine Darstellung, keine Spielwirkung
+			ServerPlayerEntity player = context.player();
+			if (!payload.phase().isShared()) {
+				return;
+			}
+			OmnitrixPhaseSyncPayload sync = new OmnitrixPhaseSyncPayload(player.getId(), payload.phase());
+			for (ServerPlayerEntity watcher : PlayerLookup.tracking(player)) {
+				if (watcher != player) {
+					ServerPlayNetworking.send(watcher, sync);
+				}
+			}
 		});
 		ServerPlayNetworking.registerGlobalReceiver(RevertRequestPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();

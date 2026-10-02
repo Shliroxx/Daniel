@@ -65,6 +65,7 @@ public final class AlienBodyRenderers {
 		context = newContext;
 		RENDERERS.clear();
 		FAILED.clear();
+		SCALES.clear();
 		AlienArms.clearCache();
 	}
 
@@ -181,8 +182,14 @@ public final class AlienBodyRenderers {
 		return renderer;
 	}
 
-	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. */
-	private static float renderScale(Identifier model) {
+	private static final Map<Identifier, Float> SCALES = new HashMap<>();
+
+	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. Zwischengespeichert. */
+	public static float renderScale(Identifier model) {
+		return SCALES.computeIfAbsent(model, AlienBodyRenderers::readRenderScale);
+	}
+
+	private static float readRenderScale(Identifier model) {
 		Identifier file = Identifier.of(model.getNamespace(), "alien_render/" + model.getPath() + ".json");
 		var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
 		if (resource.isEmpty()) {

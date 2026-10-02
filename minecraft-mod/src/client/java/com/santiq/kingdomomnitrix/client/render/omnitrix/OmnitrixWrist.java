@@ -4,13 +4,20 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.client.render.alien.AlienArms;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.model.ModelTransform;
+import org.joml.Matrix3f;
+import org.joml.Quaternionf;
+
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
+import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
-import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import java.io.IOException;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
@@ -47,22 +54,16 @@ public final class OmnitrixWrist {
 	public static final Identifier BASE = KingdomOmnitrix.id("omnitrix/wrist_base");
 	public static final Identifier CORE = KingdomOmnitrix.id("omnitrix/wrist_core");
 	public static final Identifier GLOW = KingdomOmnitrix.id("omnitrix/wrist_glow");
-	/** Hub des Kerns in Modell-Pixeln, wenn das Rad offen ist */
+	/** Hub des Kerns in Modell-Pixeln, wenn das Geraet offen ist */
 	private static final float CORE_LIFT = 1.1f;
-	/** Dauer des Schlags aufs Zifferblatt nach der Auswahl (Sekunden) */
-	private static final float SLAM_SECONDS = 0.55f;
-
-	/** Arm-Anhebung (0 = unten/unsichtbar, 1 = vor der Kamera) und Kern-Hub, je Bild nachgefuehrt */
-	private static float raise;
-	private static float lift;
-	private static long lastFrame;
-	private static long slamStart = Long.MIN_VALUE;
+	/** true, solange der Ego-Arm gezeichnet wird (die Third-Person-Armhaltung gilt dann nicht) */
+	private static boolean firstPerson;
 	/** Ego-Haltung aus {@code omnitrix/first_person.json}; null = beim naechsten Bild neu laden */
 	private static Pose pose;
 
-	/** Haltung des gehobenen linken Arms (Versatz in Bloecken, Winkel in Grad). */
-	private record Pose(float x, float y, float z, float rotateZ, float rotateY, float rotateX, float roll) {
-		static final Pose DEFAULT = new Pose(0.15f, 0.3f, 0.0f, -35.0f, 0.0f, 15.0f, 100.0f);
+	/** Ego-Haltung: Zifferblatt-Mitte vor der Kamera (Bloecke), Feinkippung (Grad), Winkel des gewaehlten Segments. */
+	private record Pose(float x, float y, float z, float rotateZ, float rotateY, float rotateX, float discAngle) {
+		static final Pose DEFAULT = new Pose(0.05f, -0.3f, -1.0f, 0.0f, 0.0f, -25.0f, -90.0f);
 	}
 
 	private OmnitrixWrist() {
@@ -79,8 +80,11 @@ public final class OmnitrixWrist {
 			@Override
 			public void reload(ResourceManager manager) {
 				pose = null;
+				OmnitrixDisc.clearCache();
 			}
 		});
+		WorldRenderEvents.START.register(context -> OmnitrixController.frame());
+		OmnitrixRemote.register();
 		LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, context) -> {
 			if (renderer instanceof PlayerEntityRenderer playerRenderer) {
 				helper.register(new OmnitrixFeatureRenderer(playerRenderer));
@@ -88,9 +92,8 @@ public final class OmnitrixWrist {
 		});
 	}
 
-	/** Aufruf bei der Alien-Auswahl: Arm bleibt oben, Kern wird heruntergeschlagen, Sanduhr blitzt. */
-	public static void slam() {
-		slamStart = System.nanoTime();
+	public static boolean isRenderingFirstPerson() {
+		return firstPerson;
 	}
 
 	/** Ob der Spieler ein Omnitrix traegt. Fremde Spieler: ihr Inventar kennt der Client nicht — wer es je benutzt hat. */
@@ -103,31 +106,6 @@ public final class OmnitrixWrist {
 			return OmnitrixItem.hasOmnitrix(player);
 		}
 		return state.selectedAlien().isPresent() || state.startTick() > 0L;
-	}
-
-	private static float slamProgress() {
-		if (slamStart == Long.MIN_VALUE) {
-			return -1.0f;
-		}
-		float t = (System.nanoTime() - slamStart) / 1.0e9f / SLAM_SECONDS;
-		return t > 1.0f ? -1.0f : t;
-	}
-
-	/** Fuehrt Anhebung und Kern-Hub weich nach (einmal pro Bild). */
-	public static void update() {
-		long now = System.nanoTime();
-		float dt = lastFrame == 0L ? 0.0f : Math.min(0.1f, (now - lastFrame) / 1.0e9f);
-		lastFrame = now;
-		MinecraftClient client = MinecraftClient.getInstance();
-		boolean wheel = client.currentScreen instanceof OmnitrixWheelScreen;
-		float slam = slamProgress();
-		float targetRaise = wheel || slam >= 0.0f ? 1.0f : 0.0f;
-		float targetLift = wheel ? 1.0f : 0.0f;
-		raise += (targetRaise - raise) * Math.min(1.0f, dt * (targetRaise > raise ? 9.0f : 6.0f));
-		lift += (targetLift - lift) * Math.min(1.0f, dt * (slam >= 0.0f ? 30.0f : 10.0f));
-		if (raise < 0.002f) {
-			raise = 0.0f;
-		}
 	}
 
 	private static Pose pose() {
@@ -145,22 +123,19 @@ public final class OmnitrixWrist {
 			JsonArray offset = json.getAsJsonArray("offset");
 			pose = new Pose(offset.get(0).getAsFloat(), offset.get(1).getAsFloat(), offset.get(2).getAsFloat(),
 					json.get("rotate_z").getAsFloat(), json.get("rotate_y").getAsFloat(), json.get("rotate_x").getAsFloat(),
-					json.has("roll") ? json.get("roll").getAsFloat() : 0.0f);
+					json.has("disc_angle") ? json.get("disc_angle").getAsFloat() : Pose.DEFAULT.discAngle());
 		} catch (IOException | RuntimeException e) {
 			KingdomOmnitrix.LOGGER.error("Omnitrix-Haltung {} unlesbar, nutze Standard", file, e);
 		}
 		return pose;
 	}
 
-	public static float raise() {
-		return raise;
-	}
-
-	/** Leuchtstaerke: Grundglimmen, beim Oeffnen heller, beim Schlag ein Blitz */
-	private static float glow() {
-		float slam = slamProgress();
-		float flash = slam >= 0.0f ? 1.0f - slam : 0.0f;
-		return MathHelper.clamp(0.55f + lift * 0.35f + flash * 0.6f, 0.0f, 1.0f);
+	/** Leuchtstaerke der Sanduhr: Grundglimmen, offen heller, Schlag voll; Abklingzeit gedimmt und blinkend */
+	private static float glow(AbstractClientPlayerEntity player) {
+		if (player == MinecraftClient.getInstance().player && OmnitrixController.phase() == OmnitrixPhase.COOLDOWN) {
+			return 0.15f + 0.15f * (MathHelper.sin(System.nanoTime() / 1.0e9f * 6.0f) * 0.5f + 0.5f);
+		}
+		return MathHelper.clamp(0.5f + OmnitrixRemote.energy(player) * 0.5f, 0.0f, 1.0f);
 	}
 
 	/**
@@ -178,8 +153,8 @@ public final class OmnitrixWrist {
 			return;
 		}
 		boolean slim = player.getSkinTextures().model() == SkinTextures.Model.SLIM;
-		float coreLift = local ? lift * CORE_LIFT : 0.0f;
-		float glow = local ? glow() : 0.55f;
+		float coreLift = OmnitrixRemote.lift(player) * CORE_LIFT;
+		float glow = glow(player);
 
 		matrices.push();
 		model.leftArm.rotate(matrices);
@@ -202,6 +177,9 @@ public final class OmnitrixWrist {
 			// Kern-Leuchten faehrt mit, Eck-Leuchten liegen am Gehaeuse (Hub dort unsichtbar klein)
 			renderer.render(matrices.peek(), eyes, null, glowModel, glow, glow, glow, 0xF000F0, OverlayTexture.DEFAULT_UV);
 		}
+		// Omniverse-Auswahlscheibe klappt aus dem Kern auf (eigener Spieler: Roster; andere: nur die Scheibe)
+		float open = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
+		OmnitrixDisc.render(matrices, consumers, open, local, pose().discAngle());
 		matrices.pop();
 		matrices.pop();
 	}
@@ -212,7 +190,7 @@ public final class OmnitrixWrist {
 	 */
 	public static void renderFirstPerson(MatrixStack matrices, VertexConsumerProvider.Immediate consumers, ClientPlayerEntity player,
 			int light) {
-		update();
+		float raise = OmnitrixController.raise();
 		if (raise <= 0.0f || player.isInvisible()) {
 			return;
 		}
@@ -220,31 +198,48 @@ public final class OmnitrixWrist {
 		if (!(client.getEntityRenderDispatcher().getRenderer(player) instanceof PlayerEntityRenderer playerRenderer)) {
 			return;
 		}
-		float slam = slamProgress();
-		// kurzer Ruck nach unten beim Schlag aufs Zifferblatt
-		float punch = slam >= 0.0f ? MathHelper.sin(Math.min(1.0f, slam * 2.5f) * MathHelper.PI) * 0.08f : 0.0f;
+		PlayerEntityModel<AbstractClientPlayerEntity> model = playerRenderer.getModel();
+		boolean slim = player.getSkinTextures().model() == SkinTextures.Model.SLIM;
+		// Schlag aufs Zifferblatt: kurzer Ruck nach unten
+		float punch = OmnitrixController.phase() == OmnitrixPhase.IMPACT
+				? MathHelper.sin(Math.min(1.0f, OmnitrixController.phaseTime() / 0.18f) * MathHelper.PI) * 0.06f : 0.0f;
 		float hidden = 1.0f - raise;
+		float ease = 1.0f - hidden * hidden;
 		Pose p = pose();
 		matrices.push();
-		// Grundlage: vanilla-Armhaltung (gespiegelt fuer links), dann ins Bild gehoben und zur Kamera gedreht
-		matrices.translate(-0.64f + p.x() * raise, -0.6f - hidden * 0.9f - punch + p.y() * raise, -0.72f + p.z() * raise);
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-45.0f));
-		matrices.translate(1.0f, 3.6f, 3.5f);
-		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-120.0f));
-		matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(200.0f));
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(135.0f));
-		matrices.translate(-5.6f, 0.0f, 0.0f);
-		// Unterarm quer vor die Brust und Handgelenk-Aussenseite zur Kamera
-		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(p.rotateZ() * raise));
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(p.rotateY() * raise));
-		matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(p.rotateX() * raise));
-		// Arm um die eigene Laengsachse drehen (Armmitte x = 6 Pixel, z = 0), damit das Zifferblatt zur Kamera zeigt
-		matrices.translate(6.0f / 16.0f, 0.0f, 0.0f);
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(p.roll() * raise));
-		matrices.translate(-6.0f / 16.0f, 0.0f, 0.0f);
-		playerRenderer.renderLeftArm(matrices, consumers, light, player);
-		if (wears(player)) {
-			renderOnArm(matrices, consumers, light, playerRenderer.getModel(), player, true);
+		// Zifferblatt-Mitte an die gewuenschte Stelle vor der Kamera; beim Heben kommt der Arm von links unten herein
+		matrices.translate(p.x() - hidden * 0.35f, p.y() - hidden * 0.45f - punch, p.z());
+		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(p.rotateY() + hidden * 35.0f));
+		matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(p.rotateX() * ease));
+		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(p.rotateZ() - hidden * 25.0f));
+		// Grundlage: Arm waagerecht von links (Hand zeigt nach rechts), Zifferblatt (+x des Arms) zur Kamera
+		matrices.multiply(new Quaternionf().setFromNormalized(new Matrix3f(0, 0, 1, 1, 0, 0, 0, 1, 0)));
+		// vom Zifferblatt zurueck zum Armursprung (Armmitte x, Handgelenk 7 Pixel vor dem Handende)
+		matrices.translate(-((slim ? 0.5f : 1.0f) + 5.0f) / 16.0f, -7.0f / 16.0f, 0.0f);
+
+		ModelPart arm = model.leftArm;
+		ModelPart sleeve = model.leftSleeve;
+		ModelTransform armSaved = arm.getTransform();
+		ModelTransform sleeveSaved = sleeve.getTransform();
+		boolean armVisible = arm.visible;
+		firstPerson = true;
+		try {
+			arm.setTransform(ModelTransform.NONE);
+			sleeve.setTransform(ModelTransform.NONE);
+			arm.visible = true;
+			Identifier skin = AlienArms.armTexture(player).orElseGet(() -> player.getSkinTextures().texture());
+			arm.render(matrices, consumers.getBuffer(RenderLayer.getEntitySolid(skin)), light, OverlayTexture.DEFAULT_UV);
+			if (sleeve.visible) {
+				sleeve.render(matrices, consumers.getBuffer(RenderLayer.getEntityTranslucent(skin)), light, OverlayTexture.DEFAULT_UV);
+			}
+			if (wears(player) || OmnitrixController.phase() == OmnitrixPhase.IMPACT) {
+				renderOnArm(matrices, consumers, light, model, player, true);
+			}
+		} finally {
+			arm.setTransform(armSaved);
+			sleeve.setTransform(sleeveSaved);
+			arm.visible = armVisible;
+			firstPerson = false;
 		}
 		matrices.pop();
 		consumers.draw();

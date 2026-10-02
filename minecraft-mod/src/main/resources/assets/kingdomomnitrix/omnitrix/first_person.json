@@ -1,12 +1,12 @@
 {
-  "_comment": "Ego-Sicht-Haltung des linken Arms mit Omnitrix bei voll gehobenem Arm (raise = 1). Versatz in Bildschirm-Bloecken, Winkel in Grad; F3+T laedt neu.",
+  "_comment": "Ego-Sicht des Omnitrix bei gehobenem Arm: offset = Zifferblatt-Mitte vor der Kamera (Bloecke, x rechts, y oben, -z vorn); rotate_* = Feinkippung in Grad um die Kamera-Achsen; disc_angle = Winkel des gewaehlten Segments auf der Scheibe. F3+T laedt neu.",
   "offset": [
-    0.15,
-    0.3,
-    0.0
+    0.05,
+    -0.3,
+    -1.0
   ],
-  "rotate_z": -35.0,
+  "rotate_x": -25.0,
   "rotate_y": 0.0,
-  "rotate_x": 15.0,
-  "roll": 100.0
+  "rotate_z": 0.0,
+  "disc_angle": -90.0
 }

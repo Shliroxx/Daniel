@@ -86,7 +86,7 @@
   "screen.kingdomomnitrix.revert": "Revert",
   "screen.kingdomomnitrix.revert_hint": "Click: revert to human form",
   "screen.kingdomomnitrix.hint": "Pick an alien: mouse + click, release the key, or 1–9",
-  "screen.kingdomomnitrix.locked": "??? – DNA sample missing",
+  "screen.kingdomomnitrix.locked": "DNA missing",
   "screen.kingdomomnitrix.ability_line": "[%s] %s",
   "screen.kingdomomnitrix.prototype": "Prototype – abilities not final",
   "hud.kingdomomnitrix.omnitrix": "Omnitrix",
@@ -567,5 +567,6 @@
   "party.kingdomomnitrix.error.full": "The party is full (4 players).",
   "party.kingdomomnitrix.error.no_invite": "No valid invite.",
   "party.kingdomomnitrix.error.not_in_party": "You are not in a party.",
-  "party.kingdomomnitrix.error.not_member": "That player is not in your party."
+  "party.kingdomomnitrix.error.not_member": "That player is not in your party.",
+  "screen.kingdomomnitrix.omnitrix_hint": "Scroll/drag: rotate · Click: confirm · Right-click: close"
 }

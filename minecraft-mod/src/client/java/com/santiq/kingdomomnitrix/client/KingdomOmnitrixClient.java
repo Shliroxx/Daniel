@@ -21,7 +21,7 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import com.santiq.kingdomomnitrix.client.magic.MagicInput;
-import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
+import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixController;
 import com.santiq.kingdomomnitrix.networking.OpenOmnitrixPayload;
 import com.santiq.kingdomomnitrix.networking.OpenTerminalPayload;
 import com.santiq.kingdomomnitrix.client.weapon.WeaponHud;
@@ -159,7 +159,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 				context.client().setScreen(new WeaponTerminalScreen(payload.pos())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenOmnitrixPayload.ID, (payload, context) -> {
 			if (context.client().currentScreen == null) {
-				OmnitrixWheelScreen.openFromItem(context.client());
+				OmnitrixController.open(context.client());
 			}
 		});
 	}

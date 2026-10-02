@@ -10,6 +10,7 @@
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",
 		"MouseMixin",
+		"PlayerEntityModelMixin",
 		"PlayerEntityRendererMixin"
 	],
 	"injectors": {

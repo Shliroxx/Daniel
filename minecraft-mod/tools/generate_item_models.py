@@ -357,13 +357,13 @@ def omnitrix_wrist_base() -> list[Box]:
 
 def omnitrix_wrist_core() -> list[Box]:
     return [
-        box((11.8, 1.7, 6.0), (12.6, 4.3, 10.0), "omni_housing"),                  # Kern (faehrt aus)
-        box((12.6, 1.9, 6.2), (12.95, 4.1, 9.8), "omni_dial_x"),                   # Zifferblatt
+        box((11.8, 1.1, 6.1), (12.6, 4.9, 9.9), "omni_housing"),                  # Kern (faehrt aus)
+        box((12.6, 1.3, 6.3), (12.95, 4.7, 9.7), "omni_dial_x"),                   # Zifferblatt
     ]
 
 
 def omnitrix_wrist_glow() -> list[Box]:
-    b = [box((12.97, 1.9, 6.2), (13.02, 4.1, 9.8), "omni_glow_x")]               # Sanduhr-Leuchten
+    b = [box((12.97, 1.3, 6.3), (13.02, 4.7, 9.7), "omni_glow_x")]               # Sanduhr-Leuchten
     for y in (0.85, 4.55):
         for z in (5.05, 10.35):
             b.append(box((11.86, y, z), (11.91, y + 0.6, z + 0.6), "omni_glow_full"))
@@ -498,7 +498,7 @@ def paint_face(img: Image.Image, s: Slot) -> None:
             elif m.pattern == "dial_x":
                 color = dial_color(px, py, w, h, "north" if s.face in ("east", "west") else "up", m)
             elif m.pattern == "glowmask_x":
-                lit = s.face in ("east", "west") and dial_color(px, py, w, h, "north", m) == hexc(m.shine)
+                lit = s.face in ("east", "west") and dial_color(px, py, w, h, "north", MATERIALS["omni_dial_x"]) == hexc(m.shine)
                 color = hexc(m.shine) if lit else (0, 0, 0, 255)
             elif m.pattern == "glowfull":
                 color = mix(base, shine, 1.0 - abs((px + 0.5) / w - 0.5) - abs((py + 0.5) / h - 0.5))
@@ -531,6 +531,9 @@ def dial_color(px: int, py: int, w: int, h: int, face: str, m: Material) -> Colo
         return hexc(m.outline)
     if r > 0.72:
         return rim
+    if m.pattern == "dial_x":
+        # Omniverse: gruenes Feld, zwei schwarze Dreiecke links/rechts bilden das X (Sanduhr bleibt gruen)
+        return black if abs(dx) > abs(dy) * 1.05 + 0.07 else green
     if abs(dx) <= abs(dy) * 0.9 and abs(dy) > 0.12:
         return green
     return black

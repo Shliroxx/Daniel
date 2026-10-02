@@ -178,6 +178,32 @@ Volumen, Omnitrix nicht am Arm, Omnitrix-HUD überdeckt die Ego-Hand. Eigene Arb
 - Offen: Alien-Silhouette als Hologramm über dem Zifferblatt beim Durchblättern, Timeout-Warnung (rot blinkend),
   Kern-Hub für fremde Spieler (nur lokal bekannt).
 
+## OMNIVERSE-OMNITRIX-SYSTEM (Vorgabe SANTIQ 2026-10-02, Pass 1 IMPLEMENTED)
+Das Omnitrix ist das Interface: Arm heben → Gerät öffnet sich → Hologramm-Scheibe klappt aus dem Zifferblatt →
+drehen → bestätigen → Schlag → Verwandlung. Referenzbild von SANTIQ (Omniverse): grüne, durchscheinende Scheibe in
+Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell; Zifferblatt grün mit schwarzem X.
+- **Zustandsmaschine** `alien/OmnitrixPhase` + `client/render/omnitrix/OmnitrixController`: IDLE, EQUIPPED,
+  ACTIVATING, OPENING, SELECTING, ROTATING, ALIEN_SELECTED, CONFIRMING, IMPACT, TRANSFORMATION, ACTIVE_ALIEN,
+  COOLDOWN, REVERT — jeder Zustand mit eigener Arm-/Kern-/Scheiben-/Licht-/Klang-Lage, weich überblendet.
+- **Auswahlscheibe** `OmnitrixDisc`: hängt am Gerät (Third- und Ego-Sicht), klappt mit Überschwingen auf, dreht
+  physisch (gedämpfte Feder), Segmentzahl = Roster (nichts hartcodiert), Silhouetten aus den **echten Spielmodellen**
+  (GeckoLib, flach projiziert), gewähltes Segment hell mit heller Silhouette, gesperrt = dunkle Silhouette + „DNA
+  fehlt“; darüber dreht sich das **3D-Hologramm des gewählten Aliens** (`AlienHologram`: dasselbe Modell wie der
+  Spielkörper, eingefärbt + additiver Leuchtpass). Bestätigen: Segmente hellen auf, Hologramm pulsiert.
+- **Ego-Sicht**: linker Arm wird direkt so gesetzt, dass das Zifferblatt frontal zur Kamera zeigt (Arm waagerecht
+  von links); vanilla-Hände und Mod-HUD blenden aus, solange das Omnitrix gehoben ist. Haltung in
+  `assets/.../omnitrix/first_person.json` (F3+T).
+- **Eingabe** `OmnitrixScreen` (kein Menü-Look, keine Unschärfe): Mausrad/Ziehen/A-D/Pfeile drehen, Klick/Enter/
+  Leertaste/G bestätigen, 1–9 direkt, Rechtsklick/Esc schließen. Verwandelt: Bestätigen = zurückverwandeln.
+- **Pipeline** Auswahl → `AlienDefinition` (JSON) → `TransformationManager` (Server) → `AlienBodyRenderers`
+  (Modell/Animation) → VFX: neue Aliens erscheinen ohne Code-Änderung im Rad.
+- **Mehrspieler**: sichtbare Zustände (Arm hoch, offen, Energieaufbau, Schlag) gehen per `OmnitrixPhasePayload` an
+  den Server und als `OmnitrixPhaseSyncPayload` an Spieler in Sichtweite; Third-Person-Arm (`PlayerEntityModelMixin`)
+  und Scheibe (ohne Roster) für andere sichtbar. Rad-Inhalt bleibt clientseitig.
+- Screenshots: `docs/screenshots/omnitrix_omniverse.png`, `omnitrix_omniverse_ablauf.png`, `omnitrix_omniverse_third_person.png`.
+- Offen: Kamera-Neigung beim Heben, eigene Klänge pro Zustand (nutzt vorhandene Omnitrix-Sounds), Scheibe in
+  Third-Person zur Weltoberseite ausrichten, Gehäuse noch näher an Omniverse (seitliche Flossen), rote Abklingzeit.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +

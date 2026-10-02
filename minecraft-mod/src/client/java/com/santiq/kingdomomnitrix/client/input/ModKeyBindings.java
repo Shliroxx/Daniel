@@ -4,7 +4,7 @@ import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.client.hero.HeroScreen;
-import com.santiq.kingdomomnitrix.client.screen.OmnitrixWheelScreen;
+import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixController;
 import com.santiq.kingdomomnitrix.networking.AbilityRequestPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -69,7 +69,7 @@ public final class ModKeyBindings {
 		}
 		while (OPEN_OMNITRIX.wasPressed()) {
 			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
-				OmnitrixWheelScreen.open(client);
+				OmnitrixController.open(client);
 			}
 		}
 		while (HERO_MENU.wasPressed()) {

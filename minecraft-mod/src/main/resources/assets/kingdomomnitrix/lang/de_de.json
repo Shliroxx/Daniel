@@ -86,7 +86,7 @@
   "screen.kingdomomnitrix.revert": "Zurück",
   "screen.kingdomomnitrix.revert_hint": "Klicken: zurückverwandeln",
   "screen.kingdomomnitrix.hint": "Alien wählen: Maus + Klick, Taste loslassen oder 1–9",
-  "screen.kingdomomnitrix.locked": "??? – DNA-Probe fehlt",
+  "screen.kingdomomnitrix.locked": "DNA fehlt",
   "screen.kingdomomnitrix.ability_line": "[%s] %s",
   "screen.kingdomomnitrix.prototype": "Prototyp – Fähigkeiten noch nicht final",
   "hud.kingdomomnitrix.omnitrix": "Omnitrix",
@@ -567,5 +567,6 @@
   "party.kingdomomnitrix.error.full": "Die Gruppe ist voll (4 Spieler).",
   "party.kingdomomnitrix.error.no_invite": "Keine gültige Einladung.",
   "party.kingdomomnitrix.error.not_in_party": "Du bist in keiner Gruppe.",
-  "party.kingdomomnitrix.error.not_member": "Dieser Spieler ist nicht in deiner Gruppe."
+  "party.kingdomomnitrix.error.not_member": "Dieser Spieler ist nicht in deiner Gruppe.",
+  "screen.kingdomomnitrix.omnitrix_hint": "Mausrad/Ziehen: drehen · Klick: bestätigen · Rechtsklick: schließen"
 }
