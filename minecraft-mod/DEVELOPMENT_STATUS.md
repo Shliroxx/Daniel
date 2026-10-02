@@ -135,6 +135,22 @@ Grey Matter nach demselben Verfahren.
   Omnitrix-HUD (HUD-Position prüfen), Sprint-Animation nach dem Umbau nicht erneut gefilmt.
 
 
+## ITEMS / TOOLS / HUD — BESTANDSAUFNAHME + AUFTRÄGE (2026-10-02)
+Prüfung im Spiel (Inventar, Ego-Sicht, Third-Person): alle 41 Item-/Block-Texturen waren 16×16-Sprites, Waffen ohne
+Volumen, Omnitrix nicht am Arm, Omnitrix-HUD überdeckt die Ego-Hand. Eigene Arbeitsaufträge mit Abnahmekriterien:
+**`docs/VISUAL_PROMPTS.md`** (Auftrag 1–7, Reihenfolge = Priorität).
+
+**Auftrag 1 — Keyblades 3D: IMPLEMENTED (Pass 1)**
+- `tools/generate_item_models.py` (neu, `--check` in CI): Waffen aus Quadern, Textur automatisch gepackt mit
+  4 Bildpunkten pro Modell-Pixel (Klinge 6 px breit statt 1–2), pro Material schattiert (Kontur, Glanzkante,
+  Rundungsverlauf, Griffwicklung, Federn, Nieten, Leuchtkern, Omnitrix-Zifferblatt).
+- Kingdom Key: silberne Klinge, goldener abgerundeter Handschutz, dunkler Wickelgriff, Kronen-Zahnbart (3 Zacken),
+  Kette + Anhänger (Kopf mit zwei Ohren). Oathkeeper: weiß, Engelsflügel-Handschutz, Stern-Spitze, Feder-Zahnbart,
+  Glücksstern-Anhänger. Omega Key: dunkle Mechanik, violette Leuchtkanten, Omnitrix-Kern, Sanduhr-Zahnbart.
+- Ein Modell für alle Ansichten (Hand, Inventar 3D, Boden, Rahmen); Lage aus vanilla „handheld“ hergeleitet und im
+  Spiel nachjustiert. Screenshot: `docs/screenshots/keyblades_3d.png`.
+- Offen: Zahnbart-Form gegen Original-Artwork feiner; Third-Person am Spieler aus Beobachter-Sicht prüfen.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +
