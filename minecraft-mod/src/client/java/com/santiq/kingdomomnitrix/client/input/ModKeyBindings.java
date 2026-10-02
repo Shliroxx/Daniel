@@ -64,21 +64,9 @@ public final class ModKeyBindings {
 	}
 
 	/** Smart-Wahl: Empfehlung des Smart-Scans anfordern (Server prueft wie bei jeder Verwandlung). */
+	/** Smart-Wahl-Taste: erster Druck zeigt die Empfehlung, zweiter bestaetigt (siehe {@link com.santiq.kingdomomnitrix.client.omnitrix.SmartChoice}). */
 	public static void smartSelect(MinecraftClient client) {
-		var recommendation = com.santiq.kingdomomnitrix.client.omnitrix.SmartScan.rescan();
-		if (recommendation.isEmpty()) {
-			client.player.sendMessage(net.minecraft.text.Text.translatable("scan.kingdomomnitrix.none")
-					.formatted(net.minecraft.util.Formatting.GRAY), true);
-			com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.play(com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.ERROR);
-			return;
-		}
-		var pick = recommendation.get();
-		client.player.sendMessage(net.minecraft.text.Text.translatable("scan.kingdomomnitrix.smart_select",
-				com.santiq.kingdomomnitrix.alien.TransformationManager.alienName(pick.alien()),
-				net.minecraft.text.Text.translatable(pick.reason())).formatted(net.minecraft.util.Formatting.GREEN), true);
-		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
-				new com.santiq.kingdomomnitrix.networking.TransformRequestPayload(pick.alien()));
-		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.play(com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.CONFIRM);
+		com.santiq.kingdomomnitrix.client.omnitrix.SmartChoice.press(client, SMART_SELECT);
 	}
 
 	private static void tick(MinecraftClient client) {

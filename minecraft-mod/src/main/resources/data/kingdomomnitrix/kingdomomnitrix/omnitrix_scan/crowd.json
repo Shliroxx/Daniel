@@ -1,1 +1,1 @@
-{"condition": {"type": "enemies_near", "radius": 10, "min": 4}, "weights": {"kingdomomnitrix:four_arms": 4, "kingdomomnitrix:heatblast": 3}, "reason": "scan.kingdomomnitrix.crowd"}
+{"condition": {"type": "enemies_near", "radius": 10, "min": 4}, "weights": {"kingdomomnitrix:four_arms": 4, "kingdomomnitrix:heatblast": 3, "kingdomomnitrix:wildmutt": 2}, "reason": "scan.kingdomomnitrix.crowd"}

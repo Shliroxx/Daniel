@@ -628,5 +628,15 @@
   "scan.kingdomomnitrix.crowd": "viele Gegner",
   "scan.kingdomomnitrix.ranged": "Fernkämpfer",
   "scan.kingdomomnitrix.explosive": "Explosionsgefahr",
-  "scan.kingdomomnitrix.low_health": "wenig Leben"
+  "scan.kingdomomnitrix.low_health": "wenig Leben",
+  "scan.kingdomomnitrix.underwater": "unter Wasser",
+  "scan.kingdomomnitrix.cliff": "Abgrund in der Nähe",
+  "scan.kingdomomnitrix.golem": "schweres Ziel",
+  "scan.kingdomomnitrix.redstone": "Technik in der Nähe",
+  "scan.kingdomomnitrix.dark": "Dunkelheit",
+  "scan.kingdomomnitrix.undead": "Untote in der Nähe",
+  "holo.kingdomomnitrix.smart_choice": "SMART CHOICE",
+  "holo.kingdomomnitrix.recommended": "EMPFOHLEN · %s",
+  "holo.kingdomomnitrix.confirm": "[%s] bestätigen",
+  "holo.kingdomomnitrix.smart_choice_expired": "Smart Choice verworfen"
 }

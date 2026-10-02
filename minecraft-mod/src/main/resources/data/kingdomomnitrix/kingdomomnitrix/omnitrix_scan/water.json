@@ -1,1 +1,1 @@
-{"condition": {"type": "in_water"}, "weights": {"kingdomomnitrix:xlr8": 4, "kingdomomnitrix:four_arms": 2, "kingdomomnitrix:heatblast": -6}, "reason": "scan.kingdomomnitrix.water"}
+{"condition": {"type": "in_water"}, "weights": {"kingdomomnitrix:ripjaws": 6, "kingdomomnitrix:xlr8": 4, "kingdomomnitrix:four_arms": 2, "kingdomomnitrix:heatblast": -6}, "reason": "scan.kingdomomnitrix.water"}

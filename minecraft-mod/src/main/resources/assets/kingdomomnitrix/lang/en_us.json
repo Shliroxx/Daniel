@@ -628,5 +628,15 @@
   "scan.kingdomomnitrix.crowd": "many enemies",
   "scan.kingdomomnitrix.ranged": "ranged attackers",
   "scan.kingdomomnitrix.explosive": "explosion danger",
-  "scan.kingdomomnitrix.low_health": "low health"
+  "scan.kingdomomnitrix.low_health": "low health",
+  "scan.kingdomomnitrix.underwater": "underwater",
+  "scan.kingdomomnitrix.cliff": "drop nearby",
+  "scan.kingdomomnitrix.golem": "heavy target",
+  "scan.kingdomomnitrix.redstone": "technology nearby",
+  "scan.kingdomomnitrix.dark": "darkness",
+  "scan.kingdomomnitrix.undead": "undead nearby",
+  "holo.kingdomomnitrix.smart_choice": "SMART CHOICE",
+  "holo.kingdomomnitrix.recommended": "RECOMMENDED · %s",
+  "holo.kingdomomnitrix.confirm": "[%s] confirm",
+  "holo.kingdomomnitrix.smart_choice_expired": "Smart Choice discarded"
 }

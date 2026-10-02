@@ -14,6 +14,18 @@ import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.mob.FlyingEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.ai.RangedAttackMob;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
+import net.minecraft.util.math.Direction;
+import net.minecraft.entity.projectile.ProjectileUtil;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -73,6 +85,12 @@ public final class SmartScan {
 			case "lava_near" -> lavaNear(world, player.getBlockPos(), Math.round(condition.radius()));
 			case "on_fire" -> player.isOnFire();
 			case "in_water" -> player.isTouchingWater();
+			case "submerged" -> player.isSubmergedInWater();
+			case "drop_near" -> dropNear(world, player.getBlockPos(), Math.round(condition.radius())) >= condition.min();
+			case "dark" -> world.getLightLevel(player.getBlockPos()) <= condition.max();
+			case "target_is" -> target != null && isEntity(target, condition);
+			case "entity_near" -> count(world, player, condition.radius(), e -> isEntity(e, condition)) >= condition.min();
+			case "block_near" -> blocksNear(world, player.getBlockPos(), Math.round(condition.radius()), condition, Math.round(condition.min()));
 			case "falling" -> !player.isOnGround() && player.fallDistance + gapBelow(world, player.getBlockPos()) >= condition.min();
 			case "tight_space" -> freeHeight(world, player.getBlockPos()) <= condition.max();
 			case "target_armor" -> target != null && target.getArmor() >= condition.min();
@@ -86,10 +104,14 @@ public final class SmartScan {
 		};
 	}
 
-	/** Ziel: angevisierte Kreatur, sonst das naechste Monster in Reichweite. */
+	/**
+	 * Ziel: angeschaute Kreatur (auch friedliche wie ein Eisengolem — der Spieler zeigt bewusst darauf), sonst das
+	 * naechste Monster in Reichweite.
+	 */
 	private static LivingEntity target(MinecraftClient client, ClientPlayerEntity player) {
-		if (client.targetedEntity instanceof LivingEntity living && living instanceof Monster) {
-			return living;
+		LivingEntity aimed = aimed(player);
+		if (aimed != null) {
+			return aimed;
 		}
 		return player.getWorld().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(TARGET_RANGE),
 						e -> e instanceof Monster && e.isAlive())
@@ -108,6 +130,61 @@ public final class SmartScan {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Angeschaute Kreatur bis {@link #TARGET_RANGE} Bloecke (die Spiel-Zielerfassung reicht nur 3 Bloecke); Waende
+	 * verdecken. Andere Spieler zaehlen nicht.
+	 */
+	private static LivingEntity aimed(ClientPlayerEntity player) {
+		Vec3d eye = player.getEyePos();
+		Vec3d reach = player.getRotationVec(1.0f).multiply(TARGET_RANGE);
+		Vec3d end = eye.add(reach);
+		HitResult block = player.getWorld().raycast(new RaycastContext(eye, end, RaycastContext.ShapeType.COLLIDER,
+				RaycastContext.FluidHandling.NONE, player));
+		double limit = block.getType() == HitResult.Type.MISS ? TARGET_RANGE * TARGET_RANGE : block.getPos().squaredDistanceTo(eye);
+		EntityHitResult hit = ProjectileUtil.raycast(player, eye, end, player.getBoundingBox().stretch(reach).expand(1.0),
+				e -> e instanceof LivingEntity && !(e instanceof PlayerEntity) && e.isAlive() && !e.isSpectator(), limit);
+		return hit != null ? (LivingEntity) hit.getEntity() : null;
+	}
+
+	/** Kreatur passt zum Ziel der Bedingung (ID oder {@code #tag}). */
+	private static boolean isEntity(Entity entity, ScanRule.Condition condition) {
+		if (condition.targetIsTag()) {
+			return entity.getType().isIn(TagKey.of(RegistryKeys.ENTITY_TYPE, condition.targetId()));
+		}
+		return Registries.ENTITY_TYPE.getId(entity.getType()).equals(condition.targetId());
+	}
+
+	/** Mindestens {@code needed} passende Bloecke im Wuerfel um den Spieler (bricht beim Erreichen ab). */
+	private static boolean blocksNear(World world, BlockPos center, int radius, ScanRule.Condition condition, int needed) {
+		TagKey<Block> tag = condition.targetIsTag() ? TagKey.of(RegistryKeys.BLOCK, condition.targetId()) : null;
+		Block block = tag == null ? Registries.BLOCK.get(condition.targetId()) : null;
+		int found = 0;
+		for (BlockPos pos : BlockPos.iterateOutwards(center, radius, Math.max(2, radius / 2), radius)) {
+			BlockState state = world.getBlockState(pos);
+			if (tag != null ? state.isIn(tag) : state.isOf(block)) {
+				if (++found >= Math.max(1, needed)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/** Tiefster Abgrund direkt neben dem Spieler (4 Richtungen, 1..radius Bloecke entfernt). */
+	private static int dropNear(World world, BlockPos feet, int radius) {
+		int deepest = 0;
+		for (Direction direction : Direction.Type.HORIZONTAL) {
+			for (int step = 1; step <= Math.max(1, radius); step++) {
+				BlockPos column = feet.offset(direction, step);
+				if (!world.getBlockState(column).getCollisionShape(world, column).isEmpty()) {
+					break;
+				}
+				deepest = Math.max(deepest, gapBelow(world, column) + 1);
+			}
+		}
+		return deepest;
 	}
 
 	/** Bloecke bis zum Boden unter den Fuessen (hoechstens 32). */

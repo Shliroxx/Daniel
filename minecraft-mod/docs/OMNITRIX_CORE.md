@@ -137,3 +137,21 @@ Dedizierter Server + 2 Clients (Tester, Tester2):
 - Offen: Symbol im 3D-Hologramm des grossen Rads (`OmnitrixScreen`) — dort steht weiterhin das 3D-Modell.
 
 Bilder: `docs/screenshots/alien_symbole.png`, `docs/screenshots/omnitrix_phase2_symbole.png`.
+
+## 8. Phase C/D — Smart-Scan erweitert, Smart Choice (2026-10-02)
+
+- Neue Bedingungen: `submerged`, `drop_near` (Abgrund neben dem Spieler), `dark` (Lichtstufe), `target_is`,
+  `entity_near` (Kreaturen-ID oder `#tag`), `block_near` (Block-ID oder `#tag`, Anzahl). Unbekannte Typen und fehlende
+  Ziele lehnt das Datenpaket beim Laden ab (Test `scanRuleRejectsTyposAndMissingTarget`).
+- Ziel-Erfassung: eigener Strahl bis 16 Bloecke (Waende verdecken) — vorher nur 3 Bloecke Spiel-Reichweite, ein Golem
+  in 4 Bloecken wurde nicht erkannt (im Spiel gefunden und behoben).
+- 17 Regeln. Neu: Golem/Verwuester/Waechter → Four Arms (`#kingdomomnitrix:heavy_hitters`), unter Wasser → Ripjaws,
+  Abgrund/Fall/Flieger → Stinkfly, Redstone-Technik → Upgrade (`#kingdomomnitrix:technology`), Dunkelheit/Untote →
+  Ghostfreak/Wildmutt, Enge → Ghostfreak. Gewichte fuer noch fehlende Aliens wirken erst, wenn sie freigeschaltet sind.
+- **Smart Choice (N):** erster Druck → Hologramm „SMART CHOICE · Alien · EMPFOHLEN · Grund · [N] bestaetigen“ mit
+  Symbol und Klang, zweiter Druck innerhalb 4 s verwandelt genau in das gezeigte Alien. Nie automatisch. Im
+  Schnellwahl-Kreis bestaetigt N direkt (Empfehlung ist dort schon sichtbar), im grossen Rad dreht N nur hin.
+- **Omnitrix-Hologramm-Meldung** (`OmnitrixHolo`, Grundlage fuer Phase I): klappt aus der Mitte auf, Text wird mit
+  Scanlinie freigeschrieben, blendet aus; immer nur eine Meldung.
+- Im Spiel geprueft: Golem in 5 Bloecken → Four Arms, Bestaetigung verwandelt (`docs/screenshots/smart_choice_golem.png`).
+  Noch nicht geprueft: Redstone, unter Wasser, Abgrund, Dunkelheit (warten auf die Aliens aus Phase E).

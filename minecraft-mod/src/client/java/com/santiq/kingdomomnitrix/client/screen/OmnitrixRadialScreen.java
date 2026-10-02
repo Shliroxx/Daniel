@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
+import com.santiq.kingdomomnitrix.client.omnitrix.SmartChoice;
 import com.santiq.kingdomomnitrix.client.omnitrix.SmartScan;
 import com.santiq.kingdomomnitrix.client.ui.UiDraw;
 import com.santiq.kingdomomnitrix.omnitrix.ScanRule;
@@ -273,9 +274,14 @@ public class OmnitrixRadialScreen extends Screen {
 	@Override
 	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		if (ModKeyBindings.SMART_SELECT.matchesKey(keyCode, scanCode)) {
-			// Smart-Wahl aus dem Kreis: Empfehlung nehmen, auch wenn sie nicht im Set ist
+			// Smart-Wahl aus dem Kreis: Empfehlung ist hier schon sichtbar → ein Druck bestaetigt (auch ausserhalb des Sets)
+			Optional<Identifier> pick = SmartScan.recommendation().map(ScanRule.Recommendation::alien);
 			close();
-			ModKeyBindings.smartSelect(MinecraftClient.getInstance());
+			if (pick.isPresent()) {
+				SmartChoice.confirm(MinecraftClient.getInstance(), pick.get());
+			} else {
+				ModKeyBindings.smartSelect(MinecraftClient.getInstance());
+			}
 			return true;
 		}
 		return super.keyPressed(keyCode, scanCode, modifiers);
