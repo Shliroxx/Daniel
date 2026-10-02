@@ -23,7 +23,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 import software.bernie.geckolib.renderer.GeoReplacedEntityRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
 /**
  * Zeichnet verwandelte Spieler mit ihrem Alien-Koerper statt dem Spielermodell.
@@ -66,6 +65,7 @@ public final class AlienBodyRenderers {
 		context = newContext;
 		RENDERERS.clear();
 		FAILED.clear();
+		AlienArms.clearCache();
 	}
 
 	/** Verfolgt Verwandlungs-Wechsel aller sichtbaren Spieler (fuer Rueckverwandlung und Kamera-Stoss). */
@@ -169,15 +169,14 @@ public final class AlienBodyRenderers {
 
 	private static GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> create(Identifier model) {
 		Identifier assetPath = Identifier.of(model.getNamespace(), "alien/" + model.getPath());
-		GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> renderer =
-				new GeoReplacedEntityRenderer<>(context, new DefaultedEntityGeoModel<>(assetPath, true), new AlienBodyAnimatable());
+		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true));
 		float scale = renderScale(model);
 		if (scale != 1.0f) {
 			renderer.withScale(scale);
 		}
 		Identifier glowmask = Identifier.of(model.getNamespace(), "textures/entity/alien/" + model.getPath() + "_glowmask.png");
 		if (MinecraftClient.getInstance().getResourceManager().getResource(glowmask).isPresent()) {
-			renderer.addRenderLayer(new AutoGlowingGeoLayer<>(renderer));
+			renderer.withEvenGlow();
 		}
 		return renderer;
 	}

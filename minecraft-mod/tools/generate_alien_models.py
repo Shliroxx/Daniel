@@ -138,6 +138,7 @@ class Alien:
     accent: str
     style: str = "normal"   # normal | heat | fast | heavy | small (bestimmt Animations-Charakter)
     glow: bool = False      # Leuchtmaske schreiben
+    arms: tuple[str, str] | None = None  # Vorlagen fuer die Ego-Sicht-Arme (rechts, links), Material-Schreibweise
     render_scale: float = 1.0  # Darstellungsgroesse (Trefferbox bleibt), z. B. fuer Vorlagen in Uebergroesse
     density: int = 1        # Pixel pro Modelleinheit in der PNG; die .geo.json nennt weiter die einfache Groesse,
                             # GeckoLib rechnet UVs normiert — so entsteht doppelt feine Textur ohne Geometrieaenderung
@@ -504,7 +505,7 @@ def paint_design(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noi
 REFERENCE_DIR = Path(__file__).resolve().parent / "reference"
 
 
-def ingame(color: Color, saturation: float = 1.35, value: float = 1.06) -> Color:
+def ingame(color: Color, saturation: float = 1.2, value: float = 1.06) -> Color:
     """Vorlagenfarben sind ungeschattet gerendert; im Spiel dunkelt das Licht sie ab und Gelb wird beige.
     Sättigung und Helligkeit anheben, damit der Eindruck im Spiel der Vorlage entspricht."""
     import colorsys
@@ -514,8 +515,21 @@ def ingame(color: Color, saturation: float = 1.35, value: float = 1.06) -> Color
 
 
 def is_hot(color: Color) -> bool:
-    """Hellste Glutfarbe (hellgelb) leuchtet leicht."""
-    return color[0] > 240 and color[1] > 200 and color[2] < 170
+    """Gelbe und orange Glut leuchtet (Leuchtmaske) — sonst dunkelt das Seitenlicht von Minecraft das Blassgelb der
+    Vorlage zu Khaki ab. Dunkelrot und Bordeaux bleiben normal beleuchtet."""
+    return color[0] > 225 and color[1] > 140
+
+
+def load_reference(spec: str) -> Image.Image:
+    name, _, crop = spec.partition("@")
+    path = REFERENCE_DIR / f"{name}.png"
+    if not path.is_file():
+        raise ValueError(f"Referenzbild fehlt: {path}")
+    img = Image.open(path).convert("RGBA")
+    if crop:
+        x, y, w, h = (int(v) for v in crop.split(","))
+        img = img.crop((x, y, x + w, y + h))
+    return img
 
 
 def paint_reference(canvas: Canvas, spec: str, face: Face) -> None:
@@ -562,6 +576,11 @@ def paint_show_detail(canvas: Canvas, cube: Part, front: Face) -> bool:
         # Omnitrix-Logo: schwarzes Feld, weisses X (Sanduhr) — 5x5 mittig
         put_pattern(canvas, fx + ((w - 5) // 2) * k, fy + ((h - 5) // 2) * k,
                     ("KKKKK", "KWKWK", "KKWKK", "KWKWK", "KKKKK"), {"K": BADGE_K, "W": BADGE_W}, scale=k)
+        return True
+    if d == "badge6":
+        # Omnitrix-Logo der Vorlage: schwarzer Rahmen, weisse Sanduhr (6x6 Pixel bei Dichte 2)
+        put_pattern(canvas, fx, fy, ("KKKKKK", "KWWWWK", "KKWWKK", "KKWWKK", "KWWWWK", "KKKKKK"),
+                    {"K": BADGE_K, "W": BADGE_W}, scale=max(1, k // 2))
         return True
     if d == "badge4":
         # Omnitrix-Logo als 8x8-Pixel-Feld: schwarzer Rahmen, weisses X
@@ -622,7 +641,38 @@ def paint_show_detail(canvas: Canvas, cube: Part, front: Face) -> bool:
     return False
 
 
+def paint_ref_material(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
+    """Material "ref:<name>[@x,y,b,h]": Vorderseite = Vorlage, Rueckseite = gespiegelt, Seiten = Randspalten der
+    Vorlage gestreckt, oben/unten = oberste/unterste Zeile. Seiten werden leicht abgedunkelt (Tiefe)."""
+    img = load_reference(cube.material[4:])
+    w, h = img.size
+    if face.name == "north":
+        src = img
+    elif face.name == "south":
+        src = img.transpose(Image.FLIP_LEFT_RIGHT)
+    elif face.name == "east":
+        src = img.crop((0, 0, max(1, w // 3), h))
+    elif face.name == "west":
+        src = img.crop((w - max(1, w // 3), 0, w, h))
+    elif face.name == "up":
+        src = img.crop((0, 0, w, 1))
+    else:
+        src = img.crop((0, h - 1, w, h))
+    src = src.resize((face.w, face.h), Image.NEAREST)
+    shade = {"north": 1.0, "south": 0.9, "east": 0.88, "west": 0.88, "up": 1.04, "down": 0.75}[face.name]
+    for py in range(face.h):
+        for px in range(face.w):
+            r, g, b, a = src.getpixel((px, py))
+            if a < 128:
+                r, g, b = PYRO_SOURCE_RGB[4] if PYRO_SOURCE_RGB else (120, 40, 50)
+            base = ingame((r, g, b))
+            hot = is_hot(base) and face.name != "down"
+            canvas.put(face.x + px, face.y + py, base if hot else scale(base, shade), glow=hot)
+
+
 def painter(material: str) -> Callable[[Canvas, Face, Cube, random.Random, Noise], None]:
+    if material.startswith("ref:"):
+        return paint_ref_material
     if material.startswith("flat:"):
         return paint_flat
     if material.startswith("clean:") or material in ("lava", "fur", "crystal", "split", "panel", "shirt", "pyro",
@@ -720,6 +770,17 @@ def pack_uvs(alien: Alien) -> None:
         cube.uv = (x, y)
         x += fw
         shelf = max(shelf, fh)
+
+
+def build_arm_skin(alien: Alien) -> Image.Image:
+    """Arm-Textur im Spieler-Skin-Layout (64x64-Raster, gemalt in 128x128 = doppelte Dichte) fuer die Ego-Sicht:
+    rechter Arm bei UV (40,16), linker bei (32,48), jeweils 4x12x4. Der Client tauscht damit die Skin der Arme."""
+    canvas = Canvas((128, 128))
+    for material, uv in zip(alien.arms, ((40, 16), (32, 48))):
+        part = Part((0, 0, 0), (4, 12, 4), material, uv=uv)
+        for face in faces_of(part, 2):
+            paint_ref_material(canvas, face, part, random.Random(0), Noise(0))
+    return canvas.color
 
 
 def build_textures(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
@@ -853,53 +914,80 @@ def finish(name: str, bones: list[Bone], accent: str, style: str, size: tuple[in
 
 
 PYRO: tuple[Color, ...] = ()
+PYRO_SOURCE_RGB: tuple[Color, ...] = tuple(rgb(c) for c in PYRO_SOURCE)
+
+
+def flame_from_silhouette(spec: str, x_left: float, y_top: float, depth_base: int) -> list[Part]:
+    """Baut die Kopfflamme Stufe fuer Stufe aus der Silhouette der Vorlage: je Einheit (2x2 Texel) gefuellt, wenn
+    mindestens die Haelfte deckend ist; zusammenhaengende Laeufe einer Zeile werden zu einem Wuerfel, dessen
+    Vorderseite den passenden Ausschnitt der Vorlage zeigt. Die Tiefe nimmt nach oben ab."""
+    img = load_reference(spec)
+    cols, rows = img.width // 2, img.height // 2
+    parts: list[Part] = []
+    for row in range(rows):
+        filled = []
+        for col in range(cols):
+            alpha = sum(1 for dx in (0, 1) for dy in (0, 1) if img.getpixel((col * 2 + dx, row * 2 + dy))[3] > 128)
+            filled.append(alpha >= 2)
+        col = 0
+        level = rows - 1 - row                                # 0 = direkt ueber dem Kopf
+        depth = max(2, depth_base - level)
+        while col < cols:
+            if not filled[col]:
+                col += 1
+                continue
+            start = col
+            while col < cols and filled[col]:
+                col += 1
+            width = col - start
+            x = x_left + start
+            y = y_top - row - 1
+            parts.append(Part((x, y, -depth / 2), (width, 1, depth), f"ref:{spec}@8,8,4,4",
+                              detail=f"ref:{spec}@{start * 2},{row * 2},{width * 2},2"))
+    return parts
 
 
 def heatblast() -> Alien:
+    """Heatblast (Pyronite), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+
+    Masse aus dem Vorlagen-Render (tools/sample_reference.py), Einheiten = 1/16 Block:
+    Fuesse 2, Beine 13, Rumpf 17, Kopf 8, Flamme 6; Oberarm 10 (4 breit), Faust 10 (6 breit);
+    Omnitrix-Logo 3x3 mittig oben auf der Brust; Seitenflammen links 4, rechts 3 hoch.
+    Alle Flaechen aus den Vorlage-Pixeln (Material "ref:"), Kopfflamme aus der Silhouette gebaut."""
     global PYRO
     PYRO = tuple(ingame(rgb(c)) for c in PYRO_SOURCE)
-    """Heatblast (Pyronite) nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt): Proportionen
-    Kopf : Rumpf : Beine = 8 : 16 : 14, Vorderseiten von Kopf, Kragen, Rumpf und Beinen aus der Vorlage abgetastet
-    (tools/reference/heatblast/), Seiten und Ruecken mit der Vorlagen-Palette, doppelte Texturdichte."""
+    ref = "heatblast/"
     bones = [Bone("root", None, (0, 0, 0)),
              Bone("body", "root", (0, 14, 0), [
-                 Part((-4, 14, -2), (8, 16, 4), "pyro", detail="ref:heatblast/torso"),
-                 Part((-2, 22.5, -2.4), (4, 4, 1), "clean:#141414", detail="badge4"),
-                 Part((-4.5, 29, -2.6), (9, 3, 5), "clean:#7C2539", detail="ref:heatblast/collar"),
+                 Part((-4.5, 14, -2.5), (9, 15, 5), "ref:" + ref + "torso"),
+                 Part((-1.5, 24, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
+                 Part((-5, 28, -3.1), (10, 3, 6), "ref:" + ref + "collar"),
              ])]
     bones += limb_pair(
-        arm=[((-9, 22, -2.5), (5, 8, 5), "pyro")],
-        forearm=[((-9.5, 14, -3), (6, 8, 6), "pyro_hot")],                                       # Gluehfaust
-        leg=[((-4, 7, -2), (4, 7, 4), "pyro", {"detail": "ref:heatblast/leg_r@0,0,8,13"})],
-        shin=[((-4, 0, -2), (4, 7, 4), "pyro_hot", {"detail": "ref:heatblast/leg_r@0,13,8,13"}),
-              ((-4.5, 0, -3), (5, 2, 6), "pyro_hot")],                                           # Fuss
-        shoulder=(5, 28), elbow=(6.5, 22), hip=(2, 14), knee=(2, 7))
-    # linkes Bein: eigene Vorlage (nicht gespiegelt)
+        arm=[((-9.5, 19, -2.5), (5, 10, 5), "ref:" + ref + "arm_r_upper")],
+        forearm=[((-10, 9, -3), (6, 10, 6), "ref:" + ref + "arm_r_fist")],
+        leg=[((-4.6, 8, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,0,8,13")],
+        shin=[((-4.6, 2, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,13,8,13"),
+              ((-5.1, 0, -3.5), (5, 2, 6), "ref:" + ref + "foot_r")],
+        shoulder=(6.5, 28), elbow=(7, 19), hip=(2.6, 14), knee=(2.6, 8))
+    # linke Seite: eigene Vorlagen (Arme/Beine/Fuss), nicht gespiegelt
     for bone in bones:
-        for part in bone.cubes:
-            if bone.name in ("left_leg", "left_shin") and part.detail and part.detail.startswith("ref:heatblast/leg_r"):
-                part.detail = part.detail.replace("leg_r", "leg_l")
+        if bone.name.startswith("left_"):
+            for part in bone.cubes:
+                part.material = part.material.replace("arm_r", "arm_l").replace("leg_r", "leg_l").replace("foot_r", "foot_l")
+                part.mirror = False
+        if bone.name in ("right_arm", "left_arm"):
+            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)          # abgespreizt wie in der Vorlage
     bones += [
         Bone("head", "body", (0, 30, 0), [
-            Part((-4, 30, -4), (8, 8, 8), "pyro_flame", detail="ref:heatblast/head"),
-            Part((-5, 32, -2), (1, 4, 4), "pyro_flame"), Part((4, 32, -2), (1, 4, 4), "pyro_flame"),   # Seitenflammen
+            Part((-4.5, 30, -4.5), (9, 9, 9), "ref:" + ref + "head@1,9,3,5", detail="ref:" + ref + "head"),
+            Part((-5.5, 35, -2.5), (1, 4, 5), "ref:" + ref + "head_wide@0,0,2,8"),               # Seitenflamme rechts
+            Part((4.5, 35, -2.5), (1, 3, 5), "ref:" + ref + "head_wide@18,4,2,6"),               # Seitenflamme links
         ]),
-        Bone("flame_base", "head", (0, 38, 0), [
-            Part((-4, 38, -3), (8, 2, 6), "pyro_flame"),
-            Part((-4, 40, -1), (2, 3, 3), "pyro_flame"), Part((2, 40, -1), (2, 3, 3), "pyro_flame"),     # Seitenzungen
-            Part((-4, 34, -4.5), (1, 4, 1), "pyro_flame"), Part((3, 34, -4.5), (1, 4, 1), "pyro_flame"),  # Schlaefen
-        ]),
-        Bone("flame_mid", "flame_base", (0, 40, 0), [Part((-2, 40, -2), (4, 4, 4), "pyro_flame"),
-                                                      Part((-3, 41, 0), (1, 3, 2), "pyro_flame"),
-                                                      Part((2, 42, -1), (1, 2, 2), "pyro_flame")], rotation=(-6, 0, 0)),
-        Bone("flame_tip", "flame_mid", (0, 44, 0), [Part((-1.5, 44, -1), (3, 3, 3), "pyro_flame"),
-                                                     Part((0.5, 46, 0), (1, 2, 1), "pyro_flame")], rotation=(-8, 0, 0)),
-        Bone("flame_spike", "flame_tip", (0, 47, 0), [Part((-1, 47, -0.5), (1, 3, 1), "pyro_flame")], rotation=(-10, 0, 0)),
+        Bone("flame_base", "head", (0, 39, 0), flame_from_silhouette(ref + "flame", -5, 45, 7)),
     ]
-    for bone in bones:
-        if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 8 if bone.name == "right_arm" else -8)                         # leicht abgespreizt
-    alien = Alien("heatblast", (96, 96), bones, "#FF6A00", style="heat", glow=True, density=2, render_scale=0.84)
+    alien = Alien("heatblast", (96, 96), bones, "#FF6A00", style="heat", glow=True, density=2, render_scale=0.85,
+                  arms=("ref:heatblast/arm_r_full", "ref:heatblast/arm_l_full"))
     pack_uvs(alien)
     return alien
 
@@ -1375,6 +1463,7 @@ def outputs(alien: Alien, seed: int) -> dict[Path, object]:
     # Leuchtmaske nur mit mindestens einem Pixel — GeckoLib verweigert leere Masken (None = Datei entfernen)
     files[ASSETS / "textures" / base / f"{alien.name}_glowmask.png"] = glow if alien.glow and glow.getbbox() else None
     files[ASSETS / "alien_render" / f"{alien.name}.json"] = {"scale": alien.render_scale}
+    files[ASSETS / "textures" / base / f"{alien.name}_arms.png"] = build_arm_skin(alien) if alien.arms else None
     return files
 
 

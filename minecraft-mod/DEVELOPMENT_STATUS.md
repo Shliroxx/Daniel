@@ -53,6 +53,50 @@ Design-Referenz (von SANTIQ vorgegeben): die Original-Serien-Varianten im Alien-
 Serien-Design-Maler: `lava`, `fur`, `crystal`, `split`, `panel`, `shirt`, `clean:#…`, Gesichter + Omnitrix-Logo).
 Stand 2026-10-02: alle 5 Aliens im Serien-Design (`docs/screenshots/aliens_serien_design.png`).
 
+## HEATBLAST — 1:1 REFERENCE REWORK (Pass 2, 2026-10-02)
+
+**Ausgangslage (Analyse):** Heatblast hatte bereits ein eigenes GeckoLib-Modell (keine Spieler-Skin), aber mit
+geschätzten Proportionen, zu kleinem Omnitrix-Logo-Verhältnis, Flammen als Platzhalter-Stapel, Seitenflächen aus
+generiertem Muster und normalen Spielerarmen in der Ego-Sicht.
+
+**Was wurde geändert**
+- *Silhouette/Proportionen* direkt aus der Vorlage vermessen: Kopf 9³ (mit Seitenflammen links 4, rechts 3 hoch),
+  Rumpf 9×15×5, Kragen 10×3×6, Oberarm 5×10×5, Faust 6×10×6 (Arme 10° abgespreizt), Beine 4×12 mit Lücke,
+  große Füße 5×2×6, Kopfflamme 6 Stufen aus der Silhouette der Vorlage gebaut (`flame_from_silhouette`).
+- *Textur:* alle Flächen aus Vorlage-Pixeln (Vorderseite 1:1, Rückseite gespiegelt, Seiten aus Randspalten),
+  doppelte Texturdichte, Farbhierarchie Dunkelrot → Rot → Orange → Gelb → Hellgelb aus der Vorlagen-Palette,
+  für das Spiel-Licht angehoben.
+- *Gesicht:* 16×16 aus der Vorlage (V-Brauen, Augen, Nase, Mund mit Zunge).
+- *Omnitrix:* eigener Würfel 3×3, Rahmen schwarz, weiße Sanduhr, Position/Größe wie Vorlage (vorher zu groß).
+- *Leuchten:* gelbe/orange Flächen über Leuchtmaske; neue Leuchtschicht mit gleichmäßiger Helligkeit von allen
+  Seiten (`AlienBodyRenderer.withEvenGlow`) — vorher wurde der Flammenkopf von hinten khakifarben.
+- *Ego-Sicht:* Arme verwandelter Spieler zeigen die Alien-Arme (`AlienArms` + Mixin in `renderArm`,
+  Textur `heatblast_arms.png` im Skin-Layout, doppelte Dichte).
+- *VFX:* kleine Flammen an Kopfflamme und abwechselnd an den Fäusten, sparsam, nicht in der eigenen Ego-Sicht am
+  Kopf (`AlienAmbientVfx`).
+- *Werkzeug:* `tools/sample_reference.py` (Rechteck- und Umriss-Abtastung, auch schräge Arme), CI prüft die
+  Abtastung (`--check`).
+
+**Geänderte/neue Dateien:** `tools/generate_alien_models.py`, `tools/sample_reference.py`,
+`tools/reference/heatblast/*.png`, `tools/reference/source/heatblast.png`, `tools/reference/README.md`,
+`assets/.../geo|animations|textures/entity/alien/heatblast*`, `heatblast_arms.png`, `alien_render/heatblast.json`,
+`client/render/alien/AlienBodyRenderer.java`, `AlienArms.java`, `AlienBodyRenderers.java`,
+`client/mixin/PlayerEntityRendererMixin.java`, `client/vfx/AlienAmbientVfx.java`, CI-Workflow.
+
+**Ersetzte Assets:** komplette Heatblast-Geometrie, -Textur, -Leuchtmaske; Platzhalter-Flammenstapel entfernt.
+
+**Behobene Probleme:** khakifarbener Kopf in Seiten-/Rückansicht; Omnitrix zu groß; Ego-Sicht mit Spielerarmen;
+leere Leuchtmaske ließ GeckoLib abstürzen; Matrix-Stapel nach Render-Absturz; Kopf-Partikel zu groß.
+
+**Noch nicht perfekt**
+- Rücken/Seiten sind aus der Vorderseite abgeleitet (die Vorlage zeigt nur vorn) — echte Rückseite fehlt.
+- Die Vorlage ist leicht von oben gerendert; Kopf/Flamme wirken dort durch die Perspektive größer.
+- Ego-Sicht nutzt die Armform des Spielermodells (4 breit), nicht die breiten Fäuste des Alien-Modells.
+- Angriffs-/Lauf-Animation nur kurz geprüft; Hitzeflimmern nicht umgesetzt (in Vanilla-Shadern nicht sinnvoll).
+
+**Nächster konkreter Visual-Polish-Schritt:** XLR8 nach demselben Verfahren (Vorlage `KineceleranOS.png`
+abtasten, Proportionen messen, Helm/Visier/Schwanz aus der Silhouette), danach Vierarm, Diamondhead, Grey Matter.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +
@@ -88,7 +132,7 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 |---|---|---|---|---|---|---|---|---|
 | Spieler (Mensch) | 50 (Vanilla) | 50 | 45 (playerAnimator Combo) | 55 | 50 | 50 | 50 | POLISH NEEDED |
 | Verwandlungs-Sequenz | – | – | 55 (Wachsen, Kraftpose, Schrumpfen) | 55 (Blitz, Helix, Vollleuchten) | 55 | 55 (Kamera-Stoß) | 55 | POLISH NEEDED |
-| Heatblast | 55 | 60 (Glutflecken, Flammengesicht, Logo) | 50 | 50 | 50 | 50 | 55 | POLISH NEEDED (Seiten-/Rückansicht prüfen) |
+| Heatblast | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn, doppelte Dichte) | 50 | 55 (Glut, Funken) | 50 | 50 | 68 | FINAL POLISH (echte Rückseite) |
 | XLR8 | 50 | 60 (Anzug mit Brustpaneel, Helm mit Gesichtsplatte) | 50 | 35 | 45 | 45 | 52 | POLISH NEEDED |
 | Vierarm | 55 (4 Arme sichtbar, breit) | 55 (Hemd, Fellarme, 4 Augen) | 45 (schwerer Gang) | 35 | 45 | 40 | 50 | POLISH NEEDED |
 | Diamondhead | 55 (Kristallarme, Schulterkristalle) | 55 (Kristallbänder, Anzug schwarz/weiß) | 45 | 35 | 45 | 40 | 50 | POLISH NEEDED |
