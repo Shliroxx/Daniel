@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.client.weapon;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.client.hud.HudAnchor;
 import com.santiq.kingdomomnitrix.client.hud.HudElement;
+import com.santiq.kingdomomnitrix.client.hud.OmnitrixHud;
 import com.santiq.kingdomomnitrix.client.ui.UiDraw;
 import com.santiq.kingdomomnitrix.client.ui.UiTheme;
 import com.santiq.kingdomomnitrix.weapon.WeaponItem;
@@ -37,7 +38,7 @@ public final class WeaponHud implements HudElement {
 
 	@Override
 	public HudAnchor defaultAnchor() {
-		return HudAnchor.BOTTOM_RIGHT;
+		return HudAnchor.TOP_RIGHT;
 	}
 
 	@Override
@@ -47,7 +48,10 @@ public final class WeaponHud implements HudElement {
 
 	@Override
 	public int defaultY() {
-		return -64;
+		// direkt unter der Omnitrix-Anzeige (deren Hoehe wechselt zwischen bereit und verwandelt)
+		MinecraftClient client = MinecraftClient.getInstance();
+		OmnitrixHud omnitrix = OmnitrixHud.INSTANCE;
+		return OmnitrixHud.TOP_OFFSET + (omnitrix.isActive(client) ? omnitrix.height(client) + 4 : 0);
 	}
 
 	@Override

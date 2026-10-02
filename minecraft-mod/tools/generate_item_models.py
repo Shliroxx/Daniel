@@ -81,6 +81,15 @@ MATERIALS: dict[str, Material] = {
     "omni_green": Material("#06401A", "#12A040", "#39FF6A", "#9DFFB8", "#E8FFF0", "glow"),
     "omni_face": Material("#050607", "#0C0E12", "#16191F", "#2A2F38", "#39FF6A", "dial"),
     "steel": Material("#2A2E38", "#4E5462", "#7A8292", "#A6AEBE", "#D8DEE8", "plate"),
+    # Ratchet-&-Clank-Geraete
+    "orange_paint": Material("#4A1A04", "#A8400E", "#E8641C", "#FF9A4A", "#FFD9B0", "plate"),
+    "red_paint": Material("#3E0808", "#8A1414", "#C8282A", "#EE5A50", "#FFC8C0", "plate"),
+    "yellow_paint": Material("#4E3A02", "#B08A0C", "#F0C21C", "#FFE066", "#FFF6C8"),
+    "blue_paint": Material("#0C1A36", "#22406E", "#3A63A8", "#6A92D2", "#C8DCFF", "plate"),
+    "teal_paint": Material("#062E2A", "#13695F", "#22A08E", "#5AD0BC", "#C8FFF4", "plate"),
+    "fire": Material("#5A1400", "#C83C00", "#FF7A1A", "#FFC060", "#FFF4D0", "glow"),
+    "plasma": Material("#08305A", "#1A6EC8", "#3AB0FF", "#9AD8FF", "#E8F8FF", "glow"),
+    "strap": Material("#050505", "#0E0F12", "#1C1E24", "#2C2F38", "#4A4F5C", "wrap"),
 }
 
 
@@ -237,14 +246,100 @@ def omega_key() -> list[Box]:
     return b
 
 
+# Ratchet-&-Clank-Geraete. Gewehre: Lauf entlang +y wie die Klinge, Griff quer (+x) um die Hand bei (8, 7, 8).
+
+def combuster() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((4.0, 5.6, 7.2), (9.5, 8.4, 8.8), "grip_dark"))                  # Griff
+    b.append(box((3.4, 5.2, 7.0), (4.4, 8.8, 9.0), "steel"))                      # Griffkappe
+    b.append(box((9.0, 8.4, 7.5), (10.4, 9.6, 8.5), "steel"))                     # Abzug
+    b.append(box((9.5, 2.0, 6.0), (14.0, 15.0, 10.0), "orange_paint"))            # Gehaeuse
+    b.append(box((9.2, 1.0, 6.4), (14.3, 2.0, 9.6), "dark"))                      # Heckplatte
+    b.append(box((14.0, 3.5, 6.5), (16.2, 12.5, 9.5), "steel"))                   # Brennstofftank
+    b.append(box((16.2, 5.0, 7.2), (16.5, 11.0, 8.8), "fire"))                    # Tankfenster
+    b.append(box((10.5, 9.0, 5.5), (13.2, 13.5, 6.0), "yellow_paint"))            # Seitenstreifen
+    b.append(box((10.5, 9.0, 10.0), (13.2, 13.5, 10.5), "yellow_paint"))
+    b.append(box((10.2, 15.0, 6.5), (13.4, 21.0, 9.5), "steel"))                  # Lauf
+    b.append(box((9.6, 21.0, 5.9), (14.0, 23.0, 10.1), "dark"))                   # Muendungsring
+    b.append(box((10.4, 23.0, 6.7), (13.2, 23.4, 9.3), "fire"))                   # Muendungsglut
+    b.append(box((10.9, 16.0, 6.1), (12.7, 20.5, 6.5), "fire"))                   # Heizspirale
+    b.append(box((10.9, 16.0, 9.5), (12.7, 20.5, 9.9), "fire"))
+    return b
+
+
+def swingshot() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((4.0, 5.6, 7.2), (9.5, 8.4, 8.8), "grip_dark"))
+    b.append(box((9.0, 8.4, 7.5), (10.4, 9.6, 8.5), "steel"))
+    b.append(box((9.5, 2.5, 6.3), (13.6, 13.0, 9.7), "steel"))                   # Gehaeuse
+    b.append(box((13.6, 4.0, 6.8), (14.2, 11.5, 9.2), "teal_paint"))             # Seitenpaneel
+    b.append(box((10.0, 6.0, 5.9), (13.0, 10.5, 6.3), "teal_paint"))
+    b.append(box((10.0, 6.0, 9.7), (13.0, 10.5, 10.1), "teal_paint"))
+    b.append(box((12.0, 3.5, 5.6), (14.6, 7.5, 10.4), "dark"))                   # Seiltrommel
+    b.append(box((10.4, 13.0, 6.8), (12.8, 15.0, 9.2), "dark"))                  # Kopf
+    b.append(box((11.0, 15.0, 7.4), (12.2, 19.5, 8.6), "chain"))                 # Greifer Mitte
+    b.append(box((9.6, 14.8, 7.4), (10.8, 18.8, 8.6), "chain", "z", 22.5, (10.6, 14.8, 8.0)))
+    b.append(box((12.4, 14.8, 7.4), (13.6, 18.8, 8.6), "chain", "z", -22.5, (12.6, 14.8, 8.0)))
+    b.append(box((11.1, 19.3, 7.5), (12.1, 20.3, 8.5), "teal_paint", "z", 45))  # Leuchtspitze
+    return b
+
+
+def omniwrench() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((7.1, -1.0, 7.1), (8.9, 0.6, 8.9), "steel"))                    # Endkappe
+    b.append(box((7.25, 0.6, 7.25), (8.75, 10.5, 8.75), "grip_blue"))            # Griff
+    b.append(box((7.0, 10.5, 7.0), (9.0, 11.6, 9.0), "yellow_paint"))            # Ring
+    b.append(box((7.35, 11.6, 7.35), (8.65, 21.0, 8.65), "blue_paint"))          # Schaft
+    b.append(box((7.0, 18.6, 7.0), (9.0, 19.6, 9.0), "yellow_paint"))
+    b.append(box((4.6, 21.0, 6.8), (11.4, 24.0, 9.2), "silver"))                 # Kopf
+    b.append(box((4.6, 24.0, 6.8), (6.9, 29.0, 9.2), "silver"))                  # Backe links
+    b.append(box((9.1, 24.0, 6.8), (11.4, 27.8, 9.2), "silver"))                 # Backe rechts (kuerzer)
+    b.append(box((4.9, 28.1, 6.9), (6.6, 29.8, 9.1), "silver", "z", 45))
+    b.append(box((9.4, 26.9, 6.9), (11.1, 28.6, 9.1), "silver", "z", 45))
+    b.append(box((6.9, 24.0, 7.6), (9.1, 24.6, 8.4), "dark"))                    # Maulgrund
+    b.append(box((5.4, 21.6, 6.6), (10.6, 22.4, 9.4), "yellow_paint"))           # Kopfband
+    return b
+
+
+def fusion_grenade() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((5.0, 5.0, 6.0), (11.0, 11.0, 10.0), "red_paint"))
+    b.append(box((6.0, 5.0, 5.0), (10.0, 11.0, 11.0), "red_paint"))
+    b.append(box((5.0, 6.0, 5.0), (11.0, 10.0, 11.0), "red_paint"))
+    b.append(box((4.7, 7.4, 4.7), (11.3, 8.6, 11.3), "plasma"))                  # Leuchtring
+    b.append(box((7.0, 11.0, 7.0), (9.0, 12.2, 9.0), "steel"))                   # Zuender
+    b.append(box((8.6, 11.4, 7.4), (11.6, 12.0, 8.6), "steel"))                  # Hebel
+    b.append(box((7.4, 3.8, 7.4), (8.6, 5.0, 8.6), "dark"))
+    return b
+
+
+def omnitrix() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((6.0, -0.5, 7.0), (10.0, 4.6, 9.0), "strap"))                   # Armband
+    b.append(box((6.0, 11.4, 7.0), (10.0, 16.5, 9.0), "strap"))
+    b.append(box((4.6, 4.6, 6.4), (11.4, 11.4, 9.6), "dark"))                    # Gehaeuse
+    b.append(box((5.4, 3.8, 6.6), (10.6, 12.2, 9.4), "dark"))
+    b.append(box((3.8, 5.4, 6.6), (12.2, 10.6, 9.4), "dark"))
+    b.append(box((3.4, 7.2, 7.4), (3.8, 8.8, 8.6), "omni_green"))               # Seitentasten
+    b.append(box((12.2, 7.2, 7.4), (12.6, 8.8, 8.6), "omni_green"))
+    b.append(box((5.0, 5.0, 9.6), (11.0, 11.0, 10.2), "omni_face"))              # Zifferblatt vorn
+    b.append(box((5.0, 5.0, 5.8), (11.0, 11.0, 6.4), "omni_face"))               # und hinten
+    return b
+
+
 WEAPONS = {
-    "kingdom_key": (kingdom_key, "silver"),
-    "oathkeeper": (oathkeeper, "white"),
-    "omega_key": (omega_key, "dark"),
+    "kingdom_key": (kingdom_key, "silver", "blade"),
+    "oathkeeper": (oathkeeper, "white", "blade"),
+    "omega_key": (omega_key, "dark", "blade"),
+    "omniwrench": (omniwrench, "silver", "blade"),
+    "combuster": (combuster, "orange_paint", "gun"),
+    "swingshot": (swingshot, "steel", "gun"),
+    "fusion_grenade": (fusion_grenade, "red_paint", "small"),
+    "omnitrix": (omnitrix, "dark", "small"),
 }
 
 # Lage pro Ansicht; hergeleitet aus vanilla „handheld“ (Klinge dort diagonal, hier entlang y → 45° weniger um z)
-DISPLAY = {
+BLADE_DISPLAY = {
     "thirdperson_righthand": {"rotation": [0, -90, 10], "translation": [0, -1.4, 1.3], "scale": [0.7, 0.7, 0.7]},
     "thirdperson_lefthand": {"rotation": [0, 90, -10], "translation": [0, -1.4, 1.3], "scale": [0.7, 0.7, 0.7]},
     "firstperson_righthand": {"rotation": [0, -90, -18], "translation": [0.9, -0.5, -2.0], "scale": [0.5, 0.5, 0.5]},
@@ -254,6 +349,30 @@ DISPLAY = {
     "fixed": {"rotation": [0, 180, -45], "translation": [1.8, -1.8, 0], "scale": [0.62, 0.62, 0.62]},
     "head": {"rotation": [0, 180, -45], "translation": [0, 13, 7], "scale": [0.8, 0.8, 0.8]},
 }
+
+# Gewehre: wie die Klinge, nur kuerzer und im Inventar waagerecht
+GUN_DISPLAY = dict(BLADE_DISPLAY) | {
+    "thirdperson_righthand": {"rotation": [0, -90, 10], "translation": [0, -0.6, 1.3], "scale": [0.7, 0.7, 0.7]},
+    "thirdperson_lefthand": {"rotation": [0, 90, -10], "translation": [0, -0.6, 1.3], "scale": [0.7, 0.7, 0.7]},
+    "firstperson_righthand": {"rotation": [0, 90, -72], "translation": [1.4, 5.2, -1.2], "scale": [0.45, 0.45, 0.45]},
+    "firstperson_lefthand": {"rotation": [0, -90, 72], "translation": [1.4, 5.2, -1.2], "scale": [0.45, 0.45, 0.45]},
+    "gui": {"rotation": [0, 0, -45], "translation": [-1.4, -1.6, 0], "scale": [0.78, 0.78, 0.78]},
+    "fixed": {"rotation": [0, 180, -45], "translation": [1.4, -1.6, 0], "scale": [0.8, 0.8, 0.8]},
+}
+
+# kleine Geraete: wie vanilla „generated“
+SMALL_DISPLAY = {
+    "thirdperson_righthand": {"rotation": [0, 0, 0], "translation": [0, 3, 1], "scale": [0.5, 0.5, 0.5]},
+    "thirdperson_lefthand": {"rotation": [0, 0, 0], "translation": [0, 3, 1], "scale": [0.5, 0.5, 0.5]},
+    "firstperson_righthand": {"rotation": [10, -110, 20], "translation": [1.6, 4.6, -1.2], "scale": [0.36, 0.36, 0.36]},
+    "firstperson_lefthand": {"rotation": [10, 110, -20], "translation": [1.6, 4.6, -1.2], "scale": [0.36, 0.36, 0.36]},
+    "gui": {"rotation": [18, -28, 0], "translation": [0, 0, 0], "scale": [0.95, 0.95, 0.95]},
+    "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
+    "fixed": {"rotation": [0, 180, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
+    "head": {"rotation": [0, 180, 0], "translation": [0, 13, 7], "scale": [1, 1, 1]},
+}
+
+DISPLAYS = {"blade": BLADE_DISPLAY, "gun": GUN_DISPLAY, "small": SMALL_DISPLAY}
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -357,7 +476,7 @@ def dial_color(px: int, py: int, w: int, h: int, face: str, m: Material) -> Colo
 
 
 def build(name: str) -> tuple[dict, Image.Image]:
-    factory, particle_material = WEAPONS[name]
+    factory, particle_material, display = WEAPONS[name]
     boxes = factory()
     slots = []
     for b in boxes:
@@ -393,7 +512,7 @@ def build(name: str) -> tuple[dict, Image.Image]:
         "gui_light": "front",
         "textures": {"blade": texture, "particle": texture},
         "elements": elements,
-        "display": DISPLAY,
+        "display": DISPLAYS[display],
     }
     return model, img
 

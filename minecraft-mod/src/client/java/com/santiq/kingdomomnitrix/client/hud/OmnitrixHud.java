@@ -31,6 +31,8 @@ public final class OmnitrixHud implements HudElement {
 	private static final Identifier ID = KingdomOmnitrix.id("omnitrix");
 
 	private static final int PADDING = 4;
+	/** Abstand von oben: unter den zwei Reihen Effekt-Symbolen, damit die Ego-Hand unten rechts frei bleibt */
+	public static final int TOP_OFFSET = 54;
 	private static final int WIDTH = 114;
 	private static final int BAR_HEIGHT = 4;
 	private static final int SLOT_SIZE = 22;
@@ -54,7 +56,7 @@ public final class OmnitrixHud implements HudElement {
 
 	@Override
 	public HudAnchor defaultAnchor() {
-		return HudAnchor.BOTTOM_RIGHT;
+		return HudAnchor.TOP_RIGHT;
 	}
 
 	@Override
@@ -64,7 +66,7 @@ public final class OmnitrixHud implements HudElement {
 
 	@Override
 	public int defaultY() {
-		return -4;
+		return TOP_OFFSET;
 	}
 
 	@Override

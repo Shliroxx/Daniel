@@ -151,6 +151,20 @@ Volumen, Omnitrix nicht am Arm, Omnitrix-HUD überdeckt die Ego-Hand. Eigene Arb
   Spiel nachjustiert. Screenshot: `docs/screenshots/keyblades_3d.png`.
 - Offen: Zahnbart-Form gegen Original-Artwork feiner; Third-Person am Spieler aus Beobachter-Sicht prüfen.
 
+**Auftrag 3 — Geräte 3D: IMPLEMENTED (Pass 1, ohne Heli-Pack)**
+- Gleicher Generator: Omniwrench 8000 (blauer Schaft, gelbe Ringe, Silberkopf mit ungleichen Backen), Combuster
+  (orange Gehäuse, Brennstofftank mit Glutfenster, Heizspirale, Mündungsring), Swingshot (Seiltrommel, Greifer mit
+  drei Klauen, türkise Paneele), Fusionsgranate (rote Kugel, blauer Leuchtring, Zünder + Hebel), Omnitrix-Item
+  (Armband, Gehäuse, grünes Sanduhr-Zifferblatt, Seitentasten).
+- Gewehre eigene Lage (Ego-Sicht Lauf nach vorn, Griff unten), kleine Geräte wie vanilla „generated“.
+- Offen: Heli-Pack (Rückenmodell), Omnitrix am Handgelenk (Auftrag 2).
+
+**Auftrag 6 — HUD: teilweise**
+- Omnitrix- und Waffen-Anzeige von unten rechts nach oben rechts (unter den Effekt-Symbolen), Waffen-Anzeige
+  stapelt sich automatisch unter der Omnitrix-Anzeige (Höhe bereit/verwandelt) → Ego-Hand und Waffe frei.
+  Screenshot: `docs/screenshots/gadgets_3d.png`.
+- Offen: Kommandomenü kompakter, KH-Lebensanzeige.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +
