@@ -31,6 +31,7 @@ import math
 import random
 import sys
 import zlib
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -142,6 +143,34 @@ class Alien:
     render_scale: float = 1.0  # Darstellungsgroesse (Trefferbox bleibt), z. B. fuer Vorlagen in Uebergroesse
     density: int = 1        # Pixel pro Modelleinheit in der PNG; die .geo.json nennt weiter die einfache Groesse,
                             # GeckoLib rechnet UVs normiert — so entsteht doppelt feine Textur ohne Geometrieaenderung
+    uniforms: dict[str, dict[str, str]] | None = None
+                            # Uniform-ID → Farbrolle → Farbe (Material „role:NAME“). Erste Uniform = <name>.png,
+                            # weitere = <name>_<id>.png (+ Leuchtmaske, Ego-Arme). Reihenfolge: classic, evo, ultimate
+
+
+UNIFORM_IDS = ("classic", "evo", "ultimate")
+
+
+def with_uniform(alien: Alien, uniform: str) -> Alien:
+    """Kopie mit aufgeloesten Farbrollen („role:SKIN“ → „clean:#…“) fuer eine Uniform."""
+    palette = (alien.uniforms or {}).get(uniform, {})
+
+    def resolve(material: str) -> str:
+        if material.startswith("role:"):
+            role = material[5:]
+            if role not in palette:
+                raise ValueError(f"{alien.name}/{uniform}: Farbrolle {role} fehlt")
+            return "clean:" + palette[role]
+        return material
+
+    copy = deepcopy(alien)
+    for bone in copy.bones:
+        for part in bone.cubes:
+            if isinstance(part, Part):
+                part.material = resolve(part.material)
+    if copy.arms:
+        copy.arms = (resolve(copy.arms[0]), resolve(copy.arms[1]))
+    return copy
 
 
 # --- Materialien ----------------------------------------------------------------------------------
@@ -784,8 +813,9 @@ def build_arm_skin(alien: Alien) -> Image.Image:
     canvas = Canvas((128, 128))
     for material, uv in zip(alien.arms, ((40, 16), (32, 48))):
         part = Part((0, 0, 0), (4, 12, 4), material, uv=uv)
+        paint = paint_ref_material if material.startswith("ref:") else painter(material)
         for face in faces_of(part, 2):
-            paint_ref_material(canvas, face, part, random.Random(0), Noise(0))
+            paint(canvas, face, part, random.Random(0), Noise(0))
     return canvas.color
 
 
@@ -1000,50 +1030,99 @@ def heatblast() -> Alien:
     return alien
 
 
-def xlr8() -> Alien:
-    """XLR8 (Kineceleran), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+def side_parts(entries: list[tuple], side: int) -> list[Part]:
+    """Wuerfel der rechten Seite (-x) fuer beide Seiten: links gespiegelt samt Wuerfel-Drehung und Pivot.
+    Eintraege: (origin, size, material[, extra-kwargs])."""
+    result = []
+    for entry in entries:
+        (x, y, z), size, material = entry[0], entry[1], entry[2]
+        extra = dict(entry[3]) if len(entry) > 3 else {}
+        if side > 0 and "rotation" in extra:
+            rx, ry, rz = extra["rotation"]
+            extra["rotation"] = (rx, -ry, -rz)
+            px, py_, pz = extra.get("pivot", (x, y, z))
+            extra["pivot"] = (-px, py_, pz)
+        result.append(Part((mirror_x(x, size[0], side), y, z), size, material, mirror=side > 0, **extra))
+    return result
 
-    Masse aus dem Vorlagen-Render (tools/sample_reference.py xlr8), Einheiten = 1/16 Block:
-    Kopf 8 (schwarzer Helm, tuerkise Gesichtsplatte, gruene Augen), Rumpf 10x15 mit weissem Mittelpaneel und
-    Guertel, Schulterpolster 5x5x6, Oberarm 4x6, Unterarm 4x5 mit heller Flosse, Krallenhand 5x4, Oberschenkel
-    5x8, Schienbein 4x6, Krallenfuss 6x3x7 mit Ferse, Schwanz in drei Gliedern."""
-    ref = "xlr8/"
+
+XLR8_SUIT = "role:SUIT"          # Anzug/Panzer
+XLR8_SKIN = "role:SKIN"          # Haut an Armen und Beinen
+XLR8_LIGHT = "role:LIGHT"        # helle Kante/Flossen
+XLR8_HELMET = "role:HELMET"
+XLR8_CLAW = "role:CLAW"
+XLR8_UNIFORMS = {
+    # Original-Serie: blaue Haut, schwarzer Anzug mit weisser Brustlinie, schwarzer Helm
+    "classic": {"SUIT": "#16171C", "SKIN": "#2D7FE6", "LIGHT": "#7FC4FF", "HELMET": "#101115", "CLAW": "#D8E0E6",
+                "STRIPE": "#E8ECEF", "TAIL": "#2D7FE6", "CHIN": "#2D7FE6"},
+    # Alien-Evolution-Look: stahlblaue Haut, schwarzer Anzug, gruene Akzente
+    "evo": {"SUIT": "#1A1818", "SKIN": "#55717E", "LIGHT": "#B3FF40", "HELMET": "#171515", "CLAW": "#C8D2D6",
+            "STRIPE": "#3A4D5E", "TAIL": "#55717E", "CHIN": "#698890"},
+    # Ultimate: schwarz-weiss mit tuerkisen Linien
+    "ultimate": {"SUIT": "#121316", "SKIN": "#D9DEE3", "LIGHT": "#39D3FF", "HELMET": "#0E0F12", "CLAW": "#39D3FF",
+                 "STRIPE": "#39D3FF", "TAIL": "#D9DEE3", "CHIN": "#D9DEE3"},
+}
+
+
+def xlr8() -> Alien:
+    """XLR8 (Kineceleran) als Raptor nach Alien Evolution (Erlaubnis laut SANTIQ, Fanprojekt): vorgebeugter Rumpf
+    aus gekippten Teilen, Kopf weit vorn mit spitzem Helm und Visier, viergliedriger Schwanz, angewinkelte Arme
+    mit Krallen, digitigrade Beine (Oberschenkel nach vorn, Mittelfuss waagerecht zurueck, steiles Schienbein,
+    Krallenfuss). Einheiten = 1/16 Block, vorn = -z; Hoehe ca. 29 (Spieler 32)."""
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 17, 0), [
-                 Part((-5, 17, -2.5), (10, 15, 5), "ref:" + ref + "torso|plainback"),
-                 Part((-1.5, 25.5, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
-             ], rotation=(4, 0, 0))]
-    bones += limb_pair(
-        arm=[((-9, 25, -2), (4, 6, 4), "ref:" + ref + "arm_upper"),
-             ((-10, 27, -3), (5, 5, 6), "ref:" + ref + "pad_r")],                                    # Schulterpolster
-        forearm=[((-9, 20, -2), (4, 5, 4), "ref:" + ref + "arm_upper"),
-                 ((-10, 20, -0.5), (1, 5, 2), "clean:#8FF0F5", {"rotation": (0, 0, 8), "pivot": (-10, 22, 0)}),  # Flosse
-                 ((-9.5, 16, -2.5), (5, 4, 5), "ref:" + ref + "hand"),
-                 ((-9.5, 15, -3), (1, 1, 1), "clean:#D9E3E8"), ((-7.5, 15, -3), (1, 1, 1), "clean:#D9E3E8"),
-                 ((-5.5, 15, -3), (1, 1, 1), "clean:#D9E3E8")],                                     # Krallen
-        leg=[((-5, 9, -2.5), (5, 8, 5), "ref:" + ref + "thigh_r")],
-        shin=[((-4.5, 3, -2), (4, 6, 4), "ref:" + ref + "shin_r"),
-              ((-5, 0, -4), (6, 3, 7), "ref:" + ref + "foot_r"),
-              ((-4.5, 0, 2), (4, 2, 2), "clean:#202024")],                                          # Ferse
-        shoulder=(5, 30), elbow=(7, 25), hip=(2.6, 17), knee=(2.6, 9))
-    for bone in bones:
-        if bone.name.startswith("left_"):
-            for part in bone.cubes:
-                part.material = part.material.replace("pad_r", "pad_l").replace("thigh_r", "thigh_l") \
-                    .replace("shin_r", "shin_l").replace("foot_r", "foot_l")
-        if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 6 if bone.name == "right_arm" else -6)
-    bones += [
-        Bone("head", "body", (0, 32, 0), [
-            Part((-4, 32, -4), (8, 8, 8), "clean:#1C1C20", detail="ref:" + ref + "head"),
-            Part((-1, 40, -3), (2, 1, 6), "clean:#2A2A2E"),                                          # Helmkamm
-        ], rotation=(-4, 0, 0)),
-        Bone("tail_1", "body", (0, 18, 2.5), [Part((-1.5, 16.5, 2.5), (3, 3, 6), "stripe")], rotation=(-14, 0, 0)),
-        Bone("tail_2", "tail_1", (0, 18, 8.5), [Part((-1, 17, 8.5), (2, 2, 6), "stripe")], rotation=(-8, 0, 0)),
-        Bone("tail_3", "tail_2", (0, 18, 14.5), [Part((-0.5, 17.5, 14.5), (1, 1, 6), "stripe")], rotation=(-5, 0, 0)),
-    ]
-    alien = Alien("xlr8", (96, 96), bones, "#1E90FF", style="fast", glow=True, density=2, render_scale=0.85,
-                  arms=("ref:xlr8/arm_full", "ref:xlr8/arm_full"))
+             Bone("body", "root", (0, 13, -1), [
+                 Part((-3, 11, -3), (6, 5, 6), XLR8_SUIT, rotation=(-8, 0, 0), pivot=(0, 13, 0)),        # Huefte
+                 Part((-3, 14, -5), (6, 6, 5), XLR8_SUIT, rotation=(25, 0, 0), pivot=(0, 15, -2.5)),     # Bauch
+                 Part((-3.5, 18, -8), (7, 5, 6), XLR8_SUIT, rotation=(20, 0, 0), pivot=(0, 20, -5)),     # Brust
+                 Part((-1, 18.4, -8.6), (2, 4, 1), "role:STRIPE", rotation=(20, 0, 0), pivot=(0, 20, -5)),  # Brustlinie
+                 Part((-1.5, 19, -8.9), (3, 3, 1), "clean:#141414", detail="badge6", rotation=(20, 0, 0),
+                      pivot=(0, 20, -5)),                                                              # Omnitrix
+                 Part((-1, 21, -9.5), (2, 3, 3), XLR8_SUIT, rotation=(35, 0, 0), pivot=(0, 22, -8)),     # Hals
+             ]),
+             Bone("head", "body", (0, 23, -9), [
+                 Part((-2.5, 23, -13), (5, 4, 5), XLR8_HELMET),                                          # Helm
+                 Part((-2, 23.5, -14.5), (4, 3, 4), XLR8_HELMET, rotation=(0, 45, 0), pivot=(0, 25, -12.5)),  # Helmspitze
+                 Part((-0.5, 27, -13), (1, 1, 7), "clean:#24262C"),                                       # Helmkamm
+                 Part((-2, 23.5, -13.4), (4, 2, 1), "clean:#0A0B0E", detail="eyes"),                     # Visier
+                 Part((-1.5, 22.3, -12.5), (3, 1, 3), "role:CHIN"),                                      # Kinn
+             ]),
+             Bone("tail_1", "body", (0, 14, 2), [
+                 Part((-2, 12, 2), (4, 4, 4), XLR8_SUIT), Part((-2, 12, 6), (4, 4, 1), "role:TAIL", inflate=0.1)],
+                 rotation=(-6, 0, 0)),
+             Bone("tail_2", "tail_1", (0, 14.5, 7), [
+                 Part((-1.5, 13, 7), (3, 3, 4), XLR8_SUIT), Part((-1.5, 13, 11), (3, 3, 1), "role:TAIL", inflate=0.1)],
+                 rotation=(-6, 0, 0)),
+             Bone("tail_3", "tail_2", (0, 15, 12), [
+                 Part((-1, 13.5, 12), (2, 2, 4), XLR8_SUIT), Part((-1, 13.5, 16), (2, 2, 1), "role:TAIL", inflate=0.1)],
+                 rotation=(-5, 0, 0)),
+             Bone("tail_4", "tail_3", (0, 15.5, 17), [
+                 Part((-1, 14, 17), (2, 2, 4), XLR8_SUIT)], rotation=(-4, 0, 0)),
+             ]
+    for side_name, side in (("right", -1), ("left", 1)):
+        bones += [
+            Bone(f"{side_name}_arm", "body", (4.5 * side, 20, -6), side_parts([
+                ((-6, 19, -7.5), (3, 3, 3), XLR8_SUIT, {"inflate": 0.25}),                              # Schulter
+                ((-6, 15, -7), (2, 5, 2), XLR8_SKIN, {"rotation": (-25, 0, 8), "pivot": (-5, 19, -6)}),  # Oberarm
+            ], side), rotation=(0, 0, 5 * -side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (5.5 * side, 16, -7), side_parts([
+                ((-6.5, 14.5, -12), (2, 2, 5), XLR8_SKIN),                                              # Unterarm nach vorn
+                ((-7, 15.5, -10.5), (1, 1, 3), XLR8_LIGHT),                                             # Flosse
+                ((-7, 13.5, -14), (3, 3, 2), XLR8_SUIT),                                                # Hand
+                ((-7, 13.5, -15), (1, 1, 1), XLR8_CLAW), ((-5.5, 13.5, -15), (1, 1, 1), XLR8_CLAW),
+                ((-6.25, 15.5, -15), (1, 1, 1), XLR8_CLAW),                                            # Krallen
+            ], side), rotation=(45, 0, 0)),
+            Bone(f"{side_name}_leg", "root", (2.5 * side, 13, -1), side_parts([
+                ((-4, 7, -4), (3, 6, 4), XLR8_SUIT, {"rotation": (-22, 0, 0), "pivot": (-2.5, 13, -1)}),  # Oberschenkel
+            ], side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (2.5 * side, 8, -4), side_parts([
+                ((-3.5, 6, -4.5), (2, 2, 5), XLR8_SKIN, {"rotation": (-15, 0, 0), "pivot": (-2.5, 7, -4)}),  # Mittelfuss
+                ((-3.5, 1.5, -0.5), (2, 5, 2), XLR8_SKIN, {"rotation": (12, 0, 0), "pivot": (-2.5, 6, 0)}),    # Schienbein
+                ((-4, 0, -4), (3, 2, 5), XLR8_SUIT),                                                    # Fuss
+                ((-4, 0, -5), (1, 1, 1), XLR8_CLAW), ((-2, 0, -5), (1, 1, 1), XLR8_CLAW),               # Zehenkrallen
+            ], side)),
+        ]
+    alien = Alien("xlr8", (96, 96), bones, "#1E90FF", style="fast", glow=True, density=2, render_scale=1.0,
+                  arms=(XLR8_SKIN, XLR8_SKIN), uniforms=XLR8_UNIFORMS)
     pack_uvs(alien)
     return alien
 
@@ -1256,7 +1335,7 @@ def build_animations(alien: Alien) -> dict:
     heavy_limbs = {"right_forearm", "left_forearm"} <= names
     knees = {"right_shin", "left_shin"} <= names
     flames = "flame_base" in names
-    tail = [n for n in ("tail_1", "tail_2", "tail_3") if n in names]
+    tail = [n for n in ("tail_1", "tail_2", "tail_3", "tail_4") if n in names]
     fast = alien.style == "fast"
     A: dict[str, dict] = {}
 
@@ -1488,16 +1567,23 @@ def build_animations(alien: Alien) -> dict:
 
 def outputs(alien: Alien, seed: int) -> dict[Path, object]:
     base = Path("entity") / "alien"
-    color, glow = build_textures(alien, seed)
     files: dict[Path, object] = {
         ASSETS / "geo" / base / f"{alien.name}.geo.json": build_geo(alien),
         ASSETS / "animations" / base / f"{alien.name}.animation.json": build_animations(alien),
-        ASSETS / "textures" / base / f"{alien.name}.png": color,
     }
-    # Leuchtmaske nur mit mindestens einem Pixel — GeckoLib verweigert leere Masken (None = Datei entfernen)
-    files[ASSETS / "textures" / base / f"{alien.name}_glowmask.png"] = glow if alien.glow and glow.getbbox() else None
-    files[ASSETS / "alien_render" / f"{alien.name}.json"] = {"scale": alien.render_scale}
-    files[ASSETS / "textures" / base / f"{alien.name}_arms.png"] = build_arm_skin(alien) if alien.arms else None
+    render: dict = {"scale": alien.render_scale}
+    variants = list(alien.uniforms) if alien.uniforms else [None]
+    for index, uniform in enumerate(variants):
+        variant = with_uniform(alien, uniform) if uniform else alien
+        suffix = "" if index == 0 else f"_{uniform}"
+        color, glow = build_textures(variant, seed)
+        files[ASSETS / "textures" / base / f"{alien.name}{suffix}.png"] = color
+        # Leuchtmaske nur mit mindestens einem Pixel — GeckoLib verweigert leere Masken (None = Datei entfernen)
+        files[ASSETS / "textures" / base / f"{alien.name}{suffix}_glowmask.png"] = glow if alien.glow and glow.getbbox() else None
+        files[ASSETS / "textures" / base / f"{alien.name}{suffix}_arms.png"] = build_arm_skin(variant) if variant.arms else None
+    if alien.uniforms:
+        render["uniforms"] = variants
+    files[ASSETS / "alien_render" / f"{alien.name}.json"] = render
     return files
 
 

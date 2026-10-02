@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.client.render.alien;
 
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
+import com.santiq.kingdomomnitrix.alien.AlienUniforms;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import net.minecraft.util.Identifier;
  * (Spieler-Skin-Layout, vom Alien-Generator erzeugt) verwendet. Aliens ohne Arm-Textur behalten die Skin.
  */
 public final class AlienArms {
-	private static final Map<Identifier, Optional<Identifier>> CACHE = new HashMap<>();
+	private static final Map<String, Optional<Identifier>> CACHE = new HashMap<>();
 
 	private AlienArms() {
 	}
@@ -31,14 +32,23 @@ public final class AlienArms {
 		if (!state.isTransformed()) {
 			return Optional.empty();
 		}
-		Optional<Identifier> model = state.activeAlien()
-				.flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id))
+		Optional<Identifier> alien = state.activeAlien();
+		Optional<Identifier> model = alien.flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id))
 				.map(AlienDefinition::model);
-		return model.flatMap(m -> CACHE.computeIfAbsent(m, AlienArms::lookup));
+		String uniform = alien.map(id -> AlienUniforms.get(player, id)).orElse(AlienUniforms.CLASSIC);
+		return model.flatMap(m -> CACHE.computeIfAbsent(m + "#" + uniform, key -> lookup(m, uniform)));
 	}
 
-	private static Optional<Identifier> lookup(Identifier model) {
+	/** Arm-Textur der Uniform ({@code <name>_<uniform>_arms.png}), sonst die classic-Arme. */
+	private static Optional<Identifier> lookup(Identifier model, String uniform) {
+		var resources = MinecraftClient.getInstance().getResourceManager();
+		if (!AlienUniforms.CLASSIC.equals(uniform)) {
+			Identifier variant = Identifier.of(model.getNamespace(), "textures/entity/alien/" + model.getPath() + "_" + uniform + "_arms.png");
+			if (resources.getResource(variant).isPresent()) {
+				return Optional.of(variant);
+			}
+		}
 		Identifier texture = Identifier.of(model.getNamespace(), "textures/entity/alien/" + model.getPath() + "_arms.png");
-		return MinecraftClient.getInstance().getResourceManager().getResource(texture).isPresent() ? Optional.of(texture) : Optional.empty();
+		return resources.getResource(texture).isPresent() ? Optional.of(texture) : Optional.empty();
 	}
 }

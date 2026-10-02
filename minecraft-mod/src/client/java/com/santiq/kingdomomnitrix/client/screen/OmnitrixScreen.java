@@ -1,9 +1,11 @@
 package com.santiq.kingdomomnitrix.client.screen;
 
+import com.santiq.kingdomomnitrix.alien.AlienUniforms;
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
+import com.santiq.kingdomomnitrix.client.render.alien.AlienBodyRenderers;
 import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixController;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -20,7 +22,7 @@ import org.lwjgl.glfw.GLFW;
  * <ul>
  *     <li>Mausrad, Maus seitwaerts ziehen, A/D oder Pfeiltasten: Rad drehen</li>
  *     <li>Linksklick, Enter, Leertaste oder Omnitrix-Taste: bestaetigen (verwandelt: zurueckverwandeln)</li>
- *     <li>1–9: direkt zu einem Alien drehen · Rechtsklick/Esc: schliessen</li>
+ *     <li>1–9: direkt zu einem Alien drehen · U: Uniform wechseln · Rechtsklick/Esc: schliessen</li>
  * </ul>
  */
 public class OmnitrixScreen extends Screen {
@@ -77,6 +79,11 @@ public class OmnitrixScreen extends Screen {
 				int color = entry.unlocked() ? 0x7DFF9C : 0x4A5A50;
 				context.drawCenteredTextWithShadow(textRenderer, name, 0, 0, alpha << 24 | color);
 				long recharge = state.rechargeRemaining(now);
+				if (entry.unlocked() && AlienBodyRenderers.uniformsOf(entry.alien().model()).size() > 1) {
+					String uniform = AlienUniforms.get(client.player, entry.id());
+					context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.uniform",
+							Text.translatable("uniform.kingdomomnitrix." + uniform)), 0, -11, alpha << 24 | 0x9ACFA8);
+				}
 				if (recharge > 0) {
 					context.drawCenteredTextWithShadow(textRenderer,
 							Text.translatable("hud.kingdomomnitrix.recharging", (recharge + 19) / 20), 0, 11, alpha << 24 | 0xFF5050);
@@ -144,6 +151,10 @@ public class OmnitrixScreen extends Screen {
 			}
 			case GLFW.GLFW_KEY_RIGHT, GLFW.GLFW_KEY_D -> {
 				OmnitrixController.rotate(1);
+				return true;
+			}
+			case GLFW.GLFW_KEY_U -> {
+				OmnitrixController.cycleUniform();
 				return true;
 			}
 			case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER, GLFW.GLFW_KEY_SPACE -> {

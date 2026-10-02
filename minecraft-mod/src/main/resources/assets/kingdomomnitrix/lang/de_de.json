@@ -568,5 +568,9 @@
   "party.kingdomomnitrix.error.no_invite": "Keine gültige Einladung.",
   "party.kingdomomnitrix.error.not_in_party": "Du bist in keiner Gruppe.",
   "party.kingdomomnitrix.error.not_member": "Dieser Spieler ist nicht in deiner Gruppe.",
-  "screen.kingdomomnitrix.omnitrix_hint": "Mausrad/Ziehen: drehen · Klick: bestätigen · Rechtsklick: schließen"
+  "screen.kingdomomnitrix.omnitrix_hint": "Mausrad/Ziehen: drehen · Klick: bestätigen · U: Uniform · Rechtsklick: schließen",
+  "screen.kingdomomnitrix.uniform": "Uniform: %s [U]",
+  "uniform.kingdomomnitrix.classic": "Original",
+  "uniform.kingdomomnitrix.evo": "Evolution",
+  "uniform.kingdomomnitrix.ultimate": "Ultimate"
 }

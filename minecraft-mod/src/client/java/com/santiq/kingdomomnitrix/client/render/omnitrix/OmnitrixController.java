@@ -2,13 +2,16 @@ package com.santiq.kingdomomnitrix.client.render.omnitrix;
 
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
+import com.santiq.kingdomomnitrix.alien.AlienUniforms;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
+import com.santiq.kingdomomnitrix.client.render.alien.AlienBodyRenderers;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixScreen;
 import com.santiq.kingdomomnitrix.networking.OmnitrixPhasePayload;
 import com.santiq.kingdomomnitrix.networking.RevertRequestPayload;
+import com.santiq.kingdomomnitrix.networking.SetUniformPayload;
 import com.santiq.kingdomomnitrix.networking.TransformRequestPayload;
 import com.santiq.kingdomomnitrix.player.HeroData;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -186,6 +189,24 @@ public final class OmnitrixController {
 			delta -= size;
 		}
 		rotate(delta);
+	}
+
+	/** Uniform des gewaehlten Aliens weiterschalten (classic → evo → ultimate), nur freigeschaltete Aliens. */
+	public static void cycleUniform() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		Optional<Entry> entry = focused();
+		if (client.player == null || entry.isEmpty() || !entry.get().unlocked() || !isInteractive()) {
+			return;
+		}
+		List<String> available = AlienBodyRenderers.uniformsOf(entry.get().alien().model());
+		if (available.size() < 2) {
+			denyStart = System.nanoTime();
+			return;
+		}
+		String current = AlienUniforms.get(client.player, entry.get().id());
+		String next = available.get((Math.max(0, available.indexOf(current)) + 1) % available.size());
+		ClientPlayNetworking.send(new SetUniformPayload(entry.get().id(), next));
+		play(ModSounds.OMNITRIX_SELECT, 0.9f, 0.5f);
 	}
 
 	/** Auswahl bestaetigen: verwandeln (oder zurueckverwandeln, wenn schon verwandelt). */

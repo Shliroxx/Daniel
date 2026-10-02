@@ -64,6 +64,7 @@ public class KingdomOmnitrix implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		HeroDataAccess.register();
+		com.santiq.kingdomomnitrix.alien.AlienUniforms.register();
 		ModComponents.register();
 		ModParticles.register();
 		ModSounds.register();

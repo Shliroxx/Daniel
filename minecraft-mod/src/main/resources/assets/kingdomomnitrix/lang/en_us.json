@@ -568,5 +568,9 @@
   "party.kingdomomnitrix.error.no_invite": "No valid invite.",
   "party.kingdomomnitrix.error.not_in_party": "You are not in a party.",
   "party.kingdomomnitrix.error.not_member": "That player is not in your party.",
-  "screen.kingdomomnitrix.omnitrix_hint": "Scroll/drag: rotate · Click: confirm · Right-click: close"
+  "screen.kingdomomnitrix.omnitrix_hint": "Scroll/drag: rotate · Click: confirm · U: uniform · Right-click: close",
+  "screen.kingdomomnitrix.uniform": "Uniform: %s [U]",
+  "uniform.kingdomomnitrix.classic": "Original",
+  "uniform.kingdomomnitrix.evo": "Evolution",
+  "uniform.kingdomomnitrix.ultimate": "Ultimate"
 }

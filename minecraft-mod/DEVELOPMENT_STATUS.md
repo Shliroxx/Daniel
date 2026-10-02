@@ -204,6 +204,22 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
 - Offen: Kamera-Neigung beim Heben, eigene Klänge pro Zustand (nutzt vorhandene Omnitrix-Sounds), Scheibe in
   Third-Person zur Weltoberseite ausrichten, Gehäuse noch näher an Omniverse (seitliche Flossen), rote Abklingzeit.
 
+## ALIEN-EVOLUTION-VERGLEICH + UNIFORMEN (2026-10-02)
+- AlienEvo 1.1.3 (Fabric 1.20.1, Palladium-Addon) lokal entpackt (nicht im Repo); Start in der Cloud scheitert am
+  Proxy (Mojang-Downloads). Vergleich stattdessen mit `tools/render_geo.py` (Offline-Renderer fuer GeckoLib-Modelle)
+  und nachgebauter Ingame-Faerbung (Palladium-Color-Transformer + Codex-Paletten).
+- Erkenntnisse: AE-Aliens mit Tier-Anatomie (XLR8 Raptor, digitigrade Beine, vorgebeugt), viele gedrehte kleine
+  Wuerfel, 64x64-Texturen in Ebenen (Haut/Uniform/Glow), 8-stufiges Glut-Leuchten, eigene Ego-Arm-Modelle, drei
+  Uniformen je Alien (default/prototype/10k). Unsere bisherigen Aliens entsprechen etwa „prototype“.
+- **Uniformen (Entscheidung SANTIQ: alle drei waehlbar):** `classic` (Original-Serie), `evo` (AE-eigener Look),
+  `ultimate`. Generator: Farbrollen („role:SKIN“) + Palette je Uniform → `<alien>[_<uniform>].png`, Arme, Leuchtmaske;
+  `alien_render/<alien>.json` listet die Uniformen. Spiel: `AlienUniforms` (Attachment, an alle synchronisiert),
+  `SetUniformPayload`, Umschalten im Omnitrix mit **U**, Renderer/Ego-Arme nehmen die Uniform-Textur.
+- **XLR8 neu (Raptor):** gekippter Rumpf aus gedrehten Teilen, spitzer Helm mit Visier, 4-gliedriger Schwanz mit
+  Ringen, angewinkelte Krallenarme, digitigrade Beine; drei Uniformen. Screenshots `docs/screenshots/xlr8_uniformen*.png`.
+- Naechste: Vierarm, Diamondhead, Heatblast, Grey Matter mit AE-Anatomie + Uniformen; Texturen mit Tonstufen statt
+  Flachfarben; Glut-Animation; Ego-Arm-Modelle.
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +

@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.networking;
 
+import com.santiq.kingdomomnitrix.player.HeroDataAccess;
+import com.santiq.kingdomomnitrix.alien.AlienUniforms;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationManager.Result;
@@ -30,6 +32,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenOmnitrixPayload.ID, OpenOmnitrixPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TransformRequestPayload.ID, TransformRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(OmnitrixPhasePayload.ID, OmnitrixPhasePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SetUniformPayload.ID, SetUniformPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixPhaseSyncPayload.ID, OmnitrixPhaseSyncPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
@@ -178,6 +181,13 @@ public final class ModNetworking {
 				if (watcher != player) {
 					ServerPlayNetworking.send(watcher, sync);
 				}
+			}
+		});
+		ServerPlayNetworking.registerGlobalReceiver(SetUniformPayload.ID, (payload, context) -> {
+			// nur fuer freigeschaltete Aliens; die Uniform ist reine Optik
+			ServerPlayerEntity player = context.player();
+			if (HeroDataAccess.get(player).hasAlien(payload.alien())) {
+				AlienUniforms.set(player, payload.alien(), payload.uniform());
 			}
 		});
 		ServerPlayNetworking.registerGlobalReceiver(RevertRequestPayload.ID, (payload, context) -> {

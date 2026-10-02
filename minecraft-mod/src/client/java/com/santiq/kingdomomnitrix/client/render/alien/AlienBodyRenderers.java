@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.client.render.alien;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
+import com.santiq.kingdomomnitrix.alien.AlienUniforms;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.client.vfx.CameraShake;
@@ -44,6 +45,9 @@ public final class AlienBodyRenderers {
 	private static final Map<Integer, Identifier> ACTIVE = new HashMap<>();
 	/** laufende Rueckverwandlung je Spieler: Modell und Start-Tick */
 	private static final Map<Integer, Revert> REVERTING = new HashMap<>();
+	/** Uniform beim Verwandeln/Zurueckverwandeln je Spieler (die Rueckverwandlung zeichnet noch das alte Alien) */
+	private static final Map<Integer, String> LAST_UNIFORM = new HashMap<>();
+	private static final Map<Integer, String> REVERT_UNIFORM = new HashMap<>();
 	/** Ticks nach Verwandlungsbeginn, in denen der Koerper voll leuchtet und abklingt */
 	private static final int GLOW_TICKS = 12;
 	/** Aufprall der Verwandlung (Koerper landet nach dem Wachsen) */
@@ -66,6 +70,7 @@ public final class AlienBodyRenderers {
 		RENDERERS.clear();
 		FAILED.clear();
 		SCALES.clear();
+		UNIFORMS.clear();
 		AlienArms.clearCache();
 	}
 
@@ -98,6 +103,8 @@ public final class AlienBodyRenderers {
 		}
 		ACTIVE.keySet().retainAll(seen);
 		REVERTING.entrySet().removeIf(e -> !seen.contains(e.getKey()) || now - e.getValue().start() > AlienBodyAnimatable.REVERT_TICKS);
+		REVERT_UNIFORM.keySet().retainAll(REVERTING.keySet());
+		LAST_UNIFORM.keySet().retainAll(seen);
 	}
 
 	static boolean isReverting(PlayerEntity player) {
@@ -142,6 +149,9 @@ public final class AlienBodyRenderers {
 			return false;
 		}
 		MatrixStack.Entry saved = matrices.peek();
+		currentUniform = state.activeAlien().map(id -> AlienUniforms.get(player, id))
+				.or(() -> Optional.ofNullable(REVERT_UNIFORM.get(player.getId())))
+				.orElse(AlienUniforms.CLASSIC);
 		try {
 			RENDERERS.computeIfAbsent(model, AlienBodyRenderers::create).render(player, yaw, tickDelta, matrices, vertexConsumers, renderLight);
 			return true;
@@ -170,7 +180,12 @@ public final class AlienBodyRenderers {
 
 	private static GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> create(Identifier model) {
 		Identifier assetPath = Identifier.of(model.getNamespace(), "alien/" + model.getPath());
-		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true));
+		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true) {
+			@Override
+			public Identifier getTextureResource(AlienBodyAnimatable animatable) {
+				return uniformTexture(model, super.getTextureResource(animatable), currentUniform);
+			}
+		});
 		float scale = renderScale(model);
 		if (scale != 1.0f) {
 			renderer.withScale(scale);
@@ -183,6 +198,44 @@ public final class AlienBodyRenderers {
 	}
 
 	private static final Map<Identifier, Float> SCALES = new HashMap<>();
+	private static final Map<Identifier, java.util.List<String>> UNIFORMS = new HashMap<>();
+	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
+	private static String currentUniform = AlienUniforms.CLASSIC;
+
+	/**
+	 * Textur einer Uniform: {@code <name>_<uniform>.png}, wenn das Modell die Uniform in {@code alien_render} fuehrt,
+	 * sonst die Grundtextur (classic).
+	 */
+	public static Identifier uniformTexture(Identifier model, Identifier base, String uniform) {
+		if (AlienUniforms.CLASSIC.equals(uniform) || !uniformsOf(model).contains(uniform)) {
+			return base;
+		}
+		String path = base.getPath();
+		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - 4) + "_" + uniform + ".png");
+	}
+
+	/** Uniformen eines Modells laut {@code alien_render/<name>.json} ({"uniforms": ["classic", "evo", …]}). */
+	public static java.util.List<String> uniformsOf(Identifier model) {
+		return UNIFORMS.computeIfAbsent(model, m -> {
+			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
+			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
+			if (resource.isEmpty()) {
+				return java.util.List.of(AlienUniforms.CLASSIC);
+			}
+			try (var reader = resource.get().getReader()) {
+				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
+				if (!json.has("uniforms")) {
+					return java.util.List.of(AlienUniforms.CLASSIC);
+				}
+				java.util.List<String> list = new java.util.ArrayList<>();
+				json.getAsJsonArray("uniforms").forEach(e -> list.add(e.getAsString()));
+				return java.util.List.copyOf(list);
+			} catch (java.io.IOException | RuntimeException e) {
+				KingdomOmnitrix.LOGGER.error("Uniformen {} unlesbar, nutze classic", file, e);
+				return java.util.List.of(AlienUniforms.CLASSIC);
+			}
+		});
+	}
 
 	/** Darstellungsgroesse aus {@code alien_render/<name>.json} ({"scale": 0.84}); fehlt die Datei: 1. Zwischengespeichert. */
 	public static float renderScale(Identifier model) {
