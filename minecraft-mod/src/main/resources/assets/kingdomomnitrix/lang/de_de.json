@@ -663,5 +663,6 @@
   "message.kingdomomnitrix.upgrade_nothing": "Nichts zum Aufrüsten in der Hand",
   "message.kingdomomnitrix.upgrade_done": "%s aufgerüstet",
   "message.kingdomomnitrix.drying_out": "Ripjaws trocknet aus – such Wasser!",
-  "message.kingdomomnitrix.rehydrated": "Ripjaws ist wieder feucht"
+  "message.kingdomomnitrix.rehydrated": "Ripjaws ist wieder feucht",
+  "commands.kingdomomnitrix.ability_result": "%s: Fähigkeit %s → %s"
 }

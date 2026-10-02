@@ -155,3 +155,42 @@ Bilder: `docs/screenshots/alien_symbole.png`, `docs/screenshots/omnitrix_phase2_
   Scanlinie freigeschrieben, blendet aus; immer nur eine Meldung.
 - Im Spiel geprueft: Golem in 5 Bloecken → Four Arms, Bestaetigung verwandelt (`docs/screenshots/smart_choice_golem.png`).
   Noch nicht geprueft: Redstone, unter Wasser, Abgrund, Dunkelheit (warten auf die Aliens aus Phase E).
+
+## 9. Phase E — fuenf neue Aliens (2026-10-02)
+
+Wildmutt (Vulpimancer), Stinkfly (Lepidopterran), Ripjaws (Piscciss Volann), Upgrade (Galvanic Mechamorph),
+Ghostfreak (Ectonurite). Modelle, Texturen, Uniformen (classic/evo/ultimate) und Daueranimationen aus Alien Evolution
+(Erlaubnis laut SANTIQ, siehe CREDITS.md) ueber `tools/import_alienevo.py`; Klaenge sind Vanilla-Klaenge (keine AE-Klaenge).
+
+| Alien | Faehigkeiten (R / V / B) | Eigenschaften (`traits`) | Notfall | DNA |
+|---|---|---|---|---|
+| Wildmutt | Ansprung, Stachelsalve, Wildes Gebruell (Leuchten + Langsamkeit) | Nachtsicht, Sinne 16 Bloecke (Monster leuchten), schnell, Sprungkraft | Fall | Wolf, Fuchs |
+| Stinkfly | Schleimspucke, Stinkwolke, Fluegelstoss | Fliegen, immun gegen Gift/Uebelkeit/Schwaeche (eigener Gestank) | Fall | Biene, Phantom |
+| Ripjaws | Kieferbiss (im Wasser ×1,5, heilt), Flutstoss (im Wasser ×3), Strudel | Nachtsicht; im Wasser Delfinsgunst, Staerke, Regeneration; trocknet nach 45 s an Land aus | Ertrinken | Waechter, Ertrunkener, Kabeljau |
+| Upgrade | Optikstrahl (24 Bloecke), Fluessige Form, Technik-Upgrade (Werkzeug +25 %, Eile) | Nachtsicht, Ruestung, Abbaugeschwindigkeit, Blitz-Immunitaet | Blitz, Explosion | Eisengolem, Creeper |
+| Ghostfreak | Tentakelhieb (zieht heran, heilt), Phasenverschiebung, Spuk | Nachtsicht, halbe Schwerkraft, kein Fall-/Ertrinkungsschaden | Geschosse | Vex, Phantom, Ghast |
+
+**Neu im Code**
+- `AlienTraits` (Datenfeld `traits`): Flug, Dauer-/Wassereffekte, Austrocknen, Sinne, Effekt-Immunitaet.
+  `AlienTraitHandler` nimmt beim Zurueckverwandeln genau das Gegebene zurueck (eigene Traenke bleiben); gewaehrter Flug
+  wird vor dem Speichern beim Abmelden entfernt (sonst Dauerflug nach Neustart).
+- `CreatureAbilities` (15 Faehigkeiten), Geschoss-Arten Schleim und Stachel, `Targeting.findMeleeTarget` (verzeihendes
+  Nahkampf-Ziel im 45°-Kegel).
+- Importer: Zusatzmodelle mit eigener Textur, Textur-Variablen, Alpha-Masken, Schleifen fuer Zusatzknochen.
+  **Fix nebenbei:** Vierarm/Grey Matter hatten Requisiten-/Ruestungsebenen in der Textur (Fels, Anzug).
+- `/hero omnitrix ability <1-6>`: loest eine Faehigkeit aus und meldet das genaue Ergebnis (Test/Admin).
+
+**Im Spiel gemessen** (Zombie 20 HP, Nacht, Feuerschutz): Kieferbiss 20 → 12,1 · Tentakelhieb (3 und 8,5 Bloecke)
+20 → 14 · Optikstrahl (10,5 Bloecke) 20 → 13 · Schleimspucke 20 → 17,1 · Ansprung 20 → 13,1 · Stachelsalve 20 → 16,1 ·
+Strudel 20 → 16. Gebruell/Sinne: Zombie leuchtet. Technik-Upgrade: Spitzhacke Schaden 200 → 137, Eile. Stinkfly-Flug
+an (`mayfly 1b`) und nach Rueckverwandlung aus (`0b`). Ripjaws: Wassereffekte; nach 47 s an Land Langsamkeit +
+Schwaeche. Smart-Scan: Redstone → Upgrade, unter Wasser → Ripjaws (Bestaetigung verwandelt).
+
+**Gefundene und behobene Fehler:** Stinkwolke vergiftete Stinkfly selbst; Kieferbiss/Tentakel verfehlten bei knappem
+Zielen (verzeihendes Ziel); Stinkfly-Fluegel trugen dauerhaft das AE-Bewegungsunschaerfe-Bild.
+**Test-Fehler (kein Mod-Fehler):** `/tp … facing <pos>` zielt ab den Fuessen — fruehere Nahkampf-Messungen zielten
+ueber das Ziel; mit `facing entity … feet` treffen alle.
+
+**Offen / ehrlich:** Faehigkeits-Posen (AE-Skripte) fuer die neuen Aliens noch nicht uebernommen (nur Spielerpose +
+Daueranimation); Klaenge nicht angehoert, nur technisch geprueft; Mehrspieler fuer die neuen Aliens nicht getestet.
+Bilder: `docs/screenshots/neue_aliens_phase_e.png`, `docs/screenshots/alien_symbole.png`.

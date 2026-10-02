@@ -137,6 +137,15 @@ public final class HeroCommand {
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 										(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
 												IdentifierArgumentType.getIdentifier(ctx, "alien"), false)))))
+						// Faehigkeit direkt ausloesen (Test/Admin): meldet das genaue Ergebnis
+						.then(CommandManager.literal("ability")
+								.then(targeted(CommandManager.argument("slot", IntegerArgumentType.integer(1, 6)), (ctx, target) -> {
+									int slot = IntegerArgumentType.getInteger(ctx, "slot");
+									TransformationManager.Result result = TransformationManager.useAbility(target, slot - 1);
+									ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.ability_result",
+											target.getDisplayName(), slot, result.name()), false);
+									return result == TransformationManager.Result.SUCCESS ? 1 : 0;
+								})))
 						.then(CommandManager.literal("heat")
 								.then(targeted(CommandManager.argument("value", FloatArgumentType.floatArg(0.0f, 1.0f)), (ctx, target) -> {
 									OmnitrixCore.setHeat(target, FloatArgumentType.getFloat(ctx, "value"));

@@ -42,6 +42,41 @@ public final class Targeting {
 		return Optional.ofNullable(best);
 	}
 
+	/**
+	 * Nahkampf-Ziel: zuerst exakt auf der Blicklinie, sonst das naechste Lebewesen im Kegel vor dem Spieler (cos ≥
+	 * {@code minDot}, z. B. 0,7 ≈ 45°) mit freier Sicht. Verzeiht knappes Zielen bei Bissen und Hieben.
+	 */
+	public static Optional<LivingEntity> findMeleeTarget(LivingEntity user, double range, double minDot,
+			java.util.function.Predicate<LivingEntity> allowed) {
+		Optional<LivingEntity> direct = findLivingTarget(user, range).filter(allowed);
+		if (direct.isPresent()) {
+			return direct;
+		}
+		Vec3d eye = user.getEyePos();
+		Vec3d look = user.getRotationVec(1.0f);
+		LivingEntity best = null;
+		double bestDistance = Double.MAX_VALUE;
+		for (Entity candidate : user.getWorld().getOtherEntities(user, user.getBoundingBox().expand(range),
+				e -> e instanceof LivingEntity living && living.isAlive() && !e.isSpectator() && allowed.test(living))) {
+			Vec3d center = candidate.getBoundingBox().getCenter();
+			Vec3d to = center.subtract(eye);
+			double distance = to.length();
+			if (distance > range + candidate.getWidth() * 0.5 || distance < 1.0E-4 || to.normalize().dotProduct(look) < minDot) {
+				continue;
+			}
+			BlockHitResult wall = user.getWorld().raycast(new RaycastContext(eye, center, RaycastContext.ShapeType.COLLIDER,
+					RaycastContext.FluidHandling.NONE, user));
+			if (wall.getType() != HitResult.Type.MISS && wall.getPos().squaredDistanceTo(eye) < distance * distance - 0.25) {
+				continue;
+			}
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				best = (LivingEntity) candidate;
+			}
+		}
+		return Optional.ofNullable(best);
+	}
+
 	/** Endpunkt der Blicklinie: erster getroffener Block oder die volle Reichweite. */
 	public static Vec3d lookEnd(LivingEntity user, double range) {
 		Vec3d start = user.getEyePos();

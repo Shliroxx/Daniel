@@ -164,8 +164,8 @@ final class CreatureAbilities {
 	/** Biss auf das Ziel vor dem Spieler; im Wasser staerker, heilt etwas. */
 	private static boolean jawBite(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 4.0));
-		if (found.isEmpty() || !PartyRules.canHarm(player, found.get())) {
+		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 4.0), 0.7, e -> PartyRules.canHarm(player, e));
+		if (found.isEmpty()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
 		}
@@ -311,8 +311,8 @@ final class CreatureAbilities {
 	/** Tentakelhieb: zieht ein Ziel heran und schaedigt es (Lebensentzug). */
 	private static boolean tentacleLash(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 10.0));
-		if (found.isEmpty() || !PartyRules.canHarm(player, found.get())) {
+		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 10.0), 0.85, e -> PartyRules.canHarm(player, e));
+		if (found.isEmpty()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
 		}

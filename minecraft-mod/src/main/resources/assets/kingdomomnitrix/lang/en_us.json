@@ -663,5 +663,6 @@
   "message.kingdomomnitrix.upgrade_nothing": "Nothing to upgrade in your hand",
   "message.kingdomomnitrix.upgrade_done": "%s upgraded",
   "message.kingdomomnitrix.drying_out": "Ripjaws is drying out – find water!",
-  "message.kingdomomnitrix.rehydrated": "Ripjaws is wet again"
+  "message.kingdomomnitrix.rehydrated": "Ripjaws is wet again",
+  "commands.kingdomomnitrix.ability_result": "%s: ability %s → %s"
 }
