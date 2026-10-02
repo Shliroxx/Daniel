@@ -97,7 +97,20 @@ leere Leuchtmaske ließ GeckoLib abstürzen; Matrix-Stapel nach Render-Absturz; 
 **Nächster konkreter Visual-Polish-Schritt:** ~~XLR8~~ (erledigt, siehe unten), dann Vierarm, Diamondhead,
 Grey Matter nach demselben Verfahren.
 
+## DIAMONDHEAD — 1:1 REFERENCE REWORK (2026-10-02)
+- Vorlage `tools/reference/source/diamondhead.png` (PetrosapienOS), ~21 px/Einheit, 13 Teile abgetastet; vom Kinn
+  verdeckte Brust und das Logo ausgefüllt.
+- Geometrie nach Maß: Kristallkopf 7 mit Kamm, schräge Schulterspitzen 3×7×3, Anzug 8×16×5 (halb schwarz/halb weiß),
+  Schulterkristalle 9×10×8, Kristall-Unterarme 7×12×7 (gestuft), Beine rechts schwarz / links weiß, Ego-Arme.
+- BEHOBEN (betraf alle Aliens mit Stil „normal“): Der Textur-Maler übersprang gespiegelte Würfel — Überbleibsel der
+  alten Bauweise mit geteilter UV. Bei Diamondhead war dadurch die ganze linke Körperseite unsichtbar. Jetzt wird
+  nur übersprungen, wenn die UV wirklich schon bemalt ist.
+- Offen: Grün im Spiel etwas kräftiger als das Pastell der Vorlage (Farbanhebung ist global); Schulterspitzen
+  könnten noch höher stehen.
+
 ## VIERARM — 1:1 REFERENCE REWORK (2026-10-02)
+- BEHOBEN (Hinweis SANTIQ): Das untere Armpaar zeigte nur Fäuste — Ober-/Unterarm lagen hinter Rumpf und oberen
+  Armen. Jetzt hängen die inneren Arme wie in der Vorlage vor den Rumpfkanten.
 - Vorlage `tools/reference/source/four_arms.png` (TetramandOS, Kopf oben angeschnitten), ~21,3 px/Einheit,
   14 Teile abgetastet (`tools/sample_reference.py four_arms`); vom inneren Armpaar verdeckte Rumpfkanten mit der
   Hemdfarbe aufgefüllt.
@@ -160,7 +173,7 @@ Rausch-Textur. Items (2D-Icons) sind solide Pixel-Art. Der Boss ist am weitesten
 | Heatblast | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn, doppelte Dichte) | 50 | 55 (Glut, Funken) | 50 | 50 | 68 | FINAL POLISH (echte Rückseite) |
 | XLR8 | 70 (Vorlagen-Silhouette) | 75 (Vorlage 1:1 vorn) | 50 | 40 | 45 | 45 | 66 | FINAL POLISH (Schwanz, Sprint) |
 | Vierarm | 68 (Vorlagen-Silhouette, Fellzacken) | 72 (Vorlage 1:1 vorn) | 45 (schwerer Gang) | 35 | 45 | 40 | 64 | FINAL POLISH (Armlänge) |
-| Diamondhead | 55 (Kristallarme, Schulterkristalle) | 55 (Kristallbänder, Anzug schwarz/weiß) | 45 | 35 | 45 | 40 | 50 | POLISH NEEDED |
+| Diamondhead | 66 (Vorlagen-Silhouette) | 70 (Vorlage 1:1 vorn) | 45 | 35 | 45 | 40 | 62 | FINAL POLISH (Farbton, Spitzen) |
 | Grey Matter | 50 (großer Kopf, Augen) | 55 | 45 (flinker Gang) | 30 | 45 | 35 | 48 | POLISH NEEDED |
 | Omnitrix (Item/Arm) | 30 (2D-Icon, nicht am Arm) | 60 | – | 50 | 55 | 50 | 40 | MODEL REWORK |
 | Keyblades (Kingdom Key, Oathkeeper, Omega) | 35 (flaches Sprite in der Hand) | 60 | 45 | 55 | 50 | 55 | 45 | MODEL REWORK |

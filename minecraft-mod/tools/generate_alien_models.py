@@ -793,10 +793,12 @@ def build_textures(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
     """Farbtextur und Leuchtmaske der detaillierten Bauweise (Wuerfel vom Typ Part)."""
     k = alien.density
     canvas = Canvas((alien.texture_size[0] * k, alien.texture_size[1] * k))
+    painted_uvs: set[tuple[int, int]] = set()
     for b in alien.bones:
         for i, cube in enumerate(b.cubes):
-            if cube.mirror and alien.style == "normal":
-                continue  # einfache Aliens teilen die UV mit der gespiegelten Seite
+            if cube.mirror and cube.uv in painted_uvs:
+                continue  # gespiegelte Seite teilt sich die UV mit der schon bemalten Gegenseite
+            painted_uvs.add(cube.uv)
             rng = random.Random(zlib.crc32(f"{seed}:{alien.name}:{b.name}:{i}".encode()))
             noise = Noise(zlib.crc32(f"{alien.name}:{b.name}:{i}".encode()))
             paint = painter(cube.material)
@@ -1051,7 +1053,7 @@ FA_TUFTS_UPPER = ((19.5, -1.5, 1, "clean:#C8141E"), (21, 0.5, 2, "clean:#9C1414"
                   (23.5, 1.5, 1, "clean:#9C1414"))
 FA_TUFTS_FIST = ((13.5, 0, 1, "clean:#9C1414"), (15, -2, 2, "clean:#C8141E"), (16.5, 1.5, 1, "clean:#E02028"),
                  (17.5, -0.5, 1, "clean:#9C1414"))
-FA_TUFTS_LOWER = ((20, 0, 1, "clean:#C8141E"), (21.5, 1.5, 2, "clean:#9C1414"))
+FA_TUFTS_LOWER = ((19, -2.5, 1, "clean:#C8141E"), (21, -1, 2, "clean:#9C1414"))
 
 
 def four_arms() -> Alien:
@@ -1080,12 +1082,13 @@ def four_arms() -> Alien:
         mirror = side > 0
         lower = f"ref:{ref}lower_{'r' if side < 0 else 'l'}"
         bones += [
-            Bone(f"{side_name}_lower_arm", "body", (6 * side, 24, 1), [
-                Part((mirror_x(-9.5, 4, side), 19, -1), (4, 5, 4), lower + "@0,0,10,6"),
-                *[Part((mirror_x(-10.5, 1, side), y, z), (1, h, 1), c, mirror=mirror) for y, z, h, c in FA_TUFTS_LOWER]],
-                rotation=(0, 0, 6 * -side)),
-            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (7.5 * side, 19, 1), [
-                Part((mirror_x(-10, 5, side), 12, -1.5), (5, 7, 5), lower + "@0,6,10,8")]),
+            # unteres Armpaar wie in der Vorlage VOR der Rumpfkante: sichtbarer Fell-Oberarm, Unterarm, Faust
+            Bone(f"{side_name}_lower_arm", "body", (5.5 * side, 24, -1.5), [
+                Part((mirror_x(-7.5, 4, side), 18, -3.8), (4, 6, 4), lower + "@0,0,10,6", mirror=mirror),
+                *[Part((mirror_x(-8.5, 1, side), y, z), (1, h, 1), c, mirror=mirror) for y, z, h, c in FA_TUFTS_LOWER]],
+                rotation=(0, 0, 4 * -side)),
+            Bone(f"{side_name}_lower_forearm", f"{side_name}_lower_arm", (5.5 * side, 18, -1.5), [
+                Part((mirror_x(-8, 5, side), 11, -4.3), (5, 7, 5), lower + "@0,6,10,8", mirror=mirror)]),
         ]
     for bone in bones:
         if bone.name.startswith("left_") and "lower" not in bone.name:
@@ -1105,35 +1108,40 @@ def four_arms() -> Alien:
 
 
 def diamondhead() -> Alien:
-    """Diamondhead (Petrosapien): Anzug halb schwarz, halb weiss; Kristallkopf mit drei Spitzen, Schulter-
-    Kristallbuendel aus je drei schraegen Spitzen, grosse Kristallarme mit aufgesetzten Facettenplatten."""
+    """Diamondhead (Petrosapien), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+
+    Masse aus PetrosapienOS (tools/sample_reference.py diamondhead), Einheiten = 1/16 Block: Kristallkopf 7 mit
+    Kamm, Schulterspitzen 3x5x3, Anzug 8x16x5 (halb schwarz, halb weiss), riesige Kristall-Oberarme 8x8x7,
+    Kristall-Unterarme 7x13x7, Beine 4x11 (rechts schwarz, links weiss), Fuesse 5x3x6."""
+    ref = "diamondhead/"
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 12, 0), [
-                 Part((-4, 12, -2), (8, 12, 4), "split"),
-                 Part((-1, 18.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
-                 Part((-4.5, 13, -2.5), (9, 1, 5), "clean:#2A2A2E"),                                      # Guertel
+             Bone("body", "root", (0, 14, 0), [
+                 Part((-4, 14, -2.5), (8, 16, 5), "ref:" + ref + "torso"),
+                 Part((0.6, 23.5, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
              ])]
     bones += limb_pair(
-        arm=[((-10, 16, -3), (6, 8, 6), "crystal"),
-             ((-8.5, 23, -1.5), (3, 7, 3), "crystal", {"rotation": (0, 0, 22), "pivot": (-7, 23, 0)}),    # Schulterspitze
-             ((-9, 22, -3), (2, 5, 2), "crystal", {"rotation": (-15, 0, 35), "pivot": (-8, 22, -2)}),
-             ((-9, 22, 1), (2, 5, 2), "crystal", {"rotation": (15, 0, 30), "pivot": (-8, 22, 2)}),
-             ((-10.5, 18, -2), (1, 4, 4), "crystal", {"rotation": (0, 45, 0), "pivot": (-10, 20, 0)})],    # Facettenplatte
-        forearm=[((-10.5, 8, -3.5), (7, 8, 7), "crystal"),
-                 ((-11, 10, -2), (1, 5, 4), "crystal", {"rotation": (0, 45, 0), "pivot": (-10.5, 12, 0)}),
-                 ((-9, 7, -4), (4, 1, 1), "crystal")],
-        leg=[((-4, 6, -2), (4, 6, 4), "split")],
-        shin=[((-4, 0, -2), (4, 6, 4), "split"),
-              ((-4.2, 0, -2.8), (4, 1, 1), "clean:#2A2A2E")],
-        shoulder=(5, 22), elbow=(7, 16))
-    bones.append(Bone("head", "body", (0, 24, 0), [
-        Part((-3.5, 24, -3.5), (7, 7, 7), "crystal", detail="petro_face"),
-        Part((-1, 31, -2), (2, 4, 4), "crystal"),                                                         # Mittelkamm
-        Part((-3, 30.5, -1), (2, 3, 2), "crystal", rotation=(0, 0, 25), pivot=(-2, 31, 0)),               # Seitenspitzen
-        Part((1, 30.5, -1), (2, 3, 2), "crystal", rotation=(0, 0, -25), pivot=(2, 31, 0)),
-        Part((-3.9, 25, -2), (1, 4, 3), "crystal"), Part((2.9, 25, -2), (1, 4, 3), "crystal"),            # Wangenkanten
+        arm=[((-13, 21, -4), (9, 10, 8), "ref:" + ref + "upper_r"),                                  # Schulterkristall
+             ((-8.5, 30, -1.5), (3, 7, 3), "ref:" + ref + "spike", {"rotation": (0, 0, 30), "pivot": (-7, 30, 0)})],
+        forearm=[((-12, 8, -3.5), (7, 12, 7), "ref:" + ref + "fore_r")],
+        leg=[((-4, 8, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,0,8,12")],
+        shin=[((-4, 3, -2), (4, 5, 4), "ref:" + ref + "leg_r@0,12,8,10"),
+              ((-4.5, 0, -3.5), (5, 3, 6), "ref:" + ref + "foot_r")],
+        shoulder=(6, 29), elbow=(8.5, 21), hip=(2, 14), knee=(2, 8))
+    for bone in bones:
+        if bone.name.startswith("left_"):
+            for part in bone.cubes:
+                part.material = part.material.replace("upper_r", "upper_l").replace("fore_r", "fore_l") \
+                    .replace("leg_r", "leg_l").replace("foot_r", "foot_l")
+        if bone.name in ("right_arm", "left_arm"):
+            bone.rotation = (0, 0, 8 if bone.name == "right_arm" else -8)
+    bones.append(Bone("head", "body", (0, 28, 0), [
+        Part((-3.5, 28, -4), (7, 7, 7), "ref:" + ref + "head@1,8,5,5", detail="ref:" + ref + "head"),
+        Part((-1.5, 35, -2), (3, 2, 3), "ref:" + ref + "crest"),                                     # Kopfkamm
     ]))
-    return finish("diamondhead", bones, "#2ECC71", "normal")
+    alien = Alien("diamondhead", (96, 96), bones, "#2ECC71", style="normal", glow=True, density=2, render_scale=0.85,
+                  arms=("ref:diamondhead/arm_full", "ref:diamondhead/arm_full"))
+    pack_uvs(alien)
+    return alien
 
 
 def grey_matter() -> Alien:

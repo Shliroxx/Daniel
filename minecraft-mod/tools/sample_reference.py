@@ -175,7 +175,41 @@ def four_arms(src: Image.Image) -> dict[str, Image.Image]:
     return out
 
 
-ALIENS = {"heatblast": heatblast, "xlr8": xlr8, "four_arms": four_arms}
+def fill_rows(img: Image.Image, y0: int, y1: int, source_y: int) -> Image.Image:
+    """Zeilen y0..y1 mit der Zeile source_y ueberschreiben — fuer verdeckte Kanten (z. B. Kinn vor der Brust)."""
+    for y in range(y0, y1):
+        for x in range(img.width):
+            img.putpixel((x, y), img.getpixel((x, source_y)))
+    return img
+
+
+def diamondhead(src: Image.Image) -> dict[str, Image.Image]:
+    """Diamondhead (Petrosapien), Vorlage PetrosapienOS: ~21 px pro Einheit, Texel ~10,5 px."""
+    torso = rect(src, 197, 120, 364, 470, 16, 32)
+    torso = fill_rows(torso, 0, 5, 5)                              # Kinn verdeckt die obere Brust
+    torso = inpaint(torso, (12, 9, 16, 14))                         # Logo (wird als eigener Wuerfel gezeichnet)
+    out = {
+        "head": rect(src, 213, 36, 348, 170, 14, 14),
+        "crest": rect(src, 251, 0, 310, 36, 6, 4),
+        "spike": rect(src, 150, 40, 205, 118, 6, 8),
+        "torso": torso,
+        "upper_r": rect(src, 0, 168, 160, 322, 14, 14),
+        "upper_l": rect(src, 401, 168, 561, 322, 14, 14),
+        "fore_r": outline(src, 324, 600, 0, 160, 14, 26),
+        "fore_l": outline(src, 324, 600, 400, 562, 14, 26),
+        "leg_r": outline(src, 470, 696, 150, 262, 8, 22),
+        "leg_l": outline(src, 470, 696, 292, 420, 8, 22),
+        "foot_r": rect(src, 153, 696, 247, 755, 10, 6),
+        "foot_l": rect(src, 314, 696, 408, 755, 10, 6),
+    }
+    full = Image.new("RGBA", (14, 40))
+    full.paste(out["upper_r"], (0, 0))
+    full.paste(out["fore_r"], (0, 14))
+    out["arm_full"] = full
+    return out
+
+
+ALIENS = {"heatblast": heatblast, "xlr8": xlr8, "four_arms": four_arms, "diamondhead": diamondhead}
 
 
 def main(argv: list[str] | None = None) -> int:
