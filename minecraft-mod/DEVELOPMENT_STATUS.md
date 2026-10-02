@@ -217,8 +217,13 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
   `SetUniformPayload`, Umschalten im Omnitrix mit **U**, Renderer/Ego-Arme nehmen die Uniform-Textur.
 - **XLR8 neu (Raptor):** gekippter Rumpf aus gedrehten Teilen, spitzer Helm mit Visier, 4-gliedriger Schwanz mit
   Ringen, angewinkelte Krallenarme, digitigrade Beine; drei Uniformen. Screenshots `docs/screenshots/xlr8_uniformen*.png`.
-- Naechste: Vierarm, Diamondhead, Heatblast, Grey Matter mit AE-Anatomie + Uniformen; Texturen mit Tonstufen statt
-  Flachfarben; Glut-Animation; Ego-Arm-Modelle.
+- **Alle 5 Aliens neu nach AE-Anatomie mit je 3 Uniformen:** Vierarm (breite Brust, Nackenflosse, Armbaender, X-Gurte
+  bei evo, 1,3-fach), Diamondhead (Rautenkopf, Rueckenstacheln, Schulterkristalle, Anzug in zwei Haelften, 1,15-fach),
+  Heatblast (schlank, Rautenkopf mit Maske, Glutrisse als Linien, prozedurale Flamme, ultimate = blaues Feuer),
+  Grey Matter (Froschaugen, grosse Haende, lange Fuesse, 0,45-fach). Neue Materialien `lava:` und `flame:` mit
+  Uniform-Farben. Uebersicht `docs/screenshots/aliens_uniformen_uebersicht.png`.
+- Naechste: Texturen mit Tonstufen statt Flachfarben (classic-Flaechen wirken noch flach), Glut-Animation,
+  Ego-Arm-Modelle, Faehigkeits-VFX (Kristallsaeulen, Bodenschlag), Animationen an die neue Anatomie anpassen.
 
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,

@@ -156,6 +156,9 @@ def with_uniform(alien: Alien, uniform: str) -> Alien:
     palette = (alien.uniforms or {}).get(uniform, {})
 
     def resolve(material: str) -> str:
+        for prefix in ("lava:", "flame:"):
+            if material.startswith(prefix):
+                return prefix + ",".join(c if c.startswith("#") else palette[c] for c in material[len(prefix):].split(","))
         if material.startswith("role:"):
             role = material[5:]
             if role not in palette:
@@ -475,6 +478,25 @@ def paint_design(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noi
             glow = False
             if mat.startswith("clean:"):
                 base = rgb(mat[6:])
+            elif mat.startswith("lava:"):
+                # Gestein mit Glutrissen in Uniform-Farben: lava:#gestein,#gestein_dunkel,#glut,#glut_rand
+                rock, rock_dark, hot, hot_edge = (rgb(c) for c in mat[5:].split(","))
+                # Risslinien = Hoehenlinien des Rauschens (verzweigtes Netz statt Flecken, wie bei Alien Evolution)
+                n = blobs(mx * 0.9 + mz * 0.7, my * 1.1)
+                if abs(n - 0.5) < 0.028:
+                    base, glow = hot, True
+                elif abs(n - 0.5) < 0.05:
+                    base, glow = hot_edge, True
+                else:
+                    t = SHADE_CLUSTERS(mx * 2.1, my * 2.1 + mz)
+                    base = rock if t > 0.45 else rock_dark
+            elif mat.startswith("flame:"):
+                # Flamme mit Verlauf nach oben: flame:#kern,#mitte,#spitze (leuchtet)
+                core, mid, tip = (rgb(c) for c in mat[6:].split(","))
+                t = (my - cube.origin[1]) / max(1.0, cube.size[1])
+                n = blobs(mx * 1.3 + mz, my * 0.9)
+                base = core if n < 0.62 - t * 0.35 else mid if n < 0.78 - t * 0.2 else tip
+                glow = True
             elif mat == "lava":
                 # dunkelrotes Gestein mit gelb-orangen Glutflecken (Flecken laufen ueber den ganzen Koerper)
                 n = blobs(mx * 1.15 + mz * 0.7, my * 1.05)
@@ -710,7 +732,7 @@ def painter(material: str) -> Callable[[Canvas, Face, Cube, random.Random, Noise
         return paint_ref_material
     if material.startswith("flat:"):
         return paint_flat
-    if material.startswith("clean:") or material in ("lava", "fur", "crystal", "split", "panel", "shirt", "pyro",
+    if material.startswith(("clean:", "lava:", "flame:")) or material in ("lava", "fur", "crystal", "split", "panel", "shirt", "pyro",
                                                      "pyro_hot", "pyro_flame"):
         return paint_design
     if material in ROCK:
@@ -985,47 +1007,72 @@ def flame_from_silhouette(spec: str, x_left: float, y_top: float, depth_base: in
     return parts
 
 
-def heatblast() -> Alien:
-    """Heatblast (Pyronite), 1:1 nach der Alien-Evolution-Vorlage (Erlaubnis laut SANTIQ, Fanprojekt).
+HEATBLAST_UNIFORMS = {
+    # Original-Serie: dunkelrotes Gestein mit gelb-orangen Glutrissen, gelb-rote Kopfflamme
+    "classic": {"ROCK": "#7A1D1D", "ROCK_DARK": "#4F1320", "HOT": "#FFD24A", "HOT2": "#FFA22E", "FACE": "#2A0F09",
+                "EYE": "#FFE14D", "FLAME_CORE": "#FFE27A", "FLAME_MID": "#FF9A1F", "FLAME_TIP": "#FF4A0A"},
+    # Alien-Evolution-Look: fast schwarzes Gestein, blassgelbe Risse, hellgelbe Flamme
+    "evo": {"ROCK": "#4F1320", "ROCK_DARK": "#290911", "HOT": "#FFF8B1", "HOT2": "#FFCC58", "FACE": "#1E0A14",
+            "EYE": "#FFFEF7", "FLAME_CORE": "#FFFEDC", "FLAME_MID": "#FFEF73", "FLAME_TIP": "#FFCC58"},
+    # Ultimate: blaues Feuer
+    "ultimate": {"ROCK": "#1C2A6B", "ROCK_DARK": "#10183E", "HOT": "#9AE8FF", "HOT2": "#3AB0FF", "FACE": "#0A0F28",
+                 "EYE": "#E8FBFF", "FLAME_CORE": "#E8FBFF", "FLAME_MID": "#7FD4FF", "FLAME_TIP": "#2A7BE6"},
+}
+HB_ROCK = "lava:ROCK,ROCK_DARK,HOT,HOT2"
+HB_FLAME = "flame:FLAME_CORE,FLAME_MID,FLAME_TIP"
 
-    Masse aus dem Vorlagen-Render (tools/sample_reference.py), Einheiten = 1/16 Block:
-    Fuesse 2, Beine 13, Rumpf 17, Kopf 8, Flamme 6; Oberarm 10 (4 breit), Faust 10 (6 breit);
-    Omnitrix-Logo 3x3 mittig oben auf der Brust; Seitenflammen links 4, rechts 3 hoch.
-    Alle Flaechen aus den Vorlage-Pixeln (Material "ref:"), Kopfflamme aus der Silhouette gebaut."""
-    global PYRO
-    PYRO = tuple(ingame(rgb(c)) for c in PYRO_SOURCE)
-    ref = "heatblast/"
+
+def heatblast() -> Alien:
+    """Heatblast (Pyronite) nach Alien Evolution (Erlaubnis laut SANTIQ, Fanprojekt): schlanker Lava-Koerper mit
+    Glutrissen, schmale Brust ueber schmaler Taille, duenne Arme mit grossen glimmenden Faeusten, duenne Beine mit
+    schmalen Knoecheln, Rautenkopf mit zweiteiliger Maske und grosse, lodernde Kopfflamme. Einheiten = 1/16 Block,
+    vorn = -z; drei Uniformen (ultimate = blaues Feuer)."""
     bones = [Bone("root", None, (0, 0, 0)),
              Bone("body", "root", (0, 14, 0), [
-                 Part((-4.5, 14, -2.5), (9, 15, 5), "ref:" + ref + "torso"),
-                 Part((-1.5, 24, -3), (3, 3, 1), "clean:#141414", detail="badge6"),
-                 Part((-5, 28, -3.1), (10, 3, 6), "ref:" + ref + "collar"),
-             ])]
-    bones += limb_pair(
-        arm=[((-9.5, 19, -2.5), (5, 10, 5), "ref:" + ref + "arm_r_upper")],
-        forearm=[((-10, 9, -3), (6, 10, 6), "ref:" + ref + "arm_r_fist")],
-        leg=[((-4.6, 8, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,0,8,13")],
-        shin=[((-4.6, 2, -2), (4, 6, 4), "ref:" + ref + "leg_r@0,13,8,13"),
-              ((-5.1, 0, -3.5), (5, 2, 6), "ref:" + ref + "foot_r")],
-        shoulder=(6.5, 28), elbow=(7, 19), hip=(2.6, 14), knee=(2.6, 8))
-    # linke Seite: eigene Vorlagen (Arme/Beine/Fuss), nicht gespiegelt
-    for bone in bones:
-        if bone.name.startswith("left_"):
-            for part in bone.cubes:
-                part.material = part.material.replace("arm_r", "arm_l").replace("leg_r", "leg_l").replace("foot_r", "foot_l")
-                part.mirror = False
-        if bone.name in ("right_arm", "left_arm"):
-            bone.rotation = (0, 0, 10 if bone.name == "right_arm" else -10)          # abgespreizt wie in der Vorlage
-    bones += [
-        Bone("head", "body", (0, 30, 0), [
-            Part((-4.5, 30, -4.5), (9, 9, 9), "ref:" + ref + "head@1,9,3,5", detail="ref:" + ref + "head"),
-            Part((-5.5, 35, -2.5), (1, 4, 5), "ref:" + ref + "head_wide@0,0,2,8"),               # Seitenflamme rechts
-            Part((4.5, 35, -2.5), (1, 3, 5), "ref:" + ref + "head_wide@18,4,2,6"),               # Seitenflamme links
-        ]),
-        Bone("flame_base", "head", (0, 39, 0), flame_from_silhouette(ref + "flame", -5, 45, 7)),
-    ]
-    alien = Alien("heatblast", (96, 96), bones, "#FF6A00", style="heat", glow=True, density=2, render_scale=0.85,
-                  arms=("ref:heatblast/arm_r_full", "ref:heatblast/arm_l_full"))
+                 Part((-2, 14, -1), (4, 2, 5), HB_ROCK),                                                # Becken
+                 Part((-3, 16, -1), (6, 5, 5), HB_ROCK),                                                # Taille
+             ]),
+             Bone("chest", "body", (0, 21, 1), [
+                 Part((-4, 21, -1.5), (8, 6, 6), HB_ROCK),                                              # Brust
+                 Part((-1.5, 23.5, -2.3), (3, 3, 1), "clean:#141414", detail="badge6"),                 # Omnitrix
+                 Part((-3, 26.5, -1), (6, 2, 5), HB_ROCK, rotation=(-15, 0, 0), pivot=(0, 27, 1.5)),     # Nacken
+             ], rotation=(-3, 0, 0)),
+             Bone("head", "chest", (0, 28.5, 0.5), [
+                 Part((-2, 28.5, -1.5), (4, 6, 4), HB_ROCK, rotation=(0, 45, 0), pivot=(0, 31.5, 0.5)),  # Rautenkopf
+                 Part((-2.6, 29.5, -2.6), (2, 4, 1), "role:FACE", rotation=(0, 30, 0), pivot=(-0.6, 31.5, -2.1)),  # Maske
+                 Part((0.6, 29.5, -2.6), (2, 4, 1), "role:FACE", rotation=(0, -30, 0), pivot=(0.6, 31.5, -2.1)),
+                 Part((-1.9, 31.6, -3.1), (1, 1, 1), "role:EYE"), Part((0.9, 31.6, -3.1), (1, 1, 1), "role:EYE"),  # Augen
+             ]),
+             Bone("flame_base", "head", (0, 34, 0.5), [
+                 Part((-2.5, 34, -2), (5, 3, 5), HB_FLAME),                                             # Flammenfuss
+                 Part((-2, 37, -1.5), (4, 3, 4), HB_FLAME),
+                 Part((-1.5, 40, -1), (2, 3, 2), HB_FLAME, rotation=(0, 0, 8), pivot=(-0.5, 40, 0)),    # Zungen
+                 Part((0.5, 39.5, 0), (2, 2, 2), HB_FLAME, rotation=(0, 0, -12), pivot=(1.5, 39.5, 1)),
+                 Part((-3.5, 35, -1), (1, 3, 2), HB_FLAME, rotation=(0, 0, 18), pivot=(-3, 35, 0)),
+                 Part((2.5, 35.5, 0), (1, 2, 2), HB_FLAME, rotation=(0, 0, -18), pivot=(3, 35.5, 1)),
+                 Part((-1, 37.5, 1.5), (2, 4, 2), HB_FLAME, rotation=(-25, 0, 0), pivot=(0, 37.5, 2.5)),  # Hinterflamme
+             ]),
+             ]
+    for side_name, side in (("right", -1), ("left", 1)):
+        bones += [
+            Bone(f"{side_name}_arm", "chest", (4 * side, 26, 1), side_parts([
+                ((-7, 18, -0.5), (3, 8, 3), HB_ROCK, {"inflate": 0.1}),                                 # Oberarm
+            ], side), rotation=(5, 0, 10 * -side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (5.5 * side, 18.5, 1), side_parts([
+                ((-8, 12.5, -1), (4, 6, 4), HB_ROCK),                                                   # Unterarm
+                ((-8, 8.5, -1), (4, 4, 4), "lava:HOT2,ROCK,HOT,HOT2"),                                  # glimmende Faust
+            ], side), rotation=(-15, 0, 0)),
+            Bone(f"{side_name}_leg", "root", (1.5 * side, 15, 1), side_parts([
+                ((-3, 8.5, 0), (3, 7, 3), HB_ROCK, {"inflate": 0.2}),                                   # Oberschenkel
+            ], side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (1.7 * side, 9, 1), side_parts([
+                ((-3.2, 5.5, -0.5), (3, 4, 3), HB_ROCK),                                                # Wade
+                ((-2.8, 1.5, 0), (2, 4, 2), HB_ROCK),                                                   # Knoechel
+                ((-3.6, 0, -2.5), (3, 2, 5), "role:FACE"),                                              # Fuss
+            ], side)),
+        ]
+    alien = Alien("heatblast", (128, 128), bones, "#FF6A00", style="heat", glow=True, density=2, render_scale=1.0,
+                  arms=(HB_ROCK, HB_ROCK), uniforms=HEATBLAST_UNIFORMS)
     pack_uvs(alien)
     return alien
 
@@ -1274,40 +1321,75 @@ def diamondhead() -> Alien:
     return alien
 
 
+GREY_MATTER_UNIFORMS = {
+    # Original-Serie: grau, weisser Anzug mit schwarzem Streifen, orange Schulterpolster, gelbgruene Augen
+    "classic": {"SKIN": "#9AAAA8", "SKIN_DARK": "#6C7F82", "SUIT": "#E8ECEF", "SUIT_DARK": "#1A1A1E",
+                "ACCENT": "#E08A2A", "EYE": "#F8FF98", "PUPIL": "#141414"},
+    # Alien-Evolution-Look: gruener Anzug, dunkle Hose, leuchtend gruene Augen
+    "evo": {"SKIN": "#9AAAA8", "SKIN_DARK": "#6C7F82", "SUIT": "#40A009", "SUIT_DARK": "#2C2828",
+            "ACCENT": "#2C2828", "EYE": "#B3FF40", "PUPIL": "#141414"},
+    # Ultimate: schwarzer Anzug mit weissen Akzenten
+    "ultimate": {"SKIN": "#AEBAB7", "SKIN_DARK": "#839695", "SUIT": "#1A1A1E", "SUIT_DARK": "#E8ECEF",
+                 "ACCENT": "#E8ECEF", "EYE": "#F8FF98", "PUPIL": "#141414"},
+}
+
+
 def grey_matter() -> Alien:
-    """Grey Matter (Galvan): grosser grauer Kopf mit Stirnwulst und zwei grossen gelben Augen, weisser Anzug mit
-    schwarzem Mittelstreifen und Kragen, schwarze Armbaender, grosse graue Haende mit Fingern, graue Fuesse."""
-    grey = "clean:#A9B3B5"
+    """Grey Matter (Galvan) nach Alien Evolution (Erlaubnis laut SANTIQ, Fanprojekt): grosser Kopf mit seitlich
+    hervorquellenden Froschaugen (leuchtend), schmaler Anzug, duenne Arme mit grossen Haenden, duenne Beine mit langen
+    Fuessen. Modell in Spielergroesse gebaut wie in der Vorlage, Darstellung 0,45-fach (ca. 1 Block hoch).
+    Einheiten = 1/16 Block, vorn = -z; drei Uniformen."""
     bones = [Bone("root", None, (0, 0, 0)),
-             Bone("body", "root", (0, 12, 0), [
-                 Part((-3.5, 12, -2), (7, 10, 4), "shirt"),
-                 Part((-3, 21.5, -2.5), (6, 1, 5), "clean:#1E1E22"),                                      # Kragen
-                 Part((-2.5, 16.5, -2.6), (5, 5, 1), "clean:#141414", detail="badge"),
-             ])]
-    bones += limb_pair(
-        arm=[((-6.5, 16, -1.5), (3, 6, 3), "clean:#EEEEEE")],
-        forearm=[((-6.5, 11, -1.5), (3, 5, 3), "clean:#EEEEEE"),
-                 ((-6.5, 14, -1.5), (3, 1, 3), "clean:#1E1E22", {"inflate": 0.2}),                        # Armband
-                 ((-7.5, 7, -2.5), (5, 5, 5), grey),                                                       # grosse Hand
-                 ((-7.5, 6, -2.5), (1, 1, 1), grey), ((-5.5, 6, -2.5), (1, 1, 1), grey),
-                 ((-3.5, 6, -2.5), (1, 1, 1), grey)],                                                      # Finger
-        leg=[((-3.5, 6, -1.5), (3, 6, 3), "clean:#EEEEEE")],
-        shin=[((-3.5, 1, -1.5), (3, 5, 3), "clean:#2A2A2E"),
-              ((-4, 0, -2.5), (4, 1, 4), grey)],
-        shoulder=(3.5, 21), elbow=(5, 16))
-    bones += [
-        Bone("head", "body", (0, 22, 0), [
-            Part((-5, 22, -4), (10, 8, 8), grey),
-            Part((-4, 30, -3), (8, 1, 6), grey),                                                          # Schaedelwoelbung
-            Part((-4.5, 26, -4.4), (9, 1, 1), "clean:#8A9497"),                                           # Stirnwulst
-            Part((-5.5, 27, -4.6), (4, 3, 1), "clean:#151515", detail="galvan_eye",
-                 rotation=(0, 0, 12), pivot=(-3.5, 28.5, -4.6)),
-            Part((1.5, 27, -4.6), (4, 3, 1), "clean:#151515", detail="galvan_eye",
-                 rotation=(0, 0, -12), pivot=(3.5, 28.5, -4.6)),
-            Part((-1.5, 23.5, -4.2), (3, 1, 1), "clean:#5A6366"),                                         # Mund
-        ]),
-    ]
-    return finish("grey_matter", bones, "#95A5A6", "small")
+             Bone("body", "root", (0, 10, 0), [
+                 Part((-4, 10, -1), (8, 3, 5), "role:SUIT_DARK"),                                       # Huefte
+                 Part((-4, 13, -1), (8, 7, 5), "role:SUIT"),                                            # Bauch
+                 Part((-1, 13, -1.3), (2, 7, 1), "role:SUIT_DARK"),                                     # Streifen
+             ]),
+             Bone("chest", "body", (0, 20, 1), [
+                 Part((-4.5, 20, -1.5), (9, 6, 6), "role:SUIT"),                                        # Brust
+                 Part((-1.5, 22, -2.3), (3, 3, 1), "clean:#141414", detail="badge6"),                   # Omnitrix
+                 Part((-5, 24.5, -1.5), (3, 2, 6), "role:ACCENT"),                                      # Schulterpolster
+                 Part((2, 24.5, -1.5), (3, 2, 6), "role:ACCENT"),
+                 Part((-1.5, 25, -1.5), (3, 3, 3), "role:SKIN", rotation=(20, 0, 0), pivot=(0, 26, 0)),  # Hals
+             ], rotation=(-8, 0, 0)),
+             Bone("head", "chest", (0, 27, 0), [
+                 Part((-4, 27, -3), (8, 8, 5), "role:SKIN", inflate=-0.1),                              # Kopf
+                 Part((-2, 28, -3.3), (4, 2, 1), "role:SKIN_DARK"),                                     # Mund
+                 *side_parts([
+                     ((-7, 30, -3.5), (5, 5, 5), "role:SKIN", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),  # Augenhoehle
+                     ((-6, 31, -4.3), (3, 3, 3), "role:EYE", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),   # Auge
+                     ((-5.2, 32, -4.6), (1, 1, 1), "role:PUPIL", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),
+                     ((-6, 34.2, -3.8), (3, 1, 1), "role:SKIN_DARK", {"rotation": (0, 0, -5), "pivot": (-4.5, 34.5, -3.3)}),  # Braue
+                 ], -1),
+                 *side_parts([
+                     ((-7, 30, -3.5), (5, 5, 5), "role:SKIN", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),
+                     ((-6, 31, -4.3), (3, 3, 3), "role:EYE", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),
+                     ((-5.2, 32, -4.6), (1, 1, 1), "role:PUPIL", {"rotation": (0, 0, 12.5), "pivot": (-4.3, 33, -2.6)}),
+                     ((-6, 34.2, -3.8), (3, 1, 1), "role:SKIN_DARK", {"rotation": (0, 0, -5), "pivot": (-4.5, 34.5, -3.3)}),
+                 ], 1),
+             ]),
+             ]
+    for side_name, side in (("right", -1), ("left", 1)):
+        bones += [
+            Bone(f"{side_name}_arm", "chest", (4.5 * side, 24, 1), side_parts([
+                ((-8, 16.5, 0), (3, 9, 3), "role:SKIN", {"rotation": (5, 0, 12), "pivot": (-4.5, 24, 1)}),   # Oberarm
+            ], side)),
+            Bone(f"{side_name}_forearm", f"{side_name}_arm", (7 * side, 17, 1), side_parts([
+                ((-9, 12, -0.5), (4, 6, 4), "role:SUIT_DARK", {"inflate": 0.15}),                        # Handschuh
+                ((-10.5, 7.5, -2), (6, 5, 6), "role:SKIN", {"inflate": -0.1}),                           # grosse Hand
+            ], side), rotation=(-5, 0, 0)),
+            Bone(f"{side_name}_leg", "root", (2.1 * side, 13.5, 1), side_parts([
+                ((-3.5, 7, -0.5), (3, 7, 3), "role:SUIT_DARK"),                                         # Oberschenkel
+            ], side)),
+            Bone(f"{side_name}_shin", f"{side_name}_leg", (2.1 * side, 7, 1), side_parts([
+                ((-3.5, 2, -0.5), (3, 5, 3), "role:SUIT_DARK", {"inflate": -0.05}),                     # Wade
+                ((-5.5, 0, -4.5), (5, 2, 8), "role:SKIN", {"inflate": -0.1}),                           # langer Fuss
+            ], side)),
+        ]
+    alien = Alien("grey_matter", (128, 128), bones, "#95A5A6", style="small", glow=True, density=2, render_scale=0.45,
+                  arms=("role:SKIN", "role:SKIN"), uniforms=GREY_MATTER_UNIFORMS)
+    pack_uvs(alien)
+    return alien
 
 
 def build_aliens() -> list[Alien]:
