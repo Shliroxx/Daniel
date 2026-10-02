@@ -27,10 +27,11 @@ public record TransformationState(
 		float energy,
 		long energyStamp,
 		List<Long> abilityReadyAt,
-		long invulnerableUntil) {
+		long invulnerableUntil,
+		float humanHealth) {
 
 	public static final TransformationState EMPTY = new TransformationState(Optional.empty(), Optional.empty(),
-			0L, 0L, 0L, 0.0f, 0L, List.of(), 0L);
+			0L, 0L, 0L, 0.0f, 0L, List.of(), 0L, 0.0f);
 
 	public static final Codec<TransformationState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Identifier.CODEC.optionalFieldOf("active_alien").forGetter(TransformationState::activeAlien),
@@ -41,7 +42,8 @@ public record TransformationState(
 			Codec.FLOAT.lenientOptionalFieldOf("energy", 0.0f).forGetter(TransformationState::energy),
 			Codec.LONG.lenientOptionalFieldOf("energy_stamp", 0L).forGetter(TransformationState::energyStamp),
 			Codec.LONG.listOf().lenientOptionalFieldOf("ability_ready_at", List.of()).forGetter(TransformationState::abilityReadyAt),
-			Codec.LONG.lenientOptionalFieldOf("invulnerable_until", 0L).forGetter(TransformationState::invulnerableUntil)
+			Codec.LONG.lenientOptionalFieldOf("invulnerable_until", 0L).forGetter(TransformationState::invulnerableUntil),
+			Codec.FLOAT.lenientOptionalFieldOf("human_health", 0.0f).forGetter(TransformationState::humanHealth)
 	).apply(instance, TransformationState::new));
 
 	public static final PacketCodec<ByteBuf, TransformationState> PACKET_CODEC = PacketCodecs.codec(CODEC);
@@ -86,18 +88,26 @@ public record TransformationState(
 
 	public TransformationState withSelected(Identifier alienId) {
 		return new TransformationState(activeAlien, Optional.of(alienId), startTick, endTick, rechargeUntil,
-				energy, energyStamp, abilityReadyAt, invulnerableUntil);
+				energy, energyStamp, abilityReadyAt, invulnerableUntil, humanHealth);
 	}
 
 	/** @param durationTicks Dauer inklusive Boni (Heldenstufe, Faehigkeiten, Meisterschaft) */
 	public TransformationState transformed(Identifier alienId, AlienDefinition alien, long now, int durationTicks) {
+		return transformed(alienId, alien, now, durationTicks, 0.0f);
+	}
+
+	/**
+	 * @param humanHealth Lebenspunkte der Menschenform beim Verwandeln — das Alien kaempft mit eigenen Lebenspunkten,
+	 *                    beim Zurueckverwandeln kommen diese zurueck (0 = nicht gespeichert)
+	 */
+	public TransformationState transformed(Identifier alienId, AlienDefinition alien, long now, int durationTicks, float humanHealth) {
 		return new TransformationState(Optional.of(alienId), Optional.of(alienId), now, now + durationTicks,
-				rechargeUntil, alien.maxEnergy(), now, List.of(), 0L);
+				rechargeUntil, alien.maxEnergy(), now, List.of(), 0L, humanHealth);
 	}
 
 	public TransformationState reverted(long rechargeUntilTick) {
 		return new TransformationState(Optional.empty(), selectedAlien, 0L, 0L, rechargeUntilTick,
-				0.0f, 0L, List.of(), 0L);
+				0.0f, 0L, List.of(), 0L, 0.0f);
 	}
 
 	public TransformationState afterAbility(int slot, float energyAfter, long now, long cooldownTicks) {
@@ -107,11 +117,20 @@ public record TransformationState(
 		}
 		ready.set(slot, now + cooldownTicks);
 		return new TransformationState(activeAlien, selectedAlien, startTick, endTick, rechargeUntil,
-				energyAfter, now, ready, invulnerableUntil);
+				energyAfter, now, ready, invulnerableUntil, humanHealth);
+	}
+
+	/**
+	 * Schnellwechsel in ein anderes Alien ohne Rueckverwandlung: neue Restzeit, volle Energie des neuen Aliens,
+	 * Abklingzeiten zurueckgesetzt; die gespeicherten Menschen-Lebenspunkte bleiben.
+	 */
+	public TransformationState quickChanged(Identifier alienId, AlienDefinition alien, long now, int durationTicks) {
+		return new TransformationState(Optional.of(alienId), Optional.of(alienId), now, now + durationTicks, rechargeUntil,
+				alien.maxEnergy(), now, List.of(), invulnerableUntil, humanHealth);
 	}
 
 	public TransformationState withInvulnerableUntil(long tick) {
 		return new TransformationState(activeAlien, selectedAlien, startTick, endTick, rechargeUntil,
-				energy, energyStamp, abilityReadyAt, Math.max(invulnerableUntil, tick));
+				energy, energyStamp, abilityReadyAt, Math.max(invulnerableUntil, tick), humanHealth);
 	}
 }

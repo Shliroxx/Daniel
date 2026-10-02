@@ -14,5 +14,9 @@
     "duration_multiplier": 3.0,
     "confirm_seconds": 0.05,
     "quick_change": true
-  }
+  },
+  "quick_change_heat": 0.08,
+  "quick_change_keep": 0.6,
+  "failsafe_cooldown_seconds": 420,
+  "failsafe_heat": 0.85
 }

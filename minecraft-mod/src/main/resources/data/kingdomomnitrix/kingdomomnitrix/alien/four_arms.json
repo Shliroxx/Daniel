@@ -83,5 +83,7 @@
       "chance": 0.5
     }
   ],
-  "model": "kingdomomnitrix:four_arms"
+  "model": "kingdomomnitrix:four_arms",
+  "failsafe_tags": [],
+  "failsafe_priority": 5
 }

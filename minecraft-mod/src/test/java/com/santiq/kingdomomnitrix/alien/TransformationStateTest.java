@@ -62,6 +62,24 @@ class TransformationStateTest {
 	}
 
 	@Test
+	void humanHealthIsKeptThroughQuickChange() {
+		Identifier other = Identifier.of("kingdomomnitrix", "other");
+		TransformationState state = TransformationState.EMPTY.transformed(ID, alien, 0L, 400, 7.5f)
+				.afterAbility(0, 10.0f, 5L, 100L)
+				.quickChanged(other, alien, 50L, 200);
+		assertEquals(7.5f, state.humanHealth(), 1.0e-6f);
+		assertEquals(other, state.activeAlien().orElseThrow());
+		assertEquals(200L, state.remainingTicks(50L));
+		assertEquals(0L, state.cooldownRemaining(0, 50L), "Abklingzeiten gelten nur fuer das alte Alien");
+		assertEquals(alien.maxEnergy(), state.currentEnergy(alien, 50L), 1.0e-4f);
+	}
+
+	@Test
+	void revertClearsHumanHealth() {
+		assertEquals(0.0f, TransformationState.EMPTY.transformed(ID, alien, 0L, 400, 12.0f).reverted(0L).humanHealth(), 1.0e-6f);
+	}
+
+	@Test
 	void invulnerabilityOnlyExtends() {
 		TransformationState state = TransformationState.EMPTY.withInvulnerableUntil(50L).withInvulnerableUntil(20L);
 		assertTrue(state.isInvulnerable(49L));

@@ -22,6 +22,8 @@ public final class ModKeyBindings {
 	public static final String CATEGORY = "category.kingdomomnitrix";
 
 	public static final KeyBinding OPEN_OMNITRIX = register("key.kingdomomnitrix.omnitrix", GLFW.GLFW_KEY_G);
+	/** Halten: Schnellwahl-Kreis (Favoriten), Loslassen verwandelt */
+	public static final KeyBinding QUICK_SELECT = register("key.kingdomomnitrix.quick_select", GLFW.GLFW_KEY_X);
 	public static final KeyBinding[] ABILITIES = {
 			register("key.kingdomomnitrix.ability_1", GLFW.GLFW_KEY_R),
 			register("key.kingdomomnitrix.ability_2", GLFW.GLFW_KEY_V),
@@ -70,6 +72,11 @@ public final class ModKeyBindings {
 		while (OPEN_OMNITRIX.wasPressed()) {
 			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
 				OmnitrixController.open(client);
+			}
+		}
+		while (QUICK_SELECT.wasPressed()) {
+			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
+				com.santiq.kingdomomnitrix.client.screen.OmnitrixRadialScreen.open(client);
 			}
 		}
 		while (HERO_MENU.wasPressed()) {

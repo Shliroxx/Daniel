@@ -73,6 +73,36 @@ class OmnitrixStateTest {
 	}
 
 	@Test
+	void favoritesToggleAndLimit() {
+		OmnitrixState state = OmnitrixState.EMPTY;
+		for (int i = 0; i < OmnitrixState.SET_SIZE + 3; i++) {
+			state = state.toggleFavorite(net.minecraft.util.Identifier.of("kingdomomnitrix", "alien_" + i));
+		}
+		assertEquals(OmnitrixState.SET_SIZE, state.activeFavorites().size());
+		net.minecraft.util.Identifier first = net.minecraft.util.Identifier.of("kingdomomnitrix", "alien_0");
+		state = state.toggleFavorite(first);
+		assertFalse(state.activeFavorites().contains(first));
+		assertEquals(OmnitrixState.SET_SIZE - 1, state.activeFavorites().size());
+	}
+
+	@Test
+	void favoriteSetsAreIndependentAndWrap() {
+		net.minecraft.util.Identifier heatblast = net.minecraft.util.Identifier.of("kingdomomnitrix", "heatblast");
+		OmnitrixState state = OmnitrixState.EMPTY.toggleFavorite(heatblast).withActiveSet(2);
+		assertTrue(state.activeFavorites().isEmpty());
+		assertEquals(0, state.withActiveSet(OmnitrixState.MAX_SETS).activeSet());
+		assertTrue(state.withActiveSet(0).activeFavorites().contains(heatblast));
+	}
+
+	@Test
+	void favoritesSurviveCodecRoundTrip() {
+		net.minecraft.util.Identifier xlr8 = net.minecraft.util.Identifier.of("kingdomomnitrix", "xlr8");
+		OmnitrixState state = OmnitrixState.EMPTY.toggleFavorite(xlr8).withFailsafeReadyAt(1234L);
+		var json = OmnitrixState.CODEC.encodeStart(com.mojang.serialization.JsonOps.INSTANCE, state).getOrThrow();
+		assertEquals(state, OmnitrixState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, json).getOrThrow());
+	}
+
+	@Test
 	void cueAndStatusOrdinalsRoundTrip() {
 		for (OmnitrixCue cue : OmnitrixCue.values()) {
 			assertEquals(cue, OmnitrixCue.byOrdinal(cue.ordinal()));

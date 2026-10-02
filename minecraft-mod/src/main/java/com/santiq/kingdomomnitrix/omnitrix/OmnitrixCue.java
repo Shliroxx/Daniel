@@ -8,7 +8,7 @@ package com.santiq.kingdomomnitrix.omnitrix;
  */
 public enum OmnitrixCue {
 	ACTIVATE, OPEN, NAVIGATE, SELECT, CONFIRM, CANCEL, TRANSFORM, DETRANSFORM, ERROR, WARNING, COOLDOWN, READY,
-	OVERHEAT, UNLOCK, LOCK, MASTER_CONTROL;
+	OVERHEAT, UNLOCK, LOCK, MASTER_CONTROL, QUICK_CHANGE, EMERGENCY, DNA_SHOCK, FAVORITE;
 
 	private static final OmnitrixCue[] VALUES = values();
 

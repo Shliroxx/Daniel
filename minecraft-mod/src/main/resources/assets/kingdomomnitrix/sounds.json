@@ -96,6 +96,18 @@
       "kingdomomnitrix:omnitrix_master_control"
     ]
   },
+  "omnitrix.emergency": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.emergency",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_emergency"
+    ]
+  },
+  "omnitrix.dna_shock": {
+    "subtitle": "subtitles.kingdomomnitrix.omnitrix.dna_shock",
+    "sounds": [
+      "kingdomomnitrix:omnitrix_dna_shock"
+    ]
+  },
   "alien.fire": {
     "subtitle": "subtitles.kingdomomnitrix.alien.fire",
     "sounds": [

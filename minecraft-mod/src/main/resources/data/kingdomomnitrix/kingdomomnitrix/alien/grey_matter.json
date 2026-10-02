@@ -35,5 +35,9 @@
     }
   ],
   "model": "kingdomomnitrix:grey_matter",
-  "prototype": true
+  "prototype": true,
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 0
 }

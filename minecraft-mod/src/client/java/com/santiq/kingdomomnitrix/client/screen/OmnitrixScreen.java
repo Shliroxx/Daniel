@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -69,16 +70,19 @@ public class OmnitrixScreen extends Screen {
 		context.getMatrices().push();
 		context.getMatrices().translate(x, y, 0.0f);
 		context.getMatrices().scale(0.85f, 0.85f, 1.0f);
-		if (state.isTransformed()) {
+		boolean revertChoice = state.isTransformed() && OmnitrixController.focused()
+				.map(entry -> state.activeAlien().filter(entry.id()::equals).isPresent()).orElse(true);
+		if (revertChoice) {
 			context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.revert"), 0, 0, alpha << 24 | 0x39FF6A);
 		} else {
 			OmnitrixController.focused().ifPresent(entry -> {
 				Text name = entry.unlocked()
-						? TransformationManager.alienName(entry.id()).formatted(Formatting.BOLD)
+						? Text.empty().append(OmnitrixController.isFavorite(entry.id()) ? Text.literal("★ ").formatted(Formatting.GOLD) : Text.empty())
+								.append(TransformationManager.alienName(entry.id()).formatted(Formatting.BOLD))
 						: Text.literal("? ? ?").formatted(Formatting.BOLD);
 				int color = entry.unlocked() ? 0x7DFF9C : 0x4A5A50;
 				context.drawCenteredTextWithShadow(textRenderer, name, 0, 0, alpha << 24 | color);
-				long recharge = state.rechargeRemaining(now);
+				long recharge = state.isTransformed() ? 0L : state.rechargeRemaining(now);
 				if (entry.unlocked() && AlienBodyRenderers.uniformsOf(entry.alien().model()).size() > 1) {
 					String uniform = AlienUniforms.get(client.player, entry.id());
 					context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.uniform",
@@ -95,7 +99,9 @@ public class OmnitrixScreen extends Screen {
 		}
 		context.getMatrices().pop();
 		if (OmnitrixController.phase() != OmnitrixPhase.CONFIRMING) {
-			Text hint = Text.translatable("screen.kingdomomnitrix.omnitrix_hint");
+			Text hint = Text.translatable("screen.kingdomomnitrix.omnitrix_hint").append("  ·  ")
+					.append(Text.translatable("hud.kingdomomnitrix.favorite_set", OmnitrixCore.state(client.player).activeSet() + 1))
+					.append(" · ").append(Text.translatable("hud.kingdomomnitrix.favorite_hint"));
 			context.getMatrices().push();
 			context.getMatrices().translate(width / 2.0f, height - 44.0f, 0.0f);
 			context.getMatrices().scale(0.75f, 0.75f, 1.0f);
@@ -155,6 +161,14 @@ public class OmnitrixScreen extends Screen {
 			}
 			case GLFW.GLFW_KEY_U -> {
 				OmnitrixController.cycleUniform();
+				return true;
+			}
+			case GLFW.GLFW_KEY_F -> {
+				OmnitrixController.toggleFavorite();
+				return true;
+			}
+			case GLFW.GLFW_KEY_TAB -> {
+				OmnitrixController.cycleFavoriteSet();
 				return true;
 			}
 			case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER, GLFW.GLFW_KEY_SPACE -> {

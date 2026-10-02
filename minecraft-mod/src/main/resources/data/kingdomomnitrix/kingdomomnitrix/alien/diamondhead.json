@@ -40,5 +40,9 @@
     }
   ],
   "model": "kingdomomnitrix:diamondhead",
-  "prototype": true
+  "prototype": true,
+  "failsafe_tags": [
+    "#minecraft:is_explosion"
+  ],
+  "failsafe_priority": 4
 }

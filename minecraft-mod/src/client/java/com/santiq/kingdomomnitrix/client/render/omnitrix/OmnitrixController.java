@@ -14,6 +14,7 @@ import com.santiq.kingdomomnitrix.client.screen.OmnitrixScreen;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixStatus;
+import com.santiq.kingdomomnitrix.networking.FavoritePayload;
 import com.santiq.kingdomomnitrix.networking.OmnitrixPhasePayload;
 import com.santiq.kingdomomnitrix.networking.RevertRequestPayload;
 import com.santiq.kingdomomnitrix.networking.SetUniformPayload;
@@ -69,6 +70,7 @@ public final class OmnitrixController {
 	private static long lastFrame;
 	private static Identifier pending;
 	private static boolean wasTransformed;
+	private static Identifier lastActive;
 
 	private OmnitrixController() {
 	}
@@ -221,23 +223,28 @@ public final class OmnitrixController {
 			return;
 		}
 		TransformationState state = TransformationManager.get(player);
-		if (state.isTransformed()) {
+		Optional<Entry> entry = focused();
+		// verwandelt und dasselbe Alien gewaehlt (oder keins): zurueckverwandeln; anderes Alien: Schnellwechsel
+		if (state.isTransformed() && (entry.isEmpty() || state.activeAlien().filter(entry.get().id()::equals).isPresent())) {
 			ClientPlayNetworking.send(RevertRequestPayload.INSTANCE);
 			setPhase(OmnitrixPhase.REVERT);
 			OmnitrixFeedback.play(OmnitrixCue.DETRANSFORM);
 			client.setScreen(null);
 			return;
 		}
-		Optional<Entry> entry = focused();
 		if (entry.isEmpty()) {
 			return;
 		}
 		// Geraet verweigert sofort sichtbar: gesperrt, ueberhitzt, zu heiss, Nachladen oder fehlende DNA
 		OmnitrixStatus device = OmnitrixClientState.status(player);
-		boolean tooHot = OmnitrixClientState.heat(player) + OmnitrixClientState.profile(player).heatPerTransform()
-				* OmnitrixCore.state(player).heatFactor(OmnitrixClientState.profile(player)) >= 1.0f;
-		if (!entry.get().unlocked() || state.rechargeRemaining(player.getWorld().getTime()) > 0
-				|| device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || tooHot) {
+		var profile = OmnitrixClientState.profile(player);
+		var core = OmnitrixCore.state(player);
+		float addedHeat = state.isTransformed()
+				? (core.masterControl() ? 0.0f : profile.quickChangeHeat())
+				: profile.heatPerTransform() * core.heatFactor(profile);
+		boolean tooHot = OmnitrixClientState.heat(player) + addedHeat >= 1.0f;
+		boolean recharging = !state.isTransformed() && state.rechargeRemaining(player.getWorld().getTime()) > 0;
+		if (!entry.get().unlocked() || recharging || device == OmnitrixStatus.LOCKED || device == OmnitrixStatus.OVERHEATED || tooHot) {
 			refuseInput();
 			return;
 		}
@@ -266,6 +273,33 @@ public final class OmnitrixController {
 			};
 		}
 		return OmnitrixRemote.lift(player) > 0.5f ? OmnitrixStatus.SELECTING : base;
+	}
+
+	/** Gewaehltes Alien im aktiven Favoriten-Set ein-/austragen (nur freigeschaltete Aliens). */
+	public static void toggleFavorite() {
+		Optional<Entry> entry = focused();
+		if (entry.isEmpty() || !entry.get().unlocked() || !isInteractive()) {
+			refuseInput();
+			return;
+		}
+		ClientPlayNetworking.send(new FavoritePayload(Optional.of(entry.get().id()), 0));
+		OmnitrixFeedback.play(OmnitrixCue.FAVORITE);
+	}
+
+	/** Naechstes Favoriten-Set waehlen. */
+	public static void cycleFavoriteSet() {
+		ClientPlayerEntity player = MinecraftClient.getInstance().player;
+		if (player == null || !isInteractive()) {
+			return;
+		}
+		ClientPlayNetworking.send(new FavoritePayload(Optional.empty(), OmnitrixCore.state(player).activeSet() + 1));
+		OmnitrixFeedback.play(OmnitrixCue.NAVIGATE);
+	}
+
+	/** Ist das Alien im aktiven Favoriten-Set? */
+	public static boolean isFavorite(Identifier alien) {
+		ClientPlayerEntity player = MinecraftClient.getInstance().player;
+		return player != null && OmnitrixCore.state(player).activeFavorites().contains(alien);
 	}
 
 	/** Geraet verweigert: Zifferblatt wackelt, Fehlerklang. */
@@ -372,6 +406,10 @@ public final class OmnitrixController {
 				}
 			}
 			default -> {
+				Identifier active = state.activeAlien().orElse(null);
+				if (wasTransformed && transformed && lastActive != null && !lastActive.equals(active)) {
+					OmnitrixFeedback.play(OmnitrixCue.QUICK_CHANGE);
+				}
 				if (wasTransformed && !transformed) {
 					setPhase(OmnitrixPhase.REVERT);
 					OmnitrixFeedback.play(OmnitrixCue.DETRANSFORM);
@@ -384,6 +422,7 @@ public final class OmnitrixController {
 			}
 		}
 		wasTransformed = transformed;
+		lastActive = state.activeAlien().orElse(null);
 	}
 
 	/** Ruhezustand je nach Lage: verwandelt, Abklingzeit, getragen oder ohne Omnitrix. */

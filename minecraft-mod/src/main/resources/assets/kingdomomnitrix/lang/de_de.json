@@ -594,5 +594,21 @@
   "commands.kingdomomnitrix.omnitrix.no_profile": "Unbekanntes Omnitrix-Profil: %s",
   "hud.kingdomomnitrix.heat": "Hitze",
   "hud.kingdomomnitrix.omnitrix_locked": "Omnitrix gesperrt · %s s",
-  "hud.kingdomomnitrix.omnitrix_overheated": "Überhitzt · kühlt ab %s s"
+  "hud.kingdomomnitrix.omnitrix_overheated": "Überhitzt · kühlt ab %s s",
+  "message.kingdomomnitrix.quick_change": "Schnellwechsel: %s",
+  "message.kingdomomnitrix.dna_shock": "DNA-Schock! Alien-Form zusammengebrochen.",
+  "message.kingdomomnitrix.failsafe": "NOTFALL-VERWANDLUNG: %s",
+  "key.kingdomomnitrix.quick_select": "Omnitrix-Schnellwahl (halten)",
+  "hud.kingdomomnitrix.favorite_set": "Set %s",
+  "hud.kingdomomnitrix.favorite_hint": "F: Favorit · Tab: Set",
+  "hud.kingdomomnitrix.radial_empty": "Keine Favoriten – im Omnitrix mit F eintragen",
+  "subtitles.kingdomomnitrix.omnitrix.emergency": "Omnitrix-Notfallalarm",
+  "subtitles.kingdomomnitrix.omnitrix.dna_shock": "DNA-Schock",
+  "alien_status.kingdomomnitrix.locked": "Keine DNA",
+  "alien_status.kingdomomnitrix.unlocked": "Bereit",
+  "alien_status.kingdomomnitrix.selected": "Eingestellt",
+  "alien_status.kingdomomnitrix.transforming": "Verwandlung …",
+  "alien_status.kingdomomnitrix.active": "Aktiv – erneut wählen: zurück",
+  "alien_status.kingdomomnitrix.cooldown": "Lädt nach",
+  "alien_status.kingdomomnitrix.mastered": "Gemeistert ★"
 }

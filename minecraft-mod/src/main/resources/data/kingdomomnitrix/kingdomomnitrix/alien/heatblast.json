@@ -60,5 +60,9 @@
       "chance": 0.08
     }
   ],
-  "model": "kingdomomnitrix:heatblast"
+  "model": "kingdomomnitrix:heatblast",
+  "failsafe_tags": [
+    "#minecraft:is_fire"
+  ],
+  "failsafe_priority": 2
 }

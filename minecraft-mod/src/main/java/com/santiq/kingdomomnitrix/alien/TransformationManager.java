@@ -27,7 +27,11 @@ import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -80,6 +84,17 @@ public final class TransformationManager {
 			} else {
 				reapplyAttributes(newPlayer);
 			}
+		});
+		// Alien besiegt → DNA-Schock statt Tod; Menschenform mit Omnitrix → Notfall-Verwandlung. Unabwendbarer Schaden
+		// (/kill, Leere) bleibt toedlich.
+		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
+			if (!(entity instanceof ServerPlayerEntity player) || source.isIn(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+				return true;
+			}
+			if (get(player).isTransformed()) {
+				return !defeatAlien(player);
+			}
+			return !failsafe(player, source);
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (!(entity instanceof ServerPlayerEntity player)) {
@@ -165,9 +180,12 @@ public final class TransformationManager {
 		}
 
 		int duration = durationTicks(player, alienId, alien);
-		update(player, s -> s.transformed(alienId, alien, now, duration));
+		// Menschenform-Lebenspunkte einfrieren; das Alien startet mit vollen eigenen Lebenspunkten
+		float human = state.isTransformed() && state.humanHealth() > 0.0f ? state.humanHealth() : player.getHealth();
+		update(player, s -> s.transformed(alienId, alien, now, duration, human));
 		OmnitrixCore.onTransform(player);
 		applyAttributes(player, alien);
+		player.setHealth(player.getMaxHealth());
 		playTransformEffects(world, player, alien, true);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.transformed", alienName(alienId).formatted(Formatting.BOLD))
 				.withColor(alien.color()), true);
@@ -195,10 +213,123 @@ public final class TransformationManager {
 		removeAttributes(player);
 		OmnitrixCore.onRevert(player);
 		update(player, s -> s.reverted(rechargeUntil));
+		restoreHumanHealth(player, state);
 		alien.ifPresent(a -> playTransformEffects(world, player, a, false));
 		player.sendMessage(Text.translatable(timeout ? "message.kingdomomnitrix.timeout" : "message.kingdomomnitrix.reverted")
 				.formatted(timeout ? Formatting.RED : Formatting.GREEN), true);
 		return Result.SUCCESS;
+	}
+
+	/** Menschenform-Lebenspunkte von vor der Verwandlung zurueck (Schaden am Alien betrifft sie nicht). */
+	private static void restoreHumanHealth(ServerPlayerEntity player, TransformationState before) {
+		if (before.humanHealth() > 0.0f && player.isAlive()) {
+			player.setHealth(Math.min(player.getMaxHealth(), before.humanHealth()));
+		}
+	}
+
+	/**
+	 * Schnellwechsel: aus einem Alien direkt in ein anderes. Normal mit Hitze-Aufschlag und nur einem Teil der
+	 * Restzeit (Profil), unter Master Control sofort, ohne Aufschlag und mit voller Dauer.
+	 */
+	public static Result quickChange(ServerPlayerEntity player, Identifier alienId) {
+		TransformationState state = get(player);
+		if (!state.isTransformed()) {
+			return transform(player, alienId, false);
+		}
+		if (state.activeAlien().filter(alienId::equals).isPresent()) {
+			return revert(player, false);
+		}
+		ServerWorld world = player.getServerWorld();
+		long now = world.getTime();
+		Optional<AlienDefinition> found = AlienRegistry.get(world.getRegistryManager(), alienId);
+		if (found.isEmpty()) {
+			return Result.UNKNOWN_ALIEN;
+		}
+		if (!HeroDataAccess.get(player).hasAlien(alienId)) {
+			return Result.LOCKED;
+		}
+		Optional<OmnitrixCore.Refusal> refusal = OmnitrixCore.checkQuickChange(player);
+		if (refusal.isPresent()) {
+			OmnitrixCore.refuse(player, refusal.get());
+			return Result.DEVICE_REFUSED;
+		}
+		AlienDefinition alien = found.get();
+		if (!hasSpaceFor(player, alien.scale())) {
+			return Result.NO_SPACE;
+		}
+		boolean master = OmnitrixCore.state(player).masterControl();
+		int full = durationTicks(player, alienId, alien);
+		int duration = master ? full : (int) Math.min(full, Math.max(200L,
+				Math.round(state.remainingTicks(now) * OmnitrixCore.profile(player).quickChangeKeep())));
+		float healthShare = player.getHealth() / Math.max(1.0f, player.getMaxHealth());
+		removeAttributes(player);
+		update(player, s -> s.quickChanged(alienId, alien, now, duration));
+		OmnitrixCore.onQuickChange(player);
+		applyAttributes(player, alien);
+		// Anteil der Alien-Lebenspunkte bleibt erhalten (kein Vollheilen durch Wechseln)
+		player.setHealth(Math.max(1.0f, player.getMaxHealth() * healthShare));
+		playTransformEffects(world, player, alien, true);
+		player.sendMessage(Text.translatable("message.kingdomomnitrix.quick_change", alienName(alienId).formatted(Formatting.BOLD))
+				.withColor(alien.color()), true);
+		AlienMasteryManager.add(player, alienId, AlienMasteryManager.PER_ABILITY);
+		return Result.SUCCESS;
+	}
+
+	/**
+	 * Alien besiegt: statt zu sterben zurueck in Menschenform mit DNA-Schock (kurz verlangsamt, benommen); die
+	 * Menschen-Lebenspunkte von vor der Verwandlung bleiben. Liefert false, wenn das nicht moeglich ist (kein Platz).
+	 */
+	private static boolean defeatAlien(ServerPlayerEntity player) {
+		TransformationState before = get(player);
+		player.setHealth(1.0f);
+		if (revert(player, true) != Result.SUCCESS) {
+			return false;
+		}
+		restoreHumanHealth(player, before);
+		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2, false, false, true));
+		player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0, false, false, true));
+		player.sendMessage(Text.translatable("message.kingdomomnitrix.dna_shock").formatted(Formatting.RED), true);
+		OmnitrixCore.cue(player, com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.DNA_SHOCK);
+		return true;
+	}
+
+	/**
+	 * Notfall-Verwandlung: toedlicher Schaden in Menschenform mit getragenem Omnitrix. Gewaehlt wird ein freigeschaltetes
+	 * Alien, das die Schadensart gut uebersteht ({@code failsafe_tags}), sonst das mit der hoechsten
+	 * {@code failsafe_priority}. Liefert true, wenn der Tod abgewendet wurde.
+	 */
+	private static boolean failsafe(ServerPlayerEntity player, DamageSource source) {
+		if (!OmnitrixItem.hasOmnitrix(player) || !OmnitrixCore.canFailsafe(player)) {
+			return false;
+		}
+		var manager = player.getWorld().getRegistryManager();
+		Identifier best = null;
+		int bestScore = Integer.MIN_VALUE;
+		for (Identifier id : HeroDataAccess.get(player).unlockedAliens()) {
+			Optional<AlienDefinition> alien = AlienRegistry.get(manager, id);
+			if (alien.isEmpty() || !hasSpaceFor(player, alien.get().scale())) {
+				continue;
+			}
+			int score = (alien.get().protectsAgainst(source) || alien.get().isImmuneTo(source) ? 1000 : 0) + alien.get().failsafePriority();
+			if (score > bestScore) {
+				best = id;
+				bestScore = score;
+			}
+		}
+		if (best == null) {
+			return false;
+		}
+		// knapp ueberlebt: die Menschenform kehrt spaeter mit 2 Herzen zurueck
+		player.setHealth(Math.min(player.getMaxHealth(), 4.0f));
+		Identifier chosen = best;
+		if (transform(player, chosen, true) != Result.SUCCESS) {
+			return false;
+		}
+		OmnitrixCore.onFailsafe(player);
+		update(player, s -> s.withInvulnerableUntil(player.getWorld().getTime() + 20));
+		player.sendMessage(Text.translatable("message.kingdomomnitrix.failsafe", alienName(chosen).formatted(Formatting.BOLD))
+				.formatted(Formatting.GOLD), true);
+		return true;
 	}
 
 	public static Result useAbility(ServerPlayerEntity player, int slotIndex) {

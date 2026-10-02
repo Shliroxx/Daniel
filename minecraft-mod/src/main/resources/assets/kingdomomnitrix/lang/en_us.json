@@ -594,5 +594,21 @@
   "commands.kingdomomnitrix.omnitrix.no_profile": "Unknown Omnitrix profile: %s",
   "hud.kingdomomnitrix.heat": "Heat",
   "hud.kingdomomnitrix.omnitrix_locked": "Omnitrix locked · %s s",
-  "hud.kingdomomnitrix.omnitrix_overheated": "Overheated · cooling %s s"
+  "hud.kingdomomnitrix.omnitrix_overheated": "Overheated · cooling %s s",
+  "message.kingdomomnitrix.quick_change": "Quick change: %s",
+  "message.kingdomomnitrix.dna_shock": "DNA shock! Alien form collapsed.",
+  "message.kingdomomnitrix.failsafe": "EMERGENCY TRANSFORMATION: %s",
+  "key.kingdomomnitrix.quick_select": "Omnitrix quick select (hold)",
+  "hud.kingdomomnitrix.favorite_set": "Set %s",
+  "hud.kingdomomnitrix.favorite_hint": "F: favorite · Tab: set",
+  "hud.kingdomomnitrix.radial_empty": "No favorites – add them in the Omnitrix with F",
+  "subtitles.kingdomomnitrix.omnitrix.emergency": "Omnitrix emergency alarm",
+  "subtitles.kingdomomnitrix.omnitrix.dna_shock": "DNA shock",
+  "alien_status.kingdomomnitrix.locked": "No DNA",
+  "alien_status.kingdomomnitrix.unlocked": "Ready",
+  "alien_status.kingdomomnitrix.selected": "Selected",
+  "alien_status.kingdomomnitrix.transforming": "Transforming …",
+  "alien_status.kingdomomnitrix.active": "Active – select again: revert",
+  "alien_status.kingdomomnitrix.cooldown": "Recharging",
+  "alien_status.kingdomomnitrix.mastered": "Mastered ★"
 }

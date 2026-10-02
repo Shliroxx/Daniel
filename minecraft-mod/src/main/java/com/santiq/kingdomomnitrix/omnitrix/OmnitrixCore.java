@@ -158,6 +158,60 @@ public final class OmnitrixCore {
 		return Optional.empty();
 	}
 
+	/** Schnellwechsel: wie Verwandeln, aber der Aufschlag ist der Schnellwechsel-Aufschlag. */
+	public static Optional<Refusal> checkQuickChange(ServerPlayerEntity player) {
+		long now = player.getWorld().getTime();
+		OmnitrixState device = state(player);
+		if (device.isLocked(now)) {
+			return Optional.of(Refusal.LOCKED);
+		}
+		if (device.isOverheated(now)) {
+			return Optional.of(Refusal.OVERHEATED);
+		}
+		OmnitrixProfile profile = profile(player);
+		if (!device.masterControl() && heat(player) + profile.quickChangeHeat() >= 1.0f) {
+			return Optional.of(Refusal.TOO_HOT);
+		}
+		return Optional.empty();
+	}
+
+	/** Schnellwechsel ausgefuehrt: Hitze-Aufschlag (Master Control: keiner). */
+	public static void onQuickChange(ServerPlayerEntity player) {
+		long now = player.getWorld().getTime();
+		OmnitrixProfile profile = profile(player);
+		update(player, s -> s.withHeat(now, true, profile, s.masterControl() ? 0.0f : profile.quickChangeHeat()));
+	}
+
+	/** Notfall-Verwandlung moeglich? (Geraet nicht gesperrt, Abklingzeit vorbei) */
+	public static boolean canFailsafe(ServerPlayerEntity player) {
+		long now = player.getWorld().getTime();
+		OmnitrixState device = state(player);
+		return !device.isLocked(now) && now >= device.failsafeReadyAt();
+	}
+
+	/** Notfall-Verwandlung ausgefuehrt: Hitze hoch, Abklingzeit setzen, Alarm-Rueckmeldung. */
+	public static void onFailsafe(ServerPlayerEntity player) {
+		long now = player.getWorld().getTime();
+		OmnitrixProfile profile = profile(player);
+		update(player, s -> {
+			OmnitrixState settled = s.withHeat(now, true, profile, 0.0f);
+			return settled.withHeat(now, true, profile, Math.max(0.0f, profile.failsafeHeat() - settled.heat()))
+					.withFailsafeReadyAt(now + profile.failsafeCooldownSeconds() * 20L);
+		});
+		cue(player, OmnitrixCue.EMERGENCY);
+	}
+
+	/** Favorit im gewaehlten Set umschalten (nur freigeschaltete Aliens). */
+	public static void toggleFavorite(ServerPlayerEntity player, Identifier alien) {
+		if (HeroDataAccess.get(player).hasAlien(alien)) {
+			update(player, s -> s.toggleFavorite(alien));
+		}
+	}
+
+	public static void setActiveSet(ServerPlayerEntity player, int set) {
+		update(player, s -> s.withActiveSet(set));
+	}
+
 	/** Abgelehnte Verwandlung: Meldung und Fehler-Rueckmeldung. */
 	public static void refuse(ServerPlayerEntity player, Refusal refusal) {
 		long now = player.getWorld().getTime();

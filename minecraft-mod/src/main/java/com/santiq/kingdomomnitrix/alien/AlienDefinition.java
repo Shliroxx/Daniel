@@ -34,6 +34,8 @@ import net.minecraft.util.Identifier;
  * @param dnaSources     Gegner, die DNA-Proben dieses Aliens fallen lassen koennen
  * @param model          Modell-ID fuer den Alien-Koerper
  * @param prototype      true = Inhalt noch nicht final (wird im Rad markiert)
+ * @param failsafeTags   Schadensarten, gegen die dieses Alien bei der Notfall-Verwandlung gewaehlt wird
+ * @param failsafePriority Rangfolge ohne passende Schadensart (hoeher = eher gewaehlt, z. B. robuste Aliens)
  */
 public record AlienDefinition(
 		int color,
@@ -48,7 +50,9 @@ public record AlienDefinition(
 		List<AbilitySlot> abilities,
 		List<DnaSource> dnaSources,
 		Identifier model,
-		boolean prototype) {
+		boolean prototype,
+		List<TagKey<DamageType>> failsafeTags,
+		int failsafePriority) {
 
 	public static final int MAX_ABILITIES = 3;
 	public static final float MIN_SCALE = 0.25f;
@@ -70,7 +74,9 @@ public record AlienDefinition(
 			AbilitySlot.CODEC.listOf().fieldOf("abilities").forGetter(AlienDefinition::abilities),
 			DnaSource.CODEC.listOf().optionalFieldOf("dna_sources", List.of()).forGetter(AlienDefinition::dnaSources),
 			Identifier.CODEC.fieldOf("model").forGetter(AlienDefinition::model),
-			Codec.BOOL.optionalFieldOf("prototype", false).forGetter(AlienDefinition::prototype)
+			Codec.BOOL.optionalFieldOf("prototype", false).forGetter(AlienDefinition::prototype),
+			TagKey.codec(RegistryKeys.DAMAGE_TYPE).listOf().optionalFieldOf("failsafe_tags", List.of()).forGetter(AlienDefinition::failsafeTags),
+			Codec.INT.optionalFieldOf("failsafe_priority", 0).forGetter(AlienDefinition::failsafePriority)
 	).apply(instance, AlienDefinition::new)).validate(AlienDefinition::validate);
 
 	public AlienDefinition {
@@ -78,6 +84,17 @@ public record AlienDefinition(
 		immunities = List.copyOf(immunities);
 		abilities = List.copyOf(abilities);
 		dnaSources = List.copyOf(dnaSources);
+		failsafeTags = List.copyOf(failsafeTags);
+	}
+
+	/** Uebersteht dieses Alien die Schadensart besonders gut (Notfall-Verwandlung)? */
+	public boolean protectsAgainst(net.minecraft.entity.damage.DamageSource source) {
+		for (TagKey<DamageType> tag : failsafeTags) {
+			if (source.isIn(tag)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static DataResult<Integer> parseColor(String text) {

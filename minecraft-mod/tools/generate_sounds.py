@@ -55,6 +55,8 @@ EVENTS: dict[str, tuple[str, int]] = {
     "omnitrix.unlock": ("omnitrix_unlock", 1),
     "omnitrix.lock": ("omnitrix_lock", 1),
     "omnitrix.master_control": ("omnitrix_master_control", 1),
+    "omnitrix.emergency": ("omnitrix_emergency", 1),
+    "omnitrix.dna_shock": ("omnitrix_dna_shock", 1),
     "alien.fire": ("alien_fire", 2),
     "alien.slam": ("alien_slam", 1),
     "alien.dash": ("alien_dash", 2),
@@ -354,6 +356,21 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         shimmer = osc(sweep(1600, 3200, 1.4), 1.4) * adsr(1.4, 0.6, 0.6) * 0.12
         return reverb(mix(s, body, at(shimmer, 0.3, s), at(bell(notes["C6"], 1.2, 2.5) * 0.4, 0.5, s)), 0.5, 1.4)
 
+    def omnitrix_emergency():
+        # Notfall: schneller Doppel-Alarm, dann harter Verwandlungs-Anstieg
+        s = 1.1
+        alarm = np.zeros(n(s))
+        for i in range(4):
+            alarm += at(osc(2200 if i % 2 == 0 else 1650, 0.09, "square") * adsr(0.09, 0.003, 0.02) * 0.5, i * 0.11, s)
+        surge = lowpass(osc(sweep(150, 2500, 0.5, 1.8), 0.5, "saw"), sweep(500, 8000, 0.5)) * adsr(0.5, 0.02, 0.1) * 0.5
+        return reverb(mix(s, alarm, at(surge, 0.45, s), at(thump(0.3, 120, 40, 9) * 0.7, 0.95, s)), 0.3)
+
+    def omnitrix_dna_shock():
+        # DNA-Schock: verzerrtes Abwaerts-Glitch, Knistern, dumpfer Aufprall
+        s = 1.0
+        glitch = osc(sweep(1800, 90, 0.7, 0.5) * (1 + 0.3 * np.sign(osc(23, 0.7, "square"))), 0.7, "square") * adsr(0.7, 0.005, 0.3) * 0.35
+        return reverb(mix(s, glitch, crackle(0.6, 160) * 0.3, at(thump(0.35, 90, 35, 8) * 0.8, 0.5, s)), 0.25)
+
     def alien_fire(v):
         s = 0.6
         roar = lowpass(noise(s), sweep(800, 3500 + v * 600, s)) * adsr(s, 0.04, 0.35)
@@ -561,7 +578,8 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         "omnitrix_confirm": omnitrix_confirm, "omnitrix_cancel": omnitrix_cancel, "omnitrix_error": omnitrix_error,
         "omnitrix_warning": omnitrix_warning, "omnitrix_overheat": omnitrix_overheat, "omnitrix_ready": omnitrix_ready,
         "omnitrix_unlock": omnitrix_unlock, "omnitrix_lock": omnitrix_lock,
-        "omnitrix_master_control": omnitrix_master_control,
+        "omnitrix_master_control": omnitrix_master_control, "omnitrix_emergency": omnitrix_emergency,
+        "omnitrix_dna_shock": omnitrix_dna_shock,
         "alien_slam": alien_slam, "combat_finisher": combat_finisher, "combat_guard": combat_guard,
         "combat_dodge": combat_dodge, "magic_fire": magic_fire, "magic_blizzard": magic_blizzard,
         "magic_thunder": magic_thunder, "magic_cure": magic_cure, "magic_mp_empty": magic_mp_empty,

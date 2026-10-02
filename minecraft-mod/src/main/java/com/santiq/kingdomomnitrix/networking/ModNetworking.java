@@ -32,6 +32,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenOmnitrixPayload.ID, OpenOmnitrixPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixCuePayload.ID, OmnitrixCuePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TransformRequestPayload.ID, TransformRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(FavoritePayload.ID, FavoritePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(OmnitrixPhasePayload.ID, OmnitrixPhasePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(SetUniformPayload.ID, SetUniformPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixPhaseSyncPayload.ID, OmnitrixPhaseSyncPayload.CODEC);
@@ -168,8 +169,19 @@ public final class ModNetworking {
 			if (!canAct(player)) {
 				return;
 			}
-			TransformationManager.select(player, payload.alien());
-			report(player, TransformationManager.transform(player, payload.alien(), false));
+			// verwandelt; als Alien: Schnellwechsel in ein anderes Alien bzw. zurueck bei gleichem Alien
+			if (!TransformationManager.get(player).isTransformed()) {
+				TransformationManager.select(player, payload.alien());
+			}
+			report(player, TransformationManager.quickChange(player, payload.alien()));
+		});
+		ServerPlayNetworking.registerGlobalReceiver(FavoritePayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			if (payload.alien().isPresent()) {
+				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.toggleFavorite(player, payload.alien().get());
+			} else {
+				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.setActiveSet(player, payload.set());
+			}
 		});
 		ServerPlayNetworking.registerGlobalReceiver(OmnitrixPhasePayload.ID, (payload, context) -> {
 			// nur sichtbare Zustaende weitergeben; reine Darstellung, keine Spielwirkung

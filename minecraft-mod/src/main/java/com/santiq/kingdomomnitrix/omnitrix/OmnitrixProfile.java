@@ -19,6 +19,10 @@ import net.minecraft.util.dynamic.Codecs;
  * @param manualRevertCooldown   Anteil der Nachladezeit bei freiwilliger Rueckverwandlung
  * @param confirmSeconds         Energieaufbau zwischen Bestaetigen und Verwandeln (Client-Ablauf)
  * @param masterControl          Werte im Master-Control-Modus
+ * @param quickChangeHeat        Hitze-Aufschlag beim Schnellwechsel Alien → Alien (Master Control: keiner)
+ * @param quickChangeKeep        Anteil der Restzeit, der beim Schnellwechsel bleibt (Master Control: volle Dauer)
+ * @param failsafeCooldownSeconds Abklingzeit der Notfall-Verwandlung
+ * @param failsafeHeat           Hitze nach einer Notfall-Verwandlung
  */
 public record OmnitrixProfile(
 		float heatPerTransform,
@@ -30,7 +34,11 @@ public record OmnitrixProfile(
 		float durationMultiplier,
 		float manualRevertCooldown,
 		float confirmSeconds,
-		MasterControl masterControl) {
+		MasterControl masterControl,
+		float quickChangeHeat,
+		float quickChangeKeep,
+		int failsafeCooldownSeconds,
+		float failsafeHeat) {
 
 	/** Master Control: Endgame-Modus, freigeschaltet pro Spieler ({@link OmnitrixState#masterControl()}). */
 	public record MasterControl(float heatMultiplier, float cooldownMultiplier, float durationMultiplier, float confirmSeconds,
@@ -46,8 +54,10 @@ public record OmnitrixProfile(
 		).apply(instance, MasterControl::new));
 	}
 
+	private static final float DEFAULT_QUICK_CHANGE_HEAT = 0.12f;
+
 	public static final OmnitrixProfile DEFAULT = new OmnitrixProfile(0.22f, 0.004f, 0.02f, 0.75f, 12, 1.0f, 1.0f, 0.5f, 0.42f,
-			MasterControl.DEFAULT);
+			MasterControl.DEFAULT, 0.12f, 0.5f, 600, 0.9f);
 
 	public static final Codec<OmnitrixProfile> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("heat_per_transform", DEFAULT.heatPerTransform()).forGetter(OmnitrixProfile::heatPerTransform),
@@ -59,6 +69,10 @@ public record OmnitrixProfile(
 			Codecs.POSITIVE_FLOAT.optionalFieldOf("duration_multiplier", 1.0f).forGetter(OmnitrixProfile::durationMultiplier),
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("manual_revert_cooldown", DEFAULT.manualRevertCooldown()).forGetter(OmnitrixProfile::manualRevertCooldown),
 			Codec.floatRange(0.0f, 5.0f).optionalFieldOf("confirm_seconds", DEFAULT.confirmSeconds()).forGetter(OmnitrixProfile::confirmSeconds),
-			MasterControl.CODEC.optionalFieldOf("master_control", MasterControl.DEFAULT).forGetter(OmnitrixProfile::masterControl)
+			MasterControl.CODEC.optionalFieldOf("master_control", MasterControl.DEFAULT).forGetter(OmnitrixProfile::masterControl),
+			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("quick_change_heat", DEFAULT_QUICK_CHANGE_HEAT).forGetter(OmnitrixProfile::quickChangeHeat),
+			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("quick_change_keep", 0.5f).forGetter(OmnitrixProfile::quickChangeKeep),
+			Codec.intRange(0, 36_000).optionalFieldOf("failsafe_cooldown_seconds", 600).forGetter(OmnitrixProfile::failsafeCooldownSeconds),
+			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("failsafe_heat", 0.9f).forGetter(OmnitrixProfile::failsafeHeat)
 	).apply(instance, OmnitrixProfile::new));
 }

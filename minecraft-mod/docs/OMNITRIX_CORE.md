@@ -69,11 +69,11 @@ profile <id>` — `use` verwandelt mit allen Geraete-Regeln (anders als `/hero t
 | 1 | Core | **neu** | Upgrades als Profilwechsel (Item/Quest), Modi-Feld |
 | 2 | Modell/Rendering | Licht je Zustand **neu** | Glas-Schicht ueber dem Zifferblatt, Metall-Glanz, Ueberhitzungs-Dampf |
 | 3 | Aktivierung | Phasen + Cues | Arm-Hub mit leichtem Ueberschwingen, Kern-Ausfahr-Licht |
-| 4 | Auswahl | Feder-Rad, Rastklang | Maus-Wischen, Controller, Schnellwahl-Favoriten |
+| 4 | Auswahl | Feder-Rad, Rastklang, **Favoriten-Sets, Schnellwahl-Kreis, Schnellwechsel** | Controller, Smart-Scan (Paket 2) |
 | 5 | Vorschau | Silhouette + Hologramm | Status-Chip (AlienStatus), Faehigkeiten-Leiste im Hologramm |
 | 6 | Verwandlung | Blitzkugel, Blitz, Kamera | Energieaufbau-Phase sichtbar am Koerper, alien-eigene Sequenz (Datenfeld) |
 | 7 | Rueckverwandlung | Blitzkugel, Cue | Energie-Rueckzug-Partikel zum Handgelenk |
-| 8 | Energie/Cooldown | **Hitze neu** | Konfig-UI, Ueberhitzung je Alien gewichten |
+| 8 | Energie/Cooldown | Hitze, **getrennte Lebenspunkte, DNA-Schock, Notfall-Verwandlung** | Konfig-UI, Ueberhitzung je Alien gewichten |
 | 9 | DNA | Registry | Sounds/VFX/Transformation als Felder in `AlienDefinition` |
 | 10 | Faehigkeiten | modular, AE-Posen | Liste der Vorgabe (z. B. Heatblast Fireball/Flame Dash) |
 | 11 | VFX | Blitzkugel, Glut, Cues | Scanline/Hologramm-Shader, DNA-Partikel |
