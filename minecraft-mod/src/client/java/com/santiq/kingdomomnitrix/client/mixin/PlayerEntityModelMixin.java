@@ -13,8 +13,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Third-Person: Hebt der Spieler das Omnitrix (Rad offen, Bestaetigen, Schlag), wandert der linke Arm vor die Brust,
- * Handgelenk nach oben — auch fuer andere Spieler sichtbar (Zustand kommt ueber den Server).
+ * Third-Person: Hebt der Spieler das Omnitrix, wandert der linke Arm vor die Brust; im Auswahlmodus greift die rechte
+ * Hand ans Zifferblatt — auch fuer andere Spieler sichtbar (Zustand kommt ueber den Server).
  */
 @Mixin(PlayerEntityModel.class)
 public abstract class PlayerEntityModelMixin {
@@ -35,5 +35,13 @@ public abstract class PlayerEntityModelMixin {
 		biped.leftArm.yaw = MathHelper.lerp(raise, biped.leftArm.yaw, 0.65f);
 		biped.leftArm.roll = MathHelper.lerp(raise, biped.leftArm.roll, -0.25f);
 		model.leftSleeve.copyTransform(biped.leftArm);
+		// Auswahlmodus: rechte Hand greift ans Omnitrix
+		float reach = OmnitrixRemote.lift(player);
+		if (reach > 0.0f) {
+			biped.rightArm.pitch = MathHelper.lerp(reach, biped.rightArm.pitch, -1.2f);
+			biped.rightArm.yaw = MathHelper.lerp(reach, biped.rightArm.yaw, -0.55f);
+			biped.rightArm.roll = MathHelper.lerp(reach, biped.rightArm.roll, 0.1f);
+			model.rightSleeve.copyTransform(biped.rightArm);
+		}
 	}
 }

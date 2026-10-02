@@ -95,6 +95,11 @@ public final class OmnitrixController {
 		return display;
 	}
 
+	/** Rest-Drehung der Rad-Feder in Eintraegen (0 = steht); treibt den Dreh des Kerns beim Weiterschalten. */
+	public static float twist() {
+		return target - display;
+	}
+
 	public static int focusedIndex() {
 		return ENTRIES.isEmpty() ? -1 : Math.floorMod(target, ENTRIES.size());
 	}

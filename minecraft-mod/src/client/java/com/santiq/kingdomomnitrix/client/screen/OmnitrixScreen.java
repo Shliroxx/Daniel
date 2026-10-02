@@ -14,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Eingabeschicht des Omnitrix. Das Rad selbst ist 3D und wird mit der Ego-Hand gezeichnet
- * ({@code OmnitrixDisc} am Omnitrix); dieser Screen faengt nur Maus und Tasten ab und blendet den Namen des gewaehlten
+ * ({@code OmnitrixDialDisplay} auf dem Zifferblatt); dieser Screen faengt nur Maus und Tasten ab und blendet den Namen des gewaehlten
  * Aliens klein ein — kein Menue-Hintergrund, keine Unschaerfe.
  *
  * <ul>
@@ -55,8 +55,9 @@ public class OmnitrixScreen extends Screen {
 		if (alpha < 8) {
 			return;
 		}
-		int x = width / 2 - width / 7;
-		int y = height / 2 + height / 6;
+		// klein ueber der Hotbar, wie bei Alien Evolution
+		int x = width / 2;
+		int y = height - 66;
 		TransformationState state = TransformationManager.get(client.player);
 		long now = client.player.getWorld().getTime();
 		if (OmnitrixController.entries().isEmpty()) {
@@ -89,7 +90,7 @@ public class OmnitrixScreen extends Screen {
 		if (OmnitrixController.phase() != OmnitrixPhase.CONFIRMING) {
 			Text hint = Text.translatable("screen.kingdomomnitrix.omnitrix_hint");
 			context.getMatrices().push();
-			context.getMatrices().translate(width / 2.0f, height - 52.0f, 0.0f);
+			context.getMatrices().translate(width / 2.0f, height - 44.0f, 0.0f);
 			context.getMatrices().scale(0.75f, 0.75f, 1.0f);
 			context.drawCenteredTextWithShadow(textRenderer, hint, 0, 0, (alpha * 3 / 4) << 24 | 0x9ACFA8);
 			context.getMatrices().pop();

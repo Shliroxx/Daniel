@@ -9,6 +9,7 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.ModelTransform;
 import org.joml.Matrix3f;
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.OmnitrixPhase;
@@ -61,9 +62,9 @@ public final class OmnitrixWrist {
 	/** Ego-Haltung aus {@code omnitrix/first_person.json}; null = beim naechsten Bild neu laden */
 	private static Pose pose;
 
-	/** Ego-Haltung: Zifferblatt-Mitte vor der Kamera (Bloecke), Feinkippung (Grad), Winkel des gewaehlten Segments. */
-	private record Pose(float x, float y, float z, float rotateZ, float rotateY, float rotateX, float discAngle) {
-		static final Pose DEFAULT = new Pose(0.05f, -0.3f, -1.0f, 0.0f, 0.0f, -25.0f, -90.0f);
+	/** Ego-Haltung: Zifferblatt-Mitte vor der Kamera (Bloecke), Feinkippung (Grad), Winkel von „oben“ auf dem Zifferblatt. */
+	private record Pose(float x, float y, float z, float rotateZ, float rotateY, float rotateX, float dialUp) {
+		static final Pose DEFAULT = new Pose(-0.45f, -0.14f, -1.1f, 0.0f, 20.0f, -30.0f, -90.0f);
 	}
 
 	private OmnitrixWrist() {
@@ -80,7 +81,7 @@ public final class OmnitrixWrist {
 			@Override
 			public void reload(ResourceManager manager) {
 				pose = null;
-				OmnitrixDisc.clearCache();
+				OmnitrixDialDisplay.clearCache();
 			}
 		});
 		WorldRenderEvents.START.register(context -> OmnitrixController.frame());
@@ -123,7 +124,7 @@ public final class OmnitrixWrist {
 			JsonArray offset = json.getAsJsonArray("offset");
 			pose = new Pose(offset.get(0).getAsFloat(), offset.get(1).getAsFloat(), offset.get(2).getAsFloat(),
 					json.get("rotate_z").getAsFloat(), json.get("rotate_y").getAsFloat(), json.get("rotate_x").getAsFloat(),
-					json.has("disc_angle") ? json.get("disc_angle").getAsFloat() : Pose.DEFAULT.discAngle());
+					json.has("dial_up") ? json.get("dial_up").getAsFloat() : Pose.DEFAULT.dialUp());
 		} catch (IOException | RuntimeException e) {
 			KingdomOmnitrix.LOGGER.error("Omnitrix-Haltung {} unlesbar, nutze Standard", file, e);
 		}
@@ -177,9 +178,9 @@ public final class OmnitrixWrist {
 			// Kern-Leuchten faehrt mit, Eck-Leuchten liegen am Gehaeuse (Hub dort unsichtbar klein)
 			renderer.render(matrices.peek(), eyes, null, glowModel, glow, glow, glow, 0xF000F0, OverlayTexture.DEFAULT_UV);
 		}
-		// Omniverse-Auswahlscheibe klappt aus dem Kern auf (eigener Spieler: Roster; andere: nur die Scheibe)
-		float open = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
-		OmnitrixDisc.render(matrices, consumers, open, local, pose().discAngle());
+		// Auswahlmodus: Raute mit Alien-Silhouette auf dem Kern (eigener Spieler: gewaehltes Alien; andere: leere Raute)
+		float show = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
+		OmnitrixDialDisplay.render(matrices, consumers, show, local, pose().dialUp());
 		matrices.pop();
 		matrices.pop();
 	}
@@ -214,34 +215,78 @@ public final class OmnitrixWrist {
 		matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(p.rotateZ() - hidden * 25.0f));
 		// Grundlage: Arm waagerecht von links (Hand zeigt nach rechts), Zifferblatt (+x des Arms) zur Kamera
 		matrices.multiply(new Quaternionf().setFromNormalized(new Matrix3f(0, 0, 1, 1, 0, 0, 0, 1, 0)));
-		// vom Zifferblatt zurueck zum Armursprung (Armmitte x, Handgelenk 7 Pixel vor dem Handende)
-		matrices.translate(-((slim ? 0.5f : 1.0f) + 5.0f) / 16.0f, -7.0f / 16.0f, 0.0f);
+		// ab hier: Zifferblatt-Raum (x = Blickrichtung des Zifferblatts, y = zur Hand, z = Bildschirm-oben)
+		Identifier skin = AlienArms.armTexture(player).orElseGet(() -> player.getSkinTextures().texture());
+		firstPerson = true;
+		try {
+			matrices.push();
+			// vom Zifferblatt zurueck zum Armursprung (Armmitte x, Handgelenk 7 Pixel vor dem Handende)
+			matrices.translate(-((slim ? 0.5f : 1.0f) + 5.0f) / 16.0f, -7.0f / 16.0f, 0.0f);
+			renderPart(matrices, consumers, light, skin, model.leftArm, model.leftSleeve);
+			if (wears(player) || OmnitrixController.phase() == OmnitrixPhase.IMPACT) {
+				renderOnArm(matrices, consumers, light, model, player, true);
+			}
+			matrices.pop();
+			renderRightHand(matrices, consumers, light, skin, model, slim);
+		} finally {
+			firstPerson = false;
+		}
+		matrices.pop();
+		consumers.draw();
+	}
 
-		ModelPart arm = model.leftArm;
-		ModelPart sleeve = model.leftSleeve;
+	/**
+	 * Rechte Hand greift im Auswahlmodus ans Zifferblatt (kommt von rechts unten), dreht beim Weiterschalten mit und
+	 * drueckt beim Bestaetigen das Zifferblatt herunter. Matrix: Zifferblatt-Raum.
+	 */
+	private static void renderRightHand(MatrixStack matrices, VertexConsumerProvider consumers, int light, Identifier skin,
+			PlayerEntityModel<AbstractClientPlayerEntity> model, boolean slim) {
+		OmnitrixPhase phase = OmnitrixController.phase();
+		float reach = Math.max(OmnitrixController.wheel(), phase == OmnitrixPhase.IMPACT ? 1.0f : 0.0f);
+		if (reach <= 0.01f) {
+			return;
+		}
+		float press = switch (phase) {
+			case CONFIRMING -> MathHelper.clamp(OmnitrixController.phaseTime() / 0.42f, 0.0f, 1.0f) * 0.02f;
+			case IMPACT -> 0.02f + MathHelper.sin(Math.min(1.0f, OmnitrixController.phaseTime() / 0.18f) * MathHelper.PI) * 0.06f;
+			default -> 0.0f;
+		};
+		float twist = OmnitrixController.twist();
+		// Unterarm-Richtung Schulter → Hand im Zifferblatt-Raum: zum Zifferblatt hin, nach links und oben
+		Vector3f direction = new Vector3f(-0.3f, -0.45f, 0.85f).normalize();
+		// Fingerspitzen am rechten oberen Rand der Fassung, etwas vor dem Zifferblatt
+		float hidden = 1.0f - reach;
+		Vector3f tip = new Vector3f(0.05f - press, 0.17f + twist * 0.02f, -0.08f)
+				.sub(new Vector3f(direction).mul(hidden * 0.6f));
+		matrices.push();
+		matrices.translate(tip.x(), tip.y(), tip.z());
+		matrices.multiply(new Quaternionf().rotationTo(new Vector3f(0.0f, 1.0f, 0.0f), direction));
+		// Handflaeche zum Zifferblatt drehen
+		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-70.0f + twist * 25.0f));
+		// Handende (rechter Arm: Mitte x = -1 bzw. -0,5) an die Fingerspitzen
+		matrices.translate((slim ? 0.5f : 1.0f) / 16.0f, -10.0f / 16.0f, 0.0f);
+		renderPart(matrices, consumers, light, skin, model.rightArm, model.rightSleeve);
+		matrices.pop();
+	}
+
+	/** Arm samt Aermel-Schicht ohne eigene Lage zeichnen (die Matrix bestimmt alles). */
+	private static void renderPart(MatrixStack matrices, VertexConsumerProvider consumers, int light, Identifier skin, ModelPart arm,
+			ModelPart sleeve) {
 		ModelTransform armSaved = arm.getTransform();
 		ModelTransform sleeveSaved = sleeve.getTransform();
 		boolean armVisible = arm.visible;
-		firstPerson = true;
 		try {
 			arm.setTransform(ModelTransform.NONE);
 			sleeve.setTransform(ModelTransform.NONE);
 			arm.visible = true;
-			Identifier skin = AlienArms.armTexture(player).orElseGet(() -> player.getSkinTextures().texture());
 			arm.render(matrices, consumers.getBuffer(RenderLayer.getEntitySolid(skin)), light, OverlayTexture.DEFAULT_UV);
 			if (sleeve.visible) {
 				sleeve.render(matrices, consumers.getBuffer(RenderLayer.getEntityTranslucent(skin)), light, OverlayTexture.DEFAULT_UV);
-			}
-			if (wears(player) || OmnitrixController.phase() == OmnitrixPhase.IMPACT) {
-				renderOnArm(matrices, consumers, light, model, player, true);
 			}
 		} finally {
 			arm.setTransform(armSaved);
 			sleeve.setTransform(sleeveSaved);
 			arm.visible = armVisible;
-			firstPerson = false;
 		}
-		matrices.pop();
-		consumers.draw();
 	}
 }
