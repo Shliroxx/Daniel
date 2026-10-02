@@ -147,11 +147,15 @@ def check_loot(report: Report, items: set[str]) -> None:
                     report.error("Loot-Tabelle %s verweist auf unbekanntes Item %s", path.relative_to(DATA), entry["name"])
 
 
-ABILITY_PATTERN = re.compile(r'AbilityRegistry\.register\(KingdomOmnitrix\.id\("([a-z0-9_]+)"\)')
+# Registrierung direkt oder ueber die Kurzform reg("name", …) in MasteryAbilities
+ABILITY_PATTERN = re.compile(r'(?:AbilityRegistry\.register\(KingdomOmnitrix\.id\(|\breg\()"([a-z0-9_]+)"')
+MAX_ABILITIES_PATTERN = re.compile(r'MAX_ABILITIES\s*=\s*(\d+)')
 
 
 def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
     abilities = set(ABILITY_PATTERN.findall(source))
+    found_max = MAX_ABILITIES_PATTERN.search(source)
+    max_abilities = int(found_max.group(1)) if found_max else 3
     alien_dir = DATA / MOD_ID / "alien"
     files = sorted(alien_dir.glob("*.json"))
     if not files:
@@ -173,8 +177,8 @@ def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
                 if not (ASSETS / rel).is_file():
                     report.error("Alien %s: Koerper-Datei fehlt: %s", name, rel)
         slots = alien.get("abilities", [])
-        if not 1 <= len(slots) <= 3:
-            report.error("Alien %s: 1 bis 3 Faehigkeiten erlaubt, gefunden %d", name, len(slots))
+        if not 1 <= len(slots) <= max_abilities:
+            report.error("Alien %s: 1 bis %d Faehigkeiten erlaubt, gefunden %d", name, max_abilities, len(slots))
         for slot in slots:
             namespace, _, ability = str(slot.get("type", "")).partition(":")
             if namespace == MOD_ID and ability not in abilities:
