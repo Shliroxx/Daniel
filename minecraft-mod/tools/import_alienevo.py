@@ -528,7 +528,11 @@ def parse_poses(jar: Jar, script: str) -> dict[str, dict]:
     Palladium-Semantik: set* setzt Lage (Pixel, Modellraum des Spielers) bzw. Drehung absolut, move*/rotate*
     addieren; animate(ease, t) blendet von der normalen Spielerpose zur Zielpose. Operationen mit Spielwerten
     (builder.getModel()…, Math.sin) werden ausgelassen."""
-    text = jar.zip.read(f"assets/alienevo/kubejs_scripts/{script}.js").decode()
+    return parse_poses_text(jar.zip.read(f"assets/alienevo/kubejs_scripts/{script}.js").decode())
+
+
+def parse_poses_text(text: str) -> dict[str, dict]:
+    """Wie {@code parse_poses}, aber direkt aus dem Skripttext (testbar ohne Jar)."""
     poses: dict[str, dict] = {}
     for m in re.finditer(r"registerForPower\('([^']+)'", text):
         start = text.index("{", m.end())
