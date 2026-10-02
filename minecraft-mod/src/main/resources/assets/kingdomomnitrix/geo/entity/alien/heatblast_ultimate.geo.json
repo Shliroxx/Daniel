@@ -30,7 +30,7 @@
             29.25,
             0.675
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "flames",
@@ -1276,7 +1276,7 @@
             24.975,
             1.575
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "leftarm_r",
@@ -2054,7 +2054,7 @@
             24.975,
             1.575
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "rightarm_r",

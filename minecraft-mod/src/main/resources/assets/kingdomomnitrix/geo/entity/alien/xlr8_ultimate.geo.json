@@ -100,7 +100,7 @@
               }
             }
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "head_scale",
@@ -1824,7 +1824,7 @@
             21.5,
             -4.25
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "armrotate3",
@@ -2356,7 +2356,7 @@
             21.5,
             -4.25
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "armrotate2",

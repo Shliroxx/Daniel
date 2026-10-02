@@ -301,7 +301,7 @@
               }
             }
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "eyes_r",
@@ -1809,7 +1809,7 @@
               }
             }
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "left_forearm",
@@ -2370,7 +2370,7 @@
               }
             }
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "right_forearm",
@@ -2769,7 +2769,7 @@
             20.546,
             1.225
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "lo_right_l_r2",
@@ -3226,7 +3226,7 @@
             20.546,
             1.225
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "lo_left_l_r",

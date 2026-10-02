@@ -30,7 +30,7 @@
             30.35,
             0
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "ae_root",
@@ -1638,7 +1638,7 @@
             26,
             0.5
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "rightarm",
@@ -2348,7 +2348,7 @@
             26,
             0.5
           ],
-          "parent": "body"
+          "parent": "root"
         },
         {
           "name": "leftarm",

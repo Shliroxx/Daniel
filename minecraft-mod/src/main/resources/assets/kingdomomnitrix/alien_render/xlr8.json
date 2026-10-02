@@ -6,5 +6,8 @@
     "ultimate"
   ],
   "uniform_models": true,
+  "vanilla_pose": true,
+  "arm_swing": 1.0,
+  "leg_swing": 1.0,
   "source": "Alien Evolution (Habb and Stephen)"
 }

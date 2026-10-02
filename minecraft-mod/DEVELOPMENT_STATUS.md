@@ -240,8 +240,15 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
   (z. B. Diamondhead-Schulterkristalle) falsch ab.
 - Im Spiel geprueft: alle 5 Aliens classic (`docs/screenshots/ae_import_alle_aliens.png`), Heatblast classic/evo/
   ultimate per Omnitrix + U (`docs/screenshots/ae_import_heatblast_uniformen.png`), keine Fehler im Log.
-- Offen: AE-eigene Animationen (Idle/Lauf/Faehigkeiten) statt unserer generierten, 8-Frame-Glut-Animation (aktuell
-  Frame 0), Abzeichen-Zustaende (rot bei Abklingzeit) ueber die AE-Overlays.
+- **Bewegung wie AE:** AE animiert die Aliens ueber die Spielerpose (Palladium haengt die Ebenen an die Spielerteile)
+  plus kleine Zusatzanimationen. Jetzt genauso: `AlienPose` berechnet die Vanilla-Pose (Gliedmaßen-Schwung, Blick,
+  Schlag, Schleichen) und setzt sie auf head/body/Arme/Beine (Vierarm: auch das untere Armpaar); Schwung-Daempfung aus
+  den AE-Skripten (`alien_render`: `arm_swing`/`leg_swing`, Heatblast 0,8/0,6, Diamondhead + Grey Matter 0,6/0,6).
+  Hauptknochen haengen wie in AE einzeln an root. Unsere generierten Lauf-/Idle-/Schlag-Animationen sind fuer die
+  importierten Aliens weg; XLR8 spielt AEs Schwanz-Animation, Verwandeln/Zurueckverwandeln skaliert nur root.
+  Im Spiel geprueft: Stehen, Laufen, Schleichen, Schlag (`docs/screenshots/ae_pose_heatblast.png`).
+- Offen: AE-Faehigkeits-Posen (Feuer-Nova, Bodenschlag, Kristallschwert …), 8-Frame-Glut-Animation (aktuell Frame 0),
+  Abzeichen-Zustaende (rot bei Abklingzeit) ueber die AE-Overlays.
 
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,

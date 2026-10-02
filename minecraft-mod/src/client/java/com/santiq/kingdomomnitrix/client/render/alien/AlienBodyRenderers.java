@@ -22,6 +22,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 import software.bernie.geckolib.renderer.GeoReplacedEntityRenderer;
 
@@ -71,6 +73,9 @@ public final class AlienBodyRenderers {
 		FAILED.clear();
 		SCALES.clear();
 		UNIFORMS.clear();
+		UNIFORM_MODELS.clear();
+		POSES.clear();
+		AlienPose.reload(newContext);
 		AlienArms.clearCache();
 	}
 
@@ -190,6 +195,17 @@ public final class AlienBodyRenderers {
 			public Identifier getModelResource(AlienBodyAnimatable animatable) {
 				return uniformModel(model, super.getModelResource(animatable), currentUniform);
 			}
+
+			@Override
+			public void setCustomAnimations(AlienBodyAnimatable animatable, long instanceId, AnimationState<AlienBodyAnimatable> state) {
+				float[] swing = poseOf(model);
+				if (swing != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
+					// wie AE: Koerper folgt der Spielerpose (inkl. Kopf) — die Standard-Kopfdrehung entfaellt
+					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), swing[0], swing[1]);
+				} else {
+					super.setCustomAnimations(animatable, instanceId, state);
+				}
+			}
 		});
 		float scale = renderScale(model);
 		if (scale != 1.0f) {
@@ -205,6 +221,7 @@ public final class AlienBodyRenderers {
 	private static final Map<Identifier, Float> SCALES = new HashMap<>();
 	private static final Map<Identifier, java.util.List<String>> UNIFORMS = new HashMap<>();
 	private static final Map<Identifier, Boolean> UNIFORM_MODELS = new HashMap<>();
+	private static final Map<Identifier, Optional<float[]>> POSES = new HashMap<>();
 	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
 	private static String currentUniform = AlienUniforms.CLASSIC;
 
@@ -231,6 +248,32 @@ public final class AlienBodyRenderers {
 		}
 		String path = base.getPath();
 		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - ".geo.json".length()) + "_" + uniform + ".geo.json");
+	}
+
+	/**
+	 * Schwung-Faktoren {arme, beine}, wenn das Modell der Spielerpose folgt ({@code "vanilla_pose": true} in
+	 * {@code alien_render}), sonst {@code null} (eigene Animationen fuer alle Knochen).
+	 */
+	static float[] poseOf(Identifier model) {
+		return POSES.computeIfAbsent(model, m -> {
+			Identifier file = Identifier.of(m.getNamespace(), "alien_render/" + m.getPath() + ".json");
+			var resource = MinecraftClient.getInstance().getResourceManager().getResource(file);
+			if (resource.isEmpty()) {
+				return Optional.empty();
+			}
+			try (var reader = resource.get().getReader()) {
+				var json = com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();
+				if (!json.has("vanilla_pose") || !json.get("vanilla_pose").getAsBoolean()) {
+					return Optional.empty();
+				}
+				float arms = json.has("arm_swing") ? json.get("arm_swing").getAsFloat() : 1.0f;
+				float legs = json.has("leg_swing") ? json.get("leg_swing").getAsFloat() : 1.0f;
+				return Optional.of(new float[] {MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f)});
+			} catch (java.io.IOException | RuntimeException e) {
+				KingdomOmnitrix.LOGGER.error("Pose-Angaben {} unlesbar, nutze Modell-Animationen", file, e);
+				return Optional.empty();
+			}
+		}).orElse(null);
 	}
 
 	/** Uniformen eines Modells laut {@code alien_render/<name>.json} ({"uniforms": ["classic", "evo", …]}). */

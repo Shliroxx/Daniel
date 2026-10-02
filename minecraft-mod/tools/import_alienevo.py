@@ -48,6 +48,10 @@ DROP = re.compile(r"sword|shield|boulder|_ball|ball_", re.I)
 RESERVED = {"root", "body", "head", "chest", "right_arm", "left_arm", "right_forearm", "left_forearm", "right_leg",
             "left_leg", "right_shin", "left_shin", "right_lower_arm", "left_lower_arm", "right_lower_forearm",
             "left_lower_forearm", "tail_1", "tail_2", "tail_3", "tail_4", "flame_base"}
+MAIN_BONES = ("head", "body", "right_arm", "left_arm", "right_leg", "left_leg")
+ROOT_NAMES = {"armorBody": "body", "armorHead": "head", "armorRightArm": "right_arm", "armorLeftArm": "left_arm",
+              "armorRightLeg": "right_leg", "armorLeftLeg": "left_leg"}
+TAIL_NAMES = {"TAIL_BASE": "tail_1", "TAIL_LOWMID": "tail_2", "TAIL_HIGHMID": "tail_3", "TAIL_HIGH": "tail_4"}
 BADGE_GLOW = {"ffffff": "B3FF40", "eaeaea": "A7F72E", "cfcfdd": "8ED721"}
 
 
@@ -60,14 +64,18 @@ class Spec:
     style: str           # Animations-Charakter
     accent: str
     extra: str | None = None   # zweites Modell (Vierarm: unteres Armpaar)
+    arm_swing: float = 1.0     # Armschwung relativ zum Spieler (AE-Skript: rotateX(xRot * -k) → 1 - k)
+    leg_swing: float = 1.0
+    loops: tuple[str, ...] = ()  # AE-Daueranimationen (laufen immer, z. B. XLR8-Schwanz)
 
 
 ALIENS = {
-    "heatblast": Spec("1", "pyronite", "pyronite.json", 1.1, "heat", "#FF6A00"),
-    "xlr8": Spec("4", "kineceleran", "kineceleran.json", 1.1, "fast", "#1E90FF"),
+    "heatblast": Spec("1", "pyronite", "pyronite.json", 1.1, "heat", "#FF6A00", arm_swing=0.8, leg_swing=0.6),
+    "xlr8": Spec("4", "kineceleran", "kineceleran.json", 1.1, "fast", "#1E90FF",
+                 loops=("xlr8.json:animation.xlr8.tail",)),
     "four_arms": Spec("6", "tetramand", "tetramand.json", 2.0, "heavy", "#C0392B", extra="tetramand_arms"),
-    "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71"),
-    "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6"),
+    "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6),
+    "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6),
 }
 
 
@@ -198,8 +206,7 @@ def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: 
 
     bones = [deepcopy(b) for b in bones if not dropped(b)]
     rename: dict[str, str] = {}
-    roots = {"armorBody": "body", "armorHead": "head", "armorRightArm": "right_arm", "armorLeftArm": "left_arm",
-             "armorRightLeg": "right_leg", "armorLeftLeg": "left_leg"}
+    roots = ROOT_NAMES
     rename.update({k: v for k, v in roots.items() if any(b["name"] == k for b in bones)})
 
     def children(name: str, pool: list[dict]) -> list[dict]:
@@ -232,11 +239,10 @@ def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: 
         b["name"] = rename.get(b["name"], b["name"])
         if "parent" in b:
             b["parent"] = rename.get(b["parent"], b["parent"])
-    # Hierarchie: root ← body ← (head, Arme); root ← Beine
+    # Hierarchie wie in AE: Kopf, Rumpf, Arme und Beine haengen einzeln an root und folgen im Spiel je dem
+    # passenden Teil des Spielermodells (Vanilla-Pose, wie Palladium/GeckoLib-Ruestung)
     for b in bones:
-        if b["name"] in ("head", "right_arm", "left_arm"):
-            b["parent"] = "body"
-        elif b["name"] in ("body", "right_leg", "left_leg"):
+        if b["name"] in MAIN_BONES:
             b["parent"] = "root"
     result = [{"name": "root", "pivot": [0, 0, 0]}] + bones
 
@@ -257,7 +263,7 @@ def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: 
                 if "parent" in b:
                     b["parent"] = mapping.get(b["parent"], f"lo_{side}_{b['parent']}")
                 if b["name"] == f"{side}_lower_arm":
-                    b["parent"] = "body"
+                    b["parent"] = "root"
             keep += sub
         result += keep
 
@@ -414,12 +420,51 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, color, (tw_new, th_new))
         if index == 0:
             classic_bones = bones
-    stub = gen.Alien(name, (64, 64), [gen.Bone(b["name"], b.get("parent"), tuple(b.get("pivot", (0, 0, 0))))
-                                       for b in classic_bones], spec.accent, style=spec.style)
-    files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = gen.build_animations(stub)
-    files[ASSETS / "alien_render" / f"{name}.json"] = {"scale": spec.scale, "uniforms": list(UNIFORMS),
-                                                       "uniform_models": True, "source": "Alien Evolution (Habb and Stephen)"}
+    files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
+    files[ASSETS / "alien_render" / f"{name}.json"] = {
+        "scale": spec.scale, "uniforms": list(UNIFORMS), "uniform_models": True,
+        # Hauptknochen folgen der Spielerpose (wie AE); Schwung-Faktoren aus den AE-Animationsskripten
+        "vanilla_pose": True, "arm_swing": spec.arm_swing, "leg_swing": spec.leg_swing,
+        "source": "Alien Evolution (Habb and Stephen)"}
     return files
+
+
+def ae_bone_name(name: str) -> str:
+    """AE-Knochenname in einer AE-Animation → unser Name (wie transform_bones fuer Wurzeln, Schwanz, Kollisionen)."""
+    if name in ROOT_NAMES:
+        return ROOT_NAMES[name]
+    if name in TAIL_NAMES:
+        return TAIL_NAMES[name]
+    return "ae_" + name if name in RESERVED else name
+
+
+def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict:
+    """Animationssatz wie AE: Hauptknochen bleiben frei (Spielerpose im Renderer), Daueranimationen aus AE laufen in
+    allen Bewegungszustaenden; Verwandeln/Zurueckverwandeln skalieren nur root (Wachsen aus dem Blitz)."""
+    present = {b["name"] for b in bones}
+    loop_bones: dict[str, dict] = {}
+    length = 1.0
+    for ref in spec.loops:
+        file, anim = ref.split(":", 1)
+        source = jar.json(f"assets/alienevo/animations/{file}")["animations"][anim]
+        length = max(length, float(source.get("animation_length", 1.0)))
+        for bone, tracks in source.get("bones", {}).items():
+            target = ae_bone_name(bone)
+            if target in present and target not in MAIN_BONES:
+                loop_bones[target] = deepcopy(tracks)
+    loop = {"loop": True, "animation_length": length, "bones": loop_bones}
+    stub = gen.Alien(name, (64, 64), [gen.Bone(b["name"], b.get("parent"), tuple(b.get("pivot", (0, 0, 0))))
+                                      for b in bones], spec.accent, style=spec.style)
+    generated = gen.build_animations(stub)["animations"]
+    animations = {key: deepcopy(loop) for key in ("idle", "walk", "run", "jump", "fall")}
+    for key in ("transform", "revert"):
+        anim = deepcopy(generated[key])
+        anim["bones"] = {"root": {k: v for k, v in anim["bones"]["root"].items() if k == "scale"}}
+        animations[key] = anim
+    # Schlag, Treffer und Faehigkeiten zeigt die Spielerpose (Armschwung); die Controller brauchen die Namen trotzdem
+    for key in ("attack", "hit", "ability_0", "ability_1", "ability_2"):
+        animations[key] = {"loop": "hold_on_last_frame", "animation_length": generated[key]["animation_length"], "bones": {}}
+    return {"format_version": "1.8.0", "animations": {k: animations[k] for k in sorted(animations)}}
 
 
 def expected_files() -> list[Path]:
