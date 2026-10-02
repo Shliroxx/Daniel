@@ -69,7 +69,8 @@ def scale(color: Color, factor: float) -> Color:
 # --- Modell-Bausteine -----------------------------------------------------------------------------
 
 @dataclass
-class Cube:
+class Part:
+    """Wuerfel der detaillierten Bauweise: Material statt Farbe, UV optional (automatisch gepackt)."""
     origin: tuple[float, float, float]
     size: tuple[int, int, int]
     material: str
@@ -93,11 +94,29 @@ class Cube:
 
 
 @dataclass
+class Cube:
+    """Wuerfel der einfachen Bauweise (Farbe + Front-Detail, feste UV). Von den Generatoren fuer Herzlose, Boss,
+    NPCs und Schiff importiert — Signatur und Bemalung bleiben deshalb unveraendert."""
+    origin: tuple[float, float, float]
+    size: tuple[int, int, int]
+    uv: tuple[int, int]
+    color: str
+    front_detail: str | None = None  # "eyes", "visor", "four_eyes", "big_eyes", "omnitrix"
+    mirror: bool = False
+
+    def to_json(self) -> dict:
+        data = {"origin": list(self.origin), "size": list(self.size), "uv": list(self.uv)}
+        if self.mirror:
+            data["mirror"] = True
+        return data
+
+
+@dataclass
 class Bone:
     name: str
     parent: str | None
     pivot: tuple[float, float, float]
-    cubes: list[Cube] = field(default_factory=list)
+    cubes: list = field(default_factory=list)  # Part oder Cube
     rotation: tuple[float, float, float] | None = None
 
     def to_json(self) -> dict:
@@ -198,7 +217,7 @@ def cracks(face: Face, rng: random.Random, density: float) -> set[tuple[int, int
     return result
 
 
-def paint_rock(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, noise: Noise) -> None:
+def paint_rock(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
     base = ROCK[cube.material]
     shade = FACE_SHADE[face.name]
     density = {"rock": 0.55, "rock_dark": 0.35, "rock_light": 0.45, "face": 0.0}[cube.material]
@@ -222,7 +241,7 @@ def paint_rock(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, noise
             canvas.put(face.x + px, face.y + py, color)
 
 
-def paint_magma(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, noise: Noise) -> None:
+def paint_magma(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
     for py in range(face.h):
         for px in range(face.w):
             n = noise(face.x + px * 1.7, face.y + py * 1.7)
@@ -239,7 +258,7 @@ def paint_magma(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, nois
 FLAME_Y = (26.0, 43.0)   # Hoehenbereich der Flammensaeule (Kern unten, Spitze oben)
 
 
-def paint_flame(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, noise: Noise) -> None:
+def paint_flame(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
     low, high = FLAME_Y
     for py in range(face.h):
         for px in range(face.w):
@@ -263,7 +282,7 @@ def paint_flame(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, nois
             canvas.put(face.x + px, face.y + py, color, alpha=alpha, glow=True)
 
 
-def paint_flat(canvas: Canvas, face: Face, cube: Cube, rng: random.Random, noise: Noise) -> None:
+def paint_flat(canvas: Canvas, face: Face, cube: Part, rng: random.Random, noise: Noise) -> None:
     base = rgb(cube.material.split(":", 1)[1])
     for py in range(face.h):
         for px in range(face.w):
@@ -280,7 +299,7 @@ def painter(material: str) -> Callable[[Canvas, Face, Cube, random.Random, Noise
     return {"magma": paint_magma, "flame": paint_flame}[material]
 
 
-def paint_detail(canvas: Canvas, cube: Cube, front: Face) -> None:
+def paint_detail(canvas: Canvas, cube: Part, front: Face) -> None:
     fx, fy, w, h = front.x, front.y, front.w, front.h
     detail = cube.detail
     if detail == "heat_face":
@@ -337,7 +356,7 @@ def paint_detail(canvas: Canvas, cube: Cube, front: Face) -> None:
                 canvas.put(cx + dx, cy + dy, (57, 255, 20))
 
 
-def faces_of(cube: Cube) -> list[Face]:
+def faces_of(cube: Part) -> list[Face]:
     u, v = cube.uv
     w, h, d = cube.size
     return [
@@ -368,7 +387,8 @@ def pack_uvs(alien: Alien) -> None:
         shelf = max(shelf, fh)
 
 
-def build_texture(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
+def build_textures(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
+    """Farbtextur und Leuchtmaske der detaillierten Bauweise (Wuerfel vom Typ Part)."""
     canvas = Canvas(alien.texture_size)
     for b in alien.bones:
         for i, cube in enumerate(b.cubes):
@@ -385,20 +405,86 @@ def build_texture(alien: Alien, seed: int) -> tuple[Image.Image, Image.Image]:
     return canvas.color, canvas.glow
 
 
+# --- Einfache Bauweise (Herzlose, Boss, NPCs, Schiff) ---------------------------------------------
+
+def paint_cube(img: Image.Image, cube: Cube, rng: random.Random) -> None:
+    u, v = cube.uv
+    w, h, d = cube.size
+    base = rgb(cube.color)
+    width, height = img.size
+
+    def put(x: int, y: int, color: tuple[int, int, int]) -> None:
+        if 0 <= x < width and 0 <= y < height:
+            img.putpixel((x, y), color + (255,))
+
+    def shade(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
+        jitter = rng.randint(-10, 10)
+        return tuple(max(0, min(255, int(c * factor) + jitter)) for c in color)
+
+    faces = [
+        (u + d, v, w, d, 1.15),              # oben
+        (u + d + w, v, w, d, 0.70),          # unten
+        (u, v + d, d, h, 0.85),              # rechts
+        (u + d, v + d, w, h, 1.00),          # vorne
+        (u + d + w, v + d, d, h, 0.85),      # links
+        (u + 2 * d + w, v + d, w, h, 0.80),  # hinten
+    ]
+    for fx, fy, fw, fh, factor in faces:
+        for y in range(fy, fy + fh):
+            for x in range(fx, fx + fw):
+                put(x, y, shade(base, factor))
+
+    front_x, front_y = u + d, v + d
+    detail = cube.front_detail
+    if detail == "eyes":
+        for ex in (1, w - 3):
+            put(front_x + ex, front_y + h // 2 - 1, (255, 255, 255))
+            put(front_x + ex + 1, front_y + h // 2 - 1, (30, 30, 30))
+    elif detail == "visor":
+        for x in range(front_x, front_x + w):
+            put(x, front_y + 2, (20, 20, 20))
+            put(x, front_y + 3, (90, 200, 255))
+    elif detail == "four_eyes":
+        for row in (2, 4):
+            for ex in (1, w - 3):
+                put(front_x + ex, front_y + row, (255, 230, 80))
+                put(front_x + ex + 1, front_y + row, (255, 230, 80))
+    elif detail == "big_eyes":
+        for ex in (1, w - 4):
+            for dx in range(3):
+                for dy in range(3):
+                    put(front_x + ex + dx, front_y + 3 + dy, (40, 255, 40) if (dx, dy) == (1, 1) else (10, 10, 10))
+    elif detail == "omnitrix":
+        cx, cy = front_x + w // 2 - 1, front_y + 2
+        for dx in range(2):
+            for dy in range(2):
+                put(cx + dx, cy + dy, (57, 255, 20))
+
+
+def build_texture(alien: Alien, rng: random.Random) -> Image.Image:
+    """Textur der einfachen Bauweise (Wuerfel vom Typ Cube) — gemeinsame API fuer die anderen Generatoren."""
+    img = Image.new("RGBA", alien.texture_size, (0, 0, 0, 0))
+    for b in alien.bones:
+        for cube in b.cubes:
+            if not cube.mirror:
+                paint_cube(img, cube, rng)
+    return img
+
+
 # --- Aliens ---------------------------------------------------------------------------------------
 
-def humanoid(skin: str, head: str, legs: str, *, body_uv=(16, 16), head_cube: Cube | None = None,
+def humanoid(skin: str, head: str, legs: str, *, body_uv=(16, 16), head_cube: Part | None = None,
              head_detail: str = "eyes") -> list[Bone]:
     """Grundgeruest im Spieler-Layout (64x64), Fuesse auf y=0, Kopf bis y=32."""
     skin, head, legs = f"flat:{skin}", f"flat:{head}", f"flat:{legs}"
     return [
         Bone("root", None, (0, 0, 0)),
-        Bone("body", "root", (0, 24, 0), [Cube((-4, 12, -2), (8, 12, 4), skin, body_uv, "omnitrix_dot")]),
-        Bone("head", "body", (0, 24, 0), [head_cube or Cube((-4, 24, -4), (8, 8, 8), head, (0, 0), head_detail)]),
-        Bone("right_arm", "body", (-5, 22, 0), [Cube((-8, 12, -2), (4, 12, 4), skin, (40, 16))]),
-        Bone("left_arm", "body", (5, 22, 0), [Cube((4, 12, -2), (4, 12, 4), skin, (40, 16), mirror=True)]),
-        Bone("right_leg", "root", (-1.9, 12, 0), [Cube((-3.9, 0, -2), (4, 12, 4), legs, (0, 16))]),
-        Bone("left_leg", "root", (1.9, 12, 0), [Cube((-0.1, 0, -2), (4, 12, 4), legs, (0, 16), mirror=True)]),
+        Bone("body", "root", (0, 24, 0), [Part((-4, 12, -2), (8, 12, 4), skin, body_uv, "omnitrix_dot")]),
+        Bone("head", "body", (0, 24, 0), [head_cube or Part((-4, 24, -4), (8, 8, 8), head, (0, 0), head_detail)]),
+        Bone("right_arm", "body", (-5, 22, 0), [Part((-8, 12, -2), (4, 12, 4), skin, (40, 16))]),
+        Bone("left_arm", "body", (5, 22, 0), [Part((4, 12, -2), (4, 12, 4), skin, (40, 16), mirror=True)]),
+        Bone("right_leg", "root", (-1.9, 12, 0), [Part((-3.9, 0, -2), (4, 12, 4), legs, (0, 16))]),
+        Bone("left_leg", "root", (1.9, 12, 0), [Part((-0.1, 0, -2), (4, 12, 4), legs, (0, 16), mirror=True)]),
     ]
 
 
@@ -406,59 +492,59 @@ def heatblast() -> Alien:
     """Heatblast: schlanker Koerper aus Magmagestein, Platten mit gluehenden Rissen, Kopf als lodernde Flamme."""
     bones = [Bone("root", None, (0, 0, 0)),
              Bone("body", "root", (0, 12, 0), [
-                 Cube((-3.5, 10.5, -2), (7, 3, 4), "rock_dark"),                 # Becken
-                 Cube((-3, 13, -1.5), (6, 4, 3), "magma"),                      # Taille (Glut zwischen den Platten)
-                 Cube((-4.5, 17, -2.5), (9, 7, 5), "rock"),                     # Brustkorb
-                 Cube((-2, 19, -3.7), (4, 4, 1), "rock_dark", detail="omnitrix_badge"),  # Omnitrix-Symbol
-                 Cube((-4, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, 8, 0), pivot=(-2, 20, -3)),
-                 Cube((0, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, -8, 0), pivot=(2, 20, -3)),
-                 Cube((-2.5, 14, -2.2), (5, 2, 1), "rock_dark"),                # Bauchplatte
-                 Cube((-3.5, 16.5, 2.2), (7, 7, 1), "rock_dark"),               # Rueckenplatte
-                 Cube((-1, 17, 3), (2, 6, 1), "magma"),                         # Glutnaht am Ruecken
-                 Cube((-1.5, 24, -1.5), (3, 1, 3), "magma"),                    # Hals
+                 Part((-3.5, 10.5, -2), (7, 3, 4), "rock_dark"),                 # Becken
+                 Part((-3, 13, -1.5), (6, 4, 3), "magma"),                      # Taille (Glut zwischen den Platten)
+                 Part((-4.5, 17, -2.5), (9, 7, 5), "rock"),                     # Brustkorb
+                 Part((-2, 19, -3.7), (4, 4, 1), "rock_dark", detail="omnitrix_badge"),  # Omnitrix-Symbol
+                 Part((-4, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, 8, 0), pivot=(-2, 20, -3)),
+                 Part((0, 18.5, -3.2), (4, 4, 1), "rock_light", rotation=(0, -8, 0), pivot=(2, 20, -3)),
+                 Part((-2.5, 14, -2.2), (5, 2, 1), "rock_dark"),                # Bauchplatte
+                 Part((-3.5, 16.5, 2.2), (7, 7, 1), "rock_dark"),               # Rueckenplatte
+                 Part((-1, 17, 3), (2, 6, 1), "magma"),                         # Glutnaht am Ruecken
+                 Part((-1.5, 24, -1.5), (3, 1, 3), "magma"),                    # Hals
              ])]
     for side, s in (("right", -1), ("left", 1)):
         mirror = side == "left"
         sx = lambda x, w: x if s < 0 else -x - w  # noqa: E731 — x-Spiegelung fuer Wuerfel-Ursprung
         bones += [
             Bone(f"{side}_arm", "body", (5.5 * s, 22.5, 0), [
-                Cube((sx(-9, 5), 20.5, -2.5), (5, 4, 5), "rock_light", rotation=(0, 0, -12 * s), pivot=(6.5 * s, 22.5, 0),
+                Part((sx(-9, 5), 20.5, -2.5), (5, 4, 5), "rock_light", rotation=(0, 0, -12 * s), pivot=(6.5 * s, 22.5, 0),
                      mirror=mirror),                                            # Schulterpanzer
-                Cube((sx(-7.5, 3), 16, -1.5), (3, 6, 3), "rock", mirror=mirror),  # Oberarm
+                Part((sx(-7.5, 3), 16, -1.5), (3, 6, 3), "rock", mirror=mirror),  # Oberarm
             ]),
             Bone(f"{side}_forearm", f"{side}_arm", (6 * s, 16.5, 0), [
-                Cube((sx(-7.75, 3), 11, -1.75), (3, 6, 3), "rock_dark", inflate=0.3, mirror=mirror),   # Armschiene
-                Cube((sx(-7.5, 3), 8.5, -1.5), (3, 3, 3), "magma", mirror=mirror),                    # gluehende Faust
+                Part((sx(-7.75, 3), 11, -1.75), (3, 6, 3), "rock_dark", inflate=0.3, mirror=mirror),   # Armschiene
+                Part((sx(-7.5, 3), 8.5, -1.5), (3, 3, 3), "magma", mirror=mirror),                    # gluehende Faust
             ]),
             Bone(f"{side}_leg", "root", (2 * s, 11, 0), [
-                Cube((sx(-3.6, 3), 5.5, -1.5), (3, 6, 3), "rock", mirror=mirror),                     # Oberschenkel
-                Cube((sx(-3.85, 3), 5, -2.3), (3, 2, 1), "rock_light", inflate=0.2, mirror=mirror),   # Knieplatte
+                Part((sx(-3.6, 3), 5.5, -1.5), (3, 6, 3), "rock", mirror=mirror),                     # Oberschenkel
+                Part((sx(-3.85, 3), 5, -2.3), (3, 2, 1), "rock_light", inflate=0.2, mirror=mirror),   # Knieplatte
             ]),
             Bone(f"{side}_shin", f"{side}_leg", (2 * s, 5.5, 0), [
-                Cube((sx(-3.6, 3), 1.5, -1.5), (3, 4, 3), "rock_dark", mirror=mirror),                # Schienbein
-                Cube((sx(-3.6, 3), 3, -1.2), (3, 2, 2), "magma", inflate=-0.1, mirror=mirror),        # Glutfuge
-                Cube((sx(-4.1, 4), 0, -3.2), (4, 2, 5), "rock", mirror=mirror),                       # Fuss
+                Part((sx(-3.6, 3), 1.5, -1.5), (3, 4, 3), "rock_dark", mirror=mirror),                # Schienbein
+                Part((sx(-3.6, 3), 3, -1.2), (3, 2, 2), "magma", inflate=-0.1, mirror=mirror),        # Glutfuge
+                Part((sx(-4.1, 4), 0, -3.2), (4, 2, 5), "rock", mirror=mirror),                       # Fuss
             ]),
         ]
     bones += [
         Bone("head", "body", (0, 25, 0), [
-            Cube((-3.5, 25, -3.5), (7, 5, 6), "face", detail="heat_face"),     # Gesicht
-            Cube((-2.5, 24.5, -3.8), (5, 1, 1), "magma"),                      # Kinnglut
+            Part((-3.5, 25, -3.5), (7, 5, 6), "face", detail="heat_face"),     # Gesicht
+            Part((-2.5, 24.5, -3.8), (5, 1, 1), "magma"),                      # Kinnglut
         ]),
         Bone("flame_base", "head", (0, 29.5, 1), [
-            Cube((-4, 29.5, -2.5), (8, 3, 7), "flame"),                                   # Krone
-            Cube((-3, 29, -3.9), (6, 2, 2), "flame"),                                     # Stirnflamme
-            Cube((-5.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, 14), pivot=(-4.2, 27, 0)),
-            Cube((3.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, -14), pivot=(4.2, 27, 0), mirror=True),
-            Cube((-3, 25.5, 2.4), (6, 6, 2), "flame"),                                    # Hinterkopf
+            Part((-4, 29.5, -2.5), (8, 3, 7), "flame"),                                   # Krone
+            Part((-3, 29, -3.9), (6, 2, 2), "flame"),                                     # Stirnflamme
+            Part((-5.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, 14), pivot=(-4.2, 27, 0)),
+            Part((3.2, 26.5, -1.5), (2, 5, 4), "flame", rotation=(0, 0, -14), pivot=(4.2, 27, 0), mirror=True),
+            Part((-3, 25.5, 2.4), (6, 6, 2), "flame"),                                    # Hinterkopf
         ]),
         Bone("flame_mid", "flame_base", (0, 32, 2), [
-            Cube((-3, 32, -0.5), (6, 4, 5), "flame"),
-            Cube((-4.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, 22), pivot=(-3.2, 33, 1.5)),
-            Cube((2.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, -22), pivot=(3.2, 33, 1.5), mirror=True),
+            Part((-3, 32, -0.5), (6, 4, 5), "flame"),
+            Part((-4.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, 22), pivot=(-3.2, 33, 1.5)),
+            Part((2.2, 33, 0.5), (2, 3, 2), "flame", rotation=(0, 0, -22), pivot=(3.2, 33, 1.5), mirror=True),
         ], rotation=(-20, 0, 0)),
-        Bone("flame_tip", "flame_mid", (0, 35.5, 3), [Cube((-2, 35.5, 1), (4, 4, 4), "flame")], rotation=(-18, 0, 0)),
-        Bone("flame_spike", "flame_tip", (0, 39, 4), [Cube((-1, 39, 2), (2, 3, 2), "flame")], rotation=(-22, 0, 0)),
+        Bone("flame_tip", "flame_mid", (0, 35.5, 3), [Part((-2, 35.5, 1), (4, 4, 4), "flame")], rotation=(-18, 0, 0)),
+        Bone("flame_spike", "flame_tip", (0, 39, 4), [Part((-1, 39, 2), (2, 3, 2), "flame")], rotation=(-22, 0, 0)),
     ]
     alien = Alien("heatblast", (128, 64), bones, "#FF6A00", style="heat", glow=True)
     pack_uvs(alien)
@@ -470,34 +556,34 @@ def build_aliens() -> list[Alien]:
 
     # XLR8: schlank, Visier, Schwanz (PLACEHOLDER bis zum Rework)
     b = humanoid("#1B3C8C", "#14213D", "#0B1A3A", head_detail="visor")
-    b.append(Bone("visor", "head", (0, 28, -4), [Cube((-4, 26, -6), (8, 3, 2), "flat:#7FD4FF", (32, 0))]))
-    b.append(Bone("tail", "body", (0, 13, 2), [Cube((-1, 12, 2), (2, 2, 9), "flat:#1B3C8C", (0, 32))]))
+    b.append(Bone("visor", "head", (0, 28, -4), [Part((-4, 26, -6), (8, 3, 2), "flat:#7FD4FF", (32, 0))]))
+    b.append(Bone("tail", "body", (0, 13, 2), [Part((-1, 12, 2), (2, 2, 9), "flat:#1B3C8C", (0, 32))]))
     aliens.append(Alien("xlr8", (64, 64), b, "#1E90FF"))
 
     # Vierarm: breiter Rumpf, vier Arme, vier Augen (128x64)
     b = [
         Bone("root", None, (0, 0, 0)),
-        Bone("body", "root", (0, 24, 0), [Cube((-5, 12, -2.5), (10, 12, 5), "flat:#B22A1E", (64, 0), "omnitrix_dot")]),
-        Bone("head", "body", (0, 24, 0), [Cube((-4, 24, -4), (8, 8, 8), "flat:#C0392B", (0, 0), "four_eyes")]),
-        Bone("right_arm", "body", (-6, 23, 0), [Cube((-10, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16))]),
-        Bone("left_arm", "body", (6, 23, 0), [Cube((6, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16), mirror=True)]),
-        Bone("right_lower_arm", "body", (-5.5, 18, 0), [Cube((-8.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32))]),
-        Bone("left_lower_arm", "body", (5.5, 18, 0), [Cube((5.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32), mirror=True)]),
-        Bone("right_leg", "root", (-2.4, 12, 0), [Cube((-4.9, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16))]),
-        Bone("left_leg", "root", (2.4, 12, 0), [Cube((-0.1, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16), mirror=True)]),
+        Bone("body", "root", (0, 24, 0), [Part((-5, 12, -2.5), (10, 12, 5), "flat:#B22A1E", (64, 0), "omnitrix_dot")]),
+        Bone("head", "body", (0, 24, 0), [Part((-4, 24, -4), (8, 8, 8), "flat:#C0392B", (0, 0), "four_eyes")]),
+        Bone("right_arm", "body", (-6, 23, 0), [Part((-10, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16))]),
+        Bone("left_arm", "body", (6, 23, 0), [Part((6, 13, -2), (4, 11, 4), "flat:#C0392B", (40, 16), mirror=True)]),
+        Bone("right_lower_arm", "body", (-5.5, 18, 0), [Part((-8.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32))]),
+        Bone("left_lower_arm", "body", (5.5, 18, 0), [Part((5.5, 9, -1.5), (3, 9, 3), "flat:#A93226", (64, 32), mirror=True)]),
+        Bone("right_leg", "root", (-2.4, 12, 0), [Part((-4.9, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16))]),
+        Bone("left_leg", "root", (2.4, 12, 0), [Part((-0.1, 0, -2.5), (5, 12, 5), "flat:#1C1C1C", (0, 16), mirror=True)]),
     ]
     aliens.append(Alien("four_arms", (128, 64), b, "#C0392B"))
 
     # Diamondhead: Kristallkoerper mit Kopf- und Schulterspitzen
     b = humanoid("#2ECC71", "#58F0A0", "#1E9E5E")
-    b.append(Bone("crystal_crest", "head", (0, 32, 0), [Cube((-2, 32, -2), (4, 6, 4), "flat:#A8FFD4", (32, 0))]))
-    b.append(Bone("right_spike", "right_arm", (-6, 24, 0), [Cube((-7, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32))]))
-    b.append(Bone("left_spike", "left_arm", (6, 24, 0), [Cube((5, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32), mirror=True)]))
+    b.append(Bone("crystal_crest", "head", (0, 32, 0), [Part((-2, 32, -2), (4, 6, 4), "flat:#A8FFD4", (32, 0))]))
+    b.append(Bone("right_spike", "right_arm", (-6, 24, 0), [Part((-7, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32))]))
+    b.append(Bone("left_spike", "left_arm", (6, 24, 0), [Part((5, 24, -1), (2, 4, 2), "flat:#A8FFD4", (0, 32), mirror=True)]))
     aliens.append(Alien("diamondhead", (64, 64), b, "#2ECC71"))
 
     # Grey Matter: grosser Kopf, grosse Augen (128x64)
     b = humanoid("#95A5A6", "#A9B7B8", "#7F8C8D",
-                 head_cube=Cube((-5, 24, -5), (10, 9, 10), "flat:#A9B7B8", (64, 0), "big_eyes"))
+                 head_cube=Part((-5, 24, -5), (10, 9, 10), "flat:#A9B7B8", (64, 0), "big_eyes"))
     aliens.append(Alien("grey_matter", (128, 64), b, "#95A5A6"))
     return aliens
 
@@ -764,7 +850,7 @@ def build_animations(alien: Alien) -> dict:
 
 def outputs(alien: Alien, seed: int) -> dict[Path, object]:
     base = Path("entity") / "alien"
-    color, glow = build_texture(alien, seed)
+    color, glow = build_textures(alien, seed)
     files: dict[Path, object] = {
         ASSETS / "geo" / base / f"{alien.name}.geo.json": build_geo(alien),
         ASSETS / "animations" / base / f"{alien.name}.animation.json": build_animations(alien),
