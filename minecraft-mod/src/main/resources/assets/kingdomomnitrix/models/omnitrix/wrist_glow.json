@@ -1,0 +1,349 @@
+{
+  "credit": "made by SANTIQ \u2014 tools/generate_item_models.py",
+  "textures": {
+    "blade": "kingdomomnitrix:item/3d/omnitrix_wrist_glow",
+    "particle": "kingdomomnitrix:item/3d/omnitrix_wrist_glow"
+  },
+  "elements": [
+    {
+      "from": [
+        12.97,
+        1.9,
+        6.2
+      ],
+      "to": [
+        13.02,
+        4.1,
+        9.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            16.0,
+            0.0,
+            15.5,
+            4.5
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            0.0,
+            7.25,
+            0.5,
+            11.75
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            1.0,
+            0.0,
+            8.25,
+            4.5
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            15.5,
+            0.0,
+            8.25,
+            4.5
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            7.25
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            7.25
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        11.86,
+        0.85,
+        5.05
+      ],
+      "to": [
+        11.91,
+        1.45,
+        5.65
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            11.0,
+            7.25,
+            10.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            11.0,
+            7.25,
+            11.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            0.5,
+            7.25,
+            1.75,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            3.0,
+            7.25,
+            1.75,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            11.5,
+            7.25,
+            12.0,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            12.0,
+            7.25,
+            12.5,
+            8.5
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        11.86,
+        0.85,
+        10.35
+      ],
+      "to": [
+        11.91,
+        1.45,
+        10.95
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            13.0,
+            7.25,
+            12.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            13.0,
+            7.25,
+            13.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            3.0,
+            7.25,
+            4.25,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            5.5,
+            7.25,
+            4.25,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            13.5,
+            7.25,
+            14.0,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            14.0,
+            7.25,
+            14.5,
+            8.5
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        11.86,
+        4.55,
+        5.05
+      ],
+      "to": [
+        11.91,
+        5.15,
+        5.65
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            15.0,
+            7.25,
+            14.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            15.0,
+            7.25,
+            15.5,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            5.5,
+            7.25,
+            6.75,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            8.0,
+            7.25,
+            6.75,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            15.5,
+            7.25,
+            16.0,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            11.75,
+            0.5,
+            13.0
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        11.86,
+        4.55,
+        10.35
+      ],
+      "to": [
+        11.91,
+        5.15,
+        10.95
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1.0,
+            11.75,
+            0.5,
+            13.0
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            1.0,
+            11.75,
+            1.5,
+            13.0
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            8.0,
+            7.25,
+            9.25,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            10.5,
+            7.25,
+            9.25,
+            8.5
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            1.5,
+            11.75,
+            2.0,
+            13.0
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            2.0,
+            11.75,
+            2.5,
+            13.0
+          ],
+          "texture": "#blade"
+        }
+      }
+    }
+  ]
+}

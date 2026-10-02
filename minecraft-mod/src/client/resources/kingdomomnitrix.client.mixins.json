@@ -5,6 +5,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"CameraMixin",
+		"HeldItemRendererMixin",
 		"IntegratedServerLoaderMixin",
 		"LivingEntityRendererMixin",
 		"MinecraftClientMixin",

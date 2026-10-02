@@ -1,0 +1,145 @@
+{
+  "credit": "made by SANTIQ \u2014 tools/generate_item_models.py",
+  "textures": {
+    "blade": "kingdomomnitrix:item/3d/omnitrix_wrist_core",
+    "particle": "kingdomomnitrix:item/3d/omnitrix_wrist_core"
+  },
+  "elements": [
+    {
+      "from": [
+        11.8,
+        1.7,
+        6.0
+      ],
+      "to": [
+        12.6,
+        4.3,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            11.375,
+            0.0,
+            10.5,
+            2.625
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            11.375,
+            0.0,
+            12.25,
+            2.625
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            2.5,
+            0.0,
+            6.5,
+            2.625
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            10.5,
+            0.0,
+            6.5,
+            2.625
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            0.0,
+            0.0,
+            0.875,
+            4.0
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            0.875,
+            0.0,
+            1.75,
+            4.0
+          ],
+          "texture": "#blade"
+        }
+      }
+    },
+    {
+      "from": [
+        12.6,
+        1.9,
+        6.2
+      ],
+      "to": [
+        12.95,
+        4.1,
+        9.8
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            4.0,
+            3.625,
+            6.25
+          ],
+          "texture": "#blade"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            4.0,
+            4.375,
+            6.25
+          ],
+          "texture": "#blade"
+        },
+        "east": {
+          "uv": [
+            12.25,
+            0.0,
+            15.875,
+            2.25
+          ],
+          "texture": "#blade"
+        },
+        "west": {
+          "uv": [
+            3.625,
+            4.0,
+            0.0,
+            6.25
+          ],
+          "texture": "#blade"
+        },
+        "up": {
+          "uv": [
+            1.75,
+            0.0,
+            2.125,
+            3.625
+          ],
+          "texture": "#blade"
+        },
+        "down": {
+          "uv": [
+            2.125,
+            0.0,
+            2.5,
+            3.625
+          ],
+          "texture": "#blade"
+        }
+      }
+    }
+  ]
+}

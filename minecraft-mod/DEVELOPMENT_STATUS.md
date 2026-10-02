@@ -165,6 +165,19 @@ Volumen, Omnitrix nicht am Arm, Omnitrix-HUD überdeckt die Ego-Hand. Eigene Arb
   Screenshot: `docs/screenshots/gadgets_3d.png`.
 - Offen: Kommandomenü kompakter, KH-Lebensanzeige.
 
+**Auftrag 2 — Omnitrix 3D am Handgelenk: IMPLEMENTED (Pass 1)**
+- Drei Modellteile aus `tools/generate_item_models.py` (`models/omnitrix/wrist_{base,core,glow}.json`, 8 Bildpunkte
+  pro Modell-Pixel): Armband mit Randwulsten, Gehäuse mit Seitenwangen und -tasten, graue Fassung, vier grüne
+  Eck-Leuchten, Kern mit Sanduhr-Zifferblatt; Leuchtschicht additiv (`RenderLayer.getEyes`) und lichtunabhängig.
+- Third-Person: Feature-Renderer am linken Arm aller Spieler, die ein Omnitrix tragen (eigenes: Inventar; fremde:
+  wer es je benutzt hat), schmale Arme (Alex) berücksichtigt; nicht sichtbar, solange verwandelt.
+- Ego-Sicht (`HeldItemRendererMixin`): Alien-Rad offen → linker Arm hebt sich ins Bild, Zifferblatt zur Kamera,
+  Kern fährt heraus und leuchtet heller; Auswahl → Schlag aufs Zifferblatt (Kern runter, Ruck, Blitz). Das Rad
+  zeichnet ohne Unschärfe, damit der Arm sichtbar bleibt. Haltung in `assets/.../omnitrix/first_person.json`
+  (F3+T lädt neu). Screenshot: `docs/screenshots/omnitrix_3d.png`.
+- Offen: Alien-Silhouette als Hologramm über dem Zifferblatt beim Durchblättern, Timeout-Warnung (rot blinkend),
+  Kern-Hub für fremde Spieler (nur lokal bekannt).
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +

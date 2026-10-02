@@ -112,6 +112,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ModParticleFactories.register();
 		ScreenEffects.register();
 		AlienBodyRenderers.register();
+		com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixWrist.register();
 		AlienAmbientVfx.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override

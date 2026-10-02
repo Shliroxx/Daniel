@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
+import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixWrist;
 import com.santiq.kingdomomnitrix.networking.RevertRequestPayload;
 import com.santiq.kingdomomnitrix.networking.TransformRequestPayload;
 import com.santiq.kingdomomnitrix.player.HeroData;
@@ -130,6 +131,12 @@ public class OmnitrixWheelScreen extends Screen {
 
 	private boolean isTransformed() {
 		return client != null && client.player != null && TransformationManager.get(client.player).isTransformed();
+	}
+
+	/** Ohne Unschaerfe: hinter dem Rad bleibt der gehobene Arm mit dem Omnitrix sichtbar. */
+	@Override
+	public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+		context.fillGradient(0, 0, width, height, 0x30000000, 0x60000000);
 	}
 
 	@Override
@@ -314,6 +321,7 @@ public class OmnitrixWheelScreen extends Screen {
 			return;
 		}
 		ClientPlayNetworking.send(new TransformRequestPayload(entry.get().id()));
+		OmnitrixWrist.slam();
 		close();
 	}
 }

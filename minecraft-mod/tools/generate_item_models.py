@@ -90,6 +90,13 @@ MATERIALS: dict[str, Material] = {
     "fire": Material("#5A1400", "#C83C00", "#FF7A1A", "#FFC060", "#FFF4D0", "glow"),
     "plasma": Material("#08305A", "#1A6EC8", "#3AB0FF", "#9AD8FF", "#E8F8FF", "glow"),
     "strap": Material("#050505", "#0E0F12", "#1C1E24", "#2C2F38", "#4A4F5C", "wrap"),
+    # Omnitrix am Handgelenk (Zifferblatt zeigt nach +x = Aussenseite des linken Arms)
+    "omni_housing": Material("#08090C", "#181B22", "#2A2E38", "#3E4452", "#6A7286", "plate"),
+    "omni_bezel": Material("#30343E", "#6A7180", "#9AA2B2", "#C8CEDA", "#F2F5FA", "metal"),
+    "omni_light": Material("#0A5A1E", "#1EC84A", "#39FF6A", "#A8FFC0", "#F0FFF4", "glow"),
+    "omni_dial_x": Material("#050607", "#0C0E12", "#121519", "#2A2F38", "#39FF6A", "dial_x"),
+    "omni_glow_x": Material("#000000", "#000000", "#000000", "#000000", "#39FF6A", "glowmask_x"),
+    "omni_glow_full": Material("#2AE05A", "#2AE05A", "#39FF6A", "#7DFF9C", "#C8FFD6", "glowfull"),
 }
 
 
@@ -327,6 +334,51 @@ def omnitrix() -> list[Box]:
     return b
 
 
+# Omnitrix am Handgelenk: drei Teile, im Code an den linken Arm gehaengt (Arm x/z 6..10, Hand bei y = 0).
+
+def omnitrix_wrist_base() -> list[Box]:
+    b: list[Box] = []
+    b.append(box((5.55, 1.2, 5.55), (10.45, 4.8, 10.45), "strap"))                # Armband
+    b.append(box((5.35, 1.2, 5.35), (10.65, 1.6, 10.65), "omni_housing"))        # Randwulst
+    b.append(box((5.35, 4.4, 5.35), (10.65, 4.8, 10.65), "omni_housing"))
+    b.append(box((10.45, 0.8, 5.0), (11.5, 5.2, 11.0), "omni_housing"))          # Gehaeuse
+    b.append(box((10.45, 1.4, 4.5), (11.3, 4.6, 5.0), "omni_housing"))           # Seitenwangen
+    b.append(box((10.45, 1.4, 11.0), (11.3, 4.6, 11.5), "omni_housing"))
+    b.append(box((11.5, 1.1, 5.4), (12.1, 4.9, 10.6), "omni_bezel"))             # Fassung
+    b.append(box((11.5, 1.6, 4.9), (12.0, 4.4, 5.4), "omni_bezel"))
+    b.append(box((11.5, 1.6, 10.6), (12.0, 4.4, 11.1), "omni_bezel"))
+    for y in (0.85, 4.55):                                                        # Eck-Leuchten
+        for z in (5.05, 10.35):
+            b.append(box((11.5, y, z), (11.85, y + 0.6, z + 0.6), "omni_light"))
+    b.append(box((10.8, 2.4, 4.1), (11.3, 3.6, 4.5), "omni_bezel"))              # Seitentasten
+    b.append(box((10.8, 2.4, 11.5), (11.3, 3.6, 11.9), "omni_bezel"))
+    return b
+
+
+def omnitrix_wrist_core() -> list[Box]:
+    return [
+        box((11.8, 1.7, 6.0), (12.6, 4.3, 10.0), "omni_housing"),                  # Kern (faehrt aus)
+        box((12.6, 1.9, 6.2), (12.95, 4.1, 9.8), "omni_dial_x"),                   # Zifferblatt
+    ]
+
+
+def omnitrix_wrist_glow() -> list[Box]:
+    b = [box((12.97, 1.9, 6.2), (13.02, 4.1, 9.8), "omni_glow_x")]               # Sanduhr-Leuchten
+    for y in (0.85, 4.55):
+        for z in (5.05, 10.35):
+            b.append(box((11.86, y, z), (11.91, y + 0.6, z + 0.6), "omni_glow_full"))
+    return b
+
+
+# Teile ohne Item: Modell unter models/omnitrix/, Dichte 8 Bildpunkte pro Modell-Pixel (am Arm sehr nah im Bild)
+PARTS = {
+    "wrist_base": (omnitrix_wrist_base, "omni_housing"),
+    "wrist_core": (omnitrix_wrist_core, "omni_housing"),
+    "wrist_glow": (omnitrix_wrist_glow, "omni_glow_x"),
+}
+PART_DENSITY = 8
+
+
 WEAPONS = {
     "kingdom_key": (kingdom_key, "silver", "blade"),
     "oathkeeper": (oathkeeper, "white", "blade"),
@@ -443,12 +495,21 @@ def paint_face(img: Image.Image, s: Slot) -> None:
                 color = mix(base, shine, core * 0.8)
             elif m.pattern == "dial":
                 color = dial_color(px, py, w, h, s.face, m)
+            elif m.pattern == "dial_x":
+                color = dial_color(px, py, w, h, "north" if s.face in ("east", "west") else "up", m)
+            elif m.pattern == "glowmask_x":
+                lit = s.face in ("east", "west") and dial_color(px, py, w, h, "north", m) == hexc(m.shine)
+                color = hexc(m.shine) if lit else (0, 0, 0, 255)
+            elif m.pattern == "glowfull":
+                color = mix(base, shine, 1.0 - abs((px + 0.5) / w - 0.5) - abs((py + 0.5) / h - 0.5))
             # Glanzlinie entlang der Kante und ein Glanzpunkt pro Flaeche
             if m.pattern in ("metal", "feather", "plate") and s.face not in ("down",):
                 if (px if vertical else py) == max(1, round((w if vertical else h) * 0.25)) and 0.12 < along < 0.88:
                     color = mix(color, shine, 0.55)
             img.putpixel((s.x + px, s.y + py), color)
     # Kontur (bei Leuchtmaterial heller statt dunkel)
+    if m.pattern in ("glowmask_x", "glowfull"):
+        return
     edge = mix(base, light, 0.5) if m.pattern == "glow" else outline
     for px in range(w):
         for py in (0, h - 1):
@@ -476,13 +537,18 @@ def dial_color(px: int, py: int, w: int, h: int, face: str, m: Material) -> Colo
 
 
 def build(name: str) -> tuple[dict, Image.Image]:
-    factory, particle_material, display = WEAPONS[name]
+    if name in PARTS:
+        factory, particle_material = PARTS[name]
+        display, density, texture = None, PART_DENSITY, f"{MOD_ID}:item/3d/omnitrix_{name}"
+    else:
+        factory, particle_material, display = WEAPONS[name]
+        density, texture = DENSITY, f"{MOD_ID}:item/3d/{name}"
     boxes = factory()
     slots = []
     for b in boxes:
         for face in FACES:
             fw, fh = b.face_size(face)
-            slots.append(Slot(b, face, max(2, math.ceil(fw * DENSITY - 1e-6)), max(2, math.ceil(fh * DENSITY - 1e-6))))
+            slots.append(Slot(b, face, max(2, math.ceil(fw * density - 1e-6)), max(2, math.ceil(fh * density - 1e-6))))
     for size in TEXTURE_SIZES:
         if pack(slots, size):
             break
@@ -499,7 +565,6 @@ def build(name: str) -> tuple[dict, Image.Image]:
         s.box.faces[s.face] = [round(v, 4) for v in uv]
         if particle_uv is None and s.box.material == particle_material:
             particle_uv = s
-    texture = f"{MOD_ID}:item/3d/{name}"
     elements = []
     for b in boxes:
         element = {"from": [round(v, 4) for v in b.frm], "to": [round(v, 4) for v in b.to]}
@@ -512,8 +577,11 @@ def build(name: str) -> tuple[dict, Image.Image]:
         "gui_light": "front",
         "textures": {"blade": texture, "particle": texture},
         "elements": elements,
-        "display": DISPLAYS[display],
     }
+    if display is None:
+        del model["gui_light"]
+    else:
+        model["display"] = DISPLAYS[display]
     return model, img
 
 
@@ -529,6 +597,10 @@ def outputs(root: Path) -> dict[Path, bytes]:
         model, img = build(name)
         files[root / "models" / "item" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
         files[root / "textures" / "item" / "3d" / f"{name}.png"] = png_bytes(img)
+    for name in PARTS:
+        model, img = build(name)
+        files[root / "models" / "omnitrix" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
+        files[root / "textures" / "item" / "3d" / f"omnitrix_{name}.png"] = png_bytes(img)
     return files
 
 

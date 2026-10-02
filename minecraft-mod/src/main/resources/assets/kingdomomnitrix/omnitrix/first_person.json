@@ -1,0 +1,12 @@
+{
+  "_comment": "Ego-Sicht-Haltung des linken Arms mit Omnitrix bei voll gehobenem Arm (raise = 1). Versatz in Bildschirm-Bloecken, Winkel in Grad; F3+T laedt neu.",
+  "offset": [
+    0.15,
+    0.3,
+    0.0
+  ],
+  "rotate_z": -35.0,
+  "rotate_y": 0.0,
+  "rotate_x": 15.0,
+  "roll": 100.0
+}
