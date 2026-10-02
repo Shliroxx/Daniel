@@ -197,6 +197,16 @@ public final class OmnitrixController {
 		rotate(delta);
 	}
 
+	/** Rad zu einem bestimmten Alien drehen (Smart-Scan). */
+	public static void rotateToAlien(Identifier alien) {
+		for (int i = 0; i < ENTRIES.size(); i++) {
+			if (ENTRIES.get(i).id().equals(alien)) {
+				rotateTo(i);
+				return;
+			}
+		}
+	}
+
 	/** Uniform des gewaehlten Aliens weiterschalten (classic → evo → ultimate), nur freigeschaltete Aliens. */
 	public static void cycleUniform() {
 		MinecraftClient client = MinecraftClient.getInstance();

@@ -13,6 +13,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
+import com.santiq.kingdomomnitrix.client.omnitrix.SmartScan;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -98,6 +99,19 @@ public class OmnitrixScreen extends Screen {
 			});
 		}
 		context.getMatrices().pop();
+		// Smart-Scan: Empfehlung ueber dem Namen, pulsierend; gewaehlt = gruen hervorgehoben
+		SmartScan.recommendation().ifPresent(pick -> {
+			boolean focusedPick = OmnitrixController.focused().map(entry -> entry.id().equals(pick.alien())).orElse(false);
+			float pulse = 0.6f + 0.4f * MathHelper.sin((System.nanoTime() % 1_000_000_000_000L) / 1.0e9f * 5.0f);
+			int light = (int) (alpha * (focusedPick ? 1.0f : pulse));
+			Text line = Text.translatable("scan.kingdomomnitrix.recommended",
+					TransformationManager.alienName(pick.alien()).formatted(Formatting.BOLD), Text.translatable(pick.reason()));
+			context.getMatrices().push();
+			context.getMatrices().translate(width / 2.0f, height - 92.0f, 0.0f);
+			context.getMatrices().scale(0.8f, 0.8f, 1.0f);
+			context.drawCenteredTextWithShadow(textRenderer, line, 0, 0, MathHelper.clamp(light, 0, 255) << 24 | (focusedPick ? 0x7DFF9C : 0xFFD84A));
+			context.getMatrices().pop();
+		});
 		if (OmnitrixController.phase() != OmnitrixPhase.CONFIRMING) {
 			Text hint = Text.translatable("screen.kingdomomnitrix.omnitrix_hint").append("  ·  ")
 					.append(Text.translatable("hud.kingdomomnitrix.favorite_set", OmnitrixCore.state(client.player).activeSet() + 1))
@@ -169,6 +183,11 @@ public class OmnitrixScreen extends Screen {
 			}
 			case GLFW.GLFW_KEY_TAB -> {
 				OmnitrixController.cycleFavoriteSet();
+				return true;
+			}
+			case GLFW.GLFW_KEY_N -> {
+				// Smart-Scan: Rad zur Empfehlung drehen
+				SmartScan.rescan().ifPresent(pick -> OmnitrixController.rotateToAlien(pick.alien()));
 				return true;
 			}
 			case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_KP_ENTER, GLFW.GLFW_KEY_SPACE -> {

@@ -52,6 +52,7 @@ public final class OmnitrixCore {
 
 	public static void register() {
 		DynamicRegistries.registerSynced(PROFILES, OmnitrixProfile.CODEC);
+		ScanRule.register();
 	}
 
 	// --- Lesen (Server und Client) --------------------------------------------------------------

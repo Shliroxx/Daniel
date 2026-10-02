@@ -610,5 +610,22 @@
   "alien_status.kingdomomnitrix.transforming": "Verwandlung …",
   "alien_status.kingdomomnitrix.active": "Aktiv – erneut wählen: zurück",
   "alien_status.kingdomomnitrix.cooldown": "Lädt nach",
-  "alien_status.kingdomomnitrix.mastered": "Gemeistert ★"
+  "alien_status.kingdomomnitrix.mastered": "Gemeistert ★",
+  "key.kingdomomnitrix.smart_select": "Omnitrix-Smart-Wahl",
+  "scan.kingdomomnitrix.recommended": "Empfohlen: %s – %s",
+  "scan.kingdomomnitrix.short": "EMPFOHLEN",
+  "scan.kingdomomnitrix.smart_select": "Smart-Wahl: %s – %s",
+  "scan.kingdomomnitrix.none": "Smart-Scan: keine Empfehlung",
+  "scan.kingdomomnitrix.generic": "passt zur Lage",
+  "scan.kingdomomnitrix.lava": "Lava in der Nähe",
+  "scan.kingdomomnitrix.burning": "du brennst",
+  "scan.kingdomomnitrix.water": "im Wasser",
+  "scan.kingdomomnitrix.falling": "tiefer Fall",
+  "scan.kingdomomnitrix.tight_space": "enger Raum",
+  "scan.kingdomomnitrix.armored": "gepanzertes Ziel",
+  "scan.kingdomomnitrix.flying": "Ziel in der Luft",
+  "scan.kingdomomnitrix.crowd": "viele Gegner",
+  "scan.kingdomomnitrix.ranged": "Fernkämpfer",
+  "scan.kingdomomnitrix.explosive": "Explosionsgefahr",
+  "scan.kingdomomnitrix.low_health": "wenig Leben"
 }

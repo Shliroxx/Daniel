@@ -6,6 +6,8 @@ import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
+import com.santiq.kingdomomnitrix.client.omnitrix.SmartScan;
+import com.santiq.kingdomomnitrix.omnitrix.ScanRule;
 import com.santiq.kingdomomnitrix.networking.TransformRequestPayload;
 import com.santiq.kingdomomnitrix.omnitrix.AlienStatus;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
@@ -111,6 +113,8 @@ public class OmnitrixRadialScreen extends Screen {
 		int count = slots.size();
 		float gap = 0.04f;
 		Identifier active = TransformationManager.get(client.player).activeAlien().orElse(null);
+		Identifier recommended = SmartScan.recommendation().map(ScanRule.Recommendation::alien).orElse(null);
+		float pulse = 0.5f + 0.5f * MathHelper.sin((System.nanoTime() % 1_000_000_000_000L) / 1.0e9f * 6.0f);
 		for (int i = 0; i < count; i++) {
 			float start = segmentStart(i) + gap;
 			float end = segmentStart(i + 1) - gap;
@@ -123,6 +127,10 @@ public class OmnitrixRadialScreen extends Screen {
 			// leuchtende Aussenkante in Alien-Farbe, aktives Alien weiss
 			int edge = slots.get(i).id().equals(active) ? 0xFFFFFF : color;
 			ring(buffer, matrix, cx, cy, outer - 2.5f, outer, start, end, edge, hover ? 0xFF : 0xC0);
+			// Smart-Scan-Empfehlung: pulsierender goldener Aussenring
+			if (slots.get(i).id().equals(recommended)) {
+				ring(buffer, matrix, cx, cy, outer + 2.0f, outer + 5.0f, start, end, 0xFFD84A, Math.round(120 + 135 * pulse));
+			}
 		}
 		// Mitte: dunkler Kern mit Omnitrix-Gruen
 		ring(buffer, matrix, cx, cy, 0.0f, INNER * ease - 3.0f, 0.0f, MathHelper.TAU, 0x0A140C, 0xC8);
@@ -153,6 +161,16 @@ public class OmnitrixRadialScreen extends Screen {
 			context.drawCenteredTextWithShadow(textRenderer, Text.translatable("alien_status.kingdomomnitrix." + status.name().toLowerCase(java.util.Locale.ROOT)),
 					0, 0, 0xFF9ACFA8);
 			context.getMatrices().pop();
+		}
+		if (hovered < 0) {
+			SmartScan.recommendation().ifPresent(pick -> {
+				context.getMatrices().push();
+				context.getMatrices().translate(cx, cy - 4, 0.0f);
+				context.getMatrices().scale(0.7f, 0.7f, 1.0f);
+				context.drawCenteredTextWithShadow(textRenderer, Text.translatable("scan.kingdomomnitrix.short"), 0, -6, 0xFFFFD84A);
+				context.drawCenteredTextWithShadow(textRenderer, TransformationManager.alienName(pick.alien()).formatted(Formatting.BOLD), 0, 5, 0xFFFFFFFF);
+				context.getMatrices().pop();
+			});
 		}
 		if (!fromFavorites) {
 			context.getMatrices().push();
@@ -214,6 +232,17 @@ public class OmnitrixRadialScreen extends Screen {
 		int g = Math.round(((rgb >> 8) & 0xFF) * factor);
 		int b = Math.round((rgb & 0xFF) * factor);
 		return r << 16 | g << 8 | b;
+	}
+
+	@Override
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+		if (ModKeyBindings.SMART_SELECT.matchesKey(keyCode, scanCode)) {
+			// Smart-Wahl aus dem Kreis: Empfehlung nehmen, auch wenn sie nicht im Set ist
+			close();
+			ModKeyBindings.smartSelect(MinecraftClient.getInstance());
+			return true;
+		}
+		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
 	@Override

@@ -69,7 +69,7 @@ profile <id>` — `use` verwandelt mit allen Geraete-Regeln (anders als `/hero t
 | 1 | Core | **neu** | Upgrades als Profilwechsel (Item/Quest), Modi-Feld |
 | 2 | Modell/Rendering | Licht je Zustand **neu** | Glas-Schicht ueber dem Zifferblatt, Metall-Glanz, Ueberhitzungs-Dampf |
 | 3 | Aktivierung | Phasen + Cues | Arm-Hub mit leichtem Ueberschwingen, Kern-Ausfahr-Licht |
-| 4 | Auswahl | Feder-Rad, Rastklang, **Favoriten-Sets, Schnellwahl-Kreis, Schnellwechsel** | Controller, Smart-Scan (Paket 2) |
+| 4 | Auswahl | Feder-Rad, Rastklang, **Favoriten-Sets, Schnellwahl-Kreis, Schnellwechsel** | **Smart-Scan mit Empfehlung + Smart-Wahl (N)** | Controller |
 | 5 | Vorschau | Silhouette + Hologramm | Status-Chip (AlienStatus), Faehigkeiten-Leiste im Hologramm |
 | 6 | Verwandlung | Blitzkugel, Blitz, Kamera | Energieaufbau-Phase sichtbar am Koerper, alien-eigene Sequenz (Datenfeld) |
 | 7 | Rueckverwandlung | Blitzkugel, Cue | Energie-Rueckzug-Partikel zum Handgelenk |

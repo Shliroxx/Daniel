@@ -1,0 +1,1 @@
+{"condition": {"type": "low_health", "max": 0.35}, "weights": {"kingdomomnitrix:xlr8": 4, "kingdomomnitrix:diamondhead": 3}, "reason": "scan.kingdomomnitrix.low_health"}

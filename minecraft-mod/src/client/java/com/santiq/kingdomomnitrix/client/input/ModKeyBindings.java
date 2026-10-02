@@ -24,6 +24,8 @@ public final class ModKeyBindings {
 	public static final KeyBinding OPEN_OMNITRIX = register("key.kingdomomnitrix.omnitrix", GLFW.GLFW_KEY_G);
 	/** Halten: Schnellwahl-Kreis (Favoriten), Loslassen verwandelt */
 	public static final KeyBinding QUICK_SELECT = register("key.kingdomomnitrix.quick_select", GLFW.GLFW_KEY_X);
+	/** Smart-Wahl: verwandelt direkt in das Alien, das der Smart-Scan empfiehlt */
+	public static final KeyBinding SMART_SELECT = register("key.kingdomomnitrix.smart_select", GLFW.GLFW_KEY_N);
 	public static final KeyBinding[] ABILITIES = {
 			register("key.kingdomomnitrix.ability_1", GLFW.GLFW_KEY_R),
 			register("key.kingdomomnitrix.ability_2", GLFW.GLFW_KEY_V),
@@ -61,6 +63,24 @@ public final class ModKeyBindings {
 		ClientTickEvents.END_CLIENT_TICK.register(ModKeyBindings::tick);
 	}
 
+	/** Smart-Wahl: Empfehlung des Smart-Scans anfordern (Server prueft wie bei jeder Verwandlung). */
+	public static void smartSelect(MinecraftClient client) {
+		var recommendation = com.santiq.kingdomomnitrix.client.omnitrix.SmartScan.rescan();
+		if (recommendation.isEmpty()) {
+			client.player.sendMessage(net.minecraft.text.Text.translatable("scan.kingdomomnitrix.none")
+					.formatted(net.minecraft.util.Formatting.GRAY), true);
+			com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.play(com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.ERROR);
+			return;
+		}
+		var pick = recommendation.get();
+		client.player.sendMessage(net.minecraft.text.Text.translatable("scan.kingdomomnitrix.smart_select",
+				com.santiq.kingdomomnitrix.alien.TransformationManager.alienName(pick.alien()),
+				net.minecraft.text.Text.translatable(pick.reason())).formatted(net.minecraft.util.Formatting.GREEN), true);
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+				new com.santiq.kingdomomnitrix.networking.TransformRequestPayload(pick.alien()));
+		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.play(com.santiq.kingdomomnitrix.omnitrix.OmnitrixCue.CONFIRM);
+	}
+
 	private static void tick(MinecraftClient client) {
 		if (client.player == null) {
 			return;
@@ -77,6 +97,11 @@ public final class ModKeyBindings {
 		while (QUICK_SELECT.wasPressed()) {
 			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
 				com.santiq.kingdomomnitrix.client.screen.OmnitrixRadialScreen.open(client);
+			}
+		}
+		while (SMART_SELECT.wasPressed()) {
+			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
+				smartSelect(client);
 			}
 		}
 		while (HERO_MENU.wasPressed()) {
