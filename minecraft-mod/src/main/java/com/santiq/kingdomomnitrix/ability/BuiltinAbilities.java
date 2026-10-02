@@ -47,6 +47,7 @@ final class BuiltinAbilities {
 		// Diamondhead / Grey Matter (Prototyp)
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_volley"), BuiltinAbilities::crystalVolley);
 		AbilityRegistry.register(KingdomOmnitrix.id("scan"), BuiltinAbilities::scan);
+		CreatureAbilities.register();
 	}
 
 	// --- Heatblast -------------------------------------------------------------------------------
@@ -231,7 +232,7 @@ final class BuiltinAbilities {
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
-	private static List<LivingEntity> livingAround(AbilityContext ctx, double radius) {
+	static List<LivingEntity> livingAround(AbilityContext ctx, double radius) {
 		ServerPlayerEntity player = ctx.player();
 		double radiusSq = radius * radius;
 		return ctx.world().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
@@ -239,7 +240,7 @@ final class BuiltinAbilities {
 	}
 
 	/** Blickrichtung ohne Neigung; faellt bei senkrechtem Blick auf die Koerperausrichtung zurueck. */
-	private static Vec3d horizontalLook(ServerPlayerEntity player) {
+	static Vec3d horizontalLook(ServerPlayerEntity player) {
 		Vec3d look = player.getRotationVec(1.0f);
 		Vec3d flat = new Vec3d(look.x, 0.0, look.z);
 		if (flat.lengthSquared() < 1.0E-4) {
@@ -250,13 +251,13 @@ final class BuiltinAbilities {
 	}
 
 	/** Setzt die Spielergeschwindigkeit serverseitig und schickt sie an den Client (der die Bewegung rechnet). */
-	private static void launch(ServerPlayerEntity player, double x, double y, double z) {
+	static void launch(ServerPlayerEntity player, double x, double y, double z) {
 		player.setVelocity(x, y, z);
 		player.velocityModified = true;
 		player.fallDistance = 0.0f;
 	}
 
-	private static void sound(AbilityContext ctx, SoundEvent sound, float volume, float pitch) {
+	static void sound(AbilityContext ctx, SoundEvent sound, float volume, float pitch) {
 		ServerWorld world = ctx.world();
 		ServerPlayerEntity player = ctx.player();
 		world.playSound(null, player.getX(), player.getY(), player.getZ(), sound, SoundCategory.PLAYERS, volume, pitch);

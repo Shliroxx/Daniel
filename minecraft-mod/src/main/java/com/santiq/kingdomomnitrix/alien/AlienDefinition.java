@@ -52,7 +52,8 @@ public record AlienDefinition(
 		Identifier model,
 		boolean prototype,
 		List<TagKey<DamageType>> failsafeTags,
-		int failsafePriority) {
+		int failsafePriority,
+		AlienTraits traits) {
 
 	public static final int MAX_ABILITIES = 3;
 	public static final float MIN_SCALE = 0.25f;
@@ -76,7 +77,8 @@ public record AlienDefinition(
 			Identifier.CODEC.fieldOf("model").forGetter(AlienDefinition::model),
 			Codec.BOOL.optionalFieldOf("prototype", false).forGetter(AlienDefinition::prototype),
 			TagKey.codec(RegistryKeys.DAMAGE_TYPE).listOf().optionalFieldOf("failsafe_tags", List.of()).forGetter(AlienDefinition::failsafeTags),
-			Codec.INT.optionalFieldOf("failsafe_priority", 0).forGetter(AlienDefinition::failsafePriority)
+			Codec.INT.optionalFieldOf("failsafe_priority", 0).forGetter(AlienDefinition::failsafePriority),
+			AlienTraits.CODEC.optionalFieldOf("traits", AlienTraits.NONE).forGetter(AlienDefinition::traits)
 	).apply(instance, AlienDefinition::new)).validate(AlienDefinition::validate);
 
 	public AlienDefinition {

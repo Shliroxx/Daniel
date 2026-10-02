@@ -1,0 +1,78 @@
+{
+  "color": "#8DB33A",
+  "sort_order": 6,
+  "duration": 1200,
+  "recharge": 450,
+  "max_energy": 100,
+  "energy_regen": 7,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.1,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": -4.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:slime_spit",
+      "energy": 10,
+      "cooldown": 15,
+      "params": {
+        "count": 2,
+        "speed": 1.8,
+        "spread": 3.0,
+        "damage": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:stink_cloud",
+      "energy": 30,
+      "cooldown": 100,
+      "params": {
+        "radius": 3.5,
+        "ticks": 120
+      }
+    },
+    {
+      "type": "kingdomomnitrix:wing_dash",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "power": 1.8,
+        "invulnerable_ticks": 8
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:bee",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:phantom",
+      "chance": 0.2
+    }
+  ],
+  "model": "kingdomomnitrix:stinkfly",
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 3,
+  "traits": {
+    "flight": true,
+    "immune_effects": [
+      "minecraft:poison",
+      "minecraft:nausea",
+      "minecraft:weakness"
+    ]
+  }
+}

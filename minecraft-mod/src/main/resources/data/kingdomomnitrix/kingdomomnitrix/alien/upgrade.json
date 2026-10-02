@@ -1,0 +1,86 @@
+{
+  "color": "#39FF14",
+  "sort_order": 8,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 120,
+  "energy_regen": 6,
+  "scale": 1.1,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:player.mining_efficiency",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.4,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_lightning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:optic_beam",
+      "energy": 15,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0,
+        "damage": 7.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:liquid_form",
+      "energy": 25,
+      "cooldown": 80,
+      "params": {
+        "ticks": 40
+      }
+    },
+    {
+      "type": "kingdomomnitrix:tech_upgrade",
+      "energy": 40,
+      "cooldown": 400,
+      "params": {
+        "repair": 0.25,
+        "seconds": 20.0,
+        "haste_level": 1
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:iron_golem",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:creeper",
+      "chance": 0.05
+    }
+  ],
+  "model": "kingdomomnitrix:upgrade",
+  "failsafe_tags": [
+    "#minecraft:is_lightning",
+    "#minecraft:is_explosion"
+  ],
+  "failsafe_priority": 3,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ]
+  }
+}

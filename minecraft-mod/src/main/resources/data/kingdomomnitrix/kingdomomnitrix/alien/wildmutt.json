@@ -1,0 +1,93 @@
+{
+  "color": "#E8892B",
+  "sort_order": 5,
+  "duration": 1200,
+  "recharge": 400,
+  "max_energy": 100,
+  "energy_regen": 8,
+  "scale": 0.85,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.4,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.jump_strength",
+      "amount": 0.25,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.step_height",
+      "amount": 0.6,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:pounce",
+      "energy": 15,
+      "cooldown": 25,
+      "params": {
+        "forward": 1.6,
+        "up": 0.55,
+        "distance": 6.0,
+        "damage": 7.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:quill_burst",
+      "energy": 20,
+      "cooldown": 40,
+      "params": {
+        "count": 7,
+        "speed": 2.4,
+        "spread": 9.0,
+        "damage": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:feral_roar",
+      "energy": 30,
+      "cooldown": 120,
+      "params": {
+        "radius": 16.0,
+        "seconds": 8.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:wolf",
+      "chance": 0.35
+    },
+    {
+      "entity": "minecraft:fox",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:wildmutt",
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "senses_radius": 16
+  }
+}

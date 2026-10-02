@@ -1,0 +1,104 @@
+{
+  "color": "#7FA9B5",
+  "sort_order": 7,
+  "duration": 1200,
+  "recharge": 450,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.water_movement_efficiency",
+      "amount": 1.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.oxygen_bonus",
+      "amount": 20.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:jaw_bite",
+      "energy": 15,
+      "cooldown": 25,
+      "params": {
+        "range": 4.0,
+        "damage": 8.0,
+        "water_multiplier": 1.5,
+        "heal": 2.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:tidal_dash",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "power": 1.0,
+        "water_multiplier": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:whirlpool",
+      "energy": 35,
+      "cooldown": 100,
+      "params": {
+        "radius": 5.0,
+        "damage": 4.0,
+        "pull": 0.9
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:drowned",
+      "chance": 0.08
+    },
+    {
+      "entity": "minecraft:cod",
+      "chance": 0.15
+    }
+  ],
+  "model": "kingdomomnitrix:ripjaws",
+  "failsafe_tags": [
+    "#minecraft:is_drowning"
+  ],
+  "failsafe_priority": 5,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "water_effects": [
+      {
+        "effect": "minecraft:dolphins_grace"
+      },
+      {
+        "effect": "minecraft:strength"
+      },
+      {
+        "effect": "minecraft:regeneration"
+      }
+    ],
+    "dry_out_seconds": 45
+  }
+}

@@ -14,6 +14,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.thrown.ThrownItemEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import com.santiq.kingdomomnitrix.registry.ModParticles;
 import com.santiq.kingdomomnitrix.vfx.Vfx;
@@ -43,7 +44,11 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		PLASMA(6.0f, false, ModParticles.PLASMA),
 		CRYSTAL(5.0f, false, ParticleTypes.END_ROD),
 		WRENCH(8.0f, false, ParticleTypes.CRIT),
-		DARK(4.0f, true, ParticleTypes.SQUID_INK);
+		DARK(4.0f, true, ParticleTypes.SQUID_INK),
+		// Stinkfly-Schleim: verlangsamt stark, leichte Vergiftung
+		SLIME(3.0f, false, ParticleTypes.ITEM_SLIME),
+		// Wildmutt-Stachel: schnell, durchdringend wenig Schaden, schwaecht
+		QUILL(4.0f, false, ParticleTypes.CRIT);
 
 		public final float damage;
 		public final boolean magic;
@@ -112,6 +117,12 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		if (stack.isOf(ModItems.DARK_ORB)) {
 			return Kind.DARK;
 		}
+		if (stack.isOf(Items.SLIME_BALL)) {
+			return Kind.SLIME;
+		}
+		if (stack.isOf(Items.ARROW)) {
+			return Kind.QUILL;
+		}
 		return Kind.PLASMA;
 	}
 
@@ -122,7 +133,8 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 
 	@Override
 	protected double getGravity() {
-		return getKind() == Kind.WRENCH ? 0.02 : 0.0;
+		Kind kind = getKind();
+		return kind == Kind.WRENCH || kind == Kind.SLIME ? 0.02 : 0.0;
 	}
 
 	private static final int TRAIL_DELAY_TICKS = 2;
@@ -159,6 +171,13 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		}
 		if (kind == Kind.DARK && target instanceof LivingEntity living) {
 			living.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 80, 0), getOwner());
+		}
+		if (kind == Kind.SLIME && target instanceof LivingEntity living) {
+			living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 3), getOwner());
+			living.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 60, 0), getOwner());
+		}
+		if (kind == Kind.QUILL && target instanceof LivingEntity living) {
+			living.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 60, 0), getOwner());
 		}
 		if (kind == Kind.ICE && target instanceof LivingEntity living) {
 			living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 2), getOwner());

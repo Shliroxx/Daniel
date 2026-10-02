@@ -77,10 +77,12 @@ public final class TransformationManager {
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(TransformationManager::tick);
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onJoin(handler.player));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> AlienTraitHandler.disconnect(handler.player));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			if (!alive) {
 				// Tod beendet jede Verwandlung; die Nachladezeit bleibt bestehen.
 				update(newPlayer, state -> state.isTransformed() ? state.reverted(state.rechargeUntil()) : state);
+				AlienTraitHandler.clear(newPlayer);
 			} else {
 				reapplyAttributes(newPlayer);
 			}
@@ -174,6 +176,7 @@ public final class TransformationManager {
 			}
 		} else if (state.isTransformed()) {
 			removeAttributes(player);
+			AlienTraitHandler.clear(player);
 		}
 		if (!hasSpaceFor(player, alien.scale())) {
 			return Result.NO_SPACE;
@@ -211,6 +214,7 @@ public final class TransformationManager {
 			return Result.NO_SPACE;
 		}
 		removeAttributes(player);
+		AlienTraitHandler.clear(player);
 		OmnitrixCore.onRevert(player);
 		update(player, s -> s.reverted(rechargeUntil));
 		restoreHumanHealth(player, state);
@@ -263,6 +267,7 @@ public final class TransformationManager {
 				Math.round(state.remainingTicks(now) * OmnitrixCore.profile(player).quickChangeKeep())));
 		float healthShare = player.getHealth() / Math.max(1.0f, player.getMaxHealth());
 		removeAttributes(player);
+		AlienTraitHandler.clear(player);
 		update(player, s -> s.quickChanged(alienId, alien, now, duration));
 		OmnitrixCore.onQuickChange(player);
 		applyAttributes(player, alien);
@@ -403,6 +408,7 @@ public final class TransformationManager {
 			if (alien.isEmpty()) {
 				// Alien wurde aus dem Datenpaket entfernt: sauber beenden.
 				removeAttributes(player);
+				AlienTraitHandler.clear(player);
 				update(player, s -> s.reverted(now));
 				continue;
 			}
@@ -428,6 +434,7 @@ public final class TransformationManager {
 			if (player.isOnFire() && alien.get().isImmuneTo(player.getDamageSources().onFire())) {
 				player.extinguish();
 			}
+			AlienTraitHandler.tick(player, alien.get(), now);
 			if (now % AURA_INTERVAL_TICKS == 0) {
 				spawnAura(player, alien.get());
 			}
@@ -442,6 +449,7 @@ public final class TransformationManager {
 		Optional<AlienDefinition> alien = activeDefinition(player);
 		if (alien.isEmpty() || state.remainingTicks(player.getWorld().getTime()) <= 0) {
 			removeAttributes(player);
+			AlienTraitHandler.clear(player);
 			update(player, s -> s.reverted(s.rechargeUntil()));
 			return;
 		}
