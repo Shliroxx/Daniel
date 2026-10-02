@@ -79,3 +79,61 @@ profile <id>` — `use` verwandelt mit allen Geraete-Regeln (anders als `/hero t
 | 11 | VFX | Blitzkugel, Glut, Cues | Scanline/Hologramm-Shader, DNA-Partikel |
 | 12 | Audio | **16 Omnitrix-Klaenge** | echte Aufnahmen koennen die OGGs ersetzen |
 | 13 | Advanced | Fehlfunktionen, Randomizer | erst nach stabilem Kern |
+
+## 5. Phase 2 — Phase A: Einstufung des Bestands (2026-10-02)
+
+Legende: **VORHANDEN** fertig und im Spiel geprueft · **TEILWEISE** funktioniert, Teile fehlen · **PLATZHALTER** sichtbar,
+aber nicht echt · **FEHLT** nicht gebaut · **SCHWACH** gebaut, Qualitaet unter Vorgabe · **FEHLER** falsches Verhalten.
+
+| Bereich | Einstufung | Befund |
+|---|---|---|
+| Geraete-Kern (Hitze, Warnung, Ueberhitzung, Sperre, Profile) | VORHANDEN | im Spiel geprueft, Daten in `omnitrix_profile` |
+| Master Control | TEILWEISE | nur Flag + Profilwerte per Befehl; keine Freischaltung, kein eigener Modus (→ Phase K) |
+| Favoriten-Sets, Schnellwahl-Kreis, Schnellwechsel | VORHANDEN | geprueft (XLR8 → Heatblast) |
+| Getrennte Lebenspunkte, DNA-Schock, Notfall-Verwandlung | VORHANDEN | geprueft; Darstellung schlicht (→ Phase I) |
+| Smart-Scan (11 Regeln) + Smart-Wahl (N) | VORHANDEN | geprueft: Lava, Wasser, Panzer, Enge, Fernkampf; Fall-Fall **nicht** geprueft |
+| Alien-Symbole (Icon, Silhouette) | **FEHLTE → jetzt VORHANDEN** | aus den echten Modellen gerendert (`tools/generate_alien_icons.py`), in Kreis, HUD, Alien-Menue, Freischalt-Meldung |
+| Freischalt-Rueckmeldung | SCHWACH → verbessert | vorher nur Klang; jetzt Hologramm-Karte mit Scan-Effekt |
+| Holo-Textmeldungen (Omnitrix OS) | FEHLT | → Phase I |
+| Code-Eingabe | FEHLT | → Phase J |
+| Kalibrier-Werkbank, Farbmodule | FEHLT | → Phasen L, M |
+| Fehlfunktionen | FEHLT | → Phase H |
+| Aliens | TEILWEISE | 5 von 10 der Vorgabe (Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak fehlen; Modelle/Texturen = **REQUIRES ASSET**) |
+| Faehigkeiten je Alien | SCHWACH | 3–4 statt 6 Rollen (BASIC … ULTIMATE) |
+| Meisterschaft | TEILWEISE | Stufen 1–10 geben nur Dauer/Abklingzeit, keine Freischaltungen |
+| Geraete-Modell (Glas, Glanz, Dampf, Ueberschwingen) | SCHWACH | Licht je Zustand vorhanden, Material-Feinschliff fehlt (→ Phase N) |
+| Klaenge | PLATZHALTER | synthetisch erzeugt (`generate_sounds.py`), funktional, nicht final abgemischt |
+| Mehrspieler-Sync | siehe Abschnitt 6 | |
+
+**Groesste Qualitaetsluecke zu Beginn:** Das Omnitrix zeigte Aliens nur als Text. Rad, Kreis, HUD und Menue hatten kein
+einziges Alien-Symbol — genau das, was ein Omnitrix ausmacht. Deshalb kam Phase B (Symbole) direkt nach der Analyse.
+
+## 6. Phase A — Mehrspieler-Stichprobe und behobene Fehler (2026-10-02)
+
+Dedizierter Server + 2 Clients (Tester, Tester2):
+
+- Verwandlung, Rueckverwandlung, Alien-Modell (XLR8, Four Arms) fuer den zweiten Spieler sichtbar — Sync ueber
+  Attachments funktioniert, keine Client-only-Zustaende gefunden.
+- **FEHLER behoben:** Als Alien hatten Spieler fuer andere **zwei Namensschilder**. Ursache: GeckoLib 4.9.3 ruft
+  `EntityRenderer.render` in `postRender` *und* `renderFinal` auf. `AlienBodyRenderer.postRender` ist jetzt leer.
+- **FEHLER behoben:** In der Ego-Sicht fuellten Verwandlungs-Staub und Alien-Aura das Bild (blaue Pixelwolke vor der
+  Kamera). Jetzt: andere sehen die Wolke wie bisher, der Spieler selbst einen Ring auf Fusshoehe und keine Aura.
+- **FEHLER behoben (durch Phase B entstanden, vor dem Commit gefunden):** Symbol + langer Name lief im HUD in die
+  Restzeit — Name wird bei Platzmangel schmaler gezeichnet.
+- Nicht geprueft: Notfall-Verwandlung und Schnellwechsel im Mehrspieler (nur Einzelspieler).
+
+## 7. Phase B — Alien-Symbole (2026-10-02)
+
+- `tools/generate_alien_icons.py` rendert je Alien aus dem echten Modell + Textur: farbiges Symbol (Dreiviertel-Ansicht,
+  Kontur) und weisse Silhouette (einfaerbbar). 64×64, `--check` in CI (toleriert Rundungsrauschen anderer Pillow-Versionen).
+  Neue Aliens bekommen ihre Symbole automatisch, sobald `alien_render/<alien>.json` existiert.
+- Schnellwahl-Kreis: Silhouette je Segment in Alien-Farbe (aktiv weiss, Nachladen grau), Mitte: farbiges Symbol +
+  Name + Zustand; ohne Auswahl die Smart-Scan-Empfehlung als pulsierende goldene Silhouette.
+- HUD: Symbol vor dem Alien-Namen (verwandelt), Silhouette in Geraete-Zustandsfarbe (Mensch).
+- Alien-Menue: Symbol je Zeile, gesperrt nur dunkle Silhouette + „???“; grosses Symbol im Detailbereich.
+- Freischaltung: Hologramm-Karte „DNA ERFASST“ — gruene Silhouette, Scanlinie, blendet ins farbige Symbol; ausgeloest
+  vom synchronisierten Heldenzustand.
+- Fremde Datenpaket-Aliens ohne Symbol: alle Stellen fallen auf den Namen zurueck (kein fehlendes-Textur-Muster).
+- Offen: Symbol im 3D-Hologramm des grossen Rads (`OmnitrixScreen`) — dort steht weiterhin das 3D-Modell.
+
+Bilder: `docs/screenshots/alien_symbole.png`, `docs/screenshots/omnitrix_phase2_symbole.png`.

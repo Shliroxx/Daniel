@@ -29,6 +29,16 @@ public final class Icons {
 		return texture(type.getNamespace(), "alien_ability/" + type.getPath());
 	}
 
+	/** Farbiges Alien-Symbol ({@code textures/gui/alien/<alien>.png}, erzeugt von {@code tools/generate_alien_icons.py}). */
+	public static Identifier alien(Identifier alien) {
+		return Identifier.of(alien.getNamespace(), "textures/gui/alien/" + alien.getPath() + ".png");
+	}
+
+	/** Weisse, einfaerbbare Alien-Silhouette ({@code textures/gui/alien/<alien>_silhouette.png}). */
+	public static Identifier alienSilhouette(Identifier alien) {
+		return Identifier.of(alien.getNamespace(), "textures/gui/alien/" + alien.getPath() + "_silhouette.png");
+	}
+
 	public static Identifier command(String name) {
 		return texture(KingdomOmnitrix.MOD_ID, "command/" + name);
 	}

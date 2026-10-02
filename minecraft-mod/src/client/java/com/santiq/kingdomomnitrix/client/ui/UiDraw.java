@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.ui;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.client.MinecraftClient;
@@ -51,6 +52,41 @@ public final class UiDraw {
 	public static void icon(DrawContext context, Identifier texture, Identifier fallback, int x, int y, int size) {
 		Identifier used = exists(texture) ? texture : fallback;
 		context.drawTexture(used, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+	}
+
+	/** Groesse der Alien-Symbole und -Silhouetten in der Textur. */
+	public static final int ALIEN_ICON_SIZE = 64;
+
+	/**
+	 * Farbiges Alien-Symbol in {@code size} Pixeln; {@code false}, wenn das Alien (z. B. aus einem fremden Datenpaket)
+	 * kein Symbol mitbringt — der Aufrufer zeigt dann nur den Namen.
+	 */
+	public static boolean alienIcon(DrawContext context, Identifier alien, int x, int y, int size, float alpha) {
+		Identifier texture = Icons.alien(alien);
+		if (!exists(texture)) {
+			return false;
+		}
+		tinted(context, texture, x, y, size, 0xFFFFFF, alpha);
+		return true;
+	}
+
+	/** Silhouette in einer Farbe (Omnitrix-Zustand, Alien-Farbe, gesperrt grau); {@code false} ohne Symbol. */
+	public static boolean alienSilhouette(DrawContext context, Identifier alien, int x, int y, int size, int rgb, float alpha) {
+		Identifier texture = Icons.alienSilhouette(alien);
+		if (!exists(texture)) {
+			return false;
+		}
+		tinted(context, texture, x, y, size, rgb, alpha);
+		return true;
+	}
+
+	private static void tinted(DrawContext context, Identifier texture, int x, int y, int size, int rgb, float alpha) {
+		RenderSystem.enableBlend();
+		context.setShaderColor(((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f,
+				Math.max(0.0f, Math.min(1.0f, alpha)));
+		context.drawTexture(texture, x, y, size, size, 0, 0, ALIEN_ICON_SIZE, ALIEN_ICON_SIZE, ALIEN_ICON_SIZE, ALIEN_ICON_SIZE);
+		context.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.disableBlend();
 	}
 
 	private static boolean exists(Identifier texture) {

@@ -39,6 +39,7 @@ public final class OmnitrixHud implements HudElement {
 	private static final int WIDTH = 114;
 	private static final int BAR_HEIGHT = 4;
 	private static final int SLOT_SIZE = 22;
+	private static final int ICON = 11;
 	private static final int SLOT_GAP = 4;
 	private static final int TIMER_WARNING_COLOR = 0xFFFF5555;
 	private static final int ENERGY_COLOR = 0xFF4FC3FF;
@@ -168,9 +169,23 @@ public final class OmnitrixHud implements HudElement {
 		int mastery = client.player != null ? AlienMasteryManager.get(client.player).level(alienId) : 1;
 		Text name = TransformationManager.alienName(alienId).withColor(alien.color()).formatted(Formatting.BOLD)
 				.append(Text.literal(" ★" + mastery).formatted(Formatting.GOLD));
-		context.drawTextWithShadow(font, name, cx, cy, UiTheme.TEXT);
+		// kleines Symbol vor dem Namen
+		int nameX = UiDraw.alienIcon(context, alienId, cx - 1, cy - 2, ICON, 1.0f) ? cx + ICON + 1 : cx;
 		String seconds = remaining / 20 + "s";
-		context.drawTextWithShadow(font, seconds, WIDTH - PADDING - font.getWidth(seconds), cy,
+		int secondsX = WIDTH - PADDING - font.getWidth(seconds);
+		// lange Namen (Four Arms ★10) schmaler zeichnen statt in die Restzeit zu laufen
+		int room = secondsX - 3 - nameX;
+		int nameWidth = font.getWidth(name);
+		if (nameWidth > room && room > 0) {
+			context.getMatrices().push();
+			context.getMatrices().translate(nameX, cy, 0.0f);
+			context.getMatrices().scale(room / (float) nameWidth, 1.0f, 1.0f);
+			context.drawTextWithShadow(font, name, 0, 0, UiTheme.TEXT);
+			context.getMatrices().pop();
+		} else {
+			context.drawTextWithShadow(font, name, nameX, cy, UiTheme.TEXT);
+		}
+		context.drawTextWithShadow(font, seconds, secondsX, cy,
 				remaining < WARNING_TICKS ? TIMER_WARNING_COLOR : 0xFFDDDDDD);
 		cy += font.fontHeight + 3;
 
@@ -210,6 +225,13 @@ public final class OmnitrixHud implements HudElement {
 				? TransformationManager.alienName(selectedId.get()).withColor(alien.get().color())
 				: Text.translatable("hud.kingdomomnitrix.omnitrix").formatted(Formatting.GREEN);
 		context.drawTextWithShadow(font, selected, PADDING + 2, PADDING, UiTheme.TEXT);
+		// gewaehltes Alien als Silhouette rechts, eingefaerbt nach Geraete-Zustand (wie das Zifferblatt)
+		selectedId.ifPresent(id -> {
+			OmnitrixStatus shown = OmnitrixClientState.status(player);
+			int tint = shown == OmnitrixStatus.IDLE ? 0x39FF14 : shown.color();
+			int size = font.fontHeight * 2 + 2;
+			UiDraw.alienSilhouette(context, id, WIDTH - PADDING - size, PADDING - 1, size, tint, 0.85f);
+		});
 
 		long recharge = state.rechargeRemaining(now);
 		OmnitrixStatus device = OmnitrixClientState.status(player);

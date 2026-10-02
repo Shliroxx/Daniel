@@ -32,6 +32,7 @@ import net.minecraft.util.Identifier;
 public class AlienScreen extends Screen {
 	private static final int ROW = 20;
 	private static final int LIST_WIDTH = 120;
+	private static final int DETAIL_ICON = 64;
 
 	private int left;
 	private int top;
@@ -94,7 +95,11 @@ public class AlienScreen extends Screen {
 			context.fill(left + 4, y, left + 4 + LIST_WIDTH, y + ROW - 2, background);
 			context.fill(left + 4, y, left + 6, y + ROW - 2, unlocked ? 0xFF000000 | alien.get().color() : UiTheme.TEXT_DISABLED);
 			Text name = unlocked ? TransformationManager.alienName(id).withColor(alien.get().color()) : Text.literal("???");
-			context.drawTextWithShadow(textRenderer, name, left + 10, y + 5, unlocked ? UiTheme.TEXT : UiTheme.TEXT_DISABLED);
+			// Symbol: freigeschaltet farbig, gesperrt nur dunkle Silhouette (Umriss verraet die Form, nicht das Alien)
+			boolean icon = unlocked ? UiDraw.alienIcon(context, id, left + 8, y + 1, ROW - 4, 1.0f)
+					: UiDraw.alienSilhouette(context, id, left + 8, y + 1, ROW - 4, 0x2A2A2A, 0.9f);
+			int textX = icon ? left + 8 + ROW - 2 : left + 10;
+			context.drawTextWithShadow(textRenderer, name, textX, y + 5, unlocked ? UiTheme.TEXT : UiTheme.TEXT_DISABLED);
 			if (unlocked) {
 				String star = "★" + mastery.level(id);
 				context.drawTextWithShadow(textRenderer, star, left + 4 + LIST_WIDTH - 4 - textRenderer.getWidth(star), y + 5, 0xFFFFC94A);
@@ -113,6 +118,14 @@ public class AlienScreen extends Screen {
 		Text name = unlocked ? TransformationManager.alienName(id).withColor(alien.color()).formatted(Formatting.BOLD)
 				: Text.translatable("screen.kingdomomnitrix.aliens.unknown").formatted(Formatting.GRAY, Formatting.BOLD);
 		context.drawTextWithShadow(textRenderer, name, x, y, UiTheme.TEXT);
+		// grosses Symbol unten rechts im Detailbereich (frei; oben laeuft die Meisterschaftsleiste ueber die volle Breite)
+		int iconX = x + width - DETAIL_ICON;
+		int iconY = top + panelHeight - DETAIL_ICON - 6;
+		if (unlocked) {
+			UiDraw.alienIcon(context, id, iconX, iconY, DETAIL_ICON, 1.0f);
+		} else {
+			UiDraw.alienSilhouette(context, id, iconX, iconY, DETAIL_ICON, 0x2A2A2A, 0.9f);
+		}
 		y += 13;
 
 		if (!unlocked) {

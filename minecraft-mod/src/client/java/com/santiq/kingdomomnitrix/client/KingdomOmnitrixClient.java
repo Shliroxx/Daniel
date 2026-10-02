@@ -117,6 +117,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		com.santiq.kingdomomnitrix.client.vfx.TransformBubble.register();
 		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState.register();
 		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback.register();
+		com.santiq.kingdomomnitrix.client.omnitrix.AlienUnlockToast.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {

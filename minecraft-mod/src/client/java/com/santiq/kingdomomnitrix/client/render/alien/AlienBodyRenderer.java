@@ -45,6 +45,16 @@ public class AlienBodyRenderer extends GeoReplacedEntityRenderer<AbstractClientP
 		return this;
 	}
 
+	/**
+	 * GeckoLib 4.9.3 ruft {@code EntityRenderer.render} (Namensschild, Feuer) sowohl hier als auch in
+	 * {@code renderFinal} auf — Spieler hatten als Alien zwei Namensschilder uebereinander. Nur {@code renderFinal}
+	 * (nach dem Zuruecksetzen der Pose, richtige Hoehe) bleibt.
+	 */
+	@Override
+	public void postRender(MatrixStack poseStack, AlienBodyAnimatable animatable, BakedGeoModel model, VertexConsumerProvider bufferSource,
+			VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
+	}
+
 	@Override
 	public void createVerticesOfQuad(GeoQuad quad, Matrix4f poseState, Vector3f normal, VertexConsumer buffer, int packedLight,
 			int packedOverlay, int colour) {

@@ -614,6 +614,7 @@
   "key.kingdomomnitrix.smart_select": "Omnitrix smart select",
   "scan.kingdomomnitrix.recommended": "Recommended: %s – %s",
   "scan.kingdomomnitrix.short": "RECOMMENDED",
+  "toast.kingdomomnitrix.dna_unlocked": "DNA ACQUIRED",
   "scan.kingdomomnitrix.smart_select": "Smart select: %s – %s",
   "scan.kingdomomnitrix.none": "Smart scan: no recommendation",
   "scan.kingdomomnitrix.generic": "fits the situation",

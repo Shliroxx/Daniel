@@ -7,6 +7,7 @@ import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixClientState;
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
 import com.santiq.kingdomomnitrix.client.omnitrix.SmartScan;
+import com.santiq.kingdomomnitrix.client.ui.UiDraw;
 import com.santiq.kingdomomnitrix.omnitrix.ScanRule;
 import com.santiq.kingdomomnitrix.networking.TransformRequestPayload;
 import com.santiq.kingdomomnitrix.omnitrix.AlienStatus;
@@ -41,6 +42,8 @@ public class OmnitrixRadialScreen extends Screen {
 	private static final int INNER = 34;
 	private static final int OUTER = 92;
 	private static final int DEADZONE = 16;
+	private static final int SILHOUETTE = 24;
+	private static final int CENTER_ICON = 28;
 	private static final int ARC_STEPS = 10;
 
 	private record Slot(Identifier id, AlienDefinition alien) {
@@ -138,34 +141,52 @@ public class OmnitrixRadialScreen extends Screen {
 		context.draw();
 
 		for (int i = 0; i < count; i++) {
+			Slot slot = slots.get(i);
+			boolean hover = i == hovered;
 			float mid = (segmentStart(i) + segmentStart(i + 1)) / 2.0f;
-			float radius = (INNER + OUTER) / 2.0f * ease + (i == hovered ? 4 : 0);
+			float radius = (INNER + OUTER) / 2.0f * ease + (hover ? 4 : 0);
 			int tx = cx + Math.round(MathHelper.cos(mid) * radius);
 			int ty = cy + Math.round(MathHelper.sin(mid) * radius);
-			Text name = TransformationManager.alienName(slots.get(i).id());
+			Text name = TransformationManager.alienName(slot.id());
+			// Silhouette in Alien-Farbe (aktiv weiss, im Nachladen grau); ohne Symbol nur der Name
+			AlienStatus status = OmnitrixCore.alienStatus(client.player, slot.id());
+			int tint = slot.id().equals(active) ? 0xFFFFFF : status == AlienStatus.COOLDOWN ? 0x7A7A7A : brighten(slot.alien().color());
+			int size = Math.round((hover ? SILHOUETTE + 6 : SILHOUETTE) * ease);
+			boolean drawn = size > 0 && UiDraw.alienSilhouette(context, slot.id(), tx - size / 2, ty - size + 6, size, tint, hover ? 1.0f : 0.8f);
 			context.getMatrices().push();
-			context.getMatrices().translate(tx, ty, 0.0f);
-			float scale = i == hovered ? 0.9f : 0.75f;
+			context.getMatrices().translate(tx, drawn ? ty + 8 : ty, 0.0f);
+			float scale = drawn ? (hover ? 0.7f : 0.6f) : (hover ? 0.9f : 0.75f);
 			context.getMatrices().scale(scale, scale, 1.0f);
-			context.drawCenteredTextWithShadow(textRenderer, name, 0, -4, i == hovered ? 0xFFFFFFFF : 0xFFCFE8D4);
+			context.drawCenteredTextWithShadow(textRenderer, name, 0, -4, hover ? 0xFFFFFFFF : 0xFFCFE8D4);
 			context.getMatrices().pop();
 		}
 		if (hovered >= 0) {
 			Slot slot = slots.get(hovered);
 			AlienStatus status = OmnitrixCore.alienStatus(client.player, slot.id());
-			context.drawCenteredTextWithShadow(textRenderer, TransformationManager.alienName(slot.id()).formatted(Formatting.BOLD),
-					cx, cy - 9, 0xFF000000 | slot.alien().color());
+			// Mitte: farbiges Symbol ueber Name und Zustand (Hologramm-Vorschau)
+			boolean icon = UiDraw.alienIcon(context, slot.id(), cx - CENTER_ICON / 2, cy - CENTER_ICON - 2, CENTER_ICON, 1.0f);
+			int nameY = icon ? cy + 1 : cy - 9;
 			context.getMatrices().push();
-			context.getMatrices().translate(cx, cy + 3, 0.0f);
-			context.getMatrices().scale(0.7f, 0.7f, 1.0f);
+			context.getMatrices().translate(cx, nameY, 0.0f);
+			float nameScale = icon ? 0.8f : 1.0f;
+			context.getMatrices().scale(nameScale, nameScale, 1.0f);
+			context.drawCenteredTextWithShadow(textRenderer, TransformationManager.alienName(slot.id()).formatted(Formatting.BOLD),
+					0, 0, 0xFF000000 | brighten(slot.alien().color()));
+			context.getMatrices().pop();
+			context.getMatrices().push();
+			context.getMatrices().translate(cx, nameY + (icon ? 9 : 12), 0.0f);
+			context.getMatrices().scale(0.6f, 0.6f, 1.0f);
 			context.drawCenteredTextWithShadow(textRenderer, Text.translatable("alien_status.kingdomomnitrix." + status.name().toLowerCase(java.util.Locale.ROOT)),
 					0, 0, 0xFF9ACFA8);
 			context.getMatrices().pop();
 		}
 		if (hovered < 0) {
 			SmartScan.recommendation().ifPresent(pick -> {
+				// Empfehlung: goldene Silhouette ueber dem Hinweis
+				boolean icon = UiDraw.alienSilhouette(context, pick.alien(), cx - CENTER_ICON / 2 + 3, cy - CENTER_ICON + 1,
+						CENTER_ICON - 6, 0xFFD84A, 0.55f + 0.45f * pulse);
 				context.getMatrices().push();
-				context.getMatrices().translate(cx, cy - 4, 0.0f);
+				context.getMatrices().translate(cx, icon ? cy + 6 : cy - 4, 0.0f);
 				context.getMatrices().scale(0.7f, 0.7f, 1.0f);
 				context.drawCenteredTextWithShadow(textRenderer, Text.translatable("scan.kingdomomnitrix.short"), 0, -6, 0xFFFFD84A);
 				context.drawCenteredTextWithShadow(textRenderer, TransformationManager.alienName(pick.alien()).formatted(Formatting.BOLD), 0, 5, 0xFFFFFFFF);
@@ -225,6 +246,21 @@ public class OmnitrixRadialScreen extends Screen {
 			buffer.vertex(matrix, cx + c1 * outer, cy + s1 * outer, 0.0f).color(color);
 			buffer.vertex(matrix, cx + c0 * outer, cy + s0 * outer, 0.0f).color(color);
 		}
+	}
+
+	/** Dunkle Alien-Farben (z. B. XLR8-Blau) fuer Schrift und Silhouette auf dem dunklen Rad aufhellen. */
+	private static int brighten(int rgb) {
+		int r = (rgb >> 16) & 0xFF;
+		int g = (rgb >> 8) & 0xFF;
+		int b = rgb & 0xFF;
+		int max = Math.max(r, Math.max(g, b));
+		if (max >= 0xB0) {
+			return rgb & 0xFFFFFF;
+		}
+		float factor = max == 0 ? 0.0f : 0xB0 / (float) max;
+		return Math.min(255, Math.round(r * factor + (max == 0 ? 0xB0 : 0))) << 16
+				| Math.min(255, Math.round(g * factor + (max == 0 ? 0xB0 : 0))) << 8
+				| Math.min(255, Math.round(b * factor + (max == 0 ? 0xB0 : 0)));
 	}
 
 	private static int darken(int rgb, float factor) {

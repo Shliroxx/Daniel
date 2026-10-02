@@ -614,6 +614,7 @@
   "key.kingdomomnitrix.smart_select": "Omnitrix-Smart-Wahl",
   "scan.kingdomomnitrix.recommended": "Empfohlen: %s – %s",
   "scan.kingdomomnitrix.short": "EMPFOHLEN",
+  "toast.kingdomomnitrix.dna_unlocked": "DNA ERFASST",
   "scan.kingdomomnitrix.smart_select": "Smart-Wahl: %s – %s",
   "scan.kingdomomnitrix.none": "Smart-Scan: keine Empfehlung",
   "scan.kingdomomnitrix.generic": "passt zur Lage",

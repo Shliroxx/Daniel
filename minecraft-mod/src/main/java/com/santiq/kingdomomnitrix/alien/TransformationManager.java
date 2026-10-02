@@ -508,10 +508,18 @@ public final class TransformationManager {
 
 	private static void playTransformEffects(ServerWorld world, ServerPlayerEntity player, AlienDefinition alien, boolean transforming) {
 		Vector3f color = colorVector(alien.color());
-		world.spawnParticles(new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.6f),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 14, 0.6, 0.9, 0.6, 0.0);
-		world.spawnParticles(new DustParticleEffect(color, 1.2f),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 8, 0.5, 0.8, 0.5, 0.0);
+		DustParticleEffect green = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.6f);
+		DustParticleEffect tint = new DustParticleEffect(color, 1.2f);
+		for (ServerPlayerEntity viewer : world.getPlayers()) {
+			if (viewer == player) {
+				// eigene Sicht: Ring auf Fusshoehe statt Wolke vor der Kamera (in der Ego-Sicht sonst bildfuellend)
+				world.spawnParticles(viewer, green, false, player.getX(), player.getY() + 0.15, player.getZ(), 14, 0.9, 0.05, 0.9, 0.0);
+				world.spawnParticles(viewer, tint, false, player.getX(), player.getY() + 0.15, player.getZ(), 8, 0.8, 0.05, 0.8, 0.0);
+			} else {
+				world.spawnParticles(viewer, green, false, player.getX(), player.getBodyY(0.5), player.getZ(), 14, 0.6, 0.9, 0.6, 0.0);
+				world.spawnParticles(viewer, tint, false, player.getX(), player.getBodyY(0.5), player.getZ(), 8, 0.5, 0.8, 0.5, 0.0);
+			}
+		}
 		if (transforming) {
 			Vfx.transform(world, player);
 		} else {
@@ -522,10 +530,15 @@ public final class TransformationManager {
 				SoundCategory.PLAYERS, 1.0f, 1.0f);
 	}
 
+	/** Aura nur fuer die anderen: der Spieler selbst saehe die Partikel direkt vor der Kamera. */
 	private static void spawnAura(ServerPlayerEntity player, AlienDefinition alien) {
-		player.getServerWorld().spawnParticles(new DustParticleEffect(colorVector(alien.color()), 0.8f),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 2,
-				player.getWidth() * 0.4, player.getHeight() * 0.3, player.getWidth() * 0.4, 0.0);
+		DustParticleEffect dust = new DustParticleEffect(colorVector(alien.color()), 0.8f);
+		for (ServerPlayerEntity viewer : player.getServerWorld().getPlayers()) {
+			if (viewer != player) {
+				player.getServerWorld().spawnParticles(viewer, dust, false, player.getX(), player.getBodyY(0.5), player.getZ(), 2,
+						player.getWidth() * 0.4, player.getHeight() * 0.3, player.getWidth() * 0.4, 0.0);
+			}
+		}
 	}
 
 	private static Vector3f colorVector(int rgb) {

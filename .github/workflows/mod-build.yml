@@ -40,7 +40,7 @@ jobs:
 
       - name: Texturen und Alien-Modelle pruefen
         run: |
-          pip install --quiet pillow
+          pip install --quiet pillow numpy
           python tools/generate_textures.py --check
           python tools/sample_reference.py heatblast --check
           python tools/sample_reference.py xlr8 --check
@@ -48,6 +48,7 @@ jobs:
           python tools/sample_reference.py diamondhead --check
           python tools/generate_alien_models.py --check
           python tools/import_alienevo.py --check
+          python tools/generate_alien_icons.py --check
           python -m unittest discover -s tools/tests -t .
           python tools/generate_item_models.py --check
           python tools/generate_player_animations.py --check
