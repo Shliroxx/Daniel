@@ -26,6 +26,19 @@ Ab jetzt gilt: Qualität vor Menge. Keine neuen Inhalte, bevor Aliens, Keyblades
 
 ---
 
+## STILVORGABE ALIENS (Entscheidung SANTIQ, 2026-10-02)
+Ziel: Qualität und Wirkung wie **Alien Evolution** — aber eigene Modelle und Texturen (AlienEvo ist „All Rights
+Reserved“, Kopieren nicht erlaubt). Abgeleitete Regeln aus den öffentlichen Vorschaubildern:
+1. **Serien-Treue zuerst:** jedes Alien in seinem bekannten Serien-Outfit (Farbblöcke, Anzug, Omnitrix-Symbol
+   gut sichtbar auf der Brust bzw. Schulter).
+2. **Saubere Flächen statt Rauschen:** flache Farbflächen mit leichter Schattierung, klare dunkle Konturlinien an
+   Kanten und Nähten, hoher Kontrast — kein Pixel-Rauschen.
+3. **Proportionen nah am Spielerskelett,** aber mit markanter Silhouette pro Alien (Vierarm massiv, Diamondhead
+   kantige Kristalle, Grey Matter klein).
+4. **Leuchten gezielt:** Augen, Omnitrix, Energie (Feuer, Kristall-Kanten) über Leuchtmaske.
+5. **Omnitrix als 3D-Gerät** am Handgelenk in der Ego-Sicht (Ziffernblatt mit Sanduhr und Alien-Silhouette).
+Heatblast und XLR8 (Rework 1) werden auf diesen Stil nachgezogen (Texturen ohne Rauschen, Konturen).
+
 ## COMPLETED
 - Phasen 1–13, 15–19 (siehe `docs/ANALYSE_UND_ROADMAP.md`): Omnitrix + 5 Aliens, Keyblade-Kampf, Magie, Herzlose,
   Ratchet-&-Clank-Waffen/Gadgets/Bolts, Raumschiff + Weltraum, Traverse Town, Arena, Dr. Nefarious, Stufe 50 +
@@ -124,7 +137,8 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
-**Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,
+**Stilwechsel „sauber wie AlienEvo“:** Material-Maler in `tools/generate_alien_models.py` auf flache Farben +
+Konturen umstellen (Heatblast, XLR8 nachziehen), danach **Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,
 Stil `heavy`: massiver Oberkörper, breite Schultern, 4 Arme mit Unterarmen, 4 Augen, schwerer Gang mit Gewichts-
 verlagerung, Bodenschlag-Animation). Seitenansicht über Beobachter-Client prüfen (siehe Testhinweis unten).
 
