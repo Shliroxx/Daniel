@@ -26,7 +26,17 @@ Ab jetzt gilt: Qualität vor Menge. Keine neuen Inhalte, bevor Aliens, Keyblades
 
 ---
 
-## STILVORGABE ALIENS (Entscheidung SANTIQ, 2026-10-02)
+## STILVORGABE ALIENS — BEN-10-ZEICHENTRICK (Entscheidung SANTIQ, 2026-10-02, ersetzt die Würfel-Vorgabe)
+„Nicht wie Minecraft, im Stil von Ben 10“: Aliens sind runde Cartoon-Figuren statt Würfelkörper.
+- **Cartoon-Renderer** (`client/render/toon/`): GeckoLib liefert nur Skelett + Animation; gezeichnet werden
+  Dreiecksnetze je Knochen (`assets/kingdomomnitrix/toon/<alien>.bin`) mit Cel-Shading (3 harte Stufen, Licht
+  relativ zur Kamera), schwarzem Umriss (Inverted Hull) und leuchtenden Flächen (Glut, Augen, Omnitrix).
+- **Generator** `tools/generate_toon_meshes.py`: Ellipsoide, Kapseln, Kegel; Farbe pro Dreieck (scharfe
+  Farbgrenzen); Gesichter als eigene glatte Formen; Diamondhead bewusst facettiert (wenig Polygone).
+- Fehlt ein Netz, fällt der Renderer auf die Würfel der .geo.json zurück.
+- Bild: `docs/screenshots/aliens_cartoon.png`.
+
+### Frühere Vorgabe (Würfel im Serien-Design, jetzt nur noch Rückfallebene)
 Ziel: Qualität und Wirkung wie **Alien Evolution** — aber eigene Modelle und Texturen (AlienEvo ist „All Rights
 Reserved“, Kopieren nicht erlaubt). Abgeleitete Regeln aus den öffentlichen Vorschaubildern:
 1. **Serien-Treue zuerst:** jedes Alien in seinem bekannten Serien-Outfit (Farbblöcke, Anzug, Omnitrix-Symbol
@@ -140,6 +150,11 @@ Reihenfolge = Abarbeitungsreihenfolge.
 ---
 
 ## NEXT TASK
+**Cartoon-Feinschliff:** Seiten-/Rückansicht und Laufanimation aller 5 im Spiel prüfen (Beobachter-Client),
+Gesichter nach Serie verfeinern (Heatblast-Flammenkopf größer, XLR8-Visier, Vierarm-Muskeln), Leistung mit
+4 verwandelten Spielern messen (~60k Dreiecke inkl. Umriss je Alien), dann Omnitrix als 3D-Gerät.
+
+**Danach:**
 **Serien-Design Feinschliff:** Seiten- und Rückansicht aller 5 Aliens über den Beobachter-Client prüfen
 (Rückseiten der Anzüge, Schwanz XLR8, Kristall-Rücken Diamondhead), danach Omnitrix als 3D-Gerät am Handgelenk.
 Danach (aus altem Plan) **Vierarm MODEL/TEXTURE/ANIMATION REWORK** in `tools/generate_alien_models.py` (neue Funktion `four_arms()`,

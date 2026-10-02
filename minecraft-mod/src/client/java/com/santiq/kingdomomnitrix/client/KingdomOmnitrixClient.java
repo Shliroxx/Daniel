@@ -38,6 +38,7 @@ import com.santiq.kingdomomnitrix.client.space.ShipClient;
 import com.santiq.kingdomomnitrix.client.space.ShipRenderer;
 import com.santiq.kingdomomnitrix.client.boss.NefariousRenderer;
 import com.santiq.kingdomomnitrix.client.render.alien.AlienBodyRenderers;
+import com.santiq.kingdomomnitrix.client.render.toon.ToonMeshes;
 import com.santiq.kingdomomnitrix.client.space.SpaceDimensionEffects;
 import com.santiq.kingdomomnitrix.client.space.SpaceRifts;
 import com.santiq.kingdomomnitrix.client.space.SpaceSkyRenderer;
@@ -111,6 +112,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ModParticleFactories.register();
 		ScreenEffects.register();
 		AlienBodyRenderers.register();
+		ToonMeshes.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public net.minecraft.util.Identifier getFabricId() {
