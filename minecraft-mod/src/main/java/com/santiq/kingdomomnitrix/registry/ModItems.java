@@ -72,6 +72,7 @@ public final class ModItems {
 	public static final Item QUEST_BOOK = register("quest_book", new QuestBookItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item SWINGSHOT = register("swingshot", new SwingshotItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item WEAPON_TERMINAL = register("weapon_terminal", new BlockItem(ModBlocks.WEAPON_TERMINAL, new Item.Settings().rarity(Rarity.UNCOMMON)));
+	public static final Item CALIBRATION_BENCH = register("calibration_bench", new BlockItem(ModBlocks.CALIBRATION_BENCH, new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item BOLT_CRATE = register("bolt_crate", new BlockItem(ModBlocks.BOLT_CRATE, new Item.Settings()));
 
 	// --- Raumfahrt und Erze (Phase 12) ---------------------------------------------------------

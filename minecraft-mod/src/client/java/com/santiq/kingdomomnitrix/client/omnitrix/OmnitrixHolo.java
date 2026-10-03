@@ -113,6 +113,12 @@ public final class OmnitrixHolo {
 		pending = null;
 	}
 
+	/** Aktuell sichtbare Meldung (fuer Bildschirme, die das HUD verdecken, z. B. die Kalibrier-Werkbank). */
+	public static Optional<Message> visible() {
+		Message message = current;
+		return message != null && System.currentTimeMillis() - shownAt < message.durationMs() ? Optional.of(message) : Optional.empty();
+	}
+
 	public static boolean isShowing(Message message) {
 		return current == message && System.currentTimeMillis() - shownAt < message.durationMs();
 	}

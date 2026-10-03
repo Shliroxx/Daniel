@@ -42,6 +42,14 @@ public final class OmnitrixCore {
 			.copyOnDeath()
 			.syncWith(OmnitrixState.PACKET_CODEC, AttachmentSyncPredicate.all()));
 
+	/** Kalibrierung (Werkbank): Module und Farbe; allen sichtbar (Farbe), daher an alle synchronisiert. */
+	public static final AttachmentType<OmnitrixCalibration> CALIBRATION = AttachmentRegistry.create(KingdomOmnitrix.id("omnitrix_calibration"),
+			builder -> builder
+					.persistent(OmnitrixCalibration.CODEC)
+					.initializer(() -> OmnitrixCalibration.DEFAULT)
+					.copyOnDeath()
+					.syncWith(OmnitrixCalibration.PACKET_CODEC, AttachmentSyncPredicate.all()));
+
 	/** Warum das Geraet eine Verwandlung ablehnt */
 	public enum Refusal {
 		LOCKED, OVERHEATED, TOO_HOT
@@ -64,8 +72,14 @@ public final class OmnitrixCore {
 		return state != null ? state : OmnitrixState.EMPTY;
 	}
 
+	public static OmnitrixCalibration calibration(PlayerEntity player) {
+		OmnitrixCalibration calibration = player.getAttached(CALIBRATION);
+		return calibration != null ? calibration : OmnitrixCalibration.DEFAULT;
+	}
+
+	/** Wirksames Geraete-Profil: Datenpaket-Profil mit eingerechneter Kalibrierung. */
 	public static OmnitrixProfile profile(PlayerEntity player) {
-		return profile(player.getWorld().getRegistryManager(), state(player).profile());
+		return calibration(player).apply(profile(player.getWorld().getRegistryManager(), state(player).profile()));
 	}
 
 	public static OmnitrixProfile profile(DynamicRegistryManager manager, Identifier id) {

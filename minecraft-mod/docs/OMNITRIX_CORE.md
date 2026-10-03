@@ -369,3 +369,38 @@ Tests: Fortschritts-Schwelle, Standardwerte und Datenfelder der Freischaltung.
 Nicht geprueft: Master-Control-Ton nach Gehoer.
 
 ![Master Control: Fortschritt, Freischaltung, Menue](screenshots/master_control_progress.png)
+
+## 15. Phase L — Kalibrier-Werkbank (2026-10-03)
+
+Neuer Block **Kalibrier-Werkbank** (`kingdomomnitrix:calibration_bench`, Rezept: Eisen, Glasscheibe, 2 Raritanium,
+Werkbank). Rechtsklick (nicht mit dem Omnitrix in der Hand — das oeffnet das Rad) → Kalibrier-Bildschirm.
+
+Drei Module zu je 3 Stufen, aber nur **5 Kalibrierpunkte** — alles maximieren geht nicht:
+
+| Modul | je Stufe | Preis dafuer |
+|---|---|---|
+| Kuehlung | −12 % Hitze als Alien, +20 % Abkuehlung | (nur Punkte) |
+| Kern | +15 % Verwandlungsdauer | +8 % Hitze pro Verwandlung |
+| Bandbreite | −12 % Nachladezeit | +25 % Fehlfunktions-Chance (falsches Alien, Zeitdrift) |
+
+Kosten je Stufe: 1 → 300 Bolts + 2 Raritanium; 2 → 700 Bolts + 4 Raritanium + 3 Mythril; 3 → 1500 Bolts +
+6 Raritanium + 4 Mythril + 1 Orichalcum. Senken ist kostenlos, gibt aber nichts zurueck. Kreativmodus: kostenlos.
+Server prueft Abstand zur Werkbank (8 Bloecke), Menschenform, Budget, Hoechststufe und Material.
+
+Technik: eigener Anhang `omnitrix_calibration` (persistent, an alle synchronisiert, bleibt nach dem Tod).
+`OmnitrixCore.profile(player)` rechnet die Kalibrierung in das Profil ein — Hitze, Dauer, Nachladen, Fehlfunktionen,
+HUD und Rad lesen also automatisch die kalibrierten Werte. Der Bildschirm zeigt die wirksamen Werte live, faerbt
+unbezahlbare Kosten orange und zeigt Geraete-Meldungen im Panel (das HUD-Hologramm liegt sonst darunter).
+
+Farbmodule (6 Farben) sind schon waehlbar und gespeichert; ihre Wirkung auf Kern, Oberflaeche, Hologramm, Effekte,
+Licht und Abzeichen ist Phase M.
+
+**Im Spiel geprueft (Ueberlebensmodus):** 3× Kuehlung + 1× Kern gekauft → Bolts 2870 → 70, Raritanium 20 → 6,
+Mythril 10 → 3; Kern 2 abgelehnt „Material oder Bolts fehlen“, Kosten orange. Kreativ: Kern 2 → Punkte 5/5, Bandbreite
+„Keine freien Punkte — anderes Modul senken“; Kern gesenkt → 4/5; Farbe Gelb → Panel-Akzent gelb. Wirksame Werte
+(Kuehlung 3, Kern 2): Hitze/Verwandlung 26 %, Hitze/s 0,26 %, Dauer ×1,30.
+**Gefunden und behoben:** die Ablehnung war nur als HUD-Hologramm hinter dem Panel sichtbar → Statuszeile im Panel.
+Tests: Wirkung je Modul, unveraendertes Profil ohne Kalibrierung, Budget, Begrenzung, Kosten steigend, Farbliste.
+Nicht geprueft: Abstand/Menschenform-Ablehnung im Spiel (nur Code), Mehrspieler-Sync der Kalibrierung.
+
+![Kalibrier-Werkbank: Bildschirm und Block](screenshots/calibration_bench.png)

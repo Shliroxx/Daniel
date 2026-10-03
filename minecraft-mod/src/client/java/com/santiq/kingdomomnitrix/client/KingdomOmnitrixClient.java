@@ -164,6 +164,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(SwingshotStatePayload.ID, (payload, context) -> SwingshotRopes.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTerminalPayload.ID, (payload, context) ->
 				context.client().setScreen(new WeaponTerminalScreen(payload.pos())));
+		ClientPlayNetworking.registerGlobalReceiver(com.santiq.kingdomomnitrix.networking.OpenCalibrationPayload.ID, (payload, context) ->
+				context.client().setScreen(new com.santiq.kingdomomnitrix.client.screen.OmnitrixCalibrationScreen(payload.pos())));
 		ClientPlayNetworking.registerGlobalReceiver(OpenOmnitrixPayload.ID, (payload, context) -> {
 			if (context.client().currentScreen == null) {
 				OmnitrixController.open(context.client());

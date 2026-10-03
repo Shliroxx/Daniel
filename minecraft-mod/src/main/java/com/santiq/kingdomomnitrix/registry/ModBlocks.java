@@ -48,6 +48,15 @@ public final class ModBlocks {
 					.luminance(state -> 9)
 					.sounds(BlockSoundGroup.METAL)));
 
+	/** Kalibrier-Werkbank: Omnitrix-Module (Kuehlung, Kern, Bandbreite) und Farbmodul einstellen. */
+	public static final Block CALIBRATION_BENCH = Registry.register(Registries.BLOCK, KingdomOmnitrix.id("calibration_bench"),
+			new com.santiq.kingdomomnitrix.omnitrix.CalibrationBenchBlock(AbstractBlock.Settings.create()
+					.mapColor(MapColor.GREEN)
+					.strength(3.0f, 6.0f)
+					.requiresTool()
+					.luminance(state -> 8)
+					.sounds(BlockSoundGroup.METAL)));
+
 	// --- Erze (Phase 12): Asteroiden im All und die Mod-Welten ----------------------------------
 
 	/** Raritanium (Ratchet & Clank): in Asteroiden und tief in Traverse Town. */

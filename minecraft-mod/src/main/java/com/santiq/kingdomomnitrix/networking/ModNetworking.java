@@ -47,7 +47,9 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(CombatAnimationPayload.ID, CombatAnimationPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(SelectSpellPayload.ID, SelectSpellPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenTerminalPayload.ID, OpenTerminalPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenCalibrationPayload.ID, OpenCalibrationPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CalibrationActionPayload.ID, CalibrationActionPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenQuestBookPayload.ID, OpenQuestBookPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenNpcDialogPayload.ID, OpenNpcDialogPayload.CODEC);
@@ -153,6 +155,9 @@ public final class ModNetworking {
 				TerminalService.handle(context.player(), actions[payload.action()], payload.weapon(), payload.terminal());
 			}
 		});
+
+		ServerPlayNetworking.registerGlobalReceiver(CalibrationActionPayload.ID, (payload, context) ->
+				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCalibrations.handle(context.player(), payload.bench(), payload.module(), payload.value()));
 
 		ServerPlayNetworking.registerGlobalReceiver(SelectSpellPayload.ID, (payload, context) ->
 				MagicManager.select(context.player(), payload.spell()));
