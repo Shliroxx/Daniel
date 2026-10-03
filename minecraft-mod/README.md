@@ -8,6 +8,8 @@ Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 > Nicht-kommerzielles Fanprojekt. Kingdom Hearts gehört Square Enix/Disney, Ben 10 Cartoon Network,
 > Ratchet & Clank Insomniac Games/Sony. Alle Texturen sind selbst erzeugt (`tools/generate_textures.py`).
 
+> **Vollständige Funktionsdokumentation:** [`docs/FUNKTIONEN.md`](docs/FUNKTIONEN.md) — Steuerung, alle 10 Aliens, Omnitrix-Gerät, Welten, Ereignisse, Dungeon, Befehle, Spielregeln.
+
 > **Offene Aufgaben für dich:** [`docs/TODO_SANTIQ.md`](docs/TODO_SANTIQ.md) — Netzwerk-Freigaben, Installationen, Testliste.
 
 ## Inhalt
