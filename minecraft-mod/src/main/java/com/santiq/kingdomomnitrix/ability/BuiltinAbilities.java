@@ -18,8 +18,6 @@ final class BuiltinAbilities {
 	}
 
 	static void register() {
-		CreatureAbilities.register();
-		MasteryAbilities.register();
 		CannonboltAbilities.register();
 		HeatblastAbilities.register();
 		Xlr8Abilities.register();
@@ -30,14 +28,16 @@ final class BuiltinAbilities {
 		StinkflyAbilities.register();
 		RipjawsAbilities.register();
 		UpgradeAbilities.register();
+		GhostfreakAbilities.register();
 		JetrayAbilities.register();
 	}
 
-	// Alien-Faehigkeiten mit eigenem System stehen je Alien in eigenen Klassen: HeatblastAbilities (Kernhitze),
+	// Jedes Alien hat sein eigenes System in einer eigenen Klasse: HeatblastAbilities (Kernhitze),
 	// Xlr8Abilities (Tempo), FourArmsAbilities (Wut), DiamondheadAbilities (Resonanz), GreyMatterAbilities
 	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung),
 	// WildmuttAbilities (Jagd), StinkflyAbilities (Toxin-Schichten),
-	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration).
+	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration),
+	// GhostfreakAbilities (Spuk).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 

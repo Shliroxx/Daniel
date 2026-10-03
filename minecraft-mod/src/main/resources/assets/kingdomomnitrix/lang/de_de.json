@@ -945,5 +945,8 @@
   "message.kingdomomnitrix.ripjaws_death_roll": "TODESROLLE!",
   "message.kingdomomnitrix.upgrade_overclock": "OVERCLOCK!",
   "message.kingdomomnitrix.upgrade_armor": "Mit der Rüstung verschmolzen",
-  "message.kingdomomnitrix.upgrade_override": "%s übernommen"
+  "message.kingdomomnitrix.upgrade_override": "%s übernommen",
+  "message.kingdomomnitrix.ghostfreak_harvest": "SEELENERNTE BEREIT",
+  "message.kingdomomnitrix.ghostfreak_ambush": "Hinterhalt!",
+  "message.kingdomomnitrix.ghostfreak_possess": "%s besessen"
 }

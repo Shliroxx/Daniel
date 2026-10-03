@@ -76,7 +76,7 @@
       "unlock_level": 3,
       "params": {
         "range": 6.0,
-        "seconds": 4.0,
+        "seconds": 6.0,
         "self_seconds": 4.0
       }
     },

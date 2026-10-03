@@ -40,7 +40,7 @@ Zählung. Jetzt: Ids ohne Namensraum gelten als `kingdomomnitrix:`, unbekannte A
 | Phase 2 (neu) | **Jetray** — Flughaltung als eigenes System: Importer liest AE-Modelle ohne Uniform-Varianten (`watch`) und die Endpose der AE-Fluganimation (`flight_pose`), der Renderer blendet sie in der Luft/im Wasser ein (`AlienFlightPose`); Flug-Manöver-Manager (Tiefflug, Windschatten, Sturm), Neuroschock-Lähmung, Verwandlungsstil `JET` |
 | **im AE-Inhalt verfügbar, noch nicht integriert** | Big Chill (Necrofriggian), Humungousaur (Vaxasaurian), Swampfire (Methanosian), Echo Echo (Sonorosian), Chromastone (Crystalsapien), Atomix, Dragonoid, Astrobot |
 
-Fähigkeiten: `ability/BuiltinAbilities`, `CreatureAbilities`, `MasteryAbilities` (vier Bausteine + Sonderfälle),
+Fähigkeiten (Stand des Audits; inzwischen je Alien eine eigene Klasse): `ability/BuiltinAbilities`, `CreatureAbilities`, `MasteryAbilities` (vier Bausteine + Sonderfälle),
 alle Zahlen im Datenpaket. **Lücke:** alien-eigene *Systeme* (z. B. Kugelform, Klonen, Einfrieren) gibt es erst als
 Fähigkeiten, nicht als dauerhafte Spielmechanik je Alien.
 

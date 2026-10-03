@@ -945,5 +945,8 @@
   "message.kingdomomnitrix.ripjaws_death_roll": "DEATH ROLL!",
   "message.kingdomomnitrix.upgrade_overclock": "OVERCLOCK!",
   "message.kingdomomnitrix.upgrade_armor": "Fused with armor",
-  "message.kingdomomnitrix.upgrade_override": "%s taken over"
+  "message.kingdomomnitrix.upgrade_override": "%s taken over",
+  "message.kingdomomnitrix.ghostfreak_harvest": "SOUL HARVEST READY",
+  "message.kingdomomnitrix.ghostfreak_ambush": "Ambush!",
+  "message.kingdomomnitrix.ghostfreak_possess": "%s possessed"
 }

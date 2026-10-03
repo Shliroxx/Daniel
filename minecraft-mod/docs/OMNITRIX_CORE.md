@@ -174,7 +174,7 @@ Ghostfreak (Ectonurite). Modelle, Texturen, Uniformen (classic/evo/ultimate) und
 - `AlienTraits` (Datenfeld `traits`): Flug, Dauer-/Wassereffekte, Austrocknen, Sinne, Effekt-Immunitaet.
   `AlienTraitHandler` nimmt beim Zurueckverwandeln genau das Gegebene zurueck (eigene Traenke bleiben); gewaehrter Flug
   wird vor dem Speichern beim Abmelden entfernt (sonst Dauerflug nach Neustart).
-- `CreatureAbilities` (15 Faehigkeiten), Geschoss-Arten Schleim und Stachel, `Targeting.findMeleeTarget` (verzeihendes
+- `CreatureAbilities` (15 Faehigkeiten; inzwischen aufgeteilt in die Alien-Klassen, siehe unten), Geschoss-Arten Schleim und Stachel, `Targeting.findMeleeTarget` (verzeihendes
   Nahkampf-Ziel im 45°-Kegel).
 - Importer: Zusatzmodelle mit eigener Textur, Textur-Variablen, Alpha-Masken, Schleifen fuer Zusatzknochen.
   **Fix nebenbei:** Vierarm/Grey Matter hatten Requisiten-/Ruestungsebenen in der Textur (Fels, Anzug).
@@ -221,8 +221,11 @@ hat Namen (de/en) und Symbol.
 | Ghostfreak | Besessenheit | Schattenschritt | Albtraum |
 
 Diamondhead und Grey Matter hatten nur eine Faehigkeit; neu dazu Kristallklinge + Kristallsprung bzw. Schwachstelle +
-Huschen. Code: `MasteryAbilities` — vier Bausteine (Flaeche/Kegel, Selbst, Ziel, Strahl) plus Sonderfaelle; alle Zahlen
-im Datenpaket.
+Huschen. Code: damals `MasteryAbilities` — vier Bausteine plus Sonderfaelle; alle Zahlen im Datenpaket.
+
+**Stand jetzt:** `CreatureAbilities` und `MasteryAbilities` gibt es nicht mehr. Jedes Alien hat ein eigenes System in
+einer eigenen Klasse (`HeatblastAbilities`, `Xlr8Abilities`, … `UpgradeAbilities`, `GhostfreakAbilities`), registriert
+in `BuiltinAbilities`; Uebersicht in `docs/FUNKTIONEN.md`.
 
 **Meisterschaft (★1–10 je Alien)**
 
