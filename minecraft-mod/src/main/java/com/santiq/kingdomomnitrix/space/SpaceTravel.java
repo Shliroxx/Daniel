@@ -190,7 +190,8 @@ public final class SpaceTravel {
 	// --- Spieler im All -------------------------------------------------------------------------
 
 	private static void tickSpace(ServerWorld space) {
-		for (ServerPlayerEntity player : space.getPlayers()) {
+		// Kopie: der Wiedereintritt nimmt den Spieler aus der Liste der Welt (sonst ConcurrentModificationException)
+		for (ServerPlayerEntity player : java.util.List.copyOf(space.getPlayers())) {
 			if (player.hasVehicle() || player.isSpectator() || player.getY() > REENTRY_Y) {
 				continue;
 			}

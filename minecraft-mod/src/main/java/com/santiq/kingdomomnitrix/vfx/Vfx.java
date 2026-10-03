@@ -71,7 +71,8 @@ public final class Vfx {
 		Vec3d forward = new Vec3d(-MathHelper.sin(yaw), 0, MathHelper.cos(yaw));
 		Vec3d right = new Vec3d(-forward.z, 0, forward.x);
 		Vec3d origin = new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ());
-		int points = 16;
+		// Die Spur selbst zeichnet der Client (SwingTrails); hier nur wenige Funken entlang des Bogens
+		int points = 5;
 		boolean leftToRight = step % 2 == 0;
 		for (int i = 0; i < points; i++) {
 			double t = (double) i / (points - 1);

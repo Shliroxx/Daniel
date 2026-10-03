@@ -31,6 +31,7 @@ public final class CombatAnimations {
 	}
 
 	public static void register() {
+		SwingTrails.register();
 		PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER_ID, LAYER_PRIORITY, player -> new ModifierLayer<>());
 		ClientPlayNetworking.registerGlobalReceiver(CombatAnimationPayload.ID, (payload, context) ->
 				play(context.client(), payload.entityId(), payload.animation()));
@@ -45,6 +46,7 @@ public final class CombatAnimations {
 		if (!(entity instanceof AbstractClientPlayerEntity player)) {
 			return;
 		}
+		SwingTrails.spawn(player, animation);
 		IAnimation stored = PlayerAnimationAccess.getPlayerAssociatedData(player).get(LAYER_ID);
 		if (!(stored instanceof ModifierLayer<?> rawLayer)) {
 			fallback(player, animation);

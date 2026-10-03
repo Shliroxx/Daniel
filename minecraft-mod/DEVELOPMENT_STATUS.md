@@ -331,11 +331,12 @@ Reihenfolge = Abarbeitungsreihenfolge.
 2. [x] **Heatblast** (Rework 1; FINAL POLISH offen) — MODEL (Magma-Gesteinsplatten, Flammenkopf aus Knochen, schlanke Silhouette), TEXTURE (128er,
    Risse + Leuchtmaske), ANIMATION (idle, walk, run, jump/fall, attack, ability, hit, transform), VFX (Flammen am Kopf).
 3. [x] **XLR8** (Rework 1; offen: Geschwindigkeits-Streifen/Nachbild beim Sprint, Visier-Animation) — MODEL (Visier-Helm, Schwanz, Raptor-Beine, vorgebeugt), TEXTURE, ANIMATION (Sprint-Pose).
-4. [ ] **Vierarm** — MODEL (massiv, breite Schultern, 4 Augen), TEXTURE, ANIMATION (schwerer Gang, Bodenschlag).
-5. [ ] **Diamondhead** — MODEL (Kristallkanten, Schulter-Kristalle), TEXTURE (Facetten), ANIMATION.
-6. [ ] **Grey Matter** — MODEL (klein, großer Kopf, große Augen), TEXTURE, ANIMATION (flink, hüpfend).
-7. [ ] **Omnitrix** — 3D-Modell am Handgelenk (Spieler-Layer), Ring-Animation beim Aktivieren.
-8. [ ] **Keyblade-Rework** — 3D-Handmodelle (Kingdom Key, Oathkeeper, Omega Key), Schwung-Spur angleichen.
+4. [x] **Vierarm** (nach Alien Evolution, Commits cfdb268/6053cf8) — MODEL (massiv, breite Schultern, 4 Augen), TEXTURE, ANIMATION (schwerer Gang, Bodenschlag).
+5. [x] **Diamondhead** (nach Alien Evolution, Commits 193373a/2b4006b) — MODEL (Kristallkanten, Schulter-Kristalle), TEXTURE (Facetten), ANIMATION.
+6. [x] **Grey Matter** (nach Alien Evolution, Commit 230bcb5) — MODEL (klein, großer Kopf, große Augen), TEXTURE, ANIMATION (flink, hüpfend).
+7. [x] **Omnitrix** (AE-Prototyp am Arm, Commit ef052fe) — 3D-Modell am Handgelenk (Spieler-Layer), Ring-Animation beim Aktivieren.
+8. [x] **Keyblade-Rework** — 3D-Handmodelle (Kingdom Key, Oathkeeper, Omega Key); Schwung-Spur als leuchtendes Band
+   (Client), Form je Angriff (Kombo links/rechts, Luft schräg, schwerer Hieb senkrecht, Finisher Kreis), Farbe je Waffe.
 9. [x] **Heartless-Rework** — Shadow (lange abknickende Fühler, Krallen, geduckt), Soldier (Spitzhelm, Zickzack, Emblem,
    Krallenhandschuhe, Rollstiefel), Air Soldier (Fliegermütze mit Brille, Fledermausflügel, Schwanz), Large Body (runder
    Bauch mit Emblem und Gürtel, Zipfelhut), Darkball (Kugel, Zahnmaul, Schwaden); gelbe Augen leuchten (Glowmask).
