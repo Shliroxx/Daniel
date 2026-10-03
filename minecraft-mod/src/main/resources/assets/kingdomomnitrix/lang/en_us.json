@@ -948,5 +948,13 @@
   "message.kingdomomnitrix.upgrade_override": "%s taken over",
   "message.kingdomomnitrix.ghostfreak_harvest": "SOUL HARVEST READY",
   "message.kingdomomnitrix.ghostfreak_ambush": "Ambush!",
-  "message.kingdomomnitrix.ghostfreak_possess": "%s possessed"
+  "message.kingdomomnitrix.ghostfreak_possess": "%s possessed",
+  "alien.kingdomomnitrix.big_chill": "Big Chill",
+  "ability.kingdomomnitrix.ice_breath": "Ice Breath",
+  "ability.kingdomomnitrix.ice_shards": "Ice Shards",
+  "ability.kingdomomnitrix.phase_flight": "Phase Flight",
+  "ability.kingdomomnitrix.ice_prison": "Ice Prison",
+  "ability.kingdomomnitrix.cryo_cloak": "Cryo Cloak",
+  "ability.kingdomomnitrix.absolute_zero": "Absolute Zero",
+  "message.kingdomomnitrix.big_chill_shatter": "Shattered!"
 }

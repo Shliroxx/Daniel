@@ -526,6 +526,12 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/strafing_run": ("omnitrix", "dash", True),
     "alien_ability/slipstream": ("omnitrix", "speed", True),
     "alien_ability/neuroshock_storm": ("omnitrix", "lightning", True),
+    "alien_ability/ice_breath": ("omnitrix", "snowflake", False),
+    "alien_ability/ice_shards": ("omnitrix", "crystal", False),
+    "alien_ability/phase_flight": ("omnitrix", "wing", True),
+    "alien_ability/ice_prison": ("omnitrix", "snowflake", True),
+    "alien_ability/cryo_cloak": ("omnitrix", "eye", True),
+    "alien_ability/absolute_zero": ("omnitrix", "sparkle", True),
     # Kommandomenue
     "command/attack": ("hero", "sword", False),
     "command/magic": ("keyblade", "sparkle", False),

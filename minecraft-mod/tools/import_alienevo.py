@@ -79,6 +79,14 @@ class Spec:
     watch: tuple[tuple[str, str], ...] = ()
     # Flug-/Schwimmhaltung: AE-Animation (Datei:Name), deren Endpose der Renderer in der Luft/im Wasser einblendet
     flight_pose: str | None = None
+    # Herkunft: "alienevo" (Uniform-Modelle unter geo/aliens/alien_N) oder "afomni" (Alien-Force-Erweiterung im selben
+    # Jar: ein Modell assets/afomni/geo/<species>.geo.json, eine Textur, keine Codex-Farben, kein Abzeichen-Modell)
+    pack: str = "alienevo"
+    # AE-Ruhehaltungen (Datei:Name): Endpose wird als feste Spur in die Daueranimation gelegt (Big Chill: Umhang zu,
+    # Humungosaur: Panzer eingefahren); in der Luft ueberschreibt die Flugpose sie
+    rest: tuple[str, ...] = ()
+    # zusaetzliche Leuchtebene (AE-Pfad), die AE selbst nicht einbindet (Big Chill: Omnitrix-Symbol)
+    glow: str | None = None
 
 
 ALIENS = {
@@ -118,6 +126,18 @@ ALIENS = {
     # Kugelform als eigenes Modell (cannonbolt_ball), die eingeklappte Kugel im Koerper faellt weg; Groesse 1,33 wie AE
     "cannonbolt": Spec("11", "arburian_pelarota", "arburian_pelarota.json", 1.33, "heavy", "#F2C230",
                        script="arburian_pelarota", drop=r"^BALL$", form=("arburian_pelarota_ball", "BALL", "ball")),
+    # --- Alien-Force-Erweiterung (afomni, im selben Jar): ein Modell, eine Textur, kein Abzeichen-Modell ---
+    # Big Chill: am Boden Umhang zu (AE cloak_on: Fluegel/Fuehler eingezogen), in der Luft Fluegel auf (cloak_off);
+    # nur die Fluegelknochen schlagen dauernd (im Umhang unsichtbar). Omnitrix-Symbol als Leuchtebene.
+    "big_chill": Spec("afomni", "necrofriggian", "necrofriggian_cloak.json", 1.0, "fast", "#4A7BD0", pack="afomni",
+                      variables=(("X", "0"),), rest=("bigchill.animation.json:animation.BigChill.cloak_on",),
+                      loops=("bigchill.animation.json:animation.BigChill.Flight@^w",),
+                      flight_pose="bigchill.animation.json:animation.BigChill.cloak_off",
+                      glow="assets/afomni/textures/models/necrofriggian/necrofriggian_glow.png"),
+    # Humungosaur: Panzerplatten eingefahren (AE armor_off), Schwanz pendelt; Groesse 2,8 wie AE
+    "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 2.8, "heavy", "#C68A4E", pack="afomni",
+                         rest=("model.humongousaur.anim.json:animation.humungousaur.armor_off",),
+                         loops=("model.humongousaur.anim.json:animation.humungousaur.tail",)),
     "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.1, "small", "#C9C3D6", script="ectonurite",
                        variables=(("X", "0"),),
                        loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye")),
@@ -141,6 +161,23 @@ class Jar:
     def asset(self, resource: str) -> str:
         namespace, path = resource.split(":", 1)
         return f"assets/{namespace}/{path}"
+
+
+def geo_path(spec: Spec, model: str) -> str:
+    if spec.pack == "afomni":
+        return f"assets/afomni/geo/{model}.geo.json"
+    return f"assets/alienevo/geo/aliens/alien_{spec.number}/{model}.geo.json"
+
+
+def anim_path(spec: Spec, file: str) -> str:
+    return f"assets/{spec.pack}/animations/{file}"
+
+
+def _loop_ref(ref: str) -> tuple[str, str, re.Pattern | None]:
+    """„Datei:Name“ oder „Datei:Name@Regex“ (nur Knochen, deren Name passt — Big Chill: nur die Fluegel schlagen)."""
+    ref, _, pattern = ref.partition("@")
+    file, anim = ref.split(":", 1)
+    return file, anim, re.compile(pattern) if pattern else None
 
 
 def codex_palettes(jar: Jar) -> dict[str, list[str]]:
@@ -175,7 +212,10 @@ def recolor(img: Image.Image, mapping: dict[str, str]) -> Image.Image:
 
 
 def layers_of(jar: Jar, spec: Spec) -> list[dict]:
-    data = jar.json(f"assets/alienevo/palladium/render_layers/aliens/alien_{spec.number}/{spec.layer}")
+    if spec.pack == "afomni":
+        data = jar.json(f"assets/afomni/palladium/render_layers/{spec.layer}")
+    else:
+        data = jar.json(f"assets/alienevo/palladium/render_layers/aliens/alien_{spec.number}/{spec.layer}")
     return data["layers"] if data.get("type") == "palladium:compound" else [data]
 
 
@@ -243,7 +283,7 @@ def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict, frame: 
         tex = layer.get("texture")
         if isinstance(tex, str):  # Ebene ohne Transformer (Jetray)
             tex = {"base": tex}
-        if ("/aliens/" not in tex.get("base", "") or not _layer_belongs(layer, model)
+        if ((spec.pack == "alienevo" and "/aliens/" not in tex.get("base", "")) or not _layer_belongs(layer, model)
                 or not _watch_matches(layer, spec, ae_uniform)):
             continue
         if model != spec.species and "#I" in tex["base"]:
@@ -278,6 +318,10 @@ def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict, frame: 
             glow = img if glow is None else _over(glow, img)
     if color is None:
         raise ValueError(f"{model}/{ae_uniform}: keine Textur-Ebene gefunden")
+    if spec.glow and model == spec.species:
+        extra = jar.image(spec.glow)
+        color = _over(color, extra)
+        glow = extra.resize(color.size, Image.NEAREST) if glow is None else _over(glow, extra)
     return color, glow if glow is not None else Image.new("RGBA", color.size, (0, 0, 0, 0))
 
 
@@ -324,6 +368,8 @@ def _with_badge(color: Image.Image, glow: Image.Image, badge: tuple[dict, Image.
 def badge_parts(jar: Jar, spec: Spec, state: str = "default") -> tuple[dict, Image.Image, Image.Image] | None:
     """Omnitrix-Abzeichen (prototype): Geometrie, Farbtextur, Leuchttextur. state „default“ (gruen) oder
     „timeout“ (AE: rot, bei uns Warnblinken kurz vor Ablauf)."""
+    if spec.pack != "alienevo":
+        return None
     folder = f"assets/alienevo/geo/aliens/alien_{spec.number}"
     geo_name = f"{folder}/badge_prototype.geo.json"
     if not jar.has(geo_name):
@@ -542,13 +588,13 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
     classic_bones: list[dict] = []
     for index, (uniform, ae) in enumerate(UNIFORMS.items()):
         suffix = "" if index == 0 else f"_{uniform}"
-        geo_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}_{ae}.geo.json"
-        if not jar.has(geo_name):  # ein Modell fuer alle Uniformen (Jetray)
-            geo_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}.geo.json"
+        geo_name = geo_path(spec, f"{spec.species}_{ae}")
+        if not jar.has(geo_name):  # ein Modell fuer alle Uniformen (Jetray, afomni)
+            geo_name = geo_path(spec, spec.species)
         geo = jar.json(geo_name)["minecraft:geometry"][0]
         extra = None
         if spec.extra:
-            extra_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.extra}_{ae}.geo.json"
+            extra_name = geo_path(spec, f"{spec.extra}_{ae}")
             extra = jar.json(extra_name)["minecraft:geometry"][0] if jar.has(extra_name) else None
         frames = glow_frames(jar, spec)
         color, glow = build_texture(jar, spec, ae, palettes)
@@ -561,8 +607,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         main_textures = _texture_bases(jar, spec, spec.species)
         th_parts = th
         for part_name in spec.parts:
-            part_file = next((f for f in (f"assets/alienevo/geo/aliens/alien_{spec.number}/{part_name}_{ae}.geo.json",
-                                          f"assets/alienevo/geo/aliens/alien_{spec.number}/{part_name}.geo.json") if jar.has(f)), None)
+            part_file = next((f for f in (geo_path(spec, f"{part_name}_{ae}"), geo_path(spec, part_name)) if jar.has(f)), None)
             if part_file is None:
                 raise ValueError(f"{name}: Zusatzmodell {part_name} fehlt fuer {ae}")
             pgeo = jar.json(part_file)["minecraft:geometry"][0]
@@ -640,7 +685,7 @@ def form_geo(jar: Jar, spec: Spec, name: str, suffix: str, texture: tuple[float,
     """Zweitform (z. B. Kugel): nur der Teilbaum unter dem Wurzelknochen, Wurzel an root und um die eigene Mitte
     drehbar; gleiche Textur wie der Koerper (AE nutzt dieselbe Bildaufteilung)."""
     model, root, tag = spec.form
-    geo = jar.json(f"assets/alienevo/geo/aliens/alien_{spec.number}/{model}.geo.json")["minecraft:geometry"][0]
+    geo = jar.json(geo_path(spec, model))["minecraft:geometry"][0]
     by_name = {b["name"]: b for b in geo["bones"]}
 
     def under(bone: dict) -> bool:
@@ -823,8 +868,10 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
     tags = [part.replace(spec.species + "_", "") for part in spec.parts]
     sources = []
     for ref in spec.loops:
-        file, anim = ref.split(":", 1)
-        source = jar.json(f"assets/alienevo/animations/{file}")["animations"][anim]
+        file, anim, only = _loop_ref(ref)
+        source = deepcopy(jar.json(anim_path(spec, file))["animations"][anim])
+        if only:
+            source["bones"] = {b: v for b, v in source.get("bones", {}).items() if only.search(b)}
         sources.append((source, float(source.get("animation_length") or _keyframe_end(source))))
     length = max([length] + [own for _, own in sources])
     for source, own in sources:
@@ -836,6 +883,18 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
             if target is None or target in MAIN_BONES:
                 continue
             loop_bones.setdefault(target, {}).update(_repeat_tracks(deepcopy(tracks), own, repeats, length))
+    # Ruhehaltungen: Endwerte als feste Spuren (nur wo keine Daueranimation dieselbe Spur bewegt)
+    for ref in spec.rest:
+        file, anim = ref.split(":", 1)
+        source = jar.json(anim_path(spec, file))["animations"][anim]
+        for bone, tracks in source.get("bones", {}).items():
+            target = ae_bone_name(bone)
+            if target not in present or target in MAIN_BONES:
+                continue
+            for kind in ("rotation", "position", "scale"):
+                value = _last_vector(tracks[kind]) if kind in tracks else None
+                if value is not None and kind not in loop_bones.get(target, {}):
+                    loop_bones.setdefault(target, {})[kind] = {"vector": value}
     loop = {"loop": True, "animation_length": length, "bones": loop_bones}
     stub = gen.Alien(name, (64, 64), [gen.Bone(b["name"], b.get("parent"), tuple(b.get("pivot", (0, 0, 0))))
                                       for b in bones], spec.accent, style=spec.style)
@@ -850,7 +909,7 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
         anim = {"loop": "hold_on_last_frame", "animation_length": 0.05, "bones": {}}
         if spec.sprint:
             file, name_ = spec.sprint[index].split(":", 1)
-            source = deepcopy(jar.json(f"assets/alienevo/animations/{file}")["animations"][name_])
+            source = deepcopy(jar.json(anim_path(spec, file))["animations"][name_])
             source["bones"] = {ae_bone_name(b): t for b, t in source.get("bones", {}).items()
                                if ae_bone_name(b) in present and ae_bone_name(b) not in MAIN_BONES}
             source["loop"] = "hold_on_last_frame"
@@ -880,10 +939,10 @@ def _last_vector(track: dict) -> list[float] | None:
 def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
     """Endpose einer AE-Animation als {knochen: {"rotation"|"position"|"scale": [x, y, z]}} (unsere Knochennamen)."""
     file, anim = spec.flight_pose.split(":", 1)
-    source = jar.json(f"assets/alienevo/animations/{file}")["animations"][anim]
+    source = jar.json(anim_path(spec, file))["animations"][anim]
     present = {b["name"] for b in bones}
     # umbenannte Knochen (Unterarm/Unterschenkel) ueber gleiche Lage und Wuerfel wiederfinden
-    ae_geo = jar.json(f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}.geo.json")["minecraft:geometry"][0]
+    ae_geo = jar.json(geo_path(spec, spec.species))["minecraft:geometry"][0]
 
     def shape(bone: dict) -> tuple:
         return (tuple(bone.get("pivot", ())), tuple((tuple(c.get("origin", ())), tuple(c.get("size", ())))
@@ -893,8 +952,14 @@ def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
     # Knochen der Daueranimationen setzt GeckoLib jedes Bild neu → Pose dort aufaddieren (Schwanz wedelt weiter)
     looped = set()
     for ref in spec.loops:
-        lfile, lanim = ref.split(":", 1)
-        looped |= {ae_bone_name(n) for n in jar.json(f"assets/alienevo/animations/{lfile}")["animations"][lanim].get("bones", {})}
+        lfile, lanim, only = _loop_ref(ref)
+        looped |= {ae_bone_name(n) for n in jar.json(anim_path(spec, lfile))["animations"][lanim].get("bones", {})
+                   if only is None or only.search(n)}
+    # Knochen mit AE-Ruhehaltung (Spec.rest): am Boden haelt die Daueranimation sie, in der Luft blendet die Pose ueber
+    rested = set()
+    for ref in spec.rest:
+        rfile, ranim = ref.split(":", 1)
+        rested |= {ae_bone_name(n) for n in jar.json(anim_path(spec, rfile))["animations"][ranim].get("bones", {})}
     pose: dict[str, dict] = {}
     for bone, tracks in source.get("bones", {}).items():
         target = ae_bone_name(bone)
@@ -910,6 +975,8 @@ def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
                     pose.setdefault(target, {})[kind] = value
         if target in pose and target in looped:
             pose[target]["add"] = True
+        elif target in pose and target in rested:
+            pose[target]["blend"] = True
     return dict(sorted(pose.items()))
 
 

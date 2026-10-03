@@ -22,7 +22,9 @@ import software.bernie.geckolib.cache.object.GeoBone;
  * "flight_pose": { "&lt;knochen&gt;": { "rotation": [x, y, z], "position": [x, y, z], "scale": [x, y, z], "add": true } }
  * </pre>
  * Drehung in Grad wie Bedrock (GeckoLib: x und y gespiegelt), Lage in Pixeln. {@code add}: Knochen wird jedes Bild von
- * einer Daueranimation gesetzt, die Pose kommt obendrauf (Schwanz wedelt weiter); sonst Ruhelage + Pose.
+ * einer Daueranimation gesetzt, die Pose kommt obendrauf (Schwanz wedelt weiter). {@code blend}: Knochen haelt am Boden
+ * eine AE-Ruhehaltung aus der Daueranimation (Big Chill: Umhang zu, Fluegel weg) — am Boden bleibt der Animationswert,
+ * in der Luft wird zu Ruhelage + Pose uebergeblendet. Sonst Ruhelage + Pose.
  *
  * <p>Darueber liegt ein eigenes Flugmodell (nicht aus AE): Kurvenlage aus der Drehgeschwindigkeit, Vorlage des
  * ganzen Koerpers mit dem Tempo, Fluegelschlag beim Steigen (Knochen mit „wing“ im Namen) und ruhiges Gleiten beim
@@ -46,7 +48,7 @@ final class AlienFlightPose {
 	/** Ticks ohne Boden je Spieler */
 	private static final Map<Integer, Integer> AIRBORNE = new HashMap<>();
 
-	record Bone(float[] rotation, float[] position, float @Nullable [] scale, boolean additive) {
+	record Bone(float[] rotation, float[] position, float @Nullable [] scale, boolean additive, boolean blend) {
 	}
 
 	private AlienFlightPose() {
@@ -69,7 +71,8 @@ final class AlienFlightPose {
 					rotation[2] * MathHelper.RADIANS_PER_DEGREE};
 			bones.put(entry.getKey(), new Bone(rotation, vector(bone, "position", 0.0f),
 					bone.has("scale") ? vector(bone, "scale", 1.0f) : null,
-					bone.has("add") && bone.get("add").getAsBoolean()));
+					bone.has("add") && bone.get("add").getAsBoolean(),
+					bone.has("blend") && bone.get("blend").getAsBoolean()));
 		}
 		return Map.copyOf(bones);
 	}
@@ -175,6 +178,19 @@ final class AlienFlightPose {
 			if (rest == null) {
 				bone.saveInitialSnapshot();
 				rest = bone.getInitialSnapshot();
+			}
+			if (target.blend()) {
+				// Animationswert (Ruhehaltung) → Ruhelage + Flugpose
+				bone.updateRotation(MathHelper.lerp(k, bone.getRotX(), rest.getRotX() + target.rotation()[0]),
+						MathHelper.lerp(k, bone.getRotY(), rest.getRotY() + target.rotation()[1]),
+						MathHelper.lerp(k, bone.getRotZ(), rest.getRotZ() + target.rotation()[2]));
+				bone.updatePosition(MathHelper.lerp(k, bone.getPosX(), rest.getOffsetX() + target.position()[0]),
+						MathHelper.lerp(k, bone.getPosY(), rest.getOffsetY() + target.position()[1]),
+						MathHelper.lerp(k, bone.getPosZ(), rest.getOffsetZ() + target.position()[2]));
+				float[] scale = target.scale() != null ? target.scale() : new float[]{1.0f, 1.0f, 1.0f};
+				bone.updateScale(MathHelper.lerp(k, bone.getScaleX(), scale[0]), MathHelper.lerp(k, bone.getScaleY(), scale[1]),
+						MathHelper.lerp(k, bone.getScaleZ(), scale[2]));
+				continue;
 			}
 			float rx = main ? bone.getRotX() : rest.getRotX();
 			float ry = main ? bone.getRotY() : rest.getRotY();

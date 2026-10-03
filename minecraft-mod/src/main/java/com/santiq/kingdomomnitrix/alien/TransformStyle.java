@@ -46,7 +46,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Panzerkugel: Schalenplatten klappen als weiss-goldener Ring zu, Metallklappern, schwerer Aufsatz */
 	ROLL,
 	/** Duese: roter Strahlkegel nach unten, Windstoss, Neuroschock-Funken an den Augen */
-	JET;
+	JET,
+	/** Frost: Eisring am Boden, Schneeflocken wirbeln auf, klirrende Kaelte */
+	FROST;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -156,6 +158,15 @@ public enum TransformStyle implements StringIdentifiable {
 				sound(world, player, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.0f, 0.9f);
 				sound(world, player, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 0.7f);
 				sound(world, player, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.3f, 2.0f);
+			}
+			case FROST -> {
+				ring(world, ParticleTypes.SNOWFLAKE, x, y + 0.1, z, 1.4, 28, 0.15);
+				world.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(ParticleTypes.BLOCK,
+						net.minecraft.block.Blocks.ICE.getDefaultState()), x, y + 0.2, z, 30, 0.6, 0.1, 0.6, 0.15);
+				world.spawnParticles(ParticleTypes.SNOWFLAKE, x, mid, z, 30, 0.4, 0.8, 0.4, 0.05);
+				sound(world, player, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 0.6f);
+				sound(world, player, SoundEvents.BLOCK_GLASS_PLACE, 0.8f, 0.5f);
+				sound(world, player, SoundEvents.ENTITY_PHANTOM_FLAP, 0.8f, 0.6f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

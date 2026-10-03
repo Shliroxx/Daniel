@@ -104,6 +104,9 @@ ABILITY_POSE = {
     # Jetray: Strahlen aus Augen und Schwanz, Flug-Manoever
     "neuroshock": "beam", "tail_shock": "spread", "jet_burst": "leap", "strafing_run": "dodge", "slipstream": "focus",
     "neuroshock_storm": "ultimate",
+    # Big Chill: Atem und Splitter nach vorn, Phasenflug, Gefaengnis auf ein Ziel, Umhang, Nullpunkt
+    "ice_breath": "beam", "ice_shards": "spread", "phase_flight": "dodge", "ice_prison": "beam", "cryo_cloak": "guard",
+    "absolute_zero": "ultimate",
 }
 
 

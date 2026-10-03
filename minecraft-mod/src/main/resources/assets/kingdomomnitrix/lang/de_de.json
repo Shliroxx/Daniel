@@ -948,5 +948,13 @@
   "message.kingdomomnitrix.upgrade_override": "%s übernommen",
   "message.kingdomomnitrix.ghostfreak_harvest": "SEELENERNTE BEREIT",
   "message.kingdomomnitrix.ghostfreak_ambush": "Hinterhalt!",
-  "message.kingdomomnitrix.ghostfreak_possess": "%s besessen"
+  "message.kingdomomnitrix.ghostfreak_possess": "%s besessen",
+  "alien.kingdomomnitrix.big_chill": "Big Chill",
+  "ability.kingdomomnitrix.ice_breath": "Eisatem",
+  "ability.kingdomomnitrix.ice_shards": "Eissplitter",
+  "ability.kingdomomnitrix.phase_flight": "Phasenflug",
+  "ability.kingdomomnitrix.ice_prison": "Eisgefängnis",
+  "ability.kingdomomnitrix.cryo_cloak": "Kälteumhang",
+  "ability.kingdomomnitrix.absolute_zero": "Absoluter Nullpunkt",
+  "message.kingdomomnitrix.big_chill_shatter": "Zersplittert!"
 }
