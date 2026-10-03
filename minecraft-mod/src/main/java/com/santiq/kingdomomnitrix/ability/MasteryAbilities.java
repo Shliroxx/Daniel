@@ -63,13 +63,7 @@ final class MasteryAbilities {
 		DustParticleEffect toxic = new DustParticleEffect(new Vector3f(0.55f, 0.7f, 0.15f), 1.5f);
 		DustParticleEffect tech = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.0f);
 
-		// --- Heatblast
-		reg("inferno_wave", ctx -> area(ctx, new Look(ParticleTypes.FLAME, 80, SoundEvents.ITEM_FIRECHARGE_USE, 0.8f, false)));
-		reg("flame_shield", ctx -> self(ctx, SoundEvents.BLOCK_FIRE_AMBIENT, new Fx(StatusEffects.RESISTANCE, 0),
-				new Fx(StatusEffects.FIRE_RESISTANCE, 0), new Fx(StatusEffects.ABSORPTION, 1))
-				&& area(ctx, new Look(ParticleTypes.FLAME, 40, SoundEvents.ENTITY_BLAZE_SHOOT, 0.7f, false)));
-		reg("supernova", ctx -> area(ctx, new Look(ParticleTypes.EXPLOSION_EMITTER, 3, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.8f, false))
-				&& particles(ctx, ParticleTypes.FLAME, 160, ctx.param("radius", 9.0) * 0.4));
+		// --- Heatblast: HeatblastAbilities (Kernhitze)
 		// --- XLR8
 		reg("cyclone_run", ctx -> area(ctx, new Look(ParticleTypes.CLOUD, 60, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.2f, false),
 				new Fx(StatusEffects.SLOWNESS, 1)));

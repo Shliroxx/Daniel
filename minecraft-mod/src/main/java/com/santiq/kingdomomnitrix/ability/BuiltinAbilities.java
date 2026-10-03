@@ -33,9 +33,6 @@ final class BuiltinAbilities {
 
 	static void register() {
 		// Heatblast
-		AbilityRegistry.register(KingdomOmnitrix.id("fire_blast"), BuiltinAbilities::fireBlast);
-		AbilityRegistry.register(KingdomOmnitrix.id("fire_burst"), BuiltinAbilities::fireBurst);
-		AbilityRegistry.register(KingdomOmnitrix.id("flame_boost"), BuiltinAbilities::flameBoost);
 		// XLR8
 		AbilityRegistry.register(KingdomOmnitrix.id("dash_strike"), BuiltinAbilities::dashStrike);
 		AbilityRegistry.register(KingdomOmnitrix.id("blur_dodge"), BuiltinAbilities::blurDodge);
@@ -50,47 +47,11 @@ final class BuiltinAbilities {
 		CreatureAbilities.register();
 		MasteryAbilities.register();
 		CannonboltAbilities.register();
+		HeatblastAbilities.register();
 		JetrayAbilities.register();
 	}
 
-	// --- Heatblast -------------------------------------------------------------------------------
-
-	private static boolean fireBlast(AbilityContext ctx) {
-		int count = (int) Math.max(1, ctx.param("count", 1));
-		float speed = (float) ctx.param("speed", 2.2);
-		float spread = (float) ctx.param("spread", 0.0);
-		for (int i = 0; i < count; i++) {
-			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.FIRE_ORB, speed, spread);
-		}
-		sound(ctx, ModSounds.ALIEN_FIRE, 1.0f, 1.0f);
-		return true;
-	}
-
-	private static boolean fireBurst(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		double radius = ctx.param("radius", 4.0);
-		float damage = (float) ctx.param("damage", 6.0);
-		float fireSeconds = (float) ctx.param("fire_seconds", 4.0);
-		for (LivingEntity target : livingAround(ctx, radius)) {
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-			target.setOnFireFor(fireSeconds);
-		}
-		ctx.world().spawnParticles(ParticleTypes.FLAME, player.getX(), player.getBodyY(0.5), player.getZ(),
-				60, radius * 0.4, 0.6, radius * 0.4, 0.15);
-		sound(ctx, ModSounds.ALIEN_FIRE, 1.2f, 0.75f);
-		return true;
-	}
-
-	private static boolean flameBoost(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = horizontalLook(player);
-		double up = ctx.param("up", 1.2);
-		double forward = ctx.param("forward", 0.6);
-		launch(player, look.x * forward, up, look.z * forward);
-		ctx.world().spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 30, 0.3, 0.1, 0.3, 0.08);
-		sound(ctx, ModSounds.ALIEN_FIRE, 0.8f, 1.3f);
-		return true;
-	}
+	// Heatblast: HeatblastAbilities (Kernhitze)
 
 	// --- XLR8 ------------------------------------------------------------------------------------
 

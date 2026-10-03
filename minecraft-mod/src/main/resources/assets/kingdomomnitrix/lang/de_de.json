@@ -884,5 +884,7 @@
   "ability.kingdomomnitrix.slipstream": "Windschatten",
   "ability.kingdomomnitrix.neuroshock_storm": "Neuroschock-Sturm",
   "message.kingdomomnitrix.jetray_overload": "Neuroschock-Überladung!",
-  "message.kingdomomnitrix.cannonbolt_gear": "Schwung-Gang %s"
+  "message.kingdomomnitrix.cannonbolt_gear": "Schwung-Gang %s",
+  "message.kingdomomnitrix.heatblast_heat": "Kernhitze",
+  "message.kingdomomnitrix.heatblast_overheat": "Kern überhitzt — die nächste Fähigkeit entfesselt Blaufeuer!"
 }

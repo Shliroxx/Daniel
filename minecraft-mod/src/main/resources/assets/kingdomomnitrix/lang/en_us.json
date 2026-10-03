@@ -884,5 +884,7 @@
   "ability.kingdomomnitrix.slipstream": "Slipstream",
   "ability.kingdomomnitrix.neuroshock_storm": "Neuroshock Storm",
   "message.kingdomomnitrix.jetray_overload": "Neuroshock overload!",
-  "message.kingdomomnitrix.cannonbolt_gear": "Momentum gear %s"
+  "message.kingdomomnitrix.cannonbolt_gear": "Momentum gear %s",
+  "message.kingdomomnitrix.heatblast_heat": "Core heat",
+  "message.kingdomomnitrix.heatblast_overheat": "Core overheated — next ability unleashes blue fire!"
 }

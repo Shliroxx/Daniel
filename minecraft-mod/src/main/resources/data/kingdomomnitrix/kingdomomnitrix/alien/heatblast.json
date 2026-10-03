@@ -27,7 +27,9 @@
       "energy": 10,
       "cooldown": 12,
       "params": {
-        "speed": 2.2
+        "speed": 2.2,
+        "damage": 6.0,
+        "heat": 10
       },
       "role": "basic",
       "unlock_level": 1
@@ -39,7 +41,8 @@
       "params": {
         "radius": 4.5,
         "damage": 7.0,
-        "fire_seconds": 5.0
+        "fire_seconds": 5.0,
+        "heat": 20
       },
       "role": "basic_2",
       "unlock_level": 1
@@ -50,7 +53,9 @@
       "cooldown": 40,
       "params": {
         "up": 1.25,
-        "forward": 0.7
+        "forward": 0.7,
+        "surf_ticks": 60,
+        "heat": 12
       },
       "role": "movement",
       "unlock_level": 1
@@ -66,7 +71,8 @@
         "cone": 0.5,
         "damage": 8.0,
         "fire_seconds": 5.0,
-        "knockback": 0.6
+        "knockback": 0.6,
+        "heat": 20
       }
     },
     {
@@ -79,7 +85,8 @@
         "seconds": 10.0,
         "radius": 3.0,
         "damage": 2.0,
-        "fire_seconds": 4.0
+        "fire_seconds": 4.0,
+        "heat": 15
       }
     },
     {
@@ -93,7 +100,9 @@
         "damage": 16.0,
         "fire_seconds": 8.0,
         "knockback": 1.6,
-        "launch": 0.5
+        "launch": 0.5,
+        "core_ticks": 80,
+        "core_damage": 3.0
       }
     }
   ],
