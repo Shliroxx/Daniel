@@ -475,7 +475,7 @@ Schwachstellen, Arena-Mechanik; Belohnung: neues Keyblade, Kampf wiederholbar.
 
 | Baustein | Status | Anmerkung |
 |---|---|---|
-| Nefarious-Mech (GeckoLib, 9 Animationen, Leuchtmaske), Bossleiste mit Phasenfarbe, Sprüche im Chat | IMPLEMENTED | Modell aus `tools/generate_boss_models.py` = PLACEHOLDER-Geometrie |
+| Nefarious-Mech (GeckoLib, 9 Animationen, Leuchtmaske), Bossleiste mit Phasenfarbe, Sprüche im Chat | IMPLEMENTED | Modell aus `tools/generate_boss_models.py`: Dr. Nefarious nach den Spielen (Glas-Eierkuppel mit Zahnrädern/Schüssel, Schädelgesicht, Tentakel), durchscheinend gerendert |
 | Angriffe mit Ankündigung: Laser (rote Ziellinie → Schuss → Überhitzung), Raketen (rote Ringe am Boden), Stampfer (gelber Ring) | IMPLEMENTED | getestet |
 | Schwachstellen: Rücken ×2, Front ×0,5, überhitzt ×2,5, beim Phasenwechsel unverwundbar | IMPLEMENTED | Rücken −38 / Front −9,5 bei 20 Schaden gemessen |
 | Phase 2 ab 60 % (Arena unter Strom: Elektrosektoren), Wut ab 25 % (Überladung, durch ≥30 Kernschaden unterbrechbar → lange Betäubung) | IMPLEMENTED | Phasen + Überladung getestet; Unterbrechen nur im Code geprüft |

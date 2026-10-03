@@ -121,7 +121,7 @@ public final class WorldEvents {
 		if (world.getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL && definition.get().type().needsMonsters()) {
 			return Optional.empty();
 		}
-		Optional<BlockPos> pos = findSpot(world, player);
+		Optional<BlockPos> pos = findSpot(world, player, definition.get());
 		if (pos.isEmpty()) {
 			return Optional.empty();
 		}
@@ -149,7 +149,16 @@ public final class WorldEvents {
 	}
 
 	/** Trockener, geladener, unbebauter Boden 40–70 Bloecke vom Spieler; bis zu 24 Versuche. */
-	private static Optional<BlockPos> findSpot(ServerWorld world, ServerPlayerEntity player) {
+	/** Freier Umkreis: Einschlaege brauchen Platz fuer Krater, Truemmer und Feuer. */
+	private static int margin(WorldEventDefinition definition) {
+		return switch (definition.type()) {
+			case RARITANIUM_METEOR -> ActiveWorldEvent.METEOR_RADIUS + 6;
+			case ALIEN_CRASH -> ActiveWorldEvent.CRASH_RADIUS + 6;
+			default -> 5;
+		};
+	}
+
+	private static Optional<BlockPos> findSpot(ServerWorld world, ServerPlayerEntity player, WorldEventDefinition definition) {
 		for (int attempt = 0; attempt < 24; attempt++) {
 			double angle = world.getRandom().nextDouble() * Math.PI * 2;
 			double distance = MathHelper.lerp(world.getRandom().nextDouble(), MIN_DISTANCE, MAX_DISTANCE);
@@ -161,17 +170,18 @@ public final class WorldEvents {
 			BlockPos ground = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, new BlockPos(x, 0, z));
 			boolean dry = !world.getFluidState(ground).isOf(Fluids.WATER) && !world.getFluidState(ground.down()).isOf(Fluids.WATER)
 					&& !world.getFluidState(ground.down()).isOf(Fluids.LAVA);
-			if (dry && ground.getY() > world.getBottomY() + 1 && Math.abs(ground.getY() - player.getY()) <= 24 && untouched(world, ground)) {
+			if (dry && ground.getY() > world.getBottomY() + 1 && Math.abs(ground.getY() - player.getY()) <= 24
+					&& untouched(world, ground, margin(definition))) {
 				return Optional.of(ground);
 			}
 		}
 		return Optional.empty();
 	}
 
-	/** Keine Bauwerke in der Naehe (Doerfer, Spielerbauten): 11 × 11 Bloecke um den Ort nur natuerlicher Boden. */
-	private static boolean untouched(ServerWorld world, BlockPos ground) {
-		for (int dx = -5; dx <= 5; dx++) {
-			for (int dz = -5; dz <= 5; dz++) {
+	/** Keine Bauwerke in der Naehe (Doerfer, Spielerbauten): im Umkreis {@code margin} nur natuerlicher Boden. */
+	private static boolean untouched(ServerWorld world, BlockPos ground, int margin) {
+		for (int dx = -margin; dx <= margin; dx++) {
+			for (int dz = -margin; dz <= margin; dz++) {
 				for (int dy = -2; dy <= 3; dy++) {
 					var state = world.getBlockState(ground.add(dx, dy, dz));
 					if (!ActiveWorldEvent.natural(state) && !state.isIn(net.minecraft.registry.tag.BlockTags.LEAVES)

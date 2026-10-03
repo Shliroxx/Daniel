@@ -53,6 +53,11 @@ public final class ActiveWorldEvent {
 	private static final int SHRINE_RADIUS = 5;
 	private static final int SHRINE_HOLD_SECONDS = 60;
 	private static final int SHRINE_MAX_HEARTLESS = 6;
+	/** Kraterradius: Meteor groesser als die Kapsel */
+	static final int METEOR_RADIUS = 7;
+	static final int CRASH_RADIUS = 6;
+	/** Schaden der Druckwelle im Zentrum (halbe Herzen) */
+	private static final float SHOCK_DAMAGE = 16.0f;
 
 	public enum Outcome {
 		RUNNING, SUCCESS, TIMEOUT, CANCELLED
@@ -233,9 +238,13 @@ public final class ActiveWorldEvent {
 		double y = pos.getY() + height;
 		double z = pos.getZ() + 0.5;
 		boolean crash = definition.type() == WorldEventDefinition.Type.ALIEN_CRASH;
-		world.spawnParticles(ParticleTypes.FLAME, x, y, z, 12, 0.6, 0.6, 0.6, 0.02);
-		world.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y + 0.5, z, 6, 0.8, 0.8, 0.8, 0.01);
-		world.spawnParticles(crash ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.LAVA, x, y, z, 4, 0.4, 0.4, 0.4, 0.05);
+		// Feuerball mit langem Rauchschweif (Meteor groesser als die Kapsel)
+		double size = crash ? 1.2 : 1.8;
+		world.spawnParticles(ParticleTypes.FLAME, x, y, z, 40, size, size, size, 0.04);
+		world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, crash ? 4 : 12, size * 0.6, size * 0.6, size * 0.6, 0.02);
+		world.spawnParticles(ParticleTypes.LARGE_SMOKE, x + 1.5, y + 1.5, z, 20, size + 0.6, size + 0.6, size + 0.6, 0.01);
+		world.spawnParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, x + 3.0, y + 3.0, z, 4, 1.0, 1.0, 1.0, 0.0);
+		world.spawnParticles(crash ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.LAVA, x, y, z, 10, size, size, size, 0.05);
 		if (age % 10 == 0) {
 			world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_BURN, SoundCategory.AMBIENT, 3.0f, 0.5f);
 		}
@@ -243,40 +252,120 @@ public final class ActiveWorldEvent {
 
 	private void impact() {
 		landed = true;
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 1, 0, 0, 0, 0);
-		world.spawnParticles(ParticleTypes.CAMPFIRE_COSY_SMOKE, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 30, 2.0, 0.5, 2.0, 0.02);
-		world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.AMBIENT, 4.0f, 0.6f);
-		boolean griefing = world.getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING);
-		if (griefing) {
-			crater(3);
+		boolean meteor = definition.type() == WorldEventDefinition.Type.RARITANIUM_METEOR;
+		int radius = meteor ? METEOR_RADIUS : CRASH_RADIUS;
+		Vec3d center = Vec3d.ofCenter(pos);
+		for (int i = 0; i < 4; i++) {
+			world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, center.x + (world.random.nextDouble() - 0.5) * radius, center.y + 0.5,
+					center.z + (world.random.nextDouble() - 0.5) * radius, 1, 0, 0, 0, 0);
 		}
-		if (definition.type() == WorldEventDefinition.Type.RARITANIUM_METEOR) {
+		world.spawnParticles(ParticleTypes.FLASH, center.x, center.y + 2, center.z, 3, 0, 0, 0, 0);
+		world.spawnParticles(ParticleTypes.LAVA, center.x, center.y + 1, center.z, 120, radius * 0.5, 1.0, radius * 0.5, 0.4);
+		world.spawnParticles(ParticleTypes.CAMPFIRE_SIGNAL_SMOKE, center.x, center.y + 1, center.z, 60, radius * 0.6, 1.0, radius * 0.6, 0.03);
+		world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.AMBIENT, 8.0f, 0.4f);
+		world.playSound(null, pos, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.AMBIENT, 6.0f, 0.5f);
+		world.playSound(null, pos, SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.AMBIENT, 8.0f, 0.6f);
+		shockwave(center, radius);
+		if (world.getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING)) {
+			crater(radius);
+			debris(radius);
+			ignite(radius);
+		}
+		if (meteor) {
 			placeOre();
 		} else {
 			placePod();
-			for (int i = 0; i < 3 + world.random.nextInt(3); i++) {
-				spawnHeartless(i % 3 == 0 ? ModEntities.SOLDIER : ModEntities.SHADOW, 4.0).ifPresent(guards::add);
+			for (int i = 0; i < 4 + world.random.nextInt(3); i++) {
+				spawnHeartless(i % 3 == 0 ? ModEntities.SOLDIER : ModEntities.SHADOW, radius + 2.0).ifPresent(guards::add);
 			}
 		}
 	}
 
-	/** Mulde aus natuerlichem Boden; Rand aus Magma und Schwarzstein. Bloecke mit Inhalt/Bauwerke bleiben. */
+	/** Druckwelle: Schaden und Rueckstoss nach Entfernung (Mitte bis {@link #SHOCK_DAMAGE}, am Rand 0). */
+	private void shockwave(Vec3d center, int radius) {
+		double reach = radius + 9.0;
+		for (net.minecraft.entity.LivingEntity living : world.getEntitiesByClass(net.minecraft.entity.LivingEntity.class,
+				new net.minecraft.util.math.Box(center, center).expand(reach), e -> e.isAlive() && !e.isSpectator())) {
+			double distance = living.getPos().distanceTo(center);
+			double strength = 1.0 - distance / reach;
+			if (strength <= 0.0) {
+				continue;
+			}
+			living.damage(world.getDamageSources().explosion(null, null), (float) (SHOCK_DAMAGE * strength));
+			Vec3d push = living.getPos().subtract(center).normalize().multiply(1.6 * strength);
+			living.addVelocity(push.x, 0.5 + 0.6 * strength, push.z);
+			living.velocityModified = true;
+		}
+	}
+
+	/** Trümmer: Blöcke vom Kraterrand fliegen als fallende Blöcke nach außen. */
+	private void debris(int radius) {
+		for (int i = 0; i < radius * 3; i++) {
+			double angle = world.random.nextDouble() * Math.PI * 2;
+			BlockPos at = pos.add((int) Math.round(Math.cos(angle) * radius), -1, (int) Math.round(Math.sin(angle) * radius));
+			BlockState state = world.getBlockState(at);
+			if (state.isAir() || !natural(state) || state.isOf(Blocks.BEDROCK)) {
+				continue;
+			}
+			net.minecraft.entity.FallingBlockEntity block = net.minecraft.entity.FallingBlockEntity.spawnFromBlock(world, at,
+					world.random.nextInt(3) == 0 ? Blocks.MAGMA_BLOCK.getDefaultState() : state);
+			block.setVelocity(Math.cos(angle) * 0.7, 0.8 + world.random.nextDouble() * 0.6, Math.sin(angle) * 0.7);
+			block.dropItem = false;
+		}
+	}
+
+	/** Brände rund um den Krater (nur auf brennbarem Boden mit Luft darueber). */
+	private void ignite(int radius) {
+		for (int i = 0; i < radius * 5; i++) {
+			double angle = world.random.nextDouble() * Math.PI * 2;
+			double distance = radius + 1 + world.random.nextDouble() * 4;
+			BlockPos column = BlockPos.ofFloored(pos.getX() + Math.cos(angle) * distance, pos.getY(), pos.getZ() + Math.sin(angle) * distance);
+			BlockPos top = world.getTopPosition(net.minecraft.world.Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, column);
+			if (world.getBlockState(top).isAir() && world.getBlockState(top.down()).isSideSolidFullSquare(world, top.down(), net.minecraft.util.math.Direction.UP)) {
+				world.setBlockState(top, Blocks.FIRE.getDefaultState());
+			}
+		}
+	}
+
+	/**
+	 * Schuesselfoermiger Krater aus natuerlichem Boden (Tiefe etwa halber Radius); Wand aus Schwarzstein, Basalt und Magma,
+	 * im Grund ein Glutkern mit Lava. Bloecke mit Inhalt und Bauwerke bleiben.
+	 */
 	private void crater(int radius) {
-		for (int dx = -radius; dx <= radius; dx++) {
-			for (int dz = -radius; dz <= radius; dz++) {
-				for (int dy = -radius; dy <= 1; dy++) {
-					double distance = Math.sqrt(dx * dx + dz * dz + dy * dy * 1.6);
+		int depth = Math.max(3, radius / 2 + 1);
+		for (int dx = -radius - 1; dx <= radius + 1; dx++) {
+			for (int dz = -radius - 1; dz <= radius + 1; dz++) {
+				double flat = Math.sqrt(dx * dx + dz * dz);
+				// Schuessel: Tiefe nimmt zum Rand quadratisch ab
+				double bowl = depth * (1.0 - (flat / radius) * (flat / radius));
+				for (int dy = -depth - 1; dy <= 2; dy++) {
 					BlockPos at = pos.add(dx, dy, dz);
 					BlockState state = world.getBlockState(at);
-					if (!natural(state)) {
+					if (!natural(state) || state.isOf(Blocks.BEDROCK)) {
 						continue;
 					}
-					if (distance <= radius - 0.6 && dy >= -radius + 2) {
+					if (flat <= radius && dy > -bowl - 0.5) {
 						world.setBlockState(at, Blocks.AIR.getDefaultState());
-					} else if (distance <= radius + 0.4 && dy < 0 && !state.isAir() && world.random.nextInt(3) > 0) {
-						world.setBlockState(at, world.random.nextInt(3) == 0 ? Blocks.MAGMA_BLOCK.getDefaultState() : Blocks.BLACKSTONE.getDefaultState());
+					} else if (flat <= radius + 1.2 && dy <= 0 && dy > -bowl - 2.0 && !state.isAir()) {
+						int roll = world.random.nextInt(10);
+						world.setBlockState(at, roll < 3 ? Blocks.MAGMA_BLOCK.getDefaultState() : roll < 6 ? Blocks.BASALT.getDefaultState()
+								: Blocks.BLACKSTONE.getDefaultState());
 					}
 				}
+			}
+		}
+		// Glutkern: Lava-Taschen im Grund, von Magma eingefasst (fliesst nicht aus dem Krater)
+		BlockPos bottom = pos.down(depth);
+		for (int i = 0; i < 2 + radius / 3; i++) {
+			BlockPos at = bottom.add(world.random.nextInt(3) - 1, 0, world.random.nextInt(3) - 1);
+			if (natural(world.getBlockState(at)) || world.getBlockState(at).isOf(Blocks.MAGMA_BLOCK) || world.getBlockState(at).isOf(Blocks.BLACKSTONE)
+					|| world.getBlockState(at).isOf(Blocks.BASALT)) {
+				for (net.minecraft.util.math.Direction side : net.minecraft.util.math.Direction.values()) {
+					if (side != net.minecraft.util.math.Direction.UP && !world.getBlockState(at.offset(side)).isAir()) {
+						world.setBlockState(at.offset(side), Blocks.MAGMA_BLOCK.getDefaultState());
+					}
+				}
+				world.setBlockState(at, Blocks.LAVA.getDefaultState());
 			}
 		}
 	}
@@ -301,9 +390,9 @@ public final class ActiveWorldEvent {
 
 	private void placeOre() {
 		BlockPos center = floor();
-		int count = 5 + world.random.nextInt(4);
+		int count = 9 + world.random.nextInt(6);
 		for (int i = 0; i < count; i++) {
-			BlockPos at = center.add(world.random.nextInt(3) - 1, world.random.nextInt(2) - 1, world.random.nextInt(3) - 1);
+			BlockPos at = center.add(world.random.nextInt(5) - 2, world.random.nextInt(2) - 1, world.random.nextInt(5) - 2);
 			boolean rare = world.random.nextFloat() < 0.12f;
 			world.setBlockState(at, (rare ? ModBlocks.ORICHALCUM_ORE : ModBlocks.RARITANIUM_ORE).getDefaultState());
 		}
