@@ -583,7 +583,8 @@ public final class TransformationManager {
 
 	private static void playTransformEffects(ServerWorld world, ServerPlayerEntity player, AlienDefinition alien, boolean transforming) {
 		Vector3f color = colorVector(alien.color());
-		DustParticleEffect green = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.6f);
+		// Farbmodul: Verwandlungsstaub in der Farbe des Omnitrix (Klassisch: Gruen)
+		DustParticleEffect green = new DustParticleEffect(colorVector(com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player)), 1.6f);
 		DustParticleEffect tint = new DustParticleEffect(color, 1.2f);
 		for (ServerPlayerEntity viewer : world.getPlayers()) {
 			if (viewer == player) {

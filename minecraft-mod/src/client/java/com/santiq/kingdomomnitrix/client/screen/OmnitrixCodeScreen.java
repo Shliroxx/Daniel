@@ -22,7 +22,8 @@ public class OmnitrixCodeScreen extends Screen {
 	private static final int PAD = 10;
 	private static final int DISPLAY = 22;
 	private static final String[] LABELS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "✔"};
-	private static final int GREEN = 0x39FF14;
+	/** Akzentfarbe = Farbmodul des Omnitrix */
+	private int accent = 0x39FF14;
 
 	private final StringBuilder code = new StringBuilder();
 	private final long openedAt = System.nanoTime();
@@ -85,6 +86,9 @@ public class OmnitrixCodeScreen extends Screen {
 	@Override
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.render(context, mouseX, mouseY, delta);
+		if (client != null && client.player != null) {
+			accent = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(client.player);
+		}
 		hovered = keyAt(mouseX, mouseY);
 		float open = MathHelper.clamp((System.nanoTime() - openedAt) / 1.0e9f / 0.15f, 0.0f, 1.0f);
 		int alpha = Math.round(255 * open);
@@ -94,20 +98,20 @@ public class OmnitrixCodeScreen extends Screen {
 		int h = panelHeight();
 		// Hologramm-Panel: dunkles Glas, gruene Kanten, Eck-Klammern
 		context.fill(x, y, x + w, y + h, (Math.round(0xD8 * open) << 24) | 0x06120A);
-		context.fill(x, y, x + w, y + 1, alpha << 24 | GREEN);
-		context.fill(x, y + h - 1, x + w, y + h, (alpha / 2) << 24 | GREEN);
-		context.fill(x, y, x + 1, y + 6, alpha << 24 | GREEN);
-		context.fill(x + w - 1, y, x + w, y + 6, alpha << 24 | GREEN);
+		context.fill(x, y, x + w, y + 1, alpha << 24 | accent);
+		context.fill(x, y + h - 1, x + w, y + h, (alpha / 2) << 24 | accent);
+		context.fill(x, y, x + 1, y + 6, alpha << 24 | accent);
+		context.fill(x + w - 1, y, x + w, y + 6, alpha << 24 | accent);
 		context.getMatrices().push();
 		context.getMatrices().translate(x + w / 2.0f, y + PAD - 2, 0.0f);
 		context.getMatrices().scale(0.75f, 0.75f, 1.0f);
-		context.drawCenteredTextWithShadow(textRenderer, title, 0, 0, alpha << 24 | GREEN);
+		context.drawCenteredTextWithShadow(textRenderer, title, 0, 0, alpha << 24 | accent);
 		context.getMatrices().pop();
 
 		// Anzeige: eingegebene Ziffern, blinkender Cursor
 		int dy = y + PAD + 12;
 		context.fill(x + PAD, dy, x + w - PAD, dy + DISPLAY, (alpha / 2) << 24 | 0x0A2A12);
-		context.drawBorder(x + PAD, dy, w - PAD * 2, DISPLAY, (alpha * 3 / 4) << 24 | GREEN);
+		context.drawBorder(x + PAD, dy, w - PAD * 2, DISPLAY, (alpha * 3 / 4) << 24 | accent);
 		boolean cursor = (System.currentTimeMillis() / 400) % 2 == 0 && code.length() < OmnitrixCode.MAX_LENGTH;
 		String shown = code + (cursor ? "_" : " ");
 		context.drawCenteredTextWithShadow(textRenderer, shown, x + w / 2, dy + (DISPLAY - textRenderer.fontHeight) / 2 + 1,
@@ -120,7 +124,7 @@ public class OmnitrixCodeScreen extends Screen {
 			boolean flash = i == pressed && now - pressedAt < 140;
 			int fill = flash ? 0x2E8F1A : i == hovered ? 0x174D12 : 0x0C2410;
 			context.fill(kx, ky, kx + KEY, ky + KEY, (Math.round(0xE0 * open) << 24) | fill);
-			context.drawBorder(kx, ky, KEY, KEY, (i == hovered ? alpha : alpha * 2 / 3) << 24 | GREEN);
+			context.drawBorder(kx, ky, KEY, KEY, (i == hovered ? alpha : alpha * 2 / 3) << 24 | accent);
 			int color = i == 9 ? 0xFF8A3C : i == 11 ? 0x7DFF9C : 0xCFFFC8;
 			context.drawCenteredTextWithShadow(textRenderer, LABELS[i], kx + KEY / 2, ky + (KEY - textRenderer.fontHeight) / 2 + 1,
 					alpha << 24 | color);

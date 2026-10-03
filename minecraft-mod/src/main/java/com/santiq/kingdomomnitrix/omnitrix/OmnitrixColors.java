@@ -41,4 +41,34 @@ public final class OmnitrixColors {
 	public static int primary(PlayerEntity player) {
 		return of(player).primary();
 	}
+
+	/** Klassisches Omnitrix-Gruen (Ausgangsfarbe aller Meldungen, Lichter und Effekte). */
+	public static final int CLASSIC = 0x39FF14;
+
+	/**
+	 * Lichtfarbe eines Geraete-Zustands mit Farbmodul: Bereit/verwandelt in der Modulfarbe, Aktiv/Auswahl/Verwandlung
+	 * zunehmend heller. Warnung, Ueberhitzung, Nachladen, Sperre und Master Control behalten ihre Farbe.
+	 */
+	public static int status(PlayerEntity player, OmnitrixStatus status) {
+		Color color = of(player);
+		return switch (status) {
+			case IDLE, READY, TRANSFORMED -> color.primary();
+			case ACTIVE -> mix(color.primary(), 0xFFFFFF, 0.15f);
+			case SELECTING -> mix(color.primary(), 0xFFFFFF, 0.25f);
+			case TRANSFORMING -> mix(color.primary(), 0xFFFFFF, 0.65f);
+			default -> status.color();
+		};
+	}
+
+	/** Klassisches Gruen gegen die Modulfarbe tauschen, alle anderen Farben unveraendert lassen. */
+	public static int themed(PlayerEntity player, int rgb) {
+		return (rgb & 0xFFFFFF) == CLASSIC && player != null ? primary(player) : rgb;
+	}
+
+	public static int mix(int a, int b, float t) {
+		int r = Math.round(((a >> 16) & 0xFF) * (1 - t) + ((b >> 16) & 0xFF) * t);
+		int g = Math.round(((a >> 8) & 0xFF) * (1 - t) + ((b >> 8) & 0xFF) * t);
+		int bl = Math.round((a & 0xFF) * (1 - t) + (b & 0xFF) * t);
+		return (r << 16) | (g << 8) | bl;
+	}
 }

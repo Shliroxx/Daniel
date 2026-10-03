@@ -57,7 +57,7 @@ public final class ScreenEffects {
 		long now = client.world.getTime();
 		// erster Stand nach dem Einloggen ist kein Wechsel; Zurueckverwandeln: rot nur bei Zeitablauf (wie AE)
 		if (known && !alien.equals(lastAlien)) {
-			flash(alien.isPresent() ? 0x39FF14 : (now >= lastEnd - 2 ? 0xFF3A2A : 0xB8FFA0), now);
+			flash(alien.isPresent() ? com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player) : (now >= lastEnd - 2 ? 0xFF3A2A : 0xB8FFA0), now);
 		}
 		if (alien.isPresent()) {
 			lastEnd = state.endTick();

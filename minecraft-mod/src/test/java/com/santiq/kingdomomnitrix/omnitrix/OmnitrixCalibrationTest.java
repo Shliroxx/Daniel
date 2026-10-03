@@ -72,4 +72,11 @@ class OmnitrixCalibrationTest {
 		assertFalse(OmnitrixColors.exists("rainbow"));
 		assertEquals("green", OmnitrixColors.ALL.getFirst().id());
 	}
+
+	@Test
+	void mixBlendsChannels() {
+		assertEquals(0x39FF14, OmnitrixColors.mix(0x39FF14, 0xFFFFFF, 0.0f));
+		assertEquals(0xFFFFFF, OmnitrixColors.mix(0x39FF14, 0xFFFFFF, 1.0f));
+		assertEquals(0x808080, OmnitrixColors.mix(0x000000, 0xFFFFFF, 0.5f));
+	}
 }

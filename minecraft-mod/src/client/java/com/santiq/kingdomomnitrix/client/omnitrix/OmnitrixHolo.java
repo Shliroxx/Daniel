@@ -63,7 +63,9 @@ public final class OmnitrixHolo {
 			client.inGameHud.setOverlayMessage(payload.body().copy().withColor(payload.style().color()), false);
 			return;
 		}
-		show(new Message(payload.title(), payload.body(), payload.footer(), payload.alien(), payload.style().color(),
+		// Farbmodul: Geraete-Meldungen in Gruen erscheinen in der Modulfarbe (Warnungen, Fehler bleiben)
+		int color = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.themed(client.player, payload.style().color());
+		show(new Message(payload.title(), payload.body(), payload.footer(), payload.alien(), color,
 				Math.max(500, payload.style().durationMs()), payload.style().priority()));
 	}
 

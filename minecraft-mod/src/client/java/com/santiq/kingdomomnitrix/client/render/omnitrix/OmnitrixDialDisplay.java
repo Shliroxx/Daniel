@@ -81,9 +81,13 @@ public final class OmnitrixDialDisplay {
 			g = 0.38f;
 			b = 0.32f;
 		} else {
-			r = MathHelper.lerp(confirm, 0.78f, 1.0f) * pulse;
-			g = MathHelper.lerp(confirm, 1.0f, 1.0f) * pulse;
-			b = MathHelper.lerp(confirm, 0.12f, 0.85f) * pulse;
+			// Farbmodul: Klassisch bleibt das helle Lindgruen des Zifferblatts, sonst die Modulfarbe (aufgehellt)
+			int tint = player == null || !local ? 0xC7FF1F
+					: com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.of(player).id().equals("green") ? 0xC7FF1F
+					: com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.mix(com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player), 0xFFFFFF, 0.2f);
+			r = MathHelper.lerp(confirm, ((tint >> 16) & 0xFF) / 255.0f, 1.0f) * pulse;
+			g = MathHelper.lerp(confirm, ((tint >> 8) & 0xFF) / 255.0f, 1.0f) * pulse;
+			b = MathHelper.lerp(confirm, (tint & 0xFF) / 255.0f, 0.85f) * pulse;
 		}
 		Matrix4f m = matrices.peek().getPositionMatrix();
 		VertexConsumer fill = consumers.getBuffer(RenderLayer.getDebugQuads());

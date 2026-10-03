@@ -404,3 +404,32 @@ Tests: Wirkung je Modul, unveraendertes Profil ohne Kalibrierung, Budget, Begren
 Nicht geprueft: Abstand/Menschenform-Ablehnung im Spiel (nur Code), Mehrspieler-Sync der Kalibrierung.
 
 ![Kalibrier-Werkbank: Bildschirm und Block](screenshots/calibration_bench.png)
+
+## 16. Phase M — Farbmodule (2026-10-03)
+
+Sechs Farbmodule an der Kalibrier-Werkbank: Klassisch Gruen, Blau, Rot, Gelb, Violett, Weiss (rein optisch, kostenlos
+umschaltbar, an alle synchronisiert — andere Spieler sehen Abzeichen, Licht und Staub in deiner Farbe).
+Statusfarben bleiben bewusst gleich (Warnung gelb, Ueberhitzung/Nachladen rot, Sperre grau, Master Control gold), damit
+Gefahr immer gleich aussieht.
+
+| Bereich | umgesetzt |
+|---|---|
+| Kern / Licht | Kernleuchten am Arm (`OmnitrixWrist`), Bereit/Aktiv/Auswahl/Verwandlung in Modulfarbe, zunehmend heller |
+| Hologramm | Raute des Zifferblatts in Modulfarbe (Klassisch: wie bisher Lindgruen) |
+| Oberflaeche | Omnitrix-Thema (Rahmen, Akzent, Hervorhebung: HUD-Panel, Alien-Menue), Rad-Statusfarbe, Code-Tastatur, Kalibrier-Bildschirm, HUD-Silhouette |
+| OS-Meldungen | gruene Meldungen (Verwandelt, Bereit, Kalibriert …) in Modulfarbe; Warnungen/Fehler unveraendert |
+| Effekte | Verwandlungsstaub (Server, fuer alle sichtbar), Bildschirmblitz beim Verwandeln, gruene Feedback-Blitze |
+| Abzeichen | Laufzeit-Umfaerbung (`BadgeTint`): gruene Flaeche in Abzeichen-Groesse (24–40 px) der Leuchtmaske + Abzeichen-Wuerfel der Grundtextur; Grundtextur und Leuchtmaske je Textur und Farbe einmal erzeugt |
+
+Pruefung der Abzeichen-Erkennung an allen 10 Aliens: je genau 93 Abzeichen-Pixel der Grundtextur (Ripjaws 99),
+Upgrades gruene Schaltkreise und Ripjaws' Leuchtpunkte bleiben unberuehrt.
+
+**Im Spiel geprueft (Violett):** Vierarms Schulter-Abzeichen violett, Upgrade: Abzeichen violett, Schaltkreise gruen;
+Rad-Raute violett; HUD-Rahmen und Balken violett; violetter Verwandlungsstaub; Kalibrier-Bildschirm in Gelb/Violett.
+**Gefunden und behoben:** erste Fassung faerbte nur die Masken-Pixel — der Abzeichen-Rand liegt ausserhalb der Maske
+und blieb gruen; zweite Fassung haette Upgrades Schaltkreise mitgefaerbt → Groessenregel fuer Abzeichen-Flaechen.
+**Noch gruen (offen, Phase N/P):** Omnitrix-Item-Textur in der Hand, Symbol-Texturen (Icons), Rahmen der
+Faehigkeits-Slots im HUD, eigene Partikel-Sprites (Blitz, DNA-Helix) und die gruenen Lampen des Omnitrix-Modells.
+Nicht geprueft: Mehrspieler-Sicht der Farbe (Sync ueber Anhang, nur mit einem Client gesehen).
+
+![Farbmodul Violett: Vierarms, Upgrade, Rad](screenshots/color_module_purple.png)

@@ -31,6 +31,13 @@ public class AlienBodyRenderer extends GeoReplacedEntityRenderer<AbstractClientP
 	/** Leuchtschicht mit gleichmaessiger Helligkeit von allen Seiten. */
 	public AlienBodyRenderer withEvenGlow() {
 		addRenderLayer(new AutoGlowingGeoLayer<>(this) {
+			/** Farbmodul: umgefaerbte Leuchtmaske statt der aus der Ressource abgeleiteten. */
+			@Override
+			protected RenderLayer getRenderType(AlienBodyAnimatable animatable, @Nullable VertexConsumerProvider bufferSource) {
+				return BadgeTint.glowOf(getTextureResource(animatable)).map(RenderLayer::getEntityTranslucentEmissive)
+						.orElseGet(() -> super.getRenderType(animatable, bufferSource));
+			}
+
 			@Override
 			public void render(MatrixStack poseStack, AlienBodyAnimatable animatable, BakedGeoModel bakedModel, @Nullable RenderLayer renderType,
 					VertexConsumerProvider bufferSource, @Nullable VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {

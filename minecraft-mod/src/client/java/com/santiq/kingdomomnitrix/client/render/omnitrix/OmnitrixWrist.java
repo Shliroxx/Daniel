@@ -149,7 +149,7 @@ public final class OmnitrixWrist {
 		if (local) {
 			brightness = Math.min(1.0f, brightness + OmnitrixFeedback.currentLight() * 0.6f);
 		}
-		int color = status.color();
+		int color = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.status(player, status);
 		return new float[] {((color >> 16) & 0xFF) / 255.0f * brightness, ((color >> 8) & 0xFF) / 255.0f * brightness,
 				(color & 0xFF) / 255.0f * brightness};
 	}

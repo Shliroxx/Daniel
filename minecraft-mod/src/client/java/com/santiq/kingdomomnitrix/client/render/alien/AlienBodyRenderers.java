@@ -74,6 +74,7 @@ public final class AlienBodyRenderers {
 		RENDERERS.clear();
 		FAILED.clear();
 		INFO.clear();
+		BadgeTint.clear();
 		TEXTURE_VARIANTS.clear();
 		AlienPose.reload(newContext);
 		AlienArms.clearCache();
@@ -171,6 +172,7 @@ public final class AlienBodyRenderers {
 		long remaining = state.remainingTicks(player.getWorld().getTime());
 		currentWarn = state.isTransformed() && remaining > 0 && remaining <= WARN_TICKS
 				&& (player.age / WARN_BLINK) % 2 == 0;
+		currentBadgeColor = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
 		currentUniform = state.activeAlien().map(id -> AlienUniforms.get(player, id))
 				.or(() -> Optional.ofNullable(REVERT_UNIFORM.get(player.getId())))
 				.orElse(AlienUniforms.CLASSIC);
@@ -205,7 +207,8 @@ public final class AlienBodyRenderers {
 		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true) {
 			@Override
 			public Identifier getTextureResource(AlienBodyAnimatable animatable) {
-				return animatedTexture(model, uniformTexture(model, super.getTextureResource(animatable), currentUniform));
+				return BadgeTint.tint(animatedTexture(model, uniformTexture(model, super.getTextureResource(animatable), currentUniform)),
+						currentBadgeColor);
 			}
 
 			@Override
@@ -244,6 +247,8 @@ public final class AlienBodyRenderers {
 	private static boolean currentWarn;
 	/** Uniform des gerade gezeichneten Spielers (Zeichnen laeuft im Render-Thread nacheinander) */
 	private static String currentUniform = AlienUniforms.CLASSIC;
+	/** Farbmodul des gerade gezeichneten Spielers (Abzeichen-Farbe) */
+	private static int currentBadgeColor = BadgeTint.CLASSIC;
 
 	/** Darstellungs-Angaben eines Modells (einmal pro Ressourcen-Neuladen gelesen). */
 	public static AlienRenderInfo info(Identifier model) {

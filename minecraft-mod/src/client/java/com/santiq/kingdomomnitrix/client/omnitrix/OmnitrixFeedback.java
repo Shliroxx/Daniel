@@ -99,7 +99,7 @@ public final class OmnitrixFeedback {
 			lightTime = System.nanoTime();
 		}
 		if (effect.flashStrength() > 0.0f && config.screenFlash > 0.0f) {
-			ScreenEffects.flash(effect.flash(), client.world.getTime(), effect.flashStrength() * config.screenFlash);
+			ScreenEffects.flash(com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.themed(client.player, effect.flash()), client.world.getTime(), effect.flashStrength() * config.screenFlash);
 		}
 		if (effect.shake() > 0.0f && config.cameraShake > 0.0f) {
 			CameraShake.start(effect.shake() * config.cameraShake, effect.shakeTicks(), 0);

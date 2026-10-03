@@ -267,7 +267,7 @@ public final class OmnitrixHud implements HudElement {
 		// gewaehltes Alien als Silhouette rechts, eingefaerbt nach Geraete-Zustand (wie das Zifferblatt)
 		selectedId.ifPresent(id -> {
 			OmnitrixStatus shown = OmnitrixClientState.status(player);
-			int tint = shown == OmnitrixStatus.IDLE ? 0x39FF14 : shown.color();
+			int tint = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.status(player, shown);
 			int size = font.fontHeight * 2 + 2;
 			UiDraw.alienSilhouette(context, id, WIDTH - PADDING - size, PADDING - 1, size, tint, 0.85f);
 		});

@@ -205,7 +205,8 @@ public class OmnitrixRadialScreen extends Screen {
 
 	private int statusColor() {
 		OmnitrixStatus status = client != null && client.player != null ? OmnitrixClientState.status(client.player) : OmnitrixStatus.READY;
-		return status == OmnitrixStatus.IDLE ? 0x39FF14 : status.color();
+		return client != null && client.player != null ? com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.status(client.player, status)
+				: status.color();
 	}
 
 	/** Segment-Anfang im Bogenmass; erstes Segment oben mittig. */

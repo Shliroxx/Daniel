@@ -36,21 +36,40 @@ public enum UiTheme {
 	}
 
 	public int border() {
-		return border;
+		int module = omnitrixModule();
+		return module < 0 ? border : 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.mix(module, 0x000000, 0.5f);
 	}
 
 	/** Hauptfarbe des Systems (Balken, Titel). */
 	public int accent() {
-		return accent;
+		int module = omnitrixModule();
+		return module < 0 ? accent : 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.mix(module, 0xFFFFFF, 0.15f);
 	}
 
 	/** Zweitfarbe (Hervorhebungen, Werte). */
 	public int highlight() {
-		return highlight;
+		int module = omnitrixModule();
+		return module < 0 ? highlight : 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.mix(module, 0xFFFFFF, 0.8f);
+	}
+
+	/**
+	 * Farbmodul des eigenen Omnitrix fuer das Omnitrix-Thema (Rahmen, Akzent, Hervorhebung); -1 = Standardfarben
+	 * (anderes Thema, kein Spieler oder Klassisch Gruen).
+	 */
+	private int omnitrixModule() {
+		if (this != OMNITRIX) {
+			return -1;
+		}
+		var player = net.minecraft.client.MinecraftClient.getInstance().player;
+		if (player == null) {
+			return -1;
+		}
+		var color = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.of(player);
+		return "green".equals(color.id()) ? -1 : color.primary();
 	}
 
 	/** Akzentfarbe mit eigener Deckkraft (0–255), z. B. fuer Auswahl-Hintergruende. */
 	public int accent(int alpha) {
-		return (alpha << 24) | (accent & 0x00FFFFFF);
+		return (alpha << 24) | (accent() & 0x00FFFFFF);
 	}
 }
