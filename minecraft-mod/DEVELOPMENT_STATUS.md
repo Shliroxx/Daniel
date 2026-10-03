@@ -338,7 +338,7 @@ Reihenfolge = Abarbeitungsreihenfolge.
 8. [ ] **Keyblade-Rework** — 3D-Handmodelle (Kingdom Key, Oathkeeper, Omega Key), Schwung-Spur angleichen.
 9. [ ] **Heartless-Rework** — Shadow (Antennen, krabbelnd), Soldier, Air Soldier, Large Body, Darkball; Texturen mit
    echter Zeichnung statt Rauschen; Leuchtaugen per Leuchtmaske.
-10. [~] **Boss-Rework** — Nefarious nach den Spielen neu gebaut (Kuppel, Schädel, Gebiss, Tentakel, 4 px/Einheit). Offen: Schadenszustände.
+10. [x] **Boss-Rework** — Nefarious nach den Spielen neu gebaut (Kuppel, Schädel, Gebiss, Tentakel, 4 px/Einheit); Schadenszustände je Phase (Risse/Brandflecken ab 60 %, tiefe Risse + Funken/Qualm ab 25 %).
 11. [ ] **Weapon-Rework** — Combuster, Omniwrench, Heli-Pack am Rücken.
 12. [ ] **HUD-Rework** — Feinschliff, Schadenszahlen, Treffer-Feedback.
 13. [ ] **World-Rework** — Traverse Town (NBT-Strukturen), Arena, Weltraum.

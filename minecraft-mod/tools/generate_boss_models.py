@@ -13,6 +13,7 @@ Aufruf aus dem Ordner minecraft-mod/:
 from __future__ import annotations
 
 import argparse
+import math
 import json
 import logging
 import random
@@ -202,15 +203,20 @@ def shade(color: str, amount: float) -> tuple[int, int, int]:
     return tuple(max(0, min(255, round(c * amount))) for c in (r, g, b))
 
 
-def paint_box(img: Image.Image, glow: Image.Image, b: Box) -> None:
-    """Malt alle sechs Flaechen eines Quaders (Box-UV) mit Material und Front-Detail."""
-    k = DENSITY
+def face_rects(b: Box) -> dict[str, tuple[float, float, float, float]]:
+    """Box-UV-Flaechen eines Quaders: Name -> (x, y, Breite, Hoehe) in Einheiten."""
     w, h, d = b.size
     u, v = b.uv
-    faces = {  # Name: (x, y, Breite, Hoehe) in Einheiten
+    return {
         "top": (u + d, v, w, d), "bottom": (u + d + w, v, w, d),
         "east": (u, v + d, d, h), "front": (u + d, v + d, w, h), "west": (u + d + w, v + d, d, h), "back": (u + 2 * d + w, v + d, w, h),
     }
+
+
+def paint_box(img: Image.Image, glow: Image.Image, b: Box) -> None:
+    """Malt alle sechs Flaechen eines Quaders (Box-UV) mit Material und Front-Detail."""
+    k = DENSITY
+    faces = face_rects(b)
     rng = random.Random(f"{b.origin}{b.size}{b.material}")
     for name, (fx, fy, fw, fh) in faces.items():
         X0, Y0, W, H = int(fx * k), int(fy * k), int(fw * k), int(fh * k)
@@ -327,6 +333,69 @@ def skull(px: int, py: int, W: int, H: int, color: tuple[int, int, int]):
     return color, False
 
 
+DAMAGE_MATERIALS = {"glass", "armor", "metal", "silver", "orange"}
+
+
+def paint_damage(img: Image.Image, b: Box, stage: int, rng: random.Random) -> None:
+    """Schadens-Overlay (gleiche UVs wie die Textur, sonst durchsichtig): Risse in Glas und Panzer, Brandflecken,
+    blanke Kratzer. Stufe 2 enthaelt Stufe 1 (gleicher Zufall) und legt mehr und tiefere Schaeden darauf."""
+    if b.material not in DAMAGE_MATERIALS:
+        return
+    k = DENSITY
+    glass = b.material == "glass"
+    for name, (fx, fy, fw, fh) in face_rects(b).items():
+        X0, Y0, W, H = int(fx * k), int(fy * k), int(fw * k), int(fh * k)
+        if W < 6 or H < 6:
+            continue
+        area = W * H
+        cracks = max(1, area // (900 if glass else 1400))
+        for level in (1, 2):
+            count = cracks * (1 if level == 1 else 2)
+            for _ in range(count):
+                start = (rng.randrange(W), rng.randrange(H))
+                length = rng.randint(min(W, H) // 2, max(W, H))
+                scorch = not glass and rng.random() < 0.35
+                if level > stage:
+                    continue  # Zufall trotzdem verbrauchen, damit Stufe 2 die Risse von Stufe 1 behaelt
+                if scorch:
+                    scorch_mark(img, X0, Y0, W, H, start, length // 3, rng)
+                else:
+                    crack(img, X0, Y0, W, H, start, length, glass, rng)
+
+
+def crack(img: Image.Image, X0: int, Y0: int, W: int, H: int, start: tuple[int, int], length: int, glass: bool,
+          rng: random.Random) -> None:
+    """Zufalls-Riss mit Abzweigungen: Glas hell gesplittert, Metall dunkle Kerbe mit heller Kante."""
+    x, y = start
+    angle = rng.uniform(0, 6.283)
+    for step in range(length):
+        angle += rng.uniform(-0.6, 0.6)
+        x += round(math.cos(angle))
+        y += round(math.sin(angle))
+        if not (0 <= x < W and 0 <= y < H):
+            return
+        if glass:
+            img.putpixel((X0 + x, Y0 + y), (235, 255, 240, 230))
+        else:
+            img.putpixel((X0 + x, Y0 + y), (14, 12, 16, 235))
+            if y + 1 < H:
+                img.putpixel((X0 + x, Y0 + y + 1), (200, 200, 210, 150))
+        if step > 3 and rng.random() < 0.06:
+            crack(img, X0, Y0, W, H, (x, y), length // 3, glass, rng)
+
+
+def scorch_mark(img: Image.Image, X0: int, Y0: int, W: int, H: int, center: tuple[int, int], radius: int,
+                rng: random.Random) -> None:
+    """Russiger Brandfleck mit ausgefranstem Rand."""
+    radius = max(2, radius)
+    cx, cy = center
+    for py in range(max(0, cy - radius), min(H, cy + radius + 1)):
+        for px in range(max(0, cx - radius), min(W, cx + radius + 1)):
+            d = ((px - cx) ** 2 + (py - cy) ** 2) ** 0.5 / radius
+            if d < 1 and rng.random() > d * 0.8:
+                img.putpixel((X0 + px, Y0 + py), (20, 16, 14, round(200 * (1 - d * 0.6))))
+
+
 def build_nefarious_geo(joints: list[Joint]) -> dict:
     def cube_json(b: Box) -> dict:
         data = {"origin": [round(c, 3) for c in b.origin], "size": list(b.size), "uv": list(b.uv)}
@@ -426,8 +495,18 @@ def outputs(rng: random.Random) -> dict[Path, object]:
     for joint in joints:
         for box in joint.boxes:
             paint_box(texture, glow, box)
+    damage = []
+    for stage in (1, 2):
+        overlay = Image.new("RGBA", size, (0, 0, 0, 0))
+        damage_rng = random.Random(4242)
+        for joint in joints:
+            for box in joint.boxes:
+                paint_damage(overlay, box, stage, damage_rng)
+        damage.append(overlay)
     base = Path("entity") / "boss"
     return {
+        ASSETS / "textures" / base / "nefarious_mech_damage1.png": damage[0],
+        ASSETS / "textures" / base / "nefarious_mech_damage2.png": damage[1],
         ASSETS / "geo" / base / "nefarious_mech.geo.json": build_nefarious_geo(joints),
         ASSETS / "animations" / base / "nefarious_mech.animation.json": build_animations(),
         ASSETS / "textures" / base / "nefarious_mech.png": texture,

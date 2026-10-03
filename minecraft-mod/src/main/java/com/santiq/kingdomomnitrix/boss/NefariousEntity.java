@@ -88,6 +88,9 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 	private final Set<UUID> fighters = new HashSet<>();
 
 	private BlockPos home;
+	/** Lebensanteil, ab dem Phase 2 bzw. 3 beginnt (auch fuer die Schadenszustaende im Client). */
+	public static final float PHASE2_FRACTION = 0.6f;
+	public static final float PHASE3_FRACTION = 0.25f;
 	private int phase = 1;
 	private boolean scaled;
 	private Attack attack = Attack.NONE;
@@ -140,6 +143,32 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 	}
 
 	// --- Ablauf ---------------------------------------------------------------------------------
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (getWorld().isClient && isAlive()) {
+			damageEffects();
+		}
+	}
+
+	/** Rauch aus der Kuppel ab Phase 2, dazu Funken und dicker Qualm ab Phase 3 (nur Client, aus dem Leben berechnet). */
+	private void damageEffects() {
+		float fraction = getHealth() / getMaxHealth();
+		if (fraction > PHASE2_FRACTION) {
+			return;
+		}
+		boolean heavy = fraction <= PHASE3_FRACTION;
+		double top = getY() + getHeight() * 0.95;
+		if (random.nextInt(heavy ? 2 : 5) == 0) {
+			getWorld().addParticle(heavy ? ParticleTypes.LARGE_SMOKE : ParticleTypes.SMOKE,
+					getX() + random.nextGaussian() * 0.3, top, getZ() + random.nextGaussian() * 0.3, 0.0, 0.05, 0.0);
+		}
+		if (heavy && random.nextInt(4) == 0) {
+			getWorld().addParticle(ParticleTypes.ELECTRIC_SPARK, getX() + random.nextGaussian() * 0.6, getBodyY(0.4 + random.nextDouble() * 0.5),
+					getZ() + random.nextGaussian() * 0.6, random.nextGaussian() * 0.2, 0.1, random.nextGaussian() * 0.2);
+		}
+	}
 
 	@Override
 	protected void mobTick() {
@@ -248,7 +277,7 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 
 	private void checkPhase(ServerWorld world) {
 		float fraction = getHealth() / getMaxHealth();
-		int next = fraction <= 0.25f ? 3 : fraction <= 0.6f ? 2 : 1;
+		int next = fraction <= PHASE3_FRACTION ? 3 : fraction <= PHASE2_FRACTION ? 2 : 1;
 		if (next <= phase) {
 			return;
 		}

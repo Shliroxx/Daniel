@@ -13,12 +13,13 @@ import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
 /**
  * Dr. Nefarious mit GeckoLib. Durchscheinend gerendert, damit man durch die gruene Glaskuppel Zahnraeder und
- * Satellitenschuessel sieht; Augen, Kern, Laser, Raketenschacht und Tentakelspitzen leuchten (Glowmask-Textur).
+ * Satellitenschuessel sieht; Risse und Brandflecken je Phase ({@link NefariousDamageLayer}); Augen, Kern, Laser, Raketenschacht und Tentakelspitzen leuchten (Glowmask-Textur).
  */
 public class NefariousRenderer extends GeoEntityRenderer<NefariousEntity> {
 	public NefariousRenderer(EntityRendererFactory.Context context) {
 		super(context, new DefaultedEntityGeoModel<>(KingdomOmnitrix.id("boss/nefarious_mech")));
 		this.shadowRadius = 1.4f;
+		addRenderLayer(new NefariousDamageLayer(this));
 		addRenderLayer(new AutoGlowingGeoLayer<>(this));
 	}
 
