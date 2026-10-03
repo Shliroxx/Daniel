@@ -965,5 +965,13 @@
   "ability.kingdomomnitrix.bone_guard": "Panzerblock",
   "ability.kingdomomnitrix.titanic_growth": "Riesenwuchs",
   "message.kingdomomnitrix.humungousaur_stage": "Wachstum %s/%s",
-  "message.kingdomomnitrix.humungousaur_titan": "RIESENWUCHS!"
+  "message.kingdomomnitrix.humungousaur_titan": "RIESENWUCHS!",
+  "alien.kingdomomnitrix.swampfire": "Swampfire",
+  "ability.kingdomomnitrix.methane_flame": "Methanflamme",
+  "ability.kingdomomnitrix.methane_cloud": "Methanwolke",
+  "ability.kingdomomnitrix.methane_jet": "Methandüse",
+  "ability.kingdomomnitrix.root_snare": "Wurzelfessel",
+  "ability.kingdomomnitrix.regrowth": "Nachwachsen",
+  "ability.kingdomomnitrix.swamp_inferno": "Sumpfinferno",
+  "message.kingdomomnitrix.swampfire_reform": "Aus der Pfütze nachgewachsen!"
 }

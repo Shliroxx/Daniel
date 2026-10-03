@@ -1,0 +1,16 @@
+{
+  "scale": 1.0,
+  "uniforms": [
+    "classic",
+    "evo",
+    "ultimate"
+  ],
+  "uniform_models": true,
+  "vanilla_pose": true,
+  "arm_swing": 1.0,
+  "leg_swing": 1.0,
+  "ability_poses": [],
+  "glow_frames": 1,
+  "warn_textures": false,
+  "source": "Alien Evolution (Habb and Stephen)"
+}

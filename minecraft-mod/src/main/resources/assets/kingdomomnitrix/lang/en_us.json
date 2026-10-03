@@ -965,5 +965,13 @@
   "ability.kingdomomnitrix.bone_guard": "Bone Guard",
   "ability.kingdomomnitrix.titanic_growth": "Titanic Growth",
   "message.kingdomomnitrix.humungousaur_stage": "Growth %s/%s",
-  "message.kingdomomnitrix.humungousaur_titan": "TITANIC!"
+  "message.kingdomomnitrix.humungousaur_titan": "TITANIC!",
+  "alien.kingdomomnitrix.swampfire": "Swampfire",
+  "ability.kingdomomnitrix.methane_flame": "Methane Flame",
+  "ability.kingdomomnitrix.methane_cloud": "Methane Cloud",
+  "ability.kingdomomnitrix.methane_jet": "Methane Jet",
+  "ability.kingdomomnitrix.root_snare": "Root Snare",
+  "ability.kingdomomnitrix.regrowth": "Regrowth",
+  "ability.kingdomomnitrix.swamp_inferno": "Swamp Inferno",
+  "message.kingdomomnitrix.swampfire_reform": "Reformed from the puddle!"
 }

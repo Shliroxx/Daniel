@@ -50,7 +50,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Frost: Eisring am Boden, Schneeflocken wirbeln auf, klirrende Kaelte */
 	FROST,
 	/** Wachstum: Boden reisst sternfoermig auf, Brocken fliegen, tiefes Bruellen */
-	GROWTH;
+	GROWTH,
+	/** Sumpf: Methanpuff mit Stichflamme, Blaetter und Schlamm spritzen */
+	SWAMP;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -185,6 +187,14 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.EXPLOSION, x, y + 0.3, z, 1, 0.0, 0.0, 0.0, 0.0);
 				sound(world, player, SoundEvents.ENTITY_RAVAGER_ROAR, 1.2f, 0.6f);
 				sound(world, player, SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, 1.0f, 0.5f);
+			}
+			case SWAMP -> {
+				world.spawnParticles(new net.minecraft.particle.DustParticleEffect(new org.joml.Vector3f(0.55f, 0.68f, 0.25f), 1.8f),
+						x, mid, z, 40, 0.6, 0.6, 0.6, 0.0);
+				world.spawnParticles(ParticleTypes.FLAME, x, y + 0.2, z, 30, 0.4, 0.1, 0.4, 0.08);
+				world.spawnParticles(ParticleTypes.COMPOSTER, x, mid, z, 30, 0.5, 0.7, 0.5, 0.0);
+				sound(world, player, SoundEvents.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f);
+				sound(world, player, SoundEvents.BLOCK_SLIME_BLOCK_PLACE, 1.0f, 0.6f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

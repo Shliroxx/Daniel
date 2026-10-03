@@ -110,6 +110,9 @@ ABILITY_POSE = {
     # Humungosaur: Schlag, Rundumschwanz, Sturmlauf, Bodenstampfer, Deckung, Wachsen
     "mega_punch": "shoot", "tail_sweep": "swipe", "stampede": "dodge", "tectonic_quake": "slam", "bone_guard": "guard",
     "titanic_growth": "ultimate",
+    # Swampfire: Flamme aus der Hand, Wolke ausstossen, Duese, Ranken rufen, Nachwachsen, Inferno
+    "methane_flame": "beam", "methane_cloud": "roar", "methane_jet": "leap", "root_snare": "slam", "regrowth": "focus",
+    "swamp_inferno": "ultimate",
 }
 
 

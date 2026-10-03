@@ -31,6 +31,7 @@ final class BuiltinAbilities {
 		GhostfreakAbilities.register();
 		BigChillAbilities.register();
 		HumungousaurAbilities.register();
+		SwampfireAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -40,7 +41,7 @@ final class BuiltinAbilities {
 	// WildmuttAbilities (Jagd), StinkflyAbilities (Toxin-Schichten),
 	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration),
 	// GhostfreakAbilities (Spuk), BigChillAbilities (Unterkuehlung),
-	// HumungousaurAbilities (Wachstum).
+	// HumungousaurAbilities (Wachstum), SwampfireAbilities (Methan & Wildwuchs).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 

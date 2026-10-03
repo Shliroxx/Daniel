@@ -138,6 +138,14 @@ ALIENS = {
     "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 2.8, "heavy", "#C68A4E", pack="afomni",
                          rest=("model.humongousaur.anim.json:animation.humungousaur.armor_off",),
                          loops=("model.humongousaur.anim.json:animation.humungousaur.tail",)),
+    # Swampfire: ein Modell, keine Daueranimation; AE-Groesse 1,7
+    "swampfire": Spec("afomni", "methanosian", "methanosian.json", 1.7, "heavy", "#4E8B3A", pack="afomni"),
+    # Chromastone: Grundtextur, Leuchten aus der AE-Spektralebene (chromastone_glow); AE-Groesse 1
+    "chromastone": Spec("afomni", "crystalsapien", "crystalsapien.json", 1.0, "heavy", "#C36BE8", pack="afomni",
+                        glow="assets/afomni/textures/models/crystalsapien/chromastone_glow.png"),
+    # Echo Echo: Schrei-Maske im Grundzustand (#TIMER 0 = Mund zu); AE-Groesse 0,5
+    "echo_echo": Spec("afomni", "sonorosian", "sonorosian.json", 0.5, "small", "#E8E8E8", pack="afomni",
+                      variables=(("TIMER", "0"),)),
     "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.3, "small", "#C9C3D6", script="ectonurite",
                        variables=(("X", "0"),),
                        loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye")),

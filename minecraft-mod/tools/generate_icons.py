@@ -538,6 +538,12 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/tectonic_quake": ("omnitrix", "slam", True),
     "alien_ability/bone_guard": ("omnitrix", "heart", False),
     "alien_ability/titanic_growth": ("omnitrix", "arrow_up", True),
+    "alien_ability/methane_flame": ("omnitrix", "flame", False),
+    "alien_ability/methane_cloud": ("omnitrix", "cycle", True),
+    "alien_ability/methane_jet": ("omnitrix", "dash", True),
+    "alien_ability/root_snare": ("omnitrix", "cycle", False),
+    "alien_ability/regrowth": ("omnitrix", "heart", True),
+    "alien_ability/swamp_inferno": ("omnitrix", "flame", True),
     # Kommandomenue
     "command/attack": ("hero", "sword", False),
     "command/magic": ("keyblade", "sparkle", False),
