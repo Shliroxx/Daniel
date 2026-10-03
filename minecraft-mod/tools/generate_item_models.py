@@ -346,6 +346,63 @@ def omnitrix() -> list[Box]:
     return b
 
 
+# Heli-Pack (Ratchet & Clank): Rucksack-Roboter mit Mast und Doppelrotor; Heli-Jet mit zwei Schubduesen.
+# Lage im Item-Raum: Rueckenplatte bei z = 0 (am Spieler), Gehaeuse waechst nach +z, Mitte bei x = 8.
+
+def heli_body(jet: bool) -> list[Box]:
+    paint = "orange_paint" if jet else "teal_paint"
+    b: list[Box] = []
+    b.append(box((3.5, 3.0, 0.0), (12.5, 12.0, 1.0), "dark"))                    # Rueckenplatte
+    b.append(box((4.0, 3.5, 1.0), (12.0, 12.5, 5.0), "silver"))                  # Gehaeuse
+    b.append(box((4.5, 4.0, 5.0), (11.5, 11.5, 5.6), "silver"))                  # gewoelbte Rueckseite
+    b.append(box((3.4, 5.0, 1.5), (4.0, 10.5, 4.5), paint))                      # Seitenpaneele
+    b.append(box((12.0, 5.0, 1.5), (12.6, 10.5, 4.5), paint))
+    b.append(box((4.5, 11.0, 1.2), (11.5, 12.6, 4.8), paint))                    # Kopfband
+    b.append(box((5.4, 8.0, 5.6), (7.2, 9.6, 5.9), "omni_green"))                # Augen (leuchten)
+    b.append(box((8.8, 8.0, 5.6), (10.6, 9.6, 5.9), "omni_green"))
+    b.append(box((6.4, 5.0, 5.6), (9.6, 5.8, 5.8), "dark"))                      # Mundschlitz
+    b.append(box((11.0, 12.5, 2.5), (11.6, 15.0, 3.1), "steel"))                 # Antenne
+    b.append(box((10.9, 15.0, 2.4), (11.7, 15.8, 3.2), "omni_green"))
+    if jet:
+        for x in (3.6, 9.4):                                                      # Schubduesen
+            b.append(box((x, 0.6, 1.4), (x + 3.0, 3.6, 4.4), "steel"))
+            b.append(box((x - 0.2, 0.0, 1.2), (x + 3.2, 0.8, 4.6), "dark"))
+            b.append(box((x + 0.6, -0.2, 2.0), (x + 2.4, 0.0, 3.8), "fire"))
+    else:
+        b.append(box((7.25, 12.5, 2.0), (8.75, 22.6, 3.5), "steel"))             # Rotormast (Rotor ueber dem Kopf)
+        b.append(box((6.9, 16.0, 1.65), (9.1, 16.8, 3.85), "teal_paint"))        # Mastring
+        b.append(box((6.9, 22.6, 1.65), (9.1, 23.6, 3.85), "dark"))              # Nabe
+    return b
+
+
+def heli_rotor() -> list[Box]:
+    """Doppelrotor ueber der Nabe (Drehachse x = 8, z = 2,75); dreht sich im Renderer um y."""
+    return [
+        box((-2.0, 23.6, 2.0), (18.0, 24.0, 3.5), "teal_paint"),
+        box((7.25, 23.6, -7.25), (8.75, 24.0, 12.75), "teal_paint"),
+        box((7.0, 24.0, 1.75), (9.0, 24.6, 3.75), "steel"),
+        box((-2.0, 23.55, 2.0), (-0.5, 24.05, 3.5), "yellow_paint"),
+        box((16.5, 23.55, 2.0), (18.0, 24.05, 3.5), "yellow_paint"),
+    ]
+
+
+def heli_flame() -> list[Box]:
+    """Schubflammen unter den Duesen (Heli-Jet), leuchtend; Laenge flackert im Renderer."""
+    b: list[Box] = []
+    for x in (3.6, 9.4):
+        b.append(box((x + 0.5, -4.0, 1.9), (x + 2.5, -0.2, 3.9), "fire"))
+        b.append(box((x + 1.0, -6.0, 2.4), (x + 2.0, -4.0, 3.4), "plasma"))
+    return b
+
+
+def heli_pack() -> list[Box]:
+    return heli_body(False) + heli_rotor()
+
+
+def heli_jet() -> list[Box]:
+    return heli_body(True)
+
+
 # Omnitrix am Handgelenk: drei Teile, im Code an den linken Arm gehaengt (Arm x/z 6..10, Hand bei y = 0).
 
 def omnitrix_wrist_base() -> list[Box]:
@@ -388,6 +445,13 @@ PARTS = {
     "wrist_core": (omnitrix_wrist_core, "omni_housing"),
     "wrist_glow": (omnitrix_wrist_glow, "omni_glow_x"),
 }
+# Teile fuer den Ruecken (Gadget-Guertel): models/gadget/<name>.json, gleiche Dichte wie die Items
+BACK_PARTS = {
+    "heli_body": (lambda: heli_body(False), "silver"),
+    "heli_rotor": (heli_rotor, "teal_paint"),
+    "jet_body": (lambda: heli_body(True), "silver"),
+    "jet_flame": (heli_flame, "fire"),
+}
 PART_DENSITY = 8
 
 
@@ -400,6 +464,12 @@ WEAPONS = {
     "swingshot": (swingshot, "steel", "gun"),
     "fusion_grenade": (fusion_grenade, "red_paint", "small"),
     "omnitrix": (omnitrix, "dark", "small"),
+    "heli_pack": (heli_pack, "silver", "small"),
+    "heli_jet": (heli_jet, "silver", "small"),
+}
+# zusaetzliche Eintraege im Item-Modell (Heli-Pack schaltet per Komponente auf das Jet-Modell)
+OVERRIDES = {
+    "heli_pack": [{"predicate": {f"{MOD_ID}:jet": 1}, "model": f"{MOD_ID}:item/heli_jet"}],
 }
 
 # Lage pro Ansicht; hergeleitet aus vanilla „handheld“ (Klinge dort diagonal, hier entlang y → 45° weniger um z)
@@ -580,6 +650,9 @@ def build(name: str) -> tuple[dict, Image.Image]:
     if name in PARTS:
         factory, particle_material = PARTS[name]
         display, density, texture = None, PART_DENSITY, f"{MOD_ID}:item/3d/omnitrix_{name}"
+    elif name in BACK_PARTS:
+        factory, particle_material = BACK_PARTS[name]
+        display, density, texture = None, DENSITY, f"{MOD_ID}:item/3d/gadget_{name}"
     else:
         factory, particle_material, display = WEAPONS[name]
         density, texture = DENSITY, f"{MOD_ID}:item/3d/{name}"
@@ -630,6 +703,8 @@ def build(name: str) -> tuple[dict, Image.Image]:
         del model["gui_light"]
     else:
         model["display"] = DISPLAYS[display]
+    if name in OVERRIDES:
+        model["overrides"] = OVERRIDES[name]
     return model, img
 
 
@@ -649,6 +724,10 @@ def outputs(root: Path) -> dict[Path, bytes]:
         model, img = build(name)
         files[root / "models" / "omnitrix" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
         files[root / "textures" / "item" / "3d" / f"omnitrix_{name}.png"] = png_bytes(img)
+    for name in BACK_PARTS:
+        model, img = build(name)
+        files[root / "models" / "gadget" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
+        files[root / "textures" / "item" / "3d" / f"gadget_{name}.png"] = png_bytes(img)
     return files
 
 
