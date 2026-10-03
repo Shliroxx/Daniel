@@ -331,6 +331,19 @@ public final class HeroCommand {
 													TransformationManager.alienName(alien), level, target.getDisplayName()), true);
 											return 1;
 										}))))
+				// Grey Matter: Forschungszeit fuer den Omnitrix-Hack setzen (Minuten), z. B. zum Testen
+				.then(CommandManager.literal("galvan")
+						.then(CommandManager.literal("research")
+								.then(targeted(CommandManager.argument("minutes", IntegerArgumentType.integer(0, 600)),
+										(ctx, target) -> {
+											int minutes = IntegerArgumentType.getInteger(ctx, "minutes");
+											com.santiq.kingdomomnitrix.galvan.GalvanHack.State state = com.santiq.kingdomomnitrix.galvan.GalvanHack.state(target);
+											target.setAttached(com.santiq.kingdomomnitrix.galvan.GalvanHack.STATE,
+													new com.santiq.kingdomomnitrix.galvan.GalvanHack.State(minutes * 1200, state.level()));
+											ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.galvan_research",
+													target.getDisplayName(), minutes), true);
+											return 1;
+										}))))
 				.then(CommandManager.literal("flag")
 						.then(CommandManager.literal("set")
 								.then(targeted(CommandManager.argument("flag", StringArgumentType.word()),

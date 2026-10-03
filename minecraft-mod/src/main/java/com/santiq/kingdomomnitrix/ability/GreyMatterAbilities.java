@@ -1,23 +1,18 @@
 package com.santiq.kingdomomnitrix.ability;
 
-import com.mojang.serialization.Codec;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.galvan.GreyMatterKnowledge;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.util.Targeting;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -29,10 +24,8 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -52,8 +45,8 @@ import org.joml.Vector3f;
  * Grey Matter (Galvan). Eigenes Dauer-System „Analyse-Datenbank“ — kein Kraftwert und keine Aura, sondern Wissen:
  *
  * <ul>
- *   <li>Jede Analyse eines neuen Gegners erhoeht das Wissen ueber seine Art (0–{@link #MAX_LEVEL}), dauerhaft im
- *       Spielstand. Pro Stufe macht der Spieler in <b>jeder</b> Form (Mensch und jedes Alien) {@link #BONUS_PER_LEVEL}
+ *   <li>Jede Analyse eines neuen Gegners erhoeht das Wissen ueber seine Art (0–{@link #GreyMatterKnowledge.MAX_LEVEL}), dauerhaft im
+ *       Spielstand. Pro Stufe macht der Spieler in <b>jeder</b> Form (Mensch und jedes Alien) {@link GreyMatterKnowledge#BONUS_PER_LEVEL}
  *       mehr Schaden gegen diese Art.</li>
  *   <li>Analysierte Ziele sind markiert: die ganze Gruppe trifft sie 20 % haerter.</li>
  *   <li>Schwachstelle: der naechste Treffer irgendeines Spielers macht 150 % Zusatzschaden und verbraucht die Markierung.</li>
@@ -61,28 +54,13 @@ import org.joml.Vector3f;
  * </ul>
  * Zusatzschaden entsteht als zweiter, magischer Treffer direkt nach dem eigentlichen (eine Sperre verhindert Ketten).
  */
-@SuppressWarnings("UnstableApiUsage")
 final class GreyMatterAbilities {
-	static final int MAX_LEVEL = 5;
-	static final float BONUS_PER_LEVEL = 0.08f;
 	private static final float MARK_BONUS = 0.2f;
 	private static final float WEAK_BONUS = 1.5f;
-	private static final int MARK_TICKS = 200;
 	private static final int MAX_TRAPS = 3;
 	private static final Identifier GREY_MATTER = KingdomOmnitrix.id("grey_matter");
 	private static final DustParticleEffect TECH = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.0f);
-	private static final Codec<Map<Identifier, Integer>> CODEC = Codec.unboundedMap(Identifier.CODEC, Codec.intRange(0, MAX_LEVEL));
-
-	/** Wissen je Gegnerart (dauerhaft, nur an den Besitzer synchronisiert) */
-	static final AttachmentType<Map<Identifier, Integer>> KNOWLEDGE = AttachmentRegistry.create(KingdomOmnitrix.id("grey_matter_knowledge"),
-			builder -> builder.persistent(CODEC).initializer(Map::of).copyOnDeath()
-					.syncWith(PacketCodecs.codec(CODEC), AttachmentSyncPredicate.targetOnly()));
-
-	/** markierte Ziele: Ende der Markierung */
-	private static final Map<UUID, Long> ANALYZED = new HashMap<>();
 	private static final Map<UUID, Long> WEAK = new HashMap<>();
-	/** schon analysierte Einzelwesen je Spieler (jedes zaehlt nur einmal) */
-	private static final Map<UUID, Set<UUID>> SCANNED = new HashMap<>();
 	private static final Map<UUID, Long> SCURRY = new HashMap<>();
 	private static final Map<UUID, Long> MASTERMIND = new HashMap<>();
 	private static final List<Trap> TRAPS = new ArrayList<>();
@@ -107,7 +85,7 @@ final class GreyMatterAbilities {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(GreyMatterAbilities::allowDamage);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
-			SCANNED.remove(id);
+			GreyMatterKnowledge.forget(id);
 			SCURRY.remove(id);
 			MASTERMIND.remove(id);
 			TRAPS.removeIf(t -> t.owner().equals(id));
@@ -117,26 +95,11 @@ final class GreyMatterAbilities {
 	// --- Wissen ----------------------------------------------------------------------------------
 
 	static int knowledge(ServerPlayerEntity player, LivingEntity target) {
-		return player.getAttachedOrElse(KNOWLEDGE, Map.of()).getOrDefault(Registries.ENTITY_TYPE.getId(target.getType()), 0);
+		return GreyMatterKnowledge.level(player, target);
 	}
 
-	/** Wissen ueber die Art erhoehen (jedes Einzelwesen nur einmal); liefert die neue Stufe. */
 	private static int learn(ServerPlayerEntity player, LivingEntity target) {
-		Set<UUID> seen = SCANNED.computeIfAbsent(player.getUuid(), id -> new LinkedHashSet<>());
-		int level = knowledge(player, target);
-		if (!seen.add(target.getUuid()) || level >= MAX_LEVEL) {
-			return level;
-		}
-		if (seen.size() > 256) {
-			// aelteste Eintraege vergessen, die Liste waechst sonst ueber eine lange Sitzung
-			Iterator<UUID> it = seen.iterator();
-			it.next();
-			it.remove();
-		}
-		Map<Identifier, Integer> map = new HashMap<>(player.getAttachedOrElse(KNOWLEDGE, Map.of()));
-		map.put(Registries.ENTITY_TYPE.getId(target.getType()), level + 1);
-		player.setAttached(KNOWLEDGE, Map.copyOf(map));
-		return level + 1;
+		return GreyMatterKnowledge.learn(player, target);
 	}
 
 	private static boolean isGreyMatter(ServerPlayerEntity player) {
@@ -154,8 +117,8 @@ final class GreyMatterAbilities {
 				|| !target.isAlive()) {
 			return;
 		}
-		float factor = knowledge(attacker, target) * BONUS_PER_LEVEL;
-		if (marked(ANALYZED, target)) {
+		float factor = knowledge(attacker, target) * GreyMatterKnowledge.BONUS_PER_LEVEL;
+		if (GreyMatterKnowledge.marked(target)) {
 			factor += MARK_BONUS;
 		}
 		boolean weak = marked(WEAK, target);
@@ -202,8 +165,7 @@ final class GreyMatterAbilities {
 		LivingEntity target = found.get();
 		int before = knowledge(player, target);
 		int level = learn(player, target);
-		ANALYZED.put(target.getUuid(), ctx.world().getTime() + MARK_TICKS);
-		target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, MARK_TICKS, 0, false, false), player);
+		GreyMatterKnowledge.mark(player, target, GreyMatterKnowledge.MARK_TICKS);
 		double attack = target.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE)
 				? target.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) : 0.0;
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.scan", target.getDisplayName(),
@@ -211,7 +173,7 @@ final class GreyMatterAbilities {
 				String.format("%.0f", target.getAttributeValue(EntityAttributes.GENERIC_ARMOR)), String.format("%.1f", attack))
 				.formatted(Formatting.GRAY), false);
 		player.sendMessage(Text.translatable(level > before ? "message.kingdomomnitrix.grey_matter_learned" : "message.kingdomomnitrix.grey_matter_known",
-				target.getType().getName(), level, MAX_LEVEL, Math.round(level * BONUS_PER_LEVEL * 100)).formatted(Formatting.GREEN), false);
+				target.getType().getName(), level, GreyMatterKnowledge.MAX_LEVEL, Math.round(level * GreyMatterKnowledge.BONUS_PER_LEVEL * 100)).formatted(Formatting.GREEN), false);
 		// Analyse-Strahl vom Kopf zum Ziel
 		Vec3d from = player.getEyePos();
 		Vec3d to = target.getPos().add(0, target.getHeight() * 0.5, 0);
@@ -306,8 +268,7 @@ final class GreyMatterAbilities {
 			if (learn(player, target) > before) {
 				learned++;
 			}
-			ANALYZED.put(target.getUuid(), world.getTime() + ticks);
-			target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ticks, 0, false, false), player);
+			GreyMatterKnowledge.mark(player, target, ticks);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 1), player);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 1), player);
 			target.damage(world.getDamageSources().indirectMagic(player, player), damage);
@@ -326,9 +287,7 @@ final class GreyMatterAbilities {
 	private static void tick(MinecraftServer server) {
 		long tick = server.getTicks();
 		if (tick % 20 == 0) {
-			if (!ANALYZED.isEmpty()) {
-				ANALYZED.values().removeIf(until -> until < server.getOverworld().getTime() - 20);
-			}
+			GreyMatterKnowledge.prune(server.getOverworld().getTime());
 			if (!WEAK.isEmpty()) {
 				WEAK.values().removeIf(until -> until < server.getOverworld().getTime() - 20);
 			}
@@ -383,7 +342,7 @@ final class GreyMatterAbilities {
 					target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, trap.rootTicks(), 0), owner);
 					target.setVelocity(0.0, Math.min(0.0, target.getVelocity().y), 0.0);
 					target.velocityModified = true;
-					ANALYZED.put(target.getUuid(), world.getTime() + MARK_TICKS);
+					GreyMatterKnowledge.mark(owner, target, GreyMatterKnowledge.MARK_TICKS);
 				}
 				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, trap.pos().x, trap.pos().y + 0.4, trap.pos().z, 30, 0.6, 0.4, 0.6, 0.2);
 				world.playSound(null, trap.pos().x, trap.pos().y, trap.pos().z, SoundEvents.BLOCK_TRIPWIRE_CLICK_ON, SoundCategory.PLAYERS, 1.2f, 1.6f);

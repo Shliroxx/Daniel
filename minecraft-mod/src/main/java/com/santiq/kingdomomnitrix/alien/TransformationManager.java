@@ -121,6 +121,21 @@ public final class TransformationManager {
 		return state != null ? state : TransformationState.EMPTY;
 	}
 
+	/**
+	 * Nachladezeit sofort beenden (Galvan-Energiezelle). Nur zurueckverwandelt und waehrend des Nachladens.
+	 *
+	 * @return true, wenn etwas zu laden war
+	 */
+	public static boolean finishRecharge(ServerPlayerEntity player) {
+		TransformationState state = get(player);
+		long now = player.getServerWorld().getTime();
+		if (state.isTransformed() || state.rechargeRemaining(now) <= 0) {
+			return false;
+		}
+		update(player, s -> s.reverted(now));
+		return true;
+	}
+
 	private static void update(ServerPlayerEntity player, UnaryOperator<TransformationState> change) {
 		TransformationState before = get(player);
 		TransformationState after = change.apply(before);

@@ -414,6 +414,37 @@ def item_textures() -> dict[str, Image.Image]:
         "......Cdd.......",
         ".......d........",
     ], {"W": hexc("E8FFF0"), "C": hexc("5CF2A0"), "d": hexc("1E9E5E")})
+    # Galvan-Erfindungen (Grey Matter): Energiezelle und Hand-Scanner
+    t["galvan_cell"] = from_ascii([
+        "",
+        "......kkkk......",
+        ".....kSSSSk.....",
+        ".....kGGGGk.....",
+        ".....kGWGGk.....",
+        ".....kGGGGk.....",
+        ".....kgGGgk.....",
+        ".....kGGGGk.....",
+        ".....kGWGGk.....",
+        ".....kGGGGk.....",
+        ".....kgggGk.....",
+        ".....kSSSSk.....",
+        "......kkkk......",
+    ], {"k": hexc("1C1F24"), "S": hexc("9AA4B0"), "G": hexc("39FF14"), "g": hexc("1E9E1E"), "W": hexc("E8FFE0")})
+    t["galvan_scanner"] = from_ascii([
+        "",
+        "...kkkkkkkk.....",
+        "...kSSSSSSk.....",
+        "...kSbbbbSk.....",
+        "...kSbGGbSk.....",
+        "...kSbGWbSk.....",
+        "...kSbbbbSk.....",
+        "...kSSSSSSkk....",
+        "....kSSSSkkGk...",
+        ".....kSSk..kk...",
+        ".....kSSk.......",
+        ".....kSSk.......",
+        "......kk........",
+    ], {"k": hexc("1C1F24"), "S": hexc("8C96A3"), "b": hexc("0B2A12"), "G": hexc("39FF14"), "W": hexc("E8FFE0")})
     return t
 
 

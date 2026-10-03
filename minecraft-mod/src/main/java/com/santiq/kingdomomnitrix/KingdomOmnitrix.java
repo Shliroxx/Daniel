@@ -65,6 +65,9 @@ public class KingdomOmnitrix implements ModInitializer {
 	public void onInitialize() {
 		HeroDataAccess.register();
 		com.santiq.kingdomomnitrix.alien.AlienUniforms.register();
+		com.santiq.kingdomomnitrix.galvan.GreyMatterKnowledge.register();
+		com.santiq.kingdomomnitrix.galvan.GalvanInvention.register();
+		com.santiq.kingdomomnitrix.galvan.GalvanHack.register();
 		ModComponents.register();
 		ModParticles.register();
 		ModSounds.register();

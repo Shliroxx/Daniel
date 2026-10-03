@@ -46,6 +46,8 @@ public final class ModItemGroup {
 										.map(key -> key.getValue())
 										.sorted(Comparator.comparing(Identifier::toString))
 										.forEach(alienId -> entries.add(DnaSampleItem.create(alienId))));
+						entries.add(ModItems.GALVAN_CELL);
+						entries.add(ModItems.GALVAN_SCANNER);
 						entries.add(ModItems.OMNIWRENCH);
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);

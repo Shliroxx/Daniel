@@ -88,6 +88,12 @@ public final class ModItems {
 	public static final Item MYTHRIL_SHARD = register("mythril_shard", new Item(new Item.Settings()));
 	public static final Item ORICHALCUM = register("orichalcum", new Item(new Item.Settings().rarity(Rarity.RARE)));
 
+	// --- Galvan-Erfindungen (Grey Matter, Galvan-Labor) ---
+	public static final Item GALVAN_CELL = register("galvan_cell",
+			new com.santiq.kingdomomnitrix.galvan.GalvanCellItem(new Item.Settings().maxCount(16).rarity(Rarity.RARE)));
+	public static final Item GALVAN_SCANNER = register("galvan_scanner",
+			new com.santiq.kingdomomnitrix.galvan.GalvanScannerItem(new Item.Settings().maxDamage(64).rarity(Rarity.RARE)));
+
 	// --- Geschoss-Darstellung (nicht im Kreativ-Tab) ---
 	public static final Item FIRE_ORB = register("fire_orb", new Item(new Item.Settings()));
 	public static final Item ICE_ORB = register("ice_orb", new Item(new Item.Settings()));

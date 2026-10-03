@@ -1,0 +1,26 @@
+{
+  "result": "kingdomomnitrix:heli_pack",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 6
+    },
+    {
+      "item": "minecraft:feather",
+      "count": 8
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 4
+    },
+    {
+      "item": "kingdomomnitrix:mythril_shard",
+      "count": 4
+    }
+  ],
+  "bolts": 800,
+  "knowledge": 12,
+  "hack_level": 1,
+  "sort_order": 70
+}

@@ -43,13 +43,15 @@ public final class ModKeyBindings {
 	public static final KeyBinding USE_GADGET = register("key.kingdomomnitrix.use_gadget", GLFW.GLFW_KEY_Y);
 	public static final KeyBinding PACK_MODE = register("key.kingdomomnitrix.pack_mode", GLFW.GLFW_KEY_J);
 	public static final KeyBinding HERO_MENU = register("key.kingdomomnitrix.hero_menu", GLFW.GLFW_KEY_K);
+	/** Galvan-Labor: Erfindungen und Omnitrix-Hack (nur als Grey Matter) */
+	public static final KeyBinding GALVAN_LAB = register("key.kingdomomnitrix.galvan_lab", GLFW.GLFW_KEY_L);
 	public static final KeyBinding COMMAND_UP = register("key.kingdomomnitrix.command_up", GLFW.GLFW_KEY_UP);
 	public static final KeyBinding COMMAND_DOWN = register("key.kingdomomnitrix.command_down", GLFW.GLFW_KEY_DOWN);
 	public static final KeyBinding COMMAND_SELECT = register("key.kingdomomnitrix.command_select", GLFW.GLFW_KEY_RIGHT);
 	public static final KeyBinding COMMAND_BACK = register("key.kingdomomnitrix.command_back", GLFW.GLFW_KEY_LEFT);
 
 	private static final KeyBinding[] OWN = {OPEN_OMNITRIX, ABILITIES[0], ABILITIES[1], ABILITIES[2], DODGE, GUARD, LOCK_ON, MAGIC,
-			GADGET_BELT, USE_GADGET, PACK_MODE, HERO_MENU,
+			GADGET_BELT, USE_GADGET, PACK_MODE, HERO_MENU, GALVAN_LAB,
 			COMMAND_UP, COMMAND_DOWN, COMMAND_SELECT, COMMAND_BACK};
 	private static boolean conflictsChecked;
 
@@ -94,6 +96,11 @@ public final class ModKeyBindings {
 		while (SMART_SELECT.wasPressed()) {
 			if (client.currentScreen == null && OmnitrixItem.hasOmnitrix(client.player)) {
 				smartSelect(client);
+			}
+		}
+		while (GALVAN_LAB.wasPressed()) {
+			if (client.currentScreen == null) {
+				com.santiq.kingdomomnitrix.client.screen.GalvanLabScreen.open(client);
 			}
 		}
 		while (HERO_MENU.wasPressed()) {

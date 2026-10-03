@@ -138,16 +138,18 @@ public final class OmnitrixCore {
 		return last ? AlienStatus.SELECTED : AlienStatus.UNLOCKED;
 	}
 
-	/** Faktor auf die Verwandlungsdauer (Profil, Master Control). */
+	/** Faktor auf die Verwandlungsdauer (Profil, Master Control, Grey-Matter-Hack). */
 	public static float durationFactor(PlayerEntity player) {
 		OmnitrixProfile profile = profile(player);
-		return profile.durationMultiplier() * (state(player).masterControl() ? profile.masterControl().durationMultiplier() : 1.0f);
+		return profile.durationMultiplier() * (state(player).masterControl() ? profile.masterControl().durationMultiplier() : 1.0f)
+				* com.santiq.kingdomomnitrix.galvan.GalvanHack.durationFactor(player);
 	}
 
-	/** Faktor auf die Nachladezeit (Profil, Master Control). */
+	/** Faktor auf die Nachladezeit (Profil, Master Control, Grey-Matter-Hack). */
 	public static float cooldownFactor(PlayerEntity player) {
 		OmnitrixProfile profile = profile(player);
-		return profile.cooldownMultiplier() * (state(player).masterControl() ? profile.masterControl().cooldownMultiplier() : 1.0f);
+		return profile.cooldownMultiplier() * (state(player).masterControl() ? profile.masterControl().cooldownMultiplier() : 1.0f)
+				* com.santiq.kingdomomnitrix.galvan.GalvanHack.cooldownFactor(player);
 	}
 
 	/** Energieaufbau-Zeit des Bedien-Ablaufs (Client). */
