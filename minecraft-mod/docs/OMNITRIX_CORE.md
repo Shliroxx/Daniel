@@ -509,7 +509,7 @@ Modulfarbe — im Spiel mit Violett als Bildfolge geprueft.
 - Klaenge nach Gehoer (Testumgebung ohne Audio).
 - Kalibrier-Werkbank: „erst zurueckverwandeln“ im Spiel belegt (§22); „zu weit weg“ nur im Code (laesst sich bei
   offenem Bildschirm ohne zweiten Eingabeweg nicht ausloesen).
-- Noch gruen mit Farbmodul: UI-Symbole (Icons). Omnitrix-Item und Lampen/Tasten/Zifferblatt am Arm: nachgezogen (§20).
+- Farbmodul: UI-Symbole, Omnitrix-Item und Lampen/Tasten/Zifferblatt am Arm nachgezogen (§20, §24).
 - Ueberschwingen/Drehverriegelung des Kerns nur im laufenden Bild beobachtet.
 - Faehigkeits-Posen: nachgezogen (§21).
 
@@ -573,3 +573,15 @@ Raute, Glas und Lichter passen auf das kleinere AE-Zifferblatt.
 Nicht geprueft: schmaler Arm (Slim-Skin) — Geometrie ist importiert, im Spiel nicht angesehen.
 
 ![AE-Omnitrix am Arm: Third-Person, Auswahlmodus, Nahaufnahme](screenshots/omnitrix_ae_model.png)
+
+## 24. Omnitrix-Item im Serien-Look, Symbole im Farbmodul (2026-10-03)
+
+- **Item** (`tools/generate_item_models.py`, `omnitrix()`): neu gestaltet wie das AE-Prototyp-Modell am Arm —
+  weisse Armband-Glieder mit grauen Fugen, schwarzes Gehaeuse, vier weisse Eck-Roehren, graue Fassung, Zifferblatt mit
+  Sanduhr und Eck-Lichtern (Akzent-Schicht im Farbmodul). Ansichten (Hand, Inventar, Boden) unveraendert.
+- **Symbole** (`IconTint`): Faehigkeits-Symbole der Aliens, Kommando „Omnitrix“ und Menue-Reiter „Aliens“ werden im
+  Farbmodul umgefaerbt (gruene Pixel, Helligkeit bleibt); andere Symbole und Klassisch Gruen unveraendert.
+**Im Spiel geprueft (Violett):** HUD-Faehigkeitsfelder, Kommandomenue-Symbol, Item in Hand und Hotbar, Third-Person.
+Nicht geprueft: schmaler Arm (Slim-Skin) — der Testspieler hatte breite Arme.
+
+![Item und Symbole im Farbmodul Violett](screenshots/omnitrix_item_icons.png)

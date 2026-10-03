@@ -214,7 +214,7 @@ public final class BadgeTint {
 	}
 
 	/** Gruen dominiert deutlich (Omnitrix-Gruen von dunkel bis fast weiss). */
-	static boolean isBadgeGreen(int abgr) {
+	public static boolean isBadgeGreen(int abgr) {
 		int r = red(abgr);
 		int g = green(abgr);
 		int b = blue(abgr);
@@ -222,7 +222,7 @@ public final class BadgeTint {
 	}
 
 	/** Helligkeit behalten, Farbton und Saettigung vom Farbmodul. */
-	static int recolor(int abgr, int rgb) {
+	public static int recolor(int abgr, int rgb) {
 		float value = green(abgr) / 255.0f;
 		float whiteness = Math.min(red(abgr), blue(abgr)) / 255.0f;
 		int tr = (rgb >> 16) & 0xFF;

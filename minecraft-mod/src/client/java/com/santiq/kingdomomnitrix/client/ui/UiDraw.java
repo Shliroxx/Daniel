@@ -50,7 +50,8 @@ public final class UiDraw {
 
 	/** Zeichnet ein Symbol aus {@code textures/gui/icon/}; fehlt es, das Ersatzsymbol. */
 	public static void icon(DrawContext context, Identifier texture, Identifier fallback, int x, int y, int size) {
-		Identifier used = exists(texture) ? texture : fallback;
+		// Omnitrix-Symbole folgen dem Farbmodul
+		Identifier used = IconTint.apply(exists(texture) ? texture : fallback);
 		context.drawTexture(used, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
 	}
 
@@ -96,6 +97,7 @@ public final class UiDraw {
 	/** Nach Ressourcen-Neuladen (F3+T) neu pruefen. */
 	public static void clearCache() {
 		EXISTS.clear();
+		IconTint.clear();
 	}
 
 	/** Kuerzt Text mit "…" auf eine Breite. */

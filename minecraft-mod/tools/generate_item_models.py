@@ -323,16 +323,26 @@ def fusion_grenade() -> list[Box]:
 
 
 def omnitrix() -> list[Box]:
+    """Omnitrix der Originalserie (wie das AE-Prototyp-Modell am Arm): weiss-graues Armband, schwarzes Gehaeuse,
+    weisse Eck-Roehren, graue Fassung, Zifferblatt mit Sanduhr und Eck-Lichtern (Zifferblatt zeigt nach +z)."""
     b: list[Box] = []
-    b.append(box((6.0, -0.5, 7.0), (10.0, 4.6, 9.0), "strap"))                   # Armband
-    b.append(box((6.0, 11.4, 7.0), (10.0, 16.5, 9.0), "strap"))
-    b.append(box((4.6, 4.6, 6.4), (11.4, 11.4, 9.6), "dark"))                    # Gehaeuse
-    b.append(box((5.4, 3.8, 6.6), (10.6, 12.2, 9.4), "dark"))
-    b.append(box((3.8, 5.4, 6.6), (12.2, 10.6, 9.4), "dark"))
-    b.append(box((3.4, 7.2, 7.4), (3.8, 8.8, 8.6), "omni_green"))               # Seitentasten
-    b.append(box((12.2, 7.2, 7.4), (12.6, 8.8, 8.6), "omni_green"))
-    b.append(box((5.0, 5.0, 9.6), (11.0, 11.0, 10.2), "omni_face"))              # Zifferblatt vorn
-    b.append(box((5.0, 5.0, 5.8), (11.0, 11.0, 6.4), "omni_face"))               # und hinten
+    b.append(box((6.0, -0.5, 7.0), (10.0, 2.2, 9.0), "white"))                   # Armband: weisse Glieder …
+    b.append(box((6.1, 2.2, 7.1), (9.9, 3.0, 8.9), "steel"))                     # … mit grauen Fugen
+    b.append(box((6.0, 3.0, 7.0), (10.0, 4.6, 9.0), "white"))
+    b.append(box((6.0, 11.4, 7.0), (10.0, 13.0, 9.0), "white"))
+    b.append(box((6.1, 13.0, 7.1), (9.9, 13.8, 8.9), "steel"))
+    b.append(box((6.0, 13.8, 7.0), (10.0, 16.5, 9.0), "white"))
+    b.append(box((4.8, 4.8, 6.4), (11.2, 11.2, 9.4), "dark"))                    # Gehaeuse
+    for x in (4.0, 11.2):                                                         # Eck-Roehren
+        for y in (4.0, 11.2):
+            b.append(box((x, y, 6.8), (x + 0.8, y + 0.8, 9.2), "white"))
+    b.append(box((5.0, 5.0, 9.4), (11.0, 11.0, 9.8), "omni_bezel"))              # Fassung
+    b.append(box((5.6, 5.6, 9.8), (10.4, 10.4, 10.2), "omni_face"))              # Zifferblatt (Sanduhr)
+    for x in (5.1, 10.3):                                                         # Eck-Lichter
+        for y in (5.1, 10.3):
+            b.append(box((x, y, 9.8), (x + 0.6, y + 0.6, 10.0), "omni_light"))
+    b.append(box((3.6, 7.2, 7.4), (4.8, 8.8, 8.6), "steel"))                     # Seitentasten
+    b.append(box((11.2, 7.2, 7.4), (12.4, 8.8, 8.6), "steel"))
     return b
 
 
