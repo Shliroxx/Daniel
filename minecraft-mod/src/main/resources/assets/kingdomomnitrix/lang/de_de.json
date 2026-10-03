@@ -886,5 +886,7 @@
   "message.kingdomomnitrix.jetray_overload": "Neuroschock-Überladung!",
   "message.kingdomomnitrix.cannonbolt_gear": "Schwung-Gang %s",
   "message.kingdomomnitrix.heatblast_heat": "Kernhitze",
-  "message.kingdomomnitrix.heatblast_overheat": "Kern überhitzt — die nächste Fähigkeit entfesselt Blaufeuer!"
+  "message.kingdomomnitrix.heatblast_overheat": "Kern überhitzt — die nächste Fähigkeit entfesselt Blaufeuer!",
+  "message.kingdomomnitrix.xlr8_tempo": "Tempo",
+  "message.kingdomomnitrix.xlr8_sound_barrier": "Schallmauer durchbrochen — nächste Fähigkeit mit voller Wucht!"
 }

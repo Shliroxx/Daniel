@@ -34,9 +34,6 @@ final class BuiltinAbilities {
 	static void register() {
 		// Heatblast
 		// XLR8
-		AbilityRegistry.register(KingdomOmnitrix.id("dash_strike"), BuiltinAbilities::dashStrike);
-		AbilityRegistry.register(KingdomOmnitrix.id("blur_dodge"), BuiltinAbilities::blurDodge);
-		AbilityRegistry.register(KingdomOmnitrix.id("rapid_strikes"), BuiltinAbilities::rapidStrikes);
 		// Vierarm
 		AbilityRegistry.register(KingdomOmnitrix.id("ground_slam"), BuiltinAbilities::groundSlam);
 		AbilityRegistry.register(KingdomOmnitrix.id("throw"), BuiltinAbilities::throwTarget);
@@ -48,60 +45,13 @@ final class BuiltinAbilities {
 		MasteryAbilities.register();
 		CannonboltAbilities.register();
 		HeatblastAbilities.register();
+		Xlr8Abilities.register();
 		JetrayAbilities.register();
 	}
 
 	// Heatblast: HeatblastAbilities (Kernhitze)
 
-	// --- XLR8 ------------------------------------------------------------------------------------
-
-	private static boolean dashStrike(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = horizontalLook(player);
-		double distance = ctx.param("distance", 8.0);
-		float damage = (float) ctx.param("damage", 5.0);
-		double speed = ctx.param("speed", 2.6);
-
-		Box path = player.getBoundingBox().stretch(look.multiply(distance)).expand(0.6);
-		for (LivingEntity target : ctx.world().getEntitiesByClass(LivingEntity.class, path, e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-			target.takeKnockback(0.6, -look.x, -look.z);
-		}
-		launch(player, look.x * speed, 0.1, look.z * speed);
-		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.2, player.getZ(), 16, 0.3, 0.1, 0.3, 0.05);
-		sound(ctx, ModSounds.ALIEN_DASH, 0.9f, 1.1f);
-		return true;
-	}
-
-	private static boolean blurDodge(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = horizontalLook(player);
-		double power = ctx.param("power", 1.6);
-		launch(player, -look.x * power, 0.25, -look.z * power);
-		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 12));
-		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getBodyY(0.5), player.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
-		sound(ctx, ModSounds.ALIEN_DASH, 0.8f, 1.4f);
-		return true;
-	}
-
-	private static boolean rapidStrikes(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = horizontalLook(player);
-		double range = ctx.param("range", 3.0);
-		float damage = (float) ctx.param("damage", 8.0);
-		Box area = player.getBoundingBox().stretch(look.multiply(range)).expand(1.0, 0.5, 1.0);
-		List<LivingEntity> targets = ctx.world().getEntitiesByClass(LivingEntity.class, area, e -> e != player && e.isAlive() && PartyRules.canHarm(player, e));
-		if (targets.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		for (LivingEntity target : targets) {
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-			ctx.world().spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 3, 0.3, 0.3, 0.3, 0.0);
-		}
-		sound(ctx, ModSounds.COMBAT_SWING, 1.0f, 1.5f);
-		return true;
-	}
+	// XLR8: Xlr8Abilities (Tempo)
 
 	// --- Vierarm ---------------------------------------------------------------------------------
 

@@ -5,9 +5,6 @@ import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.util.Targeting;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.LivingEntity;
@@ -64,12 +61,7 @@ final class MasteryAbilities {
 		DustParticleEffect tech = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.0f);
 
 		// --- Heatblast: HeatblastAbilities (Kernhitze)
-		// --- XLR8
-		reg("cyclone_run", ctx -> area(ctx, new Look(ParticleTypes.CLOUD, 60, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.2f, false),
-				new Fx(StatusEffects.SLOWNESS, 1)));
-		reg("time_slip", ctx -> self(ctx, SoundEvents.BLOCK_BEACON_POWER_SELECT, new Fx(StatusEffects.SPEED, 2), new Fx(StatusEffects.JUMP_BOOST, 1))
-				&& area(ctx, new Look(ParticleTypes.END_ROD, 20, SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 1.6f, true), new Fx(StatusEffects.SLOWNESS, 2)));
-		reg("lightspeed_barrage", MasteryAbilities::lightspeedBarrage);
+		// --- XLR8: Xlr8Abilities (Tempo)
 		// --- Vierarm
 		reg("thunder_clap", ctx -> area(ctx, new Look(ParticleTypes.SONIC_BOOM, 1, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.4f, false),
 				new Fx(StatusEffects.SLOWNESS, 3)));
@@ -252,35 +244,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** XLR8: blitzt nacheinander zu bis zu {@code targets} Gegnern im Umkreis, trifft jeden, landet am Startpunkt. */
-	private static boolean lightspeedBarrage(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		ServerWorld world = ctx.world();
-		List<LivingEntity> targets = new ArrayList<>(BuiltinAbilities.livingAround(ctx, ctx.param("radius", 12.0)));
-		if (targets.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		targets.sort(Comparator.comparingDouble(e -> e.squaredDistanceTo(player)));
-		int max = (int) ctx.param("targets", 6.0);
-		float damage = (float) ctx.param("damage", 6.0);
-		Vec3d from = player.getPos().add(0.0, 1.0, 0.0);
-		for (LivingEntity target : targets.subList(0, Math.min(max, targets.size()))) {
-			Vec3d to = target.getPos().add(0.0, target.getHeight() * 0.5, 0.0);
-			for (int i = 1; i <= 8; i++) {
-				Vec3d p = from.lerp(to, i / 8.0);
-				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
-			}
-			target.timeUntilRegen = 0;
-			target.damage(world.getDamageSources().playerAttack(player), damage);
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, to.x, to.y, to.z, 1, 0.0, 0.0, 0.0, 0.0);
-			from = to;
-		}
-		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 20));
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_SHOOT, 1.0f, 1.6f);
-		return true;
-	}
 
 	/** Diamondhead: Kristallsplitter-Ring in alle Richtungen. */
 	private static boolean crystalStorm(AbilityContext ctx) {
