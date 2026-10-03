@@ -867,5 +867,6 @@
   "commands.kingdomomnitrix.dungeon.status": "Geheime Wasserstraße: Abschnitt %s, Ursprung %s %s %s",
   "hud.kingdomomnitrix.blocked": "Block",
   "commands.kingdomomnitrix.town.not_built": "Traverse Town steht noch nicht (zuerst besuchen)",
-  "commands.kingdomomnitrix.town.rebuilt": "Traverse Town bei %s %s %s neu errichtet"
+  "commands.kingdomomnitrix.town.rebuilt": "Traverse Town bei %s %s %s neu errichtet",
+  "commands.kingdomomnitrix.unknown_alien": "Unbekanntes Alien: %s"
 }

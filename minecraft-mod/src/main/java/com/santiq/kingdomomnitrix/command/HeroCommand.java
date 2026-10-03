@@ -72,6 +72,26 @@ public final class HeroCommand {
 	private static final SuggestionProvider<ServerCommandSource> ALIEN_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(AlienRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 
+	private static final com.mojang.brigadier.exceptions.DynamicCommandExceptionType UNKNOWN_ALIEN =
+			new com.mojang.brigadier.exceptions.DynamicCommandExceptionType(id -> Text.translatable("commands.kingdomomnitrix.unknown_alien", id));
+
+	/**
+	 * Alien-Id aus dem Argument {@code alien}. Ohne Namensraum ("xlr8") liest Minecraft {@code minecraft:xlr8} — dann gilt
+	 * der Mod-Namensraum. Unbekannte Aliens werden abgelehnt, statt als ungueltige Freischaltung gespeichert zu werden.
+	 */
+	static Identifier alienId(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+		Identifier raw = IdentifierArgumentType.getIdentifier(ctx, "alien");
+		var registries = ctx.getSource().getRegistryManager();
+		if (AlienRegistry.get(registries, raw).isPresent()) {
+			return raw;
+		}
+		Identifier own = com.santiq.kingdomomnitrix.KingdomOmnitrix.id(raw.getPath());
+		if (raw.getNamespace().equals(Identifier.DEFAULT_NAMESPACE) && AlienRegistry.get(registries, own).isPresent()) {
+			return own;
+		}
+		throw UNKNOWN_ALIEN.create(raw.toString());
+	}
+
 	@FunctionalInterface
 	private interface PlayerAction {
 		int run(CommandContext<ServerCommandSource> context, ServerPlayerEntity target) throws CommandSyntaxException;
@@ -120,18 +140,20 @@ public final class HeroCommand {
 				.then(CommandManager.literal("alien")
 						.then(CommandManager.literal("unlock")
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
-										(ctx, target) -> change(ctx, target,
-												data -> data.unlockAlien(IdentifierArgumentType.getIdentifier(ctx, "alien")),
-												"commands.kingdomomnitrix.alien"))))
+										(ctx, target) -> {
+											Identifier alien = alienId(ctx);
+											return change(ctx, target, data -> data.unlockAlien(alien), "commands.kingdomomnitrix.alien");
+										})))
 						.then(CommandManager.literal("lock")
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
-										(ctx, target) -> change(ctx, target,
-												data -> data.lockAlien(IdentifierArgumentType.getIdentifier(ctx, "alien")),
-												"commands.kingdomomnitrix.alien")))))
+										(ctx, target) -> {
+											Identifier alien = alienId(ctx);
+											return change(ctx, target, data -> data.lockAlien(alien), "commands.kingdomomnitrix.alien");
+										}))))
 				.then(CommandManager.literal("transform")
 						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 								(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
-										IdentifierArgumentType.getIdentifier(ctx, "alien"), true)))))
+										alienId(ctx), true)))))
 				.then(targeted(CommandManager.literal("revert"),
 						(ctx, target) -> transformResult(ctx, target, TransformationManager.revert(target, false))))
 				.then(CommandManager.literal("omnitrix")
@@ -139,7 +161,7 @@ public final class HeroCommand {
 						.then(CommandManager.literal("use")
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 										(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
-												IdentifierArgumentType.getIdentifier(ctx, "alien"), false)))))
+												alienId(ctx), false)))))
 						// Code am Omnitrix eingeben (wie die Tastatur)
 						.then(CommandManager.literal("code")
 								.then(targeted(CommandManager.argument("code", com.mojang.brigadier.arguments.StringArgumentType.word()), (ctx, target) -> {
@@ -186,7 +208,7 @@ public final class HeroCommand {
 										}))))
 				.then(CommandManager.literal("dna")
 						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
-								(ctx, target) -> giveDna(ctx, target, IdentifierArgumentType.getIdentifier(ctx, "alien")))))
+								(ctx, target) -> giveDna(ctx, target, alienId(ctx)))))
 				.then(CommandManager.literal("spell")
 						.then(CommandManager.argument("spell", IdentifierArgumentType.identifier()).suggests(SPELL_SUGGESTIONS)
 								.then(targeted(CommandManager.argument("level", IntegerArgumentType.integer(1, 10)),
@@ -302,12 +324,8 @@ public final class HeroCommand {
 						.then(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS)
 								.then(targeted(CommandManager.argument("level", IntegerArgumentType.integer(1, AlienMastery.MAX_LEVEL)),
 										(ctx, target) -> {
-											Identifier alien = IdentifierArgumentType.getIdentifier(ctx, "alien");
+											Identifier alien = alienId(ctx);
 											int level = IntegerArgumentType.getInteger(ctx, "level");
-											if (AlienRegistry.get(ctx.getSource().getRegistryManager(), alien).isEmpty()) {
-												ctx.getSource().sendError(Text.literal("Unbekanntes Alien: " + alien));
-												return 0;
-											}
 											AlienMasteryManager.setLevel(target, alien, level);
 											ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mastery",
 													TransformationManager.alienName(alien), level, target.getDisplayName()), true);
