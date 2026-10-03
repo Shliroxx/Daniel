@@ -61,7 +61,7 @@ class Spec:
     number: str          # AE-Nummer (alien_N)
     species: str         # AE-Dateiname
     layer: str           # Render-Layer-Datei
-    scale: float         # Groesse im Spiel (AE-Pehkui-Groesse)
+    scale: float         # sichtbare Groesse wie in AE (Pehkui „size_change“); Darstellung = scale / Spielergroesse (render_scale)
     style: str           # Animations-Charakter
     accent: str
     extra: str | None = None   # zweites Modell (Vierarm: unteres Armpaar)
@@ -105,17 +105,17 @@ ALIENS = {
     "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6,
                         script="petrosapien", poses=("diamond/spikes",)),
     "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6),
-    # Groessen aus den AE-Pehkui-Befehlen (Augenhoehe/Hitbox): Wildmutt geduckt 0,8, Upgrade 1,2, Ripjaws/Ghostfreak 1,1
-    "wildmutt": Spec("2", "vulpimancer", "vulpimancer.json", 0.85, "fast", "#E8892B", script="vulpimancer"),
+    # Groessen = AE „size_change“ (sichtbare Modellgroesse); Augenhoehe/Hitbox regelt das Datenpaket (scale)
+    "wildmutt": Spec("2", "vulpimancer", "vulpimancer.json", 1.0, "fast", "#E8892B", script="vulpimancer"),
     # Augen/Schwanz-Leerlauf und Fluegelschlag laufen dauernd (Stinkfly schwebt)
     "stinkfly": Spec("7", "lepidopterran", "lepidopterran.json", 1.0, "small", "#8DB33A", script="lepidopterran",
                      parts=("lepidopterran_legs", "lepidopterran_wings"),
                      loops=("stinkfly.animation.json:animation.stinkfly.idle", "stinkfly.animation.json:animation.stinkfly.flight")),
     # Landform (Beine): #TIMER 0 — die Schwanzform im Wasser blendet AE per Maske um
-    "ripjaws": Spec("8", "piscciss_volann", "piscciss_volann.json", 1.1, "heavy", "#7FA9B5", script="piscciss_volann",
+    "ripjaws": Spec("8", "piscciss_volann", "piscciss_volann.json", 1.17, "heavy", "#7FA9B5", script="piscciss_volann",
                     variables=(("TIMER", "0"),), loops=("ripjaws.animation.json:animation.ripjaws.swim_slow",)),
     # Fluessig-Pfuetze und Kampf-Keulen zeigt AE nur bei Faehigkeiten
-    "upgrade": Spec("9", "galvanic_mechamorph", "galvanic_mechamorph.json", 1.2, "heavy", "#39FF14",
+    "upgrade": Spec("9", "galvanic_mechamorph", "galvanic_mechamorph.json", 1.4, "heavy", "#39FF14",
                     script="galvanic_mechamorph", drop=r"liquid|mace|spikes_"),
     # ein Modell; Ebenen „prototype“ (classic) und „recal“ (evo/ultimate, Alien-Force-Look); Fluegel/Umhang aus flight_on
     "jetray": Spec("34", "aerophibian", "aerophibian.json", 1.0, "fast", "#E72D2D",
@@ -134,12 +134,11 @@ ALIENS = {
                       loops=("bigchill.animation.json:animation.BigChill.Flight@^w",),
                       flight_pose="bigchill.animation.json:animation.BigChill.cloak_off",
                       glow="assets/afomni/textures/models/necrofriggian/necrofriggian_glow.png"),
-    # Humungosaur: Panzerplatten eingefahren (AE armor_off), Schwanz pendelt. GeckoLib multipliziert die Darstellung
-    # mit der Spielergroesse (Datenpaket scale 1,9): 1,47 x 1,9 = 2,8 = AE-Groesse; Wachstumsstufen kommen obendrauf
-    "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 1.47, "heavy", "#C68A4E", pack="afomni",
+    # Humungosaur: Panzerplatten eingefahren (AE armor_off), Schwanz pendelt; AE-Groesse 2,8, Wachstumsstufen obendrauf
+    "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 2.8, "heavy", "#C68A4E", pack="afomni",
                          rest=("model.humongousaur.anim.json:animation.humungousaur.armor_off",),
                          loops=("model.humongousaur.anim.json:animation.humungousaur.tail",)),
-    "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.1, "small", "#C9C3D6", script="ectonurite",
+    "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.3, "small", "#C9C3D6", script="ectonurite",
                        variables=(("X", "0"),),
                        loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye")),
 }
@@ -670,7 +669,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
     files[ASSETS / "alien_render" / f"{name}.json"] = {
-        "scale": spec.scale, "uniforms": list(UNIFORMS), "uniform_models": True,
+        "scale": render_scale(name, spec), "uniforms": list(UNIFORMS), "uniform_models": True,
         # Hauptknochen folgen der Spielerpose (wie AE); Schwung-Faktoren aus den AE-Animationsskripten
         "vanilla_pose": True, "arm_swing": spec.arm_swing, "leg_swing": spec.leg_swing,
         # Faehigkeits-Posen je Slot (aus dem AE-Skript, siehe parse_poses); null = nur Spielerpose
@@ -982,6 +981,17 @@ def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
     return dict(sorted(pose.items()))
 
 
+DATA = ASSETS.parent.parent / "data" / "kingdomomnitrix" / "kingdomomnitrix" / "alien"
+
+
+def render_scale(name: str, spec: Spec) -> float:
+    """GeckoLib multipliziert die Darstellung mit der Spielergroesse (Scale-Attribut, Datenpaket „scale“). Damit das
+    Alien so gross aussieht wie in AE, ist die Darstellung AE-Groesse / Spielergroesse."""
+    path = DATA / f"{name}.json"
+    data_scale = json.loads(path.read_text(encoding="utf-8")).get("scale", 1.0) if path.is_file() else 1.0
+    return round(spec.scale / data_scale, 3)
+
+
 def expected_files() -> list[Path]:
     paths = []
     for name in ALIENS:
@@ -1008,6 +1018,15 @@ def main(argv: list[str] | None = None) -> int:
         missing = [p for p in expected_files() if not p.is_file()]
         for p in missing:
             LOG.error("fehlt: %s", p)
+        # Darstellungsgroesse muss zur Spielergroesse im Datenpaket passen (sonst stimmt die AE-Groesse nicht mehr)
+        for name, spec in ALIENS.items():
+            render = ASSETS / "alien_render" / f"{name}.json"
+            if render.is_file():
+                have = json.loads(render.read_text(encoding="utf-8")).get("scale")
+                if have != render_scale(name, spec):
+                    LOG.error("%s: Darstellung %s, erwartet %s (AE %s / Spielergroesse) — Import neu ausfuehren",
+                              name, have, render_scale(name, spec), spec.scale)
+                    missing.append(render)
         LOG.info("%d/%d importierte Dateien vorhanden", len(expected_files()) - len(missing), len(expected_files()))
         return 1 if missing else 0
     if not args.jar or not args.jar.is_file():
