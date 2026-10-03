@@ -865,5 +865,7 @@
   "commands.kingdomomnitrix.dungeon.missing": "The Secret Waterway is not built yet (visit Traverse Town first)",
   "commands.kingdomomnitrix.dungeon.reset": "Secret Waterway reset",
   "commands.kingdomomnitrix.dungeon.status": "Secret Waterway: stage %s, origin %s %s %s",
-  "hud.kingdomomnitrix.blocked": "Block"
+  "hud.kingdomomnitrix.blocked": "Block",
+  "commands.kingdomomnitrix.town.not_built": "Traverse Town has not been built yet (visit it first)",
+  "commands.kingdomomnitrix.town.rebuilt": "Traverse Town rebuilt at %s %s %s"
 }

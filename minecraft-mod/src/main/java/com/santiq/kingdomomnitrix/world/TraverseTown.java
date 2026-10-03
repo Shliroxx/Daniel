@@ -48,9 +48,18 @@ public final class TraverseTown {
 			Blocks.ORANGE_TERRACOTTA.getDefaultState(), Blocks.YELLOW_TERRACOTTA.getDefaultState(),
 			Blocks.LIGHT_BLUE_TERRACOTTA.getDefaultState(), Blocks.WHITE_TERRACOTTA.getDefaultState(),
 			Blocks.RED_TERRACOTTA.getDefaultState(), Blocks.BRICKS.getDefaultState()};
-	private static final BlockState[] ROOFS = {
-			Blocks.BLUE_TERRACOTTA.getDefaultState(), Blocks.RED_NETHER_BRICKS.getDefaultState(),
-			Blocks.DEEPSLATE_TILES.getDefaultState(), Blocks.PURPLE_TERRACOTTA.getDefaultState()};
+	/** Dachsets (Treppe fuer die Schraegen, Vollblock fuer First und Giebel), Farben wie in KH: blau, rot, violett, schiefer. */
+	private record Roof(Block stairs, Block block) {
+	}
+
+	private static final Roof[] ROOFS = {
+			new Roof(Blocks.DARK_PRISMARINE_STAIRS, Blocks.DARK_PRISMARINE),
+			new Roof(Blocks.RED_NETHER_BRICK_STAIRS, Blocks.RED_NETHER_BRICKS),
+			new Roof(Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DEEPSLATE_TILES),
+			new Roof(Blocks.PURPUR_STAIRS, Blocks.PURPUR_BLOCK),
+			new Roof(Blocks.WARPED_STAIRS, Blocks.WARPED_PLANKS)};
+	private static final Block[] FLOWERS = {Blocks.POTTED_RED_TULIP, Blocks.POTTED_POPPY, Blocks.POTTED_BLUE_ORCHID,
+			Blocks.POTTED_ORANGE_TULIP, Blocks.POTTED_ALLIUM, Blocks.POTTED_CORNFLOWER};
 
 	private TraverseTown() {
 	}
@@ -119,6 +128,27 @@ public final class TraverseTown {
 		state.markDirty();
 		com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.ensure(world, center);
 		KingdomOmnitrix.LOGGER.info("Traverse Town bei {} errichtet ({} ms)", center, System.currentTimeMillis() - started);
+		return center;
+	}
+
+	/**
+	 * Baut die Stadt am gespeicherten Ort neu (gleicher Zufall wie beim ersten Bau). Ueberschreibt alles im
+	 * Stadtgebiet, auch Spielerbauten; Stadt-NPCs und Uhren-Rahmen werden vorher entfernt, damit nichts doppelt ist.
+	 * Gibt die Mitte zurueck oder null, wenn die Stadt noch nie gebaut wurde.
+	 */
+	public static BlockPos rebuild(ServerWorld world) {
+		BlockPos center = center(world);
+		if (center == null) {
+			return null;
+		}
+		loadArea(world, center);
+		net.minecraft.util.math.Box area = new net.minecraft.util.math.Box(center).expand(RADIUS + 2, 40, RADIUS + 2);
+		for (net.minecraft.entity.Entity entity : world.getOtherEntities(null, area, e -> e instanceof com.santiq.kingdomomnitrix.npc.NpcEntity
+				|| e instanceof net.minecraft.entity.decoration.ItemFrameEntity)) {
+			entity.discard();
+		}
+		build(world, center, Random.create(world.getSeed() ^ center.asLong()));
+		KingdomOmnitrix.LOGGER.info("Traverse Town bei {} neu errichtet", center);
 		return center;
 	}
 
@@ -253,9 +283,101 @@ public final class TraverseTown {
 		set(world, cx, y0 + 3, cz, Blocks.SEA_LANTERN.getDefaultState());
 		for (int sx : new int[]{-PLAZA + 1, PLAZA - 1}) {
 			for (int sz : new int[]{-PLAZA + 1, PLAZA - 1}) {
+				if (sx < 0 && sz < 0) {
+					continue; // Ecke des Uhrturms
+				}
 				lamp(world, cx + sx, y0, cz + sz, 3);
 			}
 		}
+		buildClockTower(world, cx - PLAZA + 3, cz - PLAZA + 3, y0);
+	}
+
+	/**
+	 * Uhrturm wie am Gizmo-Laden (KH): Steinsockel, Fachwerk-Schaft mit Fenstern, Ziffernblaetter (echte Uhren in
+	 * Rahmen) auf allen vier Seiten, Glockenstube mit Glocke unter einem spitzen Dach. Grundflaeche 5×5 um (x, z).
+	 */
+	private static void buildClockTower(ServerWorld world, int x, int z, int y0) {
+		int top = y0 + 14;
+		for (int dx = -2; dx <= 2; dx++) {
+			for (int dz = -2; dz <= 2; dz++) {
+				boolean edge = Math.abs(dx) == 2 || Math.abs(dz) == 2;
+				boolean corner = Math.abs(dx) == 2 && Math.abs(dz) == 2;
+				set(world, x + dx, y0 - 1, z + dz, Blocks.STONE_BRICKS.getDefaultState());
+				for (int y = y0; y <= top; y++) {
+					BlockState state;
+					if (!edge) {
+						state = y == y0 + 5 || y == y0 + 10 ? Blocks.SPRUCE_PLANKS.getDefaultState() : Blocks.AIR.getDefaultState();
+					} else if (corner) {
+						state = y < y0 + 3 ? Blocks.STONE_BRICKS.getDefaultState() : Blocks.DARK_OAK_LOG.getDefaultState();
+					} else if (y < y0 + 3) {
+						state = Blocks.STONE_BRICKS.getDefaultState();
+					} else if (y == y0 + 5 || y == y0 + 10) {
+						state = Blocks.DARK_OAK_PLANKS.getDefaultState();
+					} else if ((y == y0 + 7 || y == y0 + 8) && (dx == 0 || dz == 0)) {
+						state = Blocks.GLASS_PANE.getDefaultState();
+					} else {
+						state = Blocks.YELLOW_TERRACOTTA.getDefaultState();
+					}
+					set(world, x + dx, y, z + dz, state);
+				}
+			}
+		}
+		// Eingang zum Platz (Osten und Sueden)
+		for (Direction door : new Direction[]{Direction.EAST, Direction.SOUTH}) {
+			int dx = door.getOffsetX() * 2;
+			int dz = door.getOffsetZ() * 2;
+			set(world, x + dx, y0, z + dz, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, door).with(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+			set(world, x + dx, y0 + 1, z + dz, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, door).with(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+		}
+		// Ziffernblaetter: Rahmen mit Uhr auf der Mitte jeder Seite, hell umrandet
+		for (Direction face : Direction.Type.HORIZONTAL) {
+			int fx = x + face.getOffsetX() * 2;
+			int fz = z + face.getOffsetZ() * 2;
+			Direction across = face.rotateYClockwise();
+			for (int a = -1; a <= 1; a++) {
+				for (int y = top - 3; y <= top - 1; y++) {
+					boolean center = a == 0 && y == top - 2;
+					set(world, fx + across.getOffsetX() * a, y, fz + across.getOffsetZ() * a,
+							center ? Blocks.SMOOTH_QUARTZ.getDefaultState() : Blocks.WHITE_CONCRETE.getDefaultState());
+				}
+			}
+			BlockPos framePos = new BlockPos(fx + face.getOffsetX(), top - 2, fz + face.getOffsetZ());
+			net.minecraft.entity.decoration.GlowItemFrameEntity frame = new net.minecraft.entity.decoration.GlowItemFrameEntity(world, framePos, face);
+			frame.setHeldItemStack(new net.minecraft.item.ItemStack(net.minecraft.item.Items.CLOCK), false);
+			frame.setInvulnerable(true);
+			frame.addCommandTag(ALLOWED_TAG);
+			world.spawnEntity(frame);
+		}
+		// Glockenstube: offene Saeulen, Glocke, Dachpyramide
+		for (int dx = -2; dx <= 2; dx++) {
+			for (int dz = -2; dz <= 2; dz++) {
+				boolean corner = Math.abs(dx) == 2 && Math.abs(dz) == 2;
+				set(world, x + dx, top + 1, z + dz, Blocks.DARK_OAK_PLANKS.getDefaultState());
+				for (int y = top + 2; y <= top + 4; y++) {
+					set(world, x + dx, y, z + dz, corner ? Blocks.DARK_OAK_LOG.getDefaultState() : Blocks.AIR.getDefaultState());
+				}
+			}
+		}
+		set(world, x, top + 4, z, Blocks.DARK_OAK_PLANKS.getDefaultState());
+		set(world, x, top + 3, z, Blocks.BELL.getDefaultState().with(net.minecraft.block.BellBlock.ATTACHMENT,
+				net.minecraft.block.enums.Attachment.CEILING));
+		for (int layer = 0; layer <= 3; layer++) {
+			int r = 3 - layer;
+			for (int dx = -r; dx <= r; dx++) {
+				for (int dz = -r; dz <= r; dz++) {
+					if (Math.max(Math.abs(dx), Math.abs(dz)) != r && r > 0) {
+						continue;
+					}
+					Direction slope = Math.abs(dx) >= Math.abs(dz) ? (dx < 0 ? Direction.EAST : Direction.WEST)
+							: (dz < 0 ? Direction.SOUTH : Direction.NORTH);
+					BlockState state = r == 0 ? Blocks.DARK_PRISMARINE.getDefaultState()
+							: Blocks.DARK_PRISMARINE_STAIRS.getDefaultState().with(net.minecraft.block.StairsBlock.FACING, slope);
+					set(world, x + dx, top + 5 + layer, z + dz, state);
+				}
+			}
+		}
+		set(world, x, top + 9, z, Blocks.LIGHTNING_ROD.getDefaultState());
+		lamp(world, x + 3, y0, z + 3, 3);
 	}
 
 	private static void buildStreet(ServerWorld world, int cx, int cz, int y0, Direction direction) {
@@ -365,8 +487,11 @@ public final class TraverseTown {
 
 		void build(Random random) {
 			BlockState wall = WALLS[random.nextInt(WALLS.length)];
-			BlockState roof = ROOFS[random.nextInt(ROOFS.length)];
+			Roof roof = ROOFS[random.nextInt(ROOFS.length)];
 			BlockState frame = Blocks.DARK_OAK_LOG.getDefaultState();
+			BlockState beam = Blocks.STRIPPED_DARK_OAK_LOG.getDefaultState().with(net.minecraft.block.PillarBlock.AXIS,
+					street.getAxis());
+			int beamLevel = 3;
 			for (int u = 0; u < width; u++) {
 				for (int v = 0; v < depth; v++) {
 					put(u, v, y0 - 1, Blocks.SPRUCE_PLANKS.getDefaultState());
@@ -374,31 +499,46 @@ public final class TraverseTown {
 					boolean edgeV = v == 0 || v == depth - 1;
 					for (int y = y0; y < y0 + height; y++) {
 						if (!edgeU && !edgeV) {
+							put(u, v, y, y == y0 + beamLevel ? Blocks.SPRUCE_PLANKS.getDefaultState() : Blocks.AIR.getDefaultState());
 							continue;
 						}
-						BlockState state = edgeU && edgeV ? frame : wall;
 						int level = y - y0;
+						BlockState state = edgeU && edgeV ? frame
+								: level == 0 ? Blocks.STONE_BRICKS.getDefaultState()              // Sockel
+								: level == beamLevel && edgeV ? beam                             // Fachwerk-Balken zwischen den Stockwerken
+								: wall;
 						boolean window = !(edgeU && edgeV) && (level == 2 || level == height - 2 && height > 5)
 								&& ((edgeV ? u : v) % 2 == 1);
-						put(u, v, y, window ? Blocks.GLASS.getDefaultState() : state);
+						put(u, v, y, window ? Blocks.GLASS_PANE.getDefaultState() : state);
 					}
 					put(u, v, y0 + height, Blocks.SPRUCE_PLANKS.getDefaultState());
 				}
 			}
-			// Stufendach
-			for (int layer = 0; ; layer++) {
-				int u0 = layer - 1;
-				int u1 = width - layer;
-				int v0 = layer - 1;
-				int v1 = depth - layer;
-				if (u1 - u0 < 1 || v1 - v0 < 1) {
-					break;
+			gableRoof(roof);
+			// Blumenkaesten unter den Erdgeschossfenstern zur Strasse
+			BlockState box = Blocks.SPRUCE_SLAB.getDefaultState().with(net.minecraft.block.SlabBlock.TYPE, net.minecraft.block.enums.SlabType.TOP);
+			for (int u = 1; u < width - 1; u += 2) {
+				if (Math.abs(u - width / 2) <= 1) {
+					continue; // Tuer und Laterne
 				}
-				for (int u = u0; u <= u1; u++) {
-					for (int v = v0; v <= v1; v++) {
-						put(u, v, y0 + height + 1 + layer, roof);
-					}
+				put(u, -1, y0 + 1, box);
+				put(u, -1, y0 + 2, FLOWERS[random.nextInt(FLOWERS.length)].getDefaultState());
+			}
+			// Balkon im Obergeschoss (nur hohe Wohnhaeuser): Bodenplatte und Gelaender
+			if (role == Role.HOME && height >= 6 && random.nextBoolean()) {
+				int level = height - 2;
+				for (int u = 1; u < width - 1; u++) {
+					put(u, -1, y0 + level - 1, box);
+					put(u, -1, y0 + level, Blocks.SPRUCE_FENCE.getDefaultState());
 				}
+			}
+			// Schornstein mit Rauch
+			if (random.nextInt(5) < 3) {
+				int ridge = y0 + height + 1 + (depth + 1) / 2;
+				for (int y = y0 + height; y <= ridge + 1; y++) {
+					put(width - 2, depth - 2, y, Blocks.BRICKS.getDefaultState());
+				}
+				put(width - 2, depth - 2, ridge + 2, Blocks.CAMPFIRE.getDefaultState().with(net.minecraft.block.CampfireBlock.SIGNAL_FIRE, false));
 			}
 			// Tuer zur Strasse
 			int doorU = width / 2;
@@ -406,6 +546,24 @@ public final class TraverseTown {
 			put(doorU, 0, y0, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing).with(DoorBlock.HALF, DoubleBlockHalf.LOWER));
 			put(doorU, 0, y0 + 1, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing).with(DoorBlock.HALF, DoubleBlockHalf.UPPER));
 			put(doorU, -1, y0 - 1, Blocks.POLISHED_ANDESITE.getDefaultState());
+			if (role == Role.HOME) {
+				// Laterne neben der Tuer an einem kurzen Ausleger
+				put(doorU + 1, -1, y0 + 2, Blocks.SPRUCE_FENCE.getDefaultState());
+				put(doorU + 1, -1, y0 + 1, Blocks.LANTERN.getDefaultState().with(LanternBlock.HANGING, true));
+			} else {
+				// gestreifte Markise ueber dem Ladeneingang (Wolle an der Wand, Teppich als Vorderkante)
+				boolean shop = role == Role.WEAPON_SHOP;
+				Block[] wool = shop ? new Block[]{Blocks.RED_WOOL, Blocks.WHITE_WOOL} : new Block[]{Blocks.ORANGE_WOOL, Blocks.BLACK_WOOL};
+				Block[] carpet = shop ? new Block[]{Blocks.RED_CARPET, Blocks.WHITE_CARPET} : new Block[]{Blocks.ORANGE_CARPET, Blocks.BLACK_CARPET};
+				for (int u = doorU - 2; u <= doorU + 2; u++) {
+					int stripe = Math.floorMod(u - doorU, 2);
+					put(u, -1, y0 + 2, wool[stripe].getDefaultState());
+					put(u, -2, y0 + 2, Blocks.SPRUCE_SLAB.getDefaultState());
+					put(u, -2, y0 + 3, carpet[stripe].getDefaultState());
+				}
+				put(doorU - 3, -1, y0 + 1, Blocks.LANTERN.getDefaultState());
+				put(doorU + 3, -1, y0 + 1, Blocks.LANTERN.getDefaultState());
+			}
 			// Einrichtung
 			put(1, depth - 2, y0, Blocks.LANTERN.getDefaultState());
 			put(width - 2, 1, y0, Blocks.LANTERN.getDefaultState());
@@ -424,6 +582,36 @@ public final class TraverseTown {
 				default -> {
 					put(width - 2, depth - 2, y0, Blocks.BARREL.getDefaultState());
 					put(1, 1, y0, Blocks.CRAFTING_TABLE.getDefaultState());
+				}
+			}
+		}
+
+		/**
+		 * Satteldach aus Treppen: First parallel zur Strasse, Schraegen zur Strasse und nach hinten, je ein Block
+		 * Ueberstand, Giebel an den Schmalseiten in Wandfarbe aufgemauert.
+		 */
+		private void gableRoof(Roof roof) {
+			Direction up = towardStreet().getOpposite(); // +v: Treppe steigt vom Strassenrand zur Mitte
+			int base = y0 + height + 1;
+			for (int layer = 0; ; layer++) {
+				int vFront = layer - 1;
+				int vBack = depth - layer;
+				int y = base + layer;
+				if (vFront > vBack) {
+					break;
+				}
+				for (int u = -1; u <= width; u++) {
+					if (vFront == vBack) {
+						put(u, vFront, y, roof.block().getDefaultState());
+					} else {
+						put(u, vFront, y, roof.stairs().getDefaultState().with(net.minecraft.block.StairsBlock.FACING, up));
+						put(u, vBack, y, roof.stairs().getDefaultState().with(net.minecraft.block.StairsBlock.FACING, up.getOpposite()));
+					}
+				}
+				for (int v = vFront + 1; v < vBack; v++) {
+					for (int u : new int[]{0, width - 1}) {
+						put(u, v, y, Blocks.DARK_OAK_PLANKS.getDefaultState());
+					}
 				}
 			}
 		}

@@ -865,5 +865,7 @@
   "commands.kingdomomnitrix.dungeon.missing": "Die Geheime Wasserstraße ist noch nicht gebaut (erst Traverse Town besuchen)",
   "commands.kingdomomnitrix.dungeon.reset": "Geheime Wasserstraße zurückgesetzt",
   "commands.kingdomomnitrix.dungeon.status": "Geheime Wasserstraße: Abschnitt %s, Ursprung %s %s %s",
-  "hud.kingdomomnitrix.blocked": "Block"
+  "hud.kingdomomnitrix.blocked": "Block",
+  "commands.kingdomomnitrix.town.not_built": "Traverse Town steht noch nicht (zuerst besuchen)",
+  "commands.kingdomomnitrix.town.rebuilt": "Traverse Town bei %s %s %s neu errichtet"
 }

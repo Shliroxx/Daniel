@@ -252,7 +252,18 @@ public final class HeroCommand {
 							BlockPos center = TraverseTown.ensure(town);
 							target.teleport(town, center.getX() + 0.5, center.getY(), center.getZ() + 3.5, 180.0f, 0.0f);
 							return 1;
-						})))
+						}).then(CommandManager.literal("rebuild").executes(ctx -> {
+							// Neubau nach einem Update der Stadt: ueberschreibt das Stadtgebiet (auch Spielerbauten)
+							ServerWorld town = ctx.getSource().getServer().getWorld(TraverseTown.WORLD);
+							BlockPos center = town != null ? TraverseTown.rebuild(town) : null;
+							if (center == null) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.town.not_built"));
+								return 0;
+							}
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.town.rebuilt",
+									center.getX(), center.getY(), center.getZ()), true);
+							return 1;
+						}))))
 				.then(CommandManager.literal("npc")
 						.then(CommandManager.literal("spawn")
 								.then(CommandManager.argument("npc", IdentifierArgumentType.identifier()).suggests(NPC_SUGGESTIONS)

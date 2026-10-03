@@ -238,6 +238,7 @@ Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befeh
 | `/hero quest list [spieler]` | zeigt alle Quests mit Status |
 | `/hero npc spawn <npc>` | stellt einen NPC an deiner Position auf |
 | `/hero world traverse_town [spieler]` | teleportiert nach Traverse Town (baut die Stadt beim ersten Mal) |
+| `/hero world traverse_town rebuild` | baut die Stadt nach einem Update neu (überschreibt das Stadtgebiet samt Spielerbauten) |
 
 ## Installieren
 

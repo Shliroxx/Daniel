@@ -345,7 +345,9 @@ Reihenfolge = Abarbeitungsreihenfolge.
 12. [x] **HUD-Rework** — Schadenszahlen über dem Ziel (weiß, schwer = gold, Feuer = orange, Magie = violett, Block,
    Todesstoß = rot) und Treffer-Markierung am Fadenkreuz (Todesstoß = rotes X); abschaltbar in
    `config/kingdomomnitrix-combat.json` (`damageNumbers`, `hitMarker`, `numberScale`).
-13. [ ] **World-Rework** — Traverse Town (NBT-Strukturen), Arena, Weltraum.
+13. [~] **World-Rework** — Traverse Town: Satteldächer aus Treppen (KH-Farben), Fachwerk, Steinsockel, Blumenkästen,
+   Türlaternen, Balkone, rauchende Schornsteine, gestreifte Ladenmarkisen, Uhrturm (Gizmo-Laden) mit echten Uhren und
+   Glocke; Neubau per `/hero world traverse_town rebuild`. Weiter im Code gebaut statt NBT-Strukturen. Offen: Arena, Weltraum.
 
 ## BUGS
 - BEHOBEN: Leere Leuchtmaske ließ GeckoLib abstürzen → Generator schreibt Masken nur mit Pixeln.
