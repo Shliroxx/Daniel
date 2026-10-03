@@ -3,14 +3,14 @@
   "minecraft:geometry": [
     {
       "description": {
-        "identifier": "geometry.kingdomomnitrix.large_body",
+        "identifier": "geometry.kingdomomnitrix.heartless_large_body",
         "texture_width": 128,
-        "texture_height": 64,
+        "texture_height": 128,
         "visible_bounds_width": 3,
         "visible_bounds_height": 3.5,
         "visible_bounds_offset": [
           0,
-          1.5,
+          1.25,
           0
         ]
       },
@@ -36,16 +36,64 @@
               "origin": [
                 -10,
                 6,
-                -8
+                -9
               ],
               "size": [
                 20,
                 22,
-                16
+                17
               ],
               "uv": [
                 0,
                 0
+              ]
+            },
+            {
+              "origin": [
+                -11,
+                9,
+                -7
+              ],
+              "size": [
+                22,
+                16,
+                14
+              ],
+              "uv": [
+                0,
+                39
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                28,
+                -6
+              ],
+              "size": [
+                16,
+                2,
+                12
+              ],
+              "uv": [
+                0,
+                69
+              ]
+            },
+            {
+              "origin": [
+                -8,
+                5,
+                -7
+              ],
+              "size": [
+                16,
+                1,
+                13
+              ],
+              "uv": [
+                56,
+                69
               ]
             }
           ]
@@ -54,25 +102,25 @@
           "name": "head",
           "pivot": [
             0,
-            28,
+            30,
             0
           ],
           "parent": "body",
           "cubes": [
             {
               "origin": [
-                -4,
-                28,
-                -4
+                -3.5,
+                30,
+                -4.5
               ],
               "size": [
-                8,
                 7,
-                8
+                5.5,
+                7
               ],
               "uv": [
-                72,
-                0
+                0,
+                83
               ]
             }
           ]
@@ -85,48 +133,90 @@
             0
           ],
           "parent": "head",
+          "rotation": [
+            -10,
+            0,
+            0
+          ],
           "cubes": [
             {
               "origin": [
-                -4.5,
+                -5.5,
                 35,
-                -4.5
+                -6
+              ],
+              "size": [
+                11,
+                1,
+                11
+              ],
+              "uv": [
+                28,
+                83
+              ]
+            },
+            {
+              "origin": [
+                -4.5,
+                36,
+                -5
               ],
               "size": [
                 9,
-                5,
+                3,
                 9
               ],
               "uv": [
                 72,
-                16
+                83
               ]
-            }
-          ]
-        },
-        {
-          "name": "right_arm",
-          "pivot": [
-            -10,
-            24,
-            0
-          ],
-          "parent": "body",
-          "cubes": [
+            },
             {
               "origin": [
-                -14,
-                12,
-                -2.5
+                -2.5,
+                39,
+                -3
               ],
               "size": [
-                4,
-                13,
+                5,
+                2,
                 5
               ],
               "uv": [
-                104,
-                0
+                30,
+                106.5
+              ]
+            },
+            {
+              "origin": [
+                -1,
+                41,
+                -1.5
+              ],
+              "size": [
+                2,
+                2,
+                2
+              ],
+              "uv": [
+                50,
+                106.5
+              ]
+            },
+            {
+              "origin": [
+                -0.5,
+                43,
+                -1
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "uv": [
+                58,
+                106.5
               ]
             }
           ]
@@ -135,53 +225,94 @@
           "name": "left_arm",
           "pivot": [
             10,
-            24,
+            25,
             0
           ],
           "parent": "body",
+          "rotation": [
+            0,
+            0,
+            12
+          ],
           "cubes": [
             {
               "origin": [
                 10,
-                12,
+                14,
                 -2.5
               ],
               "size": [
                 4,
-                13,
+                11,
                 5
               ],
               "uv": [
-                104,
-                0
+                72,
+                39
+              ]
+            },
+            {
+              "origin": [
+                9.5,
+                10,
+                -3
               ],
-              "mirror": true
+              "size": [
+                5,
+                4,
+                6
+              ],
+              "uv": [
+                48,
+                95.5
+              ]
             }
           ]
         },
         {
-          "name": "right_leg",
+          "name": "right_arm",
           "pivot": [
-            -5,
-            7,
+            -10,
+            25,
             0
           ],
-          "parent": "root",
+          "parent": "body",
+          "rotation": [
+            0,
+            0,
+            -12
+          ],
           "cubes": [
             {
               "origin": [
-                -8,
-                0,
+                -14,
+                14,
+                -2.5
+              ],
+              "size": [
+                4,
+                11,
+                5
+              ],
+              "uv": [
+                90,
+                39
+              ]
+            },
+            {
+              "origin": [
+                -14.5,
+                10,
                 -3
               ],
               "size": [
-                6,
-                7,
+                5,
+                4,
                 6
               ],
               "uv": [
-                72,
-                32
+                70,
+                95.5
               ]
             }
           ]
@@ -198,19 +329,77 @@
             {
               "origin": [
                 2,
-                0,
+                2,
                 -3
               ],
               "size": [
                 6,
-                7,
+                5,
                 6
               ],
               "uv": [
-                72,
-                32
+                0,
+                95.5
+              ]
+            },
+            {
+              "origin": [
+                1.5,
+                0,
+                -5
               ],
-              "mirror": true
+              "size": [
+                7,
+                2,
+                8
+              ],
+              "uv": [
+                92,
+                95.5
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_leg",
+          "pivot": [
+            -5,
+            7,
+            0
+          ],
+          "parent": "root",
+          "cubes": [
+            {
+              "origin": [
+                -8,
+                2,
+                -3
+              ],
+              "size": [
+                6,
+                5,
+                6
+              ],
+              "uv": [
+                24,
+                95.5
+              ]
+            },
+            {
+              "origin": [
+                -8.5,
+                0,
+                -5
+              ],
+              "size": [
+                7,
+                2,
+                8
+              ],
+              "uv": [
+                0,
+                106.5
+              ]
             }
           ]
         }

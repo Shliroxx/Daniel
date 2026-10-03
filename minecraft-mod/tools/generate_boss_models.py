@@ -182,17 +182,17 @@ def nefarious() -> list[Joint]:
     return joints
 
 
-def pack(joints: list[Joint]) -> None:
-    """Box-UV je Quader (Breite 2·(t+b), Hoehe t+h), Regal-Packer in UNIT_TEXTURE."""
+def pack(joints: list[Joint], texture: tuple[int, int] = UNIT_TEXTURE) -> None:
+    """Box-UV je Quader (Breite 2·(t+b), Hoehe t+h), Regal-Packer in der logischen Texturgroesse."""
     boxes = [b for j in joints for b in j.boxes]
     x = y = shelf = 0
     for b in sorted(boxes, key=lambda b: -(b.size[2] + b.size[1])):
         w = 2 * (b.size[2] + b.size[0])
         h = b.size[2] + b.size[1]
-        if x + w > UNIT_TEXTURE[0]:
+        if x + w > texture[0]:
             x, y, shelf = 0, y + shelf, 0
-        if y + h > UNIT_TEXTURE[1]:
-            raise ValueError("Nefarious-Textur zu klein")
+        if y + h > texture[1]:
+            raise ValueError("Textur zu klein fuer alle Quader")
         b.uv = (x, y)
         x += w
         shelf = max(shelf, h)
@@ -213,8 +213,9 @@ def face_rects(b: Box) -> dict[str, tuple[float, float, float, float]]:
     }
 
 
-def paint_box(img: Image.Image, glow: Image.Image, b: Box) -> None:
-    """Malt alle sechs Flaechen eines Quaders (Box-UV) mit Material und Front-Detail."""
+def paint_box(img: Image.Image, glow: Image.Image, b: Box, palette: dict | None = None, extra=None) -> None:
+    """Malt alle sechs Flaechen eines Quaders (Box-UV) mit Material und Front-Detail. `palette` ersetzt PALETTE,
+    `extra(b, face, px, py, W, H, color)` darf eigene Details liefern (-> (rgb, alpha, leuchtet) oder None)."""
     k = DENSITY
     faces = face_rects(b)
     rng = random.Random(f"{b.origin}{b.size}{b.material}")
@@ -223,13 +224,13 @@ def paint_box(img: Image.Image, glow: Image.Image, b: Box) -> None:
         light = {"top": 1.15, "bottom": 0.6, "front": 1.0, "back": 0.8, "east": 0.85, "west": 0.85}[name]
         for py in range(H):
             for px in range(W):
-                color, alpha, lit = surface(b, name, px, py, W, H, light, rng)
+                color, alpha, lit = surface(b, name, px, py, W, H, light, rng, palette or PALETTE, extra)
                 img.putpixel((X0 + px, Y0 + py), color + (alpha,))
                 if lit:
                     glow.putpixel((X0 + px, Y0 + py), color + (255,))
 
 
-def surface(b: Box, face: str, px: int, py: int, W: int, H: int, light: float, rng: random.Random):
+def surface(b: Box, face: str, px: int, py: int, W: int, H: int, light: float, rng: random.Random, palette: dict, extra=None):
     """Farbe eines Pixels: Material (Verlauf, Kanten, Platten) plus Front-Details. -> (rgb, alpha, leuchtet)"""
     k = DENSITY
     if b.material == "glass":
@@ -240,7 +241,7 @@ def surface(b: Box, face: str, px: int, py: int, W: int, H: int, light: float, r
         if streak:
             return (215, 255, 225), 170, False
         return tuple(round(c * (0.75 + 0.25 * (py / max(1, H)))) for c in GLASS), 95, False
-    dark, base, high, shine = PALETTE[b.material]
+    dark, base, high, shine = palette[b.material]
     # Verlauf: oben heller, unten dunkler; Kanten dunkel, Oberkante Glanz
     t = 1.0 - py / max(1, H - 1)
     color = shade(base, light * (0.82 + 0.3 * t))
@@ -263,11 +264,11 @@ def surface(b: Box, face: str, px: int, py: int, W: int, H: int, light: float, r
         if abs(px - W / 2) < k * 0.5:
             color = shade(high, 1.1)
     if detail == "trim_bottom" and py >= H - k:
-        color = shade(PALETTE["orange"][1], light)
+        color = shade(palette.get("orange", PALETTE["orange"])[1], light)
     if detail == "trim_top" and py < k:
-        color = shade(PALETTE["orange"][1], light)
+        color = shade(palette.get("orange", PALETTE["orange"])[1], light)
     if detail == "rivets" and (px % (2 * k), py % (2 * k)) == (k, k):
-        color = shade(PALETTE["dark"][0], 1.0)
+        color = shade(palette.get("dark", PALETTE["dark"])[0], 1.0)
     if detail == "segments" and py % (2 * k) < 2:
         color = shade(dark, 0.8)
     if detail == "toes" and face == "front" and px % (k + 1) == 0:
@@ -296,6 +297,10 @@ def surface(b: Box, face: str, px: int, py: int, W: int, H: int, light: float, r
     if detail == "dish" and face == "top":
         r = ((px - W / 2) ** 2 + (py - H / 2) ** 2) ** 0.5
         color = shade(shine if r < W * 0.15 else high if r < W * 0.35 else base, 1.0)
+    if extra is not None:
+        custom = extra(b, face, px, py, W, H, color)
+        if custom is not None:
+            return custom
     if detail == "skull" and face == "front":
         color, lit = skull(px, py, W, H, color)
     if detail == "teeth" and face == "front":

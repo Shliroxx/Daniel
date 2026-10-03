@@ -336,8 +336,9 @@ Reihenfolge = Abarbeitungsreihenfolge.
 6. [ ] **Grey Matter** — MODEL (klein, großer Kopf, große Augen), TEXTURE, ANIMATION (flink, hüpfend).
 7. [ ] **Omnitrix** — 3D-Modell am Handgelenk (Spieler-Layer), Ring-Animation beim Aktivieren.
 8. [ ] **Keyblade-Rework** — 3D-Handmodelle (Kingdom Key, Oathkeeper, Omega Key), Schwung-Spur angleichen.
-9. [ ] **Heartless-Rework** — Shadow (Antennen, krabbelnd), Soldier, Air Soldier, Large Body, Darkball; Texturen mit
-   echter Zeichnung statt Rauschen; Leuchtaugen per Leuchtmaske.
+9. [x] **Heartless-Rework** — Shadow (lange abknickende Fühler, Krallen, geduckt), Soldier (Spitzhelm, Zickzack, Emblem,
+   Krallenhandschuhe, Rollstiefel), Air Soldier (Fliegermütze mit Brille, Fledermausflügel, Schwanz), Large Body (runder
+   Bauch mit Emblem und Gürtel, Zipfelhut), Darkball (Kugel, Zahnmaul, Schwaden); gelbe Augen leuchten (Glowmask).
 10. [x] **Boss-Rework** — Nefarious nach den Spielen neu gebaut (Kuppel, Schädel, Gebiss, Tentakel, 4 px/Einheit); Schadenszustände je Phase (Risse/Brandflecken ab 60 %, tiefe Risse + Funken/Qualm ab 25 %).
 11. [ ] **Weapon-Rework** — Combuster, Omniwrench, Heli-Pack am Rücken.
 12. [ ] **HUD-Rework** — Feinschliff, Schadenszahlen, Treffer-Feedback.

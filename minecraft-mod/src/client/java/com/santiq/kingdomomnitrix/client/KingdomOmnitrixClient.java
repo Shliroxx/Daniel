@@ -67,12 +67,18 @@ import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.entity.EntityType;
 import software.bernie.geckolib.model.DefaultedEntityGeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
+import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 
 public class KingdomOmnitrixClient implements ClientModInitializer {
-	/** GeckoLib-Renderer: Modell, Animation und Textur unter {geo,animations,textures}/entity/heartless/<name>. */
+	/** GeckoLib-Renderer: Modell, Animation und Textur unter {geo,animations,textures}/entity/heartless/<name>;
+	 *  die gelben Augen leuchten im Dunkeln (<name>_glowmask.png). */
 	private static <T extends HeartlessEntity> void registerHeartless(EntityType<T> type, String name) {
-		EntityRendererRegistry.register(type, context -> new GeoEntityRenderer<>(context,
-				new DefaultedEntityGeoModel<T>(KingdomOmnitrix.id("heartless/" + name), true)));
+		EntityRendererRegistry.register(type, context -> {
+			GeoEntityRenderer<T> renderer = new GeoEntityRenderer<>(context,
+					new DefaultedEntityGeoModel<T>(KingdomOmnitrix.id("heartless/" + name), true));
+			renderer.addRenderLayer(new AutoGlowingGeoLayer<>(renderer));
+			return renderer;
+		});
 	}
 
 	@Override
