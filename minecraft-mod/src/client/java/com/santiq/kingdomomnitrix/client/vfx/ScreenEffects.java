@@ -77,6 +77,28 @@ public final class ScreenEffects {
 		flashStrength = MathHelper.clamp(strength, 0.0f, 1.0f);
 	}
 
+	/** Weicher Rand-Schein: duenne Streifen mit nach innen abnehmender Deckkraft an allen vier Seiten. */
+	private static void auraEdges(DrawContext context, int argb, int width, int height) {
+		int alpha = argb >>> 24;
+		if (alpha == 0) {
+			return;
+		}
+		int rgb = argb & 0xFFFFFF;
+		int depth = Math.max(12, Math.min(width, height) / 7);
+		for (int i = 0; i < depth; i++) {
+			float fade = 1.0f - i / (float) depth;
+			int a = (int) (alpha * fade * fade);
+			if (a <= 0) {
+				continue;
+			}
+			int color = (a << 24) | rgb;
+			context.fill(i, i, i + 1, height - i, color);
+			context.fill(width - i - 1, i, width - i, height - i, color);
+			context.fill(i + 1, i, width - i - 1, i + 1, color);
+			context.fill(i + 1, height - i - 1, width - i - 1, height - i, color);
+		}
+	}
+
 	private static void render(DrawContext context, RenderTickCounter tickCounter) {
 		MinecraftClient client = MinecraftClient.getInstance();
 		ClientPlayerEntity player = client.player;
@@ -86,6 +108,12 @@ public final class ScreenEffects {
 		int width = context.getScaledWindowWidth();
 		int height = context.getScaledWindowHeight();
 		float time = client.world.getTime() + tickCounter.getTickDelta(false);
+
+		// Aura der Alien-Anzeige in der Ich-Perspektive: Leuchten vom Bildrand nach innen
+		if (client.options.getPerspective().isFirstPerson()) {
+			auraEdges(context, com.santiq.kingdomomnitrix.client.render.alien.MeterAura.edgeColor(player, tickCounter.getTickDelta(false)),
+					width, height);
+		}
 
 		// Blitz: kurz hell, dann ausblendend; die Vignette in derselben Farbe haelt etwas laenger
 		float flash = 1.0f - (time - flashStart) / FLASH_TICKS;

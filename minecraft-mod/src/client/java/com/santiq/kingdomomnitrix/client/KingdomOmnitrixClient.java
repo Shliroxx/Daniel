@@ -107,7 +107,6 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		HudManager.register(CommandMenu.INSTANCE);
 		HudManager.register(WeaponHud.INSTANCE);
 		HudManager.register(OmnitrixHud.INSTANCE);
-		HudManager.register(com.santiq.kingdomomnitrix.client.hud.AlienMeterHud.INSTANCE);
 		com.santiq.kingdomomnitrix.client.alien.AlienMeters.register();
 		HudManager.register(GadgetHud.INSTANCE);
 		HudManager.register(ShipHud.INSTANCE);

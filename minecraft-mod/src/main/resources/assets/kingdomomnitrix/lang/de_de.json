@@ -885,19 +885,9 @@
   "ability.kingdomomnitrix.neuroshock_storm": "Neuroschock-Sturm",
   "message.kingdomomnitrix.jetray_overload": "Neuroschock-Überladung!",
   "message.kingdomomnitrix.cannonbolt_gear": "Schwung-Gang %s",
-  "message.kingdomomnitrix.heatblast_heat": "Kernhitze",
   "message.kingdomomnitrix.heatblast_overheat": "Kern überhitzt — die nächste Fähigkeit entfesselt Blaufeuer!",
-  "message.kingdomomnitrix.xlr8_tempo": "Tempo",
   "message.kingdomomnitrix.xlr8_sound_barrier": "Schallmauer durchbrochen — nächste Fähigkeit mit voller Wucht!",
-  "hud.kingdomomnitrix.element.alien_meter": "Alien-Anzeige (Tempo/Hitze)",
-  "hud.kingdomomnitrix.meter.blur": "VERSCHWOMMEN",
-  "hud.kingdomomnitrix.meter.sound_barrier": "SCHALLMAUER",
-  "hud.kingdomomnitrix.meter.glowing": "GLÜHEND",
-  "hud.kingdomomnitrix.meter.overheated": "ÜBERHITZT",
   "ability.kingdomomnitrix.titan_leap": "Titanensprung",
-  "message.kingdomomnitrix.four_arms_rage": "Wut",
   "message.kingdomomnitrix.four_arms_rampage": "RASEREI — nächste Fähigkeit mit voller Wucht!",
-  "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!",
-  "hud.kingdomomnitrix.meter.angry": "ZORN",
-  "hud.kingdomomnitrix.meter.rampage": "RASEREI"
+  "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!"
 }
