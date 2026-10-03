@@ -433,3 +433,25 @@ Faehigkeits-Slots im HUD, eigene Partikel-Sprites (Blitz, DNA-Helix) und die gru
 Nicht geprueft: Mehrspieler-Sicht der Farbe (Sync ueber Anhang, nur mit einem Client gesehen).
 
 ![Farbmodul Violett: Vierarms, Upgrade, Rad](screenshots/color_module_purple.png)
+
+## 17. Phase N — Modell-Feinschliff (2026-10-03)
+
+Alles im Arm-Renderer (`OmnitrixPolish`, `OmnitrixSteam`), keine neuen Modelldateien:
+
+| Punkt | Umsetzung |
+|---|---|
+| Glas | schraeger Glanzstreifen wandert alle 3 s ueber das Zifferblatt (additiv; eine getoente Scheibe verdeckte die Rauten-Anzeige und wurde verworfen) |
+| Metallglanz | heller Streifen laeuft alle 4,5 s ueber die Fassung |
+| Kern-Leuchten | zwei schmale, pulsierende Lichtringe direkt am Zifferblatt in der Kernfarbe (Farbmodul); im Auswahlmodus aus, dann leuchtet die Raute |
+| Aktivierung | Kern faehrt mit Feder-Ueberschwingen aus (easeOutBack, ~10 % ueber Endlage) |
+| Mechanik | Drehverriegelung: der Kern dreht sich beim Ausfahren bis 22° ein und rastet oben auf 0 |
+| Dampf | ab Warnschwelle Dampfwoelkchen am linken Handgelenk (je heisser, desto dichter: alle 6 → 2 Ticks), ueberhitzt dichte Wolke jeden Tick plus vereinzelte Funken; als Alien am Abzeichen; fuer alle Spieler in 48 Bloecken sichtbar, rein clientseitig |
+
+**Im Spiel geprueft:** Zifferblatt im Auswahlmodus mit Glanz und Raute (Ego-Sicht), Dampf bei 95 % Hitze
+(Schwaden am Handgelenk), Ueberhitzung als Heatblast → Rueckverwandlung mit dichter Dampfwolke.
+**Gefunden und behoben:** Toenungsscheibe schrieb Tiefe und verdeckte die Raute; Lichtkranz wirkte als harter Kasten
+(verkleinert, nur noch bei geschlossenem Zifferblatt); Dampf richtete sich nach dem Anzeige-Zustand — beim Nachladen
+zeigt das Geraet „Nachladen“ statt „Warnung“, dadurch kein Dampf → jetzt nach Hitze.
+Nicht geprueft: Ueberschwingen und Drehverriegelung nur im laufenden Bild beobachtet, nicht als Einzelbild belegt.
+
+![Zifferblatt, Dampf bei Warnung, Dampf bei Ueberhitzung](screenshots/omnitrix_polish.png)

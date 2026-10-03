@@ -169,7 +169,10 @@ public final class OmnitrixWrist {
 			return;
 		}
 		boolean slim = player.getSkinTextures().model() == SkinTextures.Model.SLIM;
-		float coreLift = OmnitrixRemote.lift(player) * CORE_LIFT;
+		float lift = OmnitrixRemote.lift(player);
+		// Ausfahren mit Ueberschwingen (Feder), Drehverriegelung: der Kern dreht sich beim Ausfahren kurz ein und rastet
+		float coreLift = OmnitrixPolish.overshoot(lift) * CORE_LIFT;
+		float lockTwist = OmnitrixPolish.lockTwist(lift);
 		float[] glow = glow(player);
 
 		matrices.push();
@@ -185,16 +188,23 @@ public final class OmnitrixWrist {
 		BlockModelRenderer renderer = client.getBlockRenderManager().getModelRenderer();
 		var solid = consumers.getBuffer(TexturedRenderLayers.getEntityCutout());
 		renderer.render(matrices.peek(), solid, null, base, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
+		OmnitrixPolish.renderCasingShine(matrices, consumers);
 		matrices.push();
 		matrices.translate(coreLift / 16.0f, 0.0f, 0.0f);
+		OmnitrixPolish.rotateAboutCore(matrices, lockTwist);
 		renderer.render(matrices.peek(), solid, null, core, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
 		if (glowModel != null && glowModel != missing) {
 			var eyes = consumers.getBuffer(RenderLayer.getEyes(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE));
 			// Kern-Leuchten faehrt mit, Eck-Leuchten liegen am Gehaeuse (Hub dort unsichtbar klein)
 			renderer.render(matrices.peek(), eyes, null, glowModel, glow[0], glow[1], glow[2], 0xF000F0, OverlayTexture.DEFAULT_UV);
 		}
+		OmnitrixPolish.renderGlass(matrices, consumers);
 		// Auswahlmodus: Raute mit Alien-Silhouette auf dem Kern (eigener Spieler: gewaehltes Alien; andere: leere Raute)
 		float show = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
+		// Lichtkranz nur bei geschlossenem Zifferblatt (im Auswahlmodus leuchtet die Raute)
+		if (show < 0.3f) {
+			OmnitrixPolish.renderCoreHalo(matrices, consumers, glow);
+		}
 		OmnitrixDialDisplay.render(matrices, consumers, show, local, pose().dialUp());
 		matrices.pop();
 		matrices.pop();
