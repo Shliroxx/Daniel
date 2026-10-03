@@ -882,5 +882,7 @@
   "ability.kingdomomnitrix.jet_burst": "Düsenstoß",
   "ability.kingdomomnitrix.strafing_run": "Tiefflug",
   "ability.kingdomomnitrix.slipstream": "Windschatten",
-  "ability.kingdomomnitrix.neuroshock_storm": "Neuroschock-Sturm"
+  "ability.kingdomomnitrix.neuroshock_storm": "Neuroschock-Sturm",
+  "message.kingdomomnitrix.jetray_overload": "Neuroschock-Überladung!",
+  "message.kingdomomnitrix.cannonbolt_gear": "Schwung-Gang %s"
 }

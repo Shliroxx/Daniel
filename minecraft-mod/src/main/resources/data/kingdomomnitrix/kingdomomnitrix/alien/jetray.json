@@ -59,7 +59,10 @@
       "cooldown": 25,
       "params": {
         "power": 2.2,
-        "invulnerable_ticks": 8
+        "invulnerable_ticks": 8,
+        "damage": 5.0,
+        "ram_ticks": 8,
+        "stun_ticks": 15
       },
       "role": "movement",
       "unlock_level": 1
@@ -74,7 +77,8 @@
         "range": 10.0,
         "interval": 5,
         "damage": 5.0,
-        "stun_ticks": 20
+        "stun_ticks": 20,
+        "targets": 2
       },
       "role": "special",
       "unlock_level": 3

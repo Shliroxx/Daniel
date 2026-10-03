@@ -302,6 +302,7 @@ public final class AlienBodyRenderers {
 					Map<String, AlienFlightPose.Bone> flight = info(model).flightPose();
 					if (!flight.isEmpty()) {
 						AlienFlightPose.apply(getAnimationProcessor(), flight, currentFlight);
+						AlienFlightPose.applyDynamics(getAnimationProcessor(), flight, player, state.getPartialTick(), currentFlight);
 					}
 				} else {
 					super.setCustomAnimations(animatable, instanceId, state);

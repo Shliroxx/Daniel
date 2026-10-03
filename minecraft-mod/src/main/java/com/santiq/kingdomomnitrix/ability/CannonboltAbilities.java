@@ -46,7 +46,7 @@ import net.minecraft.util.math.Vec3d;
  * </ol>
  */
 final class CannonboltAbilities {
-	private enum Kind { DASH, BOUNCE, RICOCHET, CRUISE, CANNONADE }
+	private enum Kind { DASH, BOUNCE, RICOCHET, CRUISE, GUARD, CANNONADE }
 
 	/** Laufende Rolle eines Spielers. */
 	private static final class Roll {
@@ -62,6 +62,17 @@ final class CannonboltAbilities {
 		long segmentStart;
 		boolean airborne;
 		boolean diving;
+		/** Schwung 0..1: baut sich beim Rollen auf, macht schneller und haerter (Kern des Kugel-Systems) */
+		float momentum;
+		/** verbleibende Wand-Abpraller (Kanonenkugel) */
+		int wallBounces;
+		/** Rollmodus: Ticks am Stueck in voller Fahrt, aktuelle Tempo-Stufe */
+		int fastTicks;
+		int speedLevel;
+		int baseSpeedLevel;
+		/** Kanonade: hoechster Punkt (Sturzhoehe), Abpraller-Kette: Treffer bisher */
+		double peakY;
+		int chain;
 
 		Roll(Kind kind, float damage, double speed, double radius, long until, Vec3d direction) {
 			this.kind = kind;
@@ -80,6 +91,10 @@ final class CannonboltAbilities {
 	private static final int CRUISE_REHIT = 10;
 	/** Rollmodus: ab dieser Geschwindigkeit (Bloecke/Tick) rammt die Kugel */
 	private static final double CRUISE_RAM_SPEED = 0.28;
+	/** Rollmodus: so viele Ticks volle Fahrt fuer die naechste Tempo-Stufe (bis +2) */
+	private static final int CRUISE_GEAR_TICKS = 40;
+	/** Panzerkugel: Nahkaempfer in diesem Abstand werden weggeschleudert */
+	private static final double GUARD_REPEL = 2.0;
 
 	private CannonboltAbilities() {
 	}
@@ -98,8 +113,10 @@ final class CannonboltAbilities {
 
 	private static boolean cannonball(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		start(ctx, new Roll(Kind.DASH, (float) ctx.param("damage", 9.0), ctx.param("speed", 1.15), 1.4,
-				ctx.world().getTime() + (long) ctx.param("ticks", 26.0), BuiltinAbilities.horizontalLook(player)));
+		Roll roll = new Roll(Kind.DASH, (float) ctx.param("damage", 9.0), ctx.param("speed", 1.15), 1.4,
+				ctx.world().getTime() + (long) ctx.param("ticks", 26.0), BuiltinAbilities.horizontalLook(player));
+		roll.wallBounces = (int) ctx.param("wall_bounces", 3.0);
+		start(ctx, roll);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 0.6f, 1.6f);
 		return true;
 	}
@@ -110,14 +127,9 @@ final class CannonboltAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, (int) ctx.param("resistance", 2.0), false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 3, false, false));
 		knockbackImmunity(player, true);
-		// Geschosse in der Naehe prallen von der Panzerkugel ab
-		for (var projectile : ctx.world().getEntitiesByClass(net.minecraft.entity.projectile.ProjectileEntity.class,
-				player.getBoundingBox().expand(4.0), p -> p.getOwner() != player)) {
-			projectile.setVelocity(projectile.getVelocity().multiply(-0.8));
-			projectile.velocityModified = true;
-		}
-		// Ende des Schutzes: der Tick nimmt die Rueckstoss-Immunitaet wieder weg
-		start(ctx, new Roll(Kind.CRUISE, 0.0f, 0.0, 0.0, ctx.world().getTime() + ticks, Vec3d.ZERO));
+		// waehrend der ganzen Dauer: Geschosse fliegen zum Schuetzen zurueck, Nahkaempfer werden weggeschleudert
+		start(ctx, new Roll(Kind.GUARD, (float) ctx.param("damage", 4.0), ctx.param("reflect_speed", 1.5), ctx.param("radius", 4.0),
+				ctx.world().getTime() + ticks, Vec3d.ZERO));
 		BuiltinAbilities.sound(ctx, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE.value(), 1.0f, 0.7f);
 		return true;
 	}
@@ -158,7 +170,10 @@ final class CannonboltAbilities {
 		int ticks = (int) ctx.param("ticks", 200.0);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, (int) ctx.param("speed_level", 2.0), false, false));
 		stepHeight(player, true);
-		start(ctx, new Roll(Kind.CRUISE, (float) ctx.param("damage", 5.0), 0.0, 1.3, ctx.world().getTime() + ticks, Vec3d.ZERO));
+		Roll roll = new Roll(Kind.CRUISE, (float) ctx.param("damage", 5.0), 0.0, 1.3, ctx.world().getTime() + ticks, Vec3d.ZERO);
+		roll.baseSpeedLevel = (int) ctx.param("speed_level", 2.0);
+		roll.speedLevel = roll.baseSpeedLevel;
+		start(ctx, roll);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_EXTEND, 1.0f, 0.6f);
 		return true;
 	}
@@ -169,6 +184,7 @@ final class CannonboltAbilities {
 		Roll roll = new Roll(Kind.CANNONADE, (float) ctx.param("damage", 16.0), ctx.param("dive", 2.6), ctx.param("radius", 8.5),
 				ctx.world().getTime() + 120, Vec3d.ZERO);
 		roll.airborne = true;
+		roll.peakY = player.getY();
 		start(ctx, roll);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.0f, 1.2f);
 		return true;
@@ -206,6 +222,7 @@ final class CannonboltAbilities {
 				case BOUNCE -> tickLanding(world, player, roll, now, false);
 				case RICOCHET -> tickRicochet(world, player, roll, now);
 				case CRUISE -> tickCruise(world, player, roll, now);
+				case GUARD -> tickGuard(world, player, roll, now);
 				case CANNONADE -> tickLanding(world, player, roll, now, true);
 			};
 			if (done) {
@@ -219,16 +236,28 @@ final class CannonboltAbilities {
 		if (now >= roll.until) {
 			return true;
 		}
-		BuiltinAbilities.launch(player, roll.direction.x * roll.speed, Math.min(player.getVelocity().y, 0.0) - 0.04,
-				roll.direction.z * roll.speed);
+		// Schwung: startet bei 60 % Tempo und steigert sich bis 160 %
+		roll.momentum = Math.min(1.0f, roll.momentum + 0.09f);
+		double speed = roll.speed * (0.6 + roll.momentum);
+		BuiltinAbilities.launch(player, roll.direction.x * speed, Math.min(player.getVelocity().y, 0.0) - 0.04,
+				roll.direction.z * speed);
 		trail(world, player);
+		if (roll.momentum >= 1.0f) {
+			world.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 0.6, player.getZ(), 3, 0.4, 0.4, 0.4, 0.1);
+		}
 		ram(world, player, roll, false);
 		if (player.horizontalCollision) {
-			// Aufprall an der Wand: Stoss in die Umgebung, Rueckprall
-			shockwave(world, player, roll.damage * 0.6f, 3.0, 0.6);
-			BuiltinAbilities.launch(player, -roll.direction.x * 0.4, 0.35, -roll.direction.z * 0.4);
+			// Aufprall an der Wand: Stoss je nach Schwung; solange Abpraller uebrig sind, springt die Kugel zurueck
+			shockwave(world, player, roll.damage * (0.4f + 0.6f * roll.momentum), 2.5 + 2.0 * roll.momentum, 0.6);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, SoundCategory.PLAYERS, 1.0f, 0.6f);
-			return true;
+			if (roll.wallBounces-- <= 0) {
+				BuiltinAbilities.launch(player, -roll.direction.x * 0.4, 0.35, -roll.direction.z * 0.4);
+				return true;
+			}
+			roll.direction = reflect(player, roll.direction);
+			roll.hit.clear();
+			roll.momentum = Math.max(0.5f, roll.momentum * 0.85f);
+			BuiltinAbilities.launch(player, roll.direction.x * speed, 0.25, roll.direction.z * speed);
 		}
 		return false;
 	}
@@ -239,6 +268,7 @@ final class CannonboltAbilities {
 		if (now >= roll.until) {
 			return true;
 		}
+		roll.peakY = Math.max(roll.peakY, player.getY());
 		if (dive && !roll.diving && player.getVelocity().y < 0.05) {
 			roll.diving = true;
 			BuiltinAbilities.launch(player, 0.0, -roll.speed, 0.0);
@@ -249,7 +279,10 @@ final class CannonboltAbilities {
 		}
 		// erst nach dem Abheben auf Landung pruefen (der erste Tick steht noch am Boden)
 		if (roll.airborne && now - roll.until + 120 > 3 && player.isOnGround()) {
-			shockwave(world, player, roll.damage, roll.radius, dive ? 1.4 : 0.8);
+			// Sturzhoehe verstaerkt den Einschlag (je 10 Bloecke +50 %, hoechstens doppelt)
+			double height = Math.max(0.0, roll.peakY - player.getY());
+			float boost = (float) Math.min(2.0, 1.0 + height / 20.0);
+			shockwave(world, player, roll.damage * boost, roll.radius * Math.min(1.5, 0.75 + height / 40.0), dive ? 1.4 : 0.8);
 			if (dive) {
 				world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
 				world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.5f, 0.7f);
@@ -271,7 +304,11 @@ final class CannonboltAbilities {
 		Vec3d to = target.getPos().add(0.0, target.getHeight() * 0.4, 0.0).subtract(player.getPos());
 		if (to.lengthSquared() < 2.6 * 2.6 || now - roll.segmentStart > 20) {
 			if (to.lengthSquared() < 2.6 * 2.6) {
-				hurt(world, player, target, roll.damage, to.normalize(), 1.0);
+				// Kette: jeder weitere Treffer +25 %; der letzte schlaegt mit Druckwelle ein
+				hurt(world, player, target, roll.damage * (1.0f + 0.25f * roll.chain++), to.normalize(), 1.0);
+				if (roll.targets.size() == 1) {
+					shockwave(world, player, roll.damage * 0.8f, 4.0, 0.8);
+				}
 				world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_ATTACK, SoundCategory.PLAYERS, 1.0f, 1.3f);
 			}
 			roll.targets.remove(0);
@@ -297,13 +334,76 @@ final class CannonboltAbilities {
 			double horizontal = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 			if (horizontal > CRUISE_RAM_SPEED) {
 				roll.direction = new Vec3d(velocity.x, 0.0, velocity.z).normalize();
+				roll.fastTicks++;
+				roll.momentum = Math.min(1.0f, roll.fastTicks / (float) (CRUISE_GEAR_TICKS * 2));
+				int gear = roll.baseSpeedLevel + Math.min(2, roll.fastTicks / CRUISE_GEAR_TICKS);
+				if (gear != roll.speedLevel) {
+					// naechster Gang: schneller, Funkenregen, Hinweis in der Aktionsleiste
+					roll.speedLevel = gear;
+					player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, (int) (roll.until - now), gear, false, false));
+					world.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 0.5, player.getZ(), 20, 0.5, 0.3, 0.5, 0.3);
+					world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.PLAYERS, 0.8f, 0.8f + 0.2f * gear);
+					player.sendMessage(net.minecraft.text.Text.translatable("message.kingdomomnitrix.cannonbolt_gear", gear - roll.baseSpeedLevel)
+							.formatted(net.minecraft.util.Formatting.GOLD), true);
+				}
 				ram(world, player, roll, true);
 				if (now % 2 == 0) {
 					trail(world, player);
 				}
+			} else if (roll.fastTicks > 0) {
+				// angehalten: Schwung und Gaenge sind weg
+				roll.fastTicks = 0;
+				roll.momentum = 0.0f;
+				if (roll.speedLevel != roll.baseSpeedLevel) {
+					roll.speedLevel = roll.baseSpeedLevel;
+					player.removeStatusEffect(StatusEffects.SPEED);
+					player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, (int) (roll.until - now), roll.baseSpeedLevel, false, false));
+				}
 			}
 		}
 		return false;
+	}
+
+	/** Panzerkugel: Geschosse zum Schuetzen zurueck (schneller), Nahkaempfer wegschleudern. */
+	private static boolean tickGuard(ServerWorld world, ServerPlayerEntity player, Roll roll, long now) {
+		if (now >= roll.until) {
+			return true;
+		}
+		for (var projectile : world.getEntitiesByClass(net.minecraft.entity.projectile.ProjectileEntity.class,
+				player.getBoundingBox().expand(roll.radius), p -> p.getOwner() != player)) {
+			Vec3d toPlayer = player.getPos().subtract(projectile.getPos());
+			if (projectile.getVelocity().dotProduct(toPlayer) <= 0.0) {
+				continue; // fliegt schon weg
+			}
+			var owner = projectile.getOwner();
+			Vec3d back = owner != null && owner.isAlive()
+					? owner.getEyePos().subtract(projectile.getPos()).normalize()
+					: projectile.getVelocity().multiply(-1.0).normalize();
+			double speed = Math.max(1.0, projectile.getVelocity().length()) * roll.speed;
+			projectile.setVelocity(back.multiply(speed));
+			projectile.setOwner(player);
+			projectile.velocityModified = true;
+			world.spawnParticles(ParticleTypes.CRIT, projectile.getX(), projectile.getY(), projectile.getZ(), 6, 0.1, 0.1, 0.1, 0.2);
+			world.playSound(null, projectile.getBlockPos(), SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.0f, 1.3f);
+		}
+		if (now % 10 == 0) {
+			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(GUARD_REPEL),
+					e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= GUARD_REPEL * GUARD_REPEL && PartyRules.canHarm(player, e))) {
+				Vec3d away = target.getPos().subtract(player.getPos()).multiply(1, 0, 1);
+				hurt(world, player, target, roll.damage, away.lengthSquared() < 1.0E-4 ? Vec3d.ZERO : away.normalize(), 1.6);
+			}
+		}
+		return false;
+	}
+
+	/** Neue Richtung nach einem Wandtreffer: die blockierte Achse wird gespiegelt. */
+	private static Vec3d reflect(ServerPlayerEntity player, Vec3d direction) {
+		Box box = player.getBoundingBox();
+		boolean blockedX = !player.getWorld().isSpaceEmpty(player, box.offset(Math.signum(direction.x) * 0.3, 0.05, 0.0));
+		boolean blockedZ = !player.getWorld().isSpaceEmpty(player, box.offset(0.0, 0.05, Math.signum(direction.z) * 0.3));
+		double x = blockedX || !blockedZ && Math.abs(direction.x) >= Math.abs(direction.z) ? -direction.x : direction.x;
+		double z = blockedZ || !blockedX && Math.abs(direction.z) > Math.abs(direction.x) ? -direction.z : direction.z;
+		return new Vec3d(x, 0.0, z).normalize();
 	}
 
 	// --- Hilfen ----------------------------------------------------------------------------------
@@ -323,7 +423,7 @@ final class CannonboltAbilities {
 			} else if (!roll.hit.add(target.getUuid())) {
 				continue;
 			}
-			hurt(world, player, target, roll.damage, roll.direction, 1.2);
+			hurt(world, player, target, roll.damage * (0.6f + roll.momentum), roll.direction, 0.8 + roll.momentum);
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1.0f, 0.7f);
 		}
 	}

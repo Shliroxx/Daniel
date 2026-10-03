@@ -36,6 +36,11 @@ import org.joml.Vector3f;
  * Manoever“: Tiefflug-Angriff, Windschatten und Neuroschock-Sturm laufen hier tickweise; ohne aktive Manoever kehrt
  * der Tick sofort zurueck. Neuroschock laehmt (starke Langsamkeit + Schwaeche) statt nur Schaden zu machen.
  *
+ * <p>Eigenes System „Ueberladung“: jeder Neuroschock-Treffer laedt das Ziel auf (Ladungen verfallen nach
+ * {@link #CHARGE_TICKS} Ticks). Bei {@link #OVERLOAD_CHARGES} Ladungen entlaedt es sich: Explosion aus Funken
+ * (ohne Blockschaden), Zusatzschaden am Ziel und in der Naehe, lange Laehmung. Alle sechs Faehigkeiten laden auf —
+ * Kombinationen sind der Kern von Jetrays Kampfstil.</p>
+ *
  * <ol>
  *   <li>{@code neuroshock} — Augenstrahl geradeaus, laehmt das Ziel</li>
  *   <li>{@code tail_shock} — Schwanzblitz springt auf bis zu 3 Gegner ueber</li>
@@ -46,7 +51,7 @@ import org.joml.Vector3f;
  * </ol>
  */
 final class JetrayAbilities {
-	private enum Kind { STRAFE, SLIPSTREAM, STORM }
+	private enum Kind { STRAFE, SLIPSTREAM, STORM, BURST }
 
 	/** Normale Fluggeschwindigkeit (Vanilla) und Windschatten-Wert — nur genau dieser Wert wird beim Betreten zurueckgesetzt. */
 	static final float BASE_FLY_SPEED = 0.05f;
@@ -65,6 +70,8 @@ final class JetrayAbilities {
 		final int interval;
 		final int targets;
 		Vec3d direction;
+		/** bereits getroffene Ziele (Ueberschall-Flugweg trifft jeden nur einmal) */
+		final java.util.Set<UUID> struck = new java.util.HashSet<>();
 
 		Run(Kind kind, long until, float damage, int stunTicks, double range, double speed, int interval, int targets, Vec3d direction) {
 			this.kind = kind;
@@ -80,6 +87,13 @@ final class JetrayAbilities {
 	}
 
 	private static final Map<UUID, Run> RUNS = new HashMap<>();
+	/** Neuroschock-Ladungen je Ziel: Anzahl und Verfallszeit */
+	private static final Map<UUID, long[]> CHARGES = new HashMap<>();
+	static final int OVERLOAD_CHARGES = 3;
+	static final int CHARGE_TICKS = 100;
+	/** Ueberladung: Faktor auf den ausloesenden Treffer, Umkreis der Entladung */
+	private static final float OVERLOAD_FACTOR = 1.5f;
+	private static final double OVERLOAD_RADIUS = 3.5;
 
 	private JetrayAbilities() {
 	}
@@ -169,6 +183,12 @@ final class JetrayAbilities {
 			Vec3d p = player.getPos().add(0.0, 0.8, 0.0).subtract(look.multiply(i * 0.35));
 			world.spawnParticles(JET, p.x, p.y, p.z, 2, 0.08, 0.08, 0.08, 0.0);
 		}
+		// Ueberschall: Knall-Ring hinter Jetray, wer im Flugweg steht, wird mitgerissen und aufgeladen
+		Vec3d behind = player.getPos().add(0.0, 0.9, 0.0).subtract(look.multiply(0.8));
+		world.spawnParticles(ParticleTypes.SONIC_BOOM, behind.x, behind.y, behind.z, 1, 0.0, 0.0, 0.0, 0.0);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.5f, 1.8f);
+		start(player, new Run(Kind.BURST, world.getTime() + (long) ctx.param("ram_ticks", 8.0), (float) ctx.param("damage", 5.0),
+				(int) ctx.param("stun_ticks", 15.0), 1.4, 0.0, 1, 0, look));
 		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 10, 0.3, 0.2, 0.3, 0.05);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.0f, 1.3f);
 		return true;
@@ -182,7 +202,7 @@ final class JetrayAbilities {
 		Vec3d direction = new Vec3d(look.x, MathHelper.clamp(look.y, -0.5, 0.5), look.z).normalize();
 		start(player, new Run(Kind.STRAFE, now + (long) ctx.param("ticks", 40.0), (float) ctx.param("damage", 5.0),
 				(int) ctx.param("stun_ticks", 20.0), ctx.param("range", 10.0), ctx.param("speed", 1.3),
-				(int) ctx.param("interval", 5.0), 1, direction));
+				(int) ctx.param("interval", 5.0), (int) ctx.param("targets", 2.0), direction));
 		ctx.grantInvulnerability(10);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_SWOOP, 1.0f, 1.2f);
 		return true;
@@ -251,6 +271,7 @@ final class JetrayAbilities {
 				case STRAFE -> tickStrafe(world, player, run, now);
 				case SLIPSTREAM -> tickSlipstream(world, player, run, now);
 				case STORM -> tickStorm(world, player, run, now);
+				case BURST -> tickBurst(world, player, run);
 			}
 		}
 	}
@@ -262,10 +283,20 @@ final class JetrayAbilities {
 		if (now % run.interval != 0) {
 			return;
 		}
-		LivingEntity target = nearestVisible(world, player, run.range);
-		if (target != null) {
-			beam(world, player.getEyePos(), center(target), SHOCK);
+		// mehrere Ziele je Salve, naechste zuerst
+		Vec3d eye = player.getEyePos();
+		List<LivingEntity> targets = world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(run.range),
+						e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= run.range * run.range && PartyRules.canHarm(player, e))
+				.stream()
+				.filter(e -> visible(world, player, eye, center(e)))
+				.sorted(Comparator.comparingDouble(e -> e.squaredDistanceTo(player)))
+				.limit(Math.max(1, run.targets))
+				.toList();
+		for (LivingEntity target : targets) {
+			beam(world, eye, center(target), SHOCK);
 			shock(world, player, target, run.damage, run.stunTicks);
+		}
+		if (!targets.isEmpty()) {
 			play(world, player, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.5f, 2.0f);
 		}
 	}
@@ -315,6 +346,20 @@ final class JetrayAbilities {
 		}
 	}
 
+	/** Ueberschall-Flugweg: alles in Reichweite einmal treffen und mitreissen. */
+	private static void tickBurst(ServerWorld world, ServerPlayerEntity player, Run run) {
+		Vec3d velocity = player.getVelocity();
+		net.minecraft.util.math.Box box = player.getBoundingBox().expand(run.range * 0.5).stretch(velocity);
+		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, box,
+				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && !run.struck.contains(e.getUuid()))) {
+			run.struck.add(target.getUuid());
+			shock(world, player, target, run.damage, run.stunTicks);
+			target.takeKnockback(1.2, -velocity.x, -velocity.z);
+			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		}
+		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.6, player.getZ(), 1, 0.1, 0.1, 0.1, 0.0);
+	}
+
 	private static void finish(ServerWorld world, ServerPlayerEntity player, Run run) {
 		switch (run.kind) {
 			case SLIPSTREAM -> resetFlySpeed(player);
@@ -335,20 +380,77 @@ final class JetrayAbilities {
 			case STRAFE -> {
 				BuiltinAbilities.launch(player, run.direction.x * 0.3, 0.1, run.direction.z * 0.3);
 			}
+			case BURST -> {
+			}
 		}
 	}
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
-	/** Neuroschock: Schaden und Laehmung (starke Langsamkeit, Schwaeche), Funken am Ziel. */
+	/** Neuroschock: Schaden und Laehmung (starke Langsamkeit, Schwaeche), Funken am Ziel, eine Ladung mehr. */
 	private static void shock(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+		int charges = charge(world, target);
+		if (charges >= OVERLOAD_CHARGES) {
+			CHARGES.remove(target.getUuid());
+			overload(world, player, target, damage, stunTicks);
+			return;
+		}
 		target.timeUntilRegen = 0;
 		target.damage(world.getDamageSources().indirectMagic(player, player), damage);
 		if (stunTicks > 0) {
-			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, stunTicks, 4, false, true), player);
-			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, stunTicks, 1, false, true), player);
+			stun(target, player, stunTicks);
 		}
 		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getBodyY(0.5), target.getZ(), 12, 0.3, 0.4, 0.3, 0.15);
+	}
+
+	/** Ladung am Ziel erhoehen (abgelaufene verfallen); liefert die neue Anzahl. */
+	private static int charge(ServerWorld world, LivingEntity target) {
+		long now = world.getTime();
+		if (CHARGES.size() > 64) {
+			CHARGES.values().removeIf(c -> c[1] < now);
+		}
+		long[] entry = CHARGES.get(target.getUuid());
+		if (entry == null || entry[1] < now) {
+			entry = new long[]{0, 0};
+			CHARGES.put(target.getUuid(), entry);
+		}
+		entry[0]++;
+		entry[1] = now + CHARGE_TICKS;
+		// sichtbare Ladung: je Stufe mehr Funken, die um das Ziel kreisen
+		for (int i = 0; i < entry[0] * 4; i++) {
+			double angle = i * MathHelper.TAU / (entry[0] * 4) + now * 0.3;
+			world.spawnParticles(SHOCK, target.getX() + Math.cos(angle) * 0.6, target.getBodyY(0.5 + 0.15 * (i % 3)),
+					target.getZ() + Math.sin(angle) * 0.6, 1, 0.0, 0.0, 0.0, 0.0);
+		}
+		return (int) entry[0];
+	}
+
+	/** Ueberladung: Entladung am Ziel, Teilschaden im Umkreis, lange Laehmung — ohne Blockschaden. */
+	private static void overload(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+		Vec3d at = center(target);
+		target.timeUntilRegen = 0;
+		target.damage(world.getDamageSources().indirectMagic(player, player), damage * OVERLOAD_FACTOR);
+		stun(target, player, stunTicks * 2);
+		for (LivingEntity near : world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(OVERLOAD_RADIUS),
+				e -> e != player && e != target && e.isAlive() && e.squaredDistanceTo(target) <= OVERLOAD_RADIUS * OVERLOAD_RADIUS
+						&& PartyRules.canHarm(player, e))) {
+			near.timeUntilRegen = 0;
+			near.damage(world.getDamageSources().indirectMagic(player, player), damage * 0.6f);
+			stun(near, player, stunTicks);
+			beam(world, at, center(near), SHOCK);
+		}
+		world.spawnParticles(ParticleTypes.FLASH, at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
+		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 60, 0.6, 0.6, 0.6, 0.6);
+		world.spawnParticles(SHOCK, at.x, at.y, at.z, 40, 1.2, 0.8, 1.2, 0.0);
+		world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 1.0f, 1.6f);
+		world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.5f, 1.8f);
+		player.sendMessage(net.minecraft.text.Text.translatable("message.kingdomomnitrix.jetray_overload")
+				.formatted(net.minecraft.util.Formatting.GREEN), true);
+	}
+
+	private static void stun(LivingEntity target, ServerPlayerEntity player, int ticks) {
+		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 4, false, true), player);
+		target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 1, false, true), player);
 	}
 
 	private static void beam(ServerWorld world, Vec3d from, Vec3d to, DustParticleEffect dust) {
@@ -363,16 +465,6 @@ final class JetrayAbilities {
 	private static boolean visible(ServerWorld world, ServerPlayerEntity player, Vec3d from, Vec3d to) {
 		return world.raycast(new RaycastContext(from, to, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player))
 				.getType() == HitResult.Type.MISS;
-	}
-
-	private static LivingEntity nearestVisible(ServerWorld world, ServerPlayerEntity player, double range) {
-		Vec3d eye = player.getEyePos();
-		return world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(range),
-						e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= range * range && PartyRules.canHarm(player, e))
-				.stream()
-				.filter(e -> visible(world, player, eye, center(e)))
-				.min(Comparator.comparingDouble(e -> e.squaredDistanceTo(player)))
-				.orElse(null);
 	}
 
 	private static LivingEntity nearestUnstruck(List<LivingEntity> pool, Vec3d from, List<LivingEntity> struck, double hop, boolean first) {

@@ -95,6 +95,15 @@ Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser,
 Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
 
+### Eigene Alien-Systeme (über Alien Evolution hinaus)
+
+AE liefert nur Modelle und Texturen; Fähigkeiten und Systeme sind eigene Entwicklungen.
+
+| Alien | System | Wirkung |
+|---|---|---|
+| **Cannonbolt** | Schwung | Kanonenkugel beschleunigt von 60 % auf 160 %, Rammschaden wächst mit; prallt bis zu 3× von Wänden ab (Druckwelle je Aufprall). Rollmodus schaltet nach je 2 s Vollgas einen Gang hoch (bis +2, Anzeige „Schwung-Gang“), Stillstand setzt zurück. Panzerkugel schickt Geschosse die ganze Dauer zum Schützen zurück und schleudert Nahkämpfer weg. Abpraller-Kette: jeder Treffer +25 %, der letzte mit Druckwelle. Kanonade: Sturzhöhe verstärkt Schaden und Radius (bis doppelt). |
+| **Jetray** | Überladung + Flugmodell | Jeder Neuroschock-Treffer lädt das Ziel auf (sichtbare Funkenringe, 5 s). Bei 3 Ladungen: Entladung mit 150 % Schaden, Teilschaden und Lähmung im Umkreis 3,5. Düsenstoß durchbricht die Schallmauer (Knall-Ring) und reißt alles im Flugweg mit. Tiefflug feuert auf 2 Ziele je Salve. Im Flug: Kurvenlage beim Drehen, Vorlage mit dem Tempo, Flügelschlag beim Steigen. |
+
 ### Meisterschaft ★1–10 (je Alien)
 Steigt durch Benutzen. Je Stufe +5 % Dauer, −3 % Abklingzeit; schaltet Fähigkeit 4 (★3), 5 (★5), 6 (★8) frei;
 ★10 = gemeistert (keine Fehlfunktionen).
