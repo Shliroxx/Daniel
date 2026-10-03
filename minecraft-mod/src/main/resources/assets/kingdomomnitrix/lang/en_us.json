@@ -940,5 +940,7 @@
   "screen.kingdomomnitrix.galvan_lab.hack_effect_3": "Master Control",
   "message.kingdomomnitrix.wildmutt_prey": "Prey: %s",
   "message.kingdomomnitrix.wildmutt_frenzy": "BLOODLUST — the hunt is on!",
-  "message.kingdomomnitrix.stinkfly_rot": "%s is decomposing!"
+  "message.kingdomomnitrix.stinkfly_rot": "%s is decomposing!",
+  "message.kingdomomnitrix.ripjaws_combo": "Bite %s/%s",
+  "message.kingdomomnitrix.ripjaws_death_roll": "DEATH ROLL!"
 }

@@ -3,7 +3,6 @@ package com.santiq.kingdomomnitrix.ability;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.util.Targeting;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -19,7 +18,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.joml.Vector3f;
@@ -36,10 +34,7 @@ final class CreatureAbilities {
 	static void register() {
 		// Wildmutt: WildmuttAbilities (Jagd)
 		// Stinkfly: StinkflyAbilities (Toxin-Schichten)
-		// Ripjaws
-		AbilityRegistry.register(KingdomOmnitrix.id("jaw_bite"), CreatureAbilities::jawBite);
-		AbilityRegistry.register(KingdomOmnitrix.id("tidal_dash"), CreatureAbilities::tidalDash);
-		AbilityRegistry.register(KingdomOmnitrix.id("whirlpool"), CreatureAbilities::whirlpool);
+		// Ripjaws: RipjawsAbilities (Gezeiten)
 		// Upgrade
 		AbilityRegistry.register(KingdomOmnitrix.id("optic_beam"), CreatureAbilities::opticBeam);
 		AbilityRegistry.register(KingdomOmnitrix.id("liquid_form"), CreatureAbilities::liquidForm);
@@ -48,61 +43,6 @@ final class CreatureAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("phase_shift"), CreatureAbilities::phaseShift);
 		AbilityRegistry.register(KingdomOmnitrix.id("haunting_scare"), CreatureAbilities::hauntingScare);
 		AbilityRegistry.register(KingdomOmnitrix.id("tentacle_lash"), CreatureAbilities::tentacleLash);
-	}
-
-	// --- Ripjaws ---------------------------------------------------------------------------------
-
-	/** Biss auf das Ziel vor dem Spieler; im Wasser staerker, heilt etwas. */
-	private static boolean jawBite(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 4.0), 0.7, e -> PartyRules.canHarm(player, e));
-		if (found.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		LivingEntity target = found.get();
-		boolean wet = player.isTouchingWater();
-		float damage = (float) (ctx.param("damage", 8.0) * (wet ? ctx.param("water_multiplier", 1.5) : 1.0));
-		target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-		player.heal((float) ctx.param("heal", 2.0));
-		ctx.world().spawnParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getBodyY(0.6), target.getZ(), 6, 0.3, 0.3, 0.3, 0.1);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_EVOKER_FANGS_ATTACK, 1.0f, 0.8f);
-		return true;
-	}
-
-	/** Schneller Vorstoss; im Wasser dreimal so weit, an Land nur kurz. */
-	private static boolean tidalDash(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = player.getRotationVec(1.0f);
-		boolean wet = player.isTouchingWater();
-		double power = ctx.param("power", 1.0) * (wet ? ctx.param("water_multiplier", 3.0) : 1.0);
-		BuiltinAbilities.launch(player, look.x * power, wet ? look.y * power : 0.25, look.z * power);
-		ctx.world().spawnParticles(wet ? ParticleTypes.BUBBLE_COLUMN_UP : ParticleTypes.SPLASH,
-				player.getX(), player.getBodyY(0.5), player.getZ(), 24, 0.4, 0.4, 0.4, 0.1);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_DOLPHIN_SPLASH, 1.0f, 0.9f);
-		return true;
-	}
-
-	/** Strudel: zieht Gegner im Umkreis heran und schaedigt sie; im Wasser doppelte Reichweite. */
-	private static boolean whirlpool(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		boolean wet = player.isTouchingWater();
-		double radius = ctx.param("radius", 5.0) * (wet ? 2.0 : 1.0);
-		float damage = (float) ctx.param("damage", 4.0);
-		List<LivingEntity> targets = BuiltinAbilities.livingAround(ctx, radius);
-		for (LivingEntity target : targets) {
-			Vec3d pull = player.getPos().subtract(target.getPos()).normalize().multiply(ctx.param("pull", 0.9));
-			target.addVelocity(pull.x, 0.15, pull.z);
-			target.velocityModified = true;
-			target.damage(ctx.world().getDamageSources().drown(), damage);
-		}
-		for (int i = 0; i < 24; i++) {
-			double angle = i * MathHelper.TAU / 24.0;
-			ctx.world().spawnParticles(ParticleTypes.SPLASH, player.getX() + Math.cos(angle) * radius * 0.6, player.getY() + 0.3,
-					player.getZ() + Math.sin(angle) * radius * 0.6, 3, 0.1, 0.1, 0.1, 0.0);
-		}
-		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BUBBLE_COLUMN_WHIRLPOOL_INSIDE, 1.2f, 0.8f);
-		return true;
 	}
 
 	// --- Upgrade ---------------------------------------------------------------------------------

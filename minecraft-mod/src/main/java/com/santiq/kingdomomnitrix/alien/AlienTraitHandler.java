@@ -59,7 +59,8 @@ public final class AlienTraitHandler {
 		for (AlienTraits.Effect effect : traits.effects()) {
 			grant(player, effect, EFFECT_TICKS, REFRESH_BELOW);
 		}
-		if (player.isTouchingWater()) {
+		// Ripjaws' Gezeitenzonen zaehlen fuer ihren Erzeuger als Wasser
+		if (player.isTouchingWater() || com.santiq.kingdomomnitrix.ability.TideZones.isIn(player)) {
 			for (AlienTraits.Effect effect : traits.waterEffects()) {
 				grant(player, effect, WATER_EFFECT_TICKS, WATER_EFFECT_TICKS);
 			}
@@ -125,7 +126,7 @@ public final class AlienTraitHandler {
 	 */
 	private static void tickDryOut(ServerPlayerEntity player, AlienTraits traits, long now) {
 		UUID id = player.getUuid();
-		if (player.isTouchingWaterOrRain()) {
+		if (com.santiq.kingdomomnitrix.ability.TideZones.isWet(player)) {
 			if (DRY_TICKS.getOrDefault(id, 0) > traits.dryOutSeconds() * 20) {
 				player.sendMessage(Text.translatable("message.kingdomomnitrix.rehydrated").formatted(Formatting.AQUA), true);
 			}

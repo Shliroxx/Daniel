@@ -60,11 +60,7 @@ final class MasteryAbilities {
 		// --- Grey Matter: GreyMatterAbilities (Analyse-Datenbank)
 		// --- Wildmutt: WildmuttAbilities (Jagd)
 		// --- Stinkfly: StinkflyAbilities (Toxin-Schichten)
-		// --- Ripjaws
-		reg("tail_swipe", ctx -> area(ctx, new Look(ParticleTypes.SPLASH, 60, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, false)));
-		reg("hydro_heal", MasteryAbilities::hydroHeal);
-		reg("tidal_wave", ctx -> area(ctx, new Look(ParticleTypes.FISHING, 140, SoundEvents.ENTITY_GENERIC_SPLASH, 0.6f, false),
-				new Fx(StatusEffects.SLOWNESS, 1)));
+		// --- Ripjaws: RipjawsAbilities (Gezeiten)
 		// --- Upgrade
 		reg("mace_fists", ctx -> self(ctx, SoundEvents.BLOCK_PISTON_EXTEND, new Fx(StatusEffects.STRENGTH, 1), new Fx(StatusEffects.HASTE, 1)));
 		reg("system_override", ctx -> onTarget(ctx, 16.0, ParticleTypes.ELECTRIC_SPARK, SoundEvents.BLOCK_BEACON_DEACTIVATE, true,
@@ -211,17 +207,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** Ripjaws: Heilung, im Wasser deutlich staerker. */
-	private static boolean hydroHeal(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		boolean wet = player.isTouchingWaterOrRain();
-		player.heal((float) (wet ? ctx.param("heal_water", 8.0) : ctx.param("heal", 3.0)));
-		player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, (int) (ctx.param("seconds", 5.0) * 20), wet ? 1 : 0));
-		ctx.world().spawnParticles(ParticleTypes.BUBBLE, player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.4, 0.6, 0.4, 0.05);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_DOLPHIN_PLAY, 1.0f, 1.0f);
-		return true;
-	}
 
 	/** Ghostfreak: Sprung durch den Schatten bis {@code distance} Bloecke in Blickrichtung, auf eine sichere Stelle. */
 	private static boolean shadowStep(AbilityContext ctx) {
