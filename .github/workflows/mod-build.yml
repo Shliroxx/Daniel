@@ -48,6 +48,7 @@ jobs:
           python tools/sample_reference.py diamondhead --check
           python tools/generate_alien_models.py --check
           python tools/import_alienevo.py --check
+          python tools/import_omnitrix_model.py --check
           python tools/generate_alien_icons.py --check
           python tools/generate_color_particles.py --check
           python tools/generate_ability_poses.py --check

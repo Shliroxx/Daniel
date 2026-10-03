@@ -550,3 +550,26 @@ Zweiter Mehrspieler-Lauf (Dedicated Server + 2 Clients):
 Einzelspieler: Werkbank als XLR8 benutzt → „ABGELEHNT · Erst zurueckverwandeln“.
 
 ![Mehrspieler: Freischaltung bei Tester2, Dampf an Testers Handgelenk](screenshots/qa_multiplayer_mc_steam.png)
+
+## 23. Omnitrix-Modell der Originalserie (AE-Prototyp) (2026-10-03)
+
+Das Omnitrix am Arm ist jetzt das Prototyp-Modell aus Alien Evolution (Originalserie: weiss-graues Armband,
+schwarzes Gehaeuse, leuchtendes Zifferblatt mit Sanduhr, Eck-Lichter, Roehren). Import mit
+`tools/import_omnitrix_model.py --jar …` (CI `--check`): Geometrie (breit/schmal) unveraendert, Grundtextur im
+AE-Auslieferungszustand, Leuchtschicht als Graustufe.
+
+Bewegung direkt aus unserem Bedien-Ablauf statt aus AE-Animationsdateien — wie AEs `open`/`close`/`spin`, aber
+stufenlos und mit Extras (`OmnitrixGeo`):
+- Kern faehrt 0,75 px aus, mit Feder-Ueberschwingen und Drehverriegelung,
+- Pfeile blitzen beim Oeffnen nacheinander auf, dann Sanduhr → offene Pfeile, Zylinder senkt sich,
+- Zifferblatt dreht beim Weiterschalten mit.
+
+„Noch krasser“ als AE (behalten aus Phase M/N): Leuchtschicht in Geraete-Zustand und Farbmodul (stufenlos statt AEs
+drei Farbfilter), wandernder Glanz auf dem Glas, pulsierender Lichtkranz, Rauten-Anzeige mit Alien-Silhouette im
+Auswahlmodus, Dampf bei Hitze. Das bisherige Blockmodell bleibt als Rueckfall, falls das importierte Modell fehlt.
+
+**Im Spiel geprueft:** Third-Person (geschlossen), Ego-Sicht im Auswahlmodus (Violett) — Modell sitzt am Handgelenk,
+Raute, Glas und Lichter passen auf das kleinere AE-Zifferblatt.
+Nicht geprueft: schmaler Arm (Slim-Skin) — Geometrie ist importiert, im Spiel nicht angesehen.
+
+![AE-Omnitrix am Arm: Third-Person, Auswahlmodus, Nahaufnahme](screenshots/omnitrix_ae_model.png)

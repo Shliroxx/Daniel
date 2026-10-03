@@ -20,10 +20,10 @@ import org.joml.Matrix4f;
  * </ul>
  */
 public final class OmnitrixPolish {
-	private static final float FACE_X = 12.95f;
+	public static final float FACE_X = 12.95f;
 	private static final float CENTER_Y = 3.0f;
 	private static final float CENTER_Z = 8.0f;
-	private static final float FACE_HALF = 1.7f;
+	public static final float FACE_HALF = 1.7f;
 	/** Drehverriegelung: groesster Winkel waehrend des Ausfahrens (Grad) */
 	private static final float LOCK_DEGREES = 22.0f;
 	private static final float PERIOD_SHINE = 4.5f;

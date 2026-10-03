@@ -176,6 +176,10 @@ public final class OmnitrixWrist {
 		}
 		boolean slim = player.getSkinTextures().model() == SkinTextures.Model.SLIM;
 		float lift = OmnitrixRemote.lift(player);
+		if (OmnitrixGeo.available(slim)) {
+			renderGeo(matrices, consumers, light, model, player, local, slim, lift);
+			return;
+		}
 		// Ausfahren mit Ueberschwingen (Feder), Drehverriegelung: der Kern dreht sich beim Ausfahren kurz ein und rastet
 		float coreLift = OmnitrixPolish.overshoot(lift) * CORE_LIFT;
 		float lockTwist = OmnitrixPolish.lockTwist(lift);
@@ -218,6 +222,34 @@ public final class OmnitrixWrist {
 		}
 		OmnitrixDialDisplay.render(matrices, consumers, show, local, pose().dialUp());
 		matrices.pop();
+		matrices.pop();
+	}
+
+	/**
+	 * Omnitrix der Originalserie (AE-Modell, {@link OmnitrixGeo}) mit unserem Feinschliff: Leuchtschicht im
+	 * Geraete-Zustand/Farbmodul, Glanz auf dem Glas, Lichtkranz und die Rauten-Anzeige im Auswahlmodus.
+	 */
+	private static void renderGeo(MatrixStack matrices, VertexConsumerProvider consumers, int light,
+			PlayerEntityModel<AbstractClientPlayerEntity> model, AbstractClientPlayerEntity player, boolean local, boolean slim, float lift) {
+		float lockTwist = OmnitrixPolish.lockTwist(lift);
+		float dialTurn = local ? OmnitrixController.twist() * 90.0f : 0.0f;
+		float[] glow = glow(player);
+		matrices.push();
+		model.leftArm.rotate(matrices);
+		OmnitrixGeo.render(matrices, consumers, slim, light, lift, dialTurn, lockTwist, glow);
+		// Zifferblatt-Raum fuer Raute, Glas und Lichtkranz: deren Modellraum (Mitte 13/3/8, Blick +x) auf das AE-Zifferblatt
+		float dialX = OmnitrixGeo.DIAL_X - (slim ? 1.0f : 0.0f) - 5.0f + OmnitrixPolish.overshoot(lift) * 0.75f;
+		float scale = OmnitrixGeo.DIAL_HALF / OmnitrixPolish.FACE_HALF;
+		matrices.translate(dialX / 16.0f, (22.0f - OmnitrixGeo.DIAL_Y) / 16.0f, 0.0f);
+		matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180.0f));
+		matrices.scale(scale, scale, scale);
+		matrices.translate(-OmnitrixPolish.FACE_X / 16.0f, -3.0f / 16.0f, -8.0f / 16.0f);
+		OmnitrixPolish.renderGlass(matrices, consumers);
+		float show = local ? OmnitrixController.wheel() : OmnitrixRemote.lift(player);
+		if (show < 0.3f) {
+			OmnitrixPolish.renderCoreHalo(matrices, consumers, glow);
+		}
+		OmnitrixDialDisplay.render(matrices, consumers, show, local, pose().dialUp());
 		matrices.pop();
 	}
 
