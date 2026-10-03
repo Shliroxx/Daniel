@@ -199,7 +199,9 @@ public final class AlienBodyRenderers {
 		}
 		return state.activeAlien()
 				.flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id))
-				.map(AlienDefinition::model);
+				.map(AlienDefinition::model)
+				// Ultimate-Form (Evolve) zeigt ihr eigenes Modell
+				.map(base -> com.santiq.kingdomomnitrix.alien.Evolution.ultimateModel(player).orElse(base));
 	}
 
 	/** @return true, wenn ein Alien-Koerper gezeichnet wurde und das Spielermodell entfallen soll */

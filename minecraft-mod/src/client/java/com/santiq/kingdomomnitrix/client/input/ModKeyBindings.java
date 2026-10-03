@@ -45,6 +45,8 @@ public final class ModKeyBindings {
 	public static final KeyBinding HERO_MENU = register("key.kingdomomnitrix.hero_menu", GLFW.GLFW_KEY_K);
 	/** Galvan-Labor: Erfindungen und Omnitrix-Hack (nur als Grey Matter) */
 	public static final KeyBinding GALVAN_LAB = register("key.kingdomomnitrix.galvan_lab", GLFW.GLFW_KEY_L);
+	/** Evolve: Ultimate-Form des aktiven Aliens */
+	public static final KeyBinding EVOLVE = register("key.kingdomomnitrix.evolve", GLFW.GLFW_KEY_U);
 	public static final KeyBinding COMMAND_UP = register("key.kingdomomnitrix.command_up", GLFW.GLFW_KEY_UP);
 	public static final KeyBinding COMMAND_DOWN = register("key.kingdomomnitrix.command_down", GLFW.GLFW_KEY_DOWN);
 	public static final KeyBinding COMMAND_SELECT = register("key.kingdomomnitrix.command_select", GLFW.GLFW_KEY_RIGHT);
@@ -101,6 +103,11 @@ public final class ModKeyBindings {
 		while (GALVAN_LAB.wasPressed()) {
 			if (client.currentScreen == null) {
 				com.santiq.kingdomomnitrix.client.screen.GalvanLabScreen.open(client);
+			}
+		}
+		while (EVOLVE.wasPressed()) {
+			if (client.currentScreen == null && client.player != null) {
+				net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(com.santiq.kingdomomnitrix.networking.EvolvePayload.INSTANCE);
 			}
 		}
 		while (HERO_MENU.wasPressed()) {

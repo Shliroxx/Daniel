@@ -106,7 +106,8 @@ final class EchoEchoAbilities {
 	private static int spawnClones(ServerWorld world, ServerPlayerEntity player, int count, int life) {
 		int existing = clones(player).size();
 		int spawned = 0;
-		for (int i = 0; i < count && existing + spawned < MAX_CLONES; i++) {
+		int max = maxClones(player);
+		for (int i = 0; i < count && existing + spawned < max; i++) {
 			EchoCloneEntity clone = ModEntities.ECHO_CLONE.create(world);
 			if (clone == null) {
 				break;
@@ -125,6 +126,11 @@ final class EchoEchoAbilities {
 			spawned++;
 		}
 		return spawned;
+	}
+
+	/** Ultimate: mehr Stimmen im Chor. */
+	private static int maxClones(ServerPlayerEntity player) {
+		return com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? MAX_CLONES + 2 : MAX_CLONES;
 	}
 
 	private static void dismissClones(ServerPlayerEntity player) {
@@ -233,10 +239,11 @@ final class EchoEchoAbilities {
 	private static boolean sonicScream(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
-		double range = ctx.param("range", 10.0);
+		boolean ultimate = com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player);
+		double range = ctx.param("range", 10.0) * (ultimate ? 1.5 : 1.0);
 		Vec3d aim = aimPoint(world, player, range);
 		for (Vec3d[] source : sources(player, aim)) {
-			cone(world, player, source[0], source[1], range, 0.8, (float) ctx.param("damage", 4.0), ctx.param("knockback", 0.6));
+			cone(world, player, source[0], source[1], range, 0.8, (float) ctx.param("damage", 4.0) * (ultimate ? 1.5f : 1.0f), ctx.param("knockback", 0.6));
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.0f, 2.0f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PARROT_IMITATE_WARDEN, 1.0f, 1.6f);
@@ -248,7 +255,7 @@ final class EchoEchoAbilities {
 		ServerPlayerEntity player = ctx.player();
 		int spawned = spawnClones(ctx.world(), player, (int) ctx.param("count", 2), (int) Math.round(ctx.param("seconds", 30.0) * 20.0));
 		if (spawned == 0) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.echo_echo_max", MAX_CLONES).formatted(Formatting.GRAY), true);
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.echo_echo_max", maxClones(player)).formatted(Formatting.GRAY), true);
 			return false;
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 1.0f, 1.2f);
@@ -306,7 +313,7 @@ final class EchoEchoAbilities {
 	/** Echo-Chor: Klone bis zum Maximum, dann schreien alle dreimal im Sekundentakt auf alles im Umkreis. */
 	private static boolean echoChorus(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		spawnClones(ctx.world(), player, MAX_CLONES, CLONE_LIFE);
+		spawnClones(ctx.world(), player, maxClones(player), CLONE_LIFE);
 		CHORUS.put(player.getUuid(), ctx.world().getTime());
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.EVENT_RAID_HORN.value(), 1.0f, 1.8f);

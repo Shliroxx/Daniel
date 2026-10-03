@@ -53,6 +53,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(TerminalActionPayload.ID, TerminalActionPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(CalibrationActionPayload.ID, CalibrationActionPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GalvanActionPayload.ID, GalvanActionPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(EvolvePayload.ID, EvolvePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GadgetActionPayload.ID, GadgetActionPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenQuestBookPayload.ID, OpenQuestBookPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OpenNpcDialogPayload.ID, OpenNpcDialogPayload.CODEC);
@@ -161,6 +162,13 @@ public final class ModNetworking {
 
 		ServerPlayNetworking.registerGlobalReceiver(CalibrationActionPayload.ID, (payload, context) ->
 				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCalibrations.handle(context.player(), payload.bench(), payload.module(), payload.value()));
+
+		ServerPlayNetworking.registerGlobalReceiver(EvolvePayload.ID, (payload, context) -> {
+			com.santiq.kingdomomnitrix.alien.Evolution.Result result = com.santiq.kingdomomnitrix.alien.Evolution.evolve(context.player());
+			if (result != com.santiq.kingdomomnitrix.alien.Evolution.Result.SUCCESS) {
+				context.player().sendMessage(com.santiq.kingdomomnitrix.alien.Evolution.message(result).formatted(net.minecraft.util.Formatting.GRAY), true);
+			}
+		});
 
 		ServerPlayNetworking.registerGlobalReceiver(GalvanActionPayload.ID, (payload, context) ->
 				com.santiq.kingdomomnitrix.galvan.GalvanLab.handle(context.player(), payload.action(), payload.id()));

@@ -990,5 +990,14 @@
   "ability.kingdomomnitrix.wall_of_sound": "Schallmauer",
   "ability.kingdomomnitrix.sound_shield": "Schallschild",
   "ability.kingdomomnitrix.echo_chorus": "Echo-Chor",
-  "message.kingdomomnitrix.echo_echo_max": "Höchstens %s Klone gleichzeitig"
+  "message.kingdomomnitrix.echo_echo_max": "Höchstens %s Klone gleichzeitig",
+  "key.kingdomomnitrix.evolve": "Entwickeln (Ultimate-Form)",
+  "message.kingdomomnitrix.evolve": "ULTIMATE %s!",
+  "message.kingdomomnitrix.evolve_success": "Entwickelt",
+  "message.kingdomomnitrix.evolve_not_transformed": "Erst verwandeln",
+  "message.kingdomomnitrix.evolve_no_ultimate": "Dieses Alien hat keine Ultimate-Form",
+  "message.kingdomomnitrix.evolve_locked": "Ultimate-Form braucht mehr Meisterschaft",
+  "message.kingdomomnitrix.evolve_cooldown": "Entwicklung lädt noch",
+  "message.kingdomomnitrix.evolve_already": "Bereits entwickelt",
+  "commands.kingdomomnitrix.evolve.success": "%s entwickelt"
 }

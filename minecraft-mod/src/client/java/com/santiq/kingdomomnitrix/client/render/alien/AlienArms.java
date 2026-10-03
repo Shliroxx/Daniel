@@ -34,7 +34,9 @@ public final class AlienArms {
 		}
 		Optional<Identifier> alien = state.activeAlien();
 		Optional<Identifier> model = alien.flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id))
-				.map(AlienDefinition::model);
+				.map(AlienDefinition::model)
+				// Ultimate-Form (Evolve) zeigt ihr eigenes Modell
+				.map(base -> com.santiq.kingdomomnitrix.alien.Evolution.ultimateModel(player).orElse(base));
 		String uniform = alien.map(id -> AlienUniforms.get(player, id)).orElse(AlienUniforms.CLASSIC);
 		return model.flatMap(m -> CACHE.computeIfAbsent(m + "#" + uniform, key -> lookup(m, uniform)));
 	}

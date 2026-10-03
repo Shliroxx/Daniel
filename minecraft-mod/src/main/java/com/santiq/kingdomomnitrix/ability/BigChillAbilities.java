@@ -184,6 +184,11 @@ final class BigChillAbilities {
 		c.lastGain = world.getTime();
 		c.source = player.getUuid();
 		applySlow(target, c.value);
+		// Ultimate: Feuereis — die Kaelte brennt
+		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
+			target.setOnFireFor(3.0f);
+			world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getBodyY(0.5), target.getZ(), 4, 0.3, 0.4, 0.3, 0.02);
+		}
 		world.spawnParticles(FROST, target.getX(), target.getBodyY(0.6), target.getZ(), 3 + (int) (c.value / 15.0f), 0.3, 0.4, 0.3, 0.0);
 		if (c.value >= MAX_CHILL) {
 			freeze(world, player, target);
@@ -242,7 +247,8 @@ final class BigChillAbilities {
 		bonusHit = true;
 		try {
 			target.timeUntilRegen = 0;
-			target.damage(world.getDamageSources().freeze(), 8.0f + Math.min(12.0f, target.getMaxHealth() * 0.15f));
+			float burst = 8.0f + Math.min(12.0f, target.getMaxHealth() * 0.15f);
+			target.damage(world.getDamageSources().freeze(), com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? burst * 1.5f : burst);
 		} finally {
 			bonusHit = false;
 		}
@@ -308,7 +314,7 @@ final class BigChillAbilities {
 		ServerWorld world = ctx.world();
 		double range = ctx.param("range", 8.0);
 		float chill = (float) ctx.param("chill", 35.0);
-		float damage = (float) ctx.param("damage", 3.0);
+		float damage = (float) ctx.param("damage", 3.0) * (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? 1.5f : 1.0f);
 		Vec3d eye = player.getEyePos();
 		Vec3d look = player.getRotationVec(1.0f);
 		for (LivingEntity target : BuiltinAbilities.livingAround(ctx, range)) {

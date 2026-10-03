@@ -111,9 +111,14 @@ final class CannonboltAbilities {
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------
 
+	/** Ultimate: Stachelpanzer — jeder Roll-Treffer 50 % staerker. */
+	private static double spikes(ServerPlayerEntity player) {
+		return com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? 1.5 : 1.0;
+	}
+
 	private static boolean cannonball(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		Roll roll = new Roll(Kind.DASH, (float) ctx.param("damage", 9.0), ctx.param("speed", 1.15), 1.4,
+		Roll roll = new Roll(Kind.DASH, (float) (ctx.param("damage", 9.0) * spikes(ctx.player())), ctx.param("speed", 1.15), 1.4,
 				ctx.world().getTime() + (long) ctx.param("ticks", 26.0), BuiltinAbilities.horizontalLook(player));
 		roll.wallBounces = (int) ctx.param("wall_bounces", 3.0);
 		start(ctx, roll);
@@ -128,7 +133,7 @@ final class CannonboltAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 3, false, false));
 		knockbackImmunity(player, true);
 		// waehrend der ganzen Dauer: Geschosse fliegen zum Schuetzen zurueck, Nahkaempfer werden weggeschleudert
-		start(ctx, new Roll(Kind.GUARD, (float) ctx.param("damage", 4.0), ctx.param("reflect_speed", 1.5), ctx.param("radius", 4.0),
+		start(ctx, new Roll(Kind.GUARD, (float) (ctx.param("damage", 4.0) * spikes(ctx.player())), ctx.param("reflect_speed", 1.5), ctx.param("radius", 4.0),
 				ctx.world().getTime() + ticks, Vec3d.ZERO));
 		BuiltinAbilities.sound(ctx, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE.value(), 1.0f, 0.7f);
 		return true;
@@ -139,7 +144,7 @@ final class CannonboltAbilities {
 		Vec3d look = BuiltinAbilities.horizontalLook(player);
 		double forward = ctx.param("forward", 0.8);
 		BuiltinAbilities.launch(player, look.x * forward, ctx.param("up", 1.25), look.z * forward);
-		Roll roll = new Roll(Kind.BOUNCE, (float) ctx.param("damage", 7.0), 0.0, ctx.param("radius", 4.5),
+		Roll roll = new Roll(Kind.BOUNCE, (float) (ctx.param("damage", 7.0) * spikes(ctx.player())), 0.0, ctx.param("radius", 4.5),
 				ctx.world().getTime() + 80, look);
 		roll.airborne = true;
 		start(ctx, roll);
@@ -156,7 +161,7 @@ final class CannonboltAbilities {
 		}
 		targets.sort((a, b) -> Double.compare(a.squaredDistanceTo(player), b.squaredDistanceTo(player)));
 		int max = (int) ctx.param("bounces", 4.0);
-		Roll roll = new Roll(Kind.RICOCHET, (float) ctx.param("damage", 8.0), ctx.param("speed", 1.6), 1.6,
+		Roll roll = new Roll(Kind.RICOCHET, (float) (ctx.param("damage", 8.0) * spikes(ctx.player())), ctx.param("speed", 1.6), 1.6,
 				ctx.world().getTime() + 100, Vec3d.ZERO);
 		roll.targets.addAll(targets.subList(0, Math.min(max, targets.size())));
 		roll.segmentStart = ctx.world().getTime();
@@ -170,7 +175,7 @@ final class CannonboltAbilities {
 		int ticks = (int) ctx.param("ticks", 200.0);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, (int) ctx.param("speed_level", 2.0), false, false));
 		stepHeight(player, true);
-		Roll roll = new Roll(Kind.CRUISE, (float) ctx.param("damage", 5.0), 0.0, 1.3, ctx.world().getTime() + ticks, Vec3d.ZERO);
+		Roll roll = new Roll(Kind.CRUISE, (float) (ctx.param("damage", 5.0) * spikes(ctx.player())), 0.0, 1.3, ctx.world().getTime() + ticks, Vec3d.ZERO);
 		roll.baseSpeedLevel = (int) ctx.param("speed_level", 2.0);
 		roll.speedLevel = roll.baseSpeedLevel;
 		start(ctx, roll);
@@ -181,7 +186,7 @@ final class CannonboltAbilities {
 	private static boolean cannonade(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		BuiltinAbilities.launch(player, 0.0, ctx.param("up", 1.9), 0.0);
-		Roll roll = new Roll(Kind.CANNONADE, (float) ctx.param("damage", 16.0), ctx.param("dive", 2.6), ctx.param("radius", 8.5),
+		Roll roll = new Roll(Kind.CANNONADE, (float) (ctx.param("damage", 16.0) * spikes(ctx.player())), ctx.param("dive", 2.6), ctx.param("radius", 8.5),
 				ctx.world().getTime() + 120, Vec3d.ZERO);
 		roll.airborne = true;
 		roll.peakY = player.getY();

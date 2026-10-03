@@ -149,6 +149,9 @@ final class HumungousaurAbilities {
 
 	/** Faktor fuer Reichweite/Schaden der Faehigkeiten: Stufe 0 = 1, Stufe 3 = 1,6; Riesenwuchs 2. */
 	private static double size(ServerPlayerEntity player) {
+		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
+			return TITAN.containsKey(player.getUuid()) ? 2.4 : 1.8;
+		}
 		return TITAN.containsKey(player.getUuid()) ? 2.0 : 1.0 + 0.2 * stage(player);
 	}
 
@@ -291,6 +294,14 @@ final class HumungousaurAbilities {
 			if (!ground.isAir()) {
 				world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), p.x, p.y + 0.1, p.z, 8, 0.3, 0.05, 0.3, 0.15);
 			}
+		}
+		// Ultimate: Raketenfinger — fuenf Geschosse aus den Fingerspitzen, explodieren ohne Blockschaden
+		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
+			for (int i = 0; i < 5; i++) {
+				com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity.shoot(world, player, net.minecraft.item.Items.FIRE_CHARGE, 2.0f, 6.0f)
+						.withDamage((float) ctx.param("missile_damage", 6.0)).withExplosion(1.4f);
+			}
+			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.4f, 0.7f);
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_IRON_GOLEM_ATTACK, 1.4f, 0.6f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.6f, 1.4f);

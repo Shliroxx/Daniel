@@ -154,6 +154,15 @@ public final class HeroCommand {
 						.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 								(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
 										alienId(ctx), true)))))
+				.then(targeted(CommandManager.literal("evolve"), (ctx, target) -> {
+					com.santiq.kingdomomnitrix.alien.Evolution.Result result = com.santiq.kingdomomnitrix.alien.Evolution.evolve(target, true);
+					if (result == com.santiq.kingdomomnitrix.alien.Evolution.Result.SUCCESS) {
+						ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.evolve.success", target.getDisplayName()), true);
+						return 1;
+					}
+					ctx.getSource().sendError(com.santiq.kingdomomnitrix.alien.Evolution.message(result));
+					return 0;
+				}))
 				.then(targeted(CommandManager.literal("revert"),
 						(ctx, target) -> transformResult(ctx, target, TransformationManager.revert(target, false))))
 				.then(CommandManager.literal("omnitrix")

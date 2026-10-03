@@ -210,7 +210,7 @@ final class WildmuttAbilities {
 	private static boolean quillBurst(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		int frenzy = frenzy(player);
-		int count = (int) Math.max(1, ctx.param("count", 7)) + frenzy;
+		int count = ((int) Math.max(1, ctx.param("count", 7)) + frenzy) * (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? 2 : 1);
 		float speed = (float) ctx.param("speed", 2.4);
 		float spread = (float) ctx.param("spread", 9.0);
 		float damage = (float) ctx.param("damage", 4.0) * (1.0f + frenzy * FRENZY_DAMAGE);
@@ -352,6 +352,15 @@ final class WildmuttAbilities {
 			long[] f = FRENZY.get(player.getUuid());
 			if (f != null && f[0] > 0 && rampage == null && now - f[1] > FRENZY_TICKS) {
 				setFrenzy(player, (int) f[0] - 1);
+			}
+			// Ultimate: der Stachelruecken feuert alle 2 s von selbst auf die Beute
+			if (now % 40 == 0 && com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
+				prey(player).filter(p -> p.squaredDistanceTo(player) < 16 * 16).ifPresent(p -> {
+					for (int i = 0; i < 3; i++) {
+						HeroProjectileEntity.shootAt(world, player, Items.ARROW, p, 2.6f, 4.0f).withDamage(4.0f);
+					}
+					world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ARROW_SHOOT, net.minecraft.sound.SoundCategory.PLAYERS, 1.0f, 0.6f);
+				});
 			}
 			Long tracking = TRACKING.get(player.getUuid());
 			if (tracking != null) {

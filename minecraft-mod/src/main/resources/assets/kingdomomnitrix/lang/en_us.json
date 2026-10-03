@@ -990,5 +990,14 @@
   "ability.kingdomomnitrix.wall_of_sound": "Wall of Sound",
   "ability.kingdomomnitrix.sound_shield": "Sound Shield",
   "ability.kingdomomnitrix.echo_chorus": "Echo Chorus",
-  "message.kingdomomnitrix.echo_echo_max": "Maximum of %s clones reached"
+  "message.kingdomomnitrix.echo_echo_max": "Maximum of %s clones reached",
+  "key.kingdomomnitrix.evolve": "Evolve (Ultimate form)",
+  "message.kingdomomnitrix.evolve": "ULTIMATE %s!",
+  "message.kingdomomnitrix.evolve_success": "Evolved",
+  "message.kingdomomnitrix.evolve_not_transformed": "Transform first",
+  "message.kingdomomnitrix.evolve_no_ultimate": "This alien has no Ultimate form",
+  "message.kingdomomnitrix.evolve_locked": "Ultimate form needs more mastery",
+  "message.kingdomomnitrix.evolve_cooldown": "Evolution still recharging",
+  "message.kingdomomnitrix.evolve_already": "Already evolved",
+  "commands.kingdomomnitrix.evolve.success": "%s evolved"
 }

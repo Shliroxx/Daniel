@@ -67,6 +67,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.alien.AlienUniforms.register();
 		com.santiq.kingdomomnitrix.galvan.GreyMatterKnowledge.register();
 		com.santiq.kingdomomnitrix.galvan.GalvanInvention.register();
+		com.santiq.kingdomomnitrix.alien.Evolution.register();
 		com.santiq.kingdomomnitrix.galvan.GalvanHack.register();
 		ModComponents.register();
 		ModParticles.register();

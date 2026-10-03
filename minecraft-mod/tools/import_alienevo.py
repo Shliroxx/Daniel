@@ -28,7 +28,8 @@ import re
 import sys
 import zipfile
 from copy import deepcopy
-from dataclasses import dataclass
+import colorsys
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 try:
@@ -992,6 +993,248 @@ def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
 DATA = ASSETS.parent.parent / "data" / "kingdomomnitrix" / "kingdomomnitrix" / "alien"
 
 
+# --- Ultimate-Formen (Evolve) ----------------------------------------------------------------------
+# AE hat keine Ultimate-Modelle. Jede Ultimate-Form entsteht aus dem AE-Modell ihres Aliens: Textur nach der Serie
+# umgefaerbt, zusaetzliche Geometrie (Stacheln, Platten, Lautsprecherscheiben) als eigene Knochen, ggf. andere
+# AE-Ruhehaltung. Ergebnis: Modell „ultimate_<alien>“ (alle drei Uniform-Dateien), Darstellung relativ zur
+# Spielergroesse des Grund-Aliens.
+
+
+@dataclass(frozen=True)
+class Spikes:
+    bone: str                 # Knochen (inkl. Unterknochen fuer die Masse), an den die Stacheln kommen
+    face: str                 # "back" (+Z), "top" (+Y), "sides" (±X), "shoulders" (±X oben)
+    count: int
+    length: float
+    width: float = 1.4
+    tilt: float = 25.0        # Neigung der Spitze (Grad)
+    accent: bool = False      # Farbe 2 statt Farbe 1 (z. B. Scheiben/Kristalle)
+    disc: bool = False        # flache Scheibe statt Stachel
+
+
+@dataclass(frozen=True)
+class Ultimate:
+    base: str
+    recolor: str                       # Name der Umfaerbung (siehe recolor_pixel)
+    spike_color: str                   # Farbe 1 (#RRGGBB)
+    accent_color: str                  # Farbe 2
+    spikes: tuple[Spikes, ...] = ()
+    rest: tuple[str, ...] | None = None  # andere AE-Ruhehaltung (Humungosaur: Panzer ausgefahren)
+    size: float = 1.1                  # groesser als die Grundform
+
+
+ULTIMATES = {
+    # Panzerplatten ausgefahren (AE armor_on), dunkler Panzer, Stachelkamm auf dem Ruecken
+    "ultimate_humungousaur": Ultimate("humungousaur", "dark_armor", "#2E3440", "#5B6B7F",
+                                      spikes=(Spikes("body", "back", 5, 5.0, 2.0, 30.0),),
+                                      rest=("model.humongousaur.anim.json:animation.humungousaur.armor_on",), size=1.15),
+    # Feuer und Eis: dunkles Violett, Flammenfarben in den Hellen, rot-orange Eiszacken
+    "ultimate_big_chill": Ultimate("big_chill", "fire_ice", "#E2572B", "#FFB347",
+                                   spikes=(Spikes("head", "top", 3, 3.0, 1.0, 10.0),)),
+    # blaues Feuer: Gruen wird Petrol, Rot wird Blau, blaue Kristalle auf Schultern und Ruecken
+    "ultimate_swampfire": Ultimate("swampfire", "blue_fire", "#2B6CB0", "#7FD4FF",
+                                   spikes=(Spikes("body", "back", 3, 3.0, 1.6, 35.0, accent=True),
+                                           Spikes("body", "shoulders", 2, 2.5, 1.6, 20.0, accent=True))),
+    # dunkelblaue Haut statt weiss, Lautsprecherscheiben auf Ruecken und Schultern
+    "ultimate_echo_echo": Ultimate("echo_echo", "navy", "#1B2A4A", "#5AC8FA",
+                                   spikes=(Spikes("body", "back", 2, 1.2, 7.0, 0.0, accent=True, disc=True),
+                                           Spikes("body", "shoulders", 2, 1.2, 5.5, 0.0, accent=True, disc=True))),
+    # Stahlpanzer mit Stacheln rundum
+    "ultimate_cannonbolt": Ultimate("cannonbolt", "steel_shell", "#3A4250", "#D8DEE9",
+                                    spikes=(Spikes("body", "back", 4, 7.0, 3.2, 20.0), Spikes("body", "sides", 4, 6.0, 3.0, 15.0))),
+    # dunkleres Rotbraun, Stachelkamm entlang des Rueckens
+    "ultimate_wildmutt": Ultimate("wildmutt", "blood_orange", "#2B2B2B", "#C94F2A",
+                                  spikes=(Spikes("body", "top", 6, 4.0, 1.6, 30.0),)),
+}
+ULTIMATE_PATCH = 16  # Texturstreifen (Einheiten) unten fuer Stachel-/Akzentfarbe
+
+
+def _hex(color: str) -> tuple[int, int, int]:
+    color = color.lstrip("#")
+    return int(color[0:2], 16), int(color[2:4], 16), int(color[4:6], 16)
+
+
+def recolor_pixel(kind: str, r: int, g: int, b: int) -> tuple[int, int, int]:
+    """Umfaerbung je Ultimate-Form (HSV, Werte 0–1)."""
+    h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+    deg = h * 360.0
+    if kind == "dark_armor":
+        s, v = s * 0.75, v * 0.72
+    elif kind == "fire_ice":
+        if s < 0.25 and v > 0.7:          # helles Eis → Flammenorange
+            deg, s = 25.0, 0.75
+        else:                              # Blau → Violett
+            deg, v = (deg + 50.0) % 360.0, v * 0.85
+    elif kind == "blue_fire":
+        if 60.0 <= deg <= 170.0:           # Gruen → Petrol
+            deg, v = 190.0, v * 0.85
+        elif deg <= 20.0 or deg >= 330.0:  # Rot → Blau
+            deg = 215.0
+    elif kind == "navy":
+        if s < 0.2:                        # Weiss/Grau → Dunkelblau
+            deg, s, v = 222.0, 0.55, 0.15 + v * 0.35
+    elif kind == "steel_shell":
+        if s < 0.2 and v > 0.6:            # weisser Panzer → Stahl
+            deg, s, v = 215.0, 0.18, v * 0.55
+    elif kind == "blood_orange":
+        if 10.0 <= deg <= 50.0:
+            deg, v = deg - 12.0, v * 0.8
+    else:
+        raise ValueError(f"unbekannte Umfaerbung: {kind}")
+    nr, ng, nb = colorsys.hsv_to_rgb((deg % 360.0) / 360.0, max(0.0, min(1.0, s)), max(0.0, min(1.0, v)))
+    return round(nr * 255), round(ng * 255), round(nb * 255)
+
+
+def _recolor_image(img: Image.Image, kind: str) -> Image.Image:
+    out = img.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a:
+                px[x, y] = (*recolor_pixel(kind, r, g, b), a)
+    return out
+
+
+def _with_patch(img: Image.Image, units: tuple[float, float], ult: Ultimate, glow: bool) -> Image.Image:
+    """Streifen unten anhaengen: links Farbe 1, rechts Farbe 2 (Leuchtmaske: nur Akzent leuchtet)."""
+    kx, ky = img.width / units[0], img.height / units[1]
+    extra = round(ULTIMATE_PATCH * ky)
+    sheet = Image.new("RGBA", (img.width, img.height + extra), (0, 0, 0, 0))
+    sheet.paste(img, (0, 0))
+    half = img.width // 2
+    if not glow:
+        sheet.paste(Image.new("RGBA", (half, extra), (*_hex(ult.spike_color), 255)), (0, img.height))
+        sheet.paste(Image.new("RGBA", (img.width - half, extra), (*_hex(ult.accent_color), 255)), (half, img.height))
+    elif ult.recolor in ("blue_fire", "navy", "fire_ice"):
+        sheet.paste(Image.new("RGBA", (img.width - half, extra), (*_hex(ult.accent_color), 255)), (half, img.height))
+    return sheet
+
+
+def _cubes(bones: list[dict], root: str) -> list[dict]:
+    """Alle Wuerfel unter einem Knochen (bis zum naechsten Hauptknochen)."""
+    by_parent: dict[str, list[dict]] = {}
+    for b in bones:
+        by_parent.setdefault(b.get("parent", ""), []).append(b)
+    cubes, stack = [], [b for b in bones if b["name"] == root]
+    while stack:
+        bone = stack.pop()
+        cubes += bone.get("cubes", [])
+        stack += [k for k in by_parent.get(bone["name"], []) if k["name"] not in MAIN_BONES]
+    return cubes
+
+
+def _surface(cubes: list[dict], axis: int, along: int, pos: float, across: int, mid: float) -> float | None:
+    """Hoechster Wert auf Achse {@code axis} unter den Wuerfeln, die an Stelle {@code pos} (Achse {@code along}) und
+    nahe der Mitte {@code mid} (Achse {@code across}) liegen — damit Stacheln auf der echten Oberflaeche sitzen."""
+    best = None
+    for c in cubes:
+        o, s = c["origin"], c["size"]
+        if o[along] - 0.01 <= pos <= o[along] + s[along] + 0.01 and o[across] - 0.5 <= mid <= o[across] + s[across] + 0.5:
+            top = o[axis] + s[axis]
+            best = top if best is None else max(best, top)
+    return best
+
+
+def _bounds(bones: list[dict], root: str) -> tuple[list[float], list[float]] | None:
+    """Huelle aller Wuerfel unter einem Knochen (bis zum naechsten Hauptknochen)."""
+    by_parent: dict[str, list[dict]] = {}
+    for b in bones:
+        by_parent.setdefault(b.get("parent", ""), []).append(b)
+    lo, hi = [1e9] * 3, [-1e9] * 3
+    stack = [b for b in bones if b["name"] == root]
+    found = False
+    while stack:
+        bone = stack.pop()
+        for c in bone.get("cubes", []):
+            for i in range(3):
+                lo[i] = min(lo[i], c["origin"][i])
+                hi[i] = max(hi[i], c["origin"][i] + c["size"][i])
+            found = True
+        stack += [k for k in by_parent.get(bone["name"], []) if k["name"] not in MAIN_BONES]
+    return (lo, hi) if found else None
+
+
+def _spike_bones(bones: list[dict], spikes: Spikes, index: int, patch_v: float, tex_w: float) -> list[dict]:
+    box = _bounds(bones, spikes.bone)
+    if box is None:
+        return []  # Zweitform ohne diesen Knochen (Cannonbolts Kugel) bekommt keine Stacheln
+    lo, hi = box
+    u = tex_w / 2 + 1 if spikes.accent else 1
+    w, length = spikes.width, spikes.length
+    out = []
+    for i in range(spikes.count):
+        f = (i + 0.5) / spikes.count
+        cubes = _cubes(bones, spikes.bone)
+        if spikes.face == "back":        # Ruecken (+Z), von oben nach unten, auf der Oberflaeche
+            y = hi[1] - f * (hi[1] - lo[1]) * 0.85
+            base = [0.0, y, _surface(cubes, 2, 1, y, 0, 0.0) or hi[2]]
+            size = [w, w, length] if not spikes.disc else [w, w, length]
+            rot = [-spikes.tilt, 0.0, 0.0]
+            origin = [base[0] - size[0] / 2, base[1] - size[1] / 2, base[2] - 0.3]
+        elif spikes.face == "top":       # Oberseite (+Y), entlang Z von vorn nach hinten
+            z = lo[2] + (0.15 + 0.7 * f) * (hi[2] - lo[2])
+            base = [0.0, _surface(cubes, 1, 2, z, 0, 0.0) or hi[1], z]
+            size = [w, length, w]
+            rot = [spikes.tilt, 0.0, 0.0]
+            origin = [base[0] - size[0] / 2, base[1] - 0.3, base[2] - size[2] / 2]
+        elif spikes.face in ("sides", "shoulders"):
+            side = -1 if i % 2 == 0 else 1
+            row = i // 2
+            rows = max(1, (spikes.count + 1) // 2)
+            y = hi[1] - (0.15 if spikes.face == "shoulders" else (row + 0.5) / rows * 0.8) * (hi[1] - lo[1])
+            x = hi[0] if side > 0 else lo[0]
+            base = [x, y, (lo[2] + hi[2]) / 2]
+            size = [length, w, w] if not spikes.disc else [length, w, w]
+            rot = [0.0, 0.0, -side * spikes.tilt]
+            origin = [base[0] - (0.3 if side > 0 else length - 0.3), base[1] - size[1] / 2, base[2] - size[2] / 2]
+        else:
+            raise ValueError(f"unbekannte Flaeche: {spikes.face}")
+        out.append({"name": f"ult_{spikes.bone}_{spikes.face}_{index}_{i}", "parent": spikes.bone,
+                    "pivot": [round(v, 3) for v in base], "rotation": rot,
+                    "cubes": [{"origin": [round(v, 3) for v in origin], "size": [round(v, 3) for v in size],
+                               "uv": [u, patch_v + 1]}]})
+    return out
+
+
+def build_ultimate(jar: Jar, name: str, ult: Ultimate, palettes: dict) -> dict[Path, object]:
+    base_spec = ALIENS[ult.base]
+    spec = replace(base_spec, rest=ult.rest) if ult.rest is not None else base_spec
+    files = build(jar, name, spec, palettes)
+    out: dict[Path, object] = {}
+    geo_units: dict[str, tuple[float, float]] = {}
+    for path, content in files.items():
+        if path.suffix == ".json" and "geo" in path.parts and isinstance(content, dict):
+            geo = content["minecraft:geometry"][0]
+            desc = geo["description"]
+            tw, th = desc["texture_width"], desc["texture_height"]
+            geo_units[path.name.replace(".geo.json", "")] = (tw, th)
+            desc["texture_height"] = th + ULTIMATE_PATCH
+            added = []
+            for index, spikes in enumerate(ult.spikes):
+                added += _spike_bones(geo["bones"], spikes, index, th, tw)
+            if not added and not any(path.name.endswith(f"_{form}.geo.json") for form in ([base_spec.form[2]] if base_spec.form else [])):
+                raise ValueError(f"{path.name}: keine Ultimate-Geometrie angebracht")
+            geo["bones"] += added
+        out[path] = content
+    for path, content in list(out.items()):
+        if not isinstance(content, Image.Image):
+            continue
+        stem = path.name[:-4]
+        if stem.endswith("_arms"):
+            out[path] = _recolor_image(content, ult.recolor)
+            continue
+        glow = stem.endswith("_glowmask")
+        key = stem.replace("_glowmask", "").replace("_warn", "")
+        key = re.sub(r"_f\d+$", "", key)
+        units = geo_units.get(key) or geo_units.get(name)
+        img = content if glow else _recolor_image(content, ult.recolor)
+        out[path] = _with_patch(img, units, ult, glow)
+    render = ASSETS / "alien_render" / f"{name}.json"
+    out[render]["scale"] = round(render_scale(ult.base, base_spec) * ult.size, 3)
+    return out
+
+
 def render_scale(name: str, spec: Spec) -> float:
     """GeckoLib multipliziert die Darstellung mit der Spielergroesse (Scale-Attribut, Datenpaket „scale“). Damit das
     Alien so gross aussieht wie in AE, ist die Darstellung AE-Groesse / Spielergroesse."""
@@ -1002,7 +1245,7 @@ def render_scale(name: str, spec: Spec) -> float:
 
 def expected_files() -> list[Path]:
     paths = []
-    for name in ALIENS:
+    for name in list(ALIENS) + list(ULTIMATES):
         for index, uniform in enumerate(UNIFORMS):
             suffix = "" if index == 0 else f"_{uniform}"
             paths += [ASSETS / "geo" / "entity" / "alien" / f"{name}{suffix}.geo.json",
@@ -1048,6 +1291,26 @@ def main(argv: list[str] | None = None) -> int:
             continue
         try:
             files = build(jar, name, spec, palettes)
+        except (KeyError, ValueError) as exc:
+            LOG.error("%s: %s", name, exc)
+            return 1
+        for path, content in files.items():
+            if content is None:
+                if path.exists():
+                    path.unlink()
+                continue
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(content, Image.Image):
+                content.save(path)
+            else:
+                path.write_text(json.dumps(content, indent=2) + "\n")
+            written += 1
+        LOG.info("%s importiert", name)
+    for name, ult in ULTIMATES.items():
+        if args.only and args.only not in (name, ult.base):
+            continue
+        try:
+            files = build_ultimate(jar, name, ult, palettes)
         except (KeyError, ValueError) as exc:
             LOG.error("%s: %s", name, exc)
             return 1

@@ -138,6 +138,11 @@ final class SwampfireAbilities {
 	// --- Gas -------------------------------------------------------------------------------------
 
 	private static void addCloud(ServerWorld world, ServerPlayerEntity player, Vec3d center, double radius, int ticks, float power) {
+		// Ultimate: blaues Feuer — groessere, heftigere Wolken
+		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
+			radius += 1.0;
+			power *= 1.5f;
+		}
 		CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(), center, radius, world.getTime() + ticks, power));
 		world.spawnParticles(GAS, center.x, center.y, center.z, (int) (radius * 12), radius * 0.5, radius * 0.3, radius * 0.5, 0.0);
 	}
@@ -204,7 +209,8 @@ final class SwampfireAbilities {
 			LivingEntity target = hit.get();
 			stop = target.getPos().add(0, target.getHeight() * 0.5, 0);
 			target.timeUntilRegen = 0;
-			target.damage(world.getDamageSources().inFire(), (float) ctx.param("damage", 6.0));
+			target.damage(world.getDamageSources().inFire(),
+					(float) ctx.param("damage", 6.0) * (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? 1.5f : 1.0f));
 			target.setOnFireFor((float) ctx.param("fire_seconds", 4.0));
 		}
 		// Bahn abtasten: jede Wolke, durch die die Flamme geht, zuendet
@@ -214,7 +220,8 @@ final class SwampfireAbilities {
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = eye.add(step.multiply(i / (double) points)).add(0, -0.2, 0);
 			if (i > 2) {
-				world.spawnParticles(ParticleTypes.FLAME, p.x, p.y, p.z, 2, 0.06, 0.06, 0.06, 0.01);
+				world.spawnParticles(com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
+						p.x, p.y, p.z, 2, 0.06, 0.06, 0.06, 0.01);
 			}
 			ignited |= igniteAt(world, p, 0.0);
 		}
