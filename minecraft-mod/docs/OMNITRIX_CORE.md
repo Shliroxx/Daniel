@@ -484,3 +484,33 @@ sehen (der gemeinsame Blitz ueberstrahlt sie im ersten Moment).
 
 ![Alle 10 Verwandlungen](screenshots/transform_styles.png)
 ![Verwandlungs-Moment](screenshots/transform_styles_burst.png)
+
+## 19. Phase P — Abschluss-QA (2026-10-03)
+
+**Behoben in der QA:**
+- Verwandlungsblitz und DNA-Helix waren fest gruene Sprites → je Farbmodul eigene Partikeltypen
+  (`omnitrix_flash_<farbe>`, `dna_helix_<farbe>`, erzeugt von `tools/generate_color_particles.py`, in CI mit `--check`).
+- Verwandlungsblase (Kugel/Ring um den Spieler, `TransformBubble`) war fest gruen → Farbmodul des Spielers.
+- Hitzebalken im HUD (kuehler Bereich) war fest gruen → Farbmodul.
+Ergebnis: die gesamte Verwandlungssequenz (Blitz, Blase, Ring, Helix, Staub, Bildschirmblitz) erscheint in der
+Modulfarbe — im Spiel mit Violett als Bildfolge geprueft.
+
+**Mehrspieler (Dedicated Server + 2 Clients):**
+- Tester stellt an der Kalibrier-Werkbank Rot und Kuehlung 1 ein → Hologramm „Kuehlung auf Stufe 1“; Tester2 sieht
+  Testers Vierarm-Abzeichen **rot** (Anhang-Sync der Kalibrierung funktioniert).
+- Tester bringt 5 Aliens auf ★5 → Diagnose zeigt „Master Control verfuegbar“ (Flag im Mehrspieler vergeben).
+  Das Freischalt-Hologramm selbst fiel in diesem Lauf zeitlich zwischen zwei Bildschirmfotos (im Einzelspieler belegt, §14).
+- Dampf aus Sicht des zweiten Spielers: nicht eindeutig im Bild (Kamera zu nah) — nicht belegt.
+
+**Pruefungen:** `./gradlew build` (inkl. JUnit) gruen; alle Python-Pruefungen der CI lokal gruen (Assets, 18 Generatoren
+`--check`, Tool-Unittests); CI auf dem PR gruen bis Phase N, Phase O beim Schreiben laufend.
+
+**Bekannt offen / nicht geprueft:**
+- Klaenge nach Gehoer (Testumgebung ohne Audio).
+- Kalibrier-Werkbank: Ablehnung „zu weit weg“ und „erst zurueckverwandeln“ nur im Code geprueft.
+- Noch gruen mit Farbmodul: Omnitrix-Item-Textur in der Hand, UI-Symbole, gruene Lampen-Texturen am Omnitrix-Modell.
+- Ueberschwingen/Drehverriegelung des Kerns nur im laufenden Bild beobachtet.
+- Faehigkeits-Posen fuer die neuen Faehigkeiten (Phase F) gibt es weiterhin nicht.
+
+![Verwandlung mit Farbmodul Violett](screenshots/qa_color_transform.png)
+![Mehrspieler: Testers rotes Abzeichen aus Sicht von Tester2](screenshots/qa_multiplayer_badge.png)

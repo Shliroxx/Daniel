@@ -162,7 +162,7 @@ public final class OmnitrixHud implements HudElement {
 		} else if (heat >= warning * 0.6f) {
 			color = 0xFFFFC21A;
 		} else {
-			color = 0xFF39FF14;
+			color = 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
 		}
 		UiDraw.bar(context, x, y, width, HEAT_HEIGHT, status == OmnitrixStatus.OVERHEATED ? 1.0f : heat, color);
 		// Markierung der Warnschwelle

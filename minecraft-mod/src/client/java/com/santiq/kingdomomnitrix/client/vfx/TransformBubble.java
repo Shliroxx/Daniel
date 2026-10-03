@@ -73,7 +73,11 @@ public final class TransformBubble {
 			// erster Stand eines Spielers (Einloggen, in Sichtweite kommen) ist kein Wechsel
 			if (previous != null && !previous.equals(alien)) {
 				if (alien.isPresent()) {
-					BURSTS.add(new Burst(id, now, GREEN_R, GREEN_G, GREEN_B, true));
+					// Farbmodul des Spielers (Klassisch: das bisherige Gruen)
+					int rgb = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.of(player).id().equals("green") ? -1
+							: com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
+					BURSTS.add(rgb < 0 ? new Burst(id, now, GREEN_R, GREEN_G, GREEN_B, true)
+							: new Burst(id, now, ((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f, true));
 				} else {
 					boolean timeout = now >= LAST_END.getOrDefault(id, Long.MAX_VALUE) - 2;
 					BURSTS.add(timeout ? new Burst(id, now, 1.0f, 0.16f, 0.1f, false)

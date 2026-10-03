@@ -16,8 +16,13 @@ public final class ModParticleFactories {
 
 	public static void register() {
 		//                                          life size  end   grav    frict  spin  glow  animate
-		register(ModParticles.OMNITRIX_FLASH, new Style(14, 1.4f, 2.2f, 0.0f, 0.80f, 0.05f, true, true));
-		register(ModParticles.DNA_HELIX, new Style(26, 0.16f, 0.5f, -0.01f, 0.90f, 0.0f, true, false));
+		Style flash = new Style(14, 1.4f, 2.2f, 0.0f, 0.80f, 0.05f, true, true);
+		Style helix = new Style(26, 0.16f, 0.5f, -0.01f, 0.90f, 0.0f, true, false);
+		register(ModParticles.OMNITRIX_FLASH, flash);
+		register(ModParticles.DNA_HELIX, helix);
+		// Farbmodul-Varianten: gleiches Verhalten, umgefaerbte Sprites
+		ModParticles.OMNITRIX_FLASH_COLORED.values().forEach(type -> register(type, flash));
+		ModParticles.DNA_HELIX_COLORED.values().forEach(type -> register(type, helix));
 		register(ModParticles.OMNITRIX_REVERT, new Style(16, 0.3f, 0.2f, 0.02f, 0.88f, 0.2f, true, true));
 		register(ModParticles.KEYBLADE_SPARK, new Style(14, 0.22f, 0.3f, 0.0f, 0.86f, 0.15f, true, true));
 		register(ModParticles.HIT_SPARK, new Style(7, 0.55f, 1.6f, 0.0f, 0.6f, 0.0f, true, true));

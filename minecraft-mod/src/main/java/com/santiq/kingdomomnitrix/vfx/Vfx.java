@@ -36,7 +36,10 @@ public final class Vfx {
 	/** Verwandlung: gruener Blitz, aufsteigende DNA-Doppelhelix, Funkenring. */
 	public static void transform(ServerWorld world, Entity player) {
 		Vec3d center = new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ());
-		directed(world, ModParticles.OMNITRIX_FLASH, center, Vec3d.ZERO);
+		// Farbmodul des Spielers: Blitz und Helix in seiner Farbe
+		String color = player instanceof net.minecraft.entity.player.PlayerEntity human
+				? com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.calibration(human).color() : "green";
+		directed(world, ModParticles.omnitrixFlash(color), center, Vec3d.ZERO);
 		double height = Math.max(2.0, player.getHeight() + 0.4);
 		int steps = 28;
 		for (int i = 0; i < steps; i++) {
@@ -45,7 +48,7 @@ public final class Vfx {
 			for (int strand = 0; strand < 2; strand++) {
 				double a = angle + strand * Math.PI;
 				Vec3d pos = new Vec3d(player.getX() + Math.cos(a) * 0.8, player.getY() + t * height, player.getZ() + Math.sin(a) * 0.8);
-				directed(world, ModParticles.DNA_HELIX, pos, new Vec3d(0, 0.03, 0));
+				directed(world, ModParticles.dnaHelix(color), pos, new Vec3d(0, 0.03, 0));
 			}
 		}
 		ring(world, ModParticles.KEYBLADE_SPARK, new Vec3d(player.getX(), player.getY() + 0.1, player.getZ()), 1.2, 16, 0.12);
