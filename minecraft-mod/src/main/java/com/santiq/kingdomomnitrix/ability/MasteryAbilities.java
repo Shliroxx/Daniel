@@ -2,7 +2,6 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.party.PartyRules;
-import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.util.Targeting;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.Optional;
@@ -12,7 +11,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleEffect;
@@ -24,7 +22,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -64,15 +61,7 @@ final class MasteryAbilities {
 		// --- XLR8: Xlr8Abilities (Tempo)
 		// --- Vierarm: FourArmsAbilities (Wut)
 		// --- Diamondhead: DiamondheadAbilities (Resonanz, Kristall-Konstrukte)
-		// --- Grey Matter
-		reg("weak_spot", ctx -> onTarget(ctx, 16.0, ParticleTypes.ENCHANTED_HIT, SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), true,
-				new Fx(StatusEffects.WEAKNESS, 1), new Fx(StatusEffects.GLOWING, 0), new Fx(StatusEffects.SLOWNESS, 0)));
-		reg("scurry", ctx -> self(ctx, SoundEvents.ENTITY_SILVERFISH_STEP, new Fx(StatusEffects.SPEED, 2), new Fx(StatusEffects.JUMP_BOOST, 2)));
-		reg("tech_snare", ctx -> area(ctx, new Look(tech, 50, SoundEvents.BLOCK_TRIPWIRE_ATTACH, 1.4f, true),
-				new Fx(StatusEffects.SLOWNESS, 4), new Fx(StatusEffects.WEAKNESS, 0)));
-		reg("jury_rig", MasteryAbilities::juryRig);
-		reg("mastermind", ctx -> area(ctx, new Look(ParticleTypes.ELECTRIC_SPARK, 80, SoundEvents.BLOCK_BEACON_ACTIVATE, 1.4f, true),
-				new Fx(StatusEffects.GLOWING, 0), new Fx(StatusEffects.WEAKNESS, 1), new Fx(StatusEffects.SLOWNESS, 1)));
+		// --- Grey Matter: GreyMatterAbilities (Analyse-Datenbank)
 		// --- Wildmutt
 		reg("savage_maul", MasteryAbilities::savageMaul);
 		reg("scent_track", ctx -> area(ctx, new Look(ParticleTypes.NOTE, 1, SoundEvents.ENTITY_WOLF_HOWL, 1.0f, true), new Fx(StatusEffects.GLOWING, 0)));
@@ -234,19 +223,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** Grey Matter: repariert das Werkzeug in der Hand ein Stueck und heilt den Spieler. */
-	private static boolean juryRig(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
-		if (!stack.isEmpty() && stack.isDamageable()) {
-			stack.setDamage(Math.max(0, stack.getDamage() - (int) Math.ceil(stack.getMaxDamage() * ctx.param("repair", 0.15))));
-		}
-		player.heal((float) ctx.param("heal", 6.0));
-		ctx.world().spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.6), player.getZ(), 20, 0.3, 0.3, 0.3, 0.1);
-		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.4f);
-		return true;
-	}
 
 	/** Wildmutt: drei schnelle Bisse auf ein Ziel (jeder Treffer zaehlt einzeln). */
 	private static boolean savageMaul(AbilityContext ctx) {

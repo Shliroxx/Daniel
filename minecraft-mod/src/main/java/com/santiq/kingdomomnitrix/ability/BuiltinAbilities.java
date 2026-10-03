@@ -1,42 +1,23 @@
 package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.party.PartyRules;
-
-import com.santiq.kingdomomnitrix.registry.ModSounds;
-
-import com.santiq.kingdomomnitrix.KingdomOmnitrix;
-import com.santiq.kingdomomnitrix.registry.ModItems;
-import com.santiq.kingdomomnitrix.util.Targeting;
-import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.List;
-import java.util.Optional;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Die mitgelieferten Faehigkeits-Typen. Jeder Typ liest seine Zahlen aus den JSON-Parametern
- * und faellt auf die hier stehenden Standardwerte zurueck.
+ * Registriert alle mitgelieferten Faehigkeits-Typen und stellt gemeinsame Hilfen bereit. Jeder Typ liest seine Zahlen
+ * aus den JSON-Parametern und faellt auf Standardwerte zurueck.
  */
 final class BuiltinAbilities {
 	private BuiltinAbilities() {
 	}
 
 	static void register() {
-		// Heatblast
-		// XLR8
-		// Vierarm
-		// Diamondhead / Grey Matter (Prototyp)
-		AbilityRegistry.register(KingdomOmnitrix.id("scan"), BuiltinAbilities::scan);
 		CreatureAbilities.register();
 		MasteryAbilities.register();
 		CannonboltAbilities.register();
@@ -44,36 +25,13 @@ final class BuiltinAbilities {
 		Xlr8Abilities.register();
 		FourArmsAbilities.register();
 		DiamondheadAbilities.register();
+		GreyMatterAbilities.register();
 		JetrayAbilities.register();
 	}
 
-	// Heatblast: HeatblastAbilities (Kernhitze)
-
-	// XLR8: Xlr8Abilities (Tempo)
-
-	// Vierarm: FourArmsAbilities (Wut), Diamondhead: DiamondheadAbilities (Resonanz)
-
-	// --- Grey Matter ---------------------------------------------------------------
-
-	private static boolean scan(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 24.0));
-		if (found.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		LivingEntity target = found.get();
-		double attack = target.getAttributes().hasAttribute(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-				? target.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) : 0.0;
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.scan",
-				target.getDisplayName(),
-				String.format("%.1f", target.getHealth()),
-				String.format("%.1f", target.getMaxHealth()),
-				String.format("%.0f", target.getAttributeValue(EntityAttributes.GENERIC_ARMOR)),
-				String.format("%.1f", attack)).formatted(Formatting.GRAY), false);
-		sound(ctx, ModSounds.SHIP_AI, 0.7f, 1.2f);
-		return true;
-	}
+	// Alien-Faehigkeiten mit eigenem System stehen je Alien in eigenen Klassen: HeatblastAbilities (Kernhitze),
+	// Xlr8Abilities (Tempo), FourArmsAbilities (Wut), DiamondheadAbilities (Resonanz), GreyMatterAbilities
+	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 

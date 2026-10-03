@@ -890,5 +890,8 @@
   "message.kingdomomnitrix.four_arms_rampage": "RASEREI — nächste Fähigkeit mit voller Wucht!",
   "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!",
   "ability.kingdomomnitrix.crystal_vault": "Kristallsprung",
-  "message.kingdomomnitrix.diamondhead_prism": "PRISMA — nächste Fähigkeit mit voller Resonanz!"
+  "message.kingdomomnitrix.diamondhead_prism": "PRISMA — nächste Fähigkeit mit voller Resonanz!",
+  "message.kingdomomnitrix.grey_matter_learned": "Neues Wissen: %s %s/%s (+%s %% Schaden in jeder Form)",
+  "message.kingdomomnitrix.grey_matter_known": "Bekannt: %s %s/%s (+%s %% Schaden in jeder Form)",
+  "message.kingdomomnitrix.grey_matter_mastermind": "Masterplan: %s neue Analysen"
 }

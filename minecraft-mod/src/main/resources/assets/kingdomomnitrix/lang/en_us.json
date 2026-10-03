@@ -890,5 +890,8 @@
   "message.kingdomomnitrix.four_arms_rampage": "RAMPAGE — next ability at full force!",
   "message.kingdomomnitrix.four_arms_combo": "Four-fist strike!",
   "ability.kingdomomnitrix.crystal_vault": "Crystal Vault",
-  "message.kingdomomnitrix.diamondhead_prism": "PRISM — next ability at full resonance!"
+  "message.kingdomomnitrix.diamondhead_prism": "PRISM — next ability at full resonance!",
+  "message.kingdomomnitrix.grey_matter_learned": "Knowledge gained: %s %s/%s (+%s%% damage in every form)",
+  "message.kingdomomnitrix.grey_matter_known": "Known: %s %s/%s (+%s%% damage in every form)",
+  "message.kingdomomnitrix.grey_matter_mastermind": "Master plan: %s new analyses"
 }
