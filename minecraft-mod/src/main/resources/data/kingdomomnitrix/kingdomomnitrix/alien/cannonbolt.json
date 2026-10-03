@@ -1,0 +1,147 @@
+{
+  "color": "#F2C230",
+  "sort_order": 10,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 7,
+  "scale": 1.33,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 12.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 14.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.6,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": -0.08,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 10.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:cannonball",
+      "energy": 18,
+      "cooldown": 30,
+      "params": {
+        "damage": 9.0,
+        "speed": 1.15,
+        "ticks": 26.0,
+        "ball_ticks": 28.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:shell_guard",
+      "energy": 25,
+      "cooldown": 140,
+      "params": {
+        "ticks": 60.0,
+        "resistance": 2.0,
+        "ball_ticks": 60.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ball_bounce",
+      "energy": 22,
+      "cooldown": 60,
+      "params": {
+        "damage": 7.0,
+        "radius": 4.5,
+        "up": 1.25,
+        "forward": 0.8,
+        "ball_ticks": 34.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ricochet",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "range": 10.0,
+        "damage": 8.0,
+        "bounces": 4.0,
+        "speed": 1.6,
+        "ball_ticks": 70.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:rolling_mode",
+      "energy": 30,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "ticks": 200.0,
+        "speed_level": 2.0,
+        "damage": 5.0,
+        "ball_ticks": 200.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:cannonade",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "damage": 16.0,
+        "radius": 8.5,
+        "up": 1.9,
+        "dive": 2.6,
+        "ball_ticks": 60.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:armadillo",
+      "chance": 0.35
+    },
+    {
+      "entity": "minecraft:turtle",
+      "chance": 0.15
+    }
+  ],
+  "model": "kingdomomnitrix:cannonbolt",
+  "failsafe_tags": [
+    "#minecraft:is_explosion"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "transform_style": "roll"
+  }
+}

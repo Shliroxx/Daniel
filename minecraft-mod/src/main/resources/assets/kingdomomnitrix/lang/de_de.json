@@ -868,5 +868,12 @@
   "hud.kingdomomnitrix.blocked": "Block",
   "commands.kingdomomnitrix.town.not_built": "Traverse Town steht noch nicht (zuerst besuchen)",
   "commands.kingdomomnitrix.town.rebuilt": "Traverse Town bei %s %s %s neu errichtet",
-  "commands.kingdomomnitrix.unknown_alien": "Unbekanntes Alien: %s"
+  "commands.kingdomomnitrix.unknown_alien": "Unbekanntes Alien: %s",
+  "alien.kingdomomnitrix.cannonbolt": "Cannonbolt",
+  "ability.kingdomomnitrix.cannonball": "Kanonenkugel",
+  "ability.kingdomomnitrix.shell_guard": "Panzerkugel",
+  "ability.kingdomomnitrix.ball_bounce": "Kugelsprung",
+  "ability.kingdomomnitrix.ricochet": "Abpraller",
+  "ability.kingdomomnitrix.rolling_mode": "Rollmodus",
+  "ability.kingdomomnitrix.cannonade": "Kanonade"
 }

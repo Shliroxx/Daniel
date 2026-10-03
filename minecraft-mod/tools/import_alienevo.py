@@ -74,6 +74,7 @@ class Spec:
     parts: tuple[str, ...] = ()  # weitere AE-Modelle, die fest dazugehoeren (Stinkfly: Beinpaar, Fluegel)
     variables: tuple[tuple[str, str], ...] = ()  # Textur-Variablen (#TIMER, #X …) → fester Wert (Grundzustand)
     drop: str | None = None  # zusaetzliche Requisiten-Knochen (Regex), die nur Faehigkeiten zeigen
+    form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
 
 
 ALIENS = {
@@ -105,6 +106,9 @@ ALIENS = {
     "upgrade": Spec("9", "galvanic_mechamorph", "galvanic_mechamorph.json", 1.2, "heavy", "#39FF14",
                     script="galvanic_mechamorph", drop=r"liquid|mace|spikes_"),
     # #X 0 = sichtbar (1 = AE-Unsichtbarkeit)
+    # Kugelform als eigenes Modell (cannonbolt_ball), die eingeklappte Kugel im Koerper faellt weg; Groesse 1,33 wie AE
+    "cannonbolt": Spec("11", "arburian_pelarota", "arburian_pelarota.json", 1.33, "heavy", "#F2C230",
+                       script="arburian_pelarota", drop=r"^BALL$", form=("arburian_pelarota_ball", "BALL", "ball")),
     "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.1, "small", "#C9C3D6", script="ectonurite",
                        variables=(("X", "0"),),
                        loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye")),
@@ -590,6 +594,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
             "bones": bones}]}
         files[geo_dir / f"{name}{suffix}.geo.json"] = new_geo
         files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, sheet_color, (tw_new, th_new))
+        if spec.form:
+            files[geo_dir / f"{name}{suffix}_{spec.form[2]}.geo.json"] = form_geo(jar, spec, name, suffix, (tw_new, th_new))
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
@@ -603,6 +609,31 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         "glow_frames": glow_frames(jar, spec), "warn_textures": badge is not None,
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
+
+
+def form_geo(jar: Jar, spec: Spec, name: str, suffix: str, texture: tuple[float, float]) -> dict:
+    """Zweitform (z. B. Kugel): nur der Teilbaum unter dem Wurzelknochen, Wurzel an root und um die eigene Mitte
+    drehbar; gleiche Textur wie der Koerper (AE nutzt dieselbe Bildaufteilung)."""
+    model, root, tag = spec.form
+    geo = jar.json(f"assets/alienevo/geo/aliens/alien_{spec.number}/{model}.geo.json")["minecraft:geometry"][0]
+    by_name = {b["name"]: b for b in geo["bones"]}
+
+    def under(bone: dict) -> bool:
+        while bone is not None:
+            if bone["name"] == root:
+                return True
+            bone = by_name.get(bone.get("parent", ""))
+        return False
+
+    bones = [deepcopy(b) for b in geo["bones"] if under(b)]
+    for b in bones:
+        if b["name"] == root:
+            b["parent"] = "root"
+    return {"format_version": "1.12.0", "minecraft:geometry": [{
+        "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}_{tag}", "texture_width": texture[0],
+                        "texture_height": texture[1], "visible_bounds_width": 4, "visible_bounds_height": 4,
+                        "visible_bounds_offset": [0, 1.0, 0]},
+        "bones": [{"name": "root", "pivot": [0, 0, 0]}] + bones}]}
 
 
 POSE_OPS = re.compile(r"^(set|move|rotate)([XYZ])(Rot)?(Degrees)?$")

@@ -42,7 +42,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Technik: Funkenbogen und Schaltkreis-Glitzern, Summen */
 	TECH,
 	/** Geist: Seelen steigen auf, kalter Hauch */
-	GHOST;
+	GHOST,
+	/** Panzerkugel: Schalenplatten klappen als weiss-goldener Ring zu, Metallklappern, schwerer Aufsatz */
+	ROLL;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -121,6 +123,21 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.WAX_ON, x, mid, z, 20, 0.4, 0.6, 0.4, 0.5);
 				sound(world, player, SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.6f);
 				sound(world, player, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.4f, 2.0f);
+			}
+			case ROLL -> {
+				net.minecraft.particle.DustParticleEffect shell = new net.minecraft.particle.DustParticleEffect(
+						new org.joml.Vector3f(0.95f, 0.85f, 0.35f), 1.6f);
+				net.minecraft.particle.DustParticleEffect plate = new net.minecraft.particle.DustParticleEffect(
+						new org.joml.Vector3f(0.95f, 0.95f, 0.92f), 1.4f);
+				// zwei gegenlaeufige Ringe um die Brust: die Schale schliesst sich
+				ring(world, shell, x, mid, z, 1.1, 24, -0.08);
+				ring(world, plate, x, mid + 0.4, z, 1.0, 20, -0.06);
+				ring(world, new BlockStateParticleEffect(ParticleTypes.BLOCK, world.getBlockState(player.getBlockPos().down()).isAir()
+						? Blocks.STONE.getDefaultState() : world.getBlockState(player.getBlockPos().down())), x, y + 0.1, z, 1.6, 24, 0.18);
+				world.spawnParticles(ParticleTypes.CRIT, x, mid, z, 20, 0.5, 0.5, 0.5, 0.2);
+				sound(world, player, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE.value(), 1.0f, 0.7f);
+				sound(world, player, SoundEvents.BLOCK_ANVIL_LAND, 0.4f, 1.6f);
+				sound(world, player, SoundEvents.ENTITY_IRON_GOLEM_STEP, 1.0f, 0.6f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

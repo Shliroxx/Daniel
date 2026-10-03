@@ -61,6 +61,21 @@ public final class AlienBodyRenderers {
 	private record Revert(Identifier model, long start) {
 	}
 
+	/** Zweitform (z. B. Cannonbolts Kugel): Knochen, der rollt, und Groesse relativ zum Koerper. */
+	private static final String FORM_BALL = "ball";
+	private static final String BALL_BONE = "BALL";
+	/** Kugel kleiner als der Koerper (AE: 1,03 statt 1,33) */
+	private static final float BALL_SCALE = 1.03f / 1.33f;
+	/** Mitte der Kugel im Modell (Pixel) — Kugel bleibt beim Verkleinern auf dem Boden */
+	private static final float BALL_CENTER = 12.5f;
+	/** Rollradius in Bloecken (Umfang = Weg pro Umdrehung) */
+	private static final float BALL_RADIUS = 0.8f;
+	/** Rollwinkel je Spieler (Bogenmass): aktueller und vorheriger Tick */
+	private static final Map<Integer, float[]> ROLL = new HashMap<>();
+	private static final Map<Integer, double[]> LAST_POS = new HashMap<>();
+	private static String currentForm;
+	private static float currentRoll;
+
 	private AlienBodyRenderers() {
 	}
 
@@ -110,6 +125,11 @@ public final class AlienBodyRenderers {
 				}
 			}
 		}
+		for (AbstractClientPlayerEntity player : client.world.getPlayers()) {
+			trackRoll(player);
+		}
+		ROLL.keySet().retainAll(seen);
+		LAST_POS.keySet().retainAll(seen);
 		ACTIVE.keySet().retainAll(seen);
 		REVERTING.entrySet().removeIf(e -> !seen.contains(e.getKey()) || now - e.getValue().start() > AlienBodyAnimatable.REVERT_TICKS);
 		REVERT_UNIFORM.keySet().retainAll(REVERTING.keySet());
@@ -117,6 +137,44 @@ public final class AlienBodyRenderers {
 		if (now % PRUNE_INTERVAL == 0) {
 			retainAnimationData(seen);
 		}
+	}
+
+	/**
+	 * Rollwinkel aus der Bewegung: Weg in Blickrichtung des Koerpers / Radius. Auch fuer fremde Spieler (der Client kennt
+	 * deren Geschwindigkeit nicht, nur die Positionsaenderung).
+	 */
+	private static void trackRoll(AbstractClientPlayerEntity player) {
+		double[] last = LAST_POS.computeIfAbsent(player.getId(), id -> new double[]{player.getX(), player.getZ()});
+		double dx = player.getX() - last[0];
+		double dz = player.getZ() - last[1];
+		last[0] = player.getX();
+		last[1] = player.getZ();
+		float yaw = player.bodyYaw * MathHelper.RADIANS_PER_DEGREE;
+		double forward = -dx * MathHelper.sin(yaw) + dz * MathHelper.cos(yaw);
+		float[] roll = ROLL.computeIfAbsent(player.getId(), id -> new float[2]);
+		roll[1] = roll[0];
+		roll[0] += (float) (forward / BALL_RADIUS);
+	}
+
+	/**
+	 * Aktive Zweitform: die zuletzt benutzte Faehigkeit hat {@code ball_ticks} in ihren Parametern und ist noch nicht
+	 * so lange her. Kommt allein aus dem synchronisierten Verwandlungszustand — kein eigenes Netzwerkpaket.
+	 */
+	static String formOf(PlayerEntity player, TransformationState state) {
+		if (!state.isTransformed()) {
+			return null;
+		}
+		long now = player.getWorld().getTime();
+		int slot = AlienBodyAnimatable.recentAbility(state, now, 400);
+		if (slot < 0) {
+			return null;
+		}
+		Optional<AlienDefinition> alien = state.activeAlien().flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id));
+		if (alien.isEmpty() || slot >= alien.get().abilities().size()) {
+			return null;
+		}
+		double ticks = alien.get().abilities().get(slot).param("ball_ticks", 0.0);
+		return ticks > 0 && now - state.energyStamp() <= ticks ? FORM_BALL : null;
 	}
 
 	/** Animationsdaten verschwundener Spieler in allen Alien-Renderern verwerfen. */
@@ -173,6 +231,9 @@ public final class AlienBodyRenderers {
 		currentWarn = state.isTransformed() && remaining > 0 && remaining <= WARN_TICKS
 				&& (player.age / WARN_BLINK) % 2 == 0;
 		currentBadgeColor = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
+		currentForm = formOf(player, state);
+		float[] roll = ROLL.get(player.getId());
+		currentRoll = roll == null ? 0.0f : MathHelper.lerp(tickDelta, roll[1], roll[0]);
 		currentUniform = state.activeAlien().map(id -> AlienUniforms.get(player, id))
 				.or(() -> Optional.ofNullable(REVERT_UNIFORM.get(player.getId())))
 				.orElse(AlienUniforms.CLASSIC);
@@ -213,11 +274,22 @@ public final class AlienBodyRenderers {
 
 			@Override
 			public Identifier getModelResource(AlienBodyAnimatable animatable) {
-				return uniformModel(model, super.getModelResource(animatable), currentUniform);
+				Identifier geo = uniformModel(model, super.getModelResource(animatable), currentUniform);
+				return currentForm == null ? geo : formModel(geo, currentForm);
 			}
 
 			@Override
 			public void setCustomAnimations(AlienBodyAnimatable animatable, long instanceId, AnimationState<AlienBodyAnimatable> state) {
+				if (currentForm != null) {
+					// Kugel: rollt um die eigene Mitte in Laufrichtung, kleiner als der Koerper, unten am Boden
+					software.bernie.geckolib.cache.object.GeoBone ball = getAnimationProcessor().getBone(BALL_BONE);
+					if (ball != null) {
+						ball.updateRotation(currentRoll, 0.0f, 0.0f);
+						ball.updateScale(BALL_SCALE, BALL_SCALE, BALL_SCALE);
+						ball.updatePosition(0.0f, -BALL_CENTER * (1.0f - BALL_SCALE), 0.0f);
+					}
+					return;
+				}
 				AlienPose.Info info = poseOf(model);
 				if (info != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
 					// wie AE: Koerper folgt der Spielerpose (inkl. Kopf) — die Standard-Kopfdrehung entfaellt
@@ -278,6 +350,12 @@ public final class AlienBodyRenderers {
 		}
 		String path = base.getPath();
 		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - ".geo.json".length()) + "_" + uniform + ".geo.json");
+	}
+
+	/** Geometrie einer Zweitform: {@code <geo>_<form>.geo.json} (vom Importer neben jede Uniform geschrieben). */
+	static Identifier formModel(Identifier geo, String form) {
+		String path = geo.getPath();
+		return Identifier.of(geo.getNamespace(), path.substring(0, path.length() - ".geo.json".length()) + "_" + form + ".geo.json");
 	}
 
 	/**

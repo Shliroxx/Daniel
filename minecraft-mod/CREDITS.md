@@ -4,7 +4,7 @@ made by SANTIQ
 
 ## Alien Evolution (Alien-Modelle, -Texturen und -Farben)
 
-Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade und Ghostfreak (Geometrie,
+Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak und Cannonbolt (Geometrie,
 Texturen, Uniform-Varianten, Farbpaletten und das Omnitrix-Abzeichen) sowie das Omnitrix am Arm (Prototyp-Modell und
 -Texturen, `tools/import_omnitrix_model.py`) stammen aus **Alien Evolution** von Habb and Stephen
 (<https://www.curseforge.com/minecraft/mc-mods/alienevo>).

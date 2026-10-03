@@ -513,6 +513,12 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/possession": ("omnitrix", "eye", False),
     "alien_ability/shadow_step": ("omnitrix", "dash", False),
     "alien_ability/nightmare": ("omnitrix", "sparkle", False),
+    "alien_ability/cannonball": ("omnitrix", "dash", True),
+    "alien_ability/shell_guard": ("omnitrix", "heart", True),
+    "alien_ability/ball_bounce": ("omnitrix", "arrow_up", False),
+    "alien_ability/ricochet": ("omnitrix", "cycle", False),
+    "alien_ability/rolling_mode": ("omnitrix", "speed", True),
+    "alien_ability/cannonade": ("omnitrix", "slam", True),
     # Kommandomenue
     "command/attack": ("hero", "sword", False),
     "command/magic": ("keyblade", "sparkle", False),

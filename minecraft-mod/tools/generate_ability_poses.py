@@ -94,6 +94,9 @@ ABILITY_POSE = {
     # Ghostfreak
     "tentacle_lash": "swipe", "phase_shift": "dodge", "haunting_scare": "roar", "possession": "beam", "shadow_step": "dodge",
     "nightmare": "ultimate",
+    # Cannonbolt: in der Kugelform zeichnet der Client die Kugel statt des Koerpers — Posen gelten fuer den Anlauf
+    "cannonball": "dodge", "shell_guard": "guard", "ball_bounce": "leap", "ricochet": "dodge", "rolling_mode": "dodge",
+    "cannonade": "ultimate",
 }
 
 
