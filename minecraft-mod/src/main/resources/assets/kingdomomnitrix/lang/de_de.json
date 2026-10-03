@@ -942,5 +942,8 @@
   "message.kingdomomnitrix.wildmutt_frenzy": "BLUTRAUSCH — die Jagd beginnt!",
   "message.kingdomomnitrix.stinkfly_rot": "%s zersetzt sich!",
   "message.kingdomomnitrix.ripjaws_combo": "Biss %s/%s",
-  "message.kingdomomnitrix.ripjaws_death_roll": "TODESROLLE!"
+  "message.kingdomomnitrix.ripjaws_death_roll": "TODESROLLE!",
+  "message.kingdomomnitrix.upgrade_overclock": "OVERCLOCK!",
+  "message.kingdomomnitrix.upgrade_armor": "Mit der Rüstung verschmolzen",
+  "message.kingdomomnitrix.upgrade_override": "%s übernommen"
 }

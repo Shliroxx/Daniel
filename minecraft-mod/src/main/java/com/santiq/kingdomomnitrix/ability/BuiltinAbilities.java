@@ -29,6 +29,7 @@ final class BuiltinAbilities {
 		WildmuttAbilities.register();
 		StinkflyAbilities.register();
 		RipjawsAbilities.register();
+		UpgradeAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -36,7 +37,7 @@ final class BuiltinAbilities {
 	// Xlr8Abilities (Tempo), FourArmsAbilities (Wut), DiamondheadAbilities (Resonanz), GreyMatterAbilities
 	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung),
 	// WildmuttAbilities (Jagd), StinkflyAbilities (Toxin-Schichten),
-	// RipjawsAbilities (Gezeiten).
+	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 

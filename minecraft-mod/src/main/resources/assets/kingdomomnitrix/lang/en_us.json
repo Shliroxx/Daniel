@@ -942,5 +942,8 @@
   "message.kingdomomnitrix.wildmutt_frenzy": "BLOODLUST — the hunt is on!",
   "message.kingdomomnitrix.stinkfly_rot": "%s is decomposing!",
   "message.kingdomomnitrix.ripjaws_combo": "Bite %s/%s",
-  "message.kingdomomnitrix.ripjaws_death_roll": "DEATH ROLL!"
+  "message.kingdomomnitrix.ripjaws_death_roll": "DEATH ROLL!",
+  "message.kingdomomnitrix.upgrade_overclock": "OVERCLOCK!",
+  "message.kingdomomnitrix.upgrade_armor": "Fused with armor",
+  "message.kingdomomnitrix.upgrade_override": "%s taken over"
 }

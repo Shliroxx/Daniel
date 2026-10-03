@@ -23,14 +23,13 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
 import org.joml.Vector3f;
 
 /**
  * Faehigkeiten 4–6 (SPECIAL, UTILITY, ULTIMATE) aller Aliens und die fehlenden Slots von Diamondhead und Grey Matter.
  * Freigeschaltet ueber die Alien-Meisterschaft ({@code unlock_level} im Datenpaket). Gebaut aus wenigen geprueften
- * Bausteinen: Flaeche/Kegel ({@link #area}), Selbst-Verstaerkung ({@link #self}), Ziel-Wirkung ({@link #onTarget}),
- * Strahl ({@link #beam}); dazu Sonderfaelle (Kettenangriff, Schattenschritt, Kristallring).
+ * Bausteinen: Flaeche/Kegel ({@link #area}), Selbst-Verstaerkung ({@link #self}) und Ziel-Wirkung ({@link #onTarget});
+ * dazu Sonderfaelle (Kettenangriff, Schattenschritt, Kristallring).
  *
  * <p>Gemeinsame Parameter der Flaechen-Faehigkeiten: {@code radius}, {@code damage}, {@code knockback}, {@code launch},
  * {@code pull}, {@code fire_seconds}, {@code cone} (0 = Rundum, sonst Mindest-cos zum Blick, z. B. 0,5 ≈ 60°),
@@ -61,11 +60,7 @@ final class MasteryAbilities {
 		// --- Wildmutt: WildmuttAbilities (Jagd)
 		// --- Stinkfly: StinkflyAbilities (Toxin-Schichten)
 		// --- Ripjaws: RipjawsAbilities (Gezeiten)
-		// --- Upgrade
-		reg("mace_fists", ctx -> self(ctx, SoundEvents.BLOCK_PISTON_EXTEND, new Fx(StatusEffects.STRENGTH, 1), new Fx(StatusEffects.HASTE, 1)));
-		reg("system_override", ctx -> onTarget(ctx, 16.0, ParticleTypes.ELECTRIC_SPARK, SoundEvents.BLOCK_BEACON_DEACTIVATE, true,
-				new Fx(StatusEffects.SLOWNESS, 5), new Fx(StatusEffects.WEAKNESS, 1), new Fx(StatusEffects.GLOWING, 0)));
-		reg("plasma_cannon", ctx -> beam(ctx, new Vector3f(0.22f, 1.0f, 0.08f), 2.0f, SoundEvents.ENTITY_WARDEN_SONIC_BOOM));
+		// --- Upgrade: UpgradeAbilities (Integration)
 		// --- Ghostfreak
 		reg("possession", ctx -> onTarget(ctx, 6.0, ParticleTypes.SOUL, SoundEvents.ENTITY_VEX_AMBIENT, true,
 				new Fx(StatusEffects.SLOWNESS, 9), new Fx(StatusEffects.WEAKNESS, 1), new Fx(StatusEffects.LEVITATION, 0))
@@ -168,35 +163,6 @@ final class MasteryAbilities {
 		}
 		ctx.world().spawnParticles(particle, target.getX(), target.getBodyY(0.6), target.getZ(), 16, 0.3, 0.4, 0.3, 0.05);
 		BuiltinAbilities.sound(ctx, sound, 1.0f, 1.0f);
-		return true;
-	}
-
-	/** Strahl bis Wand oder erstes Wesen; am Ende optional eine Explosion ohne Blockschaden. */
-	private static boolean beam(AbilityContext ctx, Vector3f color, float defaultExplosion, SoundEvent sound) {
-		ServerPlayerEntity player = ctx.player();
-		ServerWorld world = ctx.world();
-		double range = ctx.param("range", 32.0);
-		Vec3d eye = player.getEyePos();
-		Vec3d end = eye.add(player.getRotationVec(1.0f).multiply(range));
-		HitResult block = world.raycast(new RaycastContext(eye, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
-		Vec3d stop = block.getType() == HitResult.Type.MISS ? end : block.getPos();
-		Optional<LivingEntity> hit = Targeting.findLivingTarget(player, eye.distanceTo(stop));
-		if (hit.isPresent() && PartyRules.canHarm(player, hit.get())) {
-			stop = hit.get().getPos().add(0.0, hit.get().getHeight() * 0.5, 0.0);
-			hit.get().damage(world.getDamageSources().indirectMagic(player, player), (float) ctx.param("damage", 14.0));
-		}
-		float explosion = (float) ctx.param("explosion", defaultExplosion);
-		if (explosion > 0.0f) {
-			world.createExplosion(player, stop.x, stop.y, stop.z, explosion, World.ExplosionSourceType.NONE);
-		}
-		Vec3d step = stop.subtract(eye);
-		int points = Math.max(6, (int) (step.length() * 4));
-		DustParticleEffect dust = new DustParticleEffect(color, 1.6f);
-		for (int i = 1; i <= points; i++) {
-			Vec3d p = eye.add(step.multiply(i / (double) points));
-			world.spawnParticles(dust, p.x, p.y - 0.15, p.z, 2, 0.05, 0.05, 0.05, 0.0);
-		}
-		BuiltinAbilities.sound(ctx, sound, 1.0f, 1.3f);
 		return true;
 	}
 

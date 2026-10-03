@@ -33,7 +33,8 @@ public final class MeterAura {
 			{0x1E6FFF, 0x7FF4FF},
 			{0xFF5A10, 0x7FE9FF},
 			{0xD81E1E, 0xFFB040},
-			{0x2ECC71, 0xD8FFF0}};
+			{0x2ECC71, 0xD8FFF0},
+			{0x39FF14, 0x00E5FF}};
 
 	/** Eine Huelle: Zeichen-Schicht (mit wanderndem Muster), Vergroesserung, additive Farbe. */
 	public record Shell(RenderLayer layer, float scale, int color) {
