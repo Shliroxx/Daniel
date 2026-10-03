@@ -74,7 +74,6 @@
   "ability.kingdomomnitrix.rapid_strikes": "Rapid Strikes",
   "ability.kingdomomnitrix.ground_slam": "Ground Slam",
   "ability.kingdomomnitrix.throw": "Throw",
-  "ability.kingdomomnitrix.mighty_leap": "Mighty Leap",
   "ability.kingdomomnitrix.crystal_volley": "Crystal Volley",
   "ability.kingdomomnitrix.scan": "Scan",
   "category.kingdomomnitrix": "Kingdom Omnitrix",
@@ -889,5 +888,7 @@
   "message.kingdomomnitrix.xlr8_sound_barrier": "Sound barrier broken — next ability at full speed!",
   "ability.kingdomomnitrix.titan_leap": "Titan Leap",
   "message.kingdomomnitrix.four_arms_rampage": "RAMPAGE — next ability at full force!",
-  "message.kingdomomnitrix.four_arms_combo": "Four-fist strike!"
+  "message.kingdomomnitrix.four_arms_combo": "Four-fist strike!",
+  "ability.kingdomomnitrix.crystal_vault": "Crystal Vault",
+  "message.kingdomomnitrix.diamondhead_prism": "PRISM — next ability at full resonance!"
 }

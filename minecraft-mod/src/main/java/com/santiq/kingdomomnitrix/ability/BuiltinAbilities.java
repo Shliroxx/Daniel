@@ -35,9 +35,7 @@ final class BuiltinAbilities {
 		// Heatblast
 		// XLR8
 		// Vierarm
-		AbilityRegistry.register(KingdomOmnitrix.id("mighty_leap"), BuiltinAbilities::mightyLeap);
 		// Diamondhead / Grey Matter (Prototyp)
-		AbilityRegistry.register(KingdomOmnitrix.id("crystal_volley"), BuiltinAbilities::crystalVolley);
 		AbilityRegistry.register(KingdomOmnitrix.id("scan"), BuiltinAbilities::scan);
 		CreatureAbilities.register();
 		MasteryAbilities.register();
@@ -45,6 +43,7 @@ final class BuiltinAbilities {
 		HeatblastAbilities.register();
 		Xlr8Abilities.register();
 		FourArmsAbilities.register();
+		DiamondheadAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -52,31 +51,9 @@ final class BuiltinAbilities {
 
 	// XLR8: Xlr8Abilities (Tempo)
 
-	// --- Vierarm: FourArmsAbilities (Wut); mighty_leap nutzt Diamondhead ---------------------------------------------------------------------------------
+	// Vierarm: FourArmsAbilities (Wut), Diamondhead: DiamondheadAbilities (Resonanz)
 
-	private static boolean mightyLeap(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = horizontalLook(player);
-		double up = ctx.param("up", 1.3);
-		double forward = ctx.param("forward", 1.2);
-		launch(player, look.x * forward, up, look.z * forward);
-		ctx.world().spawnParticles(ParticleTypes.POOF, player.getX(), player.getY(), player.getZ(), 15, 0.4, 0.05, 0.4, 0.02);
-		sound(ctx, ModSounds.ALIEN_SLAM, 1.0f, 1.2f);
-		return true;
-	}
-
-	// --- Diamondhead / Grey Matter ---------------------------------------------------------------
-
-	private static boolean crystalVolley(AbilityContext ctx) {
-		int count = (int) Math.max(1, ctx.param("count", 5));
-		float speed = (float) ctx.param("speed", 2.0);
-		float spread = (float) ctx.param("spread", 6.0);
-		for (int i = 0; i < count; i++) {
-			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), ModItems.CRYSTAL_SHARD, speed, spread);
-		}
-		sound(ctx, ModSounds.ALIEN_CRYSTAL, 1.0f, 1.0f);
-		return true;
-	}
+	// --- Grey Matter ---------------------------------------------------------------
 
 	private static boolean scan(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();

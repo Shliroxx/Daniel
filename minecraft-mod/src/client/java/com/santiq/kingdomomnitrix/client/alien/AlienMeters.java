@@ -27,7 +27,8 @@ public final class AlienMeters {
 	private static final Map<Identifier, Integer> METER_OF = Map.of(
 			KingdomOmnitrix.id("xlr8"), AlienMeterPayload.TEMPO,
 			KingdomOmnitrix.id("heatblast"), AlienMeterPayload.HEAT,
-			KingdomOmnitrix.id("four_arms"), AlienMeterPayload.RAGE);
+			KingdomOmnitrix.id("four_arms"), AlienMeterPayload.RAGE,
+			KingdomOmnitrix.id("diamondhead"), AlienMeterPayload.RESONANCE);
 	/** Zielwert und angezeigter Wert (aktueller/vorheriger Tick) je Spieler und Anzeige */
 	private static final Map<Integer, float[][]> VALUES = new HashMap<>();
 	/** Annaeherung je Tick an den Zielwert */

@@ -29,7 +29,8 @@
       "params": {
         "count": 5,
         "spread": 6.0,
-        "speed": 2.0
+        "speed": 2.0,
+        "damage": 4.0
       },
       "role": "basic",
       "unlock_level": 1
@@ -46,7 +47,7 @@
       }
     },
     {
-      "type": "kingdomomnitrix:mighty_leap",
+      "type": "kingdomomnitrix:crystal_vault",
       "energy": 20,
       "cooldown": 40,
       "role": "movement",

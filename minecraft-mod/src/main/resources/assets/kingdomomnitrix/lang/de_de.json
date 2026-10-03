@@ -74,7 +74,6 @@
   "ability.kingdomomnitrix.rapid_strikes": "Schlaghagel",
   "ability.kingdomomnitrix.ground_slam": "Bodenschlag",
   "ability.kingdomomnitrix.throw": "Werfen",
-  "ability.kingdomomnitrix.mighty_leap": "Riesensprung",
   "ability.kingdomomnitrix.crystal_volley": "Kristallsalve",
   "ability.kingdomomnitrix.scan": "Analyse",
   "category.kingdomomnitrix": "Kingdom Omnitrix",
@@ -889,5 +888,7 @@
   "message.kingdomomnitrix.xlr8_sound_barrier": "Schallmauer durchbrochen — nächste Fähigkeit mit voller Wucht!",
   "ability.kingdomomnitrix.titan_leap": "Titanensprung",
   "message.kingdomomnitrix.four_arms_rampage": "RASEREI — nächste Fähigkeit mit voller Wucht!",
-  "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!"
+  "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!",
+  "ability.kingdomomnitrix.crystal_vault": "Kristallsprung",
+  "message.kingdomomnitrix.diamondhead_prism": "PRISMA — nächste Fähigkeit mit voller Resonanz!"
 }

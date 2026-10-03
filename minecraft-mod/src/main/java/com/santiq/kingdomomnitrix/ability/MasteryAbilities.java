@@ -63,12 +63,7 @@ final class MasteryAbilities {
 		// --- Heatblast: HeatblastAbilities (Kernhitze)
 		// --- XLR8: Xlr8Abilities (Tempo)
 		// --- Vierarm: FourArmsAbilities (Wut)
-		// --- Diamondhead
-		reg("crystal_blade", ctx -> onTarget(ctx, 4.0, ParticleTypes.CRIT, SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, false));
-		reg("spike_eruption", ctx -> area(ctx, new Look(crystal, 90, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 0.8f, false)));
-		reg("crystal_armor", ctx -> self(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, new Fx(StatusEffects.RESISTANCE, 1),
-				new Fx(StatusEffects.ABSORPTION, 2)));
-		reg("crystal_storm", MasteryAbilities::crystalStorm);
+		// --- Diamondhead: DiamondheadAbilities (Resonanz, Kristall-Konstrukte)
 		// --- Grey Matter
 		reg("weak_spot", ctx -> onTarget(ctx, 16.0, ParticleTypes.ENCHANTED_HIT, SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), true,
 				new Fx(StatusEffects.WEAKNESS, 1), new Fx(StatusEffects.GLOWING, 0), new Fx(StatusEffects.SLOWNESS, 0)));
@@ -239,24 +234,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** Diamondhead: Kristallsplitter-Ring in alle Richtungen. */
-	private static boolean crystalStorm(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		int count = (int) Math.max(4, ctx.param("count", 24));
-		float speed = (float) ctx.param("speed", 1.8);
-		float damage = (float) ctx.param("damage", 6.0);
-		for (int i = 0; i < count; i++) {
-			float yaw = player.getYaw() + i * 360.0f / count;
-			HeroProjectileEntity shard = new HeroProjectileEntity(ctx.world(), player);
-			shard.setItem(new ItemStack(ModItems.CRYSTAL_SHARD));
-			shard.setVelocity(player, -5.0f, yaw, 0.0f, speed, 1.0f);
-			shard.withDamage(damage);
-			ctx.world().spawnEntity(shard);
-		}
-		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 1.2f, 0.7f);
-		return true;
-	}
 
 	/** Grey Matter: repariert das Werkzeug in der Hand ein Stueck und heilt den Spieler. */
 	private static boolean juryRig(AbilityContext ctx) {

@@ -72,7 +72,7 @@ ABILITY_POSE = {
     "dash_strike": "swipe", "blur_dodge": "dodge", "rapid_strikes": "swipe", "cyclone_run": "spread", "time_slip": "focus",
     "lightspeed_barrage": "ultimate",
     # Vierarm
-    "ground_slam": "slam", "throw": "throw", "mighty_leap": "leap", "thunder_clap": "clap", "iron_skin": "guard",
+    "ground_slam": "slam", "throw": "throw", "thunder_clap": "clap", "iron_skin": "guard",
     "earthquake": "slam",
     # Diamondhead
     "crystal_volley": "shoot", "crystal_blade": "swipe", "spike_eruption": "slam", "crystal_armor": "guard",
@@ -97,8 +97,10 @@ ABILITY_POSE = {
     # Cannonbolt: in der Kugelform zeichnet der Client die Kugel statt des Koerpers — Posen gelten fuer den Anlauf
     "cannonball": "dodge", "shell_guard": "guard", "ball_bounce": "leap", "ricochet": "dodge", "rolling_mode": "dodge",
     "cannonade": "ultimate",
-    # Vierarm: Titanensprung (eigene Faehigkeit, Diamondhead behaelt mighty_leap)
+    # Vierarm: Titanensprung
     "titan_leap": "leap",
+    # Diamondhead: Kristallsprung
+    "crystal_vault": "leap",
     # Jetray: Strahlen aus Augen und Schwanz, Flug-Manoever
     "neuroshock": "beam", "tail_shock": "spread", "jet_burst": "leap", "strafing_run": "dodge", "slipstream": "focus",
     "neuroshock_storm": "ultimate",
