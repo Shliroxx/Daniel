@@ -108,6 +108,7 @@ class Box:
     material: str
     rotation: dict | None = None
     faces: dict[str, list[float]] = field(default_factory=dict)
+    overlay: bool = False
 
     def face_size(self, face: str) -> tuple[float, float]:
         dx, dy, dz = (self.to[i] - self.frm[i] for i in range(3))
@@ -540,6 +541,31 @@ def dial_color(px: int, py: int, w: int, h: int, face: str, m: Material) -> Colo
     return black
 
 
+# Omnitrix-Gruen: diese Materialien bekommen eine deckungsgleiche Akzent-Schicht (tintindex 0), die der Renderer im
+# Farbmodul einfaerbt (OmnitrixColors; Klassisch = Gruen). Die Grundschicht bleibt als Rueckfall unveraendert.
+ACCENT_MATERIALS = {"omni_green", "omni_face", "omni_light", "omni_dial_x"}
+# nur Modelle mit Farbgeber (Omnitrix-Item und Armteile); das Omega-Key-Keyblade bleibt fest gruen
+TINTED = {"omnitrix", "wrist_base", "wrist_core"}
+
+
+def is_accent(color: Color) -> bool:
+    r, g, b = color[0], color[1], color[2]
+    return g >= 60 and g > r + 25 and g > b + 25
+
+
+def accent_face(img: Image.Image, s: Slot) -> None:
+    """Akzent-Schicht: gruene Pixel als Graustufe (Helligkeit = Gruenkanal), alles andere durchsichtig."""
+    paint_face(img, s)
+    for py in range(s.h):
+        for px in range(s.w):
+            color = img.getpixel((s.x + px, s.y + py))
+            if is_accent(color):
+                v = color[1]
+                img.putpixel((s.x + px, s.y + py), (v, v, v, 255))
+            else:
+                img.putpixel((s.x + px, s.y + py), (0, 0, 0, 0))
+
+
 def build(name: str) -> tuple[dict, Image.Image]:
     if name in PARTS:
         factory, particle_material = PARTS[name]
@@ -548,6 +574,8 @@ def build(name: str) -> tuple[dict, Image.Image]:
         factory, particle_material, display = WEAPONS[name]
         density, texture = DENSITY, f"{MOD_ID}:item/3d/{name}"
     boxes = factory()
+    if name in TINTED:
+        boxes += [Box(b.frm, b.to, b.material, b.rotation, overlay=True) for b in boxes if b.material in ACCENT_MATERIALS]
     slots = []
     for b in boxes:
         for face in FACES:
@@ -562,19 +590,25 @@ def build(name: str) -> tuple[dict, Image.Image]:
     unit = 16 / size
     particle_uv = None
     for s in slots:
-        paint_face(img, s)
+        if s.box.overlay:
+            accent_face(img, s)
+        else:
+            paint_face(img, s)
         u0, v0, u1, v1 = s.x * unit, s.y * unit, (s.x + s.w) * unit, (s.y + s.h) * unit
         # Nord- und Westseite gespiegelt, damit Vorder- und Rueckseite gleich herum gelesen werden
         uv = [u1, v0, u0, v1] if s.face in ("north", "west") else [u0, v0, u1, v1]
         s.box.faces[s.face] = [round(v, 4) for v in uv]
-        if particle_uv is None and s.box.material == particle_material:
+        if particle_uv is None and s.box.material == particle_material and not s.box.overlay:
             particle_uv = s
     elements = []
     for b in boxes:
         element = {"from": [round(v, 4) for v in b.frm], "to": [round(v, 4) for v in b.to]}
         if b.rotation is not None:
             element["rotation"] = b.rotation
-        element["faces"] = {f: {"uv": b.faces[f], "texture": "#blade"} for f in FACES}
+        if b.overlay:
+            element["faces"] = {f: {"uv": b.faces[f], "texture": "#blade", "tintindex": 0} for f in FACES}
+        else:
+            element["faces"] = {f: {"uv": b.faces[f], "texture": "#blade"} for f in FACES}
         elements.append(element)
     model = {
         "credit": "made by SANTIQ — tools/generate_item_models.py",

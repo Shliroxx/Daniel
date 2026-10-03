@@ -74,6 +74,12 @@ public final class OmnitrixWrist {
 
 	public static void register() {
 		ModelLoadingPlugin.register(context -> context.addModels(BASE, CORE, GLOW));
+		// Omnitrix-Item: Akzent-Schicht in der Farbe des eigenen Farbmoduls (der Stapel kennt seinen Traeger nicht)
+		net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register((stack, tintIndex) -> {
+			var player = MinecraftClient.getInstance().player;
+			return tintIndex == 0 && player != null ? 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player)
+					: tintIndex == 0 ? 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.CLASSIC : -1;
+		}, com.santiq.kingdomomnitrix.registry.ModItems.OMNITRIX);
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public Identifier getFabricId() {
@@ -187,12 +193,17 @@ public final class OmnitrixWrist {
 
 		BlockModelRenderer renderer = client.getBlockRenderManager().getModelRenderer();
 		var solid = consumers.getBuffer(TexturedRenderLayers.getEntityCutout());
-		renderer.render(matrices.peek(), solid, null, base, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
+		// Akzent-Schicht (tintindex 0: Tasten, Eck-Leuchten, Zifferblatt-Gruen) in der Farbe des Farbmoduls
+		int accent = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
+		float ar = ((accent >> 16) & 0xFF) / 255.0f;
+		float ag = ((accent >> 8) & 0xFF) / 255.0f;
+		float ab = (accent & 0xFF) / 255.0f;
+		renderer.render(matrices.peek(), solid, null, base, ar, ag, ab, light, OverlayTexture.DEFAULT_UV);
 		OmnitrixPolish.renderCasingShine(matrices, consumers);
 		matrices.push();
 		matrices.translate(coreLift / 16.0f, 0.0f, 0.0f);
 		OmnitrixPolish.rotateAboutCore(matrices, lockTwist);
-		renderer.render(matrices.peek(), solid, null, core, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
+		renderer.render(matrices.peek(), solid, null, core, ar, ag, ab, light, OverlayTexture.DEFAULT_UV);
 		if (glowModel != null && glowModel != missing) {
 			var eyes = consumers.getBuffer(RenderLayer.getEyes(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE));
 			// Kern-Leuchten faehrt mit, Eck-Leuchten liegen am Gehaeuse (Hub dort unsichtbar klein)

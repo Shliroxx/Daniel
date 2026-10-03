@@ -508,9 +508,20 @@ Modulfarbe — im Spiel mit Violett als Bildfolge geprueft.
 **Bekannt offen / nicht geprueft:**
 - Klaenge nach Gehoer (Testumgebung ohne Audio).
 - Kalibrier-Werkbank: Ablehnung „zu weit weg“ und „erst zurueckverwandeln“ nur im Code geprueft.
-- Noch gruen mit Farbmodul: Omnitrix-Item-Textur in der Hand, UI-Symbole, gruene Lampen-Texturen am Omnitrix-Modell.
+- Noch gruen mit Farbmodul: UI-Symbole (Icons). Omnitrix-Item und Lampen/Tasten/Zifferblatt am Arm: nachgezogen (§20).
 - Ueberschwingen/Drehverriegelung des Kerns nur im laufenden Bild beobachtet.
 - Faehigkeits-Posen fuer die neuen Faehigkeiten (Phase F) gibt es weiterhin nicht.
 
 ![Verwandlung mit Farbmodul Violett](screenshots/qa_color_transform.png)
 ![Mehrspieler: Testers rotes Abzeichen aus Sicht von Tester2](screenshots/qa_multiplayer_badge.png)
+
+## 20. Nachtrag — Omnitrix-Modell in Modulfarbe (2026-10-03)
+
+`tools/generate_item_models.py` legt ueber die gruenen Bauteile des Omnitrix (Item, Armteile: Seitentasten, Eck-Leuchten,
+Zifferblatt-Gruen) eine deckungsgleiche Akzent-Schicht: gruene Pixel als Graustufe, Rest durchsichtig, `tintindex 0`.
+Der Arm-Renderer und ein Item-Farbgeber faerben sie in der Modulfarbe (Klassisch: Omnitrix-Gruen). Das Omega-Key-Keyblade
+bleibt bewusst fest gruen. Einschraenkung: das Item in fremden Haenden zeigt die Farbe des eigenen Farbmoduls (der
+Item-Stapel kennt seinen Traeger nicht); am Arm anderer Spieler stimmt die Farbe.
+**Im Spiel geprueft (Violett):** Omnitrix in der Hand, Hotbar-Symbol, Zifferblatt im Auswahlmodus, Arm in Third-Person.
+
+![Omnitrix in der Hand und im Auswahlmodus, Violett](screenshots/qa_omnitrix_model_tint.png)
