@@ -999,5 +999,14 @@
   "message.kingdomomnitrix.evolve_locked": "Ultimate form needs more mastery",
   "message.kingdomomnitrix.evolve_cooldown": "Evolution still recharging",
   "message.kingdomomnitrix.evolve_already": "Already evolved",
-  "commands.kingdomomnitrix.evolve.success": "%s evolved"
+  "commands.kingdomomnitrix.evolve.success": "%s evolved",
+  "alien.kingdomomnitrix.atomix": "Atomix",
+  "ability.kingdomomnitrix.atomic_bolt": "Atomic Bolt",
+  "ability.kingdomomnitrix.nuclear_pulse": "Nuclear Pulse",
+  "ability.kingdomomnitrix.fusion_leap": "Fusion Leap",
+  "ability.kingdomomnitrix.containment_field": "Containment Field",
+  "ability.kingdomomnitrix.half_life": "Half-Life",
+  "ability.kingdomomnitrix.hero_time": "Hero Time",
+  "message.kingdomomnitrix.atomix_hero_time": "IT'S HERO TIME!",
+  "message.kingdomomnitrix.atomix_nothing": "Nothing irradiated nearby"
 }

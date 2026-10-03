@@ -119,6 +119,9 @@ ABILITY_POSE = {
     # Echo Echo: Schrei (Kopf vor), Teilung, Schallstoss, Mauer, Schild, Chor
     "sonic_scream": "roar", "echo_split": "spread", "sonic_boost": "leap", "wall_of_sound": "clap", "sound_shield": "guard",
     "echo_chorus": "ultimate",
+    # Atomix: Strahl, Puls, Sprung, Feld auf ein Ziel, Zerfall ausloesen, Hero Time
+    "atomic_bolt": "beam", "nuclear_pulse": "spread", "fusion_leap": "leap", "containment_field": "focus", "half_life": "clap",
+    "hero_time": "ultimate",
 }
 
 

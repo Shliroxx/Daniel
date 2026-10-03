@@ -127,6 +127,9 @@ ALIENS = {
     # Kugelform als eigenes Modell (cannonbolt_ball), die eingeklappte Kugel im Koerper faellt weg; Groesse 1,33 wie AE
     "cannonbolt": Spec("11", "arburian_pelarota", "arburian_pelarota.json", 1.33, "heavy", "#F2C230",
                        script="arburian_pelarota", drop=r"^BALL$", form=("arburian_pelarota_ball", "BALL", "ball")),
+    # Atomix: ein Modell, Leuchtebene, Leerlauf-Animation (Kern pulsiert); AE ohne Groessenangabe → 1,15
+    "atomix": Spec("60", "atomix", "atomix.json", 1.15, "heavy", "#3EF06A",
+                   loops=("atomix.animation.json:animation.atomix.idle",)),
     # --- Alien-Force-Erweiterung (afomni, im selben Jar): ein Modell, eine Textur, kein Abzeichen-Modell ---
     # Big Chill: am Boden Umhang zu (AE cloak_on: Fluegel/Fuehler eingezogen), in der Luft Fluegel auf (cloak_off);
     # nur die Fluegelknochen schlagen dauernd (im Umhang unsichtbar). Omnitrix-Symbol als Leuchtebene.

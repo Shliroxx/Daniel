@@ -56,7 +56,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Prisma: Regenbogenring faechert auf, heller Blitz, Kristallklang */
 	PRISM,
 	/** Echo: Schallringe laufen nach aussen, Noten steigen auf, kurzes Echo */
-	ECHO;
+	ECHO,
+	/** Nuklear: gruener Kernblitz, Strahlungsring, tiefes Brummen */
+	NUCLEAR;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -217,6 +219,14 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.NOTE, x, mid, z, 10, 0.4, 0.5, 0.4, 1.0);
 				sound(world, player, SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 1.0f, 1.4f);
 				sound(world, player, SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 0.6f, 1.9f);
+			}
+			case NUCLEAR -> {
+				net.minecraft.particle.DustParticleEffect green = new net.minecraft.particle.DustParticleEffect(new org.joml.Vector3f(0.25f, 1.0f, 0.4f), 1.6f);
+				ring(world, green, x, y + 0.2, z, 1.4, 30, 0.2);
+				world.spawnParticles(green, x, mid, z, 40, 0.4, 0.8, 0.4, 0.0);
+				world.spawnParticles(ParticleTypes.FLASH, x, mid, z, 1, 0.0, 0.0, 0.0, 0.0);
+				sound(world, player, SoundEvents.BLOCK_BEACON_POWER_SELECT, 1.0f, 0.6f);
+				sound(world, player, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 0.8f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);
