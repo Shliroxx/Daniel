@@ -408,41 +408,98 @@ public final class TraverseTown {
 		set(world, x, y + height, z, Blocks.LANTERN.getDefaultState().with(LanternBlock.HANGING, false));
 	}
 
-	/** Runde Arena mit Mauer, Saeulen mit Laternen, Eingang nach Norden und Arena-Terminal am Eingang. */
+	/**
+	 * Arena im Stil des Kolosseums (KH): Kampfflaeche mit Ringmuster und Emblem, niedrige Bruestung mit Quarz-Kante,
+	 * zwei Raenge Sitzreihen nach innen, acht Marmorsaeulen mit Kapitell und Feuerschale (Netherrack-Feuer, ohne Rauch), Torbogen mit Bannern im
+	 * Norden, Arena-Terminal am Eingang. Kampfflaeche (Radius {@value #ARENA_RADIUS}) wie bisher.
+	 */
 	private static void buildArena(ServerWorld world, int ax, int az, int y0) {
-		for (int dx = -ARENA_RADIUS - 2; dx <= ARENA_RADIUS + 2; dx++) {
-			for (int dz = -ARENA_RADIUS - 2; dz <= ARENA_RADIUS + 2; dz++) {
+		int wall = ARENA_RADIUS + 1;
+		int outer = ARENA_RADIUS + 4;
+		for (int dx = -outer - 1; dx <= outer + 1; dx++) {
+			for (int dz = -outer - 1; dz <= outer + 1; dz++) {
 				double distance = Math.sqrt(dx * dx + dz * dz);
+				int x = ax + dx;
+				int z = az + dz;
+				boolean entrance = dz < 0 && Math.abs(dx) <= 1;
 				if (distance <= ARENA_RADIUS + 0.5) {
-					BlockState floor = distance < 2.5 ? Blocks.CHISELED_STONE_BRICKS.getDefaultState()
-							: (int) distance % 3 == 0 ? Blocks.POLISHED_BLACKSTONE_BRICKS.getDefaultState() : Blocks.SMOOTH_STONE.getDefaultState();
-					set(world, ax + dx, y0 - 1, az + dz, floor);
-				} else if (distance <= ARENA_RADIUS + 1.6) {
-					boolean entrance = dz < 0 && Math.abs(dx) <= 1;
-					set(world, ax + dx, y0 - 1, az + dz, Blocks.STONE_BRICKS.getDefaultState());
+					int ring = (int) Math.round(distance);
+					BlockState floor = distance < 1.5 ? Blocks.CHISELED_QUARTZ_BLOCK.getDefaultState()
+							: distance < 3.0 ? Blocks.RED_GLAZED_TERRACOTTA.getDefaultState()
+							: ring == 4 || ring == 8 ? Blocks.POLISHED_BLACKSTONE_BRICKS.getDefaultState()
+							: ring == ARENA_RADIUS ? Blocks.QUARTZ_BRICKS.getDefaultState()
+							: (Math.floorMod(dx + dz, 2) == 0 ? Blocks.SMOOTH_SANDSTONE : Blocks.SANDSTONE).getDefaultState();
+					set(world, x, y0 - 1, z, floor);
+					for (int y = y0; y <= y0 + 8; y++) {
+						set(world, x, y, z, Blocks.AIR.getDefaultState());
+					}
+				} else if (distance <= wall + 0.6) {
+					// Bruestung: zwei Steinlagen, Quarz-Kante
+					set(world, x, y0 - 1, z, Blocks.STONE_BRICKS.getDefaultState());
 					if (!entrance) {
-						for (int y = y0; y <= y0 + 2; y++) {
-							set(world, ax + dx, y, az + dz, Blocks.STONE_BRICKS.getDefaultState());
-						}
-						set(world, ax + dx, y0 + 3, az + dz, Blocks.STONE_BRICK_WALL.getDefaultState());
+						set(world, x, y0, z, Blocks.STONE_BRICKS.getDefaultState());
+						set(world, x, y0 + 1, z, Blocks.QUARTZ_BRICKS.getDefaultState());
+					} else {
+						set(world, x, y0, z, Blocks.AIR.getDefaultState());
+						set(world, x, y0 + 1, z, Blocks.AIR.getDefaultState());
+					}
+				} else if (distance <= outer + 0.6 && !(dz < 0 && Math.abs(dx) <= 2)) {
+					// Raenge: Stufe 1 (Hoehe 2) und Stufe 2 (Hoehe 3), Sitzflaeche als Treppe zur Mitte
+					int tier = distance <= wall + 2.1 ? 0 : 1;
+					int seat = y0 + 2 + tier;
+					for (int y = y0 - 1; y < seat; y++) {
+						set(world, x, y, z, Blocks.STONE_BRICKS.getDefaultState());
+					}
+					Direction inward = Math.abs(dx) >= Math.abs(dz) ? (dx > 0 ? Direction.EAST : Direction.WEST)
+							: (dz > 0 ? Direction.SOUTH : Direction.NORTH);
+					set(world, x, seat, z, Blocks.SANDSTONE_STAIRS.getDefaultState().with(net.minecraft.block.StairsBlock.FACING, inward));
+					if (distance > outer - 0.4) {
+						set(world, x, seat + 1, z, Blocks.SANDSTONE_WALL.getDefaultState()); // Rueckenlehne
 					}
 				}
 			}
 		}
+		// Acht Saeulen zwischen Bruestung und Raengen, mit Kapitell und Feuerschale
 		for (int i = 0; i < 8; i++) {
 			double angle = Math.PI / 8 + i * Math.PI / 4;
-			int x = ax + (int) Math.round(Math.cos(angle) * (ARENA_RADIUS + 1));
-			int z = az + (int) Math.round(Math.sin(angle) * (ARENA_RADIUS + 1));
-			for (int y = y0; y <= y0 + 3; y++) {
-				set(world, x, y, z, Blocks.POLISHED_DEEPSLATE.getDefaultState());
+			int x = ax + (int) Math.round(Math.cos(angle) * (wall + 1));
+			int z = az + (int) Math.round(Math.sin(angle) * (wall + 1));
+			set(world, x, y0 - 1, z, Blocks.CHISELED_STONE_BRICKS.getDefaultState());
+			for (int y = y0; y <= y0 + 5; y++) {
+				set(world, x, y, z, Blocks.QUARTZ_PILLAR.getDefaultState());
 			}
-			set(world, x, y0 + 4, z, Blocks.LANTERN.getDefaultState().with(LanternBlock.HANGING, false));
+			set(world, x, y0 + 6, z, Blocks.CHISELED_QUARTZ_BLOCK.getDefaultState());
+			brazier(world, x, y0 + 7, z);
+		}
+		// Torbogen im Norden mit Bannern
+		int gateZ = az - wall;
+		for (int side : new int[]{-2, 2}) {
+			for (int y = y0 - 1; y <= y0 + 6; y++) {
+				set(world, ax + side, y, gateZ, Blocks.QUARTZ_PILLAR.getDefaultState());
+			}
+			brazier(world, ax + side, y0 + 7, gateZ);
+		}
+		for (int dx = -2; dx <= 2; dx++) {
+			set(world, ax + dx, y0 + 4, gateZ, Blocks.QUARTZ_BRICKS.getDefaultState());
+			set(world, ax + dx, y0 + 5, gateZ, Blocks.CHISELED_QUARTZ_BLOCK.getDefaultState());
+			set(world, ax + dx, y0 + 6, gateZ, Blocks.QUARTZ_SLAB.getDefaultState());
+		}
+		for (int dx = -1; dx <= 1; dx++) {
+			Block banner = dx == 0 ? Blocks.YELLOW_WALL_BANNER : Blocks.RED_WALL_BANNER;
+			set(world, ax + dx, y0 + 4, gateZ - 1, banner.getDefaultState().with(net.minecraft.block.WallBannerBlock.FACING, Direction.NORTH));
+			set(world, ax + dx, y0 + 4, gateZ + 1, banner.getDefaultState().with(net.minecraft.block.WallBannerBlock.FACING, Direction.SOUTH));
 		}
 		BlockPos terminal = new BlockPos(ax + 2, y0, az - ARENA_RADIUS + 1);
 		world.setBlockState(terminal, ModBlocks.ARENA_TERMINAL.getDefaultState(), Block.NOTIFY_ALL);
 		if (world.getBlockEntity(terminal) instanceof ArenaTerminalBlockEntity entity) {
 			entity.setArena(new BlockPos(ax, y0, az), ARENA_RADIUS);
 		}
+	}
+
+	/** Feuerschale: Netherrack brennt ewig und ohne Rauch; ringsum nichts Brennbares. */
+	private static void brazier(ServerWorld world, int x, int y, int z) {
+		set(world, x, y, z, Blocks.NETHERRACK.getDefaultState());
+		set(world, x, y + 1, z, Blocks.FIRE.getDefaultState());
 	}
 
 	private static void scatterCrates(ServerWorld world, int cx, int cz, int y0, Random random) {
