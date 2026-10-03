@@ -99,6 +99,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		TransformationManager.register();
 		DnaDrops.register();
 		CombatManager.register();
+		com.santiq.kingdomomnitrix.combat.CombatFeedback.register();
 		RiftSpawner.register();
 		com.santiq.kingdomomnitrix.worldevent.WorldEvents.register();
 		com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.register();

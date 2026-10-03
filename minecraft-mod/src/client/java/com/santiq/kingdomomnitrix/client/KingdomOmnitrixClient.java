@@ -120,6 +120,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		AlienBodyRenderers.register();
 		com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixWrist.register();
 		com.santiq.kingdomomnitrix.client.gadget.HeliPackFeatureRenderer.register();
+		com.santiq.kingdomomnitrix.client.combat.DamageNumbers.register();
 		com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixSteam.register();
 		AlienAmbientVfx.register();
 		com.santiq.kingdomomnitrix.client.vfx.TransformBubble.register();

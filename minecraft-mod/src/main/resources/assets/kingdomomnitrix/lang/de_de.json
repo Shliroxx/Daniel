@@ -864,5 +864,6 @@
   "entity.kingdomomnitrix.dungeon_colossus": "Schattenkoloss",
   "commands.kingdomomnitrix.dungeon.missing": "Die Geheime Wasserstraße ist noch nicht gebaut (erst Traverse Town besuchen)",
   "commands.kingdomomnitrix.dungeon.reset": "Geheime Wasserstraße zurückgesetzt",
-  "commands.kingdomomnitrix.dungeon.status": "Geheime Wasserstraße: Abschnitt %s, Ursprung %s %s %s"
+  "commands.kingdomomnitrix.dungeon.status": "Geheime Wasserstraße: Abschnitt %s, Ursprung %s %s %s",
+  "hud.kingdomomnitrix.blocked": "Block"
 }

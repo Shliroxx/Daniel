@@ -342,7 +342,9 @@ Reihenfolge = Abarbeitungsreihenfolge.
 10. [x] **Boss-Rework** — Nefarious nach den Spielen neu gebaut (Kuppel, Schädel, Gebiss, Tentakel, 4 px/Einheit); Schadenszustände je Phase (Risse/Brandflecken ab 60 %, tiefe Risse + Funken/Qualm ab 25 %).
 11. [x] **Weapon-Rework** — Combuster und Omniwrench als 3D-Handmodelle; Heli-Pack/Heli-Jet als 3D-Item und auf dem
    Rücken (Rotor über dem Kopf dreht in der Luft, Jet-Düsen mit flackernder Flamme), für alle Spieler sichtbar.
-12. [ ] **HUD-Rework** — Feinschliff, Schadenszahlen, Treffer-Feedback.
+12. [x] **HUD-Rework** — Schadenszahlen über dem Ziel (weiß, schwer = gold, Feuer = orange, Magie = violett, Block,
+   Todesstoß = rot) und Treffer-Markierung am Fadenkreuz (Todesstoß = rotes X); abschaltbar in
+   `config/kingdomomnitrix-combat.json` (`damageNumbers`, `hitMarker`, `numberScale`).
 13. [ ] **World-Rework** — Traverse Town (NBT-Strukturen), Arena, Weltraum.
 
 ## BUGS

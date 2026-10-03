@@ -31,6 +31,7 @@ public final class ModNetworking {
 	public static void register() {
 		PayloadTypeRegistry.playS2C().register(OpenOmnitrixPayload.ID, OpenOmnitrixPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixCuePayload.ID, OmnitrixCuePayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(DamageFeedbackPayload.ID, DamageFeedbackPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixHoloPayload.ID, OmnitrixHoloPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(TransformRequestPayload.ID, TransformRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(FavoritePayload.ID, FavoritePayload.CODEC);
