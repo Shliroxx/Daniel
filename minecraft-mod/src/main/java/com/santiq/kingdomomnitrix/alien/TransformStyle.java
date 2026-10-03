@@ -52,7 +52,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Wachstum: Boden reisst sternfoermig auf, Brocken fliegen, tiefes Bruellen */
 	GROWTH,
 	/** Sumpf: Methanpuff mit Stichflamme, Blaetter und Schlamm spritzen */
-	SWAMP;
+	SWAMP,
+	/** Prisma: Regenbogenring faechert auf, heller Blitz, Kristallklang */
+	PRISM;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -195,6 +197,17 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.COMPOSTER, x, mid, z, 30, 0.5, 0.7, 0.5, 0.0);
 				sound(world, player, SoundEvents.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f);
 				sound(world, player, SoundEvents.BLOCK_SLIME_BLOCK_PLACE, 1.0f, 0.6f);
+			}
+			case PRISM -> {
+				float[][] colors = {{1.0f, 0.2f, 0.2f}, {1.0f, 0.6f, 0.1f}, {1.0f, 0.95f, 0.2f}, {0.3f, 1.0f, 0.3f}, {0.2f, 0.8f, 1.0f},
+						{0.3f, 0.35f, 1.0f}, {0.75f, 0.35f, 1.0f}};
+				for (int c = 0; c < colors.length; c++) {
+					ring(world, new net.minecraft.particle.DustParticleEffect(new org.joml.Vector3f(colors[c][0], colors[c][1], colors[c][2]), 1.2f),
+							x, y + 0.2 + c * 0.25, z, 0.8 + c * 0.1, 14, 0.1);
+				}
+				world.spawnParticles(ParticleTypes.FLASH, x, mid, z, 1, 0.0, 0.0, 0.0, 0.0);
+				sound(world, player, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.2f, 1.6f);
+				sound(world, player, SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.8f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

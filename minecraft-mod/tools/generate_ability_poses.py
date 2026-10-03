@@ -113,6 +113,9 @@ ABILITY_POSE = {
     # Swampfire: Flamme aus der Hand, Wolke ausstossen, Duese, Ranken rufen, Nachwachsen, Inferno
     "methane_flame": "beam", "methane_cloud": "roar", "methane_jet": "leap", "root_snare": "slam", "regrowth": "focus",
     "swamp_inferno": "ultimate",
+    # Chromastone: Strahl aus der Hand, Blitz nach aussen, Lichtsprung, Gitter-Deckung, Licht sammeln, Vollspektrum
+    "prism_beam": "beam", "spectral_burst": "spread", "photon_dash": "dodge", "crystal_lattice": "guard", "solar_charge": "focus",
+    "full_spectrum": "ultimate",
 }
 
 

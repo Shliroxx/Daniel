@@ -973,5 +973,13 @@
   "ability.kingdomomnitrix.root_snare": "Root Snare",
   "ability.kingdomomnitrix.regrowth": "Regrowth",
   "ability.kingdomomnitrix.swamp_inferno": "Swamp Inferno",
-  "message.kingdomomnitrix.swampfire_reform": "Reformed from the puddle!"
+  "message.kingdomomnitrix.swampfire_reform": "Reformed from the puddle!",
+  "alien.kingdomomnitrix.chromastone": "Chromastone",
+  "ability.kingdomomnitrix.prism_beam": "Prism Beam",
+  "ability.kingdomomnitrix.spectral_burst": "Spectral Burst",
+  "ability.kingdomomnitrix.photon_dash": "Photon Dash",
+  "ability.kingdomomnitrix.crystal_lattice": "Crystal Lattice",
+  "ability.kingdomomnitrix.solar_charge": "Solar Charge",
+  "ability.kingdomomnitrix.full_spectrum": "Full Spectrum",
+  "message.kingdomomnitrix.chromastone_full": "Spectrum full — overload ready"
 }

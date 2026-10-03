@@ -973,5 +973,13 @@
   "ability.kingdomomnitrix.root_snare": "Wurzelfessel",
   "ability.kingdomomnitrix.regrowth": "Nachwachsen",
   "ability.kingdomomnitrix.swamp_inferno": "Sumpfinferno",
-  "message.kingdomomnitrix.swampfire_reform": "Aus der Pfütze nachgewachsen!"
+  "message.kingdomomnitrix.swampfire_reform": "Aus der Pfütze nachgewachsen!",
+  "alien.kingdomomnitrix.chromastone": "Chromastone",
+  "ability.kingdomomnitrix.prism_beam": "Prismenstrahl",
+  "ability.kingdomomnitrix.spectral_burst": "Spektralblitz",
+  "ability.kingdomomnitrix.photon_dash": "Lichtsprung",
+  "ability.kingdomomnitrix.crystal_lattice": "Kristallgitter",
+  "ability.kingdomomnitrix.solar_charge": "Spektralladung",
+  "ability.kingdomomnitrix.full_spectrum": "Vollspektrum",
+  "message.kingdomomnitrix.chromastone_full": "Spektrum voll — Überladung bereit"
 }
