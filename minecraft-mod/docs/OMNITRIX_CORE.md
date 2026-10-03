@@ -499,15 +499,16 @@ Modulfarbe — im Spiel mit Violett als Bildfolge geprueft.
 - Tester stellt an der Kalibrier-Werkbank Rot und Kuehlung 1 ein → Hologramm „Kuehlung auf Stufe 1“; Tester2 sieht
   Testers Vierarm-Abzeichen **rot** (Anhang-Sync der Kalibrierung funktioniert).
 - Tester bringt 5 Aliens auf ★5 → Diagnose zeigt „Master Control verfuegbar“ (Flag im Mehrspieler vergeben).
-  Das Freischalt-Hologramm selbst fiel in diesem Lauf zeitlich zwischen zwei Bildschirmfotos (im Einzelspieler belegt, §14).
-- Dampf aus Sicht des zweiten Spielers: nicht eindeutig im Bild (Kamera zu nah) — nicht belegt.
+  Freischalt-Hologramm im Mehrspieler: im zweiten Lauf belegt (§22).
+- Dampf aus Sicht des zweiten Spielers: im zweiten Lauf belegt (§22).
 
 **Pruefungen:** `./gradlew build` (inkl. JUnit) gruen; alle Python-Pruefungen der CI lokal gruen (Assets, 18 Generatoren
 `--check`, Tool-Unittests); CI auf dem PR gruen bis Phase N, Phase O beim Schreiben laufend.
 
 **Bekannt offen / nicht geprueft:**
 - Klaenge nach Gehoer (Testumgebung ohne Audio).
-- Kalibrier-Werkbank: Ablehnung „zu weit weg“ und „erst zurueckverwandeln“ nur im Code geprueft.
+- Kalibrier-Werkbank: „erst zurueckverwandeln“ im Spiel belegt (§22); „zu weit weg“ nur im Code (laesst sich bei
+  offenem Bildschirm ohne zweiten Eingabeweg nicht ausloesen).
 - Noch gruen mit Farbmodul: UI-Symbole (Icons). Omnitrix-Item und Lampen/Tasten/Zifferblatt am Arm: nachgezogen (§20).
 - Ueberschwingen/Drehverriegelung des Kerns nur im laufenden Bild beobachtet.
 - Faehigkeits-Posen: nachgezogen (§21).
@@ -538,3 +539,14 @@ Konzentration (Hand an den Kopf), Bruellen (Kopf hoch, Arme gespreizt), Flaeche 
 Heilung (Arme gekreuzt). Posen erscheinen nur bei erfolgreicher Faehigkeit (XLR8 ohne Ziel: FAILED, keine Pose).
 
 ![Faehigkeits-Posen](screenshots/ability_poses.png)
+
+## 22. Nachtrag — Mehrspieler-Belege und Werkbank-Ablehnung (2026-10-03)
+
+Zweiter Mehrspieler-Lauf (Dedicated Server + 2 Clients):
+- Tester2 bringt 5 Aliens auf ★5 → Hologramm „MASTER CONTROL · Master-Control-Protokoll empfangen · Code 10000
+  eingeben“ erscheint bei Tester2.
+- Tester bei 98 % Hitze → Tester2 sieht Dampf an Testers Handgelenk; Testers Omnitrix-Akzente am Arm sind in Testers
+  Farbmodul (Rot) — die Farbe am Arm kommt also vom Traeger, nicht vom Betrachter.
+Einzelspieler: Werkbank als XLR8 benutzt → „ABGELEHNT · Erst zurueckverwandeln“.
+
+![Mehrspieler: Freischaltung bei Tester2, Dampf an Testers Handgelenk](screenshots/qa_multiplayer_mc_steam.png)
