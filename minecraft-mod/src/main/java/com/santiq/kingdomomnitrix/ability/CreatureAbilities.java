@@ -3,16 +3,13 @@ package com.santiq.kingdomomnitrix.ability;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.util.Targeting;
-import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -38,10 +35,7 @@ final class CreatureAbilities {
 
 	static void register() {
 		// Wildmutt: WildmuttAbilities (Jagd)
-		// Stinkfly
-		AbilityRegistry.register(KingdomOmnitrix.id("slime_spit"), CreatureAbilities::slimeSpit);
-		AbilityRegistry.register(KingdomOmnitrix.id("stink_cloud"), CreatureAbilities::stinkCloud);
-		AbilityRegistry.register(KingdomOmnitrix.id("wing_dash"), CreatureAbilities::wingDash);
+		// Stinkfly: StinkflyAbilities (Toxin-Schichten)
 		// Ripjaws
 		AbilityRegistry.register(KingdomOmnitrix.id("jaw_bite"), CreatureAbilities::jawBite);
 		AbilityRegistry.register(KingdomOmnitrix.id("tidal_dash"), CreatureAbilities::tidalDash);
@@ -54,51 +48,6 @@ final class CreatureAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("phase_shift"), CreatureAbilities::phaseShift);
 		AbilityRegistry.register(KingdomOmnitrix.id("haunting_scare"), CreatureAbilities::hauntingScare);
 		AbilityRegistry.register(KingdomOmnitrix.id("tentacle_lash"), CreatureAbilities::tentacleLash);
-	}
-
-	// --- Stinkfly --------------------------------------------------------------------------------
-
-	private static boolean slimeSpit(AbilityContext ctx) {
-		int count = (int) Math.max(1, ctx.param("count", 2));
-		float speed = (float) ctx.param("speed", 1.8);
-		for (int i = 0; i < count; i++) {
-			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), Items.SLIME_BALL, speed, (float) ctx.param("spread", 3.0))
-					.withDamage((float) ctx.param("damage", 3.0));
-		}
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_SQUISH, 1.0f, 1.3f);
-		return true;
-	}
-
-	/** Gestankwolke am Boden unter/vor dem Spieler: Uebelkeit und Gift fuer alle ausser dem Spieler. */
-	private static boolean stinkCloud(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		ServerWorld world = ctx.world();
-		Vec3d at = groundBelow(world, player.getPos().add(BuiltinAbilities.horizontalLook(player).multiply(2.0)));
-		AreaEffectCloudEntity cloud = new AreaEffectCloudEntity(world, at.x, at.y, at.z);
-		cloud.setOwner(player);
-		cloud.setRadius((float) ctx.param("radius", 3.5));
-		cloud.setDuration((int) ctx.param("ticks", 120));
-		cloud.setRadiusGrowth(-cloud.getRadius() / cloud.getDuration() * 0.5f);
-		cloud.setWaitTime(0);
-		cloud.setParticleType(new DustParticleEffect(new Vector3f(0.55f, 0.7f, 0.15f), 1.4f));
-		cloud.addEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 120, 0));
-		cloud.addEffect(new StatusEffectInstance(StatusEffects.POISON, 60, 0));
-		cloud.addEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 80, 0));
-		world.spawnEntity(cloud);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.0f, 0.6f);
-		return true;
-	}
-
-	/** Fluegelstoss in Blickrichtung (auch nach oben/unten) — Ausweichen und Sturzflug. */
-	private static boolean wingDash(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = player.getRotationVec(1.0f);
-		double power = ctx.param("power", 1.8);
-		BuiltinAbilities.launch(player, look.x * power, look.y * power + 0.15, look.z * power);
-		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 8));
-		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getBodyY(0.5), player.getZ(), 10, 0.4, 0.3, 0.4, 0.02);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 1.2f);
-		return true;
 	}
 
 	// --- Ripjaws ---------------------------------------------------------------------------------
@@ -280,10 +229,4 @@ final class CreatureAbilities {
 		return entity != player && entity.isAlive() && PartyRules.canHarm(player, entity);
 	}
 
-	/** Boden unter einem Punkt (hoechstens 6 Bloecke tiefer), sonst der Punkt selbst. */
-	private static Vec3d groundBelow(ServerWorld world, Vec3d at) {
-		HitResult hit = world.raycast(new RaycastContext(at.add(0.0, 1.0, 0.0), at.subtract(0.0, 6.0, 0.0),
-				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, net.minecraft.block.ShapeContext.absent()));
-		return hit.getType() == HitResult.Type.MISS ? at : hit.getPos();
-	}
 }

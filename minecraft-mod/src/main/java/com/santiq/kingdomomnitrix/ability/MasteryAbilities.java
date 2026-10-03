@@ -3,15 +3,12 @@ package com.santiq.kingdomomnitrix.ability;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.util.Targeting;
-import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.Optional;
-import net.minecraft.entity.AreaEffectCloudEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.Items;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
@@ -24,7 +21,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
@@ -63,10 +59,7 @@ final class MasteryAbilities {
 		// --- Diamondhead: DiamondheadAbilities (Resonanz, Kristall-Konstrukte)
 		// --- Grey Matter: GreyMatterAbilities (Analyse-Datenbank)
 		// --- Wildmutt: WildmuttAbilities (Jagd)
-		// --- Stinkfly
-		reg("slime_bomb", MasteryAbilities::slimeBomb);
-		reg("updraft", ctx -> area(ctx, new Look(ParticleTypes.GUST, 6, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, false)));
-		reg("toxic_storm", MasteryAbilities::toxicStorm);
+		// --- Stinkfly: StinkflyAbilities (Toxin-Schichten)
 		// --- Ripjaws
 		reg("tail_swipe", ctx -> area(ctx, new Look(ParticleTypes.SPLASH, 60, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.7f, false)));
 		reg("hydro_heal", MasteryAbilities::hydroHeal);
@@ -218,39 +211,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** Stinkfly: schwere Schleimbombe mit Explosion ohne Blockschaden. */
-	private static boolean slimeBomb(AbilityContext ctx) {
-		HeroProjectileEntity.shoot(ctx.world(), ctx.player(), Items.SLIME_BALL, (float) ctx.param("speed", 1.4), 0.0f)
-				.withDamage((float) ctx.param("damage", 6.0))
-				.withExplosion((float) ctx.param("explosion", 1.6));
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_JUMP, 1.0f, 0.5f);
-		return true;
-	}
-
-	/** Stinkfly: Ring aus Stinkwolken um den Spieler. */
-	private static boolean toxicStorm(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		ServerWorld world = ctx.world();
-		int clouds = (int) Math.max(3, ctx.param("clouds", 6));
-		double ring = ctx.param("ring", 4.0);
-		for (int i = 0; i < clouds; i++) {
-			double angle = i * MathHelper.TAU / clouds;
-			AreaEffectCloudEntity cloud = new AreaEffectCloudEntity(world, player.getX() + Math.cos(angle) * ring, player.getY(),
-					player.getZ() + Math.sin(angle) * ring);
-			cloud.setOwner(player);
-			cloud.setRadius((float) ctx.param("radius", 2.5));
-			cloud.setDuration((int) ctx.param("ticks", 160));
-			cloud.setWaitTime(0);
-			cloud.setParticleType(new DustParticleEffect(new Vector3f(0.55f, 0.7f, 0.15f), 1.5f));
-			cloud.addEffect(new StatusEffectInstance(StatusEffects.POISON, 80, 1));
-			cloud.addEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 120, 0));
-			cloud.addEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, 1));
-			world.spawnEntity(cloud);
-		}
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.2f, 0.4f);
-		return true;
-	}
 
 	/** Ripjaws: Heilung, im Wasser deutlich staerker. */
 	private static boolean hydroHeal(AbilityContext ctx) {

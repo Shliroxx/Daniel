@@ -939,5 +939,6 @@
   "screen.kingdomomnitrix.galvan_lab.hack_effect_2": "−20 % Nachladen",
   "screen.kingdomomnitrix.galvan_lab.hack_effect_3": "Master Control",
   "message.kingdomomnitrix.wildmutt_prey": "Beute: %s",
-  "message.kingdomomnitrix.wildmutt_frenzy": "BLUTRAUSCH — die Jagd beginnt!"
+  "message.kingdomomnitrix.wildmutt_frenzy": "BLUTRAUSCH — die Jagd beginnt!",
+  "message.kingdomomnitrix.stinkfly_rot": "%s zersetzt sich!"
 }
