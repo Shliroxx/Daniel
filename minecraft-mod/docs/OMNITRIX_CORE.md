@@ -510,7 +510,7 @@ Modulfarbe — im Spiel mit Violett als Bildfolge geprueft.
 - Kalibrier-Werkbank: Ablehnung „zu weit weg“ und „erst zurueckverwandeln“ nur im Code geprueft.
 - Noch gruen mit Farbmodul: UI-Symbole (Icons). Omnitrix-Item und Lampen/Tasten/Zifferblatt am Arm: nachgezogen (§20).
 - Ueberschwingen/Drehverriegelung des Kerns nur im laufenden Bild beobachtet.
-- Faehigkeits-Posen fuer die neuen Faehigkeiten (Phase F) gibt es weiterhin nicht.
+- Faehigkeits-Posen: nachgezogen (§21).
 
 ![Verwandlung mit Farbmodul Violett](screenshots/qa_color_transform.png)
 ![Mehrspieler: Testers rotes Abzeichen aus Sicht von Tester2](screenshots/qa_multiplayer_badge.png)
@@ -525,3 +525,16 @@ Item-Stapel kennt seinen Traeger nicht); am Arm anderer Spieler stimmt die Farbe
 **Im Spiel geprueft (Violett):** Omnitrix in der Hand, Hotbar-Symbol, Zifferblatt im Auswahlmodus, Arm in Third-Person.
 
 ![Omnitrix in der Hand und im Auswahlmodus, Violett](screenshots/qa_omnitrix_model_tint.png)
+
+## 21. Nachtrag — Faehigkeits-Posen fuer alle 60 Slots (2026-10-03)
+
+`tools/generate_ability_poses.py` (CI `--check`) ergaenzt `ability_poses` in `alien_render/<alien>.json`: die 7 aus
+Alien Evolution uebernommenen Posen bleiben, die uebrigen 53 Slots bekommen eine Pose nach Art der Faehigkeit —
+Schuss (Arm vor), Strahl (beide Arme vor), Wurf (ueber Kopf), Hieb (Querschwung mit Rumpfdrehung), Bodenschlag
+(vorgebeugt), Klatschen, Sprung (Arme zurueck, Schrittstellung), Ausweichen (geduckt), Schutz (Arme gekreuzt),
+Konzentration (Hand an den Kopf), Bruellen (Kopf hoch, Arme gespreizt), Flaeche (Arme ausgebreitet), Grossangriff
+(Arme hoch). Jede Faehigkeit der Datenpakete muss in der Zuordnung stehen, sonst schlaegt die Pruefung fehl.
+**Im Spiel geprueft:** Wildmutt Bruellen, Upgrade Optikstrahl, Vierarm Donnerklatschen, Ghostfreak Albtraum, Ripjaws
+Heilung (Arme gekreuzt). Posen erscheinen nur bei erfolgreicher Faehigkeit (XLR8 ohne Ziel: FAILED, keine Pose).
+
+![Faehigkeits-Posen](screenshots/ability_poses.png)

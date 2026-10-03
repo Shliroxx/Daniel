@@ -175,7 +175,120 @@
         ]
       }
     },
-    null
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -100.0
+          ],
+          [
+            "set_rot",
+            "y",
+            35.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "y",
+            -20.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            20.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            85.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -85.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "y",
+            25.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_sine",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -130.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -20.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -10.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -6.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            150.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -150.0
+          ]
+        ]
+      }
+    }
   ],
   "glow_frames": 1,
   "warn_textures": true,

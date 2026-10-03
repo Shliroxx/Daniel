@@ -225,7 +225,154 @@
         ]
       }
     },
-    null
+    {
+      "ease": "out_quad",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            18.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            50.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            50.0
+          ]
+        ],
+        "right_leg": [
+          [
+            "set_rot",
+            "x",
+            -30.0
+          ]
+        ],
+        "left_leg": [
+          [
+            "set_rot",
+            "x",
+            30.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -90.0
+          ],
+          [
+            "set_rot",
+            "y",
+            28.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -90.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -28.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_sine",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -65.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -45.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -65.0
+          ],
+          [
+            "set_rot",
+            "y",
+            45.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            8.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            22.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "z",
+            10.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "z",
+            -10.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            15.0
+          ]
+        ]
+      }
+    }
   ],
   "glow_frames": 1,
   "warn_textures": true,
