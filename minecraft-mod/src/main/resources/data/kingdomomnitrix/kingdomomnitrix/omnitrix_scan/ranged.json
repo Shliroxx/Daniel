@@ -1,1 +1,1 @@
-{"condition": {"type": "ranged_enemies", "radius": 20, "min": 2}, "weights": {"kingdomomnitrix:diamondhead": 6, "kingdomomnitrix:xlr8": 2}, "reason": "scan.kingdomomnitrix.ranged"}
+{"condition": {"type": "ranged_enemies", "radius": 20, "min": 2}, "weights": {"kingdomomnitrix:diamondhead": 6, "kingdomomnitrix:xlr8": 2, "kingdomomnitrix:jetray": 3}, "reason": "scan.kingdomomnitrix.ranged"}

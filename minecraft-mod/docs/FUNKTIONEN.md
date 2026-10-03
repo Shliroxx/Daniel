@@ -73,7 +73,7 @@ Das Omnitrix muss nur im Inventar liegen. Am linken Arm sitzt das 3D-Gerät im S
 - **Getrennte Lebenspunkte:** fällt das Alien, gibt es einen **DNA-Schock** — zurück in Menschenform, Menschen-Leben bleibt.
 - **Notfall-Verwandlung:** in Lebensgefahr springt das Omnitrix selbst ein (danach 10 min nicht verfügbar).
 
-### Die 11 Aliens
+### Die 12 Aliens
 
 | Alien | 1 · 2 · 3 (R/V/B) | 4 SPECIAL ★3 · 5 UTILITY ★5 · 6 ULTIMATE ★8 (Schleichen + R/V/B) | DNA von |
 |---|---|---|---|
@@ -88,10 +88,11 @@ Das Omnitrix muss nur im Inventar liegen. Am linken Arm sitzt das 3D-Gerät im S
 | **Upgrade** | Optikstrahl · Flüssige Form · Technik-Upgrade | Keulenfäuste · Systemübernahme · Plasmakanone | Eisengolem, Creeper |
 | **Ghostfreak** | Tentakelhieb · Phasenverschiebung · Spuk | Besessenheit · Schattenschritt · Albtraum | Vex, Phantom, Ghast |
 | **Cannonbolt** | Kanonenkugel · Panzerkugel · Kugelsprung | Abpraller · Rollmodus · Kanonade | Gürteltier, Schildkröte |
+| **Jetray** | Neuroschock · Schwanzblitz · Düsenstoß | Tiefflug · Windschatten · Neuroschock-Sturm | Delfin, Papagei |
 
 Eigenschaften (Auswahl): Heatblast immun gegen Feuer/Lava · XLR8 schnell, kein Fallschaden · Vierarm groß und stark ·
 Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser, trocknet an Land aus · Ghostfreak halbe
-Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch). Modelle, Texturen und Uniformen
+Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
 
 ### Meisterschaft ★1–10 (je Alien)

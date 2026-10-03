@@ -97,6 +97,9 @@ ABILITY_POSE = {
     # Cannonbolt: in der Kugelform zeichnet der Client die Kugel statt des Koerpers — Posen gelten fuer den Anlauf
     "cannonball": "dodge", "shell_guard": "guard", "ball_bounce": "leap", "ricochet": "dodge", "rolling_mode": "dodge",
     "cannonade": "ultimate",
+    # Jetray: Strahlen aus Augen und Schwanz, Flug-Manoever
+    "neuroshock": "beam", "tail_shock": "spread", "jet_burst": "leap", "strafing_run": "dodge", "slipstream": "focus",
+    "neuroshock_storm": "ultimate",
 }
 
 

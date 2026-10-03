@@ -75,6 +75,10 @@ class Spec:
     variables: tuple[tuple[str, str], ...] = ()  # Textur-Variablen (#TIMER, #X …) → fester Wert (Grundzustand)
     drop: str | None = None  # zusaetzliche Requisiten-Knochen (Regex), die nur Faehigkeiten zeigen
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
+    # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
+    watch: tuple[tuple[str, str], ...] = ()
+    # Flug-/Schwimmhaltung: AE-Animation (Datei:Name), deren Endpose der Renderer in der Luft/im Wasser einblendet
+    flight_pose: str | None = None
 
 
 ALIENS = {
@@ -105,6 +109,11 @@ ALIENS = {
     # Fluessig-Pfuetze und Kampf-Keulen zeigt AE nur bei Faehigkeiten
     "upgrade": Spec("9", "galvanic_mechamorph", "galvanic_mechamorph.json", 1.2, "heavy", "#39FF14",
                     script="galvanic_mechamorph", drop=r"liquid|mace|spikes_"),
+    # ein Modell; Ebenen „prototype“ (classic) und „recal“ (evo/ultimate, Alien-Force-Look); Fluegel/Umhang aus flight_on
+    "jetray": Spec("34", "aerophibian", "aerophibian.json", 1.0, "fast", "#E72D2D",
+                   watch=(("prototype", "prototype"), ("default", "recal"), ("10k", "recal")),
+                   loops=("jetray.animation.json:animation.jetray.idle",),
+                   flight_pose="jetray.animation.json:animation.jetray.flight_on"),
     # #X 0 = sichtbar (1 = AE-Unsichtbarkeit)
     # Kugelform als eigenes Modell (cannonbolt_ball), die eingeklappte Kugel im Koerper faellt weg; Groesse 1,33 wie AE
     "cannonbolt": Spec("11", "arburian_pelarota", "arburian_pelarota.json", 1.33, "heavy", "#F2C230",
@@ -181,6 +190,15 @@ def _layer_belongs(layer: dict, model: str) -> bool:
     return base.endswith(f"/{model}_#UNIFORM.geo.json") or base.endswith(f"/{model}.geo.json")
 
 
+def _watch_matches(layer: dict, spec: Spec, ae_uniform: str) -> bool:
+    """Ebene mit „alienevo:watch_type“-Bedingung nur fuer die zugeordnete Uniform (Spec.watch)."""
+    wanted = dict(spec.watch).get(ae_uniform, ae_uniform)
+    for cond in layer.get("conditions", []):
+        if cond.get("type") == "alienevo:watch_type" and cond.get("value") != wanted:
+            return False
+    return True
+
+
 def _resolve(path: str, spec: Spec, ae_uniform: str, frame: int) -> str:
     path = path.replace("#UNIFORM", ae_uniform).replace("#I", str(frame))
     for name, value in spec.variables:
@@ -223,7 +241,10 @@ def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict, frame: 
     # Leuchtebenen zuletzt (im Spiel emissiv ueber der Haut)
     for layer in sorted(layers_of(jar, spec), key=lambda l: l.get("render_type") == "glow"):
         tex = layer.get("texture")
-        if not isinstance(tex, dict) or "/aliens/" not in tex["base"] or not _layer_belongs(layer, model):
+        if isinstance(tex, str):  # Ebene ohne Transformer (Jetray)
+            tex = {"base": tex}
+        if ("/aliens/" not in tex.get("base", "") or not _layer_belongs(layer, model)
+                or not _watch_matches(layer, spec, ae_uniform)):
             continue
         if model != spec.species and "#I" in tex["base"]:
             continue  # Bewegungsunschaerfe-Bilder der Zusatzmodelle (Stinkfly-Fluegelschlag) — die Animation schlaegt
@@ -356,7 +377,7 @@ def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: 
         return None
 
     for side, ae_arm, ae_leg in (("right", "armorRightArm", "armorRightLeg"), ("left", "armorLeftArm", "armorLeftLeg")):
-        forearm = find(ae_arm, r"forearm|_lower|armrotate[45]", bones)
+        forearm = find(ae_arm, r"forearm|_lower|armrotate[45]|armlow", bones)
         if forearm:
             rename[forearm] = f"{side}_forearm"
         shin = find(ae_leg, r"lower|calf", bones)
@@ -522,6 +543,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
     for index, (uniform, ae) in enumerate(UNIFORMS.items()):
         suffix = "" if index == 0 else f"_{uniform}"
         geo_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}_{ae}.geo.json"
+        if not jar.has(geo_name):  # ein Modell fuer alle Uniformen (Jetray)
+            geo_name = f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}.geo.json"
         geo = jar.json(geo_name)["minecraft:geometry"][0]
         extra = None
         if spec.extra:
@@ -607,6 +630,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         "ability_poses": [parse_poses(jar, spec.script).get(p) if spec.script and p else None for p in spec.poses],
         # Glut-Frames (alle 2 Ticks, wie AE) und Warn-Texturen (Abzeichen rot) — Dateinamen siehe build()
         "glow_frames": glow_frames(jar, spec), "warn_textures": badge is not None,
+        # Endpose der AE-Fluganimation (Knochen → Drehung/Lage/Groesse), im Renderer in der Luft/im Wasser eingeblendet
+        **({"flight_pose": flight_pose(jar, spec, classic_bones)} if spec.flight_pose else {}),
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
 
@@ -835,6 +860,57 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
     for key in ("attack", "hit", "ability_0", "ability_1", "ability_2"):
         animations[key] = {"loop": "hold_on_last_frame", "animation_length": generated[key]["animation_length"], "bones": {}}
     return {"format_version": "1.8.0", "animations": {k: animations[k] for k in sorted(animations)}}
+
+
+def _last_vector(track: dict) -> list[float] | None:
+    """Letzter Schluesselwert einer AE-Spur ({"vector": …} oder {Zeit: {"vector": …}}), nur Zahlen."""
+    if "vector" in track:
+        values = track["vector"]
+    else:
+        frames = sorted(((float(k), v) for k, v in track.items()), key=lambda kv: kv[0])
+        if not frames:
+            return None
+        last = frames[-1][1]
+        values = last.get("vector", last.get("post", last)) if isinstance(last, dict) else last
+    if not isinstance(values, list) or not all(isinstance(v, (int, float)) for v in values):
+        return None
+    return [float(v) for v in values]
+
+
+def flight_pose(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
+    """Endpose einer AE-Animation als {knochen: {"rotation"|"position"|"scale": [x, y, z]}} (unsere Knochennamen)."""
+    file, anim = spec.flight_pose.split(":", 1)
+    source = jar.json(f"assets/alienevo/animations/{file}")["animations"][anim]
+    present = {b["name"] for b in bones}
+    # umbenannte Knochen (Unterarm/Unterschenkel) ueber gleiche Lage und Wuerfel wiederfinden
+    ae_geo = jar.json(f"assets/alienevo/geo/aliens/alien_{spec.number}/{spec.species}.geo.json")["minecraft:geometry"][0]
+
+    def shape(bone: dict) -> tuple:
+        return (tuple(bone.get("pivot", ())), tuple((tuple(c.get("origin", ())), tuple(c.get("size", ())))
+                                                    for c in bone.get("cubes", [])))
+    ours = {shape(b): b["name"] for b in bones}
+    renamed = {b["name"]: ours.get(shape(b)) for b in ae_geo["bones"]}
+    # Knochen der Daueranimationen setzt GeckoLib jedes Bild neu → Pose dort aufaddieren (Schwanz wedelt weiter)
+    looped = set()
+    for ref in spec.loops:
+        lfile, lanim = ref.split(":", 1)
+        looped |= {ae_bone_name(n) for n in jar.json(f"assets/alienevo/animations/{lfile}")["animations"][lanim].get("bones", {})}
+    pose: dict[str, dict] = {}
+    for bone, tracks in source.get("bones", {}).items():
+        target = ae_bone_name(bone)
+        if target not in present:
+            target = renamed.get(bone)
+        if target not in present:
+            LOG.warning("%s: Flugpose-Knochen %s nicht gefunden", spec.species, bone)
+            continue
+        for kind in ("rotation", "position", "scale"):
+            if kind in tracks:
+                value = _last_vector(tracks[kind])
+                if value is not None:
+                    pose.setdefault(target, {})[kind] = value
+        if target in pose and target in looped:
+            pose[target]["add"] = True
+    return dict(sorted(pose.items()))
 
 
 def expected_files() -> list[Path]:

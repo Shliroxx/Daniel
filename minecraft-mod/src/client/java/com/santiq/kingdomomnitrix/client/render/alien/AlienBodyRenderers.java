@@ -74,6 +74,8 @@ public final class AlienBodyRenderers {
 	private static final Map<Integer, float[]> ROLL = new HashMap<>();
 	private static final Map<Integer, double[]> LAST_POS = new HashMap<>();
 	private static String currentForm;
+	/** Ueberblendung zur Flughaltung des gerade gezeichneten Spielers (0 = Stand) */
+	private static float currentFlight;
 	private static float currentRoll;
 
 	private AlienBodyRenderers() {
@@ -127,7 +129,9 @@ public final class AlienBodyRenderers {
 		}
 		for (AbstractClientPlayerEntity player : client.world.getPlayers()) {
 			trackRoll(player);
+			AlienFlightPose.tick(player);
 		}
+		AlienFlightPose.retain(seen);
 		ROLL.keySet().retainAll(seen);
 		LAST_POS.keySet().retainAll(seen);
 		ACTIVE.keySet().retainAll(seen);
@@ -233,6 +237,7 @@ public final class AlienBodyRenderers {
 		currentBadgeColor = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
 		currentForm = formOf(player, state);
 		float[] roll = ROLL.get(player.getId());
+		currentFlight = AlienFlightPose.progress(player, tickDelta);
 		currentRoll = roll == null ? 0.0f : MathHelper.lerp(tickDelta, roll[1], roll[0]);
 		currentUniform = state.activeAlien().map(id -> AlienUniforms.get(player, id))
 				.or(() -> Optional.ofNullable(REVERT_UNIFORM.get(player.getId())))
@@ -294,6 +299,10 @@ public final class AlienBodyRenderers {
 				if (info != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
 					// wie AE: Koerper folgt der Spielerpose (inkl. Kopf) — die Standard-Kopfdrehung entfaellt
 					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), info);
+					Map<String, AlienFlightPose.Bone> flight = info(model).flightPose();
+					if (!flight.isEmpty()) {
+						AlienFlightPose.apply(getAnimationProcessor(), flight, currentFlight);
+					}
 				} else {
 					super.setCustomAnimations(animatable, instanceId, state);
 				}

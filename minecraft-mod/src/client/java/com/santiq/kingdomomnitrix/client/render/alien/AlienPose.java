@@ -235,6 +235,14 @@ final class AlienPose {
 	 * @param baseX Grundlage des Spielerteils (x) — Verschiebung = aktuelle Lage minus Grundlage
 	 * @param baseY Grundlage (y)
 	 */
+	/** Knochen, die jedes Bild aus dem Spielermodell gesetzt werden ({@link #apply}). */
+	static boolean isPlayerDriven(String bone) {
+		return switch (bone) {
+			case "head", "body", "right_arm", "left_arm", "right_lower_arm", "left_lower_arm", "right_leg", "left_leg" -> true;
+			default -> false;
+		};
+	}
+
 	private static void follow(GeoBone bone, ModelPart part, float baseX, float baseY) {
 		if (bone == null) {
 			return;

@@ -1,1 +1,1 @@
-{"condition": {"type": "submerged"}, "weights": {"kingdomomnitrix:ripjaws": 9, "kingdomomnitrix:heatblast": -8, "kingdomomnitrix:stinkfly": -4}, "reason": "scan.kingdomomnitrix.underwater"}
+{"condition": {"type": "submerged"}, "weights": {"kingdomomnitrix:ripjaws": 9, "kingdomomnitrix:heatblast": -8, "kingdomomnitrix:stinkfly": -4, "kingdomomnitrix:jetray": 5}, "reason": "scan.kingdomomnitrix.underwater"}

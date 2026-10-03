@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -24,15 +25,16 @@ import org.jetbrains.annotations.Nullable;
  * uniform_models je Uniform eigene Geometrie
  * vanilla_pose   Hauptknochen folgen der Spielerpose (mit arm_swing, leg_swing, ability_poses)
  * glow_frames    Glut-Frames (_f&lt;i&gt;), warn_textures: Abzeichen-Warnung (_warn)
+ * flight_pose    Flughaltung je Knochen ({@link AlienFlightPose})
  * </pre>
  * Fehlende Datei: Standardwerte. Kaputte Datei oder Felder: Fehler im Log, Standardwerte — kein Absturz.
  *
  * @param pose Pose-Angaben, {@code null} = Modell nutzt eigene Animationen fuer alle Knochen
  */
 public record AlienRenderInfo(float scale, List<String> uniforms, boolean uniformModels, @Nullable AlienPose.Info pose,
-		int glowFrames, boolean warnTextures) {
+		int glowFrames, boolean warnTextures, Map<String, AlienFlightPose.Bone> flightPose) {
 
-	public static final AlienRenderInfo DEFAULT = new AlienRenderInfo(1.0f, List.of(AlienUniforms.CLASSIC), false, null, 1, false);
+	public static final AlienRenderInfo DEFAULT = new AlienRenderInfo(1.0f, List.of(AlienUniforms.CLASSIC), false, null, 1, false, Map.of());
 
 	public boolean hasUniform(String uniform) {
 		return uniforms.contains(uniform);
@@ -74,6 +76,6 @@ public record AlienRenderInfo(float scale, List<String> uniforms, boolean unifor
 		}
 		int frames = json.has("glow_frames") ? MathHelper.clamp(json.get("glow_frames").getAsInt(), 1, 64) : 1;
 		return new AlienRenderInfo(scale, List.copyOf(uniforms), json.has("uniform_models") && json.get("uniform_models").getAsBoolean(),
-				pose, frames, json.has("warn_textures") && json.get("warn_textures").getAsBoolean());
+				pose, frames, json.has("warn_textures") && json.get("warn_textures").getAsBoolean(), AlienFlightPose.parse(json));
 	}
 }

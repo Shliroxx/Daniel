@@ -875,5 +875,12 @@
   "ability.kingdomomnitrix.ball_bounce": "Ball Bounce",
   "ability.kingdomomnitrix.ricochet": "Ricochet",
   "ability.kingdomomnitrix.rolling_mode": "Rolling Mode",
-  "ability.kingdomomnitrix.cannonade": "Cannonade"
+  "ability.kingdomomnitrix.cannonade": "Cannonade",
+  "alien.kingdomomnitrix.jetray": "Jetray",
+  "ability.kingdomomnitrix.neuroshock": "Neuroshock",
+  "ability.kingdomomnitrix.tail_shock": "Tail Shock",
+  "ability.kingdomomnitrix.jet_burst": "Jet Burst",
+  "ability.kingdomomnitrix.strafing_run": "Strafing Run",
+  "ability.kingdomomnitrix.slipstream": "Slipstream",
+  "ability.kingdomomnitrix.neuroshock_storm": "Neuroshock Storm"
 }

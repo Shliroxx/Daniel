@@ -44,7 +44,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Geist: Seelen steigen auf, kalter Hauch */
 	GHOST,
 	/** Panzerkugel: Schalenplatten klappen als weiss-goldener Ring zu, Metallklappern, schwerer Aufsatz */
-	ROLL;
+	ROLL,
+	/** Duese: roter Strahlkegel nach unten, Windstoss, Neuroschock-Funken an den Augen */
+	JET;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -138,6 +140,22 @@ public enum TransformStyle implements StringIdentifiable {
 				sound(world, player, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE.value(), 1.0f, 0.7f);
 				sound(world, player, SoundEvents.BLOCK_ANVIL_LAND, 0.4f, 1.6f);
 				sound(world, player, SoundEvents.ENTITY_IRON_GOLEM_STEP, 1.0f, 0.6f);
+			}
+			case JET -> {
+				net.minecraft.particle.DustParticleEffect red = new net.minecraft.particle.DustParticleEffect(
+						new org.joml.Vector3f(0.95f, 0.2f, 0.18f), 1.5f);
+				// Duesenkegel: Partikel schiessen unter dem Koerper nach unten weg
+				for (int i = 0; i < 18; i++) {
+					double angle = i * MathHelper.TAU / 18;
+					world.spawnParticles(red, x + Math.cos(angle) * 0.35, y + 0.4, z + Math.sin(angle) * 0.35, 0,
+							Math.cos(angle) * 0.3, -1.0, Math.sin(angle) * 0.3, 0.5);
+				}
+				ring(world, ParticleTypes.CLOUD, x, y + 0.1, z, 1.2, 20, 0.2);
+				world.spawnParticles(ParticleTypes.GUST, x, mid, z, 2, 0.4, 0.3, 0.4, 0.0);
+				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, x, player.getEyeY(), z, 16, 0.25, 0.1, 0.25, 0.15);
+				sound(world, player, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.0f, 0.9f);
+				sound(world, player, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 0.7f);
+				sound(world, player, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.3f, 2.0f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

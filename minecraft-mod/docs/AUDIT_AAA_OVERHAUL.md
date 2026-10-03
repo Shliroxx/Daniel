@@ -37,7 +37,8 @@ Zählung. Jetzt: Ids ohne Namensraum gelten als `kingdomomnitrix:`, unbekannte A
 |---|---|
 | AE-Import (`tools/import_alienevo.py`, Erlaubnis laut SANTIQ) | Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak |
 | Phase 2 (neu) | **Cannonbolt** — Kugelform als eigenes System: Kugel-Modell aus AE (`BALL`-Teil), Rollwinkel aus der Strecke, Rollen-Manager für Ramm-Schaden, Abprallen, Stufen-Steigen; Verwandlungsstil `ROLL` |
-| **im AE-Inhalt verfügbar, noch nicht integriert** | Jetray (Aerophibian), Big Chill (Necrofriggian), Humungousaur (Vaxasaurian), Swampfire (Methanosian), Echo Echo (Sonorosian), Chromastone (Crystalsapien), Atomix, Dragonoid, Astrobot |
+| Phase 2 (neu) | **Jetray** — Flughaltung als eigenes System: Importer liest AE-Modelle ohne Uniform-Varianten (`watch`) und die Endpose der AE-Fluganimation (`flight_pose`), der Renderer blendet sie in der Luft/im Wasser ein (`AlienFlightPose`); Flug-Manöver-Manager (Tiefflug, Windschatten, Sturm), Neuroschock-Lähmung, Verwandlungsstil `JET` |
+| **im AE-Inhalt verfügbar, noch nicht integriert** | Big Chill (Necrofriggian), Humungousaur (Vaxasaurian), Swampfire (Methanosian), Echo Echo (Sonorosian), Chromastone (Crystalsapien), Atomix, Dragonoid, Astrobot |
 
 Fähigkeiten: `ability/BuiltinAbilities`, `CreatureAbilities`, `MasteryAbilities` (vier Bausteine + Sonderfälle),
 alle Zahlen im Datenpaket. **Lücke:** alien-eigene *Systeme* (z. B. Kugelform, Klonen, Einfrieren) gibt es erst als
@@ -101,7 +102,7 @@ und `--check` aller Generatoren in der CI. **Lücke:** keine automatischen Clien
 | Phase | Ausgangslage | nächster Schritt |
 |---|---|---|
 | 1 Omnitrix-Modell/Rendering | weitgehend fertig | Feinschliff nach Sichtprüfung; Fehler im Freischalt-Befehl behoben |
-| 2 Alien-Roster | 11 Aliens fertig (Cannonbolt ✔), 9 weitere im AE-Inhalt | Jetray, Big Chill, Humungousaur |
+| 2 Alien-Roster | 12 Aliens fertig (Cannonbolt ✔, Jetray ✔), 8 weitere im AE-Inhalt | Big Chill, Humungousaur (AE-Zusatzinhalt `afomni`: ein Modell, eine Textur — Importer braucht dafür einen eigenen Pfad) |
 | 3 Alien-Qualität | Fähigkeiten/Posen vorhanden | alien-eigene Dauer-Systeme (Kugelform, Klone, Einfrieren) |
 | 4 Transformationen | `TransformStyle` je Alien vorhanden | Kamera/Licht je Stil verfeinern |
 | 5 UI/OS/DNA | OS + Symbole fertig | DNA-Archiv (Herkunft, Seltenheit, Analyse, Fortschritt) |

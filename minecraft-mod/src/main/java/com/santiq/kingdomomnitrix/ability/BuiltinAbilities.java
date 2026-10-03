@@ -50,6 +50,7 @@ final class BuiltinAbilities {
 		CreatureAbilities.register();
 		MasteryAbilities.register();
 		CannonboltAbilities.register();
+		JetrayAbilities.register();
 	}
 
 	// --- Heatblast -------------------------------------------------------------------------------
