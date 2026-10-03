@@ -197,6 +197,40 @@ public final class HeroCommand {
 					ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mp", target.getDisplayName()), true);
 					return 1;
 				}))
+				.then(CommandManager.literal("dungeon")
+						.then(targeted(CommandManager.literal("tp"), (ctx, target) -> {
+							ServerWorld town = ctx.getSource().getServer().getWorld(TraverseTown.WORLD);
+							if (town == null) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.world_missing", TraverseTown.WORLD.getValue().toString()));
+								return 0;
+							}
+							TraverseTown.ensure(town);
+							BlockPos origin = com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.origin(town).orElseThrow();
+							BlockPos up = com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.surfaceEntrance(origin);
+							target.teleport(town, up.getX() + 0.5, up.getY(), up.getZ() + 0.5, 180.0f, 0.0f);
+							return 1;
+						}))
+						.then(CommandManager.literal("reset").executes(ctx -> {
+							ServerWorld town = ctx.getSource().getServer().getWorld(TraverseTown.WORLD);
+							if (town == null || !com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.resetNow(town)) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.dungeon.missing"));
+								return 0;
+							}
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.dungeon.reset"), true);
+							return 1;
+						}))
+						.then(CommandManager.literal("status").executes(ctx -> {
+							ServerWorld town = ctx.getSource().getServer().getWorld(TraverseTown.WORLD);
+							var origin = town == null ? java.util.Optional.<BlockPos>empty() : com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.origin(town);
+							if (origin.isEmpty()) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.dungeon.missing"));
+								return 0;
+							}
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.dungeon.status",
+									com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.stage().name().toLowerCase(java.util.Locale.ROOT),
+									origin.get().getX(), origin.get().getY(), origin.get().getZ()), false);
+							return 1;
+						})))
 				.then(CommandManager.literal("event")
 						.then(CommandManager.literal("start")
 								.executes(ctx -> startEvent(ctx, Optional.empty()))

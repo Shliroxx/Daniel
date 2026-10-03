@@ -108,6 +108,8 @@ public final class TraverseTown {
 	public static BlockPos ensure(ServerWorld world) {
 		State state = world.getPersistentStateManager().getOrCreate(TYPE, "kingdomomnitrix_traverse_town");
 		if (state.center != null) {
+			// Welten von vor dem Dungeon bekommen ihn beim naechsten Besuch nachgebaut
+			com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.ensure(world, state.center);
 			return state.center;
 		}
 		long started = System.currentTimeMillis();
@@ -115,6 +117,7 @@ public final class TraverseTown {
 		build(world, center, Random.create(world.getSeed() ^ center.asLong()));
 		state.center = center;
 		state.markDirty();
+		com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.ensure(world, center);
 		KingdomOmnitrix.LOGGER.info("Traverse Town bei {} errichtet ({} ms)", center, System.currentTimeMillis() - started);
 		return center;
 	}

@@ -101,6 +101,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		CombatManager.register();
 		RiftSpawner.register();
 		com.santiq.kingdomomnitrix.worldevent.WorldEvents.register();
+		com.santiq.kingdomomnitrix.dungeon.WaterwayDungeon.register();
 		ModNetworking.register();
 		HeroCommand.register();
 		PartyManager.register();
