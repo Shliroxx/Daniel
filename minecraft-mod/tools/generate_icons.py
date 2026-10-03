@@ -519,6 +519,7 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/ricochet": ("omnitrix", "cycle", False),
     "alien_ability/rolling_mode": ("omnitrix", "speed", True),
     "alien_ability/cannonade": ("omnitrix", "slam", True),
+    "alien_ability/titan_leap": ("omnitrix", "slam", False),
     "alien_ability/neuroshock": ("omnitrix", "lightning", False),
     "alien_ability/tail_shock": ("omnitrix", "cycle", False),
     "alien_ability/jet_burst": ("omnitrix", "wing", False),

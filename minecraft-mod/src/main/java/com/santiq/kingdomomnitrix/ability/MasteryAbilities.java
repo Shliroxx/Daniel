@@ -62,12 +62,7 @@ final class MasteryAbilities {
 
 		// --- Heatblast: HeatblastAbilities (Kernhitze)
 		// --- XLR8: Xlr8Abilities (Tempo)
-		// --- Vierarm
-		reg("thunder_clap", ctx -> area(ctx, new Look(ParticleTypes.SONIC_BOOM, 1, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.4f, false),
-				new Fx(StatusEffects.SLOWNESS, 3)));
-		reg("iron_skin", ctx -> self(ctx, SoundEvents.BLOCK_ANVIL_LAND, new Fx(StatusEffects.RESISTANCE, 1), new Fx(StatusEffects.ABSORPTION, 1)));
-		reg("earthquake", ctx -> area(ctx, new Look(ParticleTypes.EXPLOSION, 14, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.6f, false),
-				new Fx(StatusEffects.SLOWNESS, 1)));
+		// --- Vierarm: FourArmsAbilities (Wut)
 		// --- Diamondhead
 		reg("crystal_blade", ctx -> onTarget(ctx, 4.0, ParticleTypes.CRIT, SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, false));
 		reg("spike_eruption", ctx -> area(ctx, new Look(crystal, 90, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 0.8f, false)));

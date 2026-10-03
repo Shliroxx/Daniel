@@ -41,8 +41,17 @@ public final class AlienMeterHud implements HudElement {
 	/** Farbverlauf je Anzeige: Stuetzfarben von 0 bis 100 % */
 	private static final int[][] GRADIENT = {
 			{0xFF0B3D91, 0xFF1E6FFF, 0xFF33B5FF, 0xFF6FF0FF, 0xFFFFFFFF},
-			{0xFF6A1200, 0xFFD03A00, 0xFFFF7A10, 0xFFFFC23A, 0xFF7FE9FF}};
-	private static final int[] ACCENT = {0xFF4FC3FF, 0xFFFF8A2A};
+			{0xFF6A1200, 0xFFD03A00, 0xFFFF7A10, 0xFFFFC23A, 0xFF7FE9FF},
+			{0xFF3A0608, 0xFF8E0E14, 0xFFD3201E, 0xFFFF5A2A, 0xFFFFE07A}};
+	private static final int[] ACCENT = {0xFF4FC3FF, 0xFFFF8A2A, 0xFFFF3B30};
+
+	/** Beschriftung und Stufen-Namen je Anzeige */
+	private static final String[] LABELS = {"message.kingdomomnitrix.xlr8_tempo", "message.kingdomomnitrix.heatblast_heat",
+			"message.kingdomomnitrix.four_arms_rage"};
+	private static final String[][] STAGES = {
+			{"hud.kingdomomnitrix.meter.blur", "hud.kingdomomnitrix.meter.sound_barrier"},
+			{"hud.kingdomomnitrix.meter.glowing", "hud.kingdomomnitrix.meter.overheated"},
+			{"hud.kingdomomnitrix.meter.angry", "hud.kingdomomnitrix.meter.rampage"}};
 
 	private AlienMeterHud() {
 	}
@@ -153,7 +162,7 @@ public final class AlienMeterHud implements HudElement {
 		int numberColor = max ? lighten(ACCENT[m], pulse) : 0xFFFFFFFF;
 		context.drawText(font, number, -font.getWidth(number) / 2, 0, numberColor, true);
 		matrices.pop();
-		Text label = Text.translatable(m == AlienMeterPayload.TEMPO ? "message.kingdomomnitrix.xlr8_tempo" : "message.kingdomomnitrix.heatblast_heat");
+		Text label = Text.translatable(LABELS[m]);
 		matrices.push();
 		matrices.translate(CX, CY + 2, 0);
 		matrices.scale(0.6f, 0.6f, 1.0f);
@@ -173,10 +182,10 @@ public final class AlienMeterHud implements HudElement {
 
 	private static Text stageText(int meter, float value) {
 		if (value >= STAGE_MAX - 0.5f) {
-			return Text.translatable(meter == AlienMeterPayload.TEMPO ? "hud.kingdomomnitrix.meter.sound_barrier" : "hud.kingdomomnitrix.meter.overheated");
+			return Text.translatable(STAGES[meter][1]);
 		}
 		if (value >= STAGE_ONE) {
-			return Text.translatable(meter == AlienMeterPayload.TEMPO ? "hud.kingdomomnitrix.meter.blur" : "hud.kingdomomnitrix.meter.glowing");
+			return Text.translatable(STAGES[meter][0]);
 		}
 		return null;
 	}

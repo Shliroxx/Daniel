@@ -1,8 +1,10 @@
 package com.santiq.kingdomomnitrix.client.render.alien;
 
+import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.client.alien.AlienMeters;
 import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import java.util.Optional;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
@@ -20,16 +22,18 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
 /**
  * Leucht-Aura nach Alien-Anzeige: der Koerper wird ein zweites (bei hoher Anzeige drittes) Mal etwas groesser mit
- * wanderndem Energie-Muster (wie der aufgeladene Creeper) gezeichnet — XLR8 blau nach Tempo, Heatblast orange nach
- * Kernhitze (bei 100 % blau). Je hoeher die Anzeige, desto heller, groesser und schneller. Volle Helligkeit, auch nachts.
+ * wanderndem Energie-Muster gezeichnet — XLR8 blau nach Tempo, Heatblast orange nach
+ * Kernhitze (bei 100 % blau), Vierarm rot nach Wut (bei 100 % gluehend gelb). Je hoeher die Anzeige, desto heller, groesser und schneller. Volle Helligkeit, auch nachts.
  */
 public class MeterAuraLayer extends GeoRenderLayer<AlienBodyAnimatable> {
-	private static final Identifier SWIRL = Identifier.ofVanilla("textures/entity/creeper/creeper_armor.png");
+	/** eigene Graustufen-Textur (tools/generate_aura_texture.py) — die Farbe kommt allein aus der Vertex-Farbe */
+	private static final Identifier SWIRL = KingdomOmnitrix.id("textures/entity/aura_swirl.png");
 	/** ab diesem Wert (Prozent) erscheint die Aura */
 	private static final float MIN = 8.0f;
 	private static final int[][] COLORS = {
 			{0x1E6FFF, 0x7FF4FF},
-			{0xFF5A10, 0x7FE9FF}};
+			{0xFF5A10, 0x7FE9FF},
+			{0xD81E1E, 0xFFB040}};
 
 	private final GeoReplacedEntityRenderer<AbstractClientPlayerEntity, AlienBodyAnimatable> owner;
 
@@ -42,6 +46,11 @@ public class MeterAuraLayer extends GeoRenderLayer<AlienBodyAnimatable> {
 	public void render(MatrixStack poseStack, AlienBodyAnimatable animatable, BakedGeoModel bakedModel, @Nullable RenderLayer renderType,
 			VertexConsumerProvider bufferSource, @Nullable VertexConsumer buffer, float partialTick, int packedLight, int packedOverlay) {
 		if (!(owner.getCurrentEntity() instanceof AbstractClientPlayerEntity player)) {
+			return;
+		}
+		// Ich-Perspektive: die Huelle laege um die Kamera und fuellte den ganzen Bildschirm
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (player == client.getCameraEntity() && client.options.getPerspective().isFirstPerson()) {
 			return;
 		}
 		Optional<Integer> meter = AlienMeters.meterOf(player);

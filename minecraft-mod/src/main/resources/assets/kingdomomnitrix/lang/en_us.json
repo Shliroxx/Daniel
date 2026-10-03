@@ -893,5 +893,11 @@
   "hud.kingdomomnitrix.meter.blur": "BLUR",
   "hud.kingdomomnitrix.meter.sound_barrier": "SOUND BARRIER",
   "hud.kingdomomnitrix.meter.glowing": "GLOWING",
-  "hud.kingdomomnitrix.meter.overheated": "OVERHEATED"
+  "hud.kingdomomnitrix.meter.overheated": "OVERHEATED",
+  "ability.kingdomomnitrix.titan_leap": "Titan Leap",
+  "message.kingdomomnitrix.four_arms_rage": "Rage",
+  "message.kingdomomnitrix.four_arms_rampage": "RAMPAGE — next ability at full force!",
+  "message.kingdomomnitrix.four_arms_combo": "Four-fist strike!",
+  "hud.kingdomomnitrix.meter.angry": "FURY",
+  "hud.kingdomomnitrix.meter.rampage": "RAMPAGE"
 }

@@ -893,5 +893,11 @@
   "hud.kingdomomnitrix.meter.blur": "VERSCHWOMMEN",
   "hud.kingdomomnitrix.meter.sound_barrier": "SCHALLMAUER",
   "hud.kingdomomnitrix.meter.glowing": "GLÜHEND",
-  "hud.kingdomomnitrix.meter.overheated": "ÜBERHITZT"
+  "hud.kingdomomnitrix.meter.overheated": "ÜBERHITZT",
+  "ability.kingdomomnitrix.titan_leap": "Titanensprung",
+  "message.kingdomomnitrix.four_arms_rage": "Wut",
+  "message.kingdomomnitrix.four_arms_rampage": "RASEREI — nächste Fähigkeit mit voller Wucht!",
+  "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!",
+  "hud.kingdomomnitrix.meter.angry": "ZORN",
+  "hud.kingdomomnitrix.meter.rampage": "RASEREI"
 }

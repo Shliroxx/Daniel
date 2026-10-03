@@ -35,8 +35,6 @@ final class BuiltinAbilities {
 		// Heatblast
 		// XLR8
 		// Vierarm
-		AbilityRegistry.register(KingdomOmnitrix.id("ground_slam"), BuiltinAbilities::groundSlam);
-		AbilityRegistry.register(KingdomOmnitrix.id("throw"), BuiltinAbilities::throwTarget);
 		AbilityRegistry.register(KingdomOmnitrix.id("mighty_leap"), BuiltinAbilities::mightyLeap);
 		// Diamondhead / Grey Matter (Prototyp)
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_volley"), BuiltinAbilities::crystalVolley);
@@ -46,6 +44,7 @@ final class BuiltinAbilities {
 		CannonboltAbilities.register();
 		HeatblastAbilities.register();
 		Xlr8Abilities.register();
+		FourArmsAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -53,52 +52,7 @@ final class BuiltinAbilities {
 
 	// XLR8: Xlr8Abilities (Tempo)
 
-	// --- Vierarm ---------------------------------------------------------------------------------
-
-	private static boolean groundSlam(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		double radius = ctx.param("radius", 5.0);
-		float damage = (float) ctx.param("damage", 9.0);
-		double launch = ctx.param("launch", 0.5);
-		for (LivingEntity target : livingAround(ctx, radius)) {
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-			Vec3d push = target.getPos().subtract(player.getPos());
-			if (push.horizontalLengthSquared() > 1.0E-4) {
-				target.takeKnockback(1.4, -push.x, -push.z);
-			}
-			target.addVelocity(0.0, launch, 0.0);
-			target.velocityModified = true;
-		}
-		ctx.world().spawnParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 6, radius * 0.4, 0.2, radius * 0.4, 0.0);
-		sound(ctx, ModSounds.ALIEN_SLAM, 1.2f, 0.9f);
-		return true;
-	}
-
-	private static boolean throwTarget(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		double range = ctx.param("range", 5.0);
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, range);
-		if (found.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		LivingEntity target = found.get();
-		if (!PartyRules.canHarm(player, target)) {
-			return false;
-		}
-		double maxWidth = ctx.param("max_width", 2.0);
-		if (target.getWidth() > maxWidth) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.too_heavy").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		Vec3d look = player.getRotationVec(1.0f);
-		double power = ctx.param("power", 2.2);
-		target.damage(ctx.world().getDamageSources().playerAttack(player), (float) ctx.param("damage", 4.0));
-		target.setVelocity(look.x * power, Math.max(0.4, look.y * power + 0.4), look.z * power);
-		target.velocityModified = true;
-		sound(ctx, ModSounds.WEAPON_THROW, 1.0f, 0.7f);
-		return true;
-	}
+	// --- Vierarm: FourArmsAbilities (Wut); mighty_leap nutzt Diamondhead ---------------------------------------------------------------------------------
 
 	private static boolean mightyLeap(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
