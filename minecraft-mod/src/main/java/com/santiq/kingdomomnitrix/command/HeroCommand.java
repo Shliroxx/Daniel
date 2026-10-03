@@ -137,6 +137,13 @@ public final class HeroCommand {
 								.then(targeted(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS),
 										(ctx, target) -> transformResult(ctx, target, TransformationManager.transform(target,
 												IdentifierArgumentType.getIdentifier(ctx, "alien"), false)))))
+						// Code am Omnitrix eingeben (wie die Tastatur)
+						.then(CommandManager.literal("code")
+								.then(targeted(CommandManager.argument("code", com.mojang.brigadier.arguments.StringArgumentType.word()), (ctx, target) -> {
+									com.santiq.kingdomomnitrix.omnitrix.OmnitrixCodes.enter(target,
+											com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "code"));
+									return 1;
+								})))
 						// Faehigkeit direkt ausloesen (Test/Admin): meldet das genaue Ergebnis
 						.then(CommandManager.literal("ability")
 								.then(targeted(CommandManager.argument("slot", IntegerArgumentType.integer(1, 6)), (ctx, target) -> {

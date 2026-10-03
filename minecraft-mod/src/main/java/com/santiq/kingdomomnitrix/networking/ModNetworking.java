@@ -39,6 +39,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(OmnitrixPhaseSyncPayload.ID, OmnitrixPhaseSyncPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(OmnitrixCodePayload.ID, OmnitrixCodePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ComboAttackPayload.ID, ComboAttackPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(DodgePayload.ID, DodgePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GuardPayload.ID, GuardPayload.CODEC);
@@ -208,6 +209,16 @@ public final class ModNetworking {
 			ServerPlayerEntity player = context.player();
 			if (canAct(player)) {
 				report(player, TransformationManager.revert(player, false));
+			}
+		});
+		ServerPlayNetworking.registerGlobalReceiver(OmnitrixCodePayload.ID, (payload, context) -> {
+			ServerPlayerEntity player = context.player();
+			String code = payload.code();
+			// nur Ziffern in erlaubter Laenge; alles andere zaehlt wie ein falscher Code (kein Umgehen der Sperre)
+			boolean wellFormed = code.length() <= com.santiq.kingdomomnitrix.omnitrix.OmnitrixCode.MAX_LENGTH
+					&& code.chars().allMatch(Character::isDigit);
+			if (canAct(player)) {
+				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCodes.enter(player, wellFormed ? code : "");
 			}
 		});
 		ServerPlayNetworking.registerGlobalReceiver(AbilityRequestPayload.ID, (payload, context) -> {

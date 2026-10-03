@@ -52,6 +52,7 @@ public final class OmnitrixCore {
 
 	public static void register() {
 		OmnitrixMalfunction.register();
+		OmnitrixCodes.register();
 		DynamicRegistries.registerSynced(PROFILES, OmnitrixProfile.CODEC);
 		ScanRule.register();
 	}
@@ -308,11 +309,27 @@ public final class OmnitrixCore {
 		cue(player, OmnitrixCue.OVERHEAT);
 	}
 
+	/** Notkuehlung (Code): Hitze 0, Ueberhitzung und Warnung aufgehoben. */
+	public static void vent(ServerPlayerEntity player) {
+		long now = player.getWorld().getTime();
+		OmnitrixProfile profile = profile(player);
+		update(player, s -> s.withHeat(now, false, profile, -1.0f).withOverheatedUntil(0L).withWarned(false));
+		cue(player, OmnitrixCue.READY);
+	}
+
 	/** Sicherheitssperre fuer {@code ticks} (0 = aufheben). */
 	public static void lock(ServerPlayerEntity player, long ticks) {
+		lock(player, ticks, true);
+	}
+
+	/** Sperre setzen; {@code announce = false}, wenn der Aufrufer eine eigene, genauere Meldung schickt. */
+	public static void lock(ServerPlayerEntity player, long ticks, boolean announce) {
 		long now = player.getWorld().getTime();
 		update(player, s -> s.withLockedUntil(ticks > 0 ? now + ticks : 0L));
 		cue(player, ticks > 0 ? OmnitrixCue.LOCK : OmnitrixCue.READY);
+		if (!announce) {
+			return;
+		}
 		OmnitrixOs.send(player, ticks > 0 ? OmnitrixOs.Event.LOCKED : OmnitrixOs.Event.UNLOCKED, ticks > 0
 				? Text.translatable("holo.kingdomomnitrix.os.locked_for", seconds(ticks))
 				: Text.translatable("holo.kingdomomnitrix.os.unlocked_body"));

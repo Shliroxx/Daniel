@@ -33,7 +33,11 @@ public final class OmnitrixOs {
 		MASTER_CONTROL(0xFFC94A, 3000, 3, Formatting.GOLD),
 		DNA_SHOCK(0xB8FFA0, 3000, 4, Formatting.RED),
 		EMERGENCY(0xFF4A2A, 3200, 5, Formatting.GOLD),
-		MALFUNCTION(0xFF5A3C, 4200, 4, Formatting.RED);
+		MALFUNCTION(0xFF5A3C, 4200, 4, Formatting.RED),
+		DIAGNOSTICS(0x4FC3FF, 5000, 2, Formatting.AQUA),
+		RECALIBRATED(0x7DFF9C, 2500, 2, Formatting.GREEN),
+		SELF_DESTRUCT(0xFF2A1A, 1100, 5, Formatting.RED),
+		DETONATED(0xFF2A1A, 5000, 5, Formatting.RED);
 
 		private final int color;
 		private final int durationMs;

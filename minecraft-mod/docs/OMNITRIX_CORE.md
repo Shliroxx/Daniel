@@ -314,3 +314,31 @@ RUECKVERWANDLUNG · Bereit in 10 s, LAEDT NACH · Bereit in 4 s (ueber die Tasta
 (`docs/screenshots/omnitrix_os_meldungen.png`). Tests `OmnitrixOsTest` (alle Titel in beiden Sprachen, Vorrang
 kritischer Meldungen). Nicht im Spiel geprueft: ABGEKUEHLT, BEREIT, ENTSPERRT, MASTER CONTROL (gleicher Weg, nur
 Text/Farbe verschieden).
+
+## 13. Phase J — Code-Tastatur (2026-10-03)
+
+**Bedienung:** im Omnitrix-Rad **C** → Hologramm-Ziffernblock (1–9, ⌫, 0, ✔); Maus oder Tastatur (Ziffern, Ziffernblock,
+Ruecktaste, Enter, Esc). Test/Admin: `/hero omnitrix code <code>`.
+
+**Codes** liegen als Datenpaket unter `data/<ns>/kingdomomnitrix/omnitrix_code/*.json` und werden **nicht** an Clients
+geschickt (lassen sich nicht aus dem Client auslesen). Nur Ziffern, 3–8 Stellen; Admins koennen sie aendern.
+
+| Code (Standard) | Aktion | Wirkung |
+|---|---|---|
+| 0001 | Diagnose | Hitze, Profil, Notfall-Bereitschaft, Master-Control-Status als Hologramm |
+| 4040 | Notkuehlung | Hitze sofort 0 %, Ueberhitzung aufgehoben — dafuer 30 s gesperrt; nur in Menschenform |
+| 7777 | Zufallsmodus | zufaelliges freigeschaltetes Alien (Hitze, Nachladen, Platz, Fehlfunktionen gelten) |
+| 1010 | Kalibrierung | Prototyp ↔ Rekalibriert |
+| 10000 | Master Control | an/aus — nur mit Story-Flag `kingdomomnitrix:master_control` (Freischaltung = Phase K) |
+| 0000 | Selbstzerstoerung | nur mit `/gamerule kingdomomnitrixSelfDestruct true` (Standard **aus**): 10-s-Countdown, gleicher Code bricht ab; danach Explosion ohne Blockschaden, Zwangs-Rueckverwandlung, 10 min Sperre |
+
+**Schutz:** 3 falsche Codes in 30 s → 10 s Sperre; Server prueft Laenge und Ziffern selbst (manipulierte Eingaben
+zaehlen als falsch).
+
+**Im Spiel geprueft:** Ziffernblock ueber G → C, Eingabe 0001 + Enter → „DIAGNOSE · Hitze 41 % · Profil Prototyp ·
+Notfall bereit · Master Control gesperrt“; falscher Code → „Code ungueltig · noch 2 Versuche“; dritter → Sperre 10 s;
+4040 → „ABGEKUEHLT · Notkuehlung: Hitze 0 % · Gesperrt fuer 30 s“; 7777 → Ripjaws; 1010 → „KALIBRIERT“;
+0000 ohne Spielregel → abgelehnt; mit Spielregel Countdown, Abbruch, und ein Durchlauf bis zur Explosion (Sperre 600 s).
+**Gefunden und behoben:** die Sperr-Meldung verdraengte die genauere Notkuehlungs-Meldung; Endmeldung der
+Selbstzerstoerung hiess „UEBERHITZT“ (jetzt „DETONIERT“, nur Text — nicht erneut im Spiel angesehen).
+Tests: Codes gueltig und eindeutig, jede Aktion hat einen Standard-Code, Buchstaben/zu kurz/zu lang abgelehnt.

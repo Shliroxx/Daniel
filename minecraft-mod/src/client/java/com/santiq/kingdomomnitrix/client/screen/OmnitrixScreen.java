@@ -7,6 +7,7 @@ import com.santiq.kingdomomnitrix.alien.TransformationState;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.client.render.alien.AlienBodyRenderers;
 import com.santiq.kingdomomnitrix.client.render.omnitrix.OmnitrixController;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -115,7 +116,8 @@ public class OmnitrixScreen extends Screen {
 		if (OmnitrixController.phase() != OmnitrixPhase.CONFIRMING) {
 			Text hint = Text.translatable("screen.kingdomomnitrix.omnitrix_hint").append("  ·  ")
 					.append(Text.translatable("hud.kingdomomnitrix.favorite_set", OmnitrixCore.state(client.player).activeSet() + 1))
-					.append(" · ").append(Text.translatable("hud.kingdomomnitrix.favorite_hint"));
+					.append(" · ").append(Text.translatable("hud.kingdomomnitrix.favorite_hint"))
+					.append(" · ").append(Text.translatable("screen.kingdomomnitrix.code_key"));
 			context.getMatrices().push();
 			context.getMatrices().translate(width / 2.0f, height - 44.0f, 0.0f);
 			context.getMatrices().scale(0.75f, 0.75f, 1.0f);
@@ -183,6 +185,13 @@ public class OmnitrixScreen extends Screen {
 			}
 			case GLFW.GLFW_KEY_TAB -> {
 				OmnitrixController.cycleFavoriteSet();
+				return true;
+			}
+			case GLFW.GLFW_KEY_C -> {
+				// Code-Tastatur: Rad schliessen, Ziffernblock oeffnen
+				MinecraftClient client = MinecraftClient.getInstance();
+				close();
+				OmnitrixCodeScreen.open(client);
 				return true;
 			}
 			case GLFW.GLFW_KEY_N -> {
