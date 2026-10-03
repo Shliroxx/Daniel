@@ -100,6 +100,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		DnaDrops.register();
 		CombatManager.register();
 		RiftSpawner.register();
+		com.santiq.kingdomomnitrix.worldevent.WorldEvents.register();
 		ModNetworking.register();
 		HeroCommand.register();
 		PartyManager.register();

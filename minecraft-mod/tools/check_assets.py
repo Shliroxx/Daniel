@@ -243,6 +243,30 @@ def check_arena(report: Report, lang: dict[str, str]) -> int:
     return len(files)
 
 
+WORLD_EVENT_TYPES = {"heartless_invasion", "dark_rift", "alien_crash", "raritanium_meteor", "boss_spawn", "keyblade_shrine"}
+
+
+def check_world_events(report: Report, lang: dict[str, str]) -> int:
+    """Welt-Ereignisse: bekannter Typ, Riss vorhanden (Invasion/Riss), Name und Hinweis uebersetzt."""
+    files = sorted((DATA / MOD_ID / "world_event").glob("*.json"))
+    rifts = {path.stem for path in (DATA / MOD_ID / "rift").glob("*.json")}
+    for path in files:
+        event = load_json(path, report)
+        if not isinstance(event, dict):
+            continue
+        kind = event.get("type")
+        if kind not in WORLD_EVENT_TYPES:
+            report.error("Weltereignis %s: unbekannter Typ %s", path.stem, kind)
+        if kind in ("heartless_invasion", "dark_rift"):
+            rift = str(event.get("rift", "")).split(":")[-1]
+            if rift not in rifts:
+                report.error("Weltereignis %s: Riss %s fehlt", path.stem, event.get("rift"))
+        for key in (f"world_event.{MOD_ID}.{path.stem}", f"world_event.{MOD_ID}.{path.stem}.hint"):
+            if key not in lang:
+                report.error("Weltereignis ohne Text: %s", key)
+    return len(files)
+
+
 HERO_ABILITY_CATEGORIES = {"combat", "keyblade", "omnitrix", "tech", "exploration"}
 HERO_MAX_LEVEL = 50
 
@@ -432,6 +456,7 @@ def main(argv: list[str] | None = None) -> int:
     npcs = check_npcs(report, lang)
     check_routes(report, lang)
     check_arena(report, lang)
+    check_world_events(report, lang)
     check_feature_order(report)
     ability_count = check_hero_abilities(report, lang)
     check_icons(report)

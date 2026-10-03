@@ -73,15 +73,24 @@ public final class RiftSpawner {
 		if (!world.isChunkLoaded(ground.getX() >> 4, ground.getZ() >> 4) || Math.abs(ground.getY() - player.getY()) > 12) {
 			ground = player.getBlockPos().add(MathHelper.floor(Math.cos(angle) * MIN_DISTANCE), 0, MathHelper.floor(Math.sin(angle) * MIN_DISTANCE));
 		}
+		Optional<DarknessRiftEntity> rift = openAt(world, ground, chosen.get(), level);
+		rift.ifPresent(r -> player.sendMessage(Text.translatable("message.kingdomomnitrix.rift_opened").formatted(Formatting.DARK_PURPLE), false));
+		return rift;
+	}
+
+	/** Oeffnet einen bestimmten Riss an einer Stelle (Welt-Ereignisse); leer, wenn der Riss unbekannt ist. */
+	public static Optional<DarknessRiftEntity> openAt(ServerWorld world, BlockPos ground, Identifier riftId, int level) {
+		if (RiftRegistry.get(world.getRegistryManager(), riftId).isEmpty()) {
+			return Optional.empty();
+		}
 		DarknessRiftEntity rift = ModEntities.DARKNESS_RIFT.create(world);
 		if (rift == null) {
 			return Optional.empty();
 		}
-		rift.configure(chosen.get(), level);
+		rift.configure(riftId, level);
 		rift.refreshPositionAndAngles(ground.getX() + 0.5, ground.getY(), ground.getZ() + 0.5, 0.0f, 0.0f);
 		world.spawnEntity(rift);
 		world.playSound(null, ground, ModSounds.WORLD_RIFT, SoundCategory.HOSTILE, 0.8f, 0.6f);
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.rift_opened").formatted(Formatting.DARK_PURPLE), false);
 		return Optional.of(rift);
 	}
 }

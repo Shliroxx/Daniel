@@ -58,6 +58,9 @@ import net.minecraft.util.Identifier;
 public final class HeroCommand {
 	private static final int PERMISSION_LEVEL = 2;
 	private static final String TARGET = "target";
+	private static final SuggestionProvider<ServerCommandSource> EVENT_SUGGESTIONS = (ctx, builder) ->
+			net.minecraft.command.CommandSource.suggestIdentifiers(
+					com.santiq.kingdomomnitrix.worldevent.WorldEventRegistry.ids(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> SPELL_SUGGESTIONS = (ctx, builder) ->
 			CommandSource.suggestIdentifiers(SpellRegistry.sortedIds(ctx.getSource().getRegistryManager()), builder);
 	private static final SuggestionProvider<ServerCommandSource> QUEST_SUGGESTIONS = (ctx, builder) ->
@@ -194,6 +197,13 @@ public final class HeroCommand {
 					ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.mp", target.getDisplayName()), true);
 					return 1;
 				}))
+				.then(CommandManager.literal("event")
+						.then(CommandManager.literal("start")
+								.executes(ctx -> startEvent(ctx, Optional.empty()))
+								.then(CommandManager.argument("event", IdentifierArgumentType.identifier()).suggests(EVENT_SUGGESTIONS)
+										.executes(ctx -> startEvent(ctx, Optional.of(IdentifierArgumentType.getIdentifier(ctx, "event"))))))
+						.then(CommandManager.literal("stop").executes(HeroCommand::stopEvent))
+						.then(CommandManager.literal("status").executes(HeroCommand::eventStatus)))
 				.then(CommandManager.literal("rift")
 						.executes(ctx -> openRift(ctx, Optional.empty()))
 						.then(CommandManager.argument("rift", IdentifierArgumentType.identifier())
@@ -368,6 +378,40 @@ public final class HeroCommand {
 		int actual = MagicManager.get(target).level(spellId);
 		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.spell", target.getDisplayName(),
 				Text.translatable(SpellDefinition.translationKey(spellId, actual)), actual), true);
+		return 1;
+	}
+
+	private static int startEvent(CommandContext<ServerCommandSource> ctx, Optional<Identifier> eventId) throws CommandSyntaxException {
+		ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+		var event = com.santiq.kingdomomnitrix.worldevent.WorldEvents.start(player, eventId);
+		if (event.isEmpty()) {
+			ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.event.failed"));
+			return 0;
+		}
+		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.event.started", event.get().name(),
+				event.get().pos().getX(), event.get().pos().getY(), event.get().pos().getZ()), true);
+		return 1;
+	}
+
+	private static int stopEvent(CommandContext<ServerCommandSource> ctx) {
+		if (!com.santiq.kingdomomnitrix.worldevent.WorldEvents.stop()) {
+			ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.event.none"));
+			return 0;
+		}
+		ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.event.stopped"), true);
+		return 1;
+	}
+
+	private static int eventStatus(CommandContext<ServerCommandSource> ctx) {
+		var active = com.santiq.kingdomomnitrix.worldevent.WorldEvents.active();
+		if (active.isPresent()) {
+			var event = active.get();
+			ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.event.status_active", event.name(),
+					event.pos().getX(), event.pos().getY(), event.pos().getZ(), event.remainingTicks() / 20), false);
+		} else {
+			long ticks = com.santiq.kingdomomnitrix.worldevent.WorldEvents.ticksUntilNext(ctx.getSource().getServer());
+			ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.event.status_idle", ticks < 0 ? "?" : String.valueOf(ticks / 1200)), false);
+		}
 		return 1;
 	}
 
