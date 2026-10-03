@@ -91,6 +91,7 @@ public final class AlienMasteryManager {
 			player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), ModSounds.HERO_DISCOVERY,
 					SoundCategory.PLAYERS, 0.9f, 1.0f);
 			HeroDataAccess.grantExperience(player, HERO_EXPERIENCE_PER_LEVEL * newLevel);
+			com.santiq.kingdomomnitrix.omnitrix.MasterControlProgress.check(player);
 		}
 	}
 
@@ -100,5 +101,6 @@ public final class AlienMasteryManager {
 		java.util.Map<Identifier, Integer> next = new java.util.HashMap<>(get(player).experience());
 		next.put(alien, AlienMastery.experienceFor(clamped));
 		player.setAttached(MASTERY, new AlienMastery(next));
+		com.santiq.kingdomomnitrix.omnitrix.MasterControlProgress.check(player);
 	}
 }

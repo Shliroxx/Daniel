@@ -760,13 +760,11 @@
   "holo.kingdomomnitrix.code.diag_failsafe_wait": "Emergency in %s min",
   "holo.kingdomomnitrix.code.diag_mc_on": "Master Control active",
   "holo.kingdomomnitrix.code.diag_mc_ready": "Master Control available",
-  "holo.kingdomomnitrix.code.diag_mc_locked": "Master Control locked",
   "holo.kingdomomnitrix.code.vent_transformed": "Emergency vent only in human form",
   "holo.kingdomomnitrix.code.vented": "Emergency vent: heat 0%",
   "holo.kingdomomnitrix.code.random_none": "No aliens for random mode",
   "holo.kingdomomnitrix.code.no_profile": "Profile not found",
   "holo.kingdomomnitrix.code.mc_locked": "Master Control not unlocked",
-  "holo.kingdomomnitrix.code.mc_locked_hint": "Access requires unlocking first",
   "holo.kingdomomnitrix.code.sd_disabled": "Self-destruct disabled on this server",
   "holo.kingdomomnitrix.code.sd_countdown": "Detonation in %s s",
   "holo.kingdomomnitrix.code.sd_abort_hint": "Enter the same code again to abort",
@@ -774,5 +772,10 @@
   "holo.kingdomomnitrix.code.sd_done": "Omnitrix locked for %s min after self-destruct",
   "omnitrix_profile.kingdomomnitrix.prototype": "Prototype",
   "omnitrix_profile.kingdomomnitrix.recalibrated": "Recalibrated",
-  "holo.kingdomomnitrix.os.detonated": "DETONATED"
+  "holo.kingdomomnitrix.os.detonated": "DETONATED",
+  "holo.kingdomomnitrix.code.diag_mc_progress": "Master Control: %s/%s aliens at ★%s",
+  "holo.kingdomomnitrix.mc.unlocked": "Master Control protocol received",
+  "holo.kingdomomnitrix.mc.unlocked_hint": "Enter code 10000",
+  "screen.kingdomomnitrix.aliens.mc_progress": "Master Control %s/%s ★%s",
+  "screen.kingdomomnitrix.aliens.mc_unlocked": "Master Control ✔"
 }

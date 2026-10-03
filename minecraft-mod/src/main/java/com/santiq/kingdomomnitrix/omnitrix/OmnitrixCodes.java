@@ -33,7 +33,7 @@ public final class OmnitrixCodes {
 	public static final GameRules.Key<GameRules.BooleanRule> SELF_DESTRUCT_ALLOWED = GameRuleRegistry.register(
 			"kingdomomnitrixSelfDestruct", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(false));
 	/** Story-Flag, das Master Control freischaltet (vergibt Phase K / Befehl). */
-	public static final String MASTER_CONTROL_FLAG = "kingdomomnitrix:master_control";
+	public static final String MASTER_CONTROL_FLAG = MasterControlProgress.FLAG;
 
 	static final int MAX_WRONG = 3;
 	static final long WRONG_WINDOW_TICKS = 600L;
@@ -103,6 +103,7 @@ public final class OmnitrixCodes {
 
 	private static void diagnostics(ServerPlayerEntity player, long now) {
 		OmnitrixState state = OmnitrixCore.state(player);
+		MasterControlProgress.Progress progress = MasterControlProgress.progress(player);
 		long failsafe = Math.max(0L, state.failsafeReadyAt() - now);
 		Text body = Text.translatable("holo.kingdomomnitrix.code.diagnostics", Math.round(OmnitrixCore.heat(player) * 100),
 				Text.translatable("omnitrix_profile." + state.profile().getNamespace() + "." + state.profile().getPath()));
@@ -111,7 +112,8 @@ public final class OmnitrixCodes {
 				.append(" · ")
 				.append(Text.translatable(state.masterControl() ? "holo.kingdomomnitrix.code.diag_mc_on"
 						: HeroDataAccess.get(player).hasFlag(MASTER_CONTROL_FLAG) ? "holo.kingdomomnitrix.code.diag_mc_ready"
-						: "holo.kingdomomnitrix.code.diag_mc_locked"));
+						: "holo.kingdomomnitrix.code.diag_mc_progress", Math.min(progress.reached(), progress.needed()),
+						progress.needed(), progress.level()));
 		OmnitrixOs.send(player, OmnitrixOs.Event.DIAGNOSTICS, body, Optional.of(footer), Optional.empty());
 		OmnitrixCore.cue(player, OmnitrixCue.SELECT);
 	}
@@ -168,8 +170,10 @@ public final class OmnitrixCodes {
 
 	private static void masterControl(ServerPlayerEntity player) {
 		if (!HeroDataAccess.get(player).hasFlag(MASTER_CONTROL_FLAG)) {
+			MasterControlProgress.Progress progress = MasterControlProgress.progress(player);
 			OmnitrixOs.send(player, OmnitrixOs.Event.REFUSED, Text.translatable("holo.kingdomomnitrix.code.mc_locked"),
-					Optional.of(Text.translatable("holo.kingdomomnitrix.code.mc_locked_hint")), Optional.empty());
+					Optional.of(Text.translatable("holo.kingdomomnitrix.code.diag_mc_progress", progress.reached(), progress.needed(),
+							progress.level())), Optional.empty());
 			OmnitrixCore.cue(player, OmnitrixCue.ERROR);
 			return;
 		}

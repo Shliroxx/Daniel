@@ -216,9 +216,15 @@ public final class OmnitrixHud implements HudElement {
 		}
 	}
 
+	/** Master Control gibt alle Faehigkeiten frei, unabhaengig von der Meisterschaft. */
+	private static boolean masterControl() {
+		var player = net.minecraft.client.MinecraftClient.getInstance().player;
+		return player != null && OmnitrixCore.state(player).masterControl();
+	}
+
 	private static void drawSlot(DrawContext context, TextRenderer font, int x, int y, int index, AbilitySlot slot,
 			TransformationState state, float energy, long now, int mastery) {
-		if (!slot.unlocked(mastery)) {
+		if (!slot.unlocked(mastery) && !masterControl()) {
 			// gesperrt: dunkles Feld, blasses Symbol, benoetigte Meisterschaftsstufe
 			context.fill(x, y, x + SLOT_SIZE, y + SLOT_SIZE, 0xFF151815);
 			context.drawBorder(x, y, SLOT_SIZE, SLOT_SIZE, 0xFF3A3A3A);

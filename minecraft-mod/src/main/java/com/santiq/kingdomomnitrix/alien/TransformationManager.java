@@ -384,7 +384,8 @@ public final class TransformationManager {
 		long now = world.getTime();
 		AbilitySlot slot = alien.abilities().get(slotIndex);
 		int mastery = AlienMasteryManager.get(player).level(alienId);
-		if (!slot.unlocked(mastery)) {
+		// Master Control: volle Kontrolle ueber die DNA — alle Faehigkeiten frei, unabhaengig von der Meisterschaft
+		if (!slot.unlocked(mastery) && !OmnitrixCore.state(player).masterControl()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.ability_locked", Text.translatable(slot.translationKey()),
 					slot.unlockLevel()).formatted(Formatting.GOLD), true);
 			return Result.ABILITY_LOCKED;
@@ -498,6 +499,7 @@ public final class TransformationManager {
 	}
 
 	private static void onJoin(ServerPlayerEntity player) {
+		com.santiq.kingdomomnitrix.omnitrix.MasterControlProgress.check(player);
 		TransformationState state = get(player);
 		if (!state.isTransformed()) {
 			return;

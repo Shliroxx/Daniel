@@ -44,15 +44,18 @@ public record OmnitrixProfile(
 
 	/** Master Control: Endgame-Modus, freigeschaltet pro Spieler ({@link OmnitrixState#masterControl()}). */
 	public record MasterControl(float heatMultiplier, float cooldownMultiplier, float durationMultiplier, float confirmSeconds,
-			boolean quickChange) {
-		public static final MasterControl DEFAULT = new MasterControl(0.0f, 0.25f, 3.0f, 0.08f, true);
+			boolean quickChange, int unlockAliens, int unlockMastery) {
+		/** Freischaltung: so viele Aliens auf mindestens dieser Meisterschaftsstufe. */
+		public static final MasterControl DEFAULT = new MasterControl(0.0f, 0.25f, 3.0f, 0.08f, true, 5, 5);
 
 		public static final Codec<MasterControl> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.floatRange(0.0f, 100.0f).optionalFieldOf("heat_multiplier", 0.0f).forGetter(MasterControl::heatMultiplier),
 				Codec.floatRange(0.0f, 100.0f).optionalFieldOf("cooldown_multiplier", 0.25f).forGetter(MasterControl::cooldownMultiplier),
 				Codecs.POSITIVE_FLOAT.optionalFieldOf("duration_multiplier", 3.0f).forGetter(MasterControl::durationMultiplier),
 				Codec.floatRange(0.0f, 100.0f).optionalFieldOf("confirm_seconds", 0.08f).forGetter(MasterControl::confirmSeconds),
-				Codec.BOOL.optionalFieldOf("quick_change", true).forGetter(MasterControl::quickChange)
+				Codec.BOOL.optionalFieldOf("quick_change", true).forGetter(MasterControl::quickChange),
+				Codec.intRange(1, 64).optionalFieldOf("unlock_aliens", 5).forGetter(MasterControl::unlockAliens),
+				Codec.intRange(1, 10).optionalFieldOf("unlock_mastery", 5).forGetter(MasterControl::unlockMastery)
 		).apply(instance, MasterControl::new));
 	}
 

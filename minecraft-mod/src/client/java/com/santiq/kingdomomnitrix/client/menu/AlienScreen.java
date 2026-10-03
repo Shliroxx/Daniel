@@ -77,6 +77,14 @@ public class AlienScreen extends Screen {
 		UiDraw.panel(context, left, top, panelWidth, panelHeight, UiTheme.OMNITRIX);
 		context.drawTextWithShadow(textRenderer, title.copy().formatted(Formatting.BOLD), left + 8, top + 6, UiTheme.OMNITRIX.accent());
 		AlienMastery mastery = AlienMasteryManager.get(player);
+		// Kopfzeile rechts: Weg zu Master Control (oder Status, wenn freigeschaltet)
+		var progress = com.santiq.kingdomomnitrix.omnitrix.MasterControlProgress.progress(player);
+		Text mc = com.santiq.kingdomomnitrix.omnitrix.MasterControlProgress.unlocked(player)
+				? Text.translatable("screen.kingdomomnitrix.aliens.mc_unlocked")
+				: Text.translatable("screen.kingdomomnitrix.aliens.mc_progress", Math.min(progress.reached(), progress.needed()),
+						progress.needed(), progress.level());
+		context.drawTextWithShadow(textRenderer, mc, left + panelWidth - 8 - textRenderer.getWidth(mc), top + 6,
+				progress.done() ? 0xFFFFC94A : UiTheme.TEXT_SOFT);
 
 		List<Identifier> ids = aliens();
 		for (int i = 0; i < ids.size(); i++) {
@@ -171,11 +179,13 @@ public class AlienScreen extends Screen {
 		// zwei Spalten zu je drei (R/V/B, darunter Shift + R/V/B); gesperrte grau mit benoetigter Stufe
 		int column = (width - 4) / 2;
 		int top = y;
+		boolean masterControl = client != null && client.player != null
+				&& com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.state(client.player).masterControl();
 		for (int i = 0; i < alien.abilities().size(); i++) {
 			AbilitySlot slot = alien.abilities().get(i);
 			int ax = x + (i / 3) * (column + 4);
 			int ay = top + (i % 3) * 22;
-			boolean open = slot.unlocked(level);
+			boolean open = slot.unlocked(level) || masterControl;
 			UiDraw.icon(context, Icons.alienAbility(slot.type()), Icons.command("omnitrix"), ax, ay, UiDraw.ICON_SIZE);
 			if (!open) {
 				context.fill(ax, ay, ax + UiDraw.ICON_SIZE, ay + UiDraw.ICON_SIZE, 0xB0101010);

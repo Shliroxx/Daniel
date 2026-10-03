@@ -329,7 +329,7 @@ geschickt (lassen sich nicht aus dem Client auslesen). Nur Ziffern, 3–8 Stelle
 | 4040 | Notkuehlung | Hitze sofort 0 %, Ueberhitzung aufgehoben — dafuer 30 s gesperrt; nur in Menschenform |
 | 7777 | Zufallsmodus | zufaelliges freigeschaltetes Alien (Hitze, Nachladen, Platz, Fehlfunktionen gelten) |
 | 1010 | Kalibrierung | Prototyp ↔ Rekalibriert |
-| 10000 | Master Control | an/aus — nur mit Story-Flag `kingdomomnitrix:master_control` (Freischaltung = Phase K) |
+| 10000 | Master Control | an/aus — nur mit Story-Flag `master_control_unlocked` (Freischaltung siehe §14) |
 | 0000 | Selbstzerstoerung | nur mit `/gamerule kingdomomnitrixSelfDestruct true` (Standard **aus**): 10-s-Countdown, gleicher Code bricht ab; danach Explosion ohne Blockschaden, Zwangs-Rueckverwandlung, 10 min Sperre |
 
 **Schutz:** 3 falsche Codes in 30 s → 10 s Sperre; Server prueft Laenge und Ziffern selbst (manipulierte Eingaben
@@ -342,3 +342,30 @@ Notfall bereit · Master Control gesperrt“; falscher Code → „Code unguelti
 **Gefunden und behoben:** die Sperr-Meldung verdraengte die genauere Notkuehlungs-Meldung; Endmeldung der
 Selbstzerstoerung hiess „UEBERHITZT“ (jetzt „DETONIERT“, nur Text — nicht erneut im Spiel angesehen).
 Tests: Codes gueltig und eindeutig, jede Aktion hat einen Standard-Code, Buchstaben/zu kurz/zu lang abgelehnt.
+
+## 14. Phase K — Master Control freispielen (2026-10-03)
+
+Master Control ist kein Admin-Schalter mehr, sondern ein Spielziel:
+
+1. **Freispielen:** `unlock_aliens` Aliens auf mindestens Meisterschaft `unlock_mastery` bringen (Profildaten,
+   Standard **5 Aliens auf ★5**). Beim Aufstieg prueft der Server (auch beim Betreten der Welt, falls ein Datenpaket die
+   Schwellen aendert) und setzt das Story-Flag `master_control_unlocked`. Hologramm „MASTER CONTROL · Master-Control-
+   Protokoll empfangen · Code 10000 eingeben“ plus Master-Control-Ton.
+2. **Einschalten:** Code **10000** an der Code-Tastatur (G → C). Ohne Flag: „ABGELEHNT · Master Control nicht
+   freigeschaltet“ mit Fortschritt „4/5 Aliens auf ★5“.
+3. **Wirkung (echter Modus):** keine Hitze, 3× Dauer, ¼ Nachladen, Schnellwechsel (wie bisher aus dem Profil) — **und
+   alle sechs Faehigkeiten jedes Aliens sind frei**, unabhaengig von der Meisterschaft (Server-Pruefung, HUD und Menue).
+4. **Fortschritt sichtbar:** Diagnose-Code 0001 (Fusszeile) und Alien-Menue (Kopfzeile rechts: „Master Control 4/5 ★5“
+   bzw. „Master Control ✔“).
+
+Profil-Felder (`master_control`): `unlock_aliens` (1–64, Standard 5), `unlock_mastery` (1–10, Standard 5).
+Admin: `/hero flag set master_control_unlocked`.
+
+**Im Spiel geprueft:** vier Aliens auf ★5 → Diagnose „Master Control: 4/5 aliens at ★5“; Code 10000 → abgelehnt mit
+Fortschritt; fuenftes Alien auf ★5 → Freischalt-Hologramm; Code 10000 → „Volle Kontrolle ueber jedes Alien“; als
+Heatblast ★5 Faehigkeit 6 (Supernova, sonst ★8) → SUCCESS, HUD zeigt Slot 6 offen, Restzeit 243 s; Alien-Menue zeigt
+„Master Control ✔“ und alle sechs Faehigkeiten offen.
+Tests: Fortschritts-Schwelle, Standardwerte und Datenfelder der Freischaltung.
+Nicht geprueft: Master-Control-Ton nach Gehoer.
+
+![Master Control: Fortschritt, Freischaltung, Menue](screenshots/master_control_progress.png)
