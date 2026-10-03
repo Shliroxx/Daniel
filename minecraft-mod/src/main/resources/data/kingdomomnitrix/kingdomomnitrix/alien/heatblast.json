@@ -111,5 +111,8 @@
   "failsafe_tags": [
     "#minecraft:is_fire"
   ],
-  "failsafe_priority": 2
+  "failsafe_priority": 2,
+  "traits": {
+    "transform_style": "fire"
+  }
 }

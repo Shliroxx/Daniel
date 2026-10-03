@@ -120,6 +120,7 @@
       {
         "effect": "minecraft:night_vision"
       }
-    ]
+    ],
+    "transform_style": "tech"
   }
 }

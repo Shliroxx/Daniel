@@ -116,6 +116,7 @@
       "minecraft:poison",
       "minecraft:nausea",
       "minecraft:weakness"
-    ]
+    ],
+    "transform_style": "insect"
   }
 }

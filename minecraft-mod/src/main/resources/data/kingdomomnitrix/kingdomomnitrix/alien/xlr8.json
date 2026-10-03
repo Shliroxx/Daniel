@@ -114,5 +114,8 @@
   "failsafe_tags": [
     "#minecraft:is_projectile"
   ],
-  "failsafe_priority": 1
+  "failsafe_priority": 1,
+  "traits": {
+    "transform_style": "speed"
+  }
 }

@@ -146,6 +146,7 @@
         "effect": "minecraft:regeneration"
       }
     ],
-    "dry_out_seconds": 45
+    "dry_out_seconds": 45,
+    "transform_style": "water"
   }
 }

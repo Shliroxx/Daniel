@@ -128,5 +128,8 @@
   ],
   "model": "kingdomomnitrix:four_arms",
   "failsafe_tags": [],
-  "failsafe_priority": 5
+  "failsafe_priority": 5,
+  "traits": {
+    "transform_style": "slam"
+  }
 }

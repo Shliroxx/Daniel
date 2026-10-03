@@ -129,6 +129,7 @@
         "effect": "minecraft:night_vision"
       }
     ],
-    "senses_radius": 16
+    "senses_radius": 16,
+    "transform_style": "beast"
   }
 }

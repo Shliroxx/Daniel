@@ -455,3 +455,32 @@ zeigt das Geraet „Nachladen“ statt „Warnung“, dadurch kein Dampf → jet
 Nicht geprueft: Ueberschwingen und Drehverriegelung nur im laufenden Bild beobachtet, nicht als Einzelbild belegt.
 
 ![Zifferblatt, Dampf bei Warnung, Dampf bei Ueberhitzung](screenshots/omnitrix_polish.png)
+
+## 18. Phase O — alien-spezifische Verwandlungen (2026-10-03)
+
+Jedes Alien hat eine eigene Verwandlungs-Signatur (`traits.transform_style`, `TransformStyle`), zusaetzlich zum
+gemeinsamen Omnitrix-Blitz. Nur Vanilla-Partikel und -Klaenge (keine Alien-Evolution-Sounds), fuer alle Spieler sichtbar.
+
+| Alien | Stil | Bild | Klang (Vanilla) |
+|---|---|---|---|
+| Heatblast | fire | Flammenring am Boden, Lavafunken, Flammenfontaene | Feuerkugel, Blaze-Schuss (tief) |
+| XLR8 | speed | Funken-Schlieren nach hinten, Staubwolke | Wind-Stoss (Breeze, hoch) |
+| Vierarm | slam | Druckwelle aus Bodenbloecken, Explosionswolke | Golem-Schlag, dumpfer Knall |
+| Diamondhead | crystal | Glassplitter nach aussen, Lichtstrahlen | Amethyst-Bruch, Glas |
+| Grey Matter | shrink | Portal-Partikel ziehen nach innen, kleiner Puff | Amethyst-Klingen (hoch) |
+| Wildmutt | beast | Erde und Laub fliegen | Wolfsknurren (tief) |
+| Stinkfly | insect | Schleim, Sporenwolke | Bienenschwirren, Schleim |
+| Ripjaws | water | Fontaene, Blasen, Wasserring von oben | Platschen |
+| Upgrade | tech | Funkenbogen, Schaltkreis-Glitzern | Beacon-Summen, hohes Surren |
+| Ghostfreak | ghost | Seelen, Rauch, Sculk-Seelen | Vex-Schrei (tief), Seelenhauch |
+
+Test: jedes Alien hat einen Stil ≠ standard, keine zwei teilen sich einen (`DataPackTest`).
+**Im Spiel geprueft:** alle 10 Verwandlungen nacheinander (Third-Person): Heatblast-Flammen, Diamondhead-Lichtstrahlen,
+Grey-Matter-Portalpartikel, Stinkfly-Schleim, Ghostfreak-Seelen, Ripjaws-Blasen, Upgrade-Funken, Vierarm-Bodenbrocken
+sichtbar; nebenbei bestaetigt: das Farbmodul (Violett) faerbt das Abzeichen aller 10 Aliens.
+Nicht geprueft: Klaenge nach Gehoer (Testumgebung ohne Audio); XLR8-Schlieren und Wildmutt-Erde im Einzelbild kaum zu
+sehen (der gemeinsame Blitz ueberstrahlt sie im ersten Moment).
+**Noch offen:** der gemeinsame Omnitrix-Blitz (eigenes Partikel-Sprite) bleibt gruen, auch mit Farbmodul.
+
+![Alle 10 Verwandlungen](screenshots/transform_styles.png)
+![Verwandlungs-Moment](screenshots/transform_styles_burst.png)

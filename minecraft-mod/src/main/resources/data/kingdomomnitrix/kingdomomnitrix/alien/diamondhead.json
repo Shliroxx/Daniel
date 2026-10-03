@@ -102,5 +102,8 @@
   "failsafe_tags": [
     "#minecraft:is_explosion"
   ],
-  "failsafe_priority": 4
+  "failsafe_priority": 4,
+  "traits": {
+    "transform_style": "crystal"
+  }
 }

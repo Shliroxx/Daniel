@@ -17,14 +17,15 @@ import net.minecraft.registry.entry.RegistryEntry;
  *   "water_effects": [{"effect": "minecraft:dolphins_grace", "amplifier": 0}], // nur im Wasser
  *   "dry_out_seconds": 30,                            // so lange an Land ohne Nachteil, dann Schwaeche (Ripjaws)
  *   "senses_radius": 16,                              // Gegner im Umkreis leuchten (Wildmutt)
- *   "immune_effects": ["minecraft:poison"]            // diese Effekte wirken nicht (Stinkfly: eigener Gestank)
+ *   "immune_effects": ["minecraft:poison"],           // diese Effekte wirken nicht (Stinkfly: eigener Gestank)
+ *   "transform_style": "fire"                         // eigene Verwandlungs-Signatur ({@link TransformStyle})
  * }
  * </pre>
  * Effekte laufen „ambient“ (ohne Partikel) und werden beim Zurueckverwandeln entfernt — echte Traenke bleiben.
  */
 public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> waterEffects, int dryOutSeconds, float sensesRadius,
-		List<RegistryEntry<StatusEffect>> immuneEffects) {
-	public static final AlienTraits NONE = new AlienTraits(false, List.of(), List.of(), 0, 0.0f, List.of());
+		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle) {
+	public static final AlienTraits NONE = new AlienTraits(false, List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD);
 
 	/** Status-Effekt mit Stufe (0 = I). */
 	public record Effect(RegistryEntry<StatusEffect> effect, int amplifier) {
@@ -40,7 +41,8 @@ public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> wat
 			Effect.CODEC.listOf().optionalFieldOf("water_effects", List.of()).forGetter(AlienTraits::waterEffects),
 			Codec.intRange(0, 3600).optionalFieldOf("dry_out_seconds", 0).forGetter(AlienTraits::dryOutSeconds),
 			Codec.floatRange(0.0f, 48.0f).optionalFieldOf("senses_radius", 0.0f).forGetter(AlienTraits::sensesRadius),
-			Registries.STATUS_EFFECT.getEntryCodec().listOf().optionalFieldOf("immune_effects", List.of()).forGetter(AlienTraits::immuneEffects)
+			Registries.STATUS_EFFECT.getEntryCodec().listOf().optionalFieldOf("immune_effects", List.of()).forGetter(AlienTraits::immuneEffects),
+			TransformStyle.CODEC.optionalFieldOf("transform_style", TransformStyle.STANDARD).forGetter(AlienTraits::transformStyle)
 	).apply(instance, AlienTraits::new));
 
 	public AlienTraits {

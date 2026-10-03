@@ -96,5 +96,8 @@
   "failsafe_tags": [
     "#minecraft:is_fall"
   ],
-  "failsafe_priority": 0
+  "failsafe_priority": 0,
+  "traits": {
+    "transform_style": "shrink"
+  }
 }

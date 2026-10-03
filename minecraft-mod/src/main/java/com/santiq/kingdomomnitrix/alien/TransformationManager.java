@@ -598,6 +598,7 @@ public final class TransformationManager {
 		}
 		if (transforming) {
 			Vfx.transform(world, player);
+			alien.traits().transformStyle().play(world, player);
 		} else {
 			Vfx.revert(world, player);
 		}
