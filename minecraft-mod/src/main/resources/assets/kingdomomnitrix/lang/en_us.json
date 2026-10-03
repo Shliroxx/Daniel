@@ -956,5 +956,14 @@
   "ability.kingdomomnitrix.ice_prison": "Ice Prison",
   "ability.kingdomomnitrix.cryo_cloak": "Cryo Cloak",
   "ability.kingdomomnitrix.absolute_zero": "Absolute Zero",
-  "message.kingdomomnitrix.big_chill_shatter": "Shattered!"
+  "message.kingdomomnitrix.big_chill_shatter": "Shattered!",
+  "alien.kingdomomnitrix.humungousaur": "Humungousaur",
+  "ability.kingdomomnitrix.mega_punch": "Mega Punch",
+  "ability.kingdomomnitrix.tail_sweep": "Tail Sweep",
+  "ability.kingdomomnitrix.stampede": "Stampede",
+  "ability.kingdomomnitrix.tectonic_quake": "Tectonic Quake",
+  "ability.kingdomomnitrix.bone_guard": "Bone Guard",
+  "ability.kingdomomnitrix.titanic_growth": "Titanic Growth",
+  "message.kingdomomnitrix.humungousaur_stage": "Growth %s/%s",
+  "message.kingdomomnitrix.humungousaur_titan": "TITANIC!"
 }

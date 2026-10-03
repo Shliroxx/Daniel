@@ -107,6 +107,9 @@ ABILITY_POSE = {
     # Big Chill: Atem und Splitter nach vorn, Phasenflug, Gefaengnis auf ein Ziel, Umhang, Nullpunkt
     "ice_breath": "beam", "ice_shards": "spread", "phase_flight": "dodge", "ice_prison": "beam", "cryo_cloak": "guard",
     "absolute_zero": "ultimate",
+    # Humungosaur: Schlag, Rundumschwanz, Sturmlauf, Bodenstampfer, Deckung, Wachsen
+    "mega_punch": "shoot", "tail_sweep": "swipe", "stampede": "dodge", "tectonic_quake": "slam", "bone_guard": "guard",
+    "titanic_growth": "ultimate",
 }
 
 

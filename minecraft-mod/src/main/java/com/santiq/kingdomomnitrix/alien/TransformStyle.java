@@ -48,7 +48,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Duese: roter Strahlkegel nach unten, Windstoss, Neuroschock-Funken an den Augen */
 	JET,
 	/** Frost: Eisring am Boden, Schneeflocken wirbeln auf, klirrende Kaelte */
-	FROST;
+	FROST,
+	/** Wachstum: Boden reisst sternfoermig auf, Brocken fliegen, tiefes Bruellen */
+	GROWTH;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -167,6 +169,22 @@ public enum TransformStyle implements StringIdentifiable {
 				sound(world, player, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 0.6f);
 				sound(world, player, SoundEvents.BLOCK_GLASS_PLACE, 0.8f, 0.5f);
 				sound(world, player, SoundEvents.ENTITY_PHANTOM_FLAP, 0.8f, 0.6f);
+			}
+			case GROWTH -> {
+				net.minecraft.block.BlockState ground = world.getBlockState(player.getBlockPos().down());
+				if (!ground.isAir()) {
+					// Risse: Brocken in acht Strahlen nach aussen
+					for (int ray = 0; ray < 8; ray++) {
+						double angle = ray * MathHelper.TAU / 8;
+						for (int step = 1; step <= 4; step++) {
+							world.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(ParticleTypes.BLOCK, ground),
+									x + Math.cos(angle) * step * 0.6, y + 0.1, z + Math.sin(angle) * step * 0.6, 4, 0.1, 0.05, 0.1, 0.2);
+						}
+					}
+				}
+				world.spawnParticles(ParticleTypes.EXPLOSION, x, y + 0.3, z, 1, 0.0, 0.0, 0.0, 0.0);
+				sound(world, player, SoundEvents.ENTITY_RAVAGER_ROAR, 1.2f, 0.6f);
+				sound(world, player, SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, 1.0f, 0.5f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

@@ -102,7 +102,7 @@ und `--check` aller Generatoren in der CI. **Lücke:** keine automatischen Clien
 | Phase | Ausgangslage | nächster Schritt |
 |---|---|---|
 | 1 Omnitrix-Modell/Rendering | weitgehend fertig | Feinschliff nach Sichtprüfung; Fehler im Freischalt-Befehl behoben |
-| 2 Alien-Roster | 13 Aliens fertig (Cannonbolt ✔, Jetray ✔, Big Chill ✔), Importer kann `afomni` (ein Modell, Ruhe-/Flugpose) | Humungousaur (Modell importiert, Spieldaten folgen) |
+| 2 Alien-Roster | 14 Aliens fertig (Cannonbolt ✔, Jetray ✔, Big Chill ✔, Humungousaur ✔), Importer kann `afomni` (ein Modell, Ruhe-/Flugpose) | weitere AE-Aliens (Swampfire, Chromastone, Echo Echo im `afomni`-Inhalt) |
 | 3 Alien-Qualität | Fähigkeiten/Posen vorhanden | alien-eigene Dauer-Systeme (Kugelform, Klone, Einfrieren) |
 | 4 Transformationen | `TransformStyle` je Alien vorhanden | Kamera/Licht je Stil verfeinern |
 | 5 UI/OS/DNA | OS + Symbole fertig | DNA-Archiv (Herkunft, Seltenheit, Analyse, Fortschritt) |

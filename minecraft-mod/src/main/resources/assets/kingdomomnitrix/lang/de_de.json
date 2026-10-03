@@ -956,5 +956,14 @@
   "ability.kingdomomnitrix.ice_prison": "Eisgefängnis",
   "ability.kingdomomnitrix.cryo_cloak": "Kälteumhang",
   "ability.kingdomomnitrix.absolute_zero": "Absoluter Nullpunkt",
-  "message.kingdomomnitrix.big_chill_shatter": "Zersplittert!"
+  "message.kingdomomnitrix.big_chill_shatter": "Zersplittert!",
+  "alien.kingdomomnitrix.humungousaur": "Humungousaur",
+  "ability.kingdomomnitrix.mega_punch": "Megaschlag",
+  "ability.kingdomomnitrix.tail_sweep": "Schwanzfeger",
+  "ability.kingdomomnitrix.stampede": "Stampede",
+  "ability.kingdomomnitrix.tectonic_quake": "Tektonikbeben",
+  "ability.kingdomomnitrix.bone_guard": "Panzerblock",
+  "ability.kingdomomnitrix.titanic_growth": "Riesenwuchs",
+  "message.kingdomomnitrix.humungousaur_stage": "Wachstum %s/%s",
+  "message.kingdomomnitrix.humungousaur_titan": "RIESENWUCHS!"
 }

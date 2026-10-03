@@ -134,8 +134,9 @@ ALIENS = {
                       loops=("bigchill.animation.json:animation.BigChill.Flight@^w",),
                       flight_pose="bigchill.animation.json:animation.BigChill.cloak_off",
                       glow="assets/afomni/textures/models/necrofriggian/necrofriggian_glow.png"),
-    # Humungosaur: Panzerplatten eingefahren (AE armor_off), Schwanz pendelt; Groesse 2,8 wie AE
-    "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 2.8, "heavy", "#C68A4E", pack="afomni",
+    # Humungosaur: Panzerplatten eingefahren (AE armor_off), Schwanz pendelt. GeckoLib multipliziert die Darstellung
+    # mit der Spielergroesse (Datenpaket scale 1,9): 1,47 x 1,9 = 2,8 = AE-Groesse; Wachstumsstufen kommen obendrauf
+    "humungousaur": Spec("afomni", "vaxasaurian", "vaxasaurian.json", 1.47, "heavy", "#C68A4E", pack="afomni",
                          rest=("model.humongousaur.anim.json:animation.humungousaur.armor_off",),
                          loops=("model.humongousaur.anim.json:animation.humungousaur.tail",)),
     "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.1, "small", "#C9C3D6", script="ectonurite",
@@ -648,8 +649,9 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
                 c, g = (_with_badge(fcolor, fglow, parts, (kx, ky)) if parts else (fcolor, fglow))
                 stem = f"{name}{suffix}{f'_f{frame}' if frame else ''}{tag}"
                 files[base / f"{stem}.png"] = c
-                # immer schreiben (auch leer): die Leuchtebene sucht je Textur ihre Maske
-                files[base / f"{stem}_glowmask.png"] = g
+                # die Leuchtebene sucht je Textur ihre Maske; ganz leere Masken lehnt GeckoLib ab (Absturz) — dann
+                # keine Datei, der Renderer laesst die Leuchtebene weg (Humungosaur: kein Abzeichen, kein Leuchten)
+                files[base / f"{stem}_glowmask.png"] = g if g.getbbox() is not None else None
                 if frame == 0 and not tag:
                     sheet_color = c
                 if not badge:

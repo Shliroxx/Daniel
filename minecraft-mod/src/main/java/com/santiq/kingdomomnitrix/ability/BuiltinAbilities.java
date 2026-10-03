@@ -30,6 +30,7 @@ final class BuiltinAbilities {
 		UpgradeAbilities.register();
 		GhostfreakAbilities.register();
 		BigChillAbilities.register();
+		HumungousaurAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -38,7 +39,8 @@ final class BuiltinAbilities {
 	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung),
 	// WildmuttAbilities (Jagd), StinkflyAbilities (Toxin-Schichten),
 	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration),
-	// GhostfreakAbilities (Spuk), BigChillAbilities (Unterkuehlung).
+	// GhostfreakAbilities (Spuk), BigChillAbilities (Unterkuehlung),
+	// HumungousaurAbilities (Wachstum).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
