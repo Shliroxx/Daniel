@@ -22,7 +22,6 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
@@ -38,10 +37,7 @@ final class CreatureAbilities {
 	}
 
 	static void register() {
-		// Wildmutt
-		AbilityRegistry.register(KingdomOmnitrix.id("pounce"), CreatureAbilities::pounce);
-		AbilityRegistry.register(KingdomOmnitrix.id("quill_burst"), CreatureAbilities::quillBurst);
-		AbilityRegistry.register(KingdomOmnitrix.id("feral_roar"), CreatureAbilities::feralRoar);
+		// Wildmutt: WildmuttAbilities (Jagd)
 		// Stinkfly
 		AbilityRegistry.register(KingdomOmnitrix.id("slime_spit"), CreatureAbilities::slimeSpit);
 		AbilityRegistry.register(KingdomOmnitrix.id("stink_cloud"), CreatureAbilities::stinkCloud);
@@ -58,60 +54,6 @@ final class CreatureAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("phase_shift"), CreatureAbilities::phaseShift);
 		AbilityRegistry.register(KingdomOmnitrix.id("haunting_scare"), CreatureAbilities::hauntingScare);
 		AbilityRegistry.register(KingdomOmnitrix.id("tentacle_lash"), CreatureAbilities::tentacleLash);
-	}
-
-	// --- Wildmutt --------------------------------------------------------------------------------
-
-	/** Sprung nach vorn; trifft beim Absprung alles im Sprungweg (Prankenhieb). */
-	private static boolean pounce(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = BuiltinAbilities.horizontalLook(player);
-		double forward = ctx.param("forward", 1.6);
-		double distance = ctx.param("distance", 6.0);
-		float damage = (float) ctx.param("damage", 7.0);
-		Box path = player.getBoundingBox().stretch(look.multiply(distance)).expand(0.8, 0.5, 0.8);
-		for (LivingEntity target : ctx.world().getEntitiesByClass(LivingEntity.class, path, e -> hostileTo(player, e))) {
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-			target.takeKnockback(0.8, -look.x, -look.z);
-			ctx.world().spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 2, 0.2, 0.2, 0.2, 0.0);
-		}
-		BuiltinAbilities.launch(player, look.x * forward, ctx.param("up", 0.55), look.z * forward);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WOLF_GROWL, 1.0f, 0.8f);
-		return true;
-	}
-
-	/** Stachel-Faecher in Blickrichtung. */
-	private static boolean quillBurst(AbilityContext ctx) {
-		int count = (int) Math.max(1, ctx.param("count", 7));
-		float speed = (float) ctx.param("speed", 2.4);
-		float spread = (float) ctx.param("spread", 9.0);
-		float damage = (float) ctx.param("damage", 4.0);
-		for (int i = 0; i < count; i++) {
-			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), Items.ARROW, speed, spread).withDamage(damage);
-		}
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_ARROW_SHOOT, 1.0f, 0.7f);
-		return true;
-	}
-
-	/** Gebruell: Gegner im Umkreis werden sichtbar (Leuchten) und verlangsamt — Wildmutts Sinne. */
-	private static boolean feralRoar(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		double radius = ctx.param("radius", 16.0);
-		int seconds = (int) ctx.param("seconds", 8.0);
-		int hits = 0;
-		for (LivingEntity target : BuiltinAbilities.livingAround(ctx, radius)) {
-			target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, seconds * 20, 0), player);
-			if (target.squaredDistanceTo(player) < 36.0) {
-				target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60, 1), player);
-			}
-			hits++;
-		}
-		ctx.world().spawnParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getEyeY(), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.0f, 1.3f);
-		if (hits == 0) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.senses_nothing").formatted(Formatting.GRAY), true);
-		}
-		return true;
 	}
 
 	// --- Stinkfly --------------------------------------------------------------------------------

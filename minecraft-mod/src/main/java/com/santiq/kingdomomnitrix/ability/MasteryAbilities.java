@@ -62,12 +62,7 @@ final class MasteryAbilities {
 		// --- Vierarm: FourArmsAbilities (Wut)
 		// --- Diamondhead: DiamondheadAbilities (Resonanz, Kristall-Konstrukte)
 		// --- Grey Matter: GreyMatterAbilities (Analyse-Datenbank)
-		// --- Wildmutt
-		reg("savage_maul", MasteryAbilities::savageMaul);
-		reg("scent_track", ctx -> area(ctx, new Look(ParticleTypes.NOTE, 1, SoundEvents.ENTITY_WOLF_HOWL, 1.0f, true), new Fx(StatusEffects.GLOWING, 0)));
-		reg("primal_rampage", ctx -> self(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, new Fx(StatusEffects.STRENGTH, 1),
-				new Fx(StatusEffects.SPEED, 1), new Fx(StatusEffects.RESISTANCE, 0))
-				&& area(ctx, new Look(ParticleTypes.ANGRY_VILLAGER, 12, SoundEvents.ENTITY_WOLF_GROWL, 0.6f, false), new Fx(StatusEffects.SLOWNESS, 1)));
+		// --- Wildmutt: WildmuttAbilities (Jagd)
 		// --- Stinkfly
 		reg("slime_bomb", MasteryAbilities::slimeBomb);
 		reg("updraft", ctx -> area(ctx, new Look(ParticleTypes.GUST, 6, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, false)));
@@ -223,26 +218,6 @@ final class MasteryAbilities {
 	}
 
 	// --- Sonderfaelle ------------------------------------------------------------------------------
-
-	/** Wildmutt: drei schnelle Bisse auf ein Ziel (jeder Treffer zaehlt einzeln). */
-	private static boolean savageMaul(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 4.0), 0.7, e -> PartyRules.canHarm(player, e));
-		if (found.isEmpty()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
-		}
-		LivingEntity target = found.get();
-		int hits = (int) Math.max(1, ctx.param("hits", 3));
-		float damage = (float) ctx.param("damage", 4.0);
-		for (int i = 0; i < hits && target.isAlive(); i++) {
-			target.timeUntilRegen = 0;
-			target.damage(ctx.world().getDamageSources().playerAttack(player), damage);
-		}
-		ctx.world().spawnParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.3, 0.3, 0.1);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WOLF_GROWL, 1.0f, 0.6f);
-		return true;
-	}
 
 	/** Stinkfly: schwere Schleimbombe mit Explosion ohne Blockschaden. */
 	private static boolean slimeBomb(AbilityContext ctx) {

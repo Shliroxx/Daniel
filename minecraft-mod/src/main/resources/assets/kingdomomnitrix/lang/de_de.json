@@ -937,5 +937,7 @@
   "commands.kingdomomnitrix.galvan_research": "%s: Grey-Matter-Forschungszeit auf %s min gesetzt",
   "screen.kingdomomnitrix.galvan_lab.hack_effect_1": "+20 % Dauer",
   "screen.kingdomomnitrix.galvan_lab.hack_effect_2": "−20 % Nachladen",
-  "screen.kingdomomnitrix.galvan_lab.hack_effect_3": "Master Control"
+  "screen.kingdomomnitrix.galvan_lab.hack_effect_3": "Master Control",
+  "message.kingdomomnitrix.wildmutt_prey": "Beute: %s",
+  "message.kingdomomnitrix.wildmutt_frenzy": "BLUTRAUSCH — die Jagd beginnt!"
 }

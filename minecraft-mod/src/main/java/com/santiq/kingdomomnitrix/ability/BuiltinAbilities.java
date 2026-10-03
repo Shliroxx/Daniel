@@ -26,12 +26,14 @@ final class BuiltinAbilities {
 		FourArmsAbilities.register();
 		DiamondheadAbilities.register();
 		GreyMatterAbilities.register();
+		WildmuttAbilities.register();
 		JetrayAbilities.register();
 	}
 
 	// Alien-Faehigkeiten mit eigenem System stehen je Alien in eigenen Klassen: HeatblastAbilities (Kernhitze),
 	// Xlr8Abilities (Tempo), FourArmsAbilities (Wut), DiamondheadAbilities (Resonanz), GreyMatterAbilities
-	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung).
+	// (Analyse-Datenbank), CannonboltAbilities (Schwung), JetrayAbilities (Ueberladung),
+	// WildmuttAbilities (Jagd).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
