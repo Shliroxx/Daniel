@@ -93,6 +93,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.NPC, NpcRenderer::new);
+		EntityRendererRegistry.register(ModEntities.ECHO_CLONE, com.santiq.kingdomomnitrix.client.render.alien.EchoCloneRenderer::new);
 		EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
 		EntityRendererRegistry.register(ModEntities.NEFARIOUS, NefariousRenderer::new);
 		DimensionRenderingRegistry.registerDimensionEffects(KingdomOmnitrix.id("space"), new SpaceDimensionEffects());

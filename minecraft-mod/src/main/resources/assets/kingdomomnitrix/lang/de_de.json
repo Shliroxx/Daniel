@@ -981,5 +981,14 @@
   "ability.kingdomomnitrix.crystal_lattice": "Kristallgitter",
   "ability.kingdomomnitrix.solar_charge": "Spektralladung",
   "ability.kingdomomnitrix.full_spectrum": "Vollspektrum",
-  "message.kingdomomnitrix.chromastone_full": "Spektrum voll — Überladung bereit"
+  "message.kingdomomnitrix.chromastone_full": "Spektrum voll — Überladung bereit",
+  "alien.kingdomomnitrix.echo_echo": "Echo Echo",
+  "entity.kingdomomnitrix.echo_clone": "Echo-Klon",
+  "ability.kingdomomnitrix.sonic_scream": "Schallschrei",
+  "ability.kingdomomnitrix.echo_split": "Echo-Teilung",
+  "ability.kingdomomnitrix.sonic_boost": "Schallstoß",
+  "ability.kingdomomnitrix.wall_of_sound": "Schallmauer",
+  "ability.kingdomomnitrix.sound_shield": "Schallschild",
+  "ability.kingdomomnitrix.echo_chorus": "Echo-Chor",
+  "message.kingdomomnitrix.echo_echo_max": "Höchstens %s Klone gleichzeitig"
 }

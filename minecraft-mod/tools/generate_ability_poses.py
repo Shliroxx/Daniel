@@ -116,6 +116,9 @@ ABILITY_POSE = {
     # Chromastone: Strahl aus der Hand, Blitz nach aussen, Lichtsprung, Gitter-Deckung, Licht sammeln, Vollspektrum
     "prism_beam": "beam", "spectral_burst": "spread", "photon_dash": "dodge", "crystal_lattice": "guard", "solar_charge": "focus",
     "full_spectrum": "ultimate",
+    # Echo Echo: Schrei (Kopf vor), Teilung, Schallstoss, Mauer, Schild, Chor
+    "sonic_scream": "roar", "echo_split": "spread", "sonic_boost": "leap", "wall_of_sound": "clap", "sound_shield": "guard",
+    "echo_chorus": "ultimate",
 }
 
 

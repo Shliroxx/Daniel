@@ -54,7 +54,9 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Sumpf: Methanpuff mit Stichflamme, Blaetter und Schlamm spritzen */
 	SWAMP,
 	/** Prisma: Regenbogenring faechert auf, heller Blitz, Kristallklang */
-	PRISM;
+	PRISM,
+	/** Echo: Schallringe laufen nach aussen, Noten steigen auf, kurzes Echo */
+	ECHO;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -208,6 +210,13 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.FLASH, x, mid, z, 1, 0.0, 0.0, 0.0, 0.0);
 				sound(world, player, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.2f, 1.6f);
 				sound(world, player, SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.8f);
+			}
+			case ECHO -> {
+				ring(world, ParticleTypes.NOTE, x, y + 0.5, z, 0.8, 12, 0.0);
+				world.spawnParticles(ParticleTypes.SONIC_BOOM, x, mid, z, 1, 0.0, 0.0, 0.0, 0.0);
+				world.spawnParticles(ParticleTypes.NOTE, x, mid, z, 10, 0.4, 0.5, 0.4, 1.0);
+				sound(world, player, SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 1.0f, 1.4f);
+				sound(world, player, SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), 0.6f, 1.9f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

@@ -550,6 +550,12 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/crystal_lattice": ("omnitrix", "crystal", False),
     "alien_ability/solar_charge": ("omnitrix", "plus", True),
     "alien_ability/full_spectrum": ("omnitrix", "sparkle", True),
+    "alien_ability/sonic_scream": ("omnitrix", "swoosh", True),
+    "alien_ability/echo_split": ("omnitrix", "plus", False),
+    "alien_ability/sonic_boost": ("omnitrix", "dash", True),
+    "alien_ability/wall_of_sound": ("omnitrix", "cycle", True),
+    "alien_ability/sound_shield": ("omnitrix", "heart", True),
+    "alien_ability/echo_chorus": ("omnitrix", "sparkle", False),
     # Kommandomenue
     "command/attack": ("hero", "sword", False),
     "command/magic": ("keyblade", "sparkle", False),

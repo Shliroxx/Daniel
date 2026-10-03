@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.EchoCloneEntity;
 import com.santiq.kingdomomnitrix.enemy.AirSoldierHeartless;
 import com.santiq.kingdomomnitrix.enemy.DarkballHeartless;
 import com.santiq.kingdomomnitrix.enemy.DarknessRiftEntity;
@@ -69,6 +70,10 @@ public final class ModEntities {
 	private ModEntities() {
 	}
 
+	/** Echo-Echo-Klon: halbe Spielergroesse wie AE (Groesse 0,5); wird nie gespeichert */
+	public static final EntityType<EchoCloneEntity> ECHO_CLONE = register("echo_clone",
+			EntityType.Builder.<EchoCloneEntity>create(EchoCloneEntity::new, SpawnGroup.MISC).dimensions(0.35f, 0.95f).maxTrackingRange(8));
+
 	private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
 		return Registry.register(Registries.ENTITY_TYPE, KingdomOmnitrix.id(name), builder.build(KingdomOmnitrix.id(name).toString()));
 	}
@@ -76,6 +81,7 @@ public final class ModEntities {
 	public static void register() {
 		FabricDefaultAttributeRegistry.register(SHADOW, ShadowHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(NPC, NpcEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(ECHO_CLONE, EchoCloneEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(NEFARIOUS, NefariousEntity.createAttributes());
 		// Natuerliche Spawns (nur in Mod-Welten wie Traverse Town, die Biome listen sie): im Dunkeln, Bodentypen auf festem Grund.
 		SpawnRestriction.register(SHADOW, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);

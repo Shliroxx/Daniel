@@ -33,6 +33,7 @@ final class BuiltinAbilities {
 		HumungousaurAbilities.register();
 		SwampfireAbilities.register();
 		ChromastoneAbilities.register();
+		EchoEchoAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -43,7 +44,7 @@ final class BuiltinAbilities {
 	// RipjawsAbilities (Gezeiten), UpgradeAbilities (Integration),
 	// GhostfreakAbilities (Spuk), BigChillAbilities (Unterkuehlung),
 	// HumungousaurAbilities (Wachstum), SwampfireAbilities (Methan & Wildwuchs),
-	// ChromastoneAbilities (Spektralspeicher).
+	// ChromastoneAbilities (Spektralspeicher), EchoEchoAbilities (Echo-Chor).
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
