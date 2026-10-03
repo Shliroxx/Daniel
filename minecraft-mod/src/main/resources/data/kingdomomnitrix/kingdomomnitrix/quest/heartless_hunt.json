@@ -1,0 +1,64 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.heartless_hunt.title"
+  },
+  "category": "bounty",
+  "sort_order": 1,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.yen_sid"
+    },
+    "icon": "kingdomomnitrix:heart",
+    "npc": "kingdomomnitrix:yen_sid"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.heartless_hunt.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.heartless_hunt.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.heartless_hunt.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.heartless_hunt.complete.1"
+      }
+    ]
+  },
+  "requires": [
+    "kingdomomnitrix:awakening"
+  ],
+  "min_level": 6,
+  "objectives": [
+    {
+      "type": "kill",
+      "target": "kingdomomnitrix:soldier",
+      "count": 3
+    },
+    {
+      "type": "kill",
+      "target": "kingdomomnitrix:large_body",
+      "count": 1
+    }
+  ],
+  "rewards": {
+    "bolts": 300,
+    "experience": 150,
+    "items": [
+      {
+        "id": "kingdomomnitrix:spell_crystal",
+        "count": 1,
+        "components": {
+          "kingdomomnitrix:spell": "kingdomomnitrix:blizzard"
+        }
+      }
+    ]
+  },
+  "repeatable": true
+}

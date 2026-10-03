@@ -1,0 +1,8 @@
+{
+  "category": "tech",
+  "unlock_level": 4,
+  "ap_cost": 1,
+  "sort_order": 20,
+  "effect": "bolt_bonus",
+  "value": 0.25
+}

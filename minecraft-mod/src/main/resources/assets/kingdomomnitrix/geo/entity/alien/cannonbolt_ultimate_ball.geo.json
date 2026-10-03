@@ -1,0 +1,595 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.kingdomomnitrix.cannonbolt_ultimate_ball",
+        "texture_width": 128,
+        "texture_height": 144,
+        "visible_bounds_width": 4,
+        "visible_bounds_height": 4,
+        "visible_bounds_offset": [
+          0,
+          1.0,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "BALL",
+          "parent": "root",
+          "pivot": [
+            0,
+            12.5,
+            0
+          ]
+        },
+        {
+          "name": "ball_shell_front",
+          "parent": "BALL",
+          "pivot": [
+            0,
+            12.5,
+            0
+          ]
+        },
+        {
+          "name": "shell_1",
+          "parent": "ball_shell_front",
+          "pivot": [
+            0,
+            22.5,
+            -5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                20,
+                -12.5
+              ],
+              "size": [
+                22,
+                5,
+                13
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    123
+                  ],
+                  "uv_size": [
+                    22,
+                    5
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    123
+                  ],
+                  "uv_size": [
+                    -14,
+                    5
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    91,
+                    123
+                  ],
+                  "uv_size": [
+                    14,
+                    5
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    106,
+                    109
+                  ],
+                  "uv_size": [
+                    22,
+                    14
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_2",
+          "parent": "ball_shell_front",
+          "pivot": [
+            0,
+            15.5,
+            -9
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                8,
+                -12.5
+              ],
+              "size": [
+                22,
+                13,
+                5
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    74
+                  ],
+                  "uv_size": [
+                    22,
+                    13
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    74
+                  ],
+                  "uv_size": [
+                    -6,
+                    13
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    99,
+                    74
+                  ],
+                  "uv_size": [
+                    6,
+                    13
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_3",
+          "parent": "ball_shell_front",
+          "pivot": [
+            0,
+            5,
+            -7
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                0,
+                -12.5
+              ],
+              "size": [
+                22,
+                9,
+                11
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    99
+                  ],
+                  "uv_size": [
+                    22,
+                    9
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    99
+                  ],
+                  "uv_size": [
+                    -11,
+                    9
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    94,
+                    99
+                  ],
+                  "uv_size": [
+                    11,
+                    9
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    106,
+                    88
+                  ],
+                  "uv_size": [
+                    22,
+                    11
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "ball_shell_back",
+          "parent": "BALL",
+          "pivot": [
+            0,
+            12.5,
+            0
+          ],
+          "rotation": [
+            180,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "shell_4",
+          "parent": "ball_shell_back",
+          "pivot": [
+            0,
+            22.5,
+            -5
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                20,
+                -12.5
+              ],
+              "size": [
+                22,
+                5,
+                13
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    123
+                  ],
+                  "uv_size": [
+                    22,
+                    5
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    123
+                  ],
+                  "uv_size": [
+                    -14,
+                    5
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    91,
+                    123
+                  ],
+                  "uv_size": [
+                    14,
+                    5
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    106,
+                    109
+                  ],
+                  "uv_size": [
+                    22,
+                    14
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_5",
+          "parent": "ball_shell_back",
+          "pivot": [
+            0,
+            15.5,
+            -9
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                8,
+                -12.5
+              ],
+              "size": [
+                22,
+                13,
+                5
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    74
+                  ],
+                  "uv_size": [
+                    22,
+                    13
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    74
+                  ],
+                  "uv_size": [
+                    -6,
+                    13
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    99,
+                    74
+                  ],
+                  "uv_size": [
+                    6,
+                    13
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_6",
+          "parent": "ball_shell_back",
+          "pivot": [
+            0,
+            5,
+            -7
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                0,
+                -12.5
+              ],
+              "size": [
+                22,
+                9,
+                11
+              ],
+              "inflate": 0.4,
+              "uv": {
+                "north": {
+                  "uv": [
+                    106,
+                    99
+                  ],
+                  "uv_size": [
+                    22,
+                    9
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    105,
+                    99
+                  ],
+                  "uv_size": [
+                    -11,
+                    9
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    94,
+                    99
+                  ],
+                  "uv_size": [
+                    11,
+                    9
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    106,
+                    88
+                  ],
+                  "uv_size": [
+                    22,
+                    11
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_cap_left",
+          "parent": "BALL",
+          "pivot": [
+            11.625,
+            12.5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                11.5,
+                6,
+                -6.5
+              ],
+              "size": [
+                0.25,
+                13,
+                13
+              ],
+              "inflate": 0.2,
+              "uv": {
+                "west": {
+                  "uv": [
+                    70,
+                    115
+                  ],
+                  "uv_size": [
+                    13,
+                    13
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_cap_right",
+          "parent": "BALL",
+          "pivot": [
+            -11.625,
+            12.5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11.75,
+                6,
+                -6.5
+              ],
+              "size": [
+                0.25,
+                13,
+                13
+              ],
+              "inflate": 0.2,
+              "uv": {
+                "east": {
+                  "uv": [
+                    83,
+                    115
+                  ],
+                  "uv_size": [
+                    -13,
+                    13
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "shell_inner",
+          "parent": "BALL",
+          "pivot": [
+            0,
+            12.5,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -11,
+                0,
+                -12.5
+              ],
+              "size": [
+                22,
+                25,
+                25
+              ],
+              "inflate": -0.2,
+              "uv": {
+                "north": {
+                  "uv": [
+                    22,
+                    103
+                  ],
+                  "uv_size": [
+                    22,
+                    25
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    69,
+                    103
+                  ],
+                  "uv_size": [
+                    -25,
+                    25
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    22,
+                    128
+                  ],
+                  "uv_size": [
+                    22,
+                    -25
+                  ]
+                },
+                "west": {
+                  "uv": [
+                    44,
+                    103
+                  ],
+                  "uv_size": [
+                    25,
+                    25
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    0,
+                    103
+                  ],
+                  "uv_size": [
+                    22,
+                    25
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    0,
+                    103
+                  ],
+                  "uv_size": [
+                    22,
+                    25
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

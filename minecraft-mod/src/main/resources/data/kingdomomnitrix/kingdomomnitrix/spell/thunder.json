@@ -1,0 +1,34 @@
+{
+  "effect": "kingdomomnitrix:thunder",
+  "color": "#FFE14D",
+  "sort_order": 2,
+  "levels": [
+    {
+      "mp_cost": 20,
+      "cooldown": 60,
+      "params": {
+        "power": 8,
+        "strikes": 1,
+        "radius": 3
+      }
+    },
+    {
+      "mp_cost": 26,
+      "cooldown": 60,
+      "params": {
+        "power": 11,
+        "strikes": 2,
+        "radius": 3.5
+      }
+    },
+    {
+      "mp_cost": 32,
+      "cooldown": 60,
+      "params": {
+        "power": 15,
+        "strikes": 3,
+        "radius": 4
+      }
+    }
+  ]
+}

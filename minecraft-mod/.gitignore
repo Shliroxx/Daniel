@@ -1,0 +1,12 @@
+.gradle/
+build/
+out/
+run/
+run-server/
+run-client*/
+*.iml
+.idea/
+
+# Die Wurzel-.gitignore ignoriert data/ (Jarvis-Laufzeitdaten) - Mod-Daten gehoeren ins Repo.
+!src/main/resources/data/
+

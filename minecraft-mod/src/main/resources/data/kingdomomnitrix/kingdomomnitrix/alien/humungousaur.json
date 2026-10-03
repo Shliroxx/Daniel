@@ -1,0 +1,134 @@
+{
+  "color": "#C68A4E",
+  "sort_order": 13,
+  "duration": 1200,
+  "recharge": 550,
+  "max_energy": 120,
+  "energy_regen": 6,
+  "scale": 1.9,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 10.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.5,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": -0.05,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 10.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:mega_punch",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "range": 6.0,
+        "damage": 8.0,
+        "knockback": 1.6
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:tail_sweep",
+      "energy": 20,
+      "cooldown": 50,
+      "params": {
+        "radius": 4.0,
+        "damage": 6.0,
+        "knockback": 1.4
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:stampede",
+      "energy": 25,
+      "cooldown": 80,
+      "params": {
+        "ticks": 20,
+        "damage": 7.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:tectonic_quake",
+      "energy": 40,
+      "cooldown": 240,
+      "params": {
+        "radius": 10.0,
+        "damage": 7.0,
+        "launch": 0.9
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:bone_guard",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 6.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:titanic_growth",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "seconds": 15.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:ravager",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:sniffer",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:iron_golem",
+      "chance": 0.05
+    }
+  ],
+  "model": "kingdomomnitrix:humungousaur",
+  "failsafe_tags": [
+    "#minecraft:is_explosion"
+  ],
+  "failsafe_priority": 3,
+  "traits": {
+    "effects": [],
+    "transform_style": "growth"
+  }
+}

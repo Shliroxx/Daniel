@@ -1,0 +1,8 @@
+{
+  "category": "exploration",
+  "unlock_level": 18,
+  "ap_cost": 3,
+  "sort_order": 100,
+  "effect": "glide",
+  "value": 1
+}

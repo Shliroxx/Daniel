@@ -1,0 +1,8 @@
+{
+  "category": "keyblade",
+  "unlock_level": 16,
+  "ap_cost": 3,
+  "sort_order": 90,
+  "effect": "magic_boost",
+  "value": 0.2
+}

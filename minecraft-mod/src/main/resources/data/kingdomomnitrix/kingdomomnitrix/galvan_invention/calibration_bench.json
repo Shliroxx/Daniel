@@ -1,0 +1,21 @@
+{
+  "result": "kingdomomnitrix:calibration_bench",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:iron_block",
+      "count": 1
+    },
+    {
+      "item": "minecraft:redstone",
+      "count": 4
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 3
+    }
+  ],
+  "bolts": 300,
+  "knowledge": 5,
+  "sort_order": 40
+}

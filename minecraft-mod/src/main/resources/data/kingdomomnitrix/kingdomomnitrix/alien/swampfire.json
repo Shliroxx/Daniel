@@ -1,0 +1,132 @@
+{
+  "color": "#4E8B3A",
+  "sort_order": 14,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.3,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fire"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:methane_flame",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 20.0,
+        "damage": 6.0,
+        "fire_seconds": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:methane_cloud",
+      "energy": 20,
+      "cooldown": 50,
+      "params": {
+        "range": 10.0,
+        "radius": 3.0,
+        "seconds": 12.0,
+        "damage": 8.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:methane_jet",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "power": 1.8,
+        "trail": 3,
+        "damage": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:root_snare",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "range": 14.0,
+        "radius": 4.0,
+        "seconds": 3.0,
+        "damage": 4.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:regrowth",
+      "energy": 35,
+      "cooldown": 400,
+      "params": {
+        "heal": 0.3,
+        "seconds": 6.0,
+        "radius": 4.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:swamp_inferno",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 8.0,
+        "damage": 12.0,
+        "delay_seconds": 1.5
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:bogged",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:slime",
+      "chance": 0.15
+    },
+    {
+      "entity": "minecraft:blaze",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:swampfire",
+  "failsafe_tags": [
+    "#minecraft:is_fire"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:fire_resistance"
+      }
+    ],
+    "transform_style": "swamp"
+  }
+}

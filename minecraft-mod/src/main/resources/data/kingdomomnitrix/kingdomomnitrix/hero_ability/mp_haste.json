@@ -1,0 +1,8 @@
+{
+  "category": "keyblade",
+  "unlock_level": 6,
+  "ap_cost": 2,
+  "sort_order": 40,
+  "effect": "mp_haste",
+  "value": 0.3
+}

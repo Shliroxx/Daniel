@@ -1,0 +1,8 @@
+{
+  "category": "combat",
+  "unlock_level": 25,
+  "ap_cost": 3,
+  "sort_order": 120,
+  "effect": "air_dodge_plus",
+  "value": 1
+}

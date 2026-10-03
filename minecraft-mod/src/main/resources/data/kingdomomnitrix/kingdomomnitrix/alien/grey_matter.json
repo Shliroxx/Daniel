@@ -1,0 +1,103 @@
+{
+  "color": "#95A5A6",
+  "sort_order": 4,
+  "duration": 1200,
+  "recharge": 300,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 0.3,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.25,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:scan",
+      "energy": 5,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:weak_spot",
+      "energy": 15,
+      "cooldown": 60,
+      "role": "basic_2",
+      "unlock_level": 1,
+      "params": {
+        "range": 16.0,
+        "seconds": 10.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:scurry",
+      "energy": 15,
+      "cooldown": 80,
+      "role": "movement",
+      "unlock_level": 1,
+      "params": {
+        "seconds": 6.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:tech_snare",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 5.0,
+        "seconds": 5.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:jury_rig",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "repair": 0.15,
+        "heal": 6.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:mastermind",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 12.0,
+        "damage": 6.0,
+        "seconds": 8.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:silverfish",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:grey_matter",
+  "prototype": true,
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 0,
+  "traits": {
+    "transform_style": "shrink"
+  }
+}

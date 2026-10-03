@@ -1,0 +1,60 @@
+{
+  "item": "kingdomomnitrix:fusion_grenade",
+  "price": 400,
+  "ammo_price": 10,
+  "sort_order": 2,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 8,
+      "stats": {
+        "power": 2.5,
+        "cooldown": 20
+      }
+    },
+    {
+      "price": 500,
+      "max_ammo": 10,
+      "stats": {
+        "power": 3.0,
+        "cooldown": 18
+      }
+    },
+    {
+      "price": 1100,
+      "max_ammo": 12,
+      "stats": {
+        "power": 3.4,
+        "cooldown": 16
+      }
+    },
+    {
+      "price": 2200,
+      "max_ammo": 14,
+      "stats": {
+        "power": 3.8,
+        "cooldown": 14
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "price": 4000,
+      "max_ammo": 16,
+      "stats": {
+        "power": 4.5,
+        "cooldown": 12
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}
