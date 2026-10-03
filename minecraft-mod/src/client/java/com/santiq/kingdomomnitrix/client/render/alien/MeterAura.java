@@ -12,14 +12,14 @@ import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.MathHelper;
 
 /**
- * Die Alien-Anzeigen (XLR8-Tempo, Heatblast-Kernhitze, Vierarm-Wut, Diamondhead-Resonanz, Wildmutt-Blutrausch) werden allein ueber die Aura gezeigt — kein HUD.
+ * Die Alien-Anzeigen (XLR8-Tempo, Heatblast-Kernhitze, Vierarm-Wut, Diamondhead-Resonanz) werden allein ueber die Aura gezeigt — kein HUD.
  * Hier steht, wie die Aura bei einem Wert aussieht; gezeichnet wird sie am Koerper ({@link MeterAuraLayer}) und in der
  * Ich-Perspektive an den Armen (PlayerEntityRendererMixin).
  *
  * <ul>
  *   <li>ab {@link #MIN} %: eine enge Huelle, die mit dem Wert heller, groesser und schneller wird</li>
  *   <li>ab 50 % (erste Stufe): zweite, weitere Huelle</li>
- *   <li>bei 100 %: Farbwechsel (XLR8 weiss-blau, Heatblast blau, Vierarm gluehend gelb, Diamondhead weiss-gruen, Wildmutt blutrot) und Pulsieren</li>
+ *   <li>bei 100 %: Farbwechsel (XLR8 weiss-blau, Heatblast blau, Vierarm gluehend gelb, Diamondhead weiss-gruen) und Pulsieren</li>
  * </ul>
  */
 public final class MeterAura {
@@ -33,8 +33,7 @@ public final class MeterAura {
 			{0x1E6FFF, 0x7FF4FF},
 			{0xFF5A10, 0x7FE9FF},
 			{0xD81E1E, 0xFFB040},
-			{0x2ECC71, 0xD8FFF0},
-			{0xFF8A1E, 0xE01414}};
+			{0x2ECC71, 0xD8FFF0}};
 
 	/** Eine Huelle: Zeichen-Schicht (mit wanderndem Muster), Vergroesserung, additive Farbe. */
 	public record Shell(RenderLayer layer, float scale, int color) {

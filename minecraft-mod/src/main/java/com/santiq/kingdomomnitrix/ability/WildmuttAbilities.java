@@ -2,7 +2,6 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
-import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.util.Targeting;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
@@ -49,7 +48,7 @@ import org.joml.Vector3f;
  *       auf.</li>
  *   <li>Urraserei: Blutrausch voll und gesperrt, Lebensraub, jeder Kill bruellt die Umgebung in die Flucht.</li>
  * </ul>
- * Der Blutrausch zeigt sich als Aura ({@link AlienMeterPayload#FRENZY}, orange, voll blutrot).
+ * Keine Aura: der Blutrausch zeigt sich ueber Partikel an der Beute, das Heulen bei vollem Rausch und die Meldung.
  */
 final class WildmuttAbilities {
 	static final int MAX_FRENZY = 5;
@@ -98,7 +97,6 @@ final class WildmuttAbilities {
 		ServerLivingEntityEvents.AFTER_DEATH.register(WildmuttAbilities::afterDeath);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			forgetState(handler.getPlayer().getUuid());
-			AlienMeterSync.forget(handler.getPlayer().getUuid());
 		});
 	}
 
@@ -125,11 +123,6 @@ final class WildmuttAbilities {
 			player.getServerWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WOLF_HOWL, SoundCategory.PLAYERS, 1.0f, 0.7f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.wildmutt_frenzy").formatted(Formatting.RED), true);
 		}
-		sync(player);
-	}
-
-	private static void sync(ServerPlayerEntity player) {
-		AlienMeterSync.update(player, AlienMeterPayload.FRENZY, frenzy(player) * (100.0f / MAX_FRENZY));
 	}
 
 	private static Optional<LivingEntity> prey(ServerPlayerEntity player) {
@@ -335,7 +328,6 @@ final class WildmuttAbilities {
 		RAMPAGE.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, ticks, 1, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, 1, false, false));
-		sync(player);
 		fearAround(player, ctx.param("radius", 8.0), (int) (ctx.param("seconds", 4.0) * 20));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.2f, 0.7f);
 		return true;
@@ -347,7 +339,6 @@ final class WildmuttAbilities {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			if (!isWildmutt(player)) {
 				if (FRENZY.containsKey(player.getUuid()) || PREY.containsKey(player.getUuid()) || RAMPAGE.containsKey(player.getUuid())) {
-					AlienMeterSync.clear(player, AlienMeterPayload.FRENZY);
 					forgetState(player.getUuid());
 				}
 				continue;
@@ -357,7 +348,6 @@ final class WildmuttAbilities {
 			Long rampage = RAMPAGE.get(player.getUuid());
 			if (rampage != null && now >= rampage) {
 				RAMPAGE.remove(player.getUuid());
-				sync(player);
 			}
 			long[] f = FRENZY.get(player.getUuid());
 			if (f != null && f[0] > 0 && rampage == null && now - f[1] > FRENZY_TICKS) {
