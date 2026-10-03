@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import java.util.ArrayList;
@@ -279,6 +280,7 @@ final class Xlr8Abilities {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			if (!isXlr8(player)) {
 				if (TEMPO.containsKey(player.getUuid()) || EFFECTS.containsKey(player.getUuid())) {
+					AlienMeterSync.clear(player, AlienMeterPayload.TEMPO);
 					forget(player.getUuid());
 				}
 				continue;
@@ -308,21 +310,13 @@ final class Xlr8Abilities {
 		last[0] = player.getX();
 		last[1] = player.getZ();
 		double speed = Math.sqrt(dx * dx + dz * dz) / INTERVAL;
-		float before = tempo(player);
 		if (speed > RUN_SPEED) {
 			addTempo(player, GAIN_RUNNING * (float) Math.min(2.0, speed / RUN_SPEED));
-		} else if (before > 0.0f) {
+		} else if (tempo(player) > 0.0f) {
 			addTempo(player, speed < 0.05 ? -LOSS_STANDING : -LOSS_STANDING / 4.0f);
 		}
-		float tempo = tempo(player);
-		if (now % 10 == 0 && (tempo > 0.0f || before > 0.0f)) {
-			int filled = Math.round(tempo / 10.0f);
-			Formatting color = tempo >= MAX ? Formatting.AQUA : tempo >= BLUR ? Formatting.BLUE : Formatting.DARK_AQUA;
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.xlr8_tempo")
-					.append(Text.literal(" " + "▮".repeat(filled)).formatted(color))
-					.append(Text.literal("▯".repeat(10 - filled)).formatted(Formatting.DARK_GRAY))
-					.append(Text.literal(" " + Math.round(tempo) + "%").formatted(color)), true);
-		}
+		// Tacho im HUD und Aura am Koerper (Client) — Netzpaket nur bei spuerbarer Aenderung
+		AlienMeterSync.update(player, AlienMeterPayload.TEMPO, tempo(player));
 	}
 
 	/** Schallmauer beim Sprinten: was im Weg steht, wird umgerannt. */
@@ -478,6 +472,7 @@ final class Xlr8Abilities {
 
 	private static void forget(UUID id) {
 		TEMPO.remove(id);
+		AlienMeterSync.forget(id);
 		LAST_POS.remove(id);
 		EFFECTS.remove(id);
 	}

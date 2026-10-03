@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
@@ -270,6 +271,7 @@ final class HeatblastAbilities {
 			boolean heatblast = TransformationManager.get(player).activeAlien().filter(HEATBLAST::equals).isPresent();
 			if (!heatblast) {
 				if (HEAT.containsKey(player.getUuid()) || SURF.containsKey(player.getUuid()) || SHIELD.containsKey(player.getUuid())) {
+					AlienMeterSync.clear(player, AlienMeterPayload.HEAT);
 					forget(player.getUuid());
 				}
 				continue;
@@ -321,18 +323,8 @@ final class HeatblastAbilities {
 			world.spawnParticles(heat >= MAX ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
 					player.getX(), player.getBodyY(0.5), player.getZ(), heat >= MAX ? 4 : 2, 0.35, 0.6, 0.35, 0.01);
 		}
-		if (now % 10 == 0 && (heat > 0.0f || before > 0.0f)) {
-			player.sendMessage(bar(heat), true);
-		}
-	}
-
-	private static Text bar(float heat) {
-		int filled = Math.round(heat / 10.0f);
-		Formatting color = heat >= MAX ? Formatting.AQUA : heat >= GLOW ? Formatting.GOLD : Formatting.RED;
-		return Text.translatable("message.kingdomomnitrix.heatblast_heat")
-				.append(Text.literal(" " + "▮".repeat(filled)).formatted(color))
-				.append(Text.literal("▯".repeat(10 - filled)).formatted(Formatting.DARK_GRAY))
-				.append(Text.literal(" " + Math.round(heat) + "%").formatted(color));
+		// Hitze-Anzeige im HUD und Glut-Aura am Koerper (Client)
+		AlienMeterSync.update(player, AlienMeterPayload.HEAT, heat);
 	}
 
 	private static void tickSurf(ServerWorld world, ServerPlayerEntity player, long now) {
@@ -484,6 +476,7 @@ final class HeatblastAbilities {
 
 	private static void forget(UUID id) {
 		HEAT.remove(id);
+		AlienMeterSync.forget(id);
 		SURF.remove(id);
 		SHIELD.remove(id);
 	}

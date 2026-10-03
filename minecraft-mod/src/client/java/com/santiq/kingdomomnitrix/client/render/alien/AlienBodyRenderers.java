@@ -309,6 +309,8 @@ public final class AlienBodyRenderers {
 				}
 			}
 		});
+		// Leucht-Aura nach Alien-Anzeige (XLR8-Tempo, Heatblast-Kernhitze)
+		renderer.addRenderLayer(new MeterAuraLayer(renderer));
 		float scale = renderScale(model);
 		if (scale != 1.0f) {
 			renderer.withScale(scale);

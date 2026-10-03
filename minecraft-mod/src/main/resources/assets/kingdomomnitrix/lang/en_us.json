@@ -888,5 +888,10 @@
   "message.kingdomomnitrix.heatblast_heat": "Core heat",
   "message.kingdomomnitrix.heatblast_overheat": "Core overheated — next ability unleashes blue fire!",
   "message.kingdomomnitrix.xlr8_tempo": "Tempo",
-  "message.kingdomomnitrix.xlr8_sound_barrier": "Sound barrier broken — next ability at full speed!"
+  "message.kingdomomnitrix.xlr8_sound_barrier": "Sound barrier broken — next ability at full speed!",
+  "hud.kingdomomnitrix.element.alien_meter": "Alien gauge (tempo/heat)",
+  "hud.kingdomomnitrix.meter.blur": "BLUR",
+  "hud.kingdomomnitrix.meter.sound_barrier": "SOUND BARRIER",
+  "hud.kingdomomnitrix.meter.glowing": "GLOWING",
+  "hud.kingdomomnitrix.meter.overheated": "OVERHEATED"
 }
