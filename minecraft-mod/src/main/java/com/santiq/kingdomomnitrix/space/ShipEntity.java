@@ -169,8 +169,13 @@ public class ShipEntity extends Entity implements GeoEntity {
 		LivingEntity pilot = getControllingPassenger();
 		if (isWarping()) {
 			// Warp: steil hinauf und immer schneller — der Pilot steuert nicht
-			Vec3d look = Vec3d.fromPolar(-35.0f, getYaw());
-			setPitch(MathHelper.lerp(0.1f, getPitch(), -35.0f));
+			// unter der Atmosphaerengrenze waagerecht weiter (sonst klebt das Schiff an der Bauhoehe)
+			float climb = getY() > getWorld().getTopY() - SpaceTravel.ATMOSPHERE_MARGIN - 40 ? 0.0f : -35.0f;
+			Vec3d look = Vec3d.fromPolar(climb, getYaw());
+			setPitch(MathHelper.lerp(0.1f, getPitch(), climb));
+			if (climb == 0.0f) {
+				velocity = new Vec3d(velocity.x, 0.0, velocity.z);
+			}
 			setVelocity(velocity.multiply(0.9).add(look.multiply(0.25)));
 			return;
 		}

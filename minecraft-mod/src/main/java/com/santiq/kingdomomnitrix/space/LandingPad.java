@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.space;
 
+import com.santiq.kingdomomnitrix.world.PlanetHubs;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.LanternBlock;
@@ -28,11 +29,15 @@ public final class LandingPad {
 		if (state.center != null) {
 			return state.center;
 		}
+		int[] site = PlanetHubs.site(world, x, z);
+		x = site[0];
+		z = site[1];
 		world.getChunk(x >> 4, z >> 4);
 		int ground = world.getTopY(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
 		// zu tief (Leere, z. B. Raumstation) → auf fester Hoehe bauen
-		int y = ground <= world.getBottomY() + 1 ? 64 : ground;
+		int y = ground <= world.getBottomY() + 1 ? 64 : PlanetHubs.prepare(world, x, z, ground);
 		build(world, new BlockPos(x, y, z));
+		PlanetHubs.build(world, new BlockPos(x, y, z));
 		state.center = new BlockPos(x, y + 1, z);
 		state.markDirty();
 		return state.center;

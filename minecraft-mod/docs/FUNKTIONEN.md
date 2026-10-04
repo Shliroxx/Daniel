@@ -204,11 +204,26 @@ Gadgets liegen im **Gadget-Gürtel** (H). Combuster, OmniWrench, Swingshot, Gran
   „Du bist hier“, Kurslinie, Infotafel. Als Pilot **Kurs setzen** → Warp (6 s, mit Warp-Antrieb kürzer), das Schiff
   erscheint über dem **Landeplatz** der Zielwelt (runde Plattform mit gelbem Ring und Lichtern, beim ersten Anflug
   gebaut). Freischaltung je Planet: Heldenstufe, vorher besuchter Planet, Warp-Stufe für fernere Systeme.
-  Planeten sind Daten (`data/<ns>/kingdomomnitrix/planet/*.json`); Veldin, Kerwan, Novalis, Rilgar, Torren IV und die
-  Nefarious-Station stehen schon auf der Karte („Noch keine Koordinaten“, bis ihre Welten gebaut sind).
+  Planeten sind Daten (`data/<ns>/kingdomomnitrix/planet/*.json`).
 - **Schiffsausbau** (Galaxiekarte, je 3 Stufen für 1500/4000/9000 Bolts + 2/5/10 Raritanium): **Triebwerk** (+15 %
   Tempo je Stufe), **Warp-Antrieb** (Reichweite, kürzerer Warp), **Bordkanone** (Angriffstaste im Cockpit: zwei
   Laser, Stufe 3 explodiert ohne Blockschaden). Ausbau und besuchte Planeten gelten für jedes Schiff, das du fliegst.
+
+### Ratchet-&-Clank-Welten
+Sechs eigene Welten, erreichbar über die Galaxiekarte. Beim ersten Anflug entsteht um den Landeplatz eine Siedlung
+(Gelände eingeebnet, Fundamente am Hang, je ein **Waffen-Terminal** als Laden):
+
+| Welt | Gelände | Siedlung |
+|---|---|---|
+| **Veldin** (Solana) | Wüste, Tafelberge, Felsnadeln | Ratchets Garage mit Werkstatt und Satellitenschüssel, Windrad, Blarg-Schrotthaufen |
+| **Kerwan** (Solana, nach Veldin) | Ebenen und Wiesen | Metropole: Glastürme, Straßenkreuz mit Laternen, Gadgetron-Laden |
+| **Novalis** (Solana, nach Veldin, Stufe 3) | Blumenwiesen, Wälder | Bauernhäuser, Felder, Windmühle, abgestürztes Blarg-Schiff |
+| **Rilgar** (Solana, nach Kerwan, Stufe 6) | Meer, Strand, Mangroven | Wasserstadt Blackwater: Stege auf Pfählen, Pfahlhäuser, Startbogen der Hoverboard-Strecke |
+| **Torren IV** (Polaris, Stufe 12, Warp 2) | Savanne, rote Wüste | Raumhafen: drei weitere Landeplätze, Kontrollturm, Hangars, Tanks, Frachtkisten |
+| **Nefarious-Station** (Tiefraum, Stufe 20, Warp 3, nach Torren IV) | Leere, ewige Nacht | Schwebende Plattformen mit Brücken, dunkler Zentralturm mit grüner Kuppel |
+
+Die Landwelten haben kein Meer (tiefe Becken statt Ozean); der Landeplatz sucht sich die nächste ebene Hochfläche.
+Gegner: vorerst die Monster der Biome (eigene R&C-Gegner folgen).
 
 ### Traverse Town
 Eigene Welt in ewiger Nacht: Stadtrand, Schattenwald, Kristallfelder, dunkles Meer; Erze Mythril, Raritanium, Orichalcum.

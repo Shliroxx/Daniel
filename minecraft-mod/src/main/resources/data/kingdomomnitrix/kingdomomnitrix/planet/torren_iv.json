@@ -9,8 +9,8 @@
   "size": 1.2,
   "order": 20,
   "landing": [
-    0,
-    0
+    2500,
+    -4500
   ],
   "hero_level": 12,
   "warp": 2
