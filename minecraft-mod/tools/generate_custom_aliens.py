@@ -42,7 +42,8 @@ LOG = logging.getLogger("custom_aliens")
 ASSETS = Path(__file__).resolve().parent.parent / "src" / "main" / "resources" / "assets" / "kingdomomnitrix"
 DATA = ASSETS.parent.parent / "data" / "kingdomomnitrix" / "kingdomomnitrix" / "alien"
 ATLAS = 128   # Atlasbreite in Modell-Einheiten
-PX = 2        # Pixel je Einheit
+PX = 4        # Pixel je Einheit (feine Linien wie bei den Minecraft-Ben-10-Modellen)
+ART = PX // 2  # Pixel-Bilder (Gesichter, Symbol) sind fuer 2 Pixel je Einheit gezeichnet und werden hochskaliert
 
 Color = tuple[int, int, int]
 
@@ -135,6 +136,8 @@ class Painter:
         self.design = design
         self.color = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         self.glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        # Omnitrix-Symbol (gruene Pixel): BadgeTint faerbt genau diese um (Spieler-Farbe), nicht Augen o. Ae.
+        self.badge = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         self.rng = random.Random(design.seed)
 
     def put(self, x: int, y: int, c: Color, glow: bool = False) -> None:
@@ -172,51 +175,38 @@ class Painter:
                 self.put(u + px, v + py, c, mat.glow or (mat.pattern == "stars" and c == STAR))
 
     def texel(self, mat: Material, light: float, px: int, py: int, w: int, h: int, box: Box, side: str) -> Color:
+        """Flache Cartoon-Farben wie bei den Minecraft-Ben-10-Modellen: Grundfarbe, Licht je Flaechenrichtung, sanfter
+        Verlauf von oben, 1 Pixel dunklerer Rand. Kein Rauschen — Muster nur, wo das Alien eines hat."""
         base, dark, hi = rgb(mat.base), rgb(mat.dark), rgb(mat.light)
-        rng = self.rng
-        # Licht von oben auf den Seiten, Rand einen Hauch dunkler (wie die AE-Texturen), feines Rauschen
         t = py / max(1, h - 1) if side not in ("up", "down") else 0.3
-        k = light * (1.05 - 0.14 * t) * (0.97 + 0.06 * rng.random())
+        k = light * (1.04 - 0.1 * t)
         if px == 0 or py == 0 or px == w - 1 or py == h - 1:
             if mat.rim and side not in ("up", "down"):
-                return shade(rgb(mat.rim), 0.92 + 0.08 * rng.random())
-            k *= 0.93
+                return rgb(mat.rim)
+            k *= 0.9
         c = shade(base, k)
         pat = mat.pattern
-        if pat == "fur":
-            roll = rng.random()
-            if roll < 0.09:
-                c = shade(mix(base, dark, 0.3), k)
-            elif roll < 0.14:
-                c = shade(mix(base, hi, 0.35), k)
-        elif pat == "stars":
-            roll = rng.random()
-            c = shade(base, 0.9 + 0.15 * rng.random())
-            if roll < 0.035:
+        if pat == "stars":
+            roll = self.rng.random()
+            c = shade(base, 0.95 + 0.1 * self.rng.random())
+            if roll < 0.014:
                 return STAR
-            if roll < 0.06:
+            if roll < 0.024:
                 return shade(hi, 1.0)
         elif pat == "slime":
-            # glaenzende Laengsstreifen und Blasen
-            gloss = math.sin((px + box.origin[0] * PX) * 0.55 + py * 0.12)
-            c = shade(mix(base, hi, max(0.0, gloss - 0.55) * 1.6), k)
-            roll = rng.random()
-            if roll < 0.012:
-                c = shade(hi, 1.08)
-            elif roll < 0.03:
-                c = shade(mix(base, dark, 0.35), k)
+            # Glanzstreifen nahe der linken Kante und ein heller Lichtpunkt oben — glatter Gel-Look
+            fx = (px + 0.5) / w
+            if side in ("north", "west", "east") and 0.14 < fx < 0.3 and 0.1 < py / max(1, h) < 0.8:
+                c = shade(mix(base, hi, 0.55), k)
+            elif side == "up":
+                c = shade(mix(base, hi, 0.25), k)
         elif pat == "metal":
-            c = shade(mix(base, hi, 0.45 if (py % 4 == 1) else 0.0), k)
+            c = shade(mix(base, hi, 0.45 if (py % (2 * ART) == ART) else 0.0), k)
         elif pat == "brain":
             # Hirnwindungen: geschwungene dunkle Furchen
-            fold = math.sin(px * 1.1 + math.sin(py * 0.9) * 2.0) + math.sin(py * 1.7 - px * 0.3)
+            qx, qy = px / ART, py / ART
+            fold = math.sin(qx * 1.1 + math.sin(qy * 0.9) * 2.0) + math.sin(qy * 1.7 - qx * 0.3)
             c = shade(dark if fold > 1.05 else (hi if fold < -1.3 else base), light * 1.02)
-        elif pat == "shell":
-            roll = rng.random()
-            if roll < 0.06:
-                c = shade(mix(base, dark, 0.3), k)
-            elif roll < 0.09:
-                c = shade(mix(base, hi, 0.35), k)
         return c
 
 
@@ -247,16 +237,20 @@ def _world(side: str, ox: float, oy: float, oz: float, w: int, h: int, d: int, f
 
 
 def art(p: Painter, rect: tuple[int, int, int, int], rows: list[str], palette: dict[str, tuple[str, bool]],
-        cx: float = 0.5, cy: float = 0.5) -> None:
+        cx: float = 0.5, cy: float = 0.5, badge: str = "") -> None:
     """Pixel-Bild auf eine Flaeche setzen, Mittelpunkt an (cx, cy) der Flaeche."""
     u, v, w, h = rect
-    x0 = u + round(w * cx - len(rows[0]) / 2)
-    y0 = v + round(h * cy - len(rows) / 2)
+    x0 = u + round(w * cx - len(rows[0]) * ART / 2)
+    y0 = v + round(h * cy - len(rows) * ART / 2)
     for j, row in enumerate(rows):
         for i, ch in enumerate(row):
             if ch in palette:
                 color, glow = palette[ch]
-                p.put(x0 + i, y0 + j, rgb(color), glow)
+                for dy in range(ART):
+                    for dx in range(ART):
+                        p.put(x0 + i * ART + dx, y0 + j * ART + dy, rgb(color), glow)
+                        if ch in badge:
+                            p.badge.putpixel((x0 + i * ART + dx, y0 + j * ART + dy), (255, 255, 255, 255))
 
 
 BADGE = ["..rrrrrr..",
@@ -274,27 +268,29 @@ BADGE_COLORS = {"r": ("#C9CDD2", False), "k": ("#151515", False), "g": ("#5BFF3A
 
 def badge(p: Painter, rect, cx: float = 0.5, cy: float = 0.4) -> None:
     """Omnitrix-Symbol: silberner Ring, gruene Sanduhr, schwarze Seitenkeile."""
-    art(p, rect, BADGE, BADGE_COLORS, cx, cy)
+    art(p, rect, BADGE, BADGE_COLORS, cx, cy, badge="g")
 
 
 # --- Gesichter und Abzeichen (Pixel-Bilder, 2 Pixel je Einheit) --------------------------------------
 
 def f_rath_face(p, rect):
-    art(p, rect, ["..............",
-                  ".kk........kk.",
-                  "..kkk....kkk..",
-                  "..yygk..kgyy..",
-                  "..kyyk..kyyk..",
-                  "...kk....kk..."],
-        {"k": ("#141414", False), "y": ("#C8F24A", True), "g": ("#3E9E1E", True)}, 0.5, 0.42)
+    art(p, rect, [".kkk........kkk.",
+                  "..kkkk....kkkk..",
+                  "...kkkkkkkkkk...",
+                  "..wgggk..kgggw..",
+                  "..wggkk..kkggw..",
+                  "...wwww..wwww..."],
+        {"k": ("#141414", False), "g": ("#8CF23A", True), "w": ("#F4F1E6", False)}, 0.5, 0.36)
 
 
-def f_rath_nose(p, rect):
-    art(p, rect, ["..kkkk..", "...kk..."], {"k": ("#2A1A14", False)}, 0.5, 0.3)
-
-
-def f_rath_teeth(p, rect):
-    art(p, rect, ["kkkkkkkkkkkk", "wkwwkwwkwwkw"], {"k": ("#2A1A14", False), "w": ("#F4F1E6", False)}, 0.5, 0.5)
+def f_rath_mouth(p, rect):
+    art(p, rect, ["....kkkk....",
+                  ".....kk.....",
+                  "kkkkkkkkkkkk",
+                  "kwkwkwkwkwkk",
+                  "krrrrrrrrrrk",
+                  "kkkkkkkkkkkk"],
+        {"k": ("#1E1210", False), "w": ("#F4F1E6", False), "r": ("#7A2A24", False)}, 0.5, 0.5)
 
 
 def f_spider_face(p, rect):
@@ -355,11 +351,11 @@ def f_chest(p, rect):
 
 
 def f_chest_small(p, rect):
-    art(p, rect, [".rrrr.", "rggggr", "rkggkr", "rkggkr", "rggggr", ".rrrr."], BADGE_COLORS, 0.5, 0.5)
+    art(p, rect, [".rrrr.", "rggggr", "rkggkr", "rkggkr", "rggggr", ".rrrr."], BADGE_COLORS, 0.5, 0.5, badge="g")
 
 
 FEATURES: dict[str, Callable] = {
-    "rath_face": f_rath_face, "rath_nose": f_rath_nose, "rath_teeth": f_rath_teeth, "spider_face": f_spider_face,
+    "rath_face": f_rath_face, "rath_mouth": f_rath_mouth, "spider_face": f_spider_face,
     "spider_mouth": f_spider_mouth, "waybig_eyes": f_waybig_eyes, "alienx_face": f_alienx_face,
     "brainstorm_face": f_brainstorm_face, "goop_face": f_goop_face, "chest": f_chest, "chest_small": f_chest_small,
 }
@@ -421,6 +417,8 @@ def build(design: Design) -> dict[Path, object]:
         ASSETS / "textures" / "entity" / "alien" / f"{name}.png": painter.color,
         ASSETS / "textures" / "entity" / "alien" / f"{name}_arms.png": imp.arm_skin(bones_all, painter.color, (ATLAS, height)),
     }
+    if painter.badge.getbbox() is not None:
+        files[ASSETS / "textures" / "entity" / "alien" / f"{name}_badgemask.png"] = painter.badge
     if painter.glow.getbbox() is not None:
         files[ASSETS / "textures" / "entity" / "alien" / f"{name}_glowmask.png"] = painter.glow
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = animations(design, bones_all)
@@ -494,8 +492,8 @@ def rath() -> Design:
     """Rath (Turnaround/Posen AF-UA): breiter Muskelprotz, kein Schwanz. Weiss: Brust, Bauch, Kiefer, Schnauze,
     Backenbart, Faeuste, Fuesse. Schwarze Tigerstreifen auf Schultern, Armen, Kopf, Flanken, Oberschenkeln.
     Schwarze Klingen-Kralle aus jedem Handgelenk, schwere schwarze Brauen, gruene Augen; Omnitrix mitten auf der Brust."""
-    m = {"orange": Material("#E2701F", "#8E3A0C", "#F7A04E", "fur"),
-         "white": Material("#ECE9E1", "#A29C90", "#FFFFFF", "fur"),
+    m = {"orange": Material("#E2701F", "#8E3A0C", "#F7A04E", "plain"),
+         "white": Material("#ECE9E1", "#A29C90", "#FFFFFF", "plain"),
          "line": Material("#BDB6A8", "#8A8478", "#D8D2C6", "plain", outline=False),
          "stripe": Material("#1A1411", "#0A0806", "#3A2E28", "plain"),
          "claw": Material("#1E1E24", "#08080A", "#6A6A78", "metal"),
@@ -516,8 +514,10 @@ def rath() -> Design:
         if part == "abs" and (abs(t.x) < 0.25 or abs(y - 14.5) < 0.25):
             return "line"
         if part == "head":
-            if t.side == "north" and t.fy > 0.78:
+            if t.side == "north" and t.fy > 0.6:
                 return "white"
+            if t.side == "north" and t.fy < 0.2 and 0.6 < ax < 1.4:
+                return "stripe"
             if t.side in ("east", "west") and t.fy < 0.65 and tiger(t, 2.4, 0.6, 0.3):
                 return "stripe"
             if t.side == "up" and ax < 0.6 and t.fy > 0.4:
@@ -540,40 +540,38 @@ def rath() -> Design:
             Box((-3, 12.5, -3.5), (6, 3.5, 0.5), "white", "abs"),
             Box((-4.5, 10, -2.5), (9, 2.5, 5), "orange", "belly")]),
         Bone("head", None, (0, 23.5, -2), [
-            Box((-3.5, 22.5, -7.5), (7, 5, 6), "orange", "head", front="rath_face"),
-            Box((-3.5, 26, -8), (7, 0.5, 1), "stripe", "brow"),
-            Box((-2, 23, -9), (4, 2, 1.5), "white", "muzzle", front="rath_nose"),
-            Box((-3, 21, -8.5), (6, 1.5, 5), "white", "jaw", front="rath_teeth"),
-            Box((-4.5, 21.5, -7), (1, 3, 3.5), "white", "cheek"),
-            Box((3.5, 21.5, -7), (1, 3, 3.5), "white", "cheek"),
-            Box((-3.5, 27.5, -4), (1.5, 1.5, 1), "orange", "ear"),
-            Box((2, 27.5, -4), (1.5, 1.5, 1), "orange", "ear"),
-            Box((-3.25, 29, -4), (1, 0.5, 1), "orange", "ear"),
-            Box((2.25, 29, -4), (1, 0.5, 1), "orange", "ear")]),
+            Box((-4, 22, -8.5), (8, 6.5, 7), "orange", "head", front="rath_face"),
+            Box((-3, 21.5, -9.5), (6, 3.5, 1), "white", "muzzle", front="rath_mouth"),
+            Box((-3.5, 21, -8.5), (7, 1, 5), "white", "jaw"),
+            Box((-5, 21.5, -7.5), (1, 3.5, 4), "white", "cheek"),
+            Box((4, 21.5, -7.5), (1, 3.5, 4), "white", "cheek"),
+            Box((-4, 28.5, -5), (2, 1.5, 1), "orange", "ear"),
+            Box((2, 28.5, -5), (2, 1.5, 1), "orange", "ear"),
+            Box((-3.5, 30, -5), (1, 0.5, 1), "stripe", "ear"),
+            Box((2.5, 30, -5), (1, 0.5, 1), "stripe", "ear")]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
         sx = sign * 8.5
-        inner = sx - sign * 2.5 - (1 if sign > 0 else 0)
-        outer = sx + sign * 2.75 - 0.25
+        inner = sx - sign * 3 - (1 if sign > 0 else 0)
+        outer = sx + sign * 3.75 - 0.25
         bones += [
             Bone(f"{side}_arm", None, (sx, 23, 0), [
                 Box((sx - 3, 19.5, -3), (6, 5, 6), "orange", "shoulder"),
                 Box((sx - 2.5, 15, -2.5), (5, 5, 5), "orange", "upper_arm")]),
             Bone(f"{side}_forearm", f"{side}_arm", (sx, 15, 0), [
-                Box((sx - 3, 8, -3), (6, 7, 6), "orange", "forearm"),
-                Box((sx - 2.5, 6.5, -2.5), (5, 1.5, 5), "orange", "forearm"),
-                Box((sx - 2.5, 2.5, -3), (5, 4, 5), "white", "fist"),
-                Box((sx - 2.5, 3.5, -3.5), (5, 2, 0.5), "white", "fist"),
-                Box((inner, 3.5, -3), (1, 2, 2), "white", "fist")]),
+                Box((sx - 3.5, 7.5, -3.5), (7, 7.5, 7), "orange", "forearm"),
+                Box((sx - 3, 1.5, -3.5), (6, 6, 6.5), "white", "fist")]
+                + [Box((sx - 3 + i * 1.5, 1.5, -4.5), (1.5, 3.5, 1), "white", "finger") for i in range(4)]
+                + [Box((inner - sign * 0.5, 3, -3), (1.5, 2.5, 2.5), "white", "fist")]),
             Bone(f"{side}_claw", f"{side}_forearm", (outer, 8, -1), [
                 Box((outer, 0, -1.75), (0.5, 8, 2), "claw", "claw"),
                 Box((outer, -1, -1.25), (0.5, 1, 1), "claw", "claw")], rotation=(-15, 0, 0)),
             Bone(f"{side}_leg", None, (sign * 3.2, 11, 0), [
                 Box((sign * 3.2 - 2.5, 5.5, -2.5), (5, 5.5, 5), "orange", "thigh"),
                 Box((sign * 3.2 - 2, 2, -2), (4, 3.5, 4), "orange", "shin"),
-                Box((sign * 3.2 - 2.5, 0, -4.5), (5, 2, 6.5), "white", "foot")]
-                + [Box((sign * 3.2 - 2 + i * 1.5, 0, -5.5), (1, 1, 1), "white", "toe") for i in range(3)]),
+                Box((sign * 3.2 - 3, 0, -5), (6, 2.5, 7.5), "white", "foot")]
+                + [Box((sign * 3.2 - 2.75 + i * 2, 0, -6), (1.5, 1.5, 1), "white", "toe") for i in range(3)]),
         ]
     return Design("rath", 1.25, "heavy", "#E2701F", m, bones, zone, arm_swing=0.8, leg_swing=0.8, seed=11)
 
@@ -583,7 +581,7 @@ def spidermonkey() -> Design:
     Arme reichen zum Boden, Beine hinten, langer Schwanz im S-Bogen mit Haken und zwei dunklen Ringen. Kopf mit nach
     hinten fallender Maehne, dunkles Gesicht mit vier gruenen Augen (zwei gross, zwei klein), Nasenloecher, Zaehne;
     Fellbueschel an Ellbogen und Wangen; Haende und Fuesse dunkel mit drei langen Fingern/Zehen."""
-    m = {"blue": Material("#2E5FD6", "#173270", "#5F8FF6", "fur"),
+    m = {"blue": Material("#2E5FD6", "#173270", "#5F8FF6", "plain"),
          "navy": Material("#1B2350", "#0B0F24", "#2F3C7A", "plain"),
          "mouth": Material("#7E8FB8", "#46557E", "#B4C2E2", "plain")}
 
@@ -676,8 +674,12 @@ def way_big() -> Design:
         part, y, ax = t.part, t.y, abs(t.x)
         if part == "crest" and (t.z > 0.3 or t.side in ("down", "south")):
             return "black"
-        if part == "chest" and t.side == "north" and abs(ax - (1.2 + (y - 20) * 0.5)) < 0.55:
+        if part == "chest" and t.side == "north" and ax / 3.4 + abs(y - 22.6) / 3.0 < 1.0:
             return "red"
+        if part == "arm" and abs(y - 19.5) < 0.5:
+            return "black"
+        if part == "forearm" and abs(y - 14) < 0.5:
+            return "black"
         if part == "abs" and t.side == "north" and (ax < 0.2 or abs(y - 17.75) < 0.2):
             return "line"
         if part == "shin":
@@ -717,7 +719,10 @@ def way_big() -> Design:
                 Box((sx - 1.25, 5, -1.5), (2.5, 1.5, 1), "white", "hand")]),
             Bone(f"{side}_fin", f"{side}_forearm", (fin_x, 11, 0), [
                 Box((fin_x, 10, -1), (0.5, 9, 2.5), "red", "fin"),
-                Box((fin_x, 19, -0.5), (0.5, 3, 1.5), "red", "fin")], rotation=(-10, 0, sign * 5)),
+                Box((fin_x, 19, -0.5), (0.5, 3, 1.5), "red", "fin"),
+                Box((fin_x, 12, 1.5), (0.5, 5, 1), "red", "fin"),
+                Box((fin_x, 15, 2.5), (0.5, 2.5, 1), "red", "fin"),
+                Box((fin_x, 22, 0), (0.5, 1.5, 0.5), "red", "fin")], rotation=(-10, 0, sign * 5)),
             Bone(f"{side}_leg", None, (sign * 2, 13, 0), [
                 Box((sign * 2 - 1.5, 7.5, -1.75), (3, 5.5, 3.5), "white", "thigh"),
                 Box((sign * 2 - 1.5, 1.5, -1.5), (3, 6, 3), "white", "shin"),
@@ -731,8 +736,8 @@ def alien_x() -> Design:
     """Alien X (Posen AF-UA): schlanker athletischer Humanoid, ganz schwarz mit Sternen (Nachthimmel) und heller
     Konturlinie, weisse Haende, gruene pupillenlose Augen; drei Hoerner an der Stirn — ein mittleres, zwei seitliche
     nach aussen und oben gebogen. Omnitrix auf der Brust."""
-    m = {"space": Material("#07080F", "#000000", "#B8D8FF", "stars", rim="#28324E"),
-         "white": Material("#F2F2F4", "#A8AAB2", "#FFFFFF", "plain")}
+    m = {"space": Material("#07080F", "#000000", "#B8D8FF", "stars", rim="#E6EEFF"),
+         "white": Material("#F6F8FF", "#B8C0D8", "#FFFFFF", "plain", glow=True)}
 
     bones = [
         Bone("body", None, (0, 24, 0), [
@@ -744,8 +749,9 @@ def alien_x() -> Design:
             Box((-2.5, 25.5, -2.5), (5, 5, 5), "space", "head", front="alienx_face"),
             Box((-1.5, 24.5, -2.75), (3, 1.5, 3), "space", "chin")]),
         Bone("horn_mid", "head", (0, 30.5, -1.5), [
-            Box((-0.5, 30.5, -2), (1, 3, 1), "space", "horn"),
-            Box((-0.25, 33.5, -1.75), (0.5, 1.5, 0.5), "space", "horn")], rotation=(15, 0, 0)),
+            Box((-0.75, 30.5, -2.25), (1.5, 2.5, 1.5), "space", "horn"),
+            Box((-0.5, 33, -2), (1, 2.5, 1), "space", "horn"),
+            Box((-0.25, 35.5, -1.75), (0.5, 2, 0.5), "space", "horn")], rotation=(8, 0, 0)),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
@@ -755,7 +761,7 @@ def alien_x() -> Design:
                  rotation=(10, 0, sign * 25)),
             Bone(f"horn_{side}_2", f"horn_{side}", (hx, 33, -1), [Box((hx - 0.5, 33, -1.5), (1, 2.5, 1), "space", "horn")],
                  rotation=(20, 0, -sign * 15)),
-            Bone(f"horn_{side}_3", f"horn_{side}_2", (hx, 35.5, -1), [Box((hx - 0.25, 35.5, -1.25), (0.5, 2, 0.5), "space", "horn")],
+            Bone(f"horn_{side}_3", f"horn_{side}_2", (hx, 35.5, -1), [Box((hx - 0.25, 35.5, -1.25), (0.5, 1, 0.5), "space", "horn")],
                  rotation=(25, 0, -sign * 20)),
         ]
         sx = sign * 5
@@ -781,8 +787,8 @@ def brainstorm() -> Design:
     Mandelaugen und gefletschten Zaehnen. Die Schaedelplatten klappen auf und zeigen das rosa Gehirn. Halsmanschette
     mit Ringbaendern und Omnitrix, runder Hinterleib. Lange Arme mit Gelenkringen und gebogenen Zangen; vier kurze
     gebogene Krabbenbeine mit dunklen Spitzen (vorn und hinten gespreizt, Kreuzgang)."""
-    m = {"shell": Material("#9A4E22", "#56260C", "#C77440", "shell"),
-         "plate": Material("#8A4420", "#4A200A", "#B8683A", "shell"),
+    m = {"shell": Material("#9A4E22", "#56260C", "#C77440", "plain"),
+         "plate": Material("#8A4420", "#4A200A", "#B8683A", "plain"),
          "brain": Material("#F28AC4", "#B04A88", "#FFC2E4", "brain", outline=False),
          "silver": Material("#B8BEC6", "#6E747C", "#E6EAF0", "metal"),
          "band": Material("#1C1C20", "#08080A", "#3A3A42", "plain"),
@@ -803,8 +809,8 @@ def brainstorm() -> Design:
         Bone("head", None, (0, 13, 0), [
             Box((-8, 15, -7.5), (16, 1.5, 15), "shell", "brim"),
             Box((-1.5, 14.25, -7.75), (3, 1, 1), "shell", "brim"),
-            Box((-7.5, 16.5, -7), (15, 2.5, 14), "shell", "shell"),
-            Box((-6.5, 19, -6), (13, 0.5, 12), "shell", "shell"),
+            Box((-7.5, 16.5, -7), (15, 2.5, 14), "shell", "plain"),
+            Box((-6.5, 19, -6), (13, 0.5, 12), "shell", "plain"),
             Box((-5.5, 19.5, -5), (11, 2.5, 10), "brain", "brain"),
             Box((-6, 10.5, -7), (12, 4.5, 6), "shell", "face", front="brainstorm_face")]
             + [Box((sx, 16.5, sz), (0.5, 1, 0.5), "spike", "spike") for sx, sz in

@@ -17,6 +17,8 @@ import net.minecraft.util.Identifier;
  * ({@code _glowmask}) liegen UND gruen sind — das Abzeichen. Eigene Farben des Aliens (Heatblasts Glut, Upgrades
  * Schaltkreise ausserhalb der Maske) bleiben. Ergebnis: Grundtextur und Leuchtmaske als Laufzeit-Texturen, je Textur und
  * Farbe einmal erzeugt (Cache wird beim Ressourcen-Neuladen geleert).
+ * <p>Liegt neben der Textur eine {@code _badgemask.png} (eigene Modelle aus {@code tools/generate_custom_aliens.py}),
+ * gelten genau deren Pixel als Abzeichen — die Groessen-Erkennung unten passt nur zur AE-Aufloesung.
  */
 public final class BadgeTint {
 	public static final int CLASSIC = 0x39FF14;
@@ -67,8 +69,10 @@ public final class BadgeTint {
 		MinecraftClient client = MinecraftClient.getInstance();
 		Identifier texture = key.texture();
 		String path = texture.getPath();
-		Identifier maskId = Identifier.of(texture.getNamespace(), path.substring(0, path.length() - 4) + "_glowmask.png");
-		try (NativeImage base = read(texture); NativeImage mask = read(maskId)) {
+		String stem = path.substring(0, path.length() - 4);
+		Identifier maskId = Identifier.of(texture.getNamespace(), stem + "_glowmask.png");
+		Identifier badgeId = Identifier.of(texture.getNamespace(), stem + "_badgemask.png");
+		try (NativeImage base = read(texture); NativeImage mask = read(maskId); NativeImage badgeMask = read(badgeId)) {
 			if (base == null || mask == null || base.getWidth() != mask.getWidth() || base.getHeight() != mask.getHeight()) {
 				return Optional.empty();
 			}
@@ -76,7 +80,8 @@ public final class BadgeTint {
 			NativeImage tintedMask = copy(mask);
 			int width = base.getWidth();
 			int height = base.getHeight();
-			boolean[] badge = badgePixels(mask);
+			boolean[] badge = badgeMask != null && badgeMask.getWidth() == width && badgeMask.getHeight() == height
+					? markedPixels(badgeMask) : badgePixels(mask);
 			// Abzeichen-Wuerfel in der Grundtextur: Vorderseite (= Maske) plus Rand, und rechts daneben Rueck- und
 			// Seitenflaechen (Box-UV: der dunkle Rand und die Rueckseite liegen ausserhalb der Maske)
 			boolean[] near = new boolean[width * height];
@@ -130,6 +135,18 @@ public final class BadgeTint {
 			KingdomOmnitrix.LOGGER.warn("Abzeichen-Farbe fuer {} nicht erzeugt: {}", texture, e.getMessage());
 			return Optional.empty();
 		}
+	}
+
+	/** Abzeichen laut eigener Abzeichen-Maske: jedes nicht durchsichtige Pixel. */
+	static boolean[] markedPixels(NativeImage marks) {
+		int width = marks.getWidth();
+		boolean[] badge = new boolean[width * marks.getHeight()];
+		for (int y = 0; y < marks.getHeight(); y++) {
+			for (int x = 0; x < width; x++) {
+				badge[y * width + x] = ((marks.getColor(x, y) >>> 24) & 0xFF) != 0;
+			}
+		}
+		return badge;
 	}
 
 	/**
