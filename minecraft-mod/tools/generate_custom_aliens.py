@@ -42,7 +42,7 @@ LOG = logging.getLogger("custom_aliens")
 ASSETS = Path(__file__).resolve().parent.parent / "src" / "main" / "resources" / "assets" / "kingdomomnitrix"
 DATA = ASSETS.parent.parent / "data" / "kingdomomnitrix" / "kingdomomnitrix" / "alien"
 ATLAS = 128   # Atlasbreite in Modell-Einheiten
-PX = 4        # Pixel je Einheit (feine Linien wie bei den Minecraft-Ben-10-Modellen)
+PX = 2        # Pixel je Einheit (AE-Dichte)
 ART = PX // 2  # Pixel-Bilder (Gesichter, Symbol) sind fuer 2 Pixel je Einheit gezeichnet und werden hochskaliert
 
 Color = tuple[int, int, int]
@@ -175,38 +175,47 @@ class Painter:
                 self.put(u + px, v + py, c, mat.glow or (mat.pattern == "stars" and c == STAR))
 
     def texel(self, mat: Material, light: float, px: int, py: int, w: int, h: int, box: Box, side: str) -> Color:
-        """Flache Cartoon-Farben wie bei den Minecraft-Ben-10-Modellen: Grundfarbe, Licht je Flaechenrichtung, sanfter
-        Verlauf von oben, 1 Pixel dunklerer Rand. Kein Rauschen — Muster nur, wo das Alien eines hat."""
+        """AE-Malstil (wie die Alien-Evolution-Texturen): Licht je Flaechenrichtung, heller Kern und dunklere Raender
+        (Muskel-/Rundungs-Schattierung), kraeftiges Pixelrauschen mit einzelnen dunklen und hellen Tupfern,
+        1 Pixel dunklerer Rand. Leuchtende Flaechen bleiben glatt."""
         base, dark, hi = rgb(mat.base), rgb(mat.dark), rgb(mat.light)
-        t = py / max(1, h - 1) if side not in ("up", "down") else 0.3
-        k = light * (1.04 - 0.1 * t)
+        rng = self.rng
+        if mat.glow:
+            return shade(base, light * (0.96 + 0.06 * rng.random()))
+        cx, cy = (px + 0.5) / w, (py + 0.5) / h
+        t = cy if side not in ("up", "down") else 0.3
+        dist = max(abs(cx - 0.5), abs(cy - 0.5)) * 2.0
+        k = light * (1.06 - 0.12 * t) * (1.06 - 0.16 * dist * dist) * (0.9 + 0.17 * rng.random())
         if px == 0 or py == 0 or px == w - 1 or py == h - 1:
             if mat.rim and side not in ("up", "down"):
-                return rgb(mat.rim)
-            k *= 0.9
+                return shade(rgb(mat.rim), 0.9 + 0.1 * rng.random())
+            k *= 0.86
         c = shade(base, k)
         pat = mat.pattern
+        roll = rng.random()
         if pat == "stars":
-            roll = self.rng.random()
-            c = shade(base, 0.95 + 0.1 * self.rng.random())
-            if roll < 0.014:
+            c = shade(base, 0.9 + 0.2 * rng.random())
+            if roll < 0.045:
                 return STAR
-            if roll < 0.024:
+            if roll < 0.07:
                 return shade(hi, 1.0)
-        elif pat == "slime":
-            # Glanzstreifen nahe der linken Kante und ein heller Lichtpunkt oben — glatter Gel-Look
-            fx = (px + 0.5) / w
-            if side in ("north", "west", "east") and 0.14 < fx < 0.3 and 0.1 < py / max(1, h) < 0.8:
-                c = shade(mix(base, hi, 0.55), k)
-            elif side == "up":
-                c = shade(mix(base, hi, 0.25), k)
-        elif pat == "metal":
-            c = shade(mix(base, hi, 0.45 if (py % (2 * ART) == ART) else 0.0), k)
-        elif pat == "brain":
-            # Hirnwindungen: geschwungene dunkle Furchen
-            qx, qy = px / ART, py / ART
-            fold = math.sin(qx * 1.1 + math.sin(qy * 0.9) * 2.0) + math.sin(qy * 1.7 - qx * 0.3)
-            c = shade(dark if fold > 1.05 else (hi if fold < -1.3 else base), light * 1.02)
+            return c
+        if pat == "brain":
+            fold = math.sin(px * 1.1 + math.sin(py * 0.9) * 2.0) + math.sin(py * 1.7 - px * 0.3)
+            return shade(dark if fold > 1.05 else (hi if fold < -1.3 else base), light * (0.95 + 0.1 * rng.random()))
+        if pat == "slime":
+            if side in ("north", "west", "east") and 0.12 < cx < 0.3 and 0.1 < cy < 0.8:
+                c = shade(mix(base, hi, 0.5), k)
+            if roll < 0.03:
+                return shade(hi, 1.05)
+            return c
+        if pat == "metal":
+            c = shade(mix(base, hi, 0.4 if py % 3 == 1 else 0.0), k)
+        # Tupfer wie bei AE
+        if roll < 0.08:
+            c = shade(mix(base, dark, 0.45), k)
+        elif roll < 0.13:
+            c = shade(mix(base, hi, 0.4), k)
         return c
 
 
@@ -591,7 +600,7 @@ def rath() -> Design:
                 Box((sign * 3 - 2.75, 6, -2.75), (5.5, 6, 5.5), "orange", "thigh"),
                 Box((sign * 3 - 2.25, 2, -2.25), (4.5, 4, 4.5), "orange", "shin"),
                 Box((sign * 3 - 2.75, 0, -4.5), (5.5, 2, 6.5), "white", "foot")]
-                + [Box((sign * 3 - 2.5 + i * 1.75, 0, -5.5), (1.25, 1.5, 1), "toe", "toe") for i in range(3)]),
+                + [Box((sign * 3 - 2.5 + i * 1.75, 0, -5.5), (1.5, 1.5, 1), "toe", "toe") for i in range(3)]),
         ]
     return Design("rath", 1.25, "heavy", "#EE7A1E", m, bones, zone, arm_swing=0.8, leg_swing=0.8, seed=11)
 
@@ -846,7 +855,7 @@ def goop() -> Design:
 
     bones = [
         Bone("body", None, (0, 22, 0), [
-            Box((-2.5, 17, -1.5), (5, 5, 3), "slime", "chest", front="chest"),
+            Box((-2.5, 17, -1.5), (5, 5, 3), "slime", "chest", front="chest_small"),
             Box((-3, 20, -1), (6, 1.5, 2), "slime", "chest"),
             Box((-1.5, 13, -1), (3, 4, 2), "slime", "waist"),
             Box((-2, 11, -1.25), (4, 2, 2.5), "slime", "waist"),
