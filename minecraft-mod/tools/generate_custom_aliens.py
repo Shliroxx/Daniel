@@ -123,6 +123,7 @@ class Design:
     leg_swing: float = 1.0
     loops: dict[str, dict] = field(default_factory=dict)  # Knochen → Bedrock-Spuren der Daueranimation
     seed: int = 1
+    paint: str = "ae"               # "ae" = Alien-Evolution-Malstil, "flat" = flache Farben (Minecraft-DLC-Vorlage)
 
 
 # --- Maler -----------------------------------------------------------------------------------------
@@ -182,6 +183,11 @@ class Painter:
         rng = self.rng
         if mat.glow:
             return shade(base, light * (0.96 + 0.06 * rng.random()))
+        if self.design.paint == "flat":
+            k = light * (1.04 - 0.1 * ((py + 0.5) / h if side not in ("up", "down") else 0.3)) * (0.98 + 0.04 * rng.random())
+            if px == 0 or py == 0 or px == w - 1 or py == h - 1:
+                k *= 0.9
+            return shade(base, k)
         cx, cy = (px + 0.5) / w, (py + 0.5) / h
         t = cy if side not in ("up", "down") else 0.3
         dist = max(abs(cx - 0.5), abs(cy - 0.5)) * 2.0
@@ -283,22 +289,21 @@ def badge(p: Painter, rect, cx: float = 0.5, cy: float = 0.4) -> None:
 # --- Gesichter und Abzeichen (Pixel-Bilder, 2 Pixel je Einheit) --------------------------------------
 
 def f_rath_face(p, rect):
-    art(p, rect, [".kkk......kkk.",
-                  "..kkkk..kkkk..",
-                  "..kggk..kggk..",
-                  "..kkkk..kkkk.."],
-        {"k": ("#141414", False), "g": ("#5CE23A", True)}, 0.5, 0.42)
-
+    art(p, rect, [".kkkkk....kkkkk.",
+                  "kkgggk....kgggkk",
+                  ".kgggk....kgggk.",
+                  "..kkk......kkk.."],
+        {"k": ("#141414", False), "g": ("#5EE08A", True)}, 0.5, 0.36)
 
 
 def f_rath_mouth(p, rect):
-    art(p, rect, ["...kkkk...",
-                  "....kk....",
+    art(p, rect, [".oooooooo.",
+                  "..oookoo..",
                   "kkkkkkkkkk",
-                  "kwwkwwkwwk",
-                  "kddddddddk",
-                  "kkkkkkkkkk"],
-        {"k": ("#1E1E1E", False), "w": ("#F4F1E6", False), "d": ("#4A4A48", False)}, 0.5, 0.5)
+                  "kttttttttk",
+                  "kkkkkkkkkk",
+                  ".........."],
+        {"k": ("#141414", False), "o": ("#EC6C1E", False), "t": ("#CDB48C", False)}, 0.5, 0.5)
 
 
 
@@ -510,99 +515,91 @@ def side_of(sign: int) -> str:
 # --- Entwuerfe -------------------------------------------------------------------------------------
 
 def rath() -> Design:
-    """Rath (1:1 nach dem Minecraft-Ben-10-Modell): riesige Schultern und Unterarme, weisser Fellring am Handgelenk,
-    gewaltige weisse Haende mit klobigen Fingern. Kopf tief zwischen den Schultern: helle Fellbueschel oben, schwarze
-    V-Streifen auf Stirn und Wangen, gruene Augen unter schwarzen Brauen, grosse weisse Schnauze mit schwarzer Nase
-    und geschlossenem dunklem Maul mit Zahnreihe. Helles Brustband mit dem Omnitrix am unteren Rand, orangefarbenes
-    Bauchband, weisser Streifen bis in den Schritt, schwarze Keilstreifen an Flanken, Armen und Beinen; dicke Beine,
-    weisse Fuesse mit Zehen. Kein Schwanz, keine Krallen (wie die Vorlage)."""
-    m = {"orange": Material("#EE7A1E", "#9A420A", "#FFA24E", "plain"),
-         "white": Material("#E4E2DC", "#9C988E", "#FFFFFF", "plain"),
-         "pale": Material("#CFCBC2", "#8C887E", "#EEEAE2", "plain"),
-         "stripe": Material("#1B2420", "#0A0E0C", "#36403A", "plain"),
-         "toe": Material("#BDB9B0", "#7E7A72", "#DAD6CE", "plain")}
+    """Rath 1:1 nach dem Minecraft-Ben-10-Modell (DLC-Bild): flache Farben. Kopf als Block direkt auf dem Brustband:
+    oben orange mit schwarzen Zacken-Streifen, graue stachelige Fellbueschel an den oberen Ecken, gruene
+    Rechteck-Augen mit schwarzem Rand, vorstehende Schnauze (weiss, oranges V mit schwarzer Nase), schwarz gerahmtes
+    Maul mit zusammengebissenen beigen Zaehnen, weisses Kinn, schwarze Zacken an den Wangen. Hellgraues Brustband
+    mit Omnitrix, schmaler oranger Streifen, weisser Bauchfleck bis in den Schritt. Riesige Schultern und
+    Unterarme mit schwarzen Keilstreifen, gebrochen-weisse Haende mit drei dicken Fingern und Daumen. Kraeftige
+    Beine, weisse Fuesse mit drei Zehen."""
+    m = {"orange": Material("#EC6C1E", "#8E3810", "#FF9A4E", "plain"),
+         "band": Material("#C9CCC4", "#8A8D86", "#E6E8E2", "plain"),
+         "white": Material("#E2E3DA", "#9C9D94", "#FFFFFF", "plain"),
+         "hand": Material("#D6D8CB", "#94968A", "#F0F1EA", "plain"),
+         "foot": Material("#F2EEDE", "#A8A496", "#FFFFFF", "plain"),
+         "grey": Material("#A9ABA6", "#6A6C68", "#D2D4CE", "plain"),
+         "stripe": Material("#1E201C", "#0A0B09", "#3A3C36", "plain")}
 
     def zone(t: Texel) -> str | None:
         part, y, ax = t.part, t.y, abs(t.x)
-        if part == "chest":
-            if t.side == "north" and y < 23.2 and ax < 5.1:
-                return "white"
-            if t.side != "north" and t.side != "down" and tiger(t, 3.6, 0.75, 0.4):
-                return "stripe"
-        if part == "abdomen":
-            if t.side == "north" and ax < 2.6:
-                return "white"
-            if t.side in ("east", "west") and tiger(t, 3.0, 0.8, 0.6):
-                return "stripe"
-        if part == "hips" and t.side in ("north", "down") and ax < 2.0:
-            return "white"
         if part == "head":
-            if t.side == "north" and t.fy > 0.58:
-                return "white"
-            # V-Streifen auf der Stirn: zwei Schraegen je Seite, nach oben aussen
-            if t.side == "north" and t.fy < 0.42 and (abs(ax - (0.5 + (0.42 - t.fy) * 4.0)) < 0.32
-                                                        or abs(ax - (2.1 + (0.42 - t.fy) * 3.0)) < 0.3):
+            if t.side == "north":
+                # Zacken-Streifen auf der Stirn (M-Form) und an den Wangenkanten
+                if t.fy < 0.32 and (abs(ax - (0.6 + (0.32 - t.fy) * 5)) < 0.35 or abs(ax - (2.4 + (0.32 - t.fy) * 3)) < 0.35):
+                    return "stripe"
+                if t.fy > 0.5 and ax > 3.3 and int(t.fy * 12) % 3 == 0:
+                    return "stripe"
+                if t.fy > 0.52:
+                    return "white"
+            if t.side in ("east", "west"):
+                if tiger(t, 2.0, 0.55, 0.3):
+                    return "stripe"
+                if t.fy > 0.7 and t.z < -3:
+                    return "white"
+            if t.side == "up" and (abs(ax - 1.0) < 0.35 or abs(ax - 2.6) < 0.35) and t.fy > 0.35:
                 return "stripe"
-            if t.side in ("east", "west") and t.fy < 0.62 and tiger(t, 2.4, 0.6, 0.2):
-                return "stripe"
-            if t.side == "up" and (abs(ax - 0.9) < 0.3 or abs(ax - 2.4) < 0.3) and t.fy > 0.45:
-                return "stripe"
-            if t.side in ("east", "west") and t.fy >= 0.62:
-                return "white"
-        # Arme: Keilstreifen nur aussen und hinten (aussen = von der Mitte abgewandte Seite)
+        if part == "chest" and t.side == "south":
+            return "orange"
+        if part == "belly" and t.side == "north" and ax < 2.3:
+            return "white"
+        if part == "hips" and t.side in ("north", "down") and ax < 1.8:
+            return "white"
+        if part == "belly" and t.side in ("east", "west") and tiger(t, 2.6, 0.8, 0.5):
+            return "stripe"
         outer = ((t.side == "east" and t.x < 0) or (t.side == "west" and t.x > 0) or t.side == "south"
-                 or (t.side == "north" and ax > 11.0))
-        if part in ("shoulder", "upper_arm") and outer and tiger(t, 4.0, 0.9, 1.0):
+                 or (t.side == "north" and ax > 10.5) or t.side == "up")
+        if part in ("shoulder", "upper_arm", "forearm") and outer and tiger(t, 4.6, 0.9, 0.8):
             return "stripe"
-        if part == "forearm" and outer and tiger(t, 4.0, 0.9, 0.3):
-            return "stripe"
-        if part == "thigh" and tiger(t, 3.6, 0.7, 0.3):
-            return "stripe"
-        if part == "shin" and t.side in ("east", "west") and tiger(t, 3.6, 0.6, 1.2):
+        if part in ("thigh", "shin") and t.side in ("east", "west", "south") and tiger(t, 3.2, 0.7, 0.4):
             return "stripe"
         return None
 
     bones = [
         Bone("body", None, (0, 24, 0), [
-            Box((-5.5, 18, -3.5), (11, 6, 7), "orange", "chest", front="chest_band"),
-            Box((-4.5, 23.5, -1.5), (9, 1.5, 4.5), "orange", "chest"),
-            Box((-4.5, 14, -3), (9, 4, 6), "orange", "abdomen"),
-            Box((-4, 11.5, -2.75), (8, 2.5, 5.5), "orange", "hips")]),
-        Bone("head", None, (0, 25, -2), [
-            Box((-3.5, 24.5, -8), (7, 6, 6), "orange", "head", front="rath_face"),
-            Box((-2.5, 24.5, -9), (5, 3, 1), "white", "muzzle", front="rath_mouth"),
-            Box((-3, 23.5, -8.5), (6, 1.5, 4.5), "white", "jaw"),
-            Box((-1.5, 22.5, -8), (3, 1, 2), "white", "jaw"),
-            Box((-4.5, 24, -7.5), (1, 3, 3.5), "white", "cheek"),
-            Box((3.5, 24, -7.5), (1, 3, 3.5), "white", "cheek"),
-            # helle Fellbueschel/Ohren oben
-            Box((-3.5, 30.5, -6), (1.5, 1, 1.5), "pale", "tuft"),
-            Box((2, 30.5, -6), (1.5, 1, 1.5), "pale", "tuft"),
-            Box((-3, 31.5, -5.5), (0.5, 0.5, 0.5), "pale", "tuft"),
-            Box((2.5, 31.5, -5.5), (0.5, 0.5, 0.5), "pale", "tuft"),
-            Box((-0.5, 30.5, -7), (1, 0.5, 1), "pale", "tuft")]),
+            Box((-5.5, 19, -3), (11, 5, 6), "band", "chest", front="chest_band"),
+            Box((-5, 17.5, -2.75), (10, 1.5, 5.5), "orange", "belly"),
+            Box((-4.5, 13, -2.5), (9, 4.5, 5), "orange", "belly"),
+            Box((-4, 11, -2.25), (8, 2, 4.5), "orange", "hips")]),
+        Bone("head", None, (0, 24, -1), [
+            Box((-4.5, 24, -6.5), (9, 6.5, 7.5), "orange", "head", front="rath_face"),
+            Box((-3, 24, -8), (6, 3.5, 1.5), "white", "muzzle", front="rath_mouth"),
+            Box((-3, 23, -7.5), (6, 1, 4.5), "white", "chin")]
+            # graue Fellstacheln an den oberen Ecken, schraeg nach aussen oben
+            + [Box((sx, 29.5, -6), (2, 1, 1.5), "grey", "tuft") for sx in (-6, 4)]
+            + [Box((sx, 30, -6), (1.5, 1, 1), "grey", "tuft") for sx in (-7.5, 6)]
+            + [Box((sx, 31, -6), (1, 1, 1), "grey", "tuft") for sx in (-8, 7)]
+            + [Box((sx, 29, -7), (2, 0.5, 0.5), "grey", "tuft") for sx in (-4.5, 2.5)]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
-        sx = sign * 9.5
-        inner = sx - sign * 3.5 - (1 if sign > 0 else 0)
+        sx = sign * 9
+        inner = sx - sign * 3.5 - (1.5 if sign > 0 else 0)
         bones += [
             Bone(f"{side}_arm", None, (sx, 22, 0), [
-                Box((sx - 3.5, 18.5, -3.5), (7, 6, 7), "orange", "shoulder"),
-                Box((sx - 3, 13.5, -3), (6, 5, 6), "orange", "upper_arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 13.5, 0), [
-                Box((sx - 3.5, 8, -3.5), (7, 6, 7), "orange", "forearm"),
-                Box((sx - 3.75, 6.5, -3.75), (7.5, 1.5, 7.5), "white", "wrist"),
-                Box((sx - 3.5, 2.5, -3.5), (7, 4, 7), "white", "hand")]
-                + [Box((sx - 3.5 + i * 1.75, 0, -3.5), (1.5, 2.5, 2.5), "white", "finger") for i in range(4)]
-                + [Box((inner, 2, -3), (1, 3, 2.5), "white", "finger")]),
-            Bone(f"{side}_leg", None, (sign * 3, 12, 0), [
-                Box((sign * 3 - 2.75, 6, -2.75), (5.5, 6, 5.5), "orange", "thigh"),
-                Box((sign * 3 - 2.25, 2, -2.25), (4.5, 4, 4.5), "orange", "shin"),
-                Box((sign * 3 - 2.75, 0, -4.5), (5.5, 2, 6.5), "white", "foot")]
-                + [Box((sign * 3 - 2.5 + i * 1.75, 0, -5.5), (1.5, 1.5, 1), "toe", "toe") for i in range(3)]),
+                Box((sx - 3.5, 18, -3.5), (7, 6.5, 7), "orange", "shoulder"),
+                Box((sx - 3, 13, -3), (6, 5, 6), "orange", "upper_arm")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 13, 0), [
+                Box((sx - 3.5, 7, -3.5), (7, 6, 7), "orange", "forearm"),
+                Box((sx - 3.5, 2.5, -3.5), (7, 4.5, 7), "hand", "hand")]
+                + [Box((sx - 3.5 + i * 2.5, 0, -3.5), (2, 2.5, 3), "hand", "finger") for i in range(3)]
+                + [Box((inner, 2, -3), (1.5, 3, 2.5), "hand", "finger")]),
+            Bone(f"{side}_leg", None, (sign * 2.5, 11, 0), [
+                Box((sign * 2.5 - 2.25, 5.5, -2.25), (4.5, 5.5, 4.5), "orange", "thigh"),
+                Box((sign * 2.5 - 2, 2, -2), (4, 3.5, 4), "orange", "shin"),
+                Box((sign * 2.5 - 2.5, 0, -4), (5, 2, 6), "foot", "foot")]
+                + [Box((sign * 2.5 - 2.25 + i * 1.75, 0, -5), (1, 1.5, 1), "foot", "toe") for i in range(3)]),
         ]
-    return Design("rath", 1.25, "heavy", "#EE7A1E", m, bones, zone, arm_swing=0.8, leg_swing=0.8, seed=11)
+    return Design("rath", 1.25, "heavy", "#EC6C1E", m, bones, zone, arm_swing=0.8, leg_swing=0.8, seed=11, paint="flat")
 
 
 def spidermonkey() -> Design:
