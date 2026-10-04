@@ -26,12 +26,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
-import software.bernie.geckolib.animatable.GeoEntity;
-import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
-import software.bernie.geckolib.animation.RawAnimation;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
  * Die Aphelion: Raumschiff mit KI aus Ratchet & Clank 3. Ein Pilot, ein Mitflieger.
@@ -39,12 +33,10 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  * Wie beim Boot rechnet der Client des Piloten die Bewegung; der Server prueft sie (Vanilla-Fahrzeugpakete).
  * Hoch genug geflogen, verlaesst das Schiff die Atmosphaere ({@link SpaceTravel}).
  */
-public class ShipEntity extends Entity implements GeoEntity {
+public class ShipEntity extends Entity {
 	private static final TrackedData<Float> DAMAGE = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.FLOAT);
 	/** Verbleibende Warp-Ticks (0 = kein Warp); auch der Pilot-Client braucht es, er rechnet die Bewegung. */
 	private static final TrackedData<Integer> WARP = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
-	private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
-	private static final RawAnimation FLIGHT = RawAnimation.begin().thenLoop("flight");
 
 	public static final double MAX_SPEED_ATMOSPHERE = 1.6;
 	public static final double MAX_SPEED_SPACE = 2.4;
@@ -52,7 +44,6 @@ public class ShipEntity extends Entity implements GeoEntity {
 	private static final double SPACE_ACCELERATION = 0.13;
 	private static final float BREAK_DAMAGE = 60.0f;
 
-	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	// Interpolation fuer Clients, die das Schiff nur sehen
 	private int lerpTicks;
@@ -152,8 +143,9 @@ public class ShipEntity extends Entity implements GeoEntity {
 				dataTracker.set(DAMAGE, Math.max(0.0f, damage - 0.5f));
 			}
 			if (getControllingPassenger() != null && age % 2 == 0) {
-				Vec3d back = new Vec3d(0.0, 0.45, 2.1).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE);
-				world.spawnParticles(ParticleTypes.FLAME, getX() + back.x, getY() + back.y, getZ() + back.z, 2, 0.15, 0.1, 0.15, 0.01);
+				// Triebwerke am Heck (Nase = Blickrichtung)
+				Vec3d back = new Vec3d(0.0, 0.85, -3.1).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE);
+				world.spawnParticles(ParticleTypes.FLAME, getX() + back.x, getY() + back.y, getZ() + back.z, 2, 0.2, 0.15, 0.2, 0.01);
 			}
 			if (isWarping()) {
 				Galaxy.tickWarp(this, world);
@@ -376,16 +368,8 @@ public class ShipEntity extends Entity implements GeoEntity {
 		}
 	}
 
-	// --- GeckoLib -------------------------------------------------------------------------------
-
-	@Override
-	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-		controllers.add(new AnimationController<>(this, "main", 5,
-				state -> state.setAndContinue(hasPassengers() ? FLIGHT : IDLE)));
-	}
-
-	@Override
-	public AnimatableInstanceCache getAnimatableInstanceCache() {
-		return cache;
+	/** Wackeln nach Treffern (fuer den Renderer). */
+	public float hurtWobble() {
+		return dataTracker.get(DAMAGE);
 	}
 }

@@ -589,19 +589,6 @@ def material_textures() -> dict[str, Image.Image]:
         "...kyyyyyyyyk...",
         "....kkkkkkkk....",
     ], {"k": hexc("6B4A0E"), "Y": hexc("F5C542"), "y": hexc("C9921A"), "W": hexc("FFF6D0")})
-    t["aphelion"] = from_ascii([
-        "",
-        "",
-        "......PP........",
-        ".....PGGP.......",
-        "....PPPPPP......",
-        "W..PPPPPPPP..W..",
-        "WWWWPPPPPPPPWWWW",
-        ".WWWWPPPPPPWWWW.",
-        "....PPPPPPPP....",
-        "....kOk..kOk....",
-        "....kok..kok....",
-    ], {"P": hexc("6A4FB3"), "G": hexc("7FD4FF"), "W": hexc("E4E4EE"), "k": hexc("3A3550"), "O": hexc("FF9A2E"), "o": hexc("FFD27A")})
     return t
 
 

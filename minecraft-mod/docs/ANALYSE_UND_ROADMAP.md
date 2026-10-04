@@ -457,7 +457,7 @@ Welten (Vorbild: Galaxie-Mods); eigene, immer andere Generierung mit neuen Erzen
 | Baustein | Status | Anmerkung |
 |---|---|---|
 | Aphelion: fliegbar (Pilot-Client rechnet, Server prüft), 2 Plätze, Cockpit-HUD, Verfolgerkamera, Bord-KI-Meldungen | IMPLEMENTED | Flug, Aufstieg, Rückkehr getestet |
-| Aphelion-Modell (GeckoLib) | PLACEHOLDER | `tools/generate_ship_models.py` |
+| Aphelion-Modell (glattes 3D-Netz, gebackene Textur) | FERTIG | `tools/generate_ship_mesh.py` |
 | Weltall: Sternenhimmel, Nebel, Planet, Asteroiden mit Raritanium, 25 % Schwerkraft, Wiedereintritt | IMPLEMENTED | getestet |
 | Weltraumrisse als JSON (Wirbel, Name, Entfernung, HUD-Navigation, Durchflug, Rückweg) | IMPLEMENTED | Erde ↔ All ↔ Traverse Town getestet |
 | Traverse Town: Dimension (ewige Nacht), 4 Biome, Laternen und Kristallnadeln, Herzlose als Spawns | IMPLEMENTED | Gelände getestet |
