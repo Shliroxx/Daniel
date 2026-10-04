@@ -1,0 +1,17 @@
+{
+  "dimension": "kingdomomnitrix:rilgar",
+  "system": "solana",
+  "map": [
+    0.62,
+    0.84
+  ],
+  "color": 4095960,
+  "size": 1.1,
+  "order": 13,
+  "landing": [
+    0,
+    0
+  ],
+  "requires": "kingdomomnitrix:kerwan",
+  "hero_level": 6
+}

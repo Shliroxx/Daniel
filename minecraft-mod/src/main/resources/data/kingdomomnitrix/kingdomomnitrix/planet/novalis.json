@@ -1,0 +1,17 @@
+{
+  "dimension": "kingdomomnitrix:novalis",
+  "system": "solana",
+  "map": [
+    0.36,
+    0.5
+  ],
+  "color": 7327578,
+  "size": 1.0,
+  "order": 12,
+  "landing": [
+    0,
+    0
+  ],
+  "requires": "kingdomomnitrix:veldin",
+  "hero_level": 3
+}

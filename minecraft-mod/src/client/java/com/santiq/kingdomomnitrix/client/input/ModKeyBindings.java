@@ -47,6 +47,8 @@ public final class ModKeyBindings {
 	public static final KeyBinding GALVAN_LAB = register("key.kingdomomnitrix.galvan_lab", GLFW.GLFW_KEY_L);
 	/** Evolve: Ultimate-Form des aktiven Aliens */
 	public static final KeyBinding EVOLVE = register("key.kingdomomnitrix.evolve", GLFW.GLFW_KEY_U);
+	/** Galaxiekarte der Aphelion (Reisen, Schiffsausbau) */
+	public static final KeyBinding GALAXY_MAP = register("key.kingdomomnitrix.galaxy_map", GLFW.GLFW_KEY_O);
 	public static final KeyBinding COMMAND_UP = register("key.kingdomomnitrix.command_up", GLFW.GLFW_KEY_UP);
 	public static final KeyBinding COMMAND_DOWN = register("key.kingdomomnitrix.command_down", GLFW.GLFW_KEY_DOWN);
 	public static final KeyBinding COMMAND_SELECT = register("key.kingdomomnitrix.command_select", GLFW.GLFW_KEY_RIGHT);
@@ -103,6 +105,11 @@ public final class ModKeyBindings {
 		while (GALVAN_LAB.wasPressed()) {
 			if (client.currentScreen == null) {
 				com.santiq.kingdomomnitrix.client.screen.GalvanLabScreen.open(client);
+			}
+		}
+		while (GALAXY_MAP.wasPressed()) {
+			if (client.currentScreen == null && client.player != null) {
+				com.santiq.kingdomomnitrix.client.space.GalaxyMapScreen.open(client);
 			}
 		}
 		while (EVOLVE.wasPressed()) {

@@ -200,6 +200,15 @@ Gadgets liegen im **Gadget-Gürtel** (H). Combuster, OmniWrench, Swingshot, Gran
   Neue Arten nur in neu erzeugten Gegenden.
 - Ohne Schiff ins Leere gefallen → Wiedereintritt über der Oberwelt (Sanfter Fall).
 - **Weltraumrisse:** hineinfliegen = Reise; „Heimatwelt“ führt zurück.
+- **Galaxiekarte (O):** Sternsysteme mit ihren Planeten (Heimat, Unbekannte Welten, Solana, Polaris, Tiefraum),
+  „Du bist hier“, Kurslinie, Infotafel. Als Pilot **Kurs setzen** → Warp (6 s, mit Warp-Antrieb kürzer), das Schiff
+  erscheint über dem **Landeplatz** der Zielwelt (runde Plattform mit gelbem Ring und Lichtern, beim ersten Anflug
+  gebaut). Freischaltung je Planet: Heldenstufe, vorher besuchter Planet, Warp-Stufe für fernere Systeme.
+  Planeten sind Daten (`data/<ns>/kingdomomnitrix/planet/*.json`); Veldin, Kerwan, Novalis, Rilgar, Torren IV und die
+  Nefarious-Station stehen schon auf der Karte („Noch keine Koordinaten“, bis ihre Welten gebaut sind).
+- **Schiffsausbau** (Galaxiekarte, je 3 Stufen für 1500/4000/9000 Bolts + 2/5/10 Raritanium): **Triebwerk** (+15 %
+  Tempo je Stufe), **Warp-Antrieb** (Reichweite, kürzerer Warp), **Bordkanone** (Angriffstaste im Cockpit: zwei
+  Laser, Stufe 3 explodiert ohne Blockschaden). Ausbau und besuchte Planeten gelten für jedes Schiff, das du fliegst.
 
 ### Traverse Town
 Eigene Welt in ewiger Nacht: Stadtrand, Schattenwald, Kristallfelder, dunkles Meer; Erze Mythril, Raritanium, Orichalcum.

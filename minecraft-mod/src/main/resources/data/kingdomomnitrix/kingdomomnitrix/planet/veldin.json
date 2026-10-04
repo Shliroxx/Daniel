@@ -1,0 +1,15 @@
+{
+  "dimension": "kingdomomnitrix:veldin",
+  "system": "solana",
+  "map": [
+    0.4,
+    0.78
+  ],
+  "color": 14721614,
+  "size": 1.1,
+  "order": 10,
+  "landing": [
+    0,
+    0
+  ]
+}

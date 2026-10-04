@@ -78,7 +78,7 @@ public final class ShipHud implements HudElement {
 		if (client.player == null || !(client.player.getVehicle() instanceof ShipEntity ship) || client.world == null) {
 			return previewHeight();
 		}
-		return SpaceTravel.isSpace(client.world) ? 26 + nearestRoutes(client, ship).size() * 10 + 2 : 36;
+		return SpaceTravel.isSpace(client.world) ? 36 + nearestRoutes(client, ship).size() * 10 + 2 : 46;
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public final class ShipHud implements HudElement {
 
 	@Override
 	public int previewHeight() {
-		return 36;
+		return 46;
 	}
 
 	@Override
@@ -104,6 +104,12 @@ public final class ShipHud implements HudElement {
 		String stats = String.format("%.0f m/s  ·  Y %d", speed, (int) ship.getY());
 		context.drawTextWithShadow(font, stats, WIDTH - 5 - font.getWidth(stats), 4, UiTheme.TEXT);
 		int line = 16;
+		Text hint = ship.isWarping()
+				? Text.translatable("hud.kingdomomnitrix.ship.warp", (ship.warpTicksLeft() + 19) / 20)
+				: Text.translatable("hud.kingdomomnitrix.ship.map_hint",
+						com.santiq.kingdomomnitrix.client.input.ModKeyBindings.GALAXY_MAP.getBoundKeyLocalizedText());
+		context.drawTextWithShadow(font, hint, 5, line, ship.isWarping() ? 0xFFFFD84A : UiTheme.TEXT_SOFT);
+		line += 11;
 		if (!space) {
 			int toSpace = (int) (client.world.getTopY() - SpaceTravel.ATMOSPHERE_MARGIN - ship.getY());
 			context.drawTextWithShadow(font, Text.translatable("hud.kingdomomnitrix.ship.to_space", Math.max(0, toSpace)), 5, line, 0xFF9FD8FF);

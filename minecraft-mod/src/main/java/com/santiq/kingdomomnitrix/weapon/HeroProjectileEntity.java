@@ -154,6 +154,16 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		}
 	}
 
+	/** Nicht das eigene Fahrzeug treffen (Bordkanone der Aphelion) und keine Mitfahrer darin. */
+	@Override
+	protected boolean canHit(net.minecraft.entity.Entity entity) {
+		net.minecraft.entity.Entity owner = getOwner();
+		if (owner != null && owner.hasVehicle() && (entity == owner.getRootVehicle() || entity.getRootVehicle() == owner.getRootVehicle())) {
+			return false;
+		}
+		return super.canHit(entity);
+	}
+
 	@Override
 	protected void onEntityHit(EntityHitResult entityHitResult) {
 		super.onEntityHit(entityHitResult);

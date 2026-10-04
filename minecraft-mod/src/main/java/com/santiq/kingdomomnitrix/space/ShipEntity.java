@@ -41,6 +41,8 @@ import software.bernie.geckolib.util.GeckoLibUtil;
  */
 public class ShipEntity extends Entity implements GeoEntity {
 	private static final TrackedData<Float> DAMAGE = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.FLOAT);
+	/** Verbleibende Warp-Ticks (0 = kein Warp); auch der Pilot-Client braucht es, er rechnet die Bewegung. */
+	private static final TrackedData<Integer> WARP = DataTracker.registerData(ShipEntity.class, TrackedDataHandlerRegistry.INTEGER);
 	private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
 	private static final RawAnimation FLIGHT = RawAnimation.begin().thenLoop("flight");
 
@@ -68,6 +70,10 @@ public class ShipEntity extends Entity implements GeoEntity {
 	@Nullable
 	private Identifier homeWorld;
 
+	/** Ziel des laufenden Warps (Galaxiekarte), nur auf dem Server. */
+	@Nullable
+	private Identifier warpTarget;
+
 	public ShipEntity(EntityType<?> type, World world) {
 		super(type, world);
 		this.intersectionChecked = true;
@@ -76,6 +82,7 @@ public class ShipEntity extends Entity implements GeoEntity {
 	@Override
 	protected void initDataTracker(DataTracker.Builder builder) {
 		builder.add(DAMAGE, 0.0f);
+		builder.add(WARP, 0);
 	}
 
 	// --- Mitfliegen -----------------------------------------------------------------------------
@@ -148,7 +155,11 @@ public class ShipEntity extends Entity implements GeoEntity {
 				Vec3d back = new Vec3d(0.0, 0.45, 2.1).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE);
 				world.spawnParticles(ParticleTypes.FLAME, getX() + back.x, getY() + back.y, getZ() + back.z, 2, 0.15, 0.1, 0.15, 0.01);
 			}
-			SpaceTravel.tickShip(this, world);
+			if (isWarping()) {
+				Galaxy.tickWarp(this, world);
+			} else {
+				SpaceTravel.tickShip(this, world);
+			}
 		}
 	}
 
@@ -156,6 +167,13 @@ public class ShipEntity extends Entity implements GeoEntity {
 		Vec3d velocity = getVelocity();
 		boolean space = SpaceTravel.isSpace(getWorld());
 		LivingEntity pilot = getControllingPassenger();
+		if (isWarping()) {
+			// Warp: steil hinauf und immer schneller — der Pilot steuert nicht
+			Vec3d look = Vec3d.fromPolar(-35.0f, getYaw());
+			setPitch(MathHelper.lerp(0.1f, getPitch(), -35.0f));
+			setVelocity(velocity.multiply(0.9).add(look.multiply(0.25)));
+			return;
+		}
 		if (pilot instanceof PlayerEntity player) {
 			setYaw(MathHelper.lerpAngleDegrees(0.3f, getYaw(), player.getYaw()));
 			setPitch(MathHelper.lerp(0.3f, getPitch(), MathHelper.clamp(player.getPitch(), -70.0f, 70.0f)));
@@ -168,7 +186,7 @@ public class ShipEntity extends Entity implements GeoEntity {
 			if (((LivingEntityAccessor) player).kingdomomnitrix$isJumping()) {
 				velocity = velocity.add(0.0, acceleration * 1.2, 0.0);
 			}
-			double max = space ? MAX_SPEED_SPACE : MAX_SPEED_ATMOSPHERE;
+			double max = (space ? MAX_SPEED_SPACE : MAX_SPEED_ATMOSPHERE) * ShipLog.get(player).speedFactor();
 			if (velocity.lengthSquared() > max * max) {
 				velocity = velocity.normalize().multiply(max);
 			}
@@ -291,6 +309,35 @@ public class ShipEntity extends Entity implements GeoEntity {
 	@Override
 	public ItemStack getPickBlockStack() {
 		return new ItemStack(ModItems.APHELION);
+	}
+
+	// --- Warp (Galaxiekarte) --------------------------------------------------------------------
+
+	public boolean isWarping() {
+		return dataTracker.get(WARP) > 0;
+	}
+
+	public int warpTicksLeft() {
+		return dataTracker.get(WARP);
+	}
+
+	@Nullable
+	Identifier warpTarget() {
+		return warpTarget;
+	}
+
+	void startWarp(Identifier target, int ticks) {
+		warpTarget = target;
+		dataTracker.set(WARP, Math.max(1, ticks));
+	}
+
+	void tickWarp() {
+		dataTracker.set(WARP, Math.max(0, dataTracker.get(WARP) - 1));
+	}
+
+	void stopWarp() {
+		warpTarget = null;
+		dataTracker.set(WARP, 0);
 	}
 
 	// --- Speichern ------------------------------------------------------------------------------

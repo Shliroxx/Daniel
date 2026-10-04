@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:kerwan",
+  "system": "solana",
+  "map": [
+    0.56,
+    0.62
+  ],
+  "color": 7321312,
+  "size": 1.2,
+  "order": 11,
+  "landing": [
+    0,
+    0
+  ],
+  "requires": "kingdomomnitrix:veldin"
+}

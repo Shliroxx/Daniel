@@ -29,7 +29,17 @@ public final class ShipClient {
 			previousPerspective = null;
 		}
 		wasPiloting = inShip;
+		// Bordkanone: Angriffstaste halten feuert (der Server prueft Stufe und Nachladezeit)
+		if (inShip && client.currentScreen == null && client.options.attackKey.isPressed()
+				&& client.player.getVehicle() instanceof ShipEntity ship && ship.getControllingPassenger() == client.player
+				&& com.santiq.kingdomomnitrix.space.ShipLog.get(client.player).cannon() > 0 && ++fireTimer >= 3) {
+			fireTimer = 0;
+			net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(new com.santiq.kingdomomnitrix.networking.GalaxyActionPayload(
+					com.santiq.kingdomomnitrix.space.Galaxy.Action.FIRE.ordinal(), ""));
+		}
 	}
+
+	private static int fireTimer;
 
 	public static void reset() {
 		wasPiloting = false;

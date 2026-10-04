@@ -1,0 +1,17 @@
+{
+  "dimension": "kingdomomnitrix:torren_iv",
+  "system": "polaris",
+  "map": [
+    0.82,
+    0.42
+  ],
+  "color": 14186558,
+  "size": 1.2,
+  "order": 20,
+  "landing": [
+    0,
+    0
+  ],
+  "hero_level": 12,
+  "warp": 2
+}

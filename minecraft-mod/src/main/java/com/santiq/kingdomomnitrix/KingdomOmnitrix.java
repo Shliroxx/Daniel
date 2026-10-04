@@ -80,6 +80,8 @@ public class KingdomOmnitrix implements ModInitializer {
 		QuestRegistry.register();
 		NpcRegistry.register();
 		SpaceRouteRegistry.register();
+		com.santiq.kingdomomnitrix.space.PlanetRegistry.register();
+		com.santiq.kingdomomnitrix.space.ShipLog.register();
 		ArenaRegistry.register();
 		HeroAbilityRegistry.register();
 		MagicManager.register();
