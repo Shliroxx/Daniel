@@ -4,6 +4,8 @@ made by SANTIQ
 
 ## Alien Evolution (Alien-Modelle, -Texturen und -Farben)
 
+**Eigene Modelle (nicht aus Alien Evolution):** Rath, Spidermonkey, Way Big, Alien X, Brainstorm und Goop haben in AE kein Modell; Geometrie, Textur und Animation erzeugt `tools/generate_custom_aliens.py` vollständig selbst (keine AE-Dateien).
+
 Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak, Cannonbolt, Jetray und Atomix (Geometrie,
 Texturen, Uniform-Varianten, Farbpaletten und das Omnitrix-Abzeichen), Big Chill, Humungousaur, Swampfire, Chromastone und Echo Echo (Geometrie, Textur,
 Ruhe-/Fluganimationen aus der Alien-Force-Erweiterung `afomni` im selben Jar) sowie das Omnitrix am Arm (Prototyp-Modell und

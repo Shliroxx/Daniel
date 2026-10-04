@@ -1,0 +1,116 @@
+{
+  "color": "#C99A5E",
+  "sort_order": 22,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 120,
+  "energy_regen": 8,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 8.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_lightning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:lightning_arc",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 20.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:static_grid",
+      "energy": 25,
+      "cooldown": 120,
+      "params": {
+        "range": 14.0,
+        "seconds": 5.0,
+        "radius": 4.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:electro_levitation",
+      "energy": 20,
+      "cooldown": 100,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:force_field",
+      "energy": 30,
+      "cooldown": 240,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:brain_analysis",
+      "energy": 20,
+      "cooldown": 300,
+      "params": {
+        "range": 20.0,
+        "seconds": 15.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:mind_storm",
+      "energy": 90,
+      "cooldown": 900,
+      "params": {},
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:tropical_fish",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:brainstorm",
+  "failsafe_tags": [
+    "#minecraft:is_lightning"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:water_breathing"
+      }
+    ],
+    "transform_style": "electric"
+  }
+}

@@ -122,6 +122,13 @@ ABILITY_POSE = {
     # Atomix: Strahl, Puls, Sprung, Feld auf ein Ziel, Zerfall ausloesen, Hero Time
     "atomic_bolt": "beam", "nuclear_pulse": "spread", "fusion_leap": "leap", "containment_field": "focus", "half_life": "clap",
     "hero_time": "ultimate",
+    # eigene Aliens: Rath, Spidermonkey, Way Big, Alien X, Brainstorm, Goop
+    "wrist_claw": "swipe", "challenge": "roar", "rath_charge": "dodge", "suplex": "throw", "appoplexian_roar": "roar", "rath_finale": "ultimate",
+    "web_shot": "shoot", "web_net": "spread", "web_swing": "leap", "monkey_frenzy": "swipe", "web_trap": "clap", "web_cocoon": "ultimate",
+    "cosmic_ray": "beam", "titan_stomp": "slam", "giant_leap": "leap", "shockwave_clap": "clap", "tokustar_guard": "guard", "starfall": "ultimate",
+    "reality_bolt": "beam", "gravity_warp": "spread", "blink": "dodge", "time_stop": "focus", "creation": "focus", "big_bang": "ultimate",
+    "lightning_arc": "beam", "static_grid": "throw", "electro_levitation": "leap", "force_field": "guard", "brain_analysis": "focus", "mind_storm": "ultimate",
+    "acid_spit": "shoot", "slime_whip": "swipe", "puddle_form": "dodge", "engulf": "clap", "acid_pool": "throw", "acid_flood": "ultimate",
 }
 
 

@@ -58,7 +58,19 @@ public enum TransformStyle implements StringIdentifiable {
 	/** Echo: Schallringe laufen nach aussen, Noten steigen auf, kurzes Echo */
 	ECHO,
 	/** Nuklear: gruener Kernblitz, Strahlungsring, tiefes Brummen */
-	NUCLEAR;
+	NUCLEAR,
+	/** Wut: orange Funken, Krallenhieb-Schlieren, Gebruell */
+	FURY,
+	/** Netz: weisse Faeden spannen sich, Spinnenklicken */
+	WEB,
+	/** Kosmisch: Sternenstaub steigt auf, Donnerschlag, Boden bebt */
+	COSMIC,
+	/** Celestial: Sternenhimmel faltet sich, zwei Stimmen-Klaenge */
+	CELESTIAL,
+	/** Elektrisch: Blitzbogen am Kopf, Funkenregen */
+	ELECTRIC,
+	/** Schleim: gruener Schleim spritzt, Projektor surrt */
+	SLIME;
 
 	public static final Codec<TransformStyle> CODEC = StringIdentifiable.createCodec(TransformStyle::values);
 
@@ -227,6 +239,36 @@ public enum TransformStyle implements StringIdentifiable {
 				world.spawnParticles(ParticleTypes.FLASH, x, mid, z, 1, 0.0, 0.0, 0.0, 0.0);
 				sound(world, player, SoundEvents.BLOCK_BEACON_POWER_SELECT, 1.0f, 0.6f);
 				sound(world, player, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 0.8f);
+			}
+			case FURY -> {
+				world.spawnParticles(ParticleTypes.SWEEP_ATTACK, x, mid, z, 4, 0.5, 0.4, 0.5, 0.0);
+				world.spawnParticles(ParticleTypes.CRIT, x, mid, z, 30, 0.5, 0.7, 0.5, 0.3);
+				sound(world, player, SoundEvents.ENTITY_RAVAGER_ROAR, 1.0f, 1.3f);
+			}
+			case WEB -> {
+				ring(world, ParticleTypes.WHITE_ASH, x, mid, z, 1.0, 24, 0.0);
+				world.spawnParticles(ParticleTypes.WHITE_ASH, x, mid, z, 40, 0.6, 0.8, 0.6, 0.02);
+				sound(world, player, SoundEvents.ENTITY_SPIDER_AMBIENT, 1.0f, 1.4f);
+			}
+			case COSMIC -> {
+				world.spawnParticles(ParticleTypes.END_ROD, x, mid, z, 60, 1.0, 2.0, 1.0, 0.05);
+				world.spawnParticles(ParticleTypes.EXPLOSION, x, y + 0.3, z, 2, 0.5, 0.0, 0.5, 0.0);
+				sound(world, player, SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 0.7f);
+			}
+			case CELESTIAL -> {
+				world.spawnParticles(ParticleTypes.END_ROD, x, mid, z, 30, 0.4, 0.8, 0.4, 0.02);
+				world.spawnParticles(ParticleTypes.REVERSE_PORTAL, x, mid, z, 60, 0.4, 0.8, 0.4, 0.1);
+				sound(world, player, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, 1.0f, 0.6f);
+				sound(world, player, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, 1.0f, 1.4f);
+			}
+			case ELECTRIC -> {
+				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, x, player.getEyeY(), z, 40, 0.4, 0.3, 0.4, 0.3);
+				sound(world, player, SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, 0.6f, 1.6f);
+			}
+			case SLIME -> {
+				world.spawnParticles(ParticleTypes.ITEM_SLIME, x, mid, z, 40, 0.5, 0.7, 0.5, 0.1);
+				sound(world, player, SoundEvents.BLOCK_SLIME_BLOCK_PLACE, 1.2f, 0.6f);
+				sound(world, player, SoundEvents.BLOCK_BEACON_AMBIENT, 0.8f, 1.8f);
 			}
 			case GHOST -> {
 				world.spawnParticles(ParticleTypes.SCULK_SOUL, x, y + 0.3, z, 14, 0.4, 0.3, 0.4, 0.04);

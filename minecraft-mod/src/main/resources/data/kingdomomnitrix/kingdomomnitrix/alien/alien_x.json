@@ -1,0 +1,119 @@
+{
+  "color": "#9FD8FF",
+  "sort_order": 21,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 150,
+  "energy_regen": 10,
+  "scale": 1.05,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 10.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 4.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall",
+    "#minecraft:is_fire",
+    "#minecraft:is_drowning",
+    "#minecraft:is_freezing"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:reality_bolt",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "range": 32.0,
+        "damage": 9.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:gravity_warp",
+      "energy": 25,
+      "cooldown": 80,
+      "params": {
+        "radius": 8.0,
+        "damage": 6.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:blink",
+      "energy": 15,
+      "cooldown": 40,
+      "params": {
+        "range": 32.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:time_stop",
+      "energy": 40,
+      "cooldown": 300,
+      "params": {
+        "seconds": 5.0,
+        "radius": 12.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:creation",
+      "energy": 40,
+      "cooldown": 400,
+      "params": {
+        "radius": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:big_bang",
+      "energy": 120,
+      "cooldown": 1200,
+      "params": {
+        "radius": 16.0,
+        "damage": 20.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:ender_dragon",
+      "chance": 1.0
+    },
+    {
+      "entity": "minecraft:warden",
+      "chance": 0.2
+    }
+  ],
+  "model": "kingdomomnitrix:alien_x",
+  "failsafe_tags": [],
+  "failsafe_priority": 5,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "celestial"
+  }
+}

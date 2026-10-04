@@ -1,0 +1,117 @@
+{
+  "color": "#E8862A",
+  "sort_order": 18,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 8,
+  "scale": 1.25,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 5.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.4,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:wrist_claw",
+      "energy": 10,
+      "cooldown": 16,
+      "params": {
+        "range": 4.5,
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:challenge",
+      "energy": 15,
+      "cooldown": 200,
+      "params": {
+        "range": 16.0,
+        "seconds": 15.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:rath_charge",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "ticks": 14
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:suplex",
+      "energy": 30,
+      "cooldown": 120,
+      "params": {
+        "range": 4.0,
+        "damage": 10.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:appoplexian_roar",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 8.0,
+        "radius": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:rath_finale",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "range": 5.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:ravager",
+      "chance": 0.15
+    },
+    {
+      "entity": "minecraft:fox",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:rath",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [],
+    "transform_style": "fury"
+  }
+}

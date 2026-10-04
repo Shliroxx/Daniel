@@ -35,6 +35,13 @@ final class BuiltinAbilities {
 		ChromastoneAbilities.register();
 		EchoEchoAbilities.register();
 		AtomixAbilities.register();
+		AlienKit.register();
+		RathAbilities.register();
+		SpidermonkeyAbilities.register();
+		WayBigAbilities.register();
+		AlienXAbilities.register();
+		BrainstormAbilities.register();
+		GoopAbilities.register();
 		JetrayAbilities.register();
 	}
 
@@ -46,7 +53,9 @@ final class BuiltinAbilities {
 	// GhostfreakAbilities (Spuk), BigChillAbilities (Unterkuehlung),
 	// HumungousaurAbilities (Wachstum), SwampfireAbilities (Methan & Wildwuchs),
 	// ChromastoneAbilities (Spektralspeicher), EchoEchoAbilities (Echo-Chor),
-	// AtomixAbilities (Kernspaltung).
+	// AtomixAbilities (Kernspaltung), RathAbilities (Ringkampf), SpidermonkeyAbilities (Netzjaeger),
+	// WayBigAbilities (Titan), AlienXAbilities (Rat der Stimmen), BrainstormAbilities (Elektro-Intellekt),
+	// GoopAbilities (Polymorph); gemeinsame Bausteine in AlienKit.
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 

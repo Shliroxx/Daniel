@@ -1,0 +1,119 @@
+{
+  "color": "#2D63C8",
+  "sort_order": 19,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 8,
+  "scale": 0.9,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.15,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 10.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:web_shot",
+      "energy": 10,
+      "cooldown": 20,
+      "params": {
+        "range": 20.0,
+        "damage": 3.0,
+        "seconds": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:web_net",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "range": 8.0,
+        "seconds": 3.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:web_swing",
+      "energy": 10,
+      "cooldown": 15,
+      "params": {
+        "range": 28.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:monkey_frenzy",
+      "energy": 30,
+      "cooldown": 160,
+      "params": {
+        "hits": 8
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:web_trap",
+      "energy": 25,
+      "cooldown": 240,
+      "params": {
+        "radius": 5.0,
+        "seconds": 5.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:web_cocoon",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 10.0,
+        "seconds": 6.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:spider",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:cave_spider",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:spidermonkey",
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "web"
+  }
+}

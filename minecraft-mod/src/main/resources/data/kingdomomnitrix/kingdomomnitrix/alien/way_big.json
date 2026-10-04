@@ -1,0 +1,118 @@
+{
+  "color": "#C8202E",
+  "sort_order": 20,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 150,
+  "energy_regen": 6,
+  "scale": 3.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 40.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 10.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 8.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 1.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 30.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall",
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:cosmic_ray",
+      "energy": 20,
+      "cooldown": 40,
+      "params": {
+        "range": 48.0,
+        "damage": 10.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:titan_stomp",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "radius": 8.0,
+        "damage": 10.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:giant_leap",
+      "energy": 25,
+      "cooldown": 100,
+      "params": {},
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:shockwave_clap",
+      "energy": 30,
+      "cooldown": 160,
+      "params": {
+        "range": 14.0,
+        "damage": 8.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:tokustar_guard",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 6.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:starfall",
+      "energy": 100,
+      "cooldown": 1200,
+      "params": {},
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:elder_guardian",
+      "chance": 0.5
+    },
+    {
+      "entity": "minecraft:iron_golem",
+      "chance": 0.05
+    }
+  ],
+  "model": "kingdomomnitrix:way_big",
+  "failsafe_tags": [],
+  "failsafe_priority": 4,
+  "traits": {
+    "effects": [],
+    "transform_style": "cosmic"
+  }
+}

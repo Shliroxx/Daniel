@@ -102,7 +102,7 @@ und `--check` aller Generatoren in der CI. **Lücke:** keine automatischen Clien
 | Phase | Ausgangslage | nächster Schritt |
 |---|---|---|
 | 1 Omnitrix-Modell/Rendering | weitgehend fertig | Feinschliff nach Sichtprüfung; Fehler im Freischalt-Befehl behoben |
-| 2 Alien-Roster | 17 Aliens fertig (… Big Chill ✔, Humungousaur ✔, Swampfire ✔, Chromastone ✔, Echo Echo ✔), Importer kann `afomni`; Größen = AE | restliche AE-Aliens (z. B. alien_60 Atomix, alien_100/101) prüfen |
+| 2 Alien-Roster | 24 Aliens fertig (… Echo Echo ✔, Atomix ✔; eigene Modelle: Rath, Spidermonkey, Way Big, Alien X, Brainstorm, Goop ✔), Evolve-Ultimates für 6 Aliens; Importer kann `afomni`; Größen = AE | eigene Modelle (`tools/generate_custom_aliens.py`) sind einfacher als AE-Modelle — bei Bedarf nachmodellieren |
 | 3 Alien-Qualität | Fähigkeiten/Posen vorhanden | alien-eigene Dauer-Systeme (Kugelform, Klone, Einfrieren) |
 | 4 Transformationen | `TransformStyle` je Alien vorhanden | Kamera/Licht je Stil verfeinern |
 | 5 UI/OS/DNA | OS + Symbole fertig | DNA-Archiv (Herkunft, Seltenheit, Analyse, Fortschritt) |
