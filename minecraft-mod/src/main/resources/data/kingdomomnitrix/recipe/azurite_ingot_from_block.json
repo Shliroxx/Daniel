@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:azurite_block"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:azurite_ingot",
+    "count": 9
+  }
+}

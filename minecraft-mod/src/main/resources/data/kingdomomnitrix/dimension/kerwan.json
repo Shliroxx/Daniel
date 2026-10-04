@@ -2,12 +2,12 @@
   "type": "minecraft:overworld",
   "generator": {
     "type": "minecraft:noise",
-    "settings": "kingdomomnitrix:dry_planet",
+    "settings": "kingdomomnitrix:kerwan",
     "biome_source": {
       "type": "minecraft:multi_noise",
       "biomes": [
         {
-          "biome": "minecraft:plains",
+          "biome": "kingdomomnitrix:kerwan/meadows",
           "parameters": {
             "temperature": [
               -1.0,
@@ -34,7 +34,7 @@
           }
         },
         {
-          "biome": "minecraft:meadow",
+          "biome": "kingdomomnitrix:kerwan/spires",
           "parameters": {
             "temperature": [
               0.0,

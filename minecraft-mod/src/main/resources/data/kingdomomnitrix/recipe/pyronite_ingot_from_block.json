@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:pyronite_block"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:pyronite_ingot",
+    "count": 9
+  }
+}

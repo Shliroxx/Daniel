@@ -62,8 +62,9 @@ def java_sources() -> str:
 
 
 def registered_items() -> list[str]:
-    path = ROOT / "src" / "main" / "java" / "com" / "santiq" / MOD_ID / "registry" / "ModItems.java"
-    return ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))
+    base = ROOT / "src" / "main" / "java" / "com" / "santiq" / MOD_ID
+    paths = [base / "registry" / "ModItems.java", base / "world" / "content" / "PlanetItems.java"]
+    return [item for path in paths if path.is_file() for item in ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))]
 
 
 def check_json_syntax(report: Report) -> None:

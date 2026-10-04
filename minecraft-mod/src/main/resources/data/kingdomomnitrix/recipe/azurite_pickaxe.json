@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "XXX",
+    " | ",
+    " | "
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:azurite_ingot"
+    },
+    "|": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:azurite_pickaxe",
+    "count": 1
+  }
+}

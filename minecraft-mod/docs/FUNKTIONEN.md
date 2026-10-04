@@ -191,7 +191,7 @@ Gadgets liegen im **Gadget-Gürtel** (H). Combuster, OmniWrench, Swingshot, Gran
 ## 5. Raumfahrt und Welten
 
 ### Aphelion und Weltall
-- **Aphelion** (Raumschiff mit Bord-KI): Rechtsklick einsteigen, W/S Blickrichtung, A/D seitlich, Leertaste steigt,
+- **Aphelion** (Raumschiff mit Bord-KI; rundes 3D-Modell nach dem Gadgetron-Schiff mit Glaskuppel, Stachelflügeln, Doppelkanonen und leuchtenden Triebwerken): Rechtsklick einsteigen, W/S Blickrichtung, A/D seitlich, Leertaste steigt,
   Schleichen steigt aus; zwei Plätze; Cockpit-Anzeige.
 - Hoch genug fliegen → **Weltall**: geringe Schwerkraft, Sternenhimmel mit leuchtenden Nebeln, Sonne mit Lichthof,
   beringtem Gasriesen und der Oberwelt unter dir.
@@ -222,8 +222,41 @@ Sechs eigene Welten, erreichbar über die Galaxiekarte. Beim ersten Anflug entst
 | **Torren IV** (Polaris, Stufe 12, Warp 2) | Savanne, rote Wüste | Raumhafen: drei weitere Landeplätze, Kontrollturm, Hangars, Tanks, Frachtkisten |
 | **Nefarious-Station** (Tiefraum, Stufe 20, Warp 3, nach Torren IV) | Leere, ewige Nacht | Schwebende Plattformen mit Brücken, dunkler Zentralturm mit grüner Kuppel |
 
-Die Landwelten haben kein Meer (tiefe Becken statt Ozean); der Landeplatz sucht sich die nächste ebene Hochfläche.
-Gegner: vorerst die Monster der Biome (eigene R&C-Gegner folgen).
+Die Welten bestehen **nur aus eigenen Blöcken** (einzige Ausnahme: das Meer auf Rilgar ist Wasser). Jeder Planet hat
+eigenes Gestein, eigene Böden und Pflanzen, zwei eigene Biome mit eigenem Himmel und Nebel, und ganz unten den
+unzerstörbaren **Planetenkern** statt Grundgestein. Die Landwelten haben kein Meer (tiefe Becken statt Ozean); der
+Landeplatz sucht sich die nächste ebene Hochfläche. Gegner: Herzlose (Schatten, Soldaten, Luftsoldaten, Dunkelkugeln,
+Großkörper) je nach Planet; eigene R&C-Gegner folgen.
+
+**Eigene Blöcke** (alle Texturen 128×128, prozedural mit Licht und Schatten erzeugt, `tools/generate_planet_content.py`):
+
+| Planet | Natur | Erz |
+|---|---|---|
+| Veldin | Dünensand, Schichtsandstein, Veldin-Fels, Dürrstrauch | Sonnenkupfer |
+| Kerwan | Kerwan-Rasen, Kerwan-Erde, Schiefer, Spiralbaum (Stamm, Bretter, Laub), Lichtschilf (leuchtet) | Azurit |
+| Novalis | Novalis-Moos, Lehm, Kalkstein, Glockenbaum (Stamm, Bretter, Laub), Sternblüte | Viridium |
+| Rilgar | Riffsand, Korallenfels, Mangrove (Stamm, Pfahlholz, Laub), Riffgras | Aquarin |
+| Torren IV | Rotstaub, Brandkruste, Säulenbasalt (glühende Fugen), Glutdorn (leuchtet) | Pyronit |
+
+Technik-Blöcke (Siedlungen, Landeplätze, Station): Rumpfplatte (hell, dunkel, Gadgetron-Orange), Warnplatte,
+Panzerglas, Lichtpaneel, Gitterrost, Stationsplatte, Stationsleiste (leuchtet), Landefeld, Landefeld-Markierung.
+
+**Materialien und Ausrüstung** (eigener Kreativ-Reiter „Kingdom Omnitrix – Welten“):
+
+| Material | Stufe | Werkzeuge (Schwert, Spitzhacke, Axt, Schaufel) | Rüstung (Helm/Brust/Beine/Stiefel, Härte) |
+|---|---|---|---|
+| Sonnenkupfer | Eisen | 320 Haltbarkeit, Tempo 6,5 | 2/6/5/2, 0,5 |
+| Azurit | Eisen | 540, Tempo 7 | 3/6/5/2, 1 |
+| Viridium | Diamant | 1050, Tempo 8 | 3/7/6/3, 2 |
+| Aquarin | Diamant | 1500, Tempo 8,5 | 3/8/6/3, 2,5 |
+| Pyronit | Netherit | 2100, Tempo 9,5 | 4/9/7/4, 3,5 |
+
+Ablauf: Erz abbauen → Roh-Material (Glück wirkt) → im Ofen/Schmelzofen zum Barren → Werkzeuge, Schwert, Rüstung und
+Speicherblock wie gewohnt an der Werkbank. Die Erze verlangen aufsteigend Stein-, Eisen- und Diamant-Werkzeug, so führt
+der Weg von Veldin bis Torren IV. Weitere Rezepte: Bretter aus den Stämmen; Panzerglas aus Planetensand im Ofen;
+Rumpfplatten aus Planetenstein + Sonnenkupfer, daraus dunkle und orange Platten, Warnplatten und Landefeld;
+Lichtpaneel aus Panzerglas + Azurit; Gitterrost aus Sonnenkupfer; Stationsplatten aus dunklen Platten + Aquarin.
+Planetenstein zählt als Bruchstein (Ofen, Steinwerkzeuge), die Bretter als Holz (Werkbank, Stöcke).
 
 ### Traverse Town
 Eigene Welt in ewiger Nacht: Stadtrand, Schattenwald, Kristallfelder, dunkles Meer; Erze Mythril, Raritanium, Orichalcum.

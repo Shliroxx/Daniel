@@ -2,42 +2,15 @@
   "type": "minecraft:overworld",
   "generator": {
     "type": "minecraft:noise",
-    "settings": "kingdomomnitrix:dry_planet",
+    "settings": "kingdomomnitrix:torren_iv",
     "biome_source": {
       "type": "minecraft:multi_noise",
       "biomes": [
         {
-          "biome": "minecraft:savanna",
+          "biome": "kingdomomnitrix:torren_iv/plains",
           "parameters": {
             "temperature": [
               -1.0,
-              -0.5
-            ],
-            "humidity": [
-              -1.0,
-              1.0
-            ],
-            "continentalness": [
-              -1.2,
-              1.0
-            ],
-            "erosion": [
-              -1.0,
-              1.0
-            ],
-            "weirdness": [
-              -1.0,
-              1.0
-            ],
-            "depth": 0.0,
-            "offset": 0.0
-          }
-        },
-        {
-          "biome": "minecraft:desert",
-          "parameters": {
-            "temperature": [
-              -0.5,
               0.0
             ],
             "humidity": [
@@ -61,37 +34,10 @@
           }
         },
         {
-          "biome": "minecraft:savanna_plateau",
+          "biome": "kingdomomnitrix:torren_iv/wastes",
           "parameters": {
             "temperature": [
               0.0,
-              0.5
-            ],
-            "humidity": [
-              -1.0,
-              1.0
-            ],
-            "continentalness": [
-              -1.2,
-              1.0
-            ],
-            "erosion": [
-              -1.0,
-              1.0
-            ],
-            "weirdness": [
-              -1.0,
-              1.0
-            ],
-            "depth": 0.0,
-            "offset": 0.0
-          }
-        },
-        {
-          "biome": "minecraft:badlands",
-          "parameters": {
-            "temperature": [
-              0.5,
               1.0
             ],
             "humidity": [

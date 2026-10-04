@@ -1,6 +1,10 @@
 {
   "replace": false,
   "values": [
-    "kingdomomnitrix:orichalcum_ore"
+    "kingdomomnitrix:orichalcum_ore",
+    "kingdomomnitrix:aquarine_ore",
+    "kingdomomnitrix:aquarine_block",
+    "kingdomomnitrix:pyronite_ore",
+    "kingdomomnitrix:pyronite_block"
   ]
 }

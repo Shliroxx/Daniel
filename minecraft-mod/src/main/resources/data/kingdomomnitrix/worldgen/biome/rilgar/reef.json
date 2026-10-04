@@ -1,0 +1,63 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 7919856,
+    "fog_color": 12120312,
+    "water_color": 2805960,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "kingdomomnitrix:shadow",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "kingdomomnitrix:darkball",
+        "weight": 10,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:ore_aquarine"
+    ],
+    [],
+    [],
+    [
+      "kingdomomnitrix:rilgar_reef_rilgar_seagrass"
+    ],
+    []
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "kingdomomnitrix:raw_pyronite"
+  },
+  "result": {
+    "id": "kingdomomnitrix:pyronite_ingot"
+  },
+  "experience": 0.8,
+  "cookingtime": 200
+}

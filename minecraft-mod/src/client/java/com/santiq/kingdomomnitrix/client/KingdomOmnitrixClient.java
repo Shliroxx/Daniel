@@ -96,6 +96,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.ECHO_CLONE, com.santiq.kingdomomnitrix.client.render.alien.EchoCloneRenderer::new);
 		EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
 		com.santiq.kingdomomnitrix.client.space.ShipMesh.register();
+		registerPlanetRenderLayers();
 		EntityRendererRegistry.register(ModEntities.NEFARIOUS, NefariousRenderer::new);
 		DimensionRenderingRegistry.registerDimensionEffects(KingdomOmnitrix.id("space"), new SpaceDimensionEffects());
 		DimensionRenderingRegistry.registerSkyRenderer(SpaceTravel.SPACE, new SpaceSkyRenderer());
@@ -183,5 +184,16 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 				OmnitrixController.open(context.client());
 			}
 		});
+	}
+
+	/** Planeten-Bloecke mit Loechern (Pflanzen, Gitter), Laub und Glas. */
+	private static void registerPlanetRenderLayers() {
+		net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap map = net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap.INSTANCE;
+		map.putBlocks(net.minecraft.client.render.RenderLayer.getCutout(),
+				com.santiq.kingdomomnitrix.world.content.PlanetBlocks.CUTOUT.toArray(net.minecraft.block.Block[]::new));
+		map.putBlocks(net.minecraft.client.render.RenderLayer.getCutoutMipped(),
+				com.santiq.kingdomomnitrix.world.content.PlanetBlocks.CUTOUT_MIPPED.toArray(net.minecraft.block.Block[]::new));
+		map.putBlocks(net.minecraft.client.render.RenderLayer.getTranslucent(),
+				com.santiq.kingdomomnitrix.world.content.PlanetBlocks.TRANSLUCENT.toArray(net.minecraft.block.Block[]::new));
 	}
 }

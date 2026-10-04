@@ -61,6 +61,8 @@ jobs:
           python tools/generate_heartless_models.py --check
           python tools/generate_npc_models.py --check
           python tools/generate_ship_mesh.py --check
+          python tools/generate_planet_content.py --check
+          python tools/generate_planet_worlds.py --check
           python tools/generate_boss_models.py --check
           python tools/generate_icons.py --check
           python tools/generate_particles.py --check

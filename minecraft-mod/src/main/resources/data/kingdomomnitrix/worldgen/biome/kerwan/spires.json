@@ -1,0 +1,64 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 6988016,
+    "fog_color": 9486568,
+    "water_color": 4169936,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "kingdomomnitrix:soldier",
+        "weight": 40,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "kingdomomnitrix:air_soldier",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:ore_azurite"
+    ],
+    [],
+    [],
+    [
+      "kingdomomnitrix:kerwan_kerwan_spiral_tree",
+      "kingdomomnitrix:kerwan_spires_kerwan_reed"
+    ],
+    []
+  ]
+}

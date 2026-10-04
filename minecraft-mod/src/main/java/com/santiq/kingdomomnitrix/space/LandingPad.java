@@ -1,9 +1,9 @@
 package com.santiq.kingdomomnitrix.space;
 
 import com.santiq.kingdomomnitrix.world.PlanetHubs;
+import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.LanternBlock;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.world.ServerWorld;
@@ -44,10 +44,10 @@ public final class LandingPad {
 	}
 
 	private static void build(ServerWorld world, BlockPos base) {
-		BlockState metal = Blocks.LIGHT_GRAY_CONCRETE.getDefaultState();
-		BlockState plate = Blocks.SMOOTH_STONE.getDefaultState();
-		BlockState ring = Blocks.YELLOW_CONCRETE.getDefaultState();
-		BlockState stripe = Blocks.BLACK_CONCRETE.getDefaultState();
+		BlockState metal = PlanetBlocks.PAD_PLATE.getDefaultState();
+		BlockState plate = PlanetBlocks.HULL_PLATE_DARK.getDefaultState();
+		BlockState ring = PlanetBlocks.PAD_MARKING.getDefaultState();
+		BlockState stripe = PlanetBlocks.HULL_PLATE_DARK.getDefaultState();
 		for (int dx = -RADIUS - 2; dx <= RADIUS + 2; dx++) {
 			for (int dz = -RADIUS - 2; dz <= RADIUS + 2; dz++) {
 				double r = Math.sqrt(dx * dx + dz * dz);
@@ -86,13 +86,13 @@ public final class LandingPad {
 		// Lichter: vier Masten mit Laternen, Seelaternen im Boden
 		for (int[] d : new int[][] {{RADIUS + 1, 0}, {-RADIUS - 1, 0}, {0, RADIUS + 1}, {0, -RADIUS - 1}}) {
 			BlockPos foot = base.add(d[0], 0, d[1]);
-			world.setBlockState(foot, Blocks.POLISHED_ANDESITE.getDefaultState(), 2);
-			world.setBlockState(foot.up(), Blocks.IRON_BARS.getDefaultState(), 2);
-			world.setBlockState(foot.up(2), Blocks.IRON_BARS.getDefaultState(), 2);
-			world.setBlockState(foot.up(3), Blocks.LANTERN.getDefaultState().with(LanternBlock.HANGING, false), 2);
+			world.setBlockState(foot, PlanetBlocks.HULL_PLATE_DARK.getDefaultState(), 2);
+			world.setBlockState(foot.up(), PlanetBlocks.GRATE.getDefaultState(), 2);
+			world.setBlockState(foot.up(2), PlanetBlocks.GRATE.getDefaultState(), 2);
+			world.setBlockState(foot.up(3), PlanetBlocks.LIGHT_PANEL.getDefaultState(), 2);
 		}
 		for (int[] d : new int[][] {{3, 3}, {-3, 3}, {3, -3}, {-3, -3}}) {
-			world.setBlockState(base.add(d[0], 0, d[1]), Blocks.SEA_LANTERN.getDefaultState(), 2);
+			world.setBlockState(base.add(d[0], 0, d[1]), PlanetBlocks.LIGHT_PANEL.getDefaultState(), 2);
 		}
 	}
 

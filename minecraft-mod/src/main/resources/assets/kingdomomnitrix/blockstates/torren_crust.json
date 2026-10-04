@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/torren_crust"
+      },
+      {
+        "model": "kingdomomnitrix:block/torren_crust",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/torren_crust",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/torren_crust",
+        "y": 270
+      }
+    ]
+  }
+}

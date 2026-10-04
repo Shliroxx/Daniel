@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "X",
+    "|",
+    "|"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:solar_copper_ingot"
+    },
+    "|": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:solar_copper_shovel",
+    "count": 1
+  }
+}
