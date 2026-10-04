@@ -23,25 +23,8 @@
     },
     "fall": {
       "loop": true,
-      "animation_length": 2.0,
-      "bones": {
-        "projector": {
-          "position": {
-            "vector": [
-              0,
-              "math.sin(query.anim_time*120)*0.6",
-              0
-            ]
-          },
-          "rotation": {
-            "vector": [
-              0,
-              "query.anim_time*90",
-              0
-            ]
-          }
-        }
-      }
+      "animation_length": 1.0,
+      "bones": {}
     },
     "hit": {
       "loop": "hold_on_last_frame",
@@ -50,47 +33,13 @@
     },
     "idle": {
       "loop": true,
-      "animation_length": 2.0,
-      "bones": {
-        "projector": {
-          "position": {
-            "vector": [
-              0,
-              "math.sin(query.anim_time*120)*0.6",
-              0
-            ]
-          },
-          "rotation": {
-            "vector": [
-              0,
-              "query.anim_time*90",
-              0
-            ]
-          }
-        }
-      }
+      "animation_length": 1.0,
+      "bones": {}
     },
     "jump": {
       "loop": true,
-      "animation_length": 2.0,
-      "bones": {
-        "projector": {
-          "position": {
-            "vector": [
-              0,
-              "math.sin(query.anim_time*120)*0.6",
-              0
-            ]
-          },
-          "rotation": {
-            "vector": [
-              0,
-              "query.anim_time*90",
-              0
-            ]
-          }
-        }
-      }
+      "animation_length": 1.0,
+      "bones": {}
     },
     "revert": {
       "loop": "hold_on_last_frame",
@@ -125,25 +74,8 @@
     },
     "run": {
       "loop": true,
-      "animation_length": 2.0,
-      "bones": {
-        "projector": {
-          "position": {
-            "vector": [
-              0,
-              "math.sin(query.anim_time*120)*0.6",
-              0
-            ]
-          },
-          "rotation": {
-            "vector": [
-              0,
-              "query.anim_time*90",
-              0
-            ]
-          }
-        }
-      }
+      "animation_length": 1.0,
+      "bones": {}
     },
     "sprint_off": {
       "loop": "hold_on_last_frame",
@@ -204,25 +136,8 @@
     },
     "walk": {
       "loop": true,
-      "animation_length": 2.0,
-      "bones": {
-        "projector": {
-          "position": {
-            "vector": [
-              0,
-              "math.sin(query.anim_time*120)*0.6",
-              0
-            ]
-          },
-          "rotation": {
-            "vector": [
-              0,
-              "query.anim_time*90",
-              0
-            ]
-          }
-        }
-      }
+      "animation_length": 1.0,
+      "bones": {}
     }
   }
 }

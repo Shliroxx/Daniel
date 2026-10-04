@@ -4,7 +4,15 @@ made by SANTIQ
 
 ## Alien Evolution (Alien-Modelle, -Texturen und -Farben)
 
-**Eigene Modelle (nicht aus Alien Evolution):** Rath, Spidermonkey, Way Big, Alien X, Brainstorm und Goop haben in AE kein Modell; Geometrie, Textur und Animation erzeugt `tools/generate_custom_aliens.py` vollständig selbst (keine AE-Dateien).
+**Omni-Evo: Aliens (Alien-Evolution-Addon):** Rath, Spidermonkey, Brainstorm und Goop (Geometrie, Texturen, Augen-Leuchtebenen,
+Goops Anti-Gravitations-Projektor, Abzeichen-Modelle) stammen aus **Omni-Evo: Aliens** von redthefunni
+(<https://modrinth.com/mod/omni-evo-aliens>); Spidermonkey und Brainstorm tragen darin den Namensraum
+`evo_reds_alienpack`. Verwendung laut SANTIQ mit Erlaubnis der Autoren (auch für „Omnitrix Evolution“ und „Omni Extras“);
+den Nachweis bitte aufbewahren. Das Addon-Jar liegt nicht im Repository — `tools/import_addon_aliens.py --addon <jar>
+--ae <AlienEvo.jar>` erzeugt die Dateien neu (Spidermonkeys Fell dabei kräftiger blau gefärbt).
+
+**Eigene Modelle:** Way Big und Alien X gibt es weder in AE noch in den Addons; Geometrie, Textur und Animation erzeugt
+`tools/generate_custom_aliens.py` selbst (nach Vorlagebildern, keine fremden Dateien).
 
 Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak, Cannonbolt, Jetray und Atomix (Geometrie,
 Texturen, Uniform-Varianten, Farbpaletten und das Omnitrix-Abzeichen), Big Chill, Humungousaur, Swampfire, Chromastone und Echo Echo (Geometrie, Textur,

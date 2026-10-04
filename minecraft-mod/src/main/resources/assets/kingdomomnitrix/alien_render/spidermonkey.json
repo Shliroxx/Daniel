@@ -1,5 +1,5 @@
 {
-  "scale": 1.0,
+  "scale": 1.889,
   "uniforms": [
     "classic"
   ],
@@ -194,5 +194,5 @@
   ],
   "glow_frames": 1,
   "warn_textures": false,
-  "source": "Kingdom Omnitrix (eigenes Modell)"
+  "source": "Omni-Evo: Aliens (Alien-Evolution-Addon, mit Erlaubnis)"
 }

@@ -49,6 +49,7 @@ jobs:
           python tools/generate_alien_models.py --check
           python tools/import_alienevo.py --check
           python tools/generate_custom_aliens.py --check
+          python tools/import_addon_aliens.py --check
           python tools/import_omnitrix_model.py --check
           python tools/generate_alien_icons.py --check
           python tools/generate_color_particles.py --check

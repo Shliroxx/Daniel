@@ -896,7 +896,9 @@ def goop() -> Design:
     return Design("goop", 1.0, "small", "#6FD62A", m, bones, zone, loops=loops, seed=16)
 
 
-DESIGNS = {d.name: d for d in (rath(), spidermonkey(), way_big(), alien_x(), brainstorm(), goop())}
+# Rath, Spidermonkey, Brainstorm und Goop kommen aus dem Addon „Omni-Evo: Aliens“ (tools/import_addon_aliens.py);
+# ihre Entwuerfe oben bleiben als Rueckfall erhalten, werden aber nicht mehr geschrieben.
+DESIGNS = {d.name: d for d in (way_big(), alien_x())}
 
 
 def write(files: dict[Path, object]) -> int:
