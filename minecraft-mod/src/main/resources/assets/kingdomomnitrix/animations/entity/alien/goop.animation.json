@@ -40,15 +40,6 @@
               0
             ]
           }
-        },
-        "drip": {
-          "scale": {
-            "vector": [
-              1,
-              "1+math.sin(query.anim_time*160)*0.15",
-              1
-            ]
-          }
         }
       }
     },
@@ -76,15 +67,6 @@
               0
             ]
           }
-        },
-        "drip": {
-          "scale": {
-            "vector": [
-              1,
-              "1+math.sin(query.anim_time*160)*0.15",
-              1
-            ]
-          }
         }
       }
     },
@@ -105,15 +87,6 @@
               0,
               "query.anim_time*90",
               0
-            ]
-          }
-        },
-        "drip": {
-          "scale": {
-            "vector": [
-              1,
-              "1+math.sin(query.anim_time*160)*0.15",
-              1
             ]
           }
         }
@@ -167,15 +140,6 @@
               0,
               "query.anim_time*90",
               0
-            ]
-          }
-        },
-        "drip": {
-          "scale": {
-            "vector": [
-              1,
-              "1+math.sin(query.anim_time*160)*0.15",
-              1
             ]
           }
         }
@@ -255,15 +219,6 @@
               0,
               "query.anim_time*90",
               0
-            ]
-          }
-        },
-        "drip": {
-          "scale": {
-            "vector": [
-              1,
-              "1+math.sin(query.anim_time*160)*0.15",
-              1
             ]
           }
         }

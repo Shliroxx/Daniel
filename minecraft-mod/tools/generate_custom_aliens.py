@@ -66,7 +66,7 @@ def mix(a: Color, b: Color, t: float) -> Color:
 @dataclass
 class Box:
     origin: tuple[float, float, float]
-    size: tuple[int, int, int]
+    size: tuple[float, float, float]   # Vielfache von 0,5 (ganze Pixel bei 2 Pixeln je Einheit)
     mat: str
     part: str = ""                  # Name fuer die Farbzonen (leer = Knochenname)
     front: str | None = None        # Bild auf der Vorderseite (north), siehe FEATURES
@@ -91,6 +91,7 @@ class Material:
     pattern: str = "plain"          # plain, fur, stars, slime, metal, brain, shell
     glow: bool = False              # ganze Flaeche leuchtet
     outline: bool = True            # dunkle Linie an Grenzen zu anderen Zonen
+    rim: str | None = None          # helle Randlinie um jede Flaeche (Alien X: weisse Kontur der Vorlage)
 
 
 @dataclass(frozen=True)
@@ -177,6 +178,8 @@ class Painter:
         t = py / max(1, h - 1) if side not in ("up", "down") else 0.3
         k = light * (1.05 - 0.14 * t) * (0.97 + 0.06 * rng.random())
         if px == 0 or py == 0 or px == w - 1 or py == h - 1:
+            if mat.rim and side not in ("up", "down"):
+                return shade(rgb(mat.rim), 0.92 + 0.08 * rng.random())
             k *= 0.93
         c = shade(base, k)
         pat = mat.pattern
@@ -277,108 +280,88 @@ def badge(p: Painter, rect, cx: float = 0.5, cy: float = 0.4) -> None:
 # --- Gesichter und Abzeichen (Pixel-Bilder, 2 Pixel je Einheit) --------------------------------------
 
 def f_rath_face(p, rect):
-    art(p, rect, [".kk........kk.",
+    art(p, rect, ["..............",
+                  ".kk........kk.",
                   "..kkk....kkk..",
-                  "...kkkkkkkk...",
                   "..yygk..kgyy..",
-                  "..yygk..kgyy..",
-                  "...kk....kk...",
-                  "..............",
-                  "..............",
-                  "...kkkkkkkk...",
-                  "...kwkwwkwk...",
-                  "....kkkkkk...."],
-        {"k": ("#141414", False), "y": ("#C8F24A", True), "g": ("#4FD12A", True), "w": ("#F4F1E6", False)}, 0.5, 0.52)
+                  "..kyyk..kyyk..",
+                  "...kk....kk..."],
+        {"k": ("#141414", False), "y": ("#C8F24A", True), "g": ("#3E9E1E", True)}, 0.5, 0.42)
 
 
-def f_rath_muzzle(p, rect):
-    art(p, rect, ["..kkkkkk..", "...kkkk..."], {"k": ("#2A1A14", False)}, 0.5, 0.25)
+def f_rath_nose(p, rect):
+    art(p, rect, ["..kkkk..", "...kk..."], {"k": ("#2A1A14", False)}, 0.5, 0.3)
+
+
+def f_rath_teeth(p, rect):
+    art(p, rect, ["kkkkkkkkkkkk", "wkwwkwwkwwkw"], {"k": ("#2A1A14", False), "w": ("#F4F1E6", False)}, 0.5, 0.5)
 
 
 def f_spider_face(p, rect):
-    art(p, rect, ["..kkkk..kkkk..",
-                  "..kggk..kggk..",
-                  "..kkkk..kkkk..",
-                  "...kkk..kkk...",
-                  "...kgk..kgk...",
-                  "...kkk..kkk..."],
-        {"k": ("#06080F", False), "g": ("#62F03A", True)}, 0.5, 0.36)
+    art(p, rect, ["...kk..kk...",
+                  "...gk..kg...",
+                  "............",
+                  ".kkkk..kkkk.",
+                  ".kggk..kggk.",
+                  ".kggk..kggk.",
+                  ".kkkk..kkkk.",
+                  "............",
+                  ".....kk....."],
+        {"k": ("#06080F", False), "g": ("#62F03A", True)}, 0.5, 0.45)
 
 
-def f_spider_muzzle(p, rect):
-    art(p, rect, [".kkkkkk.", "........"], {"k": ("#06080F", False)}, 0.5, 0.7)
+def f_spider_mouth(p, rect):
+    art(p, rect, ["kkkkkk", "wwwwww", "kkkkkk"], {"k": ("#06080F", False), "w": ("#E8ECF2", False)}, 0.5, 0.5)
 
 
-def f_waybig_face(p, rect):
-    art(p, rect, [".kkk..kkk.",
-                  "kggk..kggk",
-                  ".kggkkggk.",
-                  "..kk..kk.."],
-        {"k": ("#111111", False), "g": ("#7CF23A", True)}, 0.5, 0.36)
+def f_waybig_eyes(p, rect):
+    art(p, rect, ["kk....kk",
+                  "kgk..kgk",
+                  ".kgkkgk.",
+                  "..k..k.."],
+        {"k": ("#111111", False), "g": ("#7CF23A", True)}, 0.5, 0.6)
 
 
 def f_alienx_face(p, rect):
-    art(p, rect, ["............",
-                  ".gg......gg.",
-                  ".ggg....ggg.",
-                  "..ggg..ggg..",
-                  "...gg..gg..."],
-        {"g": ("#8CFF52", True)}, 0.5, 0.42)
+    art(p, rect, [".gg....gg.",
+                  ".ggg..ggg.",
+                  "..gg..gg.."],
+        {"g": ("#8CFF52", True)}, 0.5, 0.5)
 
 
 def f_brainstorm_face(p, rect):
-    u, v, w, h = rect
-    rows = ["....kkkkkkk......kkkkkkk....",
-            "...kkkkkkkkkk..kkkkkkkkkk...",
-            "........kkkkkkkkkkkk........",
-            "....kggggggk....kggggggk....",
-            ".....kgggppk....kppgggk.....",
-            "......kkkkk......kkkkk......",
-            "............................",
-            "......kkkkkkkkkkkkkkkk......",
-            ".....kwkwkwkwkwkwkwkwkk.....",
-            "....kk..............kk......",
-            "............................"]
-    rows = [r.ljust(28, ".")[:28] for r in rows]
-    art(p, rect, rows, {"k": ("#20140A", False), "g": ("#8CF23A", True), "p": ("#0E0E0E", False),
-                        "w": ("#F2EEE2", False)}, 0.5, 0.58)
-
-
-def f_brain_top(p, rect):
-    """Mittelnaht der Schaedelplatten (die Platten klappen im Leerlauf auf)."""
-    u, v, w, h = rect
-    for py in range(h):
-        p.put(u + w // 2, v + py, rgb("#3A2210"))
+    art(p, rect, ["........................",
+                  "..kkkkk..........kkkkk..",
+                  ".kgggggk........kgggggk.",
+                  "..kkkkk..........kkkkk..",
+                  "........................",
+                  "...kkkkkkkkkkkkkkkkkk...",
+                  "..kkwkwkwkwkwkwkwkwkkk..",
+                  "..k..................k..",
+                  "........................"],
+        {"k": ("#20140A", False), "g": ("#8CF23A", True), "w": ("#F2EEE2", False)}, 0.5, 0.5)
 
 
 def f_goop_face(p, rect):
-    art(p, rect, ["kk....kk",
-                  "kgk..kgk",
-                  "kggkkggk",
-                  ".kk..kk."],
-        {"k": ("#0D2A08", False), "g": ("#E8FF7A", True)}, 0.5, 0.45)
+    art(p, rect, ["k.....k",
+                  "kk...kk",
+                  "kgk.kgk",
+                  ".kk.kk."],
+        {"k": ("#0D2A08", False), "g": ("#E8FF7A", True)}, 0.5, 0.42)
 
 
 def f_chest(p, rect):
-    badge(p, rect, 0.5, 0.38)
+    badge(p, rect, 0.5, 0.42)
 
 
-def f_chest_low(p, rect):
-    badge(p, rect, 0.5, 0.5)
-
-
-def f_projector_lights(p, rect):
-    u, v, w, h = rect
-    for px in range(0, w, 3):
-        for py in range(h):
-            p.put(u + px, v + py, rgb("#7CFF4A"), True)
+def f_chest_small(p, rect):
+    art(p, rect, [".rrrr.", "rggggr", "rkggkr", "rkggkr", "rggggr", ".rrrr."], BADGE_COLORS, 0.5, 0.5)
 
 
 FEATURES: dict[str, Callable] = {
-    "rath_face": f_rath_face, "rath_muzzle": f_rath_muzzle, "spider_face": f_spider_face,
-    "spider_muzzle": f_spider_muzzle, "waybig_face": f_waybig_face, "alienx_face": f_alienx_face,
-    "brainstorm_face": f_brainstorm_face, "brain_top": f_brain_top, "goop_face": f_goop_face,
-    "chest": f_chest, "chest_low": f_chest_low, "projector_lights": f_projector_lights,
+    "rath_face": f_rath_face, "rath_nose": f_rath_nose, "rath_teeth": f_rath_teeth, "spider_face": f_spider_face,
+    "spider_mouth": f_spider_mouth, "waybig_eyes": f_waybig_eyes, "alienx_face": f_alienx_face,
+    "brainstorm_face": f_brainstorm_face, "goop_face": f_goop_face, "chest": f_chest, "chest_small": f_chest_small,
 }
 
 
@@ -392,7 +375,7 @@ def pack(boxes: list[Box]) -> tuple[dict[int, tuple[int, int]], int]:
     x = y = shelf = 0
     for box in order:
         w, h, d = box.size
-        bw, bh = 2 * (w + d), d + h
+        bw, bh = math.ceil(2 * (w + d)), math.ceil(d + h)
         if bw > ATLAS:
             raise ValueError(f"Box zu breit fuer den Atlas: {box}")
         if x + bw > ATLAS:
@@ -407,8 +390,8 @@ def pack(boxes: list[Box]) -> tuple[dict[int, tuple[int, int]], int]:
 def build(design: Design) -> dict[Path, object]:
     for bone in design.bones:
         for box in bone.boxes:
-            if any(int(s) != s or s < 0 for s in box.size):
-                raise ValueError(f"{design.name}/{bone.name}: Boxgroessen muessen ganze Zahlen sein: {box.size}")
+            if any(s * PX != int(s * PX) or s < 0 for s in box.size):
+                raise ValueError(f"{design.name}/{bone.name}: Boxgroessen muessen Vielfache von 0,5 sein: {box.size}")
     boxes = [box for bone in design.bones for box in bone.boxes]
     uv, height = pack(boxes)
     painter = Painter(design, ATLAS * PX, height * PX)
@@ -453,7 +436,7 @@ def paint_box(p: Painter, design: Design, bone: Bone, box: Box, u: int, v: int) 
     # Box-UV (Einheiten): oben (u+d,v) w×d, unten (u+d+w,v) w×d, Reihe v+d: east (u), north (u+d), west (u+d+w), south (u+2d+w)
     faces = {"up": (u + d, v, w, d), "down": (u + d + w, v, w, d), "east": (u, v + d, d, h), "north": (u + d, v + d, w, h),
              "west": (u + d + w, v + d, d, h), "south": (u + 2 * d + w, v + d, w, h)}
-    rects = {side: (fu * PX, fv * PX, fw * PX, fh * PX) for side, (fu, fv, fw, fh) in faces.items()}
+    rects = {side: (int(fu * PX), int(fv * PX), int(fw * PX), int(fh * PX)) for side, (fu, fv, fw, fh) in faces.items()}
     for side, rect in rects.items():
         if rect[2] and rect[3]:
             p.face(rect, box, bone, side)
@@ -508,324 +491,377 @@ def side_of(sign: int) -> str:
 # --- Entwuerfe -------------------------------------------------------------------------------------
 
 def rath() -> Design:
-    """Rath (UAF): muskuloeser, orange-weisser Tiger ohne Schwanz; weisse Brust/Bauch, Kiefer, Haende und Fuesse,
-    schwarze Streifen auf Schultern, Kopf, Oberkoerper und Beinen; je eine schwarze Kralle aus dem Handgelenk;
-    gruene Augen unter wuetenden Brauen; Omnitrix mitten auf der Brust."""
+    """Rath (Turnaround/Posen AF-UA): breiter Muskelprotz, kein Schwanz. Weiss: Brust, Bauch, Kiefer, Schnauze,
+    Backenbart, Faeuste, Fuesse. Schwarze Tigerstreifen auf Schultern, Armen, Kopf, Flanken, Oberschenkeln.
+    Schwarze Klingen-Kralle aus jedem Handgelenk, schwere schwarze Brauen, gruene Augen; Omnitrix mitten auf der Brust."""
     m = {"orange": Material("#E2701F", "#8E3A0C", "#F7A04E", "fur"),
-         "white": Material("#E9E6DE", "#9F9A90", "#FFFFFF", "fur"),
+         "white": Material("#ECE9E1", "#A29C90", "#FFFFFF", "fur"),
+         "line": Material("#BDB6A8", "#8A8478", "#D8D2C6", "plain", outline=False),
          "stripe": Material("#1A1411", "#0A0806", "#3A2E28", "plain"),
-         "claw": Material("#1E1E22", "#08080A", "#5A5A66", "metal"),
+         "claw": Material("#1E1E24", "#08080A", "#6A6A78", "metal"),
          "nose": Material("#3A221C", "#1A0E0A", "#5A3A30", "plain")}
 
     def zone(t: Texel) -> str | None:
         part, y, ax = t.part, t.y, abs(t.x)
         if part == "torso":
-            if t.side == "north":
-                half = 4.7 if y > 19 else 2.9 + (y - 13) * 0.3
-                if ax < half and y < 23.3:
-                    return "white"
-            if y > 15 and t.side != "north" and tiger(t, 4.0, 0.7, 0.6):
-                return "stripe"
-            if t.side == "north" and y > 15 and tiger(t, 4.0, 0.7, 0.6) and edge(t) < 0.12:
-                return "stripe"
-        if part == "hips":
-            if t.side == "north" and ax < 2.6:
+            if t.side == "north" and ax < (4.8 if y > 19 else 3.4 + (y - 16) * 0.47):
                 return "white"
-            return None
+            if tiger(t, 4.0, 0.7, 0.6) and (t.side != "north" or edge(t) < 0.1):
+                return "stripe"
+        if part == "belly":
+            if t.side == "north" and ax < 3.4:
+                return "white"
+            if t.side in ("east", "west") and tiger(t, 4.0, 0.7, 0.6):
+                return "stripe"
+        if part == "abs" and (abs(t.x) < 0.25 or abs(y - 14.5) < 0.25):
+            return "line"
         if part == "head":
-            if t.side == "north" and t.fy > 0.66:
+            if t.side == "north" and t.fy > 0.78:
                 return "white"
-            if t.side in ("east", "west") and t.fy > 0.66 and t.z < -3.5:
-                return "white"
-            if t.side == "down":
-                return "white"
-            if t.side == "up" and abs(t.x) < 0.8 and t.z < -2:
+            if t.side in ("east", "west") and t.fy < 0.65 and tiger(t, 2.4, 0.6, 0.3):
                 return "stripe"
-            if t.side in ("east", "west") and t.fy < 0.6 and tiger(t, 2.6, 0.6, 0.3):
+            if t.side == "up" and ax < 0.6 and t.fy > 0.4:
                 return "stripe"
-            if t.side == "north" and t.fy < 0.22 and (abs(t.x) > 1.6 and abs(t.x) < 2.6):
-                return "stripe"
-        if part == "upper_arm" and tiger(t, 3.6, 0.7, 1.1):
+        if part in ("shoulder", "upper_arm") and t.side != "up" and tiger(t, 4.5, 0.6, 1.1):
             return "stripe"
-        if part == "forearm" and y > 13 and tiger(t, 3.6, 0.7, 0.2):
+        if part == "trap" and t.side == "south" and tiger(t, 4.5, 0.6, 1.1):
             return "stripe"
-        if part == "leg":
-            if y < 2.2:
-                return "white"
-            if y > 5 and tiger(t, 3.4, 0.65, 0.4):
-                return "stripe"
+        if part == "forearm" and y > 12 and tiger(t, 4.5, 0.6, 0.2):
+            return "stripe"
+        if part == "thigh" and tiger(t, 4.0, 0.55, 0.4):
+            return "stripe"
         return None
 
     bones = [
         Bone("body", None, (0, 24, 0), [
-            Box((-6, 13, -3.5), (12, 11, 7), "orange", "torso", front="chest"),
-            Box((-4.5, 10, -2.5), (9, 3, 5), "orange", "hips"),
-            # Nackenmuskel/Trapez hinter dem tief sitzenden Kopf
-            Box((-4, 23, -1), (8, 2, 4), "orange", "torso")]),
-        Bone("head", None, (0, 23, -2), [
-            Box((-3.5, 22.5, -7), (7, 6, 6), "orange", "head", front="rath_face"),
-            Box((-2.5, 23, -8), (5, 2, 1), "white", "muzzle", front="rath_muzzle"),
-            # weisse Backenbart-Buesche
-            Box((-4.5, 22.5, -6), (1, 2, 3), "white", "cheek"),
-            Box((3.5, 22.5, -6), (1, 2, 3), "white", "cheek")]),
-        Bone("ear_right", "head", (-3, 28.5, -3), [Box((-3.5, 28.5, -3.5), (2, 2, 1), "orange", "ear")], rotation=(0, 0, 15)),
-        Bone("ear_left", "head", (3, 28.5, -3), [Box((1.5, 28.5, -3.5), (2, 2, 1), "orange", "ear")], rotation=(0, 0, -15)),
+            Box((-6, 16, -3.5), (12, 8, 7), "orange", "torso", front="chest"),
+            Box((-4.5, 23.5, -1.5), (9, 2, 5), "orange", "trap"),
+            Box((-5, 12, -3), (10, 4, 6), "orange", "belly"),
+            Box((-3, 12.5, -3.5), (6, 3.5, 0.5), "white", "abs"),
+            Box((-4.5, 10, -2.5), (9, 2.5, 5), "orange", "belly")]),
+        Bone("head", None, (0, 23.5, -2), [
+            Box((-3.5, 22.5, -7.5), (7, 5, 6), "orange", "head", front="rath_face"),
+            Box((-3.5, 26, -8), (7, 0.5, 1), "stripe", "brow"),
+            Box((-2, 23, -9), (4, 2, 1.5), "white", "muzzle", front="rath_nose"),
+            Box((-3, 21, -8.5), (6, 1.5, 5), "white", "jaw", front="rath_teeth"),
+            Box((-4.5, 21.5, -7), (1, 3, 3.5), "white", "cheek"),
+            Box((3.5, 21.5, -7), (1, 3, 3.5), "white", "cheek"),
+            Box((-3.5, 27.5, -4), (1.5, 1.5, 1), "orange", "ear"),
+            Box((2, 27.5, -4), (1.5, 1.5, 1), "orange", "ear"),
+            Box((-3.25, 29, -4), (1, 0.5, 1), "orange", "ear"),
+            Box((2.25, 29, -4), (1, 0.5, 1), "orange", "ear")]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
         sx = sign * 8.5
+        inner = sx - sign * 2.5 - (1 if sign > 0 else 0)
+        outer = sx + sign * 2.75 - 0.25
         bones += [
-            Bone(f"{side}_arm", None, (sx, 23, 0), [Box((sx - 2.5, 16, -2.5), (5, 8, 5), "orange", "upper_arm"),
-                                                    Box((sx - 3, 21, -3), (6, 3, 6), "orange", "upper_arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 16, 0), [
-                Box((sx - 3, 8, -3), (6, 8, 6), "orange", "forearm"),
-                Box((sx - 2.5, 4, -2.5), (5, 4, 5), "white", "fist")]),
-            Bone(f"{side}_claw", f"{side}_forearm", (sx + sign * 2, 8, -1), [
-                Box((sx + sign * 2.5 - 0.5, 1, -2), (1, 7, 2), "claw", "claw")], rotation=(-12, 0, 0)),
+            Bone(f"{side}_arm", None, (sx, 23, 0), [
+                Box((sx - 3, 19.5, -3), (6, 5, 6), "orange", "shoulder"),
+                Box((sx - 2.5, 15, -2.5), (5, 5, 5), "orange", "upper_arm")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 15, 0), [
+                Box((sx - 3, 8, -3), (6, 7, 6), "orange", "forearm"),
+                Box((sx - 2.5, 6.5, -2.5), (5, 1.5, 5), "orange", "forearm"),
+                Box((sx - 2.5, 2.5, -3), (5, 4, 5), "white", "fist"),
+                Box((sx - 2.5, 3.5, -3.5), (5, 2, 0.5), "white", "fist"),
+                Box((inner, 3.5, -3), (1, 2, 2), "white", "fist")]),
+            Bone(f"{side}_claw", f"{side}_forearm", (outer, 8, -1), [
+                Box((outer, 0, -1.75), (0.5, 8, 2), "claw", "claw"),
+                Box((outer, -1, -1.25), (0.5, 1, 1), "claw", "claw")], rotation=(-15, 0, 0)),
             Bone(f"{side}_leg", None, (sign * 3.2, 11, 0), [
-                Box((sign * 3.2 - 2.5, 0, -2.5), (5, 11, 5), "orange", "leg"),
-                Box((sign * 3.2 - 2.5, 0, -4.5), (5, 2, 2), "white", "foot")]),
+                Box((sign * 3.2 - 2.5, 5.5, -2.5), (5, 5.5, 5), "orange", "thigh"),
+                Box((sign * 3.2 - 2, 2, -2), (4, 3.5, 4), "orange", "shin"),
+                Box((sign * 3.2 - 2.5, 0, -4.5), (5, 2, 6.5), "white", "foot")]
+                + [Box((sign * 3.2 - 2 + i * 1.5, 0, -5.5), (1, 1, 1), "white", "toe") for i in range(3)]),
         ]
     return Design("rath", 1.25, "heavy", "#E2701F", m, bones, zone, arm_swing=0.8, leg_swing=0.8, seed=11)
 
 
 def spidermonkey() -> Design:
-    """Spidermonkey (AF/UA): kleiner Affe mit vier Armen, blauem Fell ueber dunkelblauer Mitte (Gesicht, Brust,
-    Bauch, Haende, Fuesse), vier gruenen Augen, nach hinten gestrichenem Kopffell und langem Schwanz mit zwei
-    dunklen Ringen kurz vor der Spitze; Omnitrix auf der Brust."""
+    """Spidermonkey (Turnaround AF-UA): laeuft gebueckt auf allen Vieren — Oberkoerper nach vorn geneigt, alle vier
+    Arme reichen zum Boden, Beine hinten, langer Schwanz im S-Bogen mit Haken und zwei dunklen Ringen. Kopf mit nach
+    hinten fallender Maehne, dunkles Gesicht mit vier gruenen Augen (zwei gross, zwei klein), Nasenloecher, Zaehne;
+    Fellbueschel an Ellbogen und Wangen; Haende und Fuesse dunkel mit drei langen Fingern/Zehen."""
     m = {"blue": Material("#2E5FD6", "#173270", "#5F8FF6", "fur"),
          "navy": Material("#1B2350", "#0B0F24", "#2F3C7A", "plain"),
-         "muzzle": Material("#7E8FB8", "#46557E", "#B4C2E2", "plain")}
+         "mouth": Material("#7E8FB8", "#46557E", "#B4C2E2", "plain")}
 
     def zone(t: Texel) -> str | None:
         part = t.part
         if part == "head" and t.side == "north":
-            # rundes dunkles Gesicht im blauen Fell (Ecken bleiben Fell)
-            dx, dy = (t.fx - 0.5) / 0.4, (t.fy - 0.6) / 0.52
+            dx, dy = (t.fx - 0.5) / 0.42, (t.fy - 0.6) / 0.5
             if dx * dx + dy * dy < 1.0:
                 return "navy"
-        if part == "torso" and t.side == "north" and 0.18 < t.fx < 0.82:
+        if part == "chest" and t.side == "north" and abs(t.fx - 0.5) < 0.32 and t.fy > 0.12 + (0.32 - abs(t.fx - 0.5)) * 0.7:
             return "navy"
-        if part == "torso" and t.side == "down":
+        if part == "belly" and t.side in ("north", "down") and abs(t.fx - 0.5) < 0.32:
             return "navy"
-        if part == "tail_tip" and (t.z % 3.0) < 1.0:
+        if part == "tail_tip" and (t.z % 2.0) < 0.7:
             return "navy"
         return None
 
     bones = [
-        Bone("body", None, (0, 21, 0), [Box((-3, 12, -2), (6, 9, 4), "blue", "torso", front="chest")]),
-        Bone("head", None, (0, 21, -1), [
-            Box((-3.5, 21, -5), (7, 6, 6), "blue", "head", front="spider_face"),
-            Box((-2, 21, -6), (4, 2, 1), "muzzle", "muzzle", front="spider_muzzle"),
-            # nach hinten gestrichenes Kopffell
-            Box((-3, 25, 1), (6, 2, 3), "blue", "hair"),
-            Box((-2, 23.5, 3.5), (4, 2, 2), "blue", "hair")]),
+        Bone("body", None, (0, 13, 0), [
+            Box((-3, 10, -2.5), (6, 4.5, 5.5), "blue", "belly"),
+            Box((-3.5, 9.5, 2.5), (7, 4.5, 4.5), "blue", "hips")]),
+        # Oberkoerper nach vorn geneigt (eigener Knochen; body selbst folgt der Spielerpose)
+        Bone("chest", "body", (0, 13, -1.5), [
+            Box((-3.5, 13, -4), (7, 7, 5), "blue", "chest", front="chest"),
+            Box((-3, 15, 1), (6, 4.5, 1), "blue", "chest")], rotation=(40, 0, 0)),
+        Bone("head", None, (0, 19, -7), [
+            Box((-3, 18, -11), (6, 6, 5), "blue", "head", front="spider_face"),
+            Box((-1.5, 18, -12), (3, 2, 1), "navy", "muzzle", front="spider_mouth"),
+            Box((-3, 23.5, -10.5), (6, 1, 6), "blue", "mane"),
+            Box((-2.5, 21.5, -6), (5, 2.5, 3), "blue", "mane"),
+            Box((-2, 19.5, -3.5), (4, 2.5, 1.5), "blue", "mane"),
+            Box((-3.5, 18.5, -9.5), (0.5, 3, 2.5), "blue", "tuft"),
+            Box((3, 18.5, -9.5), (0.5, 3, 2.5), "blue", "tuft"),
+            Box((-1, 17.5, -10.5), (2, 0.5, 1), "blue", "tuft")]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
-        sx = sign * 4
+        sx = sign * 3.8
         bones += [
-            Bone(f"{side}_arm", None, (sx, 20, 0), [Box((sx - 1, 12, -1), (2, 9, 2), "blue", "arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 12, 0), [
-                Box((sx - 1, 5, -1), (2, 7, 2), "blue", "arm"),
-                Box((sx - 1.5, 3, -1.5), (3, 2, 3), "navy", "hand")]),
-            # zweites Armpaar: tiefer, weiter aussen und etwas hinten
-            Bone(f"{side}_lower_arm", "body", (sign * 4, 16.5, 1), [
-                Box((sign * 4.5 - 1, 9, 0), (2, 8, 2), "blue", "arm"),
-                Box((sign * 4.5 - 1.5, 7, -0.5), (3, 2, 3), "navy", "hand")], rotation=(8, 0, sign * 14)),
-            Bone(f"{side}_leg", None, (sign * 2, 12, 0), [
-                Box((sign * 2 - 1.5, 1, -1.5), (3, 11, 3), "blue", "leg"),
-                Box((sign * 2 - 1.5, 0, -3.5), (3, 1, 5), "navy", "foot")]),
+            # vorderes Armpaar = Vorderbeine (folgt dem Spielerarm)
+            Bone(f"{side}_arm", None, (sx, 17, -5), [
+                Box((sx - 1, 9.5, -6), (2, 8, 2), "blue", "arm"),
+                Box((sx - 1, 9.5, -4), (2, 2.5, 0.5), "blue", "tuft")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 9.5, -5), [
+                Box((sx - 1, 2.5, -6), (2, 7, 2), "blue", "arm"),
+                Box((sx - 1, 6, -4), (2, 2, 0.5), "blue", "tuft"),
+                Box((sx - 1.5, 0.5, -7), (3, 2, 3), "navy", "hand")]
+                + [Box((sx - 1.5 + i * 1.25, 0, -9), (0.5, 0.5, 2), "navy", "finger") for i in range(3)]),
+            Bone(f"{side}_leg", None, (sign * 2.5, 11, 4), [
+                Box((sign * 2.5 - 1.5, 6, 2.5), (3, 5, 4), "blue", "thigh"),
+                Box((sign * 2.5 - 1, 1, 5), (2, 5.5, 2), "blue", "shin"),
+                Box((sign * 2.5 - 1.5, 0, 1), (3, 1, 5.5), "navy", "foot")]
+                + [Box((sign * 2.5 - 1.5 + i * 1.25, 0, -0.5), (0.5, 0.5, 1.5), "navy", "toe") for i in range(3)]),
         ]
-    bones += [
-        Bone("tail_1", "body", (0, 13, 2.5), [Box((-1, 12, 2.5), (2, 2, 5), "blue", "tail")], rotation=(-35, 0, 0)),
-        Bone("tail_2", "tail_1", (0, 13, 7.5), [Box((-1, 12, 7.5), (2, 2, 5), "blue", "tail")], rotation=(-35, 0, 0)),
-        Bone("tail_3", "tail_2", (0, 13, 12.5), [Box((-1, 12, 12.5), (2, 2, 4), "blue", "tail")], rotation=(-40, 0, 0)),
-        Bone("tail_4", "tail_3", (0, 13, 16.5), [Box((-1, 12, 16.5), (2, 2, 4), "blue", "tail_tip")], rotation=(-55, 0, 0)),
-    ]
-    loops = {"tail_1": sway("y", 10, 110), "tail_2": sway("y", 12, 110, 30), "tail_3": sway("x", 8, 110, 60),
-             "tail_4": sway("x", 12, 110, 90)}
+    for sign in (-1, 1):
+        side = side_of(sign)
+        sx = sign * 4.2
+        # hinteres Armpaar: haengt am Arm der Gegenseite → laeuft gegenphasig (Kreuzgang)
+        bones.append(Bone(f"{side}_rear_arm", f"{side_of(-sign)}_arm", (sx, 15, -2.5), [
+            Box((sx - 1, 8, -3.5), (2, 7, 2), "blue", "arm"),
+            Box((sx - 1, 8, -1.5), (2, 2, 0.5), "blue", "tuft"),
+            Box((sx - 1, 2, -3.5), (2, 6, 2), "blue", "arm"),
+            Box((sx - 1.5, 0.5, -4.5), (3, 1.5, 3), "navy", "hand")]
+            + [Box((sx - 1.5 + i * 1.25, 0, -6), (0.5, 0.5, 1.5), "navy", "finger") for i in range(3)]))
+    tail = [("tail_1", "body", 55, (2, 2, 4)), ("tail_2", "tail_1", 25, (1.5, 1.5, 4)), ("tail_3", "tail_2", 15, (1.5, 1.5, 3.5)),
+            ("tail_4", "tail_3", 45, (1.5, 1.5, 3)), ("tail_5", "tail_4", 50, (1, 1, 2.5))]
+    z = 6.5
+    for name, parent, angle, size in tail:
+        w, h, d = size
+        bones.append(Bone(name, parent, (0, 13, z), [Box((-w / 2, 13 - h / 2, z), size, "blue",
+                                                         "tail_tip" if name in ("tail_4", "tail_5") else "tail")],
+                          rotation=(angle, 0, 0)))
+        z += d
+    loops = {"tail_1": sway("y", 8, 110), "tail_2": sway("x", 6, 110, 30), "tail_3": sway("x", 8, 110, 60),
+             "tail_4": sway("x", 10, 110, 90)}
     return Design("spidermonkey", 0.9, "fast", "#2E5FD6", m, bones, zone, loops=loops, seed=12)
 
 
 def way_big() -> Design:
-    """Way Big (AF/UA): schlanker weisser Riese; Kopfkamm vorn rot, unten/hinten schwarz; gruene Augen, dunkle
-    untere Gesichtshaelfte und schwarzer Hals; rote Linien von den Schultern zum Omnitrix; weisse Arme mit roten
-    Flossen und schwarzen Handgelenken; rote stiefelartige Unterschenkel und Fuesse."""
+    """Way Big (Modell AF-UA): schlanker weisser Riese. Hoher schmaler Kopfkamm, vorn rot, hinten/unten schwarz;
+    schmaler Schaedel mit gruenen Augen, schwarzes Untergesicht und schwarzer Hals; rote Linien von den Schultern zum
+    Omnitrix; weisse Arme mit langen roten Flossen am Unterarm, schwarze Handgelenke; rote stiefelartige Unterschenkel
+    mit Spitze und rote Fuesse."""
     m = {"white": Material("#EEEEF0", "#A6A8AE", "#FFFFFF", "plain"),
+         "line": Material("#DCDEE4", "#B0B2BA", "#EEEEF2", "plain", outline=False),
          "red": Material("#C21A2A", "#6E0C16", "#EE4656", "plain"),
          "black": Material("#1A1A1E", "#060608", "#3A3A42", "plain")}
 
     def zone(t: Texel) -> str | None:
         part, y, ax = t.part, t.y, abs(t.x)
-        if part == "head" and t.side != "up" and t.fy > 0.58:
+        if part == "crest" and (t.z > 0.3 or t.side in ("down", "south")):
             return "black"
-        if part == "crest" and (t.z > 1.2 or t.side == "down" or t.side == "south"):
-            return "black"
-        if part == "torso" and t.side == "north" and y > 20:
-            # zwei rote Linien von den Schultern schraeg zum Omnitrix (V)
-            if abs(ax - (1.4 + (y - 20) * 0.55)) < 0.6:
-                return "red"
-        if part == "forearm" and y < 9.2:
-            return "black"
-        if part == "leg":
-            peak = 8.0 + (2.0 * (1 - abs(t.fx - 0.5) * 2) if t.side == "north" else 0.0)
+        if part == "chest" and t.side == "north" and abs(ax - (1.2 + (y - 20) * 0.5)) < 0.55:
+            return "red"
+        if part == "abs" and t.side == "north" and (ax < 0.2 or abs(y - 17.75) < 0.2):
+            return "line"
+        if part == "shin":
+            peak = 5.5 + (2.0 * (1 - abs(t.fx - 0.5) * 2) if t.side == "north" else 0.0)
             if y < peak:
                 return "red"
         return None
 
     bones = [
         Bone("body", None, (0, 26, 0), [
-            Box((-4, 16, -2.5), (8, 10, 5), "white", "torso", front="chest"),
-            Box((-3, 13, -2), (6, 3, 4), "white", "waist")]),
+            Box((-4, 20, -2.5), (8, 6, 5), "white", "chest", front="chest"),
+            Box((-3, 15.5, -2), (6, 4.5, 4), "white", "abs"),
+            Box((-3.5, 13, -2.25), (7, 2.5, 4.5), "white", "hips")]),
         Bone("head", None, (0, 26, 0), [
-            Box((-1.5, 26, -1.5), (3, 2, 3), "black", "neck"),
-            Box((-2.5, 27.5, -3), (5, 6, 5), "white", "head", front="waybig_face")]),
-        # Kopfkamm: drei Lagen, nach vorn oben spitz zulaufend
-        Bone("crest", "head", (0, 33, 0), [
-            Box((-0.5, 32, -3.5), (1, 3, 7), "red", "crest"),
-            Box((-0.5, 35, -3.5), (1, 3, 5), "red", "crest"),
-            Box((-0.5, 38, -3.5), (1, 2, 3), "red", "crest")], rotation=(-10, 0, 0)),
+            Box((-1.25, 25.5, -1.25), (2.5, 2, 2.5), "black", "neck"),
+            Box((-2, 28, -2.5), (4, 4, 4.5), "white", "head", front="waybig_eyes"),
+            Box((-1.5, 26.5, -2.75), (3, 2, 3.5), "black", "jaw"),
+            Box((-2.25, 27.5, -2.25), (4.5, 1, 3.5), "black", "jaw")]),
+        Bone("crest", "head", (0, 31.5, 0), [
+            Box((-0.5, 31.5, -3), (1, 3, 5.5), "red", "crest"),
+            Box((-0.5, 34.5, -2.75), (1, 3, 4), "red", "crest"),
+            Box((-0.5, 37.5, -2.75), (1, 3, 2.5), "red", "crest"),
+            Box((-0.5, 40.5, -2.5), (1, 1.5, 1.5), "red", "crest")], rotation=(-8, 0, 0)),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
         sx = sign * 5.5
+        fin_x = sx + 1.25 if sign > 0 else sx - 1.75
         bones += [
-            Bone(f"{side}_arm", None, (sx, 25, 0), [Box((sx - 1.5, 18, -1.5), (3, 8, 3), "white", "arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 18, 0), [
-                Box((sx - 1.5, 8, -1.5), (3, 10, 3), "white", "forearm"),
-                Box((sx - 1.5, 5, -1.5), (3, 3, 3), "white", "hand")]),
-            # rote Flosse am Unterarm, aussen, nach hinten oben
-            Bone(f"{side}_fin", f"{side}_forearm", (sx + sign * 1.5, 16, 0), [
-                Box((sx + sign * 1.5 + (0 if sign > 0 else -1), 9, -1), (1, 9, 3), "red", "fin")], rotation=(0, 0, sign * 12)),
+            Bone(f"{side}_arm", None, (sx, 25, 0), [
+                Box((sx - 1.5, 22.5, -1.5), (3, 3, 3), "white", "shoulder"),
+                Box((sx - 1.25, 17.5, -1.25), (2.5, 5, 2.5), "white", "arm")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 17.5, 0), [
+                Box((sx - 1.25, 10.5, -1.25), (2.5, 7, 2.5), "white", "forearm"),
+                Box((sx - 1.5, 9, -1.5), (3, 1.5, 3), "black", "wrist"),
+                Box((sx - 1.25, 6.5, -1.25), (2.5, 2.5, 2.5), "white", "hand"),
+                Box((sx - 1.25, 5, -1.5), (2.5, 1.5, 1), "white", "hand")]),
+            Bone(f"{side}_fin", f"{side}_forearm", (fin_x, 11, 0), [
+                Box((fin_x, 10, -1), (0.5, 9, 2.5), "red", "fin"),
+                Box((fin_x, 19, -0.5), (0.5, 3, 1.5), "red", "fin")], rotation=(-10, 0, sign * 5)),
             Bone(f"{side}_leg", None, (sign * 2, 13, 0), [
-                Box((sign * 2 - 2, 1, -2), (4, 12, 4), "white", "leg"),
-                Box((sign * 2 - 2, 0, -4), (4, 2, 6), "red", "foot")]),
+                Box((sign * 2 - 1.5, 7.5, -1.75), (3, 5.5, 3.5), "white", "thigh"),
+                Box((sign * 2 - 1.5, 1.5, -1.5), (3, 6, 3), "white", "shin"),
+                Box((sign * 2 - 1.5, 0, -4), (3, 1.5, 5.5), "red", "foot"),
+                Box((sign * 2 - 1, 0, -5), (2, 1, 1), "red", "foot")]),
         ]
     return Design("way_big", 3.0, "heavy", "#C21A2A", m, bones, zone, arm_swing=0.7, leg_swing=0.7, seed=13)
 
 
 def alien_x() -> Design:
-    """Alien X: schlanker Humanoid, ganz schwarz mit weissen Sternpunkten (Nachthimmel), weisse Haende, gruene
-    pupillenlose Augen, drei hornartige Fortsaetze an der Stirn; Omnitrix auf der Brust."""
-    m = {"space": Material("#07080F", "#000000", "#B8D8FF", "stars"),
-         "white": Material("#F2F2F4", "#A8AAB2", "#FFFFFF", "plain"),
-         "rim": Material("#E8ECF6", "#9CA2B4", "#FFFFFF", "plain")}
-
-    def zone(t: Texel) -> str | None:
-        # Hoerner mit weissem Saum (wie die weisse Konturlinie der Vorlage)
-        if t.part == "horn" and t.side in ("north", "south") and edge(t) < 0.2:
-            return "rim"
-        return None
+    """Alien X (Posen AF-UA): schlanker athletischer Humanoid, ganz schwarz mit Sternen (Nachthimmel) und heller
+    Konturlinie, weisse Haende, gruene pupillenlose Augen; drei Hoerner an der Stirn — ein mittleres, zwei seitliche
+    nach aussen und oben gebogen. Omnitrix auf der Brust."""
+    m = {"space": Material("#07080F", "#000000", "#B8D8FF", "stars", rim="#28324E"),
+         "white": Material("#F2F2F4", "#A8AAB2", "#FFFFFF", "plain")}
 
     bones = [
         Bone("body", None, (0, 24, 0), [
-            Box((-4.5, 16, -2), (9, 8, 4), "space", "torso", front="chest"),
-            Box((-3.5, 12, -1.5), (7, 4, 3), "space", "waist")]),
-        Bone("head", None, (0, 24, 0), [
-            Box((-1.5, 24, -1.5), (3, 1, 3), "space", "neck"),
-            Box((-3, 25, -3), (6, 6, 6), "space", "head", front="alienx_face"),
-            Box((-2, 24.5, -3.5), (4, 2, 1), "space", "chin"),
-            # mittlerer kleiner Stirnfortsatz
-            Box((-0.5, 30, -3.5), (1, 2, 2), "space", "horn")]),
+            Box((-4, 19, -2), (8, 5, 4), "space", "chest", front="chest"),
+            Box((-3, 15, -1.75), (6, 4, 3.5), "space", "abs"),
+            Box((-3.25, 12, -1.75), (6.5, 3, 3.5), "space", "hips")]),
+        Bone("head", None, (0, 24.5, 0), [
+            Box((-1.25, 24, -1.25), (2.5, 1.5, 2.5), "space", "neck"),
+            Box((-2.5, 25.5, -2.5), (5, 5, 5), "space", "head", front="alienx_face"),
+            Box((-1.5, 24.5, -2.75), (3, 1.5, 3), "space", "chin")]),
+        Bone("horn_mid", "head", (0, 30.5, -1.5), [
+            Box((-0.5, 30.5, -2), (1, 3, 1), "space", "horn"),
+            Box((-0.25, 33.5, -1.75), (0.5, 1.5, 0.5), "space", "horn")], rotation=(15, 0, 0)),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
-        hx = sign * 2.5
+        hx = sign * 2
         bones += [
-            # grosse Hoerner: an den Schlaefen nach oben, dann nach hinten gebogen
-            Bone(f"horn_{side}", "head", (hx, 30, -1), [Box((hx - 0.5, 30, -2), (1, 3, 2), "space", "horn")],
-                 rotation=(15, 0, sign * -10)),
-            Bone(f"horn_{side}_2", f"horn_{side}", (hx, 33, -1), [Box((hx - 0.5, 33, -1.5), (1, 3, 2), "space", "horn")],
-                 rotation=(30, 0, 0)),
-            Bone(f"horn_{side}_3", f"horn_{side}_2", (hx, 36, -1), [Box((hx - 0.5, 36, -1), (1, 2, 1), "space", "horn")],
-                 rotation=(35, 0, 0)),
+            Bone(f"horn_{side}", "head", (hx, 30, -1), [Box((hx - 0.5, 30, -1.5), (1, 3, 1), "space", "horn")],
+                 rotation=(10, 0, sign * 25)),
+            Bone(f"horn_{side}_2", f"horn_{side}", (hx, 33, -1), [Box((hx - 0.5, 33, -1.5), (1, 2.5, 1), "space", "horn")],
+                 rotation=(20, 0, -sign * 15)),
+            Bone(f"horn_{side}_3", f"horn_{side}_2", (hx, 35.5, -1), [Box((hx - 0.25, 35.5, -1.25), (0.5, 2, 0.5), "space", "horn")],
+                 rotation=(25, 0, -sign * 20)),
         ]
-        sx = sign * 5.5
+        sx = sign * 5
         bones += [
-            Bone(f"{side}_arm", None, (sx, 23, 0), [Box((sx - 1, 17, -1.5), (2, 7, 3), "space", "arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 17, 0), [
-                Box((sx - 1, 11, -1.5), (2, 6, 3), "space", "arm"),
-                Box((sx - 1.5, 8, -1.5), (3, 3, 3), "white", "hand")]),
-            Bone(f"{side}_leg", None, (sign * 1.8, 12, 0), [Box((sign * 1.8 - 1.5, 0, -1.5), (3, 12, 3), "space", "leg")]),
+            Bone(f"{side}_arm", None, (sx, 23, 0), [
+                Box((sx - 1.25, 21, -1.5), (2.5, 2.5, 3), "space", "shoulder"),
+                Box((sx - 1, 16.5, -1.25), (2, 5, 2.5), "space", "arm")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 16.5, 0), [
+                Box((sx - 1, 11.5, -1.25), (2, 5, 2.5), "space", "arm"),
+                Box((sx - 1.25, 9, -1.25), (2.5, 2.5, 2.5), "white", "hand"),
+                Box((sx - 1.25, 7.5, -1.5), (2.5, 1.5, 1), "white", "hand")]),
+            Bone(f"{side}_leg", None, (sign * 1.75, 12, 0), [
+                Box((sign * 1.75 - 1.5, 6.5, -1.5), (3, 5.5, 3), "space", "thigh"),
+                Box((sign * 1.75 - 1.25, 1, -1.25), (2.5, 5.5, 2.5), "space", "shin"),
+                Box((sign * 1.75 - 1.25, 0, -3), (2.5, 1, 4), "space", "foot")]),
         ]
-    return Design("alien_x", 1.05, "small", "#B8D8FF", m, bones, zone, seed=14)
+    return Design("alien_x", 1.05, "small", "#B8D8FF", m, bones, None, seed=14)
 
 
 def brainstorm() -> Design:
-    """Brainstorm (AF/UA): Krabbe. Riesiger rostbrauner Kopfpanzer mit wuetendem Gesicht (gruene Augen, schwere
-    Brauen, Zahnreihe); die Schaedelplatten klappen auf und zeigen das rosa Gehirn. Silber-schwarze Halsmanschette
-    mit Omnitrix. Darunter ein kleiner Leib auf sechs duennen Spinnenbeinen, zwei lange duenne Arme mit Zangen."""
+    """Brainstorm (Turnaround AF-UA) als Krabbe auf vier Beinen: riesiger gewoelbter Panzer mit Mittelnaht und
+    Dornen am Rand, der vorn wie eine Stirn ueber das Gesicht faellt (V-Knick); darunter Gesicht mit gruenen
+    Mandelaugen und gefletschten Zaehnen. Die Schaedelplatten klappen auf und zeigen das rosa Gehirn. Halsmanschette
+    mit Ringbaendern und Omnitrix, runder Hinterleib. Lange Arme mit Gelenkringen und gebogenen Zangen; vier kurze
+    gebogene Krabbenbeine mit dunklen Spitzen (vorn und hinten gespreizt, Kreuzgang)."""
     m = {"shell": Material("#9A4E22", "#56260C", "#C77440", "shell"),
          "plate": Material("#8A4420", "#4A200A", "#B8683A", "shell"),
          "brain": Material("#F28AC4", "#B04A88", "#FFC2E4", "brain", outline=False),
          "silver": Material("#B8BEC6", "#6E747C", "#E6EAF0", "metal"),
          "band": Material("#1C1C20", "#08080A", "#3A3A42", "plain"),
          "leg": Material("#9A4E22", "#56260C", "#C77440", "plain"),
-         "tip": Material("#3A2414", "#1A0E06", "#5A3A24", "plain")}
+         "tip": Material("#3A2414", "#1A0E06", "#5A3A24", "plain"),
+         "spike": Material("#D8CDB8", "#8A806E", "#FFFFFF", "plain")}
 
     def zone(t: Texel) -> str | None:
-        if t.part == "collar" and abs(t.y - 14.5) < 0.5:
+        if t.part == "collar" and (abs(t.y - 9.25) < 0.3 or abs(t.y - 11.25) < 0.3):
             return "band"
-        if t.part == "pincer" and t.y < 1.5:
+        if t.part in ("arm", "leg") and t.side != "up" and abs(t.fy - 0.82) < 0.08:
+            return "band"
+        if t.part == "leg_tip" and t.y < 1.5:
             return "tip"
         return None
 
     bones = [
-        Bone("head", None, (0, 15, 0), [
-            # Halsmanschette (silber mit schwarzem Band, Omnitrix vorn)
-            Box((-4, 13, -4), (8, 3, 8), "silver", "collar", front="chest_low"),
-            # Kopfpanzer
-            Box((-7, 16, -6), (14, 7, 12), "shell", "shell", front="brainstorm_face"),
-            Box((-6, 23, -5), (12, 1, 10), "shell", "shell"),
-            # Gehirn unter den Platten
-            Box((-5, 23.5, -4), (10, 2, 8), "brain", "brain")]),
-        # Schaedelplatten links/rechts, klappen an der Aussenkante auf
-        Bone("plate_right", "head", (-6, 24, 0), [Box((-6, 24, -5), (6, 2, 10), "plate", "plate", top="brain_top"),
-                                                  Box((-4.5, 26, -3.5), (4, 1, 7), "plate", "plate")]),
-        Bone("plate_left", "head", (6, 24, 0), [Box((0, 24, -5), (6, 2, 10), "plate", "plate"),
-                                                Box((0.5, 26, -3.5), (4, 1, 7), "plate", "plate")]),
-        Bone("body", None, (0, 13, 0), [Box((-3, 8, -3), (6, 5, 6), "shell", "thorax")]),
-        # gewoelbter Panzerrand rundherum
-        Bone("shell_rim", "head", (0, 18, 0), [Box((-8, 17, -5), (1, 5, 10), "shell", "shell"),
-                                              Box((7, 17, -5), (1, 5, 10), "shell", "shell"),
-                                              Box((-6, 17, 6), (12, 5, 1), "shell", "shell")]),
+        Bone("head", None, (0, 13, 0), [
+            Box((-8, 15, -7.5), (16, 1.5, 15), "shell", "brim"),
+            Box((-1.5, 14.25, -7.75), (3, 1, 1), "shell", "brim"),
+            Box((-7.5, 16.5, -7), (15, 2.5, 14), "shell", "shell"),
+            Box((-6.5, 19, -6), (13, 0.5, 12), "shell", "shell"),
+            Box((-5.5, 19.5, -5), (11, 2.5, 10), "brain", "brain"),
+            Box((-6, 10.5, -7), (12, 4.5, 6), "shell", "face", front="brainstorm_face")]
+            + [Box((sx, 16.5, sz), (0.5, 1, 0.5), "spike", "spike") for sx, sz in
+               ((-8, -4), (-8, 2), (7.5, -4), (7.5, 2), (-4, -7.5), (3.5, -7.5), (-3, 7), (2.5, 7))]),
+        Bone("plate_right", "head", (-6.5, 20, 0), [
+            Box((-6.5, 19.5, -6), (6.5, 2, 12), "plate", "plate"),
+            Box((-5.5, 21.5, -5), (5.5, 1, 10), "plate", "plate"),
+            Box((-4, 22.5, -3.5), (4, 0.5, 7), "plate", "plate")]),
+        Bone("plate_left", "head", (6.5, 20, 0), [
+            Box((0, 19.5, -6), (6.5, 2, 12), "plate", "plate"),
+            Box((0, 21.5, -5), (5.5, 1, 10), "plate", "plate"),
+            Box((0, 22.5, -3.5), (4, 0.5, 7), "plate", "plate")]),
+        Bone("body", None, (0, 11, 0), [
+            Box((-4.5, 8.5, -4.5), (9, 3, 9), "silver", "collar", front="chest_small"),
+            Box((-3.5, 5, -3.5), (7, 3.5, 7), "shell", "thorax"),
+            Box((-3, 4.5, 3), (6, 4, 4), "shell", "abdomen")]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
-        sx = sign * 6.5
+        sx = sign * 8.5
         bones += [
-            # lange duenne Arme unter dem Panzer, Zangen am Ende
-            Bone(f"{side}_arm", None, (sx, 16, 0), [Box((sx - 1, 9, -1), (2, 7, 2), "leg", "arm")]),
-            Bone(f"{side}_forearm", f"{side}_arm", (sx, 9, 0), [
-                Box((sx - 1, 3, -1), (2, 6, 2), "leg", "arm"),
-                Box((sx - 1.5, 0, -1.5), (3, 3, 3), "shell", "pincer"),
-                Box((sx - 0.5, -2, -1.5), (1, 2, 1), "tip", "pincer"),
-                Box((sx - 0.5, -2, 0.5), (1, 2, 1), "tip", "pincer")]),
+            Bone(f"{side}_arm", None, (sx, 14, -1), [
+                Box((sx - 1, 6, -2), (2, 8, 2), "leg", "arm"),
+                Box((sx - 1.25, 5.5, -2.25), (2.5, 0.5, 2.5), "band", "ring")]),
+            Bone(f"{side}_forearm", f"{side}_arm", (sx, 6, -1), [
+                Box((sx - 1, 2, -2), (2, 4, 2), "leg", "arm"),
+                Box((sx - 1.5, 0.5, -3), (3, 2, 3), "shell", "pincer"),
+                Box((sx - 0.5, 1.5, -6), (1, 1, 3), "tip", "pincer"),
+                Box((sx - 0.5, 0.5, -6.5), (1, 1, 1), "tip", "pincer"),
+                Box((sx - 0.5, 0, -5), (1, 0.5, 2), "tip", "pincer")]),
         ]
-        # sechs Krabbenbeine: Oberglied schraeg nach aussen oben, Unterglied schraeg nach aussen unten.
-        # Mitte = Laufbeine (folgen dem Gang), vorn und hinten gespreizt.
-        for name, parent, yaw in ((f"{side}_leg", None, 0), (f"{side}_leg_front", "body", -38), (f"{side}_leg_rear", "body", 38)):
+    # vier Krabbenbeine: vorn = Laufbeine (Spielerbeine), hinten am Bein der Gegenseite (Kreuzgang)
+    for sign in (-1, 1):
+        side = side_of(sign)
+        for name, parent, pivot_z, yaw in ((f"{side}_leg", None, -2.5, -sign * 45), (f"{side}_leg_rear", f"{side_of(-sign)}_leg", 3, sign * 45)):
             px = sign * 3
-            bones.append(Bone(name, parent, (px, 10, 0), [
-                Box((px if sign > 0 else px - 6, 9.5, -0.5), (6, 1, 1), "leg", "leg")],
-                rotation=(0, sign * yaw, sign * 28)))
-            bones.append(Bone(f"{name}_tip", name, (px + sign * 6, 10, 0), [
-                Box((px + sign * 6 - 0.5, -1, -0.5), (1, 11, 1), "leg", "leg"),
-                Box((px + sign * 6 - 0.5, -1, -0.5), (1, 2, 1), "tip", "leg")], rotation=(0, 0, sign * -48)))
+            bones.append(Bone(name, parent, (px, 6, pivot_z)))
+            bones.append(Bone(f"{name}_yaw", name, (px, 6, pivot_z), rotation=(0, yaw, 0)))
+            bones.append(Bone(f"{name}_upper", f"{name}_yaw", (px, 6, pivot_z), [
+                Box((px if sign > 0 else px - 6, 5.5, pivot_z - 0.5), (6, 1, 1), "leg", "leg")],
+                rotation=(0, 0, -sign * 30)))
+            tip_x = px + sign * 6
+            bones.append(Bone(f"{name}_lower", f"{name}_upper", (tip_x, 6, pivot_z), [
+                Box((tip_x - 0.5, -3.5, pivot_z - 0.5), (1, 9.5, 1), "leg", "leg_tip"),
+                Box((tip_x - 0.5 + sign * 0.5, -4, pivot_z - 0.5), (1, 1, 1), "tip", "leg_tip")],
+                rotation=(0, 0, sign * 50)))
     loops = {
         # Schaedelplatten oeffnen sich kurz (Gehirn sichtbar), dann zu
-        "plate_right": {"rotation": {"vector": [0, 0, "math.max(0,math.sin(query.anim_time*90))*-22"]}},
-        "plate_left": {"rotation": {"vector": [0, 0, "math.max(0,math.sin(query.anim_time*90))*22"]}},
-        "right_leg_front": sway("x", 6, 180), "left_leg_front": sway("x", 6, 180, 90),
-        "right_leg_rear": sway("x", 6, 180, 180), "left_leg_rear": sway("x", 6, 180, 270)}
-    return Design("brainstorm", 1.0, "heavy", "#C77440", m, bones, zone, loops=loops, seed=15)
+        "plate_right": {"rotation": {"vector": [0, 0, "math.max(0,math.sin(query.anim_time*90))*-24"]}},
+        "plate_left": {"rotation": {"vector": [0, 0, "math.max(0,math.sin(query.anim_time*90))*24"]}}}
+    return Design("brainstorm", 1.0, "heavy", "#C77440", m, bones, zone, leg_swing=0.6, loops=loops, seed=15)
 
 
 def goop() -> Design:
-    """Goop (AF/UA): duenner, gallertartiger gruener Humanoid mit langen Armen, spitz nach oben auslaufendem Kopf,
-    kleinen hellen Augen und zerfliessenden Fuessen; der Anti-Gravitations-Projektor schwebt als kleine Untertasse
-    ueber dem Kopf. Omnitrix auf der Brust."""
+    """Goop (Posen AF-UA): duenner gallertartiger Humanoid, gruen mit Glanzstreifen; spitz nach oben auslaufender
+    Kopf mit kleinen Augen, Schleimtropfen an Koerper und Haenden, Beine zerfliessen am Boden zu Lachen. Der
+    Anti-Gravitations-Projektor schwebt als Untertasse mit Lichtring ueber dem Kopf. Omnitrix auf der Brust."""
     m = {"slime": Material("#6FD62A", "#2F7A10", "#D8FF8A", "slime"),
          "deep": Material("#4FB01C", "#245E0C", "#A6F060", "slime"),
          "metal": Material("#8A939E", "#4A525C", "#D6DCE4", "metal"),
@@ -833,44 +869,53 @@ def goop() -> Design:
          "light": Material("#7CFF4A", "#3DB018", "#D0FFB8", "plain", glow=True)}
 
     def zone(t: Texel) -> str | None:
-        if t.part in ("leg", "puddle") and t.y < 1.2:
-            return "deep"
+        if t.part == "rim" and t.side in ("north", "south", "east", "west") and int(t.fx * 6) % 2 == 0:
+            return "light"
         return None
 
     bones = [
         Bone("body", None, (0, 22, 0), [
-            Box((-2.5, 17, -1.5), (5, 5, 3), "slime", "torso", front="chest"),
-            Box((-1.5, 12, -1), (3, 5, 2), "slime", "torso")]),
+            Box((-2.5, 17, -1.5), (5, 5, 3), "slime", "chest", front="chest"),
+            Box((-3, 20, -1), (6, 1.5, 2), "slime", "chest"),
+            Box((-1.5, 13, -1), (3, 4, 2), "slime", "waist"),
+            Box((-2, 11, -1.25), (4, 2, 2.5), "slime", "waist"),
+            Box((1, 15, -1.25), (0.5, 1.5, 0.5), "slime", "drip"),
+            Box((-1.5, 12, 0.75), (0.5, 2, 0.5), "slime", "drip")]),
         Bone("head", None, (0, 22, 0), [
-            Box((-1, 22, -1), (2, 1, 2), "slime", "neck"),
-            Box((-2, 23, -2), (4, 4, 4), "slime", "head", front="goop_face"),
-            Box((-1.5, 27, -1.5), (3, 2, 3), "slime", "head"),
-            Box((-1, 29, -1), (2, 2, 2), "slime", "head"),
-            Box((-0.5, 31, -0.5), (1, 1, 1), "slime", "head")]),
-        # Projektor: Untertasse mit Lichtring und Kuppel, schwebt ueber dem Kopf
-        Bone("projector", "head", (0, 35, 0), [
-            Box((-3, 34, -3), (6, 1, 6), "metal", "projector"),
-            Box((-2, 33, -2), (4, 1, 4), "light", "projector"),
+            Box((-0.75, 22, -0.75), (1.5, 1, 1.5), "slime", "neck"),
+            Box((-1.75, 23, -1.75), (3.5, 3.5, 3.5), "slime", "head", front="goop_face"),
+            Box((-1.25, 26.5, -1.5), (2.5, 2, 2.5), "slime", "head"),
+            Box((-1, 28.5, -1.25), (2, 1.5, 2), "slime", "head"),
+            Box((-0.5, 30, -1), (1, 1.5, 1.5), "slime", "head"),
+            Box((-0.25, 31.5, -1), (0.5, 1, 0.5), "slime", "head"),
+            Box((-0.5, 24, 1.75), (1, 3, 0.5), "slime", "head")]),
+        Bone("projector", "head", (0, 34.5, 0), [
+            Box((-2.5, 34, -2.5), (5, 1, 5), "metal", "projector"),
+            Box((-3, 34.25, -3), (6, 0.5, 6), "metal", "rim"),
+            Box((-1.5, 33.5, -1.5), (3, 0.5, 3), "light", "projector"),
             Box((-1, 35, -1), (2, 1, 2), "dome", "projector")]),
-        Bone("drip", "body", (0, 12, 0), [Box((-2, 10, -1), (1, 2, 1), "slime", "drip"),
-                                          Box((1, 9, 0), (1, 3, 1), "slime", "drip")]),
     ]
     for sign in (-1, 1):
         side = side_of(sign)
         sx = sign * 3.5
+        x = sign * 1.2
         bones += [
-            Bone(f"{side}_arm", None, (sx, 21, 0), [Box((sx - 1, 13, -1), (2, 9, 2), "slime", "arm")]),
+            Bone(f"{side}_arm", None, (sx, 21, 0), [
+                Box((sx - 1, 14, -1), (2, 7, 2), "slime", "arm"),
+                Box((sx - 1.25, 13, -1.25), (2.5, 1.5, 2.5), "slime", "arm")]),
             Bone(f"{side}_forearm", f"{side}_arm", (sx, 13, 0), [
-                Box((sx - 1, 6, -1), (2, 7, 2), "slime", "arm"),
-                Box((sx - 1.5, 4, -1.5), (3, 2, 3), "slime", "hand")]),
-            Bone(f"{side}_leg", None, (sign * 1.2, 12, 0), [
-                Box((sign * 1.2 - 1, 2, -1), (2, 10, 2), "slime", "leg"),
-                Box((sign * 1.2 - 1.5, 1, -1.5), (3, 1, 3), "slime", "leg"),
-                Box((sign * 1.2 - 2.5, 0, -2.5), (5, 1, 5), "slime", "puddle")]),
+                Box((sx - 0.75, 7, -0.75), (1.5, 6, 1.5), "slime", "arm"),
+                Box((sx - 1.25, 5, -1.25), (2.5, 2, 2.5), "slime", "hand"),
+                Box((sx - 0.5, 3.5, -0.5), (1, 1.5, 1), "slime", "drip"),
+                Box((sx - 1.25, 4, -1.25), (0.5, 1, 0.5), "slime", "hand")]),
+            Bone(f"{side}_leg", None, (x, 11, 0), [
+                Box((x - 1, 6, -1), (2, 5, 2), "slime", "leg"),
+                Box((x - 1.25, 1.5, -1.25), (2.5, 4.5, 2.5), "slime", "leg"),
+                Box((x - 1.75, 0.5, -1.75), (3.5, 1, 3.5), "slime", "leg"),
+                Box((x - 2.5, 0, -3), (5, 0.5, 5.5), "deep", "puddle")]),
         ]
     loops = {"projector": {"position": {"vector": [0, "math.sin(query.anim_time*120)*0.6", 0]},
-                           "rotation": {"vector": [0, "query.anim_time*90", 0]}},
-             "drip": {"scale": {"vector": [1, "1+math.sin(query.anim_time*160)*0.15", 1]}}}
+                           "rotation": {"vector": [0, "query.anim_time*90", 0]}}}
     return Design("goop", 1.0, "small", "#6FD62A", m, bones, zone, loops=loops, seed=16)
 
 

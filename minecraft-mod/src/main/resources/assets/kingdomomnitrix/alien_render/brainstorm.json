@@ -6,7 +6,7 @@
   "uniform_models": false,
   "vanilla_pose": true,
   "arm_swing": 1.0,
-  "leg_swing": 1.0,
+  "leg_swing": 0.6,
   "ability_poses": [
     {
       "ease": "out_cubic",
