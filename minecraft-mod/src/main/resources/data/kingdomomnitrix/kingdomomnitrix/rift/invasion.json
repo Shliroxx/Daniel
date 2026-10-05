@@ -1,0 +1,73 @@
+{
+  "min_level": 40,
+  "weight": 1,
+  "elite_chance": 0.12,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 6
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 2
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 4
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 3
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 2
+      },
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 6
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 3
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 2
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 4
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts_min": 200,
+    "bolts_max": 320,
+    "hearts": 10,
+    "experience": 600,
+    "crystal_chance": 0.9,
+    "dna_chance": 0.5
+  }
+}

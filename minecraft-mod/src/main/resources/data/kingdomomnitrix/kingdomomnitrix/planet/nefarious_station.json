@@ -1,0 +1,18 @@
+{
+  "dimension": "kingdomomnitrix:nefarious_station",
+  "system": "deep_space",
+  "map": [
+    0.8,
+    0.12
+  ],
+  "color": 10178008,
+  "size": 0.9,
+  "order": 30,
+  "landing": [
+    0,
+    0
+  ],
+  "hero_level": 20,
+  "warp": 3,
+  "requires": "kingdomomnitrix:torren_iv"
+}

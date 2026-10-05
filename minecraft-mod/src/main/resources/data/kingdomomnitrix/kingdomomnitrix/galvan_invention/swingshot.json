@@ -1,0 +1,21 @@
+{
+  "result": "kingdomomnitrix:swingshot",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 4
+    },
+    {
+      "item": "minecraft:string",
+      "count": 4
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 2
+    }
+  ],
+  "bolts": 400,
+  "knowledge": 8,
+  "sort_order": 60
+}

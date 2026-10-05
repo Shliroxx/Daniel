@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/kerwan_turf"
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_turf",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_turf",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_turf",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/rilgar_coralstone"
+      },
+      {
+        "model": "kingdomomnitrix:block/rilgar_coralstone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/rilgar_coralstone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/rilgar_coralstone",
+        "y": 270
+      }
+    ]
+  }
+}

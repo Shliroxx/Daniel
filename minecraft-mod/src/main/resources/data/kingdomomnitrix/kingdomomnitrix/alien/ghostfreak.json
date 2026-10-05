@@ -1,0 +1,134 @@
+{
+  "color": "#C9C3D6",
+  "sort_order": 9,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 7,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.15,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.gravity",
+      "amount": -0.5,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 20.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall",
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:tentacle_lash",
+      "energy": 15,
+      "cooldown": 25,
+      "params": {
+        "range": 10.0,
+        "damage": 6.0,
+        "pull": 1.2,
+        "heal": 2.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:phase_shift",
+      "energy": 30,
+      "cooldown": 100,
+      "params": {
+        "ticks": 60
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:haunting_scare",
+      "energy": 35,
+      "cooldown": 120,
+      "params": {
+        "radius": 8.0,
+        "seconds": 6.0,
+        "push": 1.2
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:possession",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "range": 6.0,
+        "seconds": 6.0,
+        "self_seconds": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:shadow_step",
+      "energy": 25,
+      "cooldown": 100,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "distance": 10.0,
+        "invulnerable_ticks": 10.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:nightmare",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 10.0,
+        "damage": 8.0,
+        "seconds": 6.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:vex",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:phantom",
+      "chance": 0.1
+    },
+    {
+      "entity": "minecraft:ghast",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:ghostfreak",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "ghost"
+  }
+}

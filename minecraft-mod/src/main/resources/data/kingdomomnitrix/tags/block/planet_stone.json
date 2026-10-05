@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:veldin_sandstone",
+    "kingdomomnitrix:veldin_rock",
+    "kingdomomnitrix:kerwan_slate",
+    "kingdomomnitrix:novalis_limestone",
+    "kingdomomnitrix:rilgar_coralstone",
+    "kingdomomnitrix:torren_crust",
+    "kingdomomnitrix:torren_basalt"
+  ]
+}

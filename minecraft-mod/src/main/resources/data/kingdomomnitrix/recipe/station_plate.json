@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "DDD",
+    "DQD",
+    "DDD"
+  ],
+  "key": {
+    "D": {
+      "item": "kingdomomnitrix:hull_plate_dark"
+    },
+    "Q": {
+      "item": "kingdomomnitrix:aquarine_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:station_plate",
+    "count": 8
+  }
+}

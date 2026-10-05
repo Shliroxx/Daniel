@@ -1,0 +1,230 @@
+{
+  "scale": 1.0,
+  "uniforms": [
+    "classic"
+  ],
+  "uniform_models": false,
+  "vanilla_pose": true,
+  "arm_swing": 0.8,
+  "leg_swing": 0.8,
+  "ability_poses": [
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -100.0
+          ],
+          [
+            "set_rot",
+            "y",
+            35.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "y",
+            -20.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            20.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -28.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -10.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            60.0
+          ],
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -60.0
+          ],
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_sine",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            12.0
+          ],
+          [
+            "set_rot",
+            "y",
+            15.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -30.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            30.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_quad",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -160.0
+          ],
+          [
+            "set_rot",
+            "z",
+            10.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -8.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -28.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -10.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            60.0
+          ],
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -60.0
+          ],
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -6.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            150.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -150.0
+          ]
+        ]
+      }
+    }
+  ],
+  "glow_frames": 1,
+  "warn_textures": false,
+  "source": "Omni-Evo: Aliens (Alien-Evolution-Addon, mit Erlaubnis)"
+}

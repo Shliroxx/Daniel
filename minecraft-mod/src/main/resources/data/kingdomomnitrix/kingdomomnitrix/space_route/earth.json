@@ -1,0 +1,10 @@
+{
+  "destination": "minecraft:overworld",
+  "position": [
+    0,
+    120,
+    320
+  ],
+  "color": 5219327,
+  "radius": 12
+}

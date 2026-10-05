@@ -1,0 +1,78 @@
+{
+  "item": "kingdomomnitrix:oathkeeper",
+  "rarity": "epic",
+  "damage": 5.0,
+  "damage_per_level": 0.8,
+  "magic": 4.0,
+  "magic_per_level": 1.5,
+  "attack_speed": 1.25,
+  "reach": 0.5,
+  "combo_length": 3,
+  "passives": {
+    "combo_plus": 1,
+    "magic_boost": 0.2,
+    "finisher_plus": 0.3
+  },
+  "upgrades": [
+    {
+      "bolts": 60,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "bolts": 120,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 3
+        },
+        {
+          "id": "minecraft:amethyst_shard",
+          "count": 6
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "bolts": 220,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 5
+        },
+        {
+          "id": "minecraft:diamond",
+          "count": 3
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "bolts": 400,
+      "items": [
+        {
+          "id": "kingdomomnitrix:heart",
+          "count": 10
+        },
+        {
+          "id": "minecraft:nether_star",
+          "count": 1
+        },
+        {
+          "id": "kingdomomnitrix:orichalcum",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

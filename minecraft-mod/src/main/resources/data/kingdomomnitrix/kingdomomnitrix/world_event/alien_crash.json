@@ -1,0 +1,16 @@
+{
+  "type": "alien_crash",
+  "weight": 10,
+  "min_level": 3,
+  "duration_seconds": 420,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 150,
+    "experience": 200,
+    "raritanium": 3,
+    "mythril": 2,
+    "dna": true
+  }
+}

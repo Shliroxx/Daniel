@@ -1,0 +1,88 @@
+# Baut die Minecraft-Mod (minecraft-mod/) bei jeder Aenderung daran und prueft ihre Ressourcen.
+# Ergebnis: die fertige .jar als Artefakt des Workflow-Laufs.
+
+name: Mod bauen
+
+on:
+  push:
+    paths:
+      - 'minecraft-mod/**'
+      - '.github/workflows/mod-build.yml'
+  pull_request:
+    paths:
+      - 'minecraft-mod/**'
+      - '.github/workflows/mod-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mod-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: minecraft-mod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Ressourcen pruefen (Uebersetzungen, Modelle, Rezepte, Loot)
+        run: python tools/check_assets.py
+
+      - name: Texturen und Alien-Modelle pruefen
+        run: |
+          pip install --quiet pillow numpy
+          python tools/generate_textures.py --check
+          python tools/sample_reference.py heatblast --check
+          python tools/sample_reference.py xlr8 --check
+          python tools/sample_reference.py four_arms --check
+          python tools/sample_reference.py diamondhead --check
+          python tools/generate_alien_models.py --check
+          python tools/import_alienevo.py --check
+          python tools/generate_custom_aliens.py --check
+          python tools/import_addon_aliens.py --check
+          python tools/import_omnitrix_model.py --check
+          python tools/generate_alien_icons.py --check
+          python tools/generate_color_particles.py --check
+          python tools/generate_ability_poses.py --check
+          python tools/generate_aura_texture.py --check
+          python -m unittest discover -s tools/tests -t .
+          python tools/generate_item_models.py --check
+          python tools/generate_player_animations.py --check
+          python tools/generate_heartless_models.py --check
+          python tools/generate_npc_models.py --check
+          python tools/generate_ship_mesh.py --check
+          python tools/generate_planet_content.py --check
+          python tools/generate_planet_worlds.py --check
+          python tools/generate_boss_models.py --check
+          python tools/generate_icons.py --check
+          python tools/generate_particles.py --check
+          python tools/generate_sounds.py --check
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Mod bauen
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace --no-daemon
+
+      - name: Mod-Datei hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdomomnitrix
+          path: minecraft-mod/build/libs/*.jar
+          if-no-files-found: error

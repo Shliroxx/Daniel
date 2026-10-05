@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "XX",
+    "X|",
+    " |"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:pyronite_ingot"
+    },
+    "|": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:pyronite_axe",
+    "count": 1
+  }
+}

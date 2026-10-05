@@ -1,0 +1,17 @@
+{
+  "greeting": [
+    {
+      "translate": "npc.kingdomomnitrix.clank.greeting.1"
+    },
+    {
+      "translate": "npc.kingdomomnitrix.clank.greeting.2"
+    }
+  ],
+  "farewell": [
+    {
+      "translate": "npc.kingdomomnitrix.clank.farewell"
+    }
+  ],
+  "width": 0.5,
+  "height": 1.4
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "kingdomomnitrix:block/novalis_log_top",
+    "side": "kingdomomnitrix:block/novalis_log"
+  }
+}

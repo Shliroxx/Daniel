@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "HD",
+    "DH"
+  ],
+  "key": {
+    "H": {
+      "item": "kingdomomnitrix:hull_plate_orange"
+    },
+    "D": {
+      "item": "kingdomomnitrix:hull_plate_dark"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:hazard_plate",
+    "count": 4
+  }
+}

@@ -1,0 +1,1 @@
+{"condition": {"type": "block_near", "radius": 5, "min": 3, "target": "#kingdomomnitrix:technology"}, "weights": {"kingdomomnitrix:upgrade": 7, "kingdomomnitrix:grey_matter": 2}, "reason": "scan.kingdomomnitrix.redstone"}

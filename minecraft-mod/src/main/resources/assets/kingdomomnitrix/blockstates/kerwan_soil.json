@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/kerwan_soil"
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_soil",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_soil",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_soil",
+        "y": 270
+      }
+    ]
+  }
+}

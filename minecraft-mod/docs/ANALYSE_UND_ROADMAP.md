@@ -1,0 +1,606 @@
+# KINGDOM OMNITRIX — Bestandsaufnahme und technische Roadmap
+
+made by SANTIQ · Minecraft 1.21.1 · Fabric · Stand: 2026-10-01
+
+Status-Begriffe in diesem Dokument:
+
+| Begriff | Bedeutung |
+|---|---|
+| **IMPLEMENTED** | Läuft vollständig: Logik, Speicherung, Multiplayer, UI, Feedback, Fehlerbehandlung |
+| **PROTOTYPE** | Läuft, ist aber noch nicht endgültig |
+| **PLACEHOLDER** | Vorläufiger Inhalt, wird ersetzt |
+| **TODO** | Noch nicht gebaut |
+| **UNVERIFIED** | Code ist geschrieben, aber nie kompiliert oder im Spiel getestet |
+
+---
+
+## 0. Harter Blocker: Der Build ist nicht geprüft
+
+Für die bestehende Version (`minecraft-mod/`, 1 420 Zeilen Java) lief **nie** ein `./gradlew build`.
+Das Netzwerk dieser Entwicklungsumgebung sperrt alle Server, die Fabric braucht:
+
+| Host | Wofür | Status (geprüft 2026-10-01) |
+|---|---|---|
+| `maven.fabricmc.net` | Loom, Loader, Fabric API, Yarn | gesperrt (403 am Proxy) |
+| `piston-meta.mojang.com` | Minecraft-Versionsliste | gesperrt |
+| `libraries.minecraft.net` | Minecraft-Bibliotheken | gesperrt |
+| `maven.terraformersmc.com`, `dl.cloudsmith.io` | mögliche Abhängigkeiten (GeckoLib, Mod Menu …) | gesperrt |
+
+Was trotzdem geprüft wurde:
+- Jeder Aufruf an Minecraft und die Fabric API wurde einzeln gegen die Yarn-Mappings `1.21.1` und den Quellcode der Fabric API (Branch `1.21.1`) abgeglichen.
+- Ein `javac`-Lauf ohne Bibliotheken zeigt keine Syntaxfehler.
+- Ein Skript prüft, dass jeder Übersetzungsschlüssel, jedes Modell, jede Textur und jede Rezeptzutat vorhanden ist.
+
+**Folge für die Roadmap:** Laut Qualitätsregel ist eine Phase erst fertig, wenn `./gradlew build` grün ist.
+Solange die Hosts gesperrt sind, kann hier keine Phase diesen Status erreichen. Zwei Auswege:
+
+1. **Empfohlen:** Die Hosts oben in den Umgebungseinstellungen freigeben (Network access → Allowed domains).
+2. Nach jeder Phase lokal bauen (`Mod bauen.bat`) und die Fehlerausgabe zurückgeben.
+
+Zusätzlich empfohlen: ein GitHub-Actions-Workflow, der die Mod bei jedem Push baut. GitHub-Runner erreichen Maven.
+Dann hat jeder PR einen echten Build-Nachweis, egal wie diese Umgebung eingestellt ist. → Phase 2, Schritt 1.
+
+---
+
+## Entscheidungen (2026-10-01)
+
+| Frage | Entscheidung |
+|---|---|
+| Build-Prüfung | Hosts werden freigegeben; zusätzlich baut GitHub Actions bei jedem Push |
+| Mod-ID / Paket | `kingdomomnitrix` / `com.santiq.kingdomomnitrix` |
+| Bibliotheken | GeckoLib + playerAnimator — eingebunden in der Phase, die sie zuerst nutzt (3 bzw. 4) |
+| Ablauf | Phase für Phase, nach jeder Phase Prüfung durch SANTIQ |
+| Alien-Aussehen | echter, animierter Alien-Körper (GeckoLib), für alle sichtbar |
+| Alien-Freischaltung | DNA-Proben von Gegnern (Quellen pro Alien im JSON) |
+| Diamondhead, Grey Matter | ins neue System übernommen, Status PROTOTYPE |
+| Progression (Phase 15) | Stufe 50; Werte automatisch + neue Fähigkeiten pro Stufe; KH-Fähigkeitenliste mit AP; EP auch aus Herzlosen/Bossen, Erkunden, Alien-Meisterschaft |
+| UI (Phase 16) | KH-Kommandomenü, Weltkarte, Inventar-Reiter, HUD aufräumen; Farben je System; HUD verschieb- und skalierbar; eigene Symbole |
+| VFX (Phase 17) | alle vier Bereiche (Verwandlung, Treffer/Combos, Magie, Waffen/Gadgets); immer voll; Bildschirm-Blitz und Vignette; eigene Partikel-Texturen |
+| Audio (Phase 18) | selbst erzeugte Sounds; alle vier Bereiche; keine Musik; Lautstärke über die Minecraft-Kategorien |
+| Multiplayer (Phase 19) | Gruppen bis 4 Spieler; je mehr Spieler in der Gruppe, desto stärker Herzlose, Arena-Gegner, Risse und Boss; geteilte Quests, EP und Belohnungen; PvP wie Minecraft-Einstellung (`pvp` in server.properties), in der Gruppe nie; Vita heilt Mitspieler; Schiff mit 2 Plätzen; Test mit 4 Clients |
+| Party / Begleiter (Phase 14) | **gestrichen** — keine Begleiter in der Mod; man kämpft allein oder mit anderen Spielern |
+
+---
+
+## 1. Bestandsaufnahme: jedes System bewertet
+
+### Übersicht
+
+| System | Ist-Zustand | Status | Urteil |
+|---|---|---|---|
+| Fabric-Setup | Loom 1.10, Loader 0.16.14, API 0.116.16+1.21.1, Yarn build.3, Gradle 8.14.3 | UNVERIFIED | **KEEP** + Paket umbenennen |
+| Aliens | `enum Alien` mit `switch` je Fähigkeit | PROTOTYPE | **REPLACE** |
+| Transformation | Statuseffekt pro Alien trägt den Zustand | PROTOTYPE | **REPLACE** |
+| Omnitrix | Item, Rechtsklick/Schleichen, Nachladen im Item-NBT | PROTOTYPE | **REFACTOR** |
+| Keyblade | `SwordItem` + Zauber über Rechtsklick | PROTOTYPE | **REPLACE** (Kampf), **KEEP** (Item-Hülle) |
+| Magie | `enum Spell` mit `switch`, nur Abklingzeit, kein MP | PROTOTYPE | **REPLACE** |
+| Heartless | 1 Mob (Shadow), Zombie-Unterklasse | PROTOTYPE | **REFACTOR** |
+| Projektile | 1 Entity, Art wird aus dem Item-Stack abgelesen | PROTOTYPE | **REFACTOR** |
+| Bolts | Item, Drop-Event, Kiste | PROTOTYPE | **REFACTOR** (Bolt-Konto) |
+| Combuster | Haltbarkeit = Munition | PROTOTYPE | **REPLACE** (Waffen-Komponente) |
+| Fusionsgranate | Wurf-Entity, Explosion ohne Blockschaden | PROTOTYPE | **KEEP** |
+| OmniWrench | Schwert, Wurf ohne Rückkehr | PROTOTYPE | **REFACTOR** |
+| Heli-Pack | Item in der Zweithand | PROTOTYPE | **REFACTOR** (Gadget-Slot) |
+| Rezepte | 9 JSON-Rezepte | IMPLEMENTED (UNVERIFIED) | **KEEP**, später zum Teil durch Shop ersetzt |
+| Loot | 2 Loot-Tabellen + Code-Drop für Bolts | IMPLEMENTED (UNVERIFIED) | **KEEP** |
+| Texturen | 23 prozedurale Pixel-PNGs | PLACEHOLDER | **REPLACE** (Generator bleibt für Platzhalter) |
+| Übersetzung | de_de + en_us, 53 Schlüssel, vollständig | IMPLEMENTED | **KEEP** |
+| Kreativ-Tab | 1 Tab | PROTOTYPE | **REFACTOR** (mehrere Tabs) |
+| Networking | nicht vorhanden | TODO | **NEU** |
+| Speichersystem | nur Item-NBT (Zauberwahl, Alienwahl, Nachladezeit) | TODO | **NEU** |
+| HUD / UI | nur Actionbar-Texte und Tooltips | TODO | **NEU** |
+| Lock-On, Combos, Dodge, Guard | nicht vorhanden | TODO | **NEU** |
+| Sounds | nur Vanilla-Sounds, keine `sounds.json` | PLACEHOLDER | **NEU** (Sound-Architektur) |
+| Advancements, Befehle, Quests, Dialoge, NPCs, Welten, Bosse, Progression | nicht vorhanden | TODO | **NEU** |
+
+### Begründungen im Einzelnen
+
+**Fabric-Setup — KEEP.** Die Versionen passen zu 1.21.1. Ändern:
+- Paket `com.daniel.heroverse` → `com.santiq.kingdomomnitrix`.
+- Mod-ID: **entschieden → `kingdomomnitrix`** (umgesetzt in Phase 2).
+- `loom { splitEnvironmentSourceSets() }` einführen. Dann kann Client-Code nicht mehr versehentlich auf einem Dedicated Server landen. Der Compiler erzwingt die Trennung.
+
+**Aliens — REPLACE.** `item/Alien.java:22` ist ein `enum`, Fähigkeiten hängen an einem `switch` (`Alien.java:82`).
+Ein neues Alien bedeutet heute Änderungen an vier Stellen (Enum, Switch, `ModEffects`, Partikel-Switch in `AlienEffect`).
+Das widerspricht direkt der Anforderung „modular, beliebig erweiterbar“. Ersatz:
+- `AlienDefinition` aus JSON: Werte, Attribute, Hitbox-Skalierung, Zuordnung der Fähigkeiten zu Slots, Dauer, Energie, Freischalt-Bedingung.
+- Fähigkeiten als Java-Klassen in einer `AbilityType`-Registry. Das JSON verweist per ID darauf und übergibt Parameter.
+
+**Transformation — REPLACE.** Der Zustand steckt heute in einem Statuseffekt. Das bringt drei echte Fehler:
+1. **Milch** beendet die Verwandlung, und die Nachladezeit läuft trotzdem.
+2. Die Nachladezeit liegt im Item-NBT (`OmnitrixItem.java:85`). Mit zwei Omnitrixen umgeht man sie.
+3. Vierarm mit Skalierung ×1,5 (`ModEffects.java:33`) passt nicht durch 2 Blöcke hohe Gänge. Ohne Platzprüfung erstickt der Spieler.
+
+Ersatz: `TransformationManager` auf dem Server. Der Zustand liegt in einer Spieler-Attachment (Fabric Data Attachment API). Die Attribute setzt der Manager direkt. Vor jeder Größenänderung prüft er den Platz.
+
+**Omnitrix — REFACTOR.** Das Item bleibt als Auslöser und Darstellung. Die Bedienung zieht um:
+- Taste (Standard `G`) öffnet das Alien-Rad, Taste `R` löst die Fähigkeiten-Slots aus.
+- Der Client schickt nur die Absicht als Paket, der Server prüft und führt aus.
+- Energie, Dauer, Nachladezeit und Freischaltungen liegen beim Spieler, nicht im Item.
+
+**Keyblade — REPLACE (Kampf), KEEP (Item).** Ein `SwordItem` mit Rechtsklick-Zaubern kann keine Leicht-/Schwer-Angriffe, Combos, Ausweichen, Blocken oder Lock-On.
+Neu wird ein eigenes Kampfsystem gebaut. Die Werte des Keyblades (Schaden, Magiekraft, Tempo, Reichweite, Passiv, Seltenheit, Stufe) kommen aus JSON und als Item-Komponente.
+
+**Magie — REPLACE.** `Spell.java:62` ist ebenfalls ein `switch` ohne MP. Ersatz:
+- `SpellDefinition` aus JSON: MP-Kosten, Abklingzeit, Stufen, VFX- und Sound-IDs.
+- Die Wirkung als `SpellEffect`-Klasse in einer Registry.
+- MP liegt in der Spieler-Attachment und wird an den Client synchronisiert.
+
+**Heartless — REFACTOR.** Spawn-Prüfung (Dunkelheit + fester Boden) und Loot sind brauchbar und bleiben. Neu:
+- Gemeinsame Basisklasse `HeartlessEntity` mit eigener KI (Ziele, Angriffsmuster, Telegraphing).
+- Eigene Modelle. Die Zombie-Unterklasse erbt Zombie-Eigenheiten (Verstärkungen rufen, Baby-Varianten, Hühnerreiter).
+- Spawn-Regeln aus JSON (Dimension, Biom, Tageszeit, Story-Fortschritt, Spielerlevel). Heute ist es ein fester Eintrag (`ModEntities.java:42`).
+
+**Projektile — REFACTOR.** `HeroProjectileEntity.getKind()` (`HeroProjectileEntity.java:63`) liest die Art aus dem angezeigten Item. Das ist ein Hack.
+Ersatz: Die Projektil-Daten (Schaden, Effekte, Explosion, Schwerkraft, Lebensdauer, VFX) werden per `DataTracker` mitgegeben. Der Renderer bleibt.
+
+**Bolts — REFACTOR.** Das Item bleibt als sichtbarer Drop. Beim Aufsammeln wandert der Wert auf ein Bolt-Konto (Attachment, im HUD sichtbar). Shops und Upgrades buchen davon ab. Das Drop-Event bleibt, nur die Zielfunktion ändert sich.
+
+**Combuster — REPLACE.** Haltbarkeit als Munition (`CombusterItem.java:54`) schließt Upgrades, Feuerrate und Magazin pro Stufe aus. Ersatz:
+- Allgemeine `WeaponDefinition` (JSON) und eine `WeaponState`-Komponente am Stack (Stufe, Munition, Erfahrung).
+- Gemeinsame Schuss-Pipeline mit Rückstoß-, VFX- und Sound-Haken.
+
+**Fusionsgranate — KEEP.** `ExplosionSourceType.NONE` lässt Blöcke stehen. Das erfüllt die Vorgabe. Sie wird nur an die Waffen-Pipeline angeschlossen (Stufen, Radius).
+
+**OmniWrench — REFACTOR.** Neu:
+- Der geworfene Schlüssel kehrt zurück.
+- Er löst Mechanismen aus: Bolt-Schrauben, Hebel, Knöpfe, eigene Mechanismus-Blöcke.
+
+**Heli-Pack — REFACTOR.** Die Zweithand ist eine Notlösung (`HeliPackItem.java:32`). Neu:
+- Gadget-Slots am Spieler.
+- Steuerung über Taste und Sprung-Eingabe am Client (Gleiten, Doppelsprung, Luftschub). Der Server prüft nur Grenzen.
+
+**Texturen — REPLACE.** Die 16×16-Pixelbilder sind Platzhalter. `tools/generate_textures.py` bleibt, damit neue Inhalte sofort sichtbar sind.
+Echte Assets entstehen in Blockbench: 3D-Itemmodelle für Keyblades und Waffen, GeckoLib-Modelle für Heartless, Bosse und Alien-Körper.
+
+---
+
+## 2. Zielarchitektur
+
+```
+com.santiq.kingdomomnitrix
+├── KingdomOmnitrix                 Haupteinstieg, nur Aufrufe der Bootstrap-Klassen
+├── core/                           Registries, IDs, Logging, Konfiguration
+├── data/                           JSON-Loader (ResourceReloadListener) + Codecs + Sync an Clients
+├── player/                         HeroData (Attachment): Level, Werte, MP, Bolts, Freischaltungen,
+│                                   Story-Flags, Quests, Gadget-Slots, Transformations-Zustand
+├── networking/                     Payloads (C2S-Absichten, S2C-Zustand), Ratenbegrenzung
+├── alien/                          AlienDefinition, AlienRegistry, TransformationManager, Omnitrix
+├── ability/                        AbilityType-Registry, AbilityContext, Abklingzeiten
+│   └── impl/                       Feuerstrahl, Dash, Wandlauf, Bodenschlag, Kristallwand …
+├── combat/                         Angriffs-Pipeline, Combo-Graph, Ausweichen, Blocken, Treffer-Stopp,
+│                                   Lock-On (Server prüft), Finisher
+├── keyblade/                       KeybladeDefinition, Komponente, Stufen
+├── magic/                          SpellDefinition, SpellEffect-Registry, MP
+├── weapon/                         WeaponDefinition, WeaponState-Komponente, Schuss-Pipeline, Upgrades
+├── gadget/                         Heli-Pack, Swingshot, Grindboots, Hydro-Pack …
+├── enemy/                          HeartlessEntity-Basis, KI-Bausteine, Spawn-Regeln (JSON)
+├── boss/                           BossEntity, Phasen-Automat, Telegraphing, Arena, Bossbar
+├── quest/                          QuestDefinition (JSON), Ziel-Typen, Tracker, Belohnungen
+├── dialogue/                       Dialog-Baum (JSON), Bedingungen, Aktionen
+├── cutscene/                       Cutscene-Skript (JSON): Kamera, Text, Fade, Teleport, Sound
+├── npc/                            NPC-Entity, Händler, Shop-Definitionen
+├── world/                          Dimensionen, Portale, Weltkarte, Hub-Strukturen
+├── progression/                    Level, Erfahrung, Werte, Fähigkeiten-Punkte
+├── command/                        /hero … (nur OP)
+└── client/                         nur im Client-Source-Set
+    ├── hud/                        HUD-Bausteine (HP, MP, Bolts, Alien, Munition, Quest, Lock-On)
+    ├── screen/                     Alien-Rad, Weltkarte, Shop, Dialog, Quest-Log, Inventar-Tabs
+    ├── input/                      Tastenbelegungen
+    ├── render/                     Entity-Renderer, Alien-Körper statt Spielermodell, Spuren
+    ├── vfx/                        Partikel-Presets
+    └── cutscene/                   Kamera-Steuerung
+```
+
+### Grundregeln
+
+1. **Server entscheidet.** Der Client schickt nur Absichten („Fähigkeit 2 auslösen, Ziel #123“). Der Server prüft Abklingzeit, Energie, Reichweite und Sichtlinie.
+   Ausnahme ist die Spielerbewegung (Dash, Doppelsprung, Gleiten). Sie läuft im Client, weil Minecraft die Bewegung dort berechnet. Der Server prüft dabei Grenzen gegen Missbrauch.
+2. **Ein Zustand, eine Stelle.** Alles Spielerbezogene liegt in `HeroData` (Fabric Data Attachment API, `persistent(codec)`).
+   In 1.21.1 synchronisiert die Attachment-API noch nicht von selbst. Deshalb gibt es eigene S2C-Pakete, nur bei Änderungen und nur für Felder, die der Client sehen muss.
+3. **Daten in JSON, Verhalten in Java.** Aliens, Keyblades, Zauber, Waffen, Gadgets, Quests, Dialoge, Bosse, Shops und Spawn-Regeln sind JSON unter `data/<modid>/…`.
+   Das Verhalten (Fähigkeiten, Zaubereffekte, Boss-Angriffe, Quest-Ziele) sind registrierte Java-Typen, die das JSON per ID und Parameter auswählt.
+   Neues Alien = eine JSON-Datei + Assets. Neue Fähigkeit = eine Java-Klasse.
+4. **Keine Tick-Schleifen über alle Entities.** Spieler-Ticks laufen nur für Spieler mit aktivem Zustand. Gesucht wird nur in kleinen Boxen. Bosse ticken ihre Phasen-Logik selbst.
+5. **Client-Code nur im Client-Source-Set** (`splitEnvironmentSourceSets`).
+
+### Abhängigkeiten (Entscheidung nötig)
+
+| Bibliothek | Wofür | Empfehlung |
+|---|---|---|
+| **GeckoLib 4** (1.21.1) | animierte Modelle für Heartless, Bosse, Alien-Körper, Clank | **ja** — ohne sie kein ernstzunehmendes Animationssystem |
+| **playerAnimator** (KosmX) | Spieler-Animationen für Keyblade-Combos, Dodge, Wurf | **ja** — Vanilla kann Spieler-Arme nicht frei animieren |
+| Mod Menu + Cloth Config | Einstellungsmenü | optional, später |
+
+Beide Kern-Bibliotheken liegen auf Maven-Servern, die hier gesperrt sind (siehe Abschnitt 0).
+
+---
+
+## 3. Vertical Slice — Umfang und Abnahme
+
+Die Vertical Slice ist der erste Meilenstein. Alles danach baut auf ihr auf.
+
+| Bereich | Inhalt | Abnahme (alle 8 Qualitätsregeln) |
+|---|---|---|
+| Hub | 1 Traverse-Town-artige Dimension: Platz, 3 Gebäude, Händler, Portal zurück | per Portal erreichbar, Position wird gespeichert, NPCs vorhanden |
+| Aliens | Heatblast, XLR8, Vierarm — je 3 Fähigkeiten-Slots | Rad-Menü, Verwandlung mit Effekt, HUD, Dauer/Nachladen/Energie, Multiplayer sichtbar, übersteht Neuanmeldung |
+| Keyblades | Kingdom Key, Oathkeeper-artiges Zweitschwert | Leicht/Schwer/3er-Combo/Luft-Combo, Dodge, Guard, Finisher, Lock-On mit UI |
+| Magie | Feuer, Eis, Donner, Vita | MP-Leiste, Kosten, Abklingzeit, VFX, Sound, 3 Stufen |
+| Waffen | OmniWrench (Wurf + Rückkehr), Combuster, Fusionsgranate | Munition, 5 Stufen, Kauf beim Händler, HUD-Anzeige |
+| Gadgets | Heli-Pack, Swingshot | Gadget-Slot, Taste, sichtbare Wirkung |
+| Heartless | Shadow, Soldier, Large Body, Air Soldier, Darkball | eigene KI-Muster, Spawn-Regeln aus JSON |
+| Boss | 1 Boss mit 2 Phasen (Guard-Armor-artig, zerlegbare Teile = Schwachstellen) | Telegraphing, Phasenwechsel, Enrage, Bossbar, Arena-Sperre, Loot |
+| Quests | 5 (1 Story, 1 Neben, 1 Kopfgeld, 1 Boss, 1 Erkundung) | Quest-Log, HUD-Tracker, Belohnung, gespeichert |
+| HUD | HP, MP, Level, Bolts, Alien, Munition, Quest, Lock-On | skalierbar, abschaltbar |
+| Speichern | gesamter `HeroData`-Zustand | Neustart- und Rejoin-Test |
+
+**Bewusst nicht in der Vertical Slice:** Welten außer Hub, Cutscene-Kamera (nur Text + Fade), Diamondhead/Grey Matter, Endgame-Waffen.
+
+---
+
+## 4. Roadmap in Phasen
+
+Jede Phase endet mit `./gradlew build` grün (siehe Abschnitt 0), einem Testprotokoll und einer Status-Tabelle (IMPLEMENTED/PROTOTYPE/PLACEHOLDER/TODO).
+
+| # | Phase | Ergebnis | Hängt ab von |
+|---|---|---|---|
+| 1 | Analyse | dieses Dokument | — |
+| 2 | Architektur | Paket-Umbau, Split Source Sets, CI-Build-Workflow, `HeroData`-Attachment mit Codec und Sync, Status-HUD, `/hero`-Befehle | Build-Zugang |
+| 3 | Omnitrix | `AlienDefinition` + `AbilityType`-Registry, `TransformationManager`, Rad-Screen, Tasten, HUD-Baustein, Heatblast/XLR8/Vierarm mit je 3 Fähigkeiten, Platzprüfung bei Größe, `/hero transform` | 2 |
+| 4 | Kampf | Angriffs-Pipeline, Combo-Graph, Dodge mit Unverwundbarkeits-Fenster, Guard, Lock-On (Auswahl, Wechsel, UI, Entfernung), Treffer-Feedback | 2 |
+| 5 | Keyblades | `KeybladeDefinition`, 2 Keyblades, Stufen, Finisher | 4 |
+| 6 | Magie | MP, `SpellDefinition`, 4 Zauber mit 3 Stufen | 2, 4 |
+| 7 | Heartless | Basisklasse, 5 Typen, KI-Bausteine, Spawn-Regeln aus JSON, GeckoLib-Modelle (Platzhalter-Geometrie) | 2 |
+| 8 | Waffen | `WeaponDefinition`, Komponente, Schuss-Pipeline, 3 Waffen, 5 Stufen, Bolt-Konto | 2 |
+| 9 | Gadgets | Slots, Heli-Pack, Swingshot | 2 |
+| 10 | Quests | JSON-Definitionen, Ziel-Typen (töten, sammeln, reden, erreichen, Boss), Log, Tracker | 2 |
+| 11 | NPCs | NPC-Entity, Dialog-JSON mit Antworten, Händler-Screen | 10 |
+| 12 | Welten | Hub-Dimension, Portal-Block, Hub-Struktur | 11 |
+| 13 | Bosse | Phasen-Automat, 1 Boss, Arena | 4, 7 |
+| — | **Vertical Slice abgenommen** | Abnahme nach Abschnitt 3 mit 2 Spielern auf Dedicated Server | 3–13 |
+| ~~14~~ | ~~Party~~ | gestrichen (Entscheidung SANTIQ): keine Begleiter | — |
+| 15 | Progression | Level, Werte, Fähigkeiten-Punkte, Fähigkeiten-Liste | VS |
+| 16 | UI | Inventar-Tabs, Weltkarte, Feinschliff aller Screens | VS |
+| 17 | VFX | Partikel-Presets, Spuren, Aufprall, Verwandlungssequenz | VS |
+| 18 | Audio | `sounds.json`, eigene Sound-Events für alle Haken, Platzhalter-OGGs | VS |
+| 19 | Multiplayer | Gruppen, Gegner-Skalierung, geteilte Quests/EP, PvP-Regeln, 4-Client-Test | ✅ 0.11.0 |
+| 20 | Optimierung | Profiling (Spark) mit 20/50 Gegnern, Boss, 4 Spielern | 19 |
+| 21 | Tests | GameTests (Fabric) für Kernregeln, QA-Checkliste | 20 |
+| 22 | Release | Versionierung, Modrinth-Paket, Changelog | 21 |
+
+Danach folgen Inhalts-Wellen: weitere Aliens, Welten (Destiny Islands, Halloween Town, Sci-Fi-Planet, Dark World), Waffen bis RYNO-artig, Advancements, Cutscene-Kamera.
+
+---
+
+## Phasenstatus
+
+### Phase 2 — Architektur (abgeschlossen bis auf den Build-Nachweis)
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Paket `com.santiq.kingdomomnitrix`, Mod-ID `kingdomomnitrix` | IMPLEMENTED | alle Klassen, Assets, Daten, Übersetzungen umgezogen |
+| Client-Source-Set (`splitEnvironmentSourceSets`) | IMPLEMENTED | Client-Code in `src/client/java` |
+| Paketstruktur nach Zielarchitektur | IMPLEMENTED | Prototyp-Systeme in `alien/ keyblade/ magic/ weapon/ gadget/ enemy/` |
+| `HeroData` (Stufe, EP, Bolts, Aliens, Story-Flags) | IMPLEMENTED | Attachment: persistent, beim Tod kopiert, an eigenen Client synchronisiert, robuster Codec |
+| Status-HUD (Stufe, EP-Balken, Bolts) | PROTOTYPE | funktionsfähig; Gestaltung folgt in Phase 16 |
+| `/hero debug · reset · bolts · level · xp · alien · flag` | IMPLEMENTED | OP-Stufe 2, optional mit Zielspieler |
+| CI-Build `.github/workflows/mod-build.yml` | IMPLEMENTED | Ressourcen-Check, Textur-Check, `./gradlew build`, Jar als Artefakt |
+| `tools/check_assets.py` | IMPLEMENTED | JSON, Übersetzungen, Modelle, Texturen, Rezepte, Loot |
+| Netzwerk-Payloads (C2S-Absichten) | TODO → Phase 3 | erster Bedarf: Alien-Rad und Fähigkeiten-Tasten |
+| JSON-Definitionen (Aliens usw.) | TODO → Phase 3 | über Fabric `DynamicRegistries.registerSynced`: wird mit der Welt geladen und automatisch an Clients gesendet; kein eigener Loader nötig |
+| Bolt-Konto statt Bolt-Items | TODO → Phase 8 | Datenfeld existiert bereits |
+| `./gradlew build` | **UNVERIFIED** | lokal gesperrt; Nachweis über den CI-Lauf auf GitHub |
+
+### Phase 3 — Omnitrix
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Alien-Definitionen als JSON (`data/<ns>/kingdomomnitrix/alien/*.json`) | IMPLEMENTED | Fabric-`DynamicRegistries`, automatisch an Clients synchronisiert; neues Alien = neue Datei |
+| Fähigkeits-Typen (`AbilityRegistry`) | IMPLEMENTED | 11 Typen, Parameter aus JSON, Fehler einer Fähigkeit stürzen den Server nicht ab |
+| `TransformationManager` | IMPLEMENTED | Dauer, Nachladen (Timeout voll, manuell halb), Energie, Abklingzeiten, Attribute, Größe mit Platzprüfung, Immunitäten, Unverwundbarkeit beim Ausweichen, Tod beendet die Verwandlung |
+| Zustand speichern + Multiplayer | IMPLEMENTED | Attachment, persistent, an alle Clients; Energie/Zeit ohne Tick-Pakete |
+| Heatblast, XLR8, Vierarm (je 3 Fähigkeiten) | IMPLEMENTED | Werte im JSON, Balancing offen |
+| Diamondhead, Grey Matter | PROTOTYPE | je 1 Fähigkeit; Kristallwand/-schild, Hacken, Rätsel folgen nach der Vertical Slice |
+| Alien-Rad (G) | IMPLEMENTED | Maus/Klick, Taste loslassen, Ziffern 1–9; gesperrte Aliens als „?“ |
+| Fähigkeiten-Tasten R / V / B | IMPLEMENTED | in den Steuerungsoptionen änderbar |
+| Omnitrix-HUD | IMPLEMENTED | Alien, Restzeit, Energie, 3 Slots mit Taste und Abklingzeit, Nachladeanzeige |
+| DNA-Proben + Drops | IMPLEMENTED | Quellen und Chancen pro Alien im JSON; Freischalten per Rechtsklick |
+| Alien-Körper (GeckoLib) | PROTOTYPE | Ersatz des Spielermodells, Idle/Walk, Kopf folgt Blick; Modelle/Texturen sind PLACEHOLDER |
+| Verwandlungs-Effekt | PROTOTYPE | Partikel (Omnitrix-Grün + Alienfarbe), Blitz, Sound; eigene Sounds folgen in Phase 18 |
+| `/hero transform · revert · dna` | IMPLEMENTED | mit Alien-Vorschlägen |
+| Controller-Unterstützung | TODO | Tastatur/Maus fertig; Controller über Controlify-Kompatibilität nach der Vertical Slice |
+| Fehlverwandlung (falsches Alien) | TODO | bewusst offen; braucht Designentscheidung (Spaß vs. Frust) |
+| Erste-Person-Arme des Aliens | TODO | in der Ego-Ansicht sieht man noch die Spielerarme |
+| Alte Statuseffekt-Lösung | entfernt | behebt: Milch beendet Verwandlung, zweites Omnitrix umgeht Nachladen, Vierarm erstickt |
+
+**Test-Rezept:** `/hero dna kingdomomnitrix:heatblast` → Probe rechtsklicken (Omnitrix im Inventar) → `G` → Heatblast → `R`/`V`/`B`.
+
+### Phase 4 — Kampf
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Leichte Combo (3 Schläge, Finisher als Flächenschlag) | IMPLEMENTED | im Client getestet: Treffer, Kill, Bolt-Drop, Advancement |
+| Luftcombo (Schweben, Finisher nach unten) | IMPLEMENTED | Logik fertig, Spielgefühl noch zu testen |
+| Schwerer Angriff (Linksklick halten) | IMPLEMENTED | |
+| Ausweichen (Alt) mit Unverwundbarkeit, 1× in der Luft | IMPLEMENTED | |
+| Blocken (Feststelltaste, vorher X — kollidierte mit Vanilla „Hotbar laden") mit perfektem Block + Betäubung | IMPLEMENTED | |
+| Lock-On (Z): Auswahl, Wechsel, Lösen (Schleichen+Z), Kamera folgt, Umrandung, HUD | IMPLEMENTED | im Client getestet |
+| Kampfanimationen (playerAnimator, Jar-in-Jar) | PROTOTYPE | 9 Animationen, Platzhalter-Bewegungen |
+| `ComboWeapon`-Schnittstelle | IMPLEMENTED | Keyblade nutzt sie; Werte pro Waffe in Phase 5 |
+| Schnelle Klicks unter 1 Tick | behoben | wurden anfangs verschluckt (im Client-Test gefunden) |
+| Skilltree-Anbindung (Combo Plus, Air Combo …) | TODO → Phase 15 | laut `DESIGN_PROGRESSION.md` |
+
+### Phase 5 — Keyblades
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Keyblade-Werte als JSON (`data/<ns>/kingdomomnitrix/keyblade/*.json`) | IMPLEMENTED | Schaden, Magie, Tempo, Reichweite, Combo-Länge, Passive, Seltenheit, Upgrade-Kosten; synchronisiert |
+| Kingdom Key + Treueschwur (Oathkeeper) | IMPLEMENTED | je 5 Stufen; Erhalt per Crafting (Entscheidung SANTIQ) |
+| Passive: Combo Plus, Kritisch, Finisher Plus | IMPLEMENTED | wirken im Kampfsystem |
+| Passive: Magie-Boost, MP-Eile | TODO → Phase 6 | Werte vorhanden, Wirkung kommt mit dem MP-System |
+| Keyblade-Schmiede (Block) | IMPLEMENTED | im Client getestet: Stufe 1 → 2, Bolts und Herzen abgezogen, zeigt nächste Kosten |
+| Tooltip mit Werten | IMPLEMENTED | im Client getestet |
+| Unzerstörbar, verzauberbar (Schärfe, Verbrennung …) | IMPLEMENTED | über Item-Tags |
+| Kampfwerte über `ComboProfile` | IMPLEMENTED | Kampfsystem kennt keine Waffenarten mehr |
+| Bolts als Kosten | PROTOTYPE | heute Bolt-Items im Inventar; ab Phase 8 Bolt-Konto |
+| 3D-Modelle für Keyblades | TODO | aktuell 2D-Pixel-Texturen |
+
+### Phase 6 — Magie
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Zauber als JSON (`data/<ns>/kingdomomnitrix/spell/*.json`), 3 Stufen je Zauber | IMPLEMENTED | Feuer/Feura/Feuga, Eis/Eisra/Eisga, Blitz/Blitzra/Blitzga, Vita/Vitra/Vitga |
+| Zaubereffekte als Registry (`SpellEffects`) | IMPLEMENTED | neue Zauber = JSON, neue Wirkung = eine Java-Methode |
+| Nur mit Keyblade; Magiekraft + Magie-Boost verstärken | IMPLEMENTED | Entscheidung SANTIQ |
+| MP im KH-Stil: Regeneration, +MP durch Nahkampftreffer, letzter Zauber leert, MP-Ladezeit | IMPLEMENTED | im Client getestet |
+| MP-Eile (Keyblade-Passiv) | IMPLEMENTED | schnellere Regeneration und kürzere Ladezeit |
+| Zauberwahl: M halten + Mausrad, M tippen = nächster | IMPLEMENTED | im Client getestet |
+| Rechtsklick wirkt den aktiven Zauber | IMPLEMENTED | im Client getestet |
+| Zauberleiste (MP, Stufen, Kosten, Abklingzeit) + MP im Status-Panel | IMPLEMENTED | Position im Test korrigiert (lag auf dem Chat) |
+| Magie-Kristalle (Zauberstufe +1), Drop vom Schatten (4 %) | IMPLEMENTED | weitere Quellen: Dungeons/Bosse (Phasen 12–13) |
+| Stufe 2/3: mehrere Geschosse, Mehrfachblitz, Gruppenheilung | IMPLEMENTED | |
+| `/hero spell <zauber> <stufe>`, `/hero mp` | IMPLEMENTED | |
+| Aero, Gravity, Reflect, Stop | TODO | nach der Vertical Slice |
+| Eigene VFX/Sounds für Zauber | PROTOTYPE | Vanilla-Partikel und -Sounds; Phase 17/18 |
+
+### Phase 7 — Herzlose
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| `HeartlessEntity`-Basis: GeckoLib-Animationen (idle/walk/attack/special/emerge), Auftauchen, kein Tageslicht-Brand | IMPLEMENTED | |
+| Skalierung mit Heldenstufe (+8 % Leben, +5 % Schaden pro Stufe), Elite-Variante (×2 Leben, ×1,5 Schaden, Flammen-Aura, Name) | IMPLEMENTED | Entscheidung SANTIQ: mitwachsend |
+| Schatten: taucht ab (unsichtbar, unverwundbar), springt am Ziel heraus | IMPLEMENTED | KI im echten Kampf noch zu testen |
+| Soldat: Nahkampf + Sprung-Tritt | IMPLEMENTED | |
+| Großkörper: Front blockt 85 % (nur von hinten verwundbar), Rammangriff | IMPLEMENTED | |
+| Luftsoldat: Flug, kreist, Sturzflug | IMPLEMENTED | |
+| Dunkelball: Flug, Dunkelkugeln (Schwäche), Teleport nach Treffer | IMPLEMENTED | |
+| GeckoLib-Modelle aller 5 Typen | PLACEHOLDER | `tools/generate_heartless_models.py`, in Blockbench verfeinerbar; im Client sichtbar ✅ |
+| Spawn: **keine** natürlichen Oberwelt-Spawns | IMPLEMENTED | Entscheidung SANTIQ: nur Risse + Mod-Dimensionen |
+| Dunkelheitsrisse: nachts nahe Spielern, 3 Wellen, Bossleiste, Belohnung (Bolts, Herzen, Kristall/DNA-Chance, Helden-EP) | IMPLEMENTED | im Client getestet; speichert Fortschritt |
+| Riss-Definitionen als JSON (Mindeststufe, Gewicht, Wellen, Elite-Chance, Belohnung) | IMPLEMENTED | 3 Risse: Schattenschwarm (ab 1), Soldatentrupp (ab 3), Schwerer Angriff (ab 6) |
+| Gamerule `kingdomomnitrixDarknessRifts` | IMPLEMENTED | Casual-Spieler können Risse abschalten |
+| `/hero rift [id]` | IMPLEMENTED | |
+| Spawns in Mod-Dimensionen | TODO → Phase 12 | |
+| Eigene Herzlosen-Sounds | TODO → Phase 18 | aktuell Endermiten-Sounds |
+
+### Phase 8 — Ratchet & Clank (Waffen, Bolts, Terminal)
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Bolts als Konto (`HeroData.bolts`): aufgehobene Bolts wandern automatisch aufs Konto | IMPLEMENTED | im Client getestet (1.500 gutgeschrieben) |
+| Waffen-Definitionen als JSON (Preis, Munitionspreis, Stufen mit Werten) | IMPLEMENTED | `data/kingdomomnitrix/kingdomomnitrix/weapon/*.json` |
+| Waffenzustand am Item (Stufe, Munition) + Haltbarkeitsleiste = Munition | IMPLEMENTED | |
+| Waffen-Terminal: Kaufen, Aufrüsten (nur hier), Munition nachfüllen; Server prüft Abstand und Konto | IMPLEMENTED | Kauf + Aufrüsten getestet; Nachfüllen nur im Code geprüft |
+| Combuster: Dauerfeuer bei gehaltener Rechtsklick-Taste, Rückstoß, Explosiv-Schüsse auf Stufe 5 | IMPLEMENTED | Feuern getestet |
+| Fusionsgranate: Wurf, Explosion ohne Blockschaden | IMPLEMENTED | Wurf + Munitionsverbrauch getestet |
+| OmniWrench: Nahkampf-Combo + Bumerang-Wurf, löst Hebel/Knöpfe aus, zerschlägt Bolt-Kisten | IMPLEMENTED | Hebel per Wurf getestet |
+| Waffen auch per Crafting (Entscheidung SANTIQ) | IMPLEMENTED | |
+| Waffen-HUD (Name, Stufe, Munition) am rechten Rand | IMPLEMENTED | |
+| Weitere Waffen (Blaster, Pyrocitor …) | TODO → später, rein per JSON + Item-Klasse | |
+| Eigene Waffen-Sounds/Modelle | PLACEHOLDER | Vanilla-Sounds, generierte Texturen |
+
+### Phase 9 — Gadgets
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Gadget-Gürtel (Rücken- + Werkzeug-Platz) als Attachment, gespeichert, an alle synchronisiert; Menü (**H**) und Rechtsklick-Ausrüsten | IMPLEMENTED | Entscheidung SANTIQ: eigener Slot; im Client + Dedicated Server getestet |
+| Heli-Pack: Doppelsprung, Gleiten bei gehaltener Sprungtaste, kein Fallschaden beim Gleiten | IMPLEMENTED | getestet: 30 Blöcke Gleitflug ohne Schaden, Doppelsprung ≈ 2,8 Blöcke |
+| Heli-Jet (Modus, **J**): bis zu 2 Schübe nach vorn in der Luft, schneller Sinkflug | IMPLEMENTED | Entscheidung SANTIQ: Pack wechselbar; getestet: ≈ 8,5 Blöcke pro Schub |
+| Swingshot: Haken an jedem festen Block (24 Blöcke), Zug, Hängen bis 10 s, Absprung | IMPLEMENTED | Entscheidung SANTIQ: jeder feste Block; Server prüft Reichweite + Sichtlinie |
+| Swingshot-Seil für alle Spieler in Sichtweite | IMPLEMENTED | eigenes Seil im Client gesehen; Sicht eines zweiten Spielers nicht getestet |
+| Kein Anti-Fly-Kick beim Hängen/Hochziehen (Accessor auf den Schwebe-Zähler) | IMPLEMENTED | auf Dedicated Server ohne `allow-flight` getestet (8 s hängen) |
+| Gadgets fallen beim Tod (außer `keepInventory`) | IMPLEMENTED | nur im Code geprüft |
+| Erhalt per Crafting | IMPLEMENTED | Entscheidung SANTIQ |
+| Gadget-HUD links neben der Hotbar mit Tastenhinweis | IMPLEMENTED | |
+| Heli-Pack am Rücken sichtbar (3D-Modell) | TODO → Phase 18 (Grafik) | |
+| Weitere Gadgets (Magnetstiefel, Hydro-Displacer …) | TODO → später | Schnittstelle `Gadget` + Platz reichen |
+
+Behoben in Phase 9: Waffen- und Heli-Pack-Rezepte nutzten Bolt-Items, die seit Phase 8 sofort aufs Konto wandern → nie herstellbar.
+Jetzt Eisennuggets/Kupfer; `check_assets.py` verbietet Bolts als Zutat. Tastenkonflikte mit Vanilla behoben
+(Blocken X → Feststelltaste, Gadget C → Y); die Mod warnt beim Einloggen vor doppelt belegten Tasten.
+Neu: `tools/client_smoke.sh server|join` startet einen Dedicated Server und verbindet den Test-Client (Mehrspieler-Test).
+
+### Phase 10 — Quests
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Quests als JSON (synchronisierte Registry): Titel, Kategorie, Auftraggeber mit Symbol, Dialog (Angebot/Fortschritt/Abschluss), Voraussetzungen, Mindeststufe, wiederholbar | IMPLEMENTED | 7 Beispiel-Quests (3 Story, 2 Neben, 2 Kopfgeld) |
+| Ziele: Besiegen (Entity oder Tag), Herstellen (über `ItemStack#onCraftByPlayer`), Bringen (Inventar, wird abgezogen) | IMPLEMENTED | alle drei im Client getestet |
+| Belohnung: Bolts, Helden-EP mit Stufenaufstieg-Meldung, Items mit Komponenten | IMPLEMENTED | getestet |
+| Quest-Buch im NPC-Stil mit Tracker-Reiter (Entscheidung SANTIQ: Tracker im Buch, kein HUD) | IMPLEMENTED | Annehmen/Abgeben/Aufgeben getestet |
+| Fortschritt als Attachment (gespeichert, beim Tod behalten, nur an den Spieler synchronisiert); Server prüft jede Aktion | IMPLEMENTED | |
+| Quest-Buch beim ersten Einloggen, Rezept | IMPLEMENTED | |
+| `/hero quest start/complete/reset/list` | IMPLEMENTED | |
+| `check_assets.py` prüft Quests (Übersetzungen, Voraussetzungen, Items, Tags) | IMPLEMENTED | |
+| Ziel-Typen „Ort erreichen“, „mit NPC reden“, „Boss“ | TODO → Phasen 11–13 | brauchen NPCs, Welten, Bosse |
+| Quests von NPCs annehmen | TODO → Phase 11 | Dialog-Struktur ist schon vorbereitet |
+
+### Phase 11 — NPCs
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| NPCs als JSON (synchronisierte Registry): Begrüßung, Abschied, Hitbox, Modell | IMPLEMENTED | Yen Sid, Max Tennyson, Clank |
+| `NpcEntity`: steht still, schaut Spieler an, winkt, unverwundbar, verschwindet nie, NPC-ID gespeichert | IMPLEMENTED | Unverwundbarkeit getestet |
+| GeckoLib-Modelle (idle, walk, talk, wave) | PLACEHOLDER | `tools/generate_npc_models.py`, in Blockbench verfeinerbar; im Client sichtbar |
+| Quest-Markierung über dem Kopf („!“ neu, „?“ abgeben) | IMPLEMENTED | getestet, wechselt nach dem Abgeben |
+| Dialog-Fenster: Schreibmaschinen-Text, Namensschild, Antworten (annehmen, Stand, abgeben, tschüss) | IMPLEMENTED | Entscheidung SANTIQ; Annehmen und Abgeben getestet |
+| Quests verweisen per `giver.npc` auf ihren NPC | IMPLEMENTED | |
+| Aufstellen per NPC-Setzer (Kreativ-Tab) und `/hero npc spawn` | IMPLEMENTED | Entscheidung SANTIQ; feste Orte kommen mit der Hub-Welt (Phase 12) |
+| Händler | TODO → später | nicht gewählt |
+| Eigene Stimmen/Sounds | TODO → Phase 18 | aktuell Dorfbewohner-Laut |
+
+### Phase 12 — Welten (Raumfahrt, Traverse Town, Arena)
+
+Entscheidung SANTIQ: Zugang über das KI-Raumschiff aus Ratchet & Clank 3 → Weltall → Weltraumrisse in verschiedene
+Welten (Vorbild: Galaxie-Mods); eigene, immer andere Generierung mit neuen Erzen; Arena mit Belohnungen, Herzlosen-Arena, Bauen erlaubt.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Aphelion: fliegbar (Pilot-Client rechnet, Server prüft), 2 Plätze, Cockpit-HUD, Verfolgerkamera, Bord-KI-Meldungen | IMPLEMENTED | Flug, Aufstieg, Rückkehr getestet |
+| Aphelion-Modell (glattes 3D-Netz, gebackene Textur) | FERTIG | `tools/generate_ship_mesh.py` |
+| Weltall: Sternenhimmel, Nebel, Planet, Asteroiden mit Raritanium, 25 % Schwerkraft, Wiedereintritt | IMPLEMENTED | getestet |
+| Weltraumrisse als JSON (Wirbel, Name, Entfernung, HUD-Navigation, Durchflug, Rückweg) | IMPLEMENTED | Erde ↔ All ↔ Traverse Town getestet |
+| Traverse Town: Dimension (ewige Nacht), 4 Biome, Laternen und Kristallnadeln, Herzlose als Spawns | IMPLEMENTED | Gelände getestet |
+| Erze Raritanium / Mythril / Orichalcum mit Zweck (Waffen- bzw. Keyblade-Upgrades) | IMPLEMENTED | Generierung nur stichprobenhaft gesehen |
+| Stadt: prozedural pro Welt (Platz, Brunnen, Straßen, Häuser, Laden mit Clank, Schmiede, NPCs, Kisten), sicherer Ort | IMPLEMENTED | Bau (3,6 s) und Schutz getestet |
+| Arena: Herausforderungen als JSON, Countdown, Runden, Zeitlimit, Bossleiste, Titel, Belohnung, Bestzeit | IMPLEMENTED | Bronze-Pokal komplett getestet; Niederlage nur im Code geprüft |
+| Keine „Experimentell“-Warnung durch Mod-Dimensionen | IMPLEMENTED | |
+| Weitere Welten (Insel, Halloween-artig, Sci-Fi-Planet) | TODO → Phase 22 | Weltraumriss + Dimension per JSON vorbereitet |
+| Eigene Sounds für Schiff, Risse, Arena | TODO → Phase 18 | Vanilla-Klänge |
+
+### Phase 13 — Boss: Dr. Nefarious
+
+Entscheidung SANTIQ: Dr. Nefarious; beschwörbar über ein Item und als Arena-Kampf; Phasen + Wut, angekündigte Angriffe,
+Schwachstellen, Arena-Mechanik; Belohnung: neues Keyblade, Kampf wiederholbar.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Nefarious-Mech (GeckoLib, 9 Animationen, Leuchtmaske), Bossleiste mit Phasenfarbe, Sprüche im Chat | IMPLEMENTED | Modell aus `tools/generate_boss_models.py`: Dr. Nefarious nach den Spielen (Glas-Eierkuppel mit Zahnrädern/Schüssel, Schädelgesicht, Tentakel), durchscheinend gerendert |
+| Angriffe mit Ankündigung: Laser (rote Ziellinie → Schuss → Überhitzung), Raketen (rote Ringe am Boden), Stampfer (gelber Ring) | IMPLEMENTED | getestet |
+| Schwachstellen: Rücken ×2, Front ×0,5, überhitzt ×2,5, beim Phasenwechsel unverwundbar | IMPLEMENTED | Rücken −38 / Front −9,5 bei 20 Schaden gemessen |
+| Phase 2 ab 60 % (Arena unter Strom: Elektrosektoren), Wut ab 25 % (Überladung, durch ≥30 Kernschaden unterbrechbar → lange Betäubung) | IMPLEMENTED | Phasen + Überladung getestet; Unterbrechen nur im Code geprüft |
+| Leben skaliert mit Spielerzahl (+50 % je weiterem Spieler) | IMPLEMENTED | nur Einzelspieler getestet |
+| Beschwörung: Nefarious-Kommunikator (Rezept), Landeplatz = Kampfmitte, max. einer im Umkreis von 96 Blöcken | IMPLEMENTED | getestet |
+| Arena: Platin-Pokal (ab Stufe 8) mit Nefarious als einziger Runde | IMPLEMENTED | Sieg 1:23,4 getestet |
+| Belohnung: erster Sieg Omega-Schlüssel + 2 Orichalcum + 5 Raritanium + 800 Bolts + 300 EP; danach 3 Raritanium + 300 Bolts + 120 EP | IMPLEMENTED | beide getestet |
+| Omega-Schlüssel (Keyblade, Passiv: Kritisch, MP-Eile, Finisher+) | IMPLEMENTED | Textur PLACEHOLDER |
+| Arena-Liste: Namen werden gekürzt statt überlappt, Einzahl „1 Runde / 1 Gegner“ | IMPLEMENTED | getestet |
+| Eigene Boss-Musik und Sounds | TODO → Phase 18 | Vanilla-Klänge |
+| Kampf mit 2+ Spielern auf Dedicated Server | TODO → Vertical-Slice-Abnahme | |
+
+### Phase 15 — Progression
+
+Entscheidung SANTIQ: Stufenaufstieg bringt Werte automatisch und neue Fähigkeiten; Ausrüsten über eine KH-Fähigkeitenliste;
+Höchststufe 50; EP zusätzlich aus Herzlosen & Bossen, Erkunden und Alien-Nutzung (Aliens steigen eigenständig auf).
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Höchststufe 50, alte Stände über 50 werden gekappt statt zurückgesetzt | IMPLEMENTED | |
+| Werte pro Stufe (Leben, Angriff, MP, Omnitrix-Dauer) als gespeicherte Attribut-Modifikatoren | IMPLEMENTED | Level-Up, Einloggen, Respawn (volles Leben) getestet |
+| Fähigkeiten als JSON-Registry (14 Stück, 5 Äste), AP-Budget, Freischaltung per Stufe, Meldung beim Aufstieg | IMPLEMENTED | `check_assets.py` prüft Texte, Kategorien, Effekte |
+| Heldenmenü [K]: Stufe, EP, AP-Leiste, Werte, Meisterschaft, Liste mit Kategorie/Kosten/Sperre, Beschreibung | IMPLEMENTED | getestet; Server prüft jede Änderung, legt bei Stufenverlust Gesperrtes ab |
+| Effekte: Combo-/Luftcombo-Plus, Luftrolle-Plus, Zweite Chance, MP-Eile, Magie-Boost, Lange Verwandlung, Schnellladung, Bolt-Bonus, Nanotech-Heilung, Schnelllauf, Hochsprung, Gleiten, EP-Boost | IMPLEMENTED | im Spiel getestet: AP, Zweite Chance (+Pause), Gleiten, Verwandlungsdauer; übrige im Code geprüft |
+| EP für Herzlose (½ Grundleben, Elite ×3, +5 % je Stufe) | IMPLEMENTED | +14 EP für Schatten auf Stufe 26 gemessen |
+| EP fürs Erkunden: Dimensionen (Nether, Ende, All, Traverse Town) und Biome im Tag `#kingdomomnitrix:discoverable` | IMPLEMENTED | Traverse Town getestet |
+| Alien-Meisterschaft ★1–10 (Schaden, Todesstoß, Fähigkeiten, Zeit), +5 % Dauer / −3 % Abklingzeit je Stufe, Helden-EP beim Aufstieg | IMPLEMENTED | ★1→★2 und Dauer 60 s → 87 s getestet |
+| Combos länger als 3 Schläge wechseln die beiden Schlag-Animationen ab | IMPLEMENTED | |
+| Fähigkeits-Symbole, eigene Sounds | TODO → Phase 16/18 | Text-Liste und Vanilla-Klänge |
+
+### Phase 16 — UI
+
+Entscheidung SANTIQ: KH-Kommandomenü, Weltkarte, Inventar-Reiter und HUD aufräumen; Stil je nach System;
+HUD mit Position und Größe anpassbar; eigene Symbole statt Text.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Farbschema je System (`UiTheme`) und gemeinsame Zeichenhilfen (Panel, Leisten, Symbole) | IMPLEMENTED | alle HUDs und neuen Menüs |
+| 38 Symbole (14 Helden-Fähigkeiten, 4 Zauber, 11 Alien-Fähigkeiten, Kommandomenü, Reiter) aus `tools/generate_icons.py` | PLACEHOLDER | Pixel-Art aus ASCII-Rastern; `check_assets` prüft Vollständigkeit, CI prüft Generator |
+| HUD-Rahmen: Elemente mit Bezugspunkt/Versatz/Größe/Sichtbarkeit, Datei `config/kingdomomnitrix-hud.json` | IMPLEMENTED | getestet (verschieben, 120 %, ausblenden, gespeichert, im Spiel angewendet) |
+| HUD-Editor (ziehen, Mausrad, Rechtsklick, Zurücksetzen), Platzhalter für gerade inaktive Anzeigen | IMPLEMENTED | getestet |
+| Status, Omnitrix (jetzt mit Fähigkeits-Symbolen), Waffe, Gadgets, Cockpit als HUD-Elemente | IMPLEMENTED | Zauberleiste ist im Kommandomenü aufgegangen |
+| KH-Kommandomenü: Angriff, Magie (Zauber wirken), Items (sofort benutzen, Tag `command_items`), Omnitrix (verwandeln/zurück) | IMPLEMENTED | Feuer, Hi-Potion (13→21 Leben), Verwandlung in XLR8 getestet |
+| Menü-Reiter im Inventar (Überleben + Kreativ) und in Held, Aliens, Quests, Karte | IMPLEMENTED | getestet |
+| Aliens-Seite (Meisterschaft, Dauer mit Boni, Fähigkeiten, DNA-Quellen gesperrter Aliens) | IMPLEMENTED | getestet |
+| Weltkarte (Galaxie mit Rissen, entdeckt/unentdeckt, Standort, Nether/Ende) | IMPLEMENTED | getestet |
+| Controller-Steuerung des Kommandomenüs | TODO | offen (Entscheidung Controlify, TODO_SANTIQ) |
+
+### Phase 17 — VFX
+
+Entscheidung SANTIQ: Verwandlung, Treffer & Combos, Magie, Waffen & Gadgets; Effekte immer voll; Bildschirm-Blitz/Vignette
+(kein Kamerawackeln, keine Trefferpause); eigene Partikel-Texturen.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| 14 Partikel-Typen mit animierten Texturen (`tools/generate_particles.py`), ein Client-Partikel mit Stil je Typ (Leuchten, Wachsen, Drehung, Schwerkraft) | IMPLEMENTED | Texturen PLACEHOLDER (generiert); CI und `check_assets` prüfen Vollständigkeit |
+| `Vfx`: fertige Effekt-Abläufe serverseitig (an alle Spieler in Sichtweite) | IMPLEMENTED | |
+| Verwandlung: Omnitrix-Stern, DNA-Doppelhelix, Funkenring; Rückverwandlung: rote Funken | IMPLEMENTED | getestet |
+| Combo-Schwungspur (durchgehender Bogen, Luft schräg), Trefferfunken, Keyblade-Funken, Finisher-Ring, Blocken | IMPLEMENTED | Schwungspur + Treffer getestet |
+| Magie: Glut, Eissplitter, Blitzfunken, Heil-Blätter | IMPLEMENTED | Feuer, Donner, Vita getestet |
+| Combuster-Mündungsfeuer und Plasma-Spur (beginnt erst nach 2 Ticks, verdeckt nicht die Sicht), Granaten-Explosion | IMPLEMENTED | Combuster getestet |
+| Gadgets: Rotor-Wind beim Gleiten/Doppelsprung, Düsenglut, Swingshot-Funken | IMPLEMENTED | im Code geprüft |
+| Bildschirm: grüner/roter Blitz mit Vignette beim (Rück-)Verwandeln, rote Puls-Vignette bei wenig Leben | IMPLEMENTED | getestet |
+| Boss- und Herzlosen-Effekte auf eigene Partikel umstellen | TODO → Abschluss-Überarbeitung | nutzen noch Vanilla-Partikel |
+
+### Phase 18 — Audio
+
+Entscheidung SANTIQ: Sounds selbst erzeugen; Omnitrix & Aliens, Kampf & Magie, Technik & Welten, Gegner & Boss; keine Musik;
+Lautstärke über die Minecraft-Kategorien.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Synthesizer `tools/generate_sounds.py` (Oszillatoren, Rauschen, Filter, Hüllkurven, Hall, Lautheit −16 dBFS), OGG über ffmpeg | IMPLEMENTED | reproduzierbar (Seed je Datei); `--check` läuft ohne numpy/ffmpeg in der CI |
+| 45 Sound-Ereignisse / 57 Dateien, `sounds.json`, Untertitel DE/EN | PLACEHOLDER | synthetisch, nicht von Hand gestaltet; im Spiel nicht angehört (Testumgebung ohne Audiogerät) |
+| `ModSounds` und Ersatz aller Vanilla-Platzhalter in Omnitrix, Aliens, Kampf, Magie, Waffen, Gadgets, Raumschiff, Arena, Herzlosen, Boss | IMPLEMENTED | Minecraft lädt alle Dateien ohne Warnung; `/playsound` findet die Ereignisse |
+| Neu: Omnitrix-Warnpiepen (letzte 5 s), Klick im Alien-Rad, Treffer-Klang bei jedem Combo-Treffer, Start/Riss-Klang beim Weltwechsel | IMPLEMENTED | |
+| `check_assets.py` prüft Ereignisse, Dateien und Untertitel | IMPLEMENTED | |
+| Musik | gestrichen | Entscheidung SANTIQ |
+
+### Phase 19 — Multiplayer
+
+Entscheidung SANTIQ: je mehr Leute in der Gruppe, desto schwerer Boss und Gegner; geteilte Quests und Belohnungen; Gruppensystem;
+PvP wie die Minecraft-Einstellung; Vita heilt Mitspieler; Schiff mit 2 Plätzen; Test mit 4 Clients.
+
+| Baustein | Status | Anmerkung |
+|---|---|---|
+| Gruppen (`/party invite|accept|leave|kick|list`), max. 4, Anführer, Einladung 60 s mit Klick-Annahme | IMPLEMENTED | 4 Clients getestet; Gruppe lebt bis Server-Neustart (nicht gespeichert) |
+| Gruppen-HUD (Name, Stufe, Lebensbalken, offline grau), im HUD-Editor verschiebbar | IMPLEMENTED | getestet |
+| Gegner-Skalierung: +50 % Leben, +15 % Schaden je weiterem Mitglied im Umkreis von 48 Blöcken (Herzlose, Arena, Risse, Nefarious) | IMPLEMENTED | Shadow 12 → 30 Leben bei 4 Spielern, Nefarious 1000 Leben bei 4 Kämpfern |
+| Geteilte Quest-Fortschritte und Herzlosen-EP an Mitglieder in Reichweite | IMPLEMENTED | Quest-Kill bei Tester3 gezählt |
+| Kein Schaden zwischen Gruppenmitgliedern (Nahkampf, Fähigkeiten, Zauber, Projektile); außerhalb der Gruppe gilt `pvp` | IMPLEMENTED | in der Gruppe 18,92 → 18,92; nach `/party kick` 18,92 → 11,84 |
+| Vita heilt Verbündete im Umkreis (Stufe 1: 3, 2: 4, 3: 6 Blöcke) | IMPLEMENTED | 11,84 → 18,8 |
+| Schiff mit 2 Plätzen (Pilot + Beifahrer) | IMPLEMENTED | zwei Spieler gleichzeitig an Bord getestet |
+| `pvp=false` im Spiel getestet | TODO | Logik nutzt `shouldDamagePlayer`; nur im Code geprüft |
+| `tools/multiplayer_test.sh` (bis 4 Clients, je eigener Xvfb-Bildschirm) | IMPLEMENTED | |
+
+### Testumgebung (seit Phase 4)
+
+- `./gradlew build` lokal ✅ · Dedicated Server startet/stoppt sauber, 5 Aliens geladen ✅
+- Client auf Xvfb: Status-HUD, Omnitrix-HUD, DNA-Freischaltung, Alien-Rad, Heatblast-Körper (GeckoLib), Feuerexplosion, Lock-On, Combo ✅ (Screenshots)
+- `tools/client_smoke.sh` für wiederholbare Client-Tests
+
+---
+
+## 5. Risiken
+
+| Risiko | Wirkung | Gegenmaßnahme |
+|---|---|---|
+| Kein Build-Zugang | keine Phase nachweisbar fertig | Hosts freigeben, CI-Workflow |
+| Alien-Körper statt Spielermodell rendern | braucht Eingriff in den Spieler-Renderer (Mixin) + GeckoLib | Prototyp in Phase 3 isoliert; Rückfallebene: Skalierung + Partikel-Aura |
+| Bewegung (Wandlauf, Dash) läuft im Client | Desync, Cheat-Anfälligkeit | serverseitige Grenzprüfung, Abklingzeit beim Server |
+| Hub-Strukturen müssen gebaut werden | können hier nicht im Spiel gebaut werden | Phase 12: Struktur zuerst im Code erzeugt, später als NBT aus dem Spiel ersetzt |
+| Umfang | Gesamtplan entspricht vielen Monaten Teamarbeit | strikt Vertical Slice zuerst, nichts aus Phase 14+ vorziehen |
+| Urheberrecht | Namen und Marken von Square Enix/Disney, Cartoon Network, Sony | nicht-kommerziell, nur eigene Assets, keine Originalmusik oder -sounds |
+
+---
+
+## 6. Sofort behebbare Fehler in der aktuellen Version
+
+Diese Fehler verschwinden mit den REPLACE-Schritten oben. Behoben werden sie deshalb nicht einzeln, sondern dort.
+
+| Fehler | Ort | Wird behoben in |
+|---|---|---|
+| Milch beendet die Verwandlung | Statuseffekt als Zustand | Phase 3 |
+| Zweites Omnitrix umgeht die Nachladezeit | `OmnitrixItem.java:85` | Phase 3 |
+| Vierarm kann in 2 Blöcke hohen Gängen ersticken | `ModEffects.java:33` | Phase 3 (Platzprüfung) |
+| Die Art eines Projektils hängt am angezeigten Item | `HeroProjectileEntity.java:63` | Phase 8 |
+| Shadows erben Zombie-Verstärkungen und Babys | `ShadowEntity` | Phase 7 |

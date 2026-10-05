@@ -1,0 +1,15 @@
+{
+  "greeting": [
+    {
+      "translate": "npc.kingdomomnitrix.max.greeting.1"
+    },
+    {
+      "translate": "npc.kingdomomnitrix.max.greeting.2"
+    }
+  ],
+  "farewell": [
+    {
+      "translate": "npc.kingdomomnitrix.max.farewell"
+    }
+  ]
+}

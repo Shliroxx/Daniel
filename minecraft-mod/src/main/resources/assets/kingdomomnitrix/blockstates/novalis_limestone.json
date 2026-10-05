@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/novalis_limestone"
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_limestone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_limestone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_limestone",
+        "y": 270
+      }
+    ]
+  }
+}

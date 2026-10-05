@@ -1,0 +1,138 @@
+{
+  "color": "#4A7BD0",
+  "sort_order": 12,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.1,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.05,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 20.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_freezing",
+    "#minecraft:is_fall",
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:ice_breath",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "range": 8.0,
+        "chill": 35.0,
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ice_shards",
+      "energy": 20,
+      "cooldown": 40,
+      "params": {
+        "count": 5,
+        "damage": 4.0,
+        "speed": 2.2,
+        "spread": 5.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:phase_flight",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "ticks": 12,
+        "power": 1.6
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ice_prison",
+      "energy": 35,
+      "cooldown": 200,
+      "params": {
+        "range": 16.0,
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:cryo_cloak",
+      "energy": 30,
+      "cooldown": 400,
+      "params": {
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:absolute_zero",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 12.0,
+        "shatter_seconds": 2.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:stray",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:polar_bear",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:phantom",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:big_chill",
+  "failsafe_tags": [
+    "#minecraft:is_fire",
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "flight": true,
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      },
+      {
+        "effect": "minecraft:fire_resistance"
+      }
+    ],
+    "transform_style": "frost"
+  }
+}

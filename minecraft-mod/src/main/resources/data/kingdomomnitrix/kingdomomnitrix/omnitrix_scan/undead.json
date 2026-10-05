@@ -1,0 +1,1 @@
+{"condition": {"type": "entity_near", "radius": 12, "min": 3, "target": "#minecraft:undead"}, "weights": {"kingdomomnitrix:ghostfreak": 4, "kingdomomnitrix:heatblast": 3}, "reason": "scan.kingdomomnitrix.undead"}

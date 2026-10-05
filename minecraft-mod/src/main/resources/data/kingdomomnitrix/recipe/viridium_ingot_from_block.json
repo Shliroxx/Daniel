@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:viridium_block"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:viridium_ingot",
+    "count": 9
+  }
+}

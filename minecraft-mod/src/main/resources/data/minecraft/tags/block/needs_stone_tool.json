@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:hull_plate",
+    "kingdomomnitrix:hull_plate_dark",
+    "kingdomomnitrix:hull_plate_orange",
+    "kingdomomnitrix:hazard_plate",
+    "kingdomomnitrix:grate",
+    "kingdomomnitrix:pad_plate",
+    "kingdomomnitrix:pad_marking",
+    "kingdomomnitrix:solar_copper_ore",
+    "kingdomomnitrix:solar_copper_block"
+  ]
+}

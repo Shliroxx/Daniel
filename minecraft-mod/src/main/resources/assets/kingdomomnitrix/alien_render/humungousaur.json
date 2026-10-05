@@ -1,0 +1,225 @@
+{
+  "scale": 1.474,
+  "uniforms": [
+    "classic",
+    "evo",
+    "ultimate"
+  ],
+  "uniform_models": true,
+  "vanilla_pose": true,
+  "arm_swing": 1.0,
+  "leg_swing": 1.0,
+  "ability_poses": [
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -90.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -5.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -100.0
+          ],
+          [
+            "set_rot",
+            "y",
+            35.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "y",
+            -20.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            20.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_sine",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            12.0
+          ],
+          [
+            "set_rot",
+            "y",
+            15.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -30.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            30.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            22.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "z",
+            10.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "z",
+            -10.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            15.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_sine",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -65.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -45.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -65.0
+          ],
+          [
+            "set_rot",
+            "y",
+            45.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            8.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -6.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            150.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -150.0
+          ]
+        ]
+      }
+    }
+  ],
+  "glow_frames": 1,
+  "warn_textures": false,
+  "source": "Alien Evolution (Habb and Stephen)"
+}

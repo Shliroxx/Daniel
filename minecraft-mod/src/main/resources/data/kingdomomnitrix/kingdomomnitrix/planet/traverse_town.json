@@ -1,0 +1,13 @@
+{
+  "dimension": "kingdomomnitrix:traverse_town",
+  "system": "unknown",
+  "map": [
+    0.12,
+    0.2
+  ],
+  "color": 16757575,
+  "size": 1.0,
+  "order": 1,
+  "hero_level": 3,
+  "warp": 1
+}

@@ -1,0 +1,8 @@
+{
+  "category": "combat",
+  "unlock_level": 8,
+  "ap_cost": 2,
+  "sort_order": 50,
+  "effect": "air_combo_plus",
+  "value": 1
+}

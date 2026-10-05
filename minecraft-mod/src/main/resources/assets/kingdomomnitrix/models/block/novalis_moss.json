@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/novalis_moss_top",
+    "side": "kingdomomnitrix:block/novalis_moss_side",
+    "bottom": "kingdomomnitrix:block/novalis_moss_bottom"
+  }
+}

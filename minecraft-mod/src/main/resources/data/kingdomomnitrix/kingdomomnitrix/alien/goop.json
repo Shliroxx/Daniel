@@ -1,0 +1,114 @@
+{
+  "color": "#5FD13A",
+  "sort_order": 23,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 8,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall",
+    "#minecraft:is_projectile",
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:acid_spit",
+      "energy": 10,
+      "cooldown": 16,
+      "params": {
+        "range": 16.0,
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:slime_whip",
+      "energy": 15,
+      "cooldown": 40,
+      "params": {
+        "range": 12.0,
+        "damage": 5.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:puddle_form",
+      "energy": 20,
+      "cooldown": 80,
+      "params": {
+        "seconds": 3.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:engulf",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "range": 4.0,
+        "seconds": 4.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:acid_pool",
+      "energy": 25,
+      "cooldown": 240,
+      "params": {
+        "range": 12.0,
+        "radius": 3.5,
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:acid_flood",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 9.0,
+        "seconds": 6.0,
+        "damage": 8.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:slime",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:magma_cube",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:goop",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [],
+    "transform_style": "slime"
+  }
+}

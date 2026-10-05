@@ -1,0 +1,18 @@
+{
+  "result": "kingdomomnitrix:orichalcum",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:mythril_shard",
+      "count": 6
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 4
+    }
+  ],
+  "bolts": 500,
+  "knowledge": 15,
+  "hack_level": 2,
+  "sort_order": 80
+}

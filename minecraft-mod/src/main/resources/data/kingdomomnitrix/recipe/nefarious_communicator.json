@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RAR",
+    "CEC",
+    "RAR"
+  ],
+  "key": {
+    "R": {
+      "item": "kingdomomnitrix:raritanium"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "E": {
+      "item": "minecraft:echo_shard"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:nefarious_communicator",
+    "count": 1
+  }
+}

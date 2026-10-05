@@ -1,0 +1,47 @@
+{
+  "min_level": 1,
+  "sort_order": 1,
+  "time_limit": 240,
+  "waves": [
+    [
+      {
+        "entity": "minecraft:zombie",
+        "count": 4
+      }
+    ],
+    [
+      {
+        "entity": "minecraft:zombie",
+        "count": 3
+      },
+      {
+        "entity": "minecraft:skeleton",
+        "count": 2
+      }
+    ],
+    [
+      {
+        "entity": "minecraft:husk",
+        "count": 3
+      },
+      {
+        "entity": "minecraft:stray",
+        "count": 2
+      },
+      {
+        "entity": "minecraft:zombie_villager",
+        "count": 1
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts": 200,
+    "experience": 70,
+    "items": [
+      {
+        "id": "kingdomomnitrix:raritanium",
+        "count": 1
+      }
+    ]
+  }
+}

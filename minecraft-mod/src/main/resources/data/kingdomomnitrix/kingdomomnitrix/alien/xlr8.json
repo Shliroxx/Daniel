@@ -1,0 +1,124 @@
+{
+  "color": "#1E90FF",
+  "sort_order": 1,
+  "duration": 1200,
+  "recharge": 400,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.6,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.step_height",
+      "amount": 0.65,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_speed",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:dash_strike",
+      "energy": 15,
+      "cooldown": 20,
+      "params": {
+        "distance": 8.0,
+        "damage": 5.0,
+        "speed": 2.6,
+        "tempo": 10
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:blur_dodge",
+      "energy": 10,
+      "cooldown": 25,
+      "params": {
+        "power": 1.6,
+        "invulnerable_ticks": 12,
+        "radius": 12.0,
+        "tempo": 20
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:rapid_strikes",
+      "energy": 25,
+      "cooldown": 50,
+      "params": {
+        "range": 3.0,
+        "damage": 9.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:cyclone_run",
+      "energy": 30,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 4.5,
+        "damage": 5.0,
+        "pull": 0.8,
+        "seconds": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:time_slip",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "self_seconds": 8.0,
+        "seconds": 6.0,
+        "radius": 8.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:lightspeed_barrage",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 12.0,
+        "targets": 6.0,
+        "damage": 6.0,
+        "invulnerable_ticks": 20.0
+      }
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "kingdomomnitrix:shadow",
+      "chance": 0.06
+    },
+    {
+      "entity": "minecraft:ocelot",
+      "chance": 0.5
+    }
+  ],
+  "model": "kingdomomnitrix:xlr8",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "transform_style": "speed"
+  }
+}

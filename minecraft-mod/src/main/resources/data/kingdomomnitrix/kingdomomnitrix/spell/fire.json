@@ -1,0 +1,34 @@
+{
+  "effect": "kingdomomnitrix:fire",
+  "color": "#FF6A00",
+  "sort_order": 0,
+  "levels": [
+    {
+      "mp_cost": 10,
+      "cooldown": 16,
+      "params": {
+        "power": 5,
+        "count": 1,
+        "spread": 0.5
+      }
+    },
+    {
+      "mp_cost": 14,
+      "cooldown": 16,
+      "params": {
+        "power": 7,
+        "count": 2,
+        "spread": 4
+      }
+    },
+    {
+      "mp_cost": 18,
+      "cooldown": 16,
+      "params": {
+        "power": 9,
+        "count": 3,
+        "spread": 6
+      }
+    }
+  ]
+}

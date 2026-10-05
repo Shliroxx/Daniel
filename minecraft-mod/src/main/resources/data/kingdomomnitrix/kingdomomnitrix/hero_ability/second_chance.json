@@ -1,0 +1,8 @@
+{
+  "category": "combat",
+  "unlock_level": 14,
+  "ap_cost": 3,
+  "sort_order": 80,
+  "effect": "second_chance",
+  "value": 60
+}

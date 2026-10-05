@@ -1,0 +1,18 @@
+{
+  "model": "kingdomomnitrix:ultimate_echo_echo",
+  "seconds": 60,
+  "cooldown": 300,
+  "unlock_level": 6,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ]
+}

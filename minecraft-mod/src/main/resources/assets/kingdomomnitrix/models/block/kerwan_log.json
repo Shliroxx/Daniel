@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "kingdomomnitrix:block/kerwan_log_top",
+    "side": "kingdomomnitrix:block/kerwan_log"
+  }
+}

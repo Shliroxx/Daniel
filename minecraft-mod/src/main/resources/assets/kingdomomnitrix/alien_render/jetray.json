@@ -1,0 +1,340 @@
+{
+  "scale": 1.0,
+  "uniforms": [
+    "classic",
+    "evo",
+    "ultimate"
+  ],
+  "uniform_models": true,
+  "vanilla_pose": true,
+  "arm_swing": 1.0,
+  "leg_swing": 1.0,
+  "ability_poses": [
+    {
+      "ease": "out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -90.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -12.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -90.0
+          ],
+          [
+            "set_rot",
+            "y",
+            12.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            85.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -85.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "y",
+            25.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_quad",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            18.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            50.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            50.0
+          ]
+        ],
+        "right_leg": [
+          [
+            "set_rot",
+            "x",
+            -30.0
+          ]
+        ],
+        "left_leg": [
+          [
+            "set_rot",
+            "x",
+            30.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "out_sine",
+      "parts": {
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            12.0
+          ],
+          [
+            "set_rot",
+            "y",
+            15.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -30.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -40.0
+          ],
+          [
+            "set_rot",
+            "y",
+            30.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_sine",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -130.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -20.0
+          ]
+        ],
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -10.0
+          ]
+        ]
+      }
+    },
+    {
+      "ease": "in_out_cubic",
+      "parts": {
+        "head": [
+          [
+            "set_rot",
+            "x",
+            -20.0
+          ]
+        ],
+        "chest": [
+          [
+            "set_rot",
+            "x",
+            -6.0
+          ]
+        ],
+        "right_arm": [
+          [
+            "set_rot",
+            "z",
+            150.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "z",
+            -150.0
+          ]
+        ]
+      }
+    }
+  ],
+  "glow_frames": 1,
+  "warn_textures": true,
+  "flight_pose": {
+    "armwing_left": {
+      "rotation": [
+        0.0,
+        21.0,
+        -2.0
+      ]
+    },
+    "armwing_right": {
+      "rotation": [
+        0.0,
+        -21.0,
+        2.0
+      ]
+    },
+    "cape_closed": {
+      "position": [
+        0.0,
+        -0.25882,
+        -0.96593
+      ],
+      "scale": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    "cape_open": {
+      "position": [
+        0.0,
+        -0.05176,
+        -0.19319
+      ],
+      "scale": [
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "left_arm": {
+      "rotation": [
+        -55.0,
+        -40.0,
+        -33.0
+      ]
+    },
+    "left_foot": {
+      "rotation": [
+        50.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        -0.2,
+        0.25
+      ]
+    },
+    "left_shin": {
+      "rotation": [
+        -26.0,
+        -4.0,
+        -7.0
+      ]
+    },
+    "leftlegrot": {
+      "rotation": [
+        42.0,
+        0.0,
+        0.0
+      ]
+    },
+    "right_arm": {
+      "rotation": [
+        -55.0,
+        40.0,
+        33.0
+      ]
+    },
+    "right_foot": {
+      "rotation": [
+        50.0,
+        0.0,
+        0.0
+      ],
+      "position": [
+        0.0,
+        -0.2,
+        0.25
+      ]
+    },
+    "right_shin": {
+      "rotation": [
+        -26.0,
+        4.0,
+        7.0
+      ]
+    },
+    "rightlegrot": {
+      "rotation": [
+        42.0,
+        0.0,
+        0.0
+      ]
+    },
+    "tailbase": {
+      "rotation": [
+        -5.0,
+        0.0,
+        0.0
+      ],
+      "add": true
+    },
+    "tailmid": {
+      "rotation": [
+        -15.0,
+        0.0,
+        0.0
+      ],
+      "add": true
+    },
+    "tailtip": {
+      "rotation": [
+        -35.0,
+        0.0,
+        0.0
+      ],
+      "add": true
+    }
+  },
+  "source": "Alien Evolution (Habb and Stephen)"
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "PPP",
+    "PRP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "kingdomomnitrix:pad_plate"
+    },
+    "R": {
+      "item": "kingdomomnitrix:raw_solar_copper"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:pad_marking",
+    "count": 8
+  }
+}

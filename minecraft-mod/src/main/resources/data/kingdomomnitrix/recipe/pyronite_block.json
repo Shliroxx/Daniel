@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "XXX",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:pyronite_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:pyronite_block",
+    "count": 1
+  }
+}

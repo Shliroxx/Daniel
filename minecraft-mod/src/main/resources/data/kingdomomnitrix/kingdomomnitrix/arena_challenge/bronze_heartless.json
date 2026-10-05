@@ -1,0 +1,43 @@
+{
+  "min_level": 1,
+  "sort_order": 0,
+  "time_limit": 180,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 4
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 5
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 1
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 1
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts": 150,
+    "experience": 60,
+    "items": [
+      {
+        "id": "kingdomomnitrix:hi_potion",
+        "count": 1
+      }
+    ]
+  }
+}

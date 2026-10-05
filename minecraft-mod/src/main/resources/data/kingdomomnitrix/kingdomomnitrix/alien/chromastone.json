@@ -1,0 +1,129 @@
+{
+  "color": "#C36BE8",
+  "sort_order": 15,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.1,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 8.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.3,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:prism_beam",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:spectral_burst",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "radius": 5.0,
+        "damage": 5.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:photon_dash",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "distance": 10.0,
+        "damage": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:crystal_lattice",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:solar_charge",
+      "energy": 20,
+      "cooldown": 400,
+      "params": {
+        "bright": 40.0,
+        "dark": 15.0,
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:full_spectrum",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "damage": 6.0,
+        "seconds": 3.0,
+        "range": 12.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:allay",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:shulker",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:chromastone",
+  "failsafe_tags": [
+    "#minecraft:is_explosion",
+    "#minecraft:is_lightning"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "prism"
+  }
+}

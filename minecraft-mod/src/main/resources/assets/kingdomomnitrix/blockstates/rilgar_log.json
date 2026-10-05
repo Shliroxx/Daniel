@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "kingdomomnitrix:block/rilgar_log"
+    },
+    "axis=z": {
+      "model": "kingdomomnitrix:block/rilgar_log_horizontal",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "kingdomomnitrix:block/rilgar_log_horizontal",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "kingdomomnitrix:raw_aquarine"
+  },
+  "result": {
+    "id": "kingdomomnitrix:aquarine_ingot"
+  },
+  "experience": 0.8,
+  "cookingtime": 200
+}

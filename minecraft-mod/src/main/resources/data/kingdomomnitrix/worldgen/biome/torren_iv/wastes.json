@@ -1,0 +1,76 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 11554880,
+    "fog_color": 11034704,
+    "water_color": 9062970,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:ash"
+      },
+      "probability": 0.04
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "kingdomomnitrix:large_body",
+        "weight": 20,
+        "minCount": 1,
+        "maxCount": 1
+      },
+      {
+        "type": "kingdomomnitrix:darkball",
+        "weight": 30,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "kingdomomnitrix:shadow",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 3
+      }
+    ],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:ore_pyronite",
+      "kingdomomnitrix:torren_iv_blob_torren_crust"
+    ],
+    [],
+    [],
+    [
+      "kingdomomnitrix:torren_iv_wastes_torren_thorn"
+    ],
+    []
+  ]
+}

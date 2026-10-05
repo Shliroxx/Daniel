@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/kerwan_slate"
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_slate",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_slate",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/kerwan_slate",
+        "y": 270
+      }
+    ]
+  }
+}
