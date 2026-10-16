@@ -1,8 +1,8 @@
 {
   "_comment": "Ego-Sicht des Omnitrix bei gehobenem Arm: offset = Zifferblatt-Mitte vor der Kamera (Bloecke, x rechts, y oben, -z vorn); rotate_* = Feinkippung in Grad um die Kamera-Achsen; dial_up = Winkel von oben auf dem Zifferblatt. F3+T laedt neu.",
   "offset": [
-    -0.45,
-    -0.14,
+    -0.3,
+    -0.04,
     -1.1
   ],
   "rotate_x": -30.0,

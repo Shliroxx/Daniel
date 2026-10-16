@@ -186,7 +186,11 @@ public final class OmnitrixWrist {
 		float[] glow = glow(player);
 
 		matrices.push();
-		model.leftArm.rotate(matrices);
+		// Ego-Sicht: die Matrix steht schon im Armraum (renderFirstPerson); die Third-Person-Armlage (Schulterversatz,
+		// Laufschwingen) darf nicht noch einmal angewendet werden, sonst schwebt das Geraet neben dem Handgelenk
+		if (!firstPerson) {
+			model.leftArm.rotate(matrices);
+		}
 		// Armmitte (breit x = 1, schmal x = 0,5) am Handende (y = 10); Modell-y zeigt zur Schulter
 		matrices.translate((slim ? 0.5f : 1.0f) / 16.0f, 10.0f / 16.0f, 0.0f);
 		if (slim) {
@@ -235,7 +239,11 @@ public final class OmnitrixWrist {
 		float dialTurn = local ? OmnitrixController.twist() * 90.0f : 0.0f;
 		float[] glow = glow(player);
 		matrices.push();
-		model.leftArm.rotate(matrices);
+		// Ego-Sicht: die Matrix steht schon im Armraum (renderFirstPerson); die Third-Person-Armlage (Schulterversatz,
+		// Laufschwingen) darf nicht noch einmal angewendet werden, sonst schwebt das Geraet neben dem Handgelenk
+		if (!firstPerson) {
+			model.leftArm.rotate(matrices);
+		}
 		OmnitrixGeo.render(matrices, consumers, slim, light, lift, dialTurn, lockTwist, glow);
 		// Zifferblatt-Raum fuer Raute, Glas und Lichtkranz: deren Modellraum (Mitte 13/3/8, Blick +x) auf das AE-Zifferblatt
 		float dialX = OmnitrixGeo.DIAL_X - (slim ? 1.0f : 0.0f) - 5.0f + OmnitrixPolish.overshoot(lift) * 0.75f;

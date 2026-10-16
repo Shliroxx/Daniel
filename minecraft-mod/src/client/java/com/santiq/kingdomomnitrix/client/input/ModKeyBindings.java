@@ -44,7 +44,7 @@ public final class ModKeyBindings {
 	public static final KeyBinding PACK_MODE = register("key.kingdomomnitrix.pack_mode", GLFW.GLFW_KEY_J);
 	public static final KeyBinding HERO_MENU = register("key.kingdomomnitrix.hero_menu", GLFW.GLFW_KEY_K);
 	/** Galvan-Labor: Erfindungen und Omnitrix-Hack (nur als Grey Matter) */
-	public static final KeyBinding GALVAN_LAB = register("key.kingdomomnitrix.galvan_lab", GLFW.GLFW_KEY_L);
+	public static final KeyBinding GALVAN_LAB = register("key.kingdomomnitrix.galvan_lab", GLFW.GLFW_KEY_I);
 	/** Evolve: Ultimate-Form des aktiven Aliens */
 	public static final KeyBinding EVOLVE = register("key.kingdomomnitrix.evolve", GLFW.GLFW_KEY_U);
 	/** Galaxiekarte der Aphelion (Reisen, Schiffsausbau) */
