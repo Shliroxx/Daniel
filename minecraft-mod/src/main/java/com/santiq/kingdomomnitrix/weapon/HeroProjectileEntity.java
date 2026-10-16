@@ -146,7 +146,7 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		World world = getWorld();
 		if (world.isClient()) {
 			// erst nach 2 Ticks: sonst entsteht die Spur direkt vor der Kamera des Schuetzen und verdeckt die Sicht
-			if (age > TRAIL_DELAY_TICKS && (getOwner() == null || getOwner().squaredDistanceTo(this) > TRAIL_MIN_DISTANCE_SQ)) {
+			if (age > TRAIL_DELAY_TICKS && age % 2 == 0 && (getOwner() == null || getOwner().squaredDistanceTo(this) > TRAIL_MIN_DISTANCE_SQ)) {
 				world.addParticle(getKind().particle, getX(), getY(), getZ(), 0.0, 0.0, 0.0);
 			}
 		} else if (age > MAX_AGE_TICKS) {
@@ -202,9 +202,60 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 			if (explosionPower > 0.0f) {
 				serverWorld.createExplosion(this, getX(), getY(), getZ(), explosionPower, World.ExplosionSourceType.NONE);
 			}
-			serverWorld.spawnParticles(getKind().particle, getX(), getY(), getZ(), 8, 0.15, 0.15, 0.15, 0.05);
-			Vfx.directed(serverWorld, ModParticles.HIT_SPARK, getPos(), Vec3d.ZERO);
+			impact(serverWorld, getKind(), getPos(), explosionPower);
 			discard();
+		}
+	}
+
+	/** Leuchtfarbe der Art fuer die FX-Engine (Kugel, Schweif, Aufprall). */
+	public static int fxColor(Kind kind) {
+		return switch (kind) {
+			case FIRE -> 0xFF7A1A;
+			case ICE -> 0x8AE8FF;
+			case PLASMA -> 0x5AF0FF;
+			case CRYSTAL -> 0x9AFFD8;
+			case DARK -> 0x9A40FF;
+			case SLIME -> 0x9AF040;
+			case WRENCH, QUILL -> 0xFFFFFF;
+		};
+	}
+
+	/** Aufprall je Art: Feuerball-Explosion mit Brandfleck, Eissplitter, Plasmablitz, Kristallsplitter, dunkler Rauch, Schleim. */
+	private static void impact(ServerWorld world, Kind kind, Vec3d pos, float explosionPower) {
+		int color = fxColor(kind);
+		float boost = 1.0f + explosionPower * 0.5f;
+		switch (kind) {
+			case FIRE -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, pos, color, 0.9f * boost);
+				com.santiq.kingdomomnitrix.vfx.Fx.scorch(world, pos.add(0, -0.4, 0), 0.9f * boost, 120);
+			}
+			case ICE -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.flash(world, pos, color, 1.4f * boost);
+				com.santiq.kingdomomnitrix.vfx.Fx.shards(world, pos, color, 0.35f, 12);
+			}
+			case CRYSTAL -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.flash(world, pos, color, 1.0f * boost);
+				com.santiq.kingdomomnitrix.vfx.Fx.shards(world, pos, color, 0.3f, 10);
+			}
+			case DARK -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.flash(world, pos, color, 1.2f * boost);
+				com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, pos, 0x2A1040, 0.7f, 6);
+			}
+			case SLIME -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.flash(world, pos, color, 0.9f);
+				com.santiq.kingdomomnitrix.vfx.Fx.shards(world, pos, color, 0.25f, 10);
+			}
+			case PLASMA -> {
+				com.santiq.kingdomomnitrix.vfx.Fx.flash(world, pos, color, 1.3f * boost);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, pos, color, 0.4f, 14);
+			}
+			case WRENCH, QUILL -> {
+				Vfx.directed(world, ModParticles.HIT_SPARK, pos, Vec3d.ZERO);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, pos, 0xFFE8A0, 0.3f, 6);
+			}
+		}
+		if (explosionPower > 0.0f) {
+			com.santiq.kingdomomnitrix.vfx.Fx.shake(world, pos, 0.3f, 8, 12);
 		}
 	}
 }

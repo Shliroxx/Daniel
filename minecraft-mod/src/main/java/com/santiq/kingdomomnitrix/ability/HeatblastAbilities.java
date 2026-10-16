@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,8 +21,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -58,6 +57,9 @@ final class HeatblastAbilities {
 	private static final float COOLING = 0.25f;
 	private static final float HEAT_PER_HIT = 1.0f;
 	private static final Identifier HEATBLAST = KingdomOmnitrix.id("heatblast");
+	/** Flammenfarben der FX-Engine: normales Feuer, Blaufeuer (ueberhitzt) */
+	static final int FIRE = 0xFF6A10;
+	static final int BLUE = 0x3A9CFF;
 
 	/** Kernhitze je Spieler */
 	private static final Map<UUID, Float> HEAT = new HashMap<>();
@@ -123,7 +125,8 @@ final class HeatblastAbilities {
 		HEAT.put(player.getUuid(), after);
 		if (before < MAX && after >= MAX) {
 			ServerWorld world = player.getServerWorld();
-			world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.08);
+			Fx.flash(world, player.getPos().add(0, 1.0, 0), BLUE, 2.5f);
+			Fx.aura(world, player, BLUE, 0.7f, 30);
 			world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.PLAYERS, 1.0f, 0.7f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.heatblast_overheat").formatted(Formatting.AQUA), true);
 		}
@@ -140,8 +143,8 @@ final class HeatblastAbilities {
 	}
 
 	private record Power(float factor, boolean blue) {
-		ParticleEffect flame() {
-			return blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME;
+		int color() {
+			return blue ? BLUE : FIRE;
 		}
 	}
 
@@ -160,6 +163,10 @@ final class HeatblastAbilities {
 				orb.withExplosion(1.2f);
 			}
 		}
+		Vec3d look = player.getRotationVec(1.0f);
+		Vec3d hand = player.getEyePos().add(look.multiply(0.8)).add(0, -0.35, 0);
+		Fx.flames(ctx.world(), hand, look.multiply(0.35), power.color(), 0.18f, 8);
+		Fx.flash(ctx.world(), hand, power.color(), 0.9f);
 		addHeat(player, (float) ctx.param("heat", 8.0));
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_FIRE, 1.0f, power.blue() ? 0.7f : 1.0f);
 		return true;
@@ -179,9 +186,16 @@ final class HeatblastAbilities {
 			}
 		}
 		ServerWorld world = ctx.world();
-		ring(world, power.flame(), player.getPos().add(0, 0.3, 0), radius, 48, 0.12);
-		ring(world, power.flame(), player.getPos().add(0, 1.0, 0), radius * 0.7, 36, 0.08);
-		world.spawnParticles(ParticleTypes.LAVA, player.getX(), player.getBodyY(0.5), player.getZ(), 12, 0.5, 0.4, 0.5, 0.0);
+		Vec3d body = player.getPos().add(0, 1.0, 0);
+		Fx.explosion(world, body, power.color(), (float) radius * 0.35f);
+		Fx.shockwave(world, player.getPos(), power.color(), (float) radius, 10);
+		for (int i = 0; i < 10; i++) {
+			double angle = i * MathHelper.TAU / 10;
+			Fx.flames(world, player.getPos().add(0, 0.4, 0), new Vec3d(Math.cos(angle), 0.08, Math.sin(angle)).multiply(radius / 9.0),
+					power.color(), 0.15f, 3);
+		}
+		Fx.scorch(world, player.getPos(), (float) radius * 0.5f, 160);
+		Fx.shake(world, player.getPos(), 0.35f, 10, (int) radius + 6);
 		addHeat(player, (float) ctx.param("heat", 15.0));
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_FIRE, 1.2f, power.blue() ? 0.55f : 0.75f);
 		return true;
@@ -195,7 +209,8 @@ final class HeatblastAbilities {
 		int ticks = (int) ctx.param("surf_ticks", 60.0);
 		SURF.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, ticks, 0, false, false));
-		ctx.world().spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 30, 0.3, 0.1, 0.3, 0.08);
+		Fx.flames(ctx.world(), player.getPos(), new Vec3d(0, -0.35, 0), FIRE, 0.45f, 22);
+		Fx.shockwave(ctx.world(), player.getPos(), FIRE, 2.5f, 8);
 		addHeat(player, (float) ctx.param("heat", 10.0));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 0.9f, 0.8f);
 		return true;
@@ -222,7 +237,8 @@ final class HeatblastAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, 0, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, ticks, 0, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, ticks, 1, false, false));
-		ring(ctx.world(), ParticleTypes.FLAME, player.getPos().add(0, 1.0, 0), 1.4, 32, 0.0);
+		Fx.aura(ctx.world(), player, FIRE, 1.1f, ticks);
+		Fx.flash(ctx.world(), player.getPos().add(0, 1.0, 0), FIRE, 2.0f);
 		addHeat(player, (float) ctx.param("heat", 10.0));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 0.8f, 0.6f);
 		return true;
@@ -238,7 +254,6 @@ final class HeatblastAbilities {
 		double radius = ctx.param("radius", 9.0) * (0.8 + 0.4 * heat / MAX);
 		float damage = (float) ctx.param("damage", 16.0) * scale;
 		boolean blue = heat >= MAX;
-		ParticleEffect flame = blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME;
 		for (LivingEntity target : around(player, radius)) {
 			double distance = Math.sqrt(target.squaredDistanceTo(player));
 			hit(player, target, (float) (damage * (1.0 - 0.4 * distance / radius)), (float) ctx.param("fire_seconds", 8.0));
@@ -249,12 +264,16 @@ final class HeatblastAbilities {
 			target.addVelocity(0.0, ctx.param("launch", 0.5), 0.0);
 			target.velocityModified = true;
 		}
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getBodyY(0.5), player.getZ(), 2, 0.5, 0.5, 0.5, 0.0);
-		world.spawnParticles(ParticleTypes.FLASH, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-		for (int i = 0; i < 3; i++) {
-			ring(world, flame, player.getPos().add(0, 0.3 + i * 0.8, 0), radius * (1.0 - i * 0.25), 64, 0.25);
-		}
-		world.spawnParticles(flame, player.getX(), player.getBodyY(0.5), player.getZ(), 200, radius * 0.3, 1.2, radius * 0.3, 0.2);
+		int color = blue ? BLUE : FIRE;
+		Vec3d body = player.getPos().add(0, 1.0, 0);
+		Fx.explosion(world, body, color, (float) radius * 0.45f);
+		Fx.explosion(world, body.add(0, 1.5, 0), 0xFFD27A, (float) radius * 0.25f);
+		Fx.flash(world, body, 0xFFFFFF, (float) radius * 0.8f);
+		Fx.shockwave(world, player.getPos(), color, (float) radius * 1.2f, 14);
+		Fx.shockwave(world, player.getPos(), 0xFFF0C0, (float) radius * 0.8f, 22);
+		Fx.flames(world, player.getPos(), new Vec3d(0, 0.7, 0), color, 0.35f, 30);
+		Fx.scorch(world, player.getPos(), (float) radius * 0.7f, 300);
+		Fx.shake(world, player.getPos(), 1.0f, 24, (int) (radius * 2.5));
 		if (blue) {
 			CORES.put(player.getUuid(), new Core(player.getPos(), world.getTime() + (long) ctx.param("core_ticks", 80.0),
 					(float) ctx.param("core_damage", 3.0), radius * 0.5));
@@ -302,7 +321,7 @@ final class HeatblastAbilities {
 		}
 		if (player.isTouchingWaterOrRain()) {
 			delta = player.isSubmergedInWater() ? -12.0f : -4.0f;
-			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getBodyY(0.7), player.getZ(), 4, 0.3, 0.4, 0.3, 0.02);
+			Fx.smoke(world, player.getPos().add(0, 1.2, 0), 0xE8F0F4, 0.6f, 2);
 			if (player.isSubmergedInWater()) {
 				player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 40, 0, false, false));
 			}
@@ -320,8 +339,9 @@ final class HeatblastAbilities {
 					hit(player, target, 1.5f, 3.0f);
 				}
 			}
-			world.spawnParticles(heat >= MAX ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
-					player.getX(), player.getBodyY(0.5), player.getZ(), heat >= MAX ? 4 : 2, 0.35, 0.6, 0.35, 0.01);
+			if (now % 10 == 0) {
+				Fx.flames(world, player.getPos().add(0, 0.6, 0), new Vec3d(0, 0.08, 0), heat >= MAX ? BLUE : FIRE, 0.6f, heat >= MAX ? 5 : 3);
+			}
 		}
 		// Hitze-Anzeige im HUD und Glut-Aura am Koerper (Client)
 		AlienMeterSync.update(player, AlienMeterPayload.HEAT, heat);
@@ -337,7 +357,7 @@ final class HeatblastAbilities {
 			return;
 		}
 		player.fallDistance = 0.0f;
-		world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY() - 0.2, player.getZ(), 6, 0.2, 0.3, 0.2, 0.02);
+		Fx.flames(world, player.getPos().add(0, -0.1, 0), new Vec3d(0, -0.3, 0).add(player.getVelocity().multiply(-0.5)), FIRE, 0.25f, 4);
 		if (now % 5 == 0) {
 			// Feuersaeule unter Heatblast: alles darunter (bis 4 Bloecke) wird versengt
 			var box = player.getBoundingBox().expand(1.2, 0.0, 1.2).stretch(0.0, -4.0, 0.0);
@@ -357,16 +377,12 @@ final class HeatblastAbilities {
 			SHIELD.remove(player.getUuid());
 			return;
 		}
-		if (now % 4 == 0) {
-			double angle = now * 0.5;
-			world.spawnParticles(ParticleTypes.FLAME, player.getX() + Math.cos(angle) * 1.2, player.getBodyY(0.5),
-					player.getZ() + Math.sin(angle) * 1.2, 2, 0.05, 0.4, 0.05, 0.0);
-		}
+
 		// Geschosse verglühen, bevor sie treffen
 		for (ProjectileEntity projectile : world.getEntitiesByClass(ProjectileEntity.class, player.getBoundingBox().expand(3.5),
 				p -> p.getOwner() != player)) {
-			world.spawnParticles(ParticleTypes.FLAME, projectile.getX(), projectile.getY(), projectile.getZ(), 8, 0.1, 0.1, 0.1, 0.05);
-			world.spawnParticles(ParticleTypes.SMOKE, projectile.getX(), projectile.getY(), projectile.getZ(), 4, 0.1, 0.1, 0.1, 0.02);
+			Fx.flash(world, projectile.getPos(), FIRE, 1.0f);
+			Fx.smoke(world, projectile.getPos(), 0x403830, 0.4f, 3);
 			world.playSound(null, projectile.getBlockPos(), SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.PLAYERS, 0.6f, 1.4f);
 			projectile.discard();
 		}
@@ -391,16 +407,19 @@ final class HeatblastAbilities {
 			long age = world.getTime() - wave.start;
 			// Front laeuft in 10 Ticks bis zum Rand
 			double front = wave.radius * Math.min(1.0, (age + 1) / 10.0);
-			ParticleEffect flame = wave.blue ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME;
-			int points = (int) (front * 8);
-			for (int i = 0; i < points; i++) {
-				double angle = (i / (double) points) * MathHelper.TAU;
-				Vec3d dir = new Vec3d(Math.cos(angle), 0, Math.sin(angle));
-				if (wave.cone > 0.0 && dir.dotProduct(wave.facing) < wave.cone) {
-					continue;
+			int color = wave.blue ? BLUE : FIRE;
+			if (age < 6) {
+				// Flammenstrom im Kegel (blau: rundum)
+				int streams = wave.cone > 0.0 ? 1 : 6;
+				for (int i = 0; i < streams; i++) {
+					Vec3d dir = wave.cone > 0.0 ? wave.facing
+							: new Vec3d(Math.cos(i * MathHelper.TAU / streams), 0, Math.sin(i * MathHelper.TAU / streams));
+					Fx.flames(world, wave.origin.add(0, 1.0, 0).add(dir.multiply(0.6)), dir.multiply(wave.radius / 9.0).add(0, -0.02, 0), color,
+							wave.cone > 0.0 ? (float) (1.0 - wave.cone) * 0.9f : 0.35f, wave.cone > 0.0 ? 16 : 6);
 				}
-				Vec3d p = wave.origin.add(dir.multiply(front));
-				world.spawnParticles(flame, p.x, p.y + 0.3, p.z, 1, 0.05, 0.2, 0.05, 0.01);
+			}
+			if (age == 9) {
+				Fx.scorch(world, wave.origin.add(wave.facing.multiply(wave.radius * 0.6)), (float) wave.radius * 0.45f, 160);
 			}
 			for (LivingEntity target : around(player, wave.radius)) {
 				Vec3d flat = target.getPos().subtract(wave.origin).multiply(1, 0, 1);
@@ -434,9 +453,11 @@ final class HeatblastAbilities {
 				continue;
 			}
 			ServerWorld world = player.getServerWorld();
-			world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, core.pos().x, core.pos().y + 1.0, core.pos().z, 6, 0.4, 0.4, 0.4, 0.02);
+			if (world.getTime() % 4 == 0) {
+				Fx.flames(world, core.pos().add(0, 0.5, 0), new Vec3d(0, 0.25, 0), BLUE, 0.3f, 4);
+			}
 			if (world.getTime() % 10 == 0) {
-				ring(world, ParticleTypes.SOUL_FIRE_FLAME, core.pos().add(0, 0.2, 0), core.radius(), 32, 0.0);
+				Fx.shockwave(world, core.pos(), BLUE, (float) core.radius(), 10);
 				for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(core.pos(),
 						core.radius() * 2, 4, core.radius() * 2), e -> e != player && e.isAlive() && PartyRules.canHarm(player, e)
 						&& e.getPos().squaredDistanceTo(core.pos()) <= core.radius() * core.radius())) {
@@ -462,15 +483,6 @@ final class HeatblastAbilities {
 		}
 		if (fireSeconds > 0.0f) {
 			target.setOnFireFor(fireSeconds);
-		}
-	}
-
-	private static void ring(ServerWorld world, ParticleEffect particle, Vec3d center, double radius, int count, double outward) {
-		for (int i = 0; i < count; i++) {
-			double angle = i * MathHelper.TAU / count;
-			double dx = Math.cos(angle);
-			double dz = Math.sin(angle);
-			world.spawnParticles(particle, center.x + dx * radius, center.y, center.z + dz * radius, 0, dx, 0.05, dz, outward);
 		}
 	}
 

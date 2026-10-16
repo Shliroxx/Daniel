@@ -90,13 +90,14 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		registerHeartless(ModEntities.DARKBALL, "darkball");
 		// Der Riss besteht nur aus Partikeln (serverseitig) und der Bossleiste.
 		EntityRendererRegistry.register(ModEntities.DARKNESS_RIFT, EmptyEntityRenderer::new);
-		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, FlyingItemEntityRenderer::new);
+		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, com.santiq.kingdomomnitrix.client.fx.FxProjectileRenderer::new);
 		EntityRendererRegistry.register(ModEntities.FUSION_GRENADE, FlyingItemEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.NPC, NpcRenderer::new);
 		EntityRendererRegistry.register(ModEntities.ECHO_CLONE, com.santiq.kingdomomnitrix.client.render.alien.EchoCloneRenderer::new);
 		EntityRendererRegistry.register(ModEntities.SHIP, ShipRenderer::new);
 		com.santiq.kingdomomnitrix.client.space.ShipMesh.register();
 		registerPlanetRenderLayers();
+		com.santiq.kingdomomnitrix.client.fx.FxManager.register();
 		EntityRendererRegistry.register(ModEntities.NEFARIOUS, NefariousRenderer::new);
 		DimensionRenderingRegistry.registerDimensionEffects(KingdomOmnitrix.id("space"), new SpaceDimensionEffects());
 		DimensionRenderingRegistry.registerSkyRenderer(SpaceTravel.SPACE, new SpaceSkyRenderer());

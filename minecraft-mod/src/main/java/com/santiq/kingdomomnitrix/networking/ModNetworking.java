@@ -39,6 +39,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(OmnitrixPhasePayload.ID, OmnitrixPhasePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(SetUniformPayload.ID, SetUniformPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(OmnitrixPhaseSyncPayload.ID, OmnitrixPhaseSyncPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(FxPayload.ID, FxPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(OmnitrixCodePayload.ID, OmnitrixCodePayload.CODEC);
