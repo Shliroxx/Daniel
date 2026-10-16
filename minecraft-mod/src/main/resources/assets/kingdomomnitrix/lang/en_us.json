@@ -889,7 +889,7 @@
   "ability.kingdomomnitrix.titan_leap": "Titan Leap",
   "message.kingdomomnitrix.four_arms_rampage": "RAMPAGE — next ability at full force!",
   "message.kingdomomnitrix.four_arms_combo": "Four-fist strike!",
-  "ability.kingdomomnitrix.crystal_vault": "Crystal Vault",
+  "ability.kingdomomnitrix.crystal_vault": "Crystal Surf",
   "message.kingdomomnitrix.diamondhead_prism": "PRISM — next ability at full resonance!",
   "message.kingdomomnitrix.grey_matter_learned": "Knowledge gained: %s %s/%s (+%s%% damage in every form)",
   "message.kingdomomnitrix.grey_matter_known": "Known: %s %s/%s (+%s%% damage in every form)",
@@ -1215,5 +1215,9 @@
   "item.kingdomomnitrix.pyronite_helmet": "Pyronite Helmet",
   "item.kingdomomnitrix.pyronite_chestplate": "Pyronite Chestplate",
   "item.kingdomomnitrix.pyronite_leggings": "Pyronite Leggings",
-  "item.kingdomomnitrix.pyronite_boots": "Pyronite Boots"
+  "item.kingdomomnitrix.pyronite_boots": "Pyronite Boots",
+  "block.kingdomomnitrix.petrosapien_crystal": "Petrosapien Crystal",
+  "block.kingdomomnitrix.petrosapien_spike": "Petrosapien Spike",
+  "block.kingdomomnitrix.necrofriggian_ice": "Necrofriggian Ice",
+  "block.kingdomomnitrix.necrofriggian_spike": "Necrofriggian Ice Spike"
 }

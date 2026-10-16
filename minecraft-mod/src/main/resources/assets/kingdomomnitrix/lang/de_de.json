@@ -889,7 +889,7 @@
   "ability.kingdomomnitrix.titan_leap": "Titanensprung",
   "message.kingdomomnitrix.four_arms_rampage": "RASEREI — nächste Fähigkeit mit voller Wucht!",
   "message.kingdomomnitrix.four_arms_combo": "Vierfach-Schlag!",
-  "ability.kingdomomnitrix.crystal_vault": "Kristallsprung",
+  "ability.kingdomomnitrix.crystal_vault": "Kristallsurfen",
   "message.kingdomomnitrix.diamondhead_prism": "PRISMA — nächste Fähigkeit mit voller Resonanz!",
   "message.kingdomomnitrix.grey_matter_learned": "Neues Wissen: %s %s/%s (+%s %% Schaden in jeder Form)",
   "message.kingdomomnitrix.grey_matter_known": "Bekannt: %s %s/%s (+%s %% Schaden in jeder Form)",
@@ -1215,5 +1215,9 @@
   "item.kingdomomnitrix.pyronite_helmet": "Pyronit-Helm",
   "item.kingdomomnitrix.pyronite_chestplate": "Pyronit-Brustpanzer",
   "item.kingdomomnitrix.pyronite_leggings": "Pyronit-Beinschutz",
-  "item.kingdomomnitrix.pyronite_boots": "Pyronit-Stiefel"
+  "item.kingdomomnitrix.pyronite_boots": "Pyronit-Stiefel",
+  "block.kingdomomnitrix.petrosapien_crystal": "Petrosapien-Kristall",
+  "block.kingdomomnitrix.petrosapien_spike": "Petrosapien-Stachel",
+  "block.kingdomomnitrix.necrofriggian_ice": "Necrofriggian-Eis",
+  "block.kingdomomnitrix.necrofriggian_spike": "Necrofriggian-Eisstachel"
 }

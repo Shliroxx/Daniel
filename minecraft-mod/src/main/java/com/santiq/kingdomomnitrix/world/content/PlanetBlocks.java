@@ -120,11 +120,19 @@ public final class PlanetBlocks {
 	public static final Block PYRONITE_ORE = register("pyronite_ore", new ExperienceDroppingBlock(UniformIntProvider.create(2, 6), base(MapColor.STONE_GRAY, 3.0f, 3.0f, BlockSoundGroup.STONE, 5, true).instrument(NoteBlockInstrument.BASEDRUM)));
 	/** Pyronit-Block */
 	public static final Block PYRONITE_BLOCK = register("pyronite_block", new Block(base(MapColor.ORANGE, 5.0f, 6.0f, BlockSoundGroup.METAL, 0, true)));
+	/** Petrosapien-Kristall */
+	public static final Block PETROSAPIEN_CRYSTAL = register("petrosapien_crystal", new TechGlassBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).strength(0.4f, 6.0f).sounds(BlockSoundGroup.AMETHYST_BLOCK).luminance(state -> 9).nonOpaque().dropsNothing().slipperiness(0.98f).allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false).suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false)));
+	/** Petrosapien-Stachel */
+	public static final Block PETROSAPIEN_SPIKE = register("petrosapien_spike", new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).strength(0.4f, 6.0f).sounds(BlockSoundGroup.AMETHYST_CLUSTER).luminance(state -> 7).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Necrofriggian-Eis */
+	public static final Block NECROFRIGGIAN_ICE = register("necrofriggian_ice", new TechGlassBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(0.4f, 6.0f).sounds(BlockSoundGroup.GLASS).luminance(state -> 4).nonOpaque().dropsNothing().slipperiness(0.98f).allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false).suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false)));
+	/** Necrofriggian-Eisstachel */
+	public static final Block NECROFRIGGIAN_SPIKE = register("necrofriggian_spike", new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(0.4f, 6.0f).sounds(BlockSoundGroup.GLASS).luminance(state -> 3).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY)));
 
 	/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */
 	public static final List<Block> CUTOUT = List.of(VELDIN_SCRUB, KERWAN_REED, NOVALIS_BLOOM, RILGAR_SEAGRASS, TORREN_THORN, GRATE);
 	public static final List<Block> CUTOUT_MIPPED = List.of(KERWAN_LEAVES, NOVALIS_LEAVES, RILGAR_LEAVES);
-	public static final List<Block> TRANSLUCENT = List.of(TECH_GLASS);
+	public static final List<Block> TRANSLUCENT = List.of(TECH_GLASS, PETROSAPIEN_CRYSTAL, PETROSAPIEN_SPIKE, NECROFRIGGIAN_ICE, NECROFRIGGIAN_SPIKE);
 
 	private PlanetBlocks() {
 	}

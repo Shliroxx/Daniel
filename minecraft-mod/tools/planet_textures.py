@@ -929,3 +929,27 @@ def armor_layer(name: str, dark: Color, mid: Color, light: Color, accent: Color,
     color = np.where(glow_line[..., None], np.asarray(accent), color)
     del legs
     return finish(color)
+
+
+def crystal(name: str, dark: Color, mid: Color, light: Color, frost: float = 0.0) -> Image.Image:
+    """Kristall/Eis (durchscheinend): grosse Facetten mit Kantenglanz, innere Schlieren, helle Bruchkanten."""
+    rng = rng_for(name)
+    f1, f2, idx, pts = voronoi(rng, 14)
+    edge = np.clip((f2 - f1) / 2.0, 0, 1)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    tilt = rng.random((14, 2)) * 2 - 1
+    dx = (xs - pts[idx, 0] + N / 2) % N - N / 2
+    dy = (ys - pts[idx, 1] + N / 2) % N - N / 2
+    shade = 0.5 + 0.5 * np.tanh((tilt[idx, 0] * dx + tilt[idx, 1] * dy) / 18)
+    streak = fbm(rng, 4, 4, stretch=(0.3, 2.5))
+    t = shade * 0.7 + streak * 0.3
+    color = gradient_map(t, [(0, dark), (0.55, mid), (1, light)])
+    rim = (1 - edge) ** 4
+    color = color + rim[..., None] * 0.6
+    if frost > 0:
+        fr = fbm(rng_for(name + "f"), 10, 3)
+        color = color * (1 - frost * 0.5) + frost * 0.5 * fr[..., None]
+    sparkle = (rng.random((N, N)) < 0.004) & (shade > 0.75)
+    color = np.where(sparkle[..., None], 1.0, color)
+    alpha = np.clip(0.62 + 0.3 * rim + 0.12 * shade, 0, 1)
+    return finish(color, alpha)

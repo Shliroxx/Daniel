@@ -6,7 +6,10 @@ import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
+import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
+import com.santiq.kingdomomnitrix.world.content.TempBlocks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,24 +19,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.block.AmethystClusterBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -48,8 +41,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import org.joml.Vector3f;
 
 /**
  * Diamondhead (Petrosapien). Eigenes Dauer-System „Resonanz“ (0–100) und echte Kristall-Konstrukte:
@@ -60,9 +51,9 @@ import org.joml.Vector3f;
  *   <li>Ab {@link #FACETED} <b>facettiert</b>: jedes abprallende Geschoss wird als Kristallsplitter auf den Schuetzen
  *       zurueckgeworfen, Splitter machen mehr Schaden.</li>
  *   <li>Bei {@link #MAX} <b>Prisma</b>: die naechste Faehigkeit verbraucht die Resonanz fuer ihre groesste Form.</li>
- *   <li>Kristall-Konstrukte: Spitzen wachsen fuer einige Sekunden als echte Bloecke (Amethyst) aus dem Boden — nur in
- *       Luft, nur auf festem Grund — und zerspringen danach; es wird genau das entfernt, was gesetzt wurde. Beim
- *       Herunterfahren des Servers verschwinden alle sofort.</li>
+ *   <li>Kristall-Konstrukte aus eigenen Bloecken ({@link TempBlocks}): Stacheln brechen aus dem Boden, eine Kuppel aus
+ *       Stacheln schuetzt, beim <b>Kristallsurfen</b> waechst unter Diamondhead eine Kristallbruecke, die seinem Blick
+ *       folgt (auch bergauf) und hinter ihm zerspringt. Gesetzt wird nur in Luft, nach Ablauf verschwindet alles.</li>
  * </ul>
  * Anzeige ueber {@link AlienMeterPayload#RESONANCE} (gruene Aura).
  */
@@ -77,25 +68,19 @@ final class DiamondheadAbilities {
 	private static final float DECAY = 4.0f;
 	/** Lebensdauer der Kristallspitzen (Ticks) */
 	private static final int SPIKE_TICKS = 100;
-	/**
-	 * Entfernen ohne Nachbar-Updates und ohne Drops: sonst faellt ein Amethyst-Cluster, dessen Sockel zuerst
-	 * verschwindet, als Item ab (kostenloser Amethyst).
-	 */
-	private static final int QUIET = net.minecraft.block.Block.NOTIFY_LISTENERS | net.minecraft.block.Block.FORCE_STATE
-			| net.minecraft.block.Block.SKIP_DROPS;
-	private static final DustParticleEffect GREEN = new DustParticleEffect(new Vector3f(0.45f, 1.0f, 0.7f), 1.3f);
+	/** Kristallgruen der FX-Engine und Prisma-Weiss */
+	static final int CRYSTAL = 0x3AE89A;
+	static final int PRISM = 0xE8FFF4;
+	/** Kristallsurfen: Tempo (Bloecke/Tick), Lebensdauer der Bruecke (Ticks) */
+	private static final double SURF_SPEED = 0.85;
+	private static final int BRIDGE_TICKS = 50;
 
 	private static final Map<UUID, Float> CHARGE = new HashMap<>();
 	private static final Map<UUID, Long> LAST_COMBAT = new HashMap<>();
 	private static final Map<UUID, Long> ARMOR = new HashMap<>();
-	private static final Map<UUID, Long> LEAPS = new HashMap<>();
+	private static final Map<UUID, Long> SURFS = new HashMap<>();
 	private static final Map<UUID, Storm> STORMS = new HashMap<>();
 	private static final List<Eruption> ERUPTIONS = new ArrayList<>();
-	private static final List<Spike> SPIKES = new ArrayList<>();
-
-	/** Gesetzter Kristallblock: wird nach Ablauf nur entfernt, wenn dort noch genau dieser Block steht. */
-	private record Spike(RegistryKey<World> world, BlockPos pos, BlockState state, long until) {
-	}
 
 	/** Spitzen-Welle: waechst ringfoermig nach aussen, setzt Spitzen an der Front und trifft jeden einmal. */
 	private static final class Eruption {
@@ -134,27 +119,11 @@ final class DiamondheadAbilities {
 	static void register() {
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_volley"), DiamondheadAbilities::volley);
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_blade"), DiamondheadAbilities::blade);
-		AbilityRegistry.register(KingdomOmnitrix.id("crystal_vault"), DiamondheadAbilities::vault);
+		AbilityRegistry.register(KingdomOmnitrix.id("crystal_vault"), DiamondheadAbilities::surf);
 		AbilityRegistry.register(KingdomOmnitrix.id("spike_eruption"), DiamondheadAbilities::spikeEruption);
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_armor"), DiamondheadAbilities::armor);
 		AbilityRegistry.register(KingdomOmnitrix.id("crystal_storm"), DiamondheadAbilities::storm);
 		ServerTickEvents.END_SERVER_TICK.register(DiamondheadAbilities::tick);
-		ServerLifecycleEvents.SERVER_STOPPING.register(DiamondheadAbilities::removeAllSpikes);
-		// Abbauen einer Spitze: zerspringt ohne Drop (kein Amethyst aus Faehigkeiten)
-		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
-			if (!(world instanceof ServerWorld server) || SPIKES.isEmpty()) {
-				return true;
-			}
-			for (Iterator<Spike> it = SPIKES.iterator(); it.hasNext(); ) {
-				Spike spike = it.next();
-				if (spike.pos().equals(pos) && spike.world() == server.getRegistryKey()) {
-					shatter(server, spike);
-					it.remove();
-					return false;
-				}
-			}
-			return true;
-		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			forgetState(handler.getPlayer().getUuid());
 			AlienMeterSync.forget(handler.getPlayer().getUuid());
@@ -192,7 +161,8 @@ final class DiamondheadAbilities {
 		}
 		if (before < MAX && after >= MAX) {
 			ServerWorld world = player.getServerWorld();
-			world.spawnParticles(ParticleTypes.END_ROD, player.getX(), player.getBodyY(0.6), player.getZ(), 24, 0.5, 0.7, 0.5, 0.05);
+			Fx.flash(world, player.getPos().add(0, 1.2, 0), PRISM, 2.6f);
+			Fx.shards(world, player.getPos().add(0, 1.2, 0), CRYSTAL, 0.35f, 16);
 			world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.PLAYERS, 1.5f, 1.4f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.diamondhead_prism").formatted(Formatting.GREEN), true);
 		}
@@ -220,7 +190,7 @@ final class DiamondheadAbilities {
 			// derselbe Treffer kann mehrfach geprueft werden — hoechstens einmal je Tick zaehlen
 			if (LAST_COMBAT.getOrDefault(player.getUuid(), 0L) != now) {
 				addCharge(player, CHARGE_PER_PROJECTILE);
-				world.spawnParticles(GREEN, player.getX(), player.getBodyY(0.6), player.getZ(), 10, 0.3, 0.4, 0.3, 0.0);
+				Fx.flash(world, player.getPos().add(0, 1.2, 0), CRYSTAL, 1.2f);
 				world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_HIT, SoundCategory.PLAYERS, 1.0f, 1.4f);
 				Entity shooter = source.getAttacker();
 				if (charge(player) >= FACETED && shooter instanceof LivingEntity living && living.isAlive() && PartyRules.canHarm(player, living)) {
@@ -246,6 +216,9 @@ final class DiamondheadAbilities {
 				shard.withExplosion(0.8f);
 			}
 		}
+		Vec3d hand = player.getEyePos().add(player.getRotationVec(1.0f).multiply(0.9)).add(0, -0.3, 0);
+		Fx.flash(ctx.world(), hand, power.prism() ? PRISM : CRYSTAL, 1.3f);
+		Fx.shards(ctx.world(), hand, CRYSTAL, 0.2f, 5);
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_CRYSTAL, 1.0f, power.prism() ? 0.7f : 1.0f);
 		return true;
 	}
@@ -269,17 +242,20 @@ final class DiamondheadAbilities {
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().playerAttack(player), damage);
 			target.takeKnockback(0.6, -look.x, -look.z);
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+			Fx.flash(world, target.getPos().add(0, target.getHeight() * 0.5, 0), CRYSTAL, 1.4f);
+			Fx.shards(world, target.getPos().add(0, target.getHeight() * 0.5, 0), CRYSTAL, 0.35f, 8);
 			hits++;
 		}
 		// Bogen aus Kristallstaub vor Diamondhead; bei Prisma als fliegende Welle bis 12 Bloecke
 		double reach = power.prism() ? 12.0 : range;
-		for (int i = -6; i <= 6; i++) {
-			double angle = Math.atan2(look.z, look.x) + i * 0.13;
-			for (double d = 1.2; d <= reach; d += power.prism() ? 1.0 : reach) {
-				world.spawnParticles(GREEN, player.getX() + Math.cos(angle) * d, player.getBodyY(0.6), player.getZ() + Math.sin(angle) * d,
-						1, 0.0, 0.0, 0.0, 0.0);
-			}
+		Vec3d chest = player.getPos().add(0, 1.1, 0);
+		for (int i = -4; i <= 4; i++) {
+			double angle = Math.atan2(look.z, look.x) + i * 0.2;
+			Vec3d dir = new Vec3d(Math.cos(angle), 0, Math.sin(angle));
+			Fx.send(world, Fx.Kind.SPARKS, chest.add(dir.multiply(range * 0.7)), Vec3d.ZERO, CRYSTAL, 0.25f, 0, 3, null);
+		}
+		if (power.prism()) {
+			Fx.beam(world, chest, chest.add(look.multiply(reach)), PRISM, 0.6f, 10);
 		}
 		if (hits == 0 && !power.prism()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
@@ -288,17 +264,24 @@ final class DiamondheadAbilities {
 		return true;
 	}
 
-	/** Kristallsprung: eine Kristallsaeule schiesst unter Diamondhead hoch und katapultiert ihn; Landung: Spitzenring. */
-	private static boolean vault(AbilityContext ctx) {
+	/**
+	 * Kristallsurfen: unter Diamondhead waechst eine drei Bloecke breite Kristallbruecke, die dem Blick folgt (auch
+	 * bergauf und bergab); seitlich schiessen Stacheln hoch, Gegner auf dem Weg werden zur Seite geschleudert. Hinter ihm
+	 * zerspringt die Bruecke. Schleichen beendet das Surfen.
+	 */
+	private static boolean surf(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
+		int ticks = (int) ctx.param("surf_ticks", 100.0);
+		SURFS.put(player.getUuid(), world.getTime() + ticks);
 		BlockPos base = player.getBlockPos();
-		for (int i = 0; i < 3; i++) {
-			placeSpike(world, base.up(i), Blocks.AMETHYST_BLOCK.getDefaultState(), 30);
+		for (int i = 0; i < 2; i++) {
+			TempBlocks.place(world, base.up(i), PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState(), 30, player, CRYSTAL, true);
 		}
-		Vec3d look = BuiltinAbilities.horizontalLook(player);
-		BuiltinAbilities.launch(player, look.x * ctx.param("forward", 1.3), ctx.param("up", 1.1) + 0.3, look.z * ctx.param("forward", 1.3));
-		LEAPS.put(player.getUuid(), world.getTime() + 100);
+		BuiltinAbilities.launch(player, 0.0, ctx.param("up", 0.9), 0.0);
+		Fx.shockwave(world, player.getPos(), CRYSTAL, 3.0f, 8);
+		Fx.flash(world, player.getPos().add(0, 0.5, 0), CRYSTAL, 2.0f);
+		Fx.shards(world, player.getPos(), CRYSTAL, 0.4f, 14);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_PLACE, 1.4f, 0.8f);
 		return true;
 	}
@@ -309,6 +292,10 @@ final class DiamondheadAbilities {
 		ERUPTIONS.add(new Eruption(player.getUuid(), player.getPos(), ctx.param("radius", 6.0) * (power.prism() ? 1.7 : 1.0),
 				(float) ctx.param("damage", 9.0) * power.factor(), ctx.param("launch", 0.7), ctx.world().getTime(), power.prism() ? 14 : 10,
 				Vec3d.ZERO, 0.0));
+		float radius = (float) (ctx.param("radius", 6.0) * (power.prism() ? 1.7 : 1.0));
+		Fx.shockwave(ctx.world(), player.getPos(), power.prism() ? PRISM : CRYSTAL, radius, power.prism() ? 14 : 10);
+		Fx.flash(ctx.world(), player.getPos().add(0, 0.3, 0), CRYSTAL, 2.5f);
+		Fx.shake(ctx.world(), player.getPos(), 0.45f, 12, (int) radius + 8);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 1.2f, 0.6f);
 		return true;
 	}
@@ -320,8 +307,18 @@ final class DiamondheadAbilities {
 		ARMOR.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, 1, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, ticks, 2, false, false));
-		ctx.world().spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.AMETHYST_BLOCK.getDefaultState()),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.1);
+		Fx.aura(ctx.world(), player, CRYSTAL, 0.8f, 30);
+		Fx.flash(ctx.world(), player.getPos().add(0, 1.0, 0), CRYSTAL, 2.2f);
+		// Stachelkranz: Ring aus Kristallstacheln um Diamondhead (haelt Nahkaempfer auf Abstand)
+		ServerWorld world = ctx.world();
+		for (int i = 0; i < 16; i++) {
+			double angle = i * MathHelper.TAU / 16;
+			BlockPos ground = surface(world, BlockPos.ofFloored(player.getX() + Math.cos(angle) * 2.6, player.getY() + 0.5,
+					player.getZ() + Math.sin(angle) * 2.6));
+			if (ground != null) {
+				TempBlocks.place(world, ground, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), Math.min(ticks, 160), player, CRYSTAL, false);
+			}
+		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.0f, 1.0f);
 		return true;
 	}
@@ -332,6 +329,7 @@ final class DiamondheadAbilities {
 		STORMS.put(player.getUuid(), new Storm(ctx.world().getTime(), power.prism() ? 80 : 50, (float) ctx.param("damage", 6.0) * power.factor(),
 				(int) Math.max(4, ctx.param("count", 24)) * (power.prism() ? 2 : 1), (float) ctx.param("speed", 1.8), power.prism()));
 		ctx.grantInvulnerability(20);
+		Fx.charge(ctx.world(), player, power.prism() ? PRISM : CRYSTAL, 1.2f, power.prism() ? 80 : 50);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.4f, 0.6f);
 		return true;
 	}
@@ -341,7 +339,8 @@ final class DiamondheadAbilities {
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
 			if (!isDiamondhead(player)) {
-				if (CHARGE.containsKey(player.getUuid()) || ARMOR.containsKey(player.getUuid()) || STORMS.containsKey(player.getUuid())) {
+				if (CHARGE.containsKey(player.getUuid()) || ARMOR.containsKey(player.getUuid()) || STORMS.containsKey(player.getUuid())
+						|| SURFS.containsKey(player.getUuid())) {
 					if (CHARGE.containsKey(player.getUuid())) {
 						AlienMeterSync.clear(player, AlienMeterPayload.RESONANCE);
 					}
@@ -358,15 +357,13 @@ final class DiamondheadAbilities {
 			if (armored) {
 				tickArmor(world, player, now);
 			}
-			tickLeap(world, player, now);
+			tickSurf(world, player, now);
 			tickStorm(world, player, now);
 		}
 		if (!ERUPTIONS.isEmpty()) {
 			tickEruptions(server);
 		}
-		if (!SPIKES.isEmpty()) {
-			tickSpikes(server);
-		}
+
 	}
 
 	private static void tickArmor(ServerWorld world, ServerPlayerEntity player, long now) {
@@ -383,24 +380,69 @@ final class DiamondheadAbilities {
 					target.takeKnockback(0.8, -away.x, -away.z);
 				}
 			}
-			world.spawnParticles(GREEN, player.getX(), player.getBodyY(0.5), player.getZ(), 6, 0.5, 0.7, 0.5, 0.0);
+			Fx.shards(world, player.getPos().add(0, 1.0, 0), CRYSTAL, 0.15f, 3);
 		}
 	}
 
-	private static void tickLeap(ServerWorld world, ServerPlayerEntity player, long now) {
-		Long until = LEAPS.get(player.getUuid());
+	private static void tickSurf(ServerWorld world, ServerPlayerEntity player, long now) {
+		Long until = SURFS.get(player.getUuid());
 		if (until == null) {
 			return;
 		}
 		player.fallDistance = 0.0f;
-		if (now >= until) {
-			LEAPS.remove(player.getUuid());
+		if (now >= until || player.isSneaking()) {
+			SURFS.remove(player.getUuid());
+			// Abschluss: kleiner Stachelring, wo das Surfen endet
+			ERUPTIONS.add(new Eruption(player.getUuid(), player.getPos(), 3.0, 5.0f, 0.4, now, 5, Vec3d.ZERO, 0.0));
+			Fx.shockwave(world, player.getPos(), CRYSTAL, 3.5f, 8);
 			return;
 		}
-		if (player.isOnGround() && now > until - 94) {
-			LEAPS.remove(player.getUuid());
-			ERUPTIONS.add(new Eruption(player.getUuid(), player.getPos(), 3.5, 6.0f, 0.5, now, 5, Vec3d.ZERO, 0.0));
-			world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, SoundCategory.PLAYERS, 1.2f, 0.7f);
+		Vec3d look = player.getRotationVec(1.0f);
+		Vec3d flat = new Vec3d(look.x, 0, look.z);
+		if (flat.lengthSquared() < 1.0e-4) {
+			flat = BuiltinAbilities.horizontalLook(player);
+		}
+		flat = flat.normalize();
+		// Neigung folgt dem Blick: hoch schauen = Rampe hinauf, runter schauen = abwaerts
+		double climb = MathHelper.clamp(-player.getPitch() / 90.0 * 0.9, -0.45, 0.55);
+		player.setVelocity(flat.x * SURF_SPEED, climb, flat.z * SURF_SPEED);
+		player.velocityModified = true;
+		// Bruecke unter den Fuessen und ein Stueck voraus, drei Bloecke breit
+		Vec3d side = new Vec3d(-flat.z, 0, flat.x);
+		BlockPos feet = BlockPos.ofFloored(player.getX(), player.getY() - 0.5, player.getZ());
+		for (int ahead = 0; ahead <= 1; ahead++) {
+			Vec3d c = Vec3d.ofCenter(feet).add(flat.multiply(ahead));
+			for (int w = -1; w <= 1; w++) {
+				BlockPos pos = BlockPos.ofFloored(c.add(side.multiply(w)));
+				TempBlocks.place(world, pos, PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState(), BRIDGE_TICKS, player, CRYSTAL, false);
+			}
+		}
+		// Kielwasser: seitlich schiessen Stacheln hoch
+		if (now % 3 == 0) {
+			for (int w : new int[] {-2, 2}) {
+				BlockPos spike = BlockPos.ofFloored(Vec3d.ofCenter(feet).add(side.multiply(w)).add(0, 1, 0));
+				if (world.getBlockState(spike.down()).isSideSolidFullSquare(world, spike.down(), Direction.UP)) {
+					TempBlocks.place(world, spike, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), BRIDGE_TICKS, player, CRYSTAL, false);
+				}
+			}
+		}
+		if (now % 2 == 0) {
+			Fx.shards(world, player.getPos(), CRYSTAL, 0.25f, 3);
+			Fx.send(world, Fx.Kind.SPARKS, player.getPos().add(0, 0.1, 0), Vec3d.ZERO, CRYSTAL, 0.3f, 0, 4, null);
+		}
+		if (now % 6 == 0) {
+			world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 0.8f,
+					1.0f + world.random.nextFloat() * 0.5f);
+		}
+		// Gegner auf dem Weg werden zur Seite geschleudert
+		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(1.4, 0.5, 1.4),
+				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && e.hurtTime == 0)) {
+			target.damage(world.getDamageSources().playerAttack(player), 6.0f);
+			Vec3d away = target.getPos().subtract(player.getPos()).multiply(1, 0, 1);
+			double sign = away.dotProduct(side) >= 0 ? 1 : -1;
+			target.setVelocity(side.multiply(sign * 1.1).add(flat.multiply(0.5)).add(0, 0.5, 0));
+			target.velocityModified = true;
+			Fx.flash(world, target.getPos().add(0, target.getHeight() * 0.5, 0), CRYSTAL, 1.5f);
 		}
 	}
 
@@ -412,10 +454,12 @@ final class DiamondheadAbilities {
 		long age = now - storm.start();
 		double radius = 2.2 + (storm.prism() ? 1.0 : 0.0);
 		// kreisende Splitter
-		for (int i = 0; i < 12; i++) {
-			double angle = i * MathHelper.TAU / 12 + age * 0.35;
-			world.spawnParticles(storm.prism() ? ParticleTypes.END_ROD : GREEN, player.getX() + Math.cos(angle) * radius,
-					player.getBodyY(0.3 + 0.4 * ((i % 3) / 2.0)), player.getZ() + Math.sin(angle) * radius, 1, 0.0, 0.0, 0.0, 0.0);
+		if (age % 2 == 0) {
+			for (int i = 0; i < 6; i++) {
+				double angle = i * MathHelper.TAU / 6 + age * 0.35;
+				Vec3d p = player.getPos().add(Math.cos(angle) * radius, 0.4 + 0.5 * (i % 3), Math.sin(angle) * radius);
+				Fx.send(world, Fx.Kind.SHARDS, p, Vec3d.ZERO, storm.prism() ? PRISM : CRYSTAL, 0.05f, 0, 1, null);
+			}
 		}
 		if (age % 8 == 0) {
 			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius + 0.5),
@@ -436,6 +480,10 @@ final class DiamondheadAbilities {
 				shard.withDamage(storm.damage());
 				world.spawnEntity(shard);
 			}
+			Fx.flash(world, player.getPos().add(0, 1.0, 0), storm.prism() ? PRISM : CRYSTAL, 3.5f);
+			Fx.shockwave(world, player.getPos(), CRYSTAL, 7.0f, 10);
+			Fx.shards(world, player.getPos().add(0, 1.0, 0), CRYSTAL, 0.6f, 30);
+			Fx.shake(world, player.getPos(), 0.5f, 12, 16);
 			world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, SoundCategory.PLAYERS, 1.4f, 0.7f);
 		}
 	}
@@ -464,10 +512,13 @@ final class DiamondheadAbilities {
 				BlockPos ground = surface(world, BlockPos.ofFloored(p.x, eruption.center.y + 0.5, p.z));
 				if (ground != null && eruption.placed.add(ground)) {
 					boolean tall = (ground.getX() + ground.getZ()) % 3 == 0;
-					placeSpike(world, ground, tall ? Blocks.AMETHYST_BLOCK.getDefaultState()
-							: Blocks.AMETHYST_CLUSTER.getDefaultState().with(AmethystClusterBlock.FACING, Direction.UP), SPIKE_TICKS);
+					TempBlocks.place(world, ground, tall ? PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState()
+							: PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), SPIKE_TICKS, player, CRYSTAL, false);
 					if (tall) {
-						placeSpike(world, ground.up(), Blocks.AMETHYST_CLUSTER.getDefaultState().with(AmethystClusterBlock.FACING, Direction.UP), SPIKE_TICKS);
+						TempBlocks.place(world, ground.up(), PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), SPIKE_TICKS, player, CRYSTAL, false);
+					}
+					if (world.random.nextInt(3) == 0) {
+						Fx.shards(world, Vec3d.ofCenter(ground), CRYSTAL, 0.3f, 3);
 					}
 				}
 			}
@@ -483,25 +534,9 @@ final class DiamondheadAbilities {
 				target.damage(world.getDamageSources().playerAttack(player), eruption.damage);
 				target.addVelocity(0.0, eruption.launch, 0.0);
 				target.velocityModified = true;
+				Fx.flash(world, target.getPos().add(0, target.getHeight() * 0.5, 0), CRYSTAL, 1.3f);
 			}
 			if (age >= eruption.ticks) {
-				it.remove();
-			}
-		}
-	}
-
-	/** Abgelaufene Spitzen zerspringen (nur wenn dort noch der gesetzte Block steht). */
-	private static void tickSpikes(MinecraftServer server) {
-		Iterator<Spike> it = SPIKES.iterator();
-		while (it.hasNext()) {
-			Spike spike = it.next();
-			ServerWorld world = server.getWorld(spike.world());
-			if (world == null) {
-				it.remove();
-				continue;
-			}
-			// ungeladener Chunk: spaeter erneut versuchen (spaetestens beim Herunterfahren)
-			if (world.getTime() >= spike.until() && shatter(world, spike)) {
 				it.remove();
 			}
 		}
@@ -520,50 +555,11 @@ final class DiamondheadAbilities {
 		return null;
 	}
 
-	private static void placeSpike(ServerWorld world, BlockPos pos, BlockState state, int ticks) {
-		if (!world.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4) || !world.getBlockState(pos).isAir()
-				|| !world.getEntitiesByClass(LivingEntity.class, new Box(pos), e -> e instanceof ServerPlayerEntity).isEmpty()) {
-			return;
-		}
-		world.setBlockState(pos, state);
-		SPIKES.add(new Spike(world.getRegistryKey(), pos, state, world.getTime() + ticks));
-		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, state), pos.getX() + 0.5, pos.getY() + 0.2, pos.getZ() + 0.5,
-				6, 0.25, 0.1, 0.25, 0.1);
-	}
-
-	/** @return true, wenn erledigt (zersprungen oder inzwischen anders bebaut); false = Chunk nicht geladen */
-	private static boolean shatter(ServerWorld world, Spike spike) {
-		if (!world.isChunkLoaded(spike.pos().getX() >> 4, spike.pos().getZ() >> 4)) {
-			return false;
-		}
-		if (world.getBlockState(spike.pos()) == spike.state()) {
-			world.setBlockState(spike.pos(), Blocks.AIR.getDefaultState(), QUIET);
-			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, spike.state()), spike.pos().getX() + 0.5,
-					spike.pos().getY() + 0.5, spike.pos().getZ() + 0.5, 10, 0.3, 0.3, 0.3, 0.1);
-			if (world.random.nextInt(4) == 0) {
-				world.playSound(null, spike.pos(), SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, SoundCategory.BLOCKS, 0.6f, 1.2f);
-			}
-		}
-		return true;
-	}
-
-	/** Server faehrt herunter: alle Spitzen sofort weg, damit keine im Spielstand bleiben. */
-	private static void removeAllSpikes(MinecraftServer server) {
-		for (Spike spike : SPIKES) {
-			ServerWorld world = server.getWorld(spike.world());
-			if (world != null && world.getBlockState(spike.pos()) == spike.state()) {
-				world.setBlockState(spike.pos(), Blocks.AIR.getDefaultState(), QUIET);
-			}
-		}
-		SPIKES.clear();
-		ERUPTIONS.clear();
-	}
-
 	private static void forgetState(UUID id) {
 		CHARGE.remove(id);
 		LAST_COMBAT.remove(id);
 		ARMOR.remove(id);
-		LEAPS.remove(id);
+		SURFS.remove(id);
 		STORMS.remove(id);
 	}
 }

@@ -73,6 +73,7 @@ class BlockDef:
     xp: tuple[int, int] = (0, 0)
     planet: str = "tech"
     tags: list[str] = field(default_factory=list)
+    item: bool = True
 
 
 @dataclass
@@ -278,6 +279,23 @@ for m in MATERIALS:
                            (lambda m=m: {f"{m.name}_block": tx.metal_block(f"{m.name}_block", *m.colors)}),
                            "ORANGE", 5.0, 6.0, "METAL", tier=m.ore_tier, planet="tech", tags=["beacon"]))
 
+# Bloecke der Alien-Faehigkeiten (temporaer, kein Item, kein Drop): Diamondheads Kristall, Big Chills Eis
+ABILITY_BLOCKS = [
+    BlockDef("petrosapien_crystal", "Petrosapien-Kristall", "Petrosapien Crystal", "crystal",
+             single("petrosapien_crystal", lambda: tx.crystal("petrosapien_crystal", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             "EMERALD_GREEN", 0.4, 6.0, "AMETHYST_BLOCK", None, light=9, drop="none", item=False),
+    BlockDef("petrosapien_spike", "Petrosapien-Stachel", "Petrosapien Spike", "spike",
+             single("petrosapien_spike", lambda: tx.crystal("petrosapien_spike", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             "EMERALD_GREEN", 0.4, 6.0, "AMETHYST_CLUSTER", None, light=7, drop="none", item=False),
+    BlockDef("necrofriggian_ice", "Necrofriggian-Eis", "Necrofriggian Ice", "crystal",
+             single("necrofriggian_ice", lambda: tx.crystal("necrofriggian_ice", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
+             "LIGHT_BLUE", 0.4, 6.0, "GLASS", None, light=4, drop="none", item=False),
+    BlockDef("necrofriggian_spike", "Necrofriggian-Eisstachel", "Necrofriggian Ice Spike", "spike",
+             single("necrofriggian_spike", lambda: tx.crystal("necrofriggian_spike", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
+             "LIGHT_BLUE", 0.4, 6.0, "GLASS", None, light=3, drop="none", item=False),
+]
+BLOCKS += ABILITY_BLOCKS
+
 PLANT_SOIL = "alien_soil"
 
 
@@ -294,6 +312,17 @@ def block_model_files(b: BlockDef) -> dict[str, dict]:
                                          "textures": {"end": tex(f"{b.name}_top"), "side": tex(b.name)}}}
     if b.kind == "leaves":
         return {b.name: {"parent": "minecraft:block/leaves", "textures": {"all": tex(b.name)}}}
+    if b.kind == "spike":
+        # gestufte Spitze aus vier Quadern (Sockel breit, Spitze schmal)
+        steps = [(2, 0, 14, 5), (4, 5, 12, 9), (5.5, 9, 10.5, 13), (7, 13, 9, 16)]
+        elements = []
+        for lo, y0, hi, y1 in steps:
+            faces = {d: {"texture": "#all", "uv": [lo, 16 - y1, hi, 16 - y0]} for d in ("north", "south", "east", "west")}
+            faces["up"] = {"texture": "#all", "uv": [lo, lo, hi, hi]}
+            faces["down"] = {"texture": "#all", "uv": [lo, lo, hi, hi]}
+            elements.append({"from": [lo, y0, lo], "to": [hi, y1, hi], "faces": faces})
+        return {b.name: {"parent": "minecraft:block/block", "textures": {"all": tex(b.name), "particle": tex(b.name)},
+                         "elements": elements}}
     if b.kind == "plant":
         return {b.name: {"parent": "minecraft:block/cross", "textures": {"cross": tex(b.name)}},
                 f"{b.name}_inventory": {"parent": "minecraft:item/generated", "textures": {"layer0": tex(b.name)}}}
@@ -548,7 +577,7 @@ def java_blocks() -> str:
         lines.append(f"\tpublic static final Block {const(b.name)} = register(\"{b.name}\", {java_block_ctor(b)});")
     cutout = [const(b.name) for b in BLOCKS if b.kind in ("plant", "grate")]
     mipped = [const(b.name) for b in BLOCKS if b.kind == "leaves"]
-    translucent = [const(b.name) for b in BLOCKS if b.kind == "glass"]
+    translucent = [const(b.name) for b in BLOCKS if b.kind in ("glass", "crystal", "spike")]
     lines += ["",
               "\t/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */",
               f"\tpublic static final List<Block> CUTOUT = List.of({', '.join(cutout)});",
@@ -593,6 +622,14 @@ def java_block_ctor(b: BlockDef) -> str:
         return f"new ExperienceDroppingBlock(UniformIntProvider.create({b.xp[0]}, {b.xp[1]}), {settings}.instrument(NoteBlockInstrument.BASEDRUM))"
     if b.kind == "glass":
         return f"new TechGlassBlock(AbstractBlock.Settings.copy(Blocks.GLASS).mapColor({color}).strength({b.hardness}f, {b.resistance}f))"
+    if b.kind == "crystal":
+        return (f"new TechGlassBlock(AbstractBlock.Settings.create().mapColor({color}).strength({b.hardness}f, {b.resistance}f)"
+                f".sounds({sound}).luminance(state -> {b.light}).nonOpaque().dropsNothing().slipperiness(0.98f)"
+                f".allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false)"
+                f".suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false))")
+    if b.kind == "spike":
+        return (f"new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor({color}).strength({b.hardness}f, {b.resistance}f)"
+                f".sounds({sound}).luminance(state -> {b.light}).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY))")
     if b.kind == "grate":
         return f"new Block({settings}.nonOpaque())"
     if b.kind == "core":
@@ -624,7 +661,7 @@ def java_items() -> str:
              "/** Items der Ratchet-&-Clank-Welten: Block-Items, Rohstoffe, Barren, Werkzeuge, Schwerter, Ruestungen. */",
              "public final class PlanetItems {",
              "\tprivate static final List<Item> ALL = new ArrayList<>();", ""]
-    for b in BLOCKS:
+    for b in [b for b in BLOCKS if b.item]:
         lines.append(f"\tpublic static final Item {const(b.name)} = register(\"{b.name}\", new BlockItem(PlanetBlocks.{const(b.name)}, "
                      f"new Item.Settings()));")
     lines.append("")
@@ -701,7 +738,8 @@ def outputs(with_images: bool = True) -> dict[Path, object]:
         files[ASSETS / "blockstates" / f"{b.name}.json"] = blockstate(b)
         for name, model in block_model_files(b).items():
             files[ASSETS / "models" / "block" / f"{name}.json"] = model
-        files[ASSETS / "models" / "item" / f"{b.name}.json"] = item_model(b)
+        if b.item:
+            files[ASSETS / "models" / "item" / f"{b.name}.json"] = item_model(b)
         table = loot_table(b)
         if table is not None:
             files[DATA / "loot_table" / "blocks" / f"{b.name}.json"] = table
