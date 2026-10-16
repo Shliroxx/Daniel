@@ -635,6 +635,8 @@ final class BigChillAbilities {
 							life, field.owner, ICE_COLOR, false);
 					if (tall) {
 						TempBlocks.place(field.world, ground.up(), PlanetBlocks.NECROFRIGGIAN_SPIKE.getDefaultState(), life, field.owner, ICE_COLOR, false);
+						com.santiq.kingdomomnitrix.vfx.CrystalGrowth.cluster(field.world, Vec3d.ofBottomCenter(ground.up()),
+								PlanetBlocks.NECROFRIGGIAN_ICE.getDefaultState(), 3, (float) (2.0 + 2.0 * outer / field.radius), 0.4f, life, ICE_COLOR);
 					}
 				}
 			}

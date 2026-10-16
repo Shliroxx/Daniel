@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
+import com.santiq.kingdomomnitrix.vfx.CrystalGrowth;
 import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
@@ -317,6 +318,10 @@ final class DiamondheadAbilities {
 					player.getZ() + Math.sin(angle) * 2.6));
 			if (ground != null) {
 				TempBlocks.place(world, ground, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), Math.min(ticks, 160), player, CRYSTAL, false);
+				if (i % 2 == 0) {
+					CrystalGrowth.shard(world, Vec3d.ofBottomCenter(ground), PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState(), (float) angle, 0.55f,
+							0.35f, 2.2f, Math.min(ticks, 160), CRYSTAL);
+				}
 			}
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.0f, 1.0f);
@@ -423,6 +428,10 @@ final class DiamondheadAbilities {
 				BlockPos spike = BlockPos.ofFloored(Vec3d.ofCenter(feet).add(side.multiply(w)).add(0, 1, 0));
 				if (world.getBlockState(spike.down()).isSideSolidFullSquare(world, spike.down(), Direction.UP)) {
 					TempBlocks.place(world, spike, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), BRIDGE_TICKS, player, CRYSTAL, false);
+					// Kielwasser: hohe Kristalle kippen von der Bahn weg
+					float yaw = (float) Math.atan2(side.z * w, side.x * w);
+					CrystalGrowth.shard(world, Vec3d.ofBottomCenter(spike), PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState(), yaw, 0.6f, 0.4f,
+							2.4f + world.random.nextFloat(), BRIDGE_TICKS, CRYSTAL);
 				}
 			}
 		}
@@ -511,11 +520,13 @@ final class DiamondheadAbilities {
 				Vec3d p = eruption.center.add(dir.multiply(front));
 				BlockPos ground = TempBlocks.surface(world, BlockPos.ofFloored(p.x, eruption.center.y + 0.5, p.z));
 				if (ground != null && eruption.placed.add(ground)) {
-					boolean tall = (ground.getX() + ground.getZ()) % 3 == 0;
-					TempBlocks.place(world, ground, tall ? PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState()
-							: PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), SPIKE_TICKS, player, CRYSTAL, false);
+					boolean tall = Math.floorMod(ground.getX() * 7 + ground.getZ() * 13, 4) == 0;
+					TempBlocks.place(world, ground, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), SPIKE_TICKS, player, CRYSTAL, false);
 					if (tall) {
-						TempBlocks.place(world, ground.up(), PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), SPIKE_TICKS, player, CRYSTAL, false);
+						// Geoden-Buendel: hohe, schraeg nach aussen kippende Kristalle
+						float height = (float) (2.0 + 2.5 * front / eruption.radius);
+						CrystalGrowth.cluster(world, Vec3d.ofBottomCenter(ground), PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState(),
+								3 + world.random.nextInt(3), height, 0.35f, SPIKE_TICKS, CRYSTAL);
 					}
 					if (world.random.nextInt(3) == 0) {
 						Fx.shards(world, Vec3d.ofCenter(ground), CRYSTAL, 0.3f, 3);
