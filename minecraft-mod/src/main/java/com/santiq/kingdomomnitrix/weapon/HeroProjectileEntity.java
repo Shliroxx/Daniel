@@ -203,6 +203,17 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 				serverWorld.createExplosion(this, getX(), getY(), getZ(), explosionPower, World.ExplosionSourceType.NONE);
 			}
 			impact(serverWorld, getKind(), getPos(), explosionPower);
+			// Geschosse starker Aliens (Feuerbaelle, Raketenfinger) schlagen Krater
+			if (getOwner() instanceof net.minecraft.server.network.ServerPlayerEntity owner) {
+				float strength = com.santiq.kingdomomnitrix.power.AlienStrength.of(owner);
+				if (strength > 0.0f && (explosionPower > 0.0f || getKind() == Kind.FIRE)) {
+					double radius = 0.9 + explosionPower * 0.6;
+					com.santiq.kingdomomnitrix.power.Destruction.crater(serverWorld, owner, getPos(), radius, strength, 0.0, 0.4);
+					if (getKind() == Kind.FIRE) {
+						com.santiq.kingdomomnitrix.power.Destruction.ignite(serverWorld, owner, getPos(), radius + 0.5, 0.25);
+					}
+				}
+			}
 			discard();
 		}
 	}

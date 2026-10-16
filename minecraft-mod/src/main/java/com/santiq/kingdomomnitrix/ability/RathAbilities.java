@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.power.AlienStrength;
+import com.santiq.kingdomomnitrix.power.Destruction;
+import com.santiq.kingdomomnitrix.vfx.EarthWave;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.util.Targeting;
@@ -15,8 +19,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -39,9 +41,10 @@ import net.minecraft.util.math.Vec3d;
  * </ul>
  */
 final class RathAbilities {
+	private static final int FURY = 0xFF8A1E;
+	private static final int DUST = 0x9C8466;
 	private static final Identifier RATH = KingdomOmnitrix.id("rath");
 	private static final int CHAIN_WINDOW = 60;
-	private static final DustParticleEffect ORANGE = AlienKit.dust("#E8862A", 1.4f);
 
 	/** Rivale je Rath: Ziel und Ablauf */
 	private static final Map<UUID, Rival> RIVALS = new HashMap<>();
@@ -130,7 +133,13 @@ final class RathAbilities {
 				AlienKit.push(near, target.getPos(), 0.8, 0.4);
 			}
 		}
-		world.spawnParticles(ParticleTypes.CLOUD, target.getX(), target.getY() + 0.2, target.getZ(), 20, 0.6, 0.1, 0.6, 0.05);
+		// Aufschlagstelle hinter Rath: der Boden bricht ein
+		Vec3d slam = rath.getPos().add(back.multiply(2.2));
+		Destruction.crater(world, rath, slam.add(0, -0.6, 0), 1.8, 0.5, AlienStrength.of(rath), 0.0, 0.35);
+		EarthWave.ring(world, slam, 3.0, 4, 0.5f);
+		Fx.shockwave(world, slam.add(0, 0.1, 0), DUST, 3.5f, 8);
+		Fx.smoke(world, slam, DUST, 1.0f, 4);
+		Fx.shake(world, slam, 0.35f, 8, 16);
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1.4f, 0.6f);
 		rath.sendMessage(Text.translatable("message.kingdomomnitrix.rath_suplex").formatted(Formatting.GOLD, Formatting.BOLD), true);
 	}
@@ -151,7 +160,11 @@ final class RathAbilities {
 		boolean isRival = rival != null && rival.target().equals(target.getUuid());
 		AlienKit.melee(world, rath, target, (float) ctx.param("damage", 7.0) * (isRival ? 2.0f : 1.0f));
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, 60, isRival ? 1 : 0), rath);
-		world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.6), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ());
+		Vec3d side = new Vec3d(-rath.getRotationVec(1.0f).z, 0, rath.getRotationVec(1.0f).x).multiply(0.7);
+		Fx.beam(world, body.add(side).add(0, 0.4, 0), body.subtract(side).add(0, -0.4, 0), FURY, 0.25f, 5);
+		Fx.sparks(world, body, FURY, 0.4f, 10);
+		Fx.flash(world, body, FURY, 1.2f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 0.8f);
 		return true;
 	}
@@ -172,7 +185,9 @@ final class RathAbilities {
 		for (MobEntity mob : world.getEntitiesByClass(MobEntity.class, rath.getBoundingBox().expand(12.0), m -> AlienKit.foe(rath, m))) {
 			mob.setTarget(rath);
 		}
-		world.spawnParticles(ORANGE, rath.getX(), rath.getBodyY(0.8), rath.getZ(), 30, 0.6, 0.4, 0.6, 0.0);
+		Fx.aura(world, rath, FURY, 1.3f, 40);
+		Fx.flash(world, new Vec3d(rath.getX(), rath.getBodyY(0.8), rath.getZ()), FURY, 2.0f);
+		Fx.beam(world, rath.getEyePos(), new Vec3d(target.getX(), target.getBodyY(0.7), target.getZ()), FURY, 0.15f, 10);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.2f, 1.3f);
 		rath.sendMessage(Text.translatable("message.kingdomomnitrix.rath_challenge", target.getName()).formatted(Formatting.GOLD), true);
 		return true;
@@ -210,7 +225,13 @@ final class RathAbilities {
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 1), rath);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 1), rath);
 		}
-		AlienKit.ring(world, rath.getPos().add(0, 1.0, 0), 4.0, ORANGE);
+		double radius = ctx.param("radius", 8.0);
+		for (int i = 0; i < 3; i++) {
+			Fx.shockwave(world, rath.getPos().add(0, 0.8 + i * 0.5, 0), FURY, (float) (radius * (0.5 + i * 0.25)), 8 + i * 3);
+		}
+		Fx.shake(world, rath.getPos(), 0.5f, 14, 24);
+		// Gebruell: Glas und Laub ringsum zerspringen
+		Destruction.crater(world, rath, rath.getPos().add(0, 1.0, 0), radius * 0.75, 0.6f, 0.0, 0.1);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.5f, 0.8f);
 		return true;
 	}
@@ -257,6 +278,13 @@ final class RathAbilities {
 				} else {
 					rath.setVelocity(charge.direction().x * 0.9, rath.getVelocity().y, charge.direction().z * 0.9);
 					rath.velocityModified = true;
+					// Kopf voran durch Waende
+					Destruction.carve(world, rath, rath.getPos().add(charge.direction().multiply(0.8)).add(0, 1.0, 0), charge.direction(), 1.2, 1.0,
+							AlienStrength.of(rath), 0.0);
+					if (now % 2 == 0) {
+						Fx.smoke(world, rath.getPos(), DUST, 0.7f, 1);
+						Fx.sparks(world, rath.getPos().add(charge.direction().multiply(0.8)).add(0, 1.0, 0), FURY, 0.3f, 3);
+					}
 					for (LivingEntity target : AlienKit.around(world, rath, rath.getPos().add(0, 1, 0), 1.6)) {
 						AlienKit.melee(world, rath, target, 6.0f);
 						AlienKit.push(target, rath.getPos(), 1.3, 0.5);
@@ -277,7 +305,11 @@ final class RathAbilities {
 							AlienKit.push(near, target.getPos(), 1.0, 0.5);
 						}
 					}
-					world.spawnParticles(ParticleTypes.EXPLOSION, target.getX(), target.getY(), target.getZ(), 3, 0.5, 0.2, 0.5, 0.0);
+					Destruction.crater(world, rath, target.getPos().add(0, -0.8, 0), 2.6, 0.55, AlienStrength.of(rath) * 1.3f, 0.4, 0.5);
+					EarthWave.ring(world, target.getPos(), 5.0, 5, 0.8f);
+					Fx.explosion(world, target.getPos().add(0, 0.4, 0), FURY, 2.6f);
+					Fx.shockwave(world, target.getPos().add(0, 0.1, 0), DUST, 6.0f, 10);
+					Fx.shake(world, target.getPos(), 0.7f, 12, 30);
 					world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.2f, 0.7f);
 				}
 				rath.setVelocity(0, -1.5, 0);

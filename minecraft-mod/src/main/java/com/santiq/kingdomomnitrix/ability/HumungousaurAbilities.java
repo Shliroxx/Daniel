@@ -3,6 +3,10 @@ package com.santiq.kingdomomnitrix.ability;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.party.PartyRules;
+import com.santiq.kingdomomnitrix.power.AlienStrength;
+import com.santiq.kingdomomnitrix.power.Destruction;
+import com.santiq.kingdomomnitrix.vfx.EarthWave;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,7 +15,6 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
@@ -20,8 +23,6 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -85,6 +86,9 @@ final class HumungousaurAbilities {
 	private static final Map<UUID, Vec3d> LAST_STEP = new HashMap<>();
 	/** verhindert, dass Bonus-Schaden erneut Bonus-Schaden ausloest */
 	private static boolean bonusHit;
+	private static final int DUST = 0x9C8466;
+	private static final int IMPACT = 0xFFE2A8;
+	private static final int SKIN = 0xC8A070;
 
 	private record Charge(long until, Vec3d direction, float damage, Set<UUID> rammed) {
 	}
@@ -96,7 +100,7 @@ final class HumungousaurAbilities {
 	}
 
 	static void register() {
-		AbilityRegistry.register(KingdomOmnitrix.id("mega_punch"), HumungousaurAbilities::megaPunch);
+		AbilityRegistry.register(KingdomOmnitrix.id("mega_punch"), new MegaPunch());
 		AbilityRegistry.register(KingdomOmnitrix.id("tail_sweep"), HumungousaurAbilities::tailSweep);
 		AbilityRegistry.register(KingdomOmnitrix.id("stampede"), HumungousaurAbilities::stampede);
 		AbilityRegistry.register(KingdomOmnitrix.id("tectonic_quake"), HumungousaurAbilities::tectonicQuake);
@@ -221,11 +225,10 @@ final class HumungousaurAbilities {
 
 	/** Bodenstoss um den Spieler: Erdbrocken, Schaden und Anheben fuer Bodennahe. */
 	private static void stomp(ServerWorld world, ServerPlayerEntity player, double radius, float damage, double launch) {
-		BlockState ground = world.getBlockState(player.getBlockPos().down());
-		if (!ground.isAir()) {
-			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), player.getX(), player.getY() + 0.1, player.getZ(),
-					(int) (12 * radius), radius * 0.4, 0.1, radius * 0.4, 0.2);
-		}
+		EarthWave.ring(world, player.getPos(), radius, 4, (float) Math.min(1.2, 0.25 * radius));
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), DUST, (float) radius, 10);
+		Fx.smoke(world, player.getPos(), DUST, (float) (0.6 + radius * 0.1), (int) (2 + radius * 0.5));
+		Fx.shake(world, player.getPos(), (float) Math.min(0.6, radius * 0.08), 8, (int) (radius * 4 + 8));
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius, 1.0, radius),
 				e -> e != player && e.isAlive() && e.isOnGround() && PartyRules.canHarm(player, e))) {
 			if (damage > 0.0f) {
@@ -267,14 +270,39 @@ final class HumungousaurAbilities {
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------
 
-	/** Megaschlag: Druckwelle in Blickrichtung — trifft alles in der Linie, Reichweite und Wucht wachsen mit der Stufe. */
-	private static boolean megaPunch(AbilityContext ctx) {
+	/**
+	 * Megaschlag (Halten laedt auf, bis 1,25 s): Faustschlag mit Druckwelle in Blickrichtung — trifft alles in der Linie
+	 * und schlaegt einen Tunnel durch Waende und Felsen; Reichweite, Breite und Wucht wachsen mit Stufe und Ladung.
+	 */
+	private static final class MegaPunch implements ChargeableAbility {
+		@Override
+		public int chargeTicks(AbilityContext ctx) {
+			return 25;
+		}
+
+		@Override
+		public void charging(AbilityContext ctx, int ticks, float charge) {
+			ServerPlayerEntity player = ctx.player();
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 3, 1, false, false));
+			if (ticks % 4 == 0) {
+				Fx.charge(ctx.world(), player, charge >= 1.0f ? 0xFF7A30 : IMPACT, (float) (0.8 + charge) * (float) size(player), 6);
+			}
+		}
+
+		@Override
+		public boolean release(AbilityContext ctx, float charge) {
+			return megaPunch(ctx, charge);
+		}
+	}
+
+	private static boolean megaPunch(AbilityContext ctx, float charge) {
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
 		double size = size(player);
-		double range = ctx.param("range", 6.0) * size;
-		float damage = (float) (ctx.param("damage", 8.0) * size);
-		double knockback = ctx.param("knockback", 1.6) * size;
+		double range = ctx.param("range", 6.0) * size * (1.0 + charge * 0.8);
+		float damage = (float) (ctx.param("damage", 8.0) * size * (1.0 + charge * 0.75));
+		double knockback = ctx.param("knockback", 1.6) * size * (1.0 + charge * 0.5);
+		Vec3d look = player.getRotationVec(1.0f);
 		Vec3d dir = BuiltinAbilities.horizontalLook(player);
 		Vec3d origin = player.getPos().add(0, player.getHeight() * 0.5, 0);
 		for (LivingEntity target : BuiltinAbilities.livingAround(ctx, range + 1.0)) {
@@ -287,15 +315,19 @@ final class HumungousaurAbilities {
 			target.addVelocity(dir.x * knockback, 0.35 + 0.1 * size, dir.z * knockback);
 			target.velocityModified = true;
 		}
-		BlockState ground = world.getBlockState(player.getBlockPos().down());
-		for (int i = 1; i <= (int) range; i++) {
-			Vec3d p = player.getPos().add(dir.multiply(i));
-			world.spawnParticles(ParticleTypes.EXPLOSION, p.x, p.y + 0.8, p.z, 1, 0.1, 0.1, 0.1, 0.0);
-			if (!ground.isAir()) {
-				world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), p.x, p.y + 0.1, p.z, 8, 0.3, 0.05, 0.3, 0.15);
-			}
+		// Tunnel: Faust und Druckwelle brechen durch alles bis zur Staerke
+		float strength = AlienStrength.of(player) * (float) size * (1.0f + charge);
+		Vec3d fist = player.getEyePos().add(look.multiply(0.8)).add(0, -0.4 * size, 0);
+		Destruction.carve(world, player, fist, look, range, 0.9 + 0.35 * size + charge * 0.9, strength, 0.5);
+		for (int i = 0; i < 4; i++) {
+			Vec3d at = fist.add(look.multiply(range * (i + 1) / 4.0));
+			Fx.send(world, Fx.Kind.SHOCKWAVE, at, look, IMPACT, (float) (1.0 + i * 0.6 + charge), 6 + i * 2, 1, null);
+			Fx.smoke(world, at, DUST, (float) (0.6 + charge * 0.5), 2);
 		}
-		// Ultimate: Raketenfinger — fuenf Geschosse aus den Fingerspitzen, explodieren ohne Blockschaden
+		Fx.flash(world, fist.add(look.multiply(1.2)), IMPACT, (float) (1.4 + charge * 1.4));
+		Fx.explosion(world, fist.add(look.multiply(range)), IMPACT, (float) (1.2 + charge * 2.0));
+		Fx.shake(world, player.getPos(), 0.3f + charge * 0.4f, 8, 20);
+		// Ultimate: Raketenfinger — fuenf Geschosse aus den Fingerspitzen
 		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
 			for (int i = 0; i < 5; i++) {
 				com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity.shoot(world, player, net.minecraft.item.Items.FIRE_CHARGE, 2.0f, 6.0f)
@@ -304,7 +336,7 @@ final class HumungousaurAbilities {
 			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.4f, 0.7f);
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_IRON_GOLEM_ATTACK, 1.4f, 0.6f);
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.6f, 1.4f);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.6f + charge * 0.6f, 1.4f - charge * 0.5f);
 		return true;
 	}
 
@@ -325,11 +357,13 @@ final class HumungousaurAbilities {
 				target.velocityModified = true;
 			}
 		}
-		for (int i = 0; i < 32; i++) {
-			double a = i * MathHelper.TAU / 32;
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, player.getX() + Math.cos(a) * radius * 0.7, player.getY() + 0.6,
-					player.getZ() + Math.sin(a) * radius * 0.7, 1, 0.0, 0.0, 0.0, 0.0);
+		// der Schwanz fegt auf Hueft-Hoehe alles weg, was im Kreis steht (Waende, Baeume, Zaeune)
+		Destruction.crater(world, player, player.getPos().add(0, 0.5 + 0.3 * size, 0), radius * 0.8, 0.3, AlienStrength.of(player) * (float) size * 0.7f,
+				0.0, 0.15);
+		for (int i = 0; i < 3; i++) {
+			Fx.shockwave(world, player.getPos().add(0, 0.6 + i * 0.4, 0), i == 1 ? SKIN : DUST, (float) (radius * (0.7 + i * 0.15)), 6 + i * 2);
 		}
+		Fx.sparks(world, player.getPos().add(0, 0.8, 0), IMPACT, 0.6f, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.4f, 0.5f);
 		return true;
 	}
@@ -353,6 +387,16 @@ final class HumungousaurAbilities {
 		QUAKES.put(player.getUuid(), new Quake(player.getPos(), ctx.world().getTime(), ctx.param("radius", 10.0) * size,
 				(float) (ctx.param("damage", 7.0) * size), ctx.param("launch", 0.9), new HashSet<>()));
 		stomp(ctx.world(), player, 2.0, 0.0f, 0.2);
+		float strength = AlienStrength.of(player) * (float) size;
+		double radius = ctx.param("radius", 10.0) * size;
+		EarthWave.ring(ctx.world(), player.getPos(), radius, (int) radius, (float) Math.min(1.4, 0.5 + 0.2 * size));
+		Destruction.crater(ctx.world(), player, player.getPos().add(0, -0.6, 0), 2.0 + size, 0.45, strength, 0.6, 0.4);
+		for (int i = 0; i < 6; i++) {
+			double a = i * MathHelper.TAU / 6 + ctx.world().random.nextDouble() * 0.6;
+			Vec3d dir = new Vec3d(Math.cos(a), -0.06, Math.sin(a));
+			Destruction.carve(ctx.world(), player, player.getPos().add(dir.multiply(2.5 + size)).add(0, -1.3, 0), dir, radius * 0.9, 1.1, strength, 1.0);
+		}
+		Fx.shake(ctx.world(), player.getPos(), 0.8f, 20, (int) radius * 3);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_EMERGE, 1.2f, 0.7f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.0f, 0.5f);
 		return true;
@@ -429,6 +473,8 @@ final class HumungousaurAbilities {
 		if (player.isOnGround() && (last == null || last.squaredDistanceTo(player.getPos()) > 4.0)) {
 			LAST_STEP.put(player.getUuid(), player.getPos());
 			stomp(world, player, 3.5, 3.0f, 0.35);
+			// Fussabdruck: weicher Boden (Erde, Sand, Gras) gibt nach
+			Destruction.crater(world, player, player.getPos().add(0, -0.4, 0), 1.6, 0.4, 1.0f, 0.0, 0.1);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_RAVAGER_STEP, SoundCategory.PLAYERS, 1.5f, 0.5f);
 		}
 	}
@@ -445,12 +491,13 @@ final class HumungousaurAbilities {
 		double speed = 0.7 + 0.1 * stage(player);
 		player.setVelocity(charge.direction().x * speed, player.getVelocity().y, charge.direction().z * speed);
 		player.velocityModified = true;
+		// rammt durch Waende: Schneise in Koerperhoehe und -breite vor dem Kopf
+		double size = size(player);
+		Destruction.carve(world, player, player.getPos().add(charge.direction().multiply(0.6 + 0.4 * size)).add(0, player.getHeight() * 0.5, 0),
+				charge.direction(), 1.4, Math.max(0.9, player.getWidth() * 0.75), AlienStrength.of(player) * (float) size, 0.0);
 		if (now % 3 == 0) {
-			BlockState ground = world.getBlockState(player.getBlockPos().down());
-			if (!ground.isAir()) {
-				world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), player.getX(), player.getY() + 0.1, player.getZ(),
-						10, 0.5, 0.05, 0.5, 0.2);
-			}
+			Fx.smoke(world, player.getPos(), DUST, 0.9f, 2);
+			Fx.shockwave(world, player.getPos().add(0, 0.1, 0), DUST, 1.8f, 6);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_RAVAGER_STEP, SoundCategory.PLAYERS, 1.0f, 0.8f);
 		}
 		double reach = 1.0 + 0.3 * size(player);
@@ -478,16 +525,8 @@ final class HumungousaurAbilities {
 		}
 		long age = now - quake.start();
 		double front = Math.min(quake.radius(), age * 1.0);
-		// Erdbrocken auf der Wellenfront
-		int points = Math.max(8, (int) (front * 6));
-		BlockState ground = world.getBlockState(BlockPos.ofFloored(quake.center()).down());
-		for (int i = 0; i < points; i++) {
-			double a = i * MathHelper.TAU / points;
-			double x = quake.center().x + Math.cos(a) * front;
-			double z = quake.center().z + Math.sin(a) * front;
-			if (!ground.isAir()) {
-				world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), x, quake.center().y + 0.2, z, 2, 0.1, 0.1, 0.1, 0.15);
-			}
+		if (age % 3 == 0) {
+			Fx.shockwave(world, quake.center().add(0, 0.1, 0), DUST, (float) front + 1.0f, 6);
 		}
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class,
 				new net.minecraft.util.math.Box(quake.center(), quake.center()).expand(front + 0.5, 2.0, front + 0.5),

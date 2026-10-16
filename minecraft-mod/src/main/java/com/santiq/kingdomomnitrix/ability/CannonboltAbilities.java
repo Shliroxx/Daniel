@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.power.AlienStrength;
+import com.santiq.kingdomomnitrix.power.Destruction;
+import com.santiq.kingdomomnitrix.vfx.EarthWave;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.party.PartyRules;
@@ -27,7 +31,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
@@ -46,6 +49,9 @@ import net.minecraft.util.math.Vec3d;
  * </ol>
  */
 final class CannonboltAbilities {
+	private static final int SHELL = 0xF2E6C8;
+	private static final int DUST = 0x9C8466;
+	private static final int HEAT = 0xFF9A3A;
 	private enum Kind { DASH, BOUNCE, RICOCHET, CRUISE, GUARD, CANNONADE }
 
 	/** Laufende Rolle eines Spielers. */
@@ -248,9 +254,13 @@ final class CannonboltAbilities {
 				roll.direction.z * speed);
 		trail(world, player);
 		if (roll.momentum >= 1.0f) {
-			world.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 0.6, player.getZ(), 3, 0.4, 0.4, 0.4, 0.1);
+			Fx.sparks(world, player.getPos().add(0, 0.6, 0), SHELL, 0.3f, 2);
 		}
 		ram(world, player, roll, false);
+		// mit Schwung bricht die Kugel durch Waende, statt abzuprallen
+		if (roll.momentum >= 0.5f) {
+			smashAhead(world, player, roll.direction, roll.momentum);
+		}
 		if (player.horizontalCollision) {
 			// Aufprall an der Wand: Stoss je nach Schwung; solange Abpraller uebrig sind, springt die Kugel zurueck
 			shockwave(world, player, roll.damage * (0.4f + 0.6f * roll.momentum), 2.5 + 2.0 * roll.momentum, 0.6);
@@ -280,16 +290,20 @@ final class CannonboltAbilities {
 			world.playSound(null, player.getBlockPos(), SoundEvents.ITEM_TRIDENT_RIPTIDE_3.value(), SoundCategory.PLAYERS, 1.2f, 0.6f);
 		}
 		if (dive && roll.diving) {
-			world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 0.8, player.getZ(), 4, 0.4, 0.4, 0.4, 0.01);
+			Fx.flames(world, player.getPos().add(0, 0.8, 0), new Vec3d(0, 0.15, 0), HEAT, 0.3f, 4);
 		}
 		// erst nach dem Abheben auf Landung pruefen (der erste Tick steht noch am Boden)
 		if (roll.airborne && now - roll.until + 120 > 3 && player.isOnGround()) {
 			// Sturzhoehe verstaerkt den Einschlag (je 10 Bloecke +50 %, hoechstens doppelt)
 			double height = Math.max(0.0, roll.peakY - player.getY());
 			float boost = (float) Math.min(2.0, 1.0 + height / 20.0);
-			shockwave(world, player, roll.damage * boost, roll.radius * Math.min(1.5, 0.75 + height / 40.0), dive ? 1.4 : 0.8);
+			double radius = roll.radius * Math.min(1.5, 0.75 + height / 40.0);
+			shockwave(world, player, roll.damage * boost, radius, dive ? 1.4 : 0.8);
+			// Einschlagkrater: Kanonade tief, Sprung flach
+			Destruction.crater(world, player, player.getPos().add(0, -0.6, 0), (dive ? 2.4 : 1.4) * boost, dive ? 0.6 : 0.4,
+					AlienStrength.of(player) * boost, 0.4, dive ? 0.6 : 0.35);
 			if (dive) {
-				world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
+				Fx.explosion(world, player.getPos().add(0, 0.4, 0), HEAT, 2.0f + boost);
 				world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.5f, 0.7f);
 			} else {
 				world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_ATTACK, SoundCategory.PLAYERS, 1.2f, 0.6f);
@@ -346,12 +360,16 @@ final class CannonboltAbilities {
 					// naechster Gang: schneller, Funkenregen, Hinweis in der Aktionsleiste
 					roll.speedLevel = gear;
 					player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, (int) (roll.until - now), gear, false, false));
-					world.spawnParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 0.5, player.getZ(), 20, 0.5, 0.3, 0.5, 0.3);
+					Fx.sparks(world, player.getPos().add(0, 0.5, 0), SHELL, 0.6f, 20);
+					Fx.shockwave(world, player.getPos().add(0, 0.2, 0), SHELL, 3.0f, 8);
 					world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.PLAYERS, 0.8f, 0.8f + 0.2f * gear);
 					player.sendMessage(net.minecraft.text.Text.translatable("message.kingdomomnitrix.cannonbolt_gear", gear - roll.baseSpeedLevel)
 							.formatted(net.minecraft.util.Formatting.GOLD), true);
 				}
 				ram(world, player, roll, true);
+				if (roll.momentum >= 0.5f) {
+					smashAhead(world, player, roll.direction, roll.momentum);
+				}
 				if (now % 2 == 0) {
 					trail(world, player);
 				}
@@ -388,7 +406,8 @@ final class CannonboltAbilities {
 			projectile.setVelocity(back.multiply(speed));
 			projectile.setOwner(player);
 			projectile.velocityModified = true;
-			world.spawnParticles(ParticleTypes.CRIT, projectile.getX(), projectile.getY(), projectile.getZ(), 6, 0.1, 0.1, 0.1, 0.2);
+			Fx.sparks(world, projectile.getPos(), SHELL, 0.3f, 8);
+			Fx.flash(world, projectile.getPos(), SHELL, 0.8f);
 			world.playSound(null, projectile.getBlockPos(), SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.0f, 1.3f);
 		}
 		if (now % 10 == 0) {
@@ -444,12 +463,11 @@ final class CannonboltAbilities {
 			target.addVelocity(0.0, lift * (1.0 - distance / radius) + 0.2, 0.0);
 			target.velocityModified = true;
 		}
-		BlockPos below = player.getBlockPos().down();
-		var ground = world.getBlockState(below);
-		int count = (int) (radius * 14);
-		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground.isAir() ? net.minecraft.block.Blocks.STONE.getDefaultState() : ground),
-				player.getX(), player.getY() + 0.1, player.getZ(), count, radius * 0.4, 0.1, radius * 0.4, 0.15);
-		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.2, player.getZ(), count / 3, radius * 0.4, 0.05, radius * 0.4, 0.05);
+		EarthWave.ring(world, player.getPos(), radius, (int) Math.max(3, radius), (float) Math.min(1.0, 0.2 * radius));
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), DUST, (float) radius * 1.1f, 10);
+		Fx.flash(world, player.getPos().add(0, 0.2, 0), SHELL, 1.4f);
+		Fx.smoke(world, player.getPos(), DUST, (float) (0.7 + radius * 0.08), (int) (2 + radius * 0.5));
+		Fx.shake(world, player.getPos(), (float) Math.min(0.7, 0.1 * radius), 8, (int) (radius * 4 + 8));
 	}
 
 	private static void hurt(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, Vec3d direction, double knockback) {
@@ -457,7 +475,20 @@ final class CannonboltAbilities {
 		if (direction.lengthSquared() > 1.0E-4) {
 			target.takeKnockback(knockback, -direction.x, -direction.z);
 		}
-		world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getBodyY(0.5), target.getZ(), 8, 0.3, 0.3, 0.3, 0.2);
+		Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), SHELL, 0.4f, 8);
+		Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), SHELL, 1.0f);
+	}
+
+	/** Durchbrechen: Kugelquerschnitt vor Cannonbolt, Staerke waechst mit dem Schwung. */
+	private static void smashAhead(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float momentum) {
+		Vec3d center = player.getPos().add(0, player.getHeight() * 0.5, 0);
+		int broken = Destruction.carve(world, player, center.add(direction.multiply(player.getWidth() * 0.5 + 0.4)), direction, 0.8,
+				Math.max(0.9, player.getWidth() * 0.65), AlienStrength.of(player) * (0.5f + momentum), 0.0);
+		if (broken > 0) {
+			Fx.sparks(world, center.add(direction), SHELL, 0.5f, 6);
+			Fx.smoke(world, center.add(direction), DUST, 0.8f, 1);
+			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.8f, 0.7f);
+		}
 	}
 
 	private static void trail(ServerWorld world, ServerPlayerEntity player) {
@@ -466,7 +497,7 @@ final class CannonboltAbilities {
 			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), player.getX(), player.getY() + 0.05, player.getZ(),
 					4, 0.4, 0.0, 0.4, 0.1);
 		}
-		world.spawnParticles(ParticleTypes.POOF, player.getX(), player.getY() + 0.3, player.getZ(), 1, 0.2, 0.1, 0.2, 0.0);
+		Fx.smoke(world, player.getPos().add(0, 0.2, 0), DUST, 0.6f, 1);
 	}
 
 	private static void knockbackImmunity(ServerPlayerEntity player, boolean on) {

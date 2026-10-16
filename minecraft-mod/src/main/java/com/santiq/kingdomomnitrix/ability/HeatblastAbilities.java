@@ -196,6 +196,10 @@ final class HeatblastAbilities {
 		}
 		Fx.scorch(world, player.getPos(), (float) radius * 0.5f, 160);
 		Fx.shake(world, player.getPos(), 0.35f, 10, (int) radius + 6);
+		// die Explosion reisst den Boden auf und setzt die Umgebung in Brand
+		float strength = com.santiq.kingdomomnitrix.power.AlienStrength.of(player) * (power.blue() ? 1.6f : 1.0f);
+		com.santiq.kingdomomnitrix.power.Destruction.crater(world, player, player.getPos().add(0, 0.2, 0), radius * 0.45, 0.6, strength, 0.3, 0.55);
+		com.santiq.kingdomomnitrix.power.Destruction.ignite(world, player, player.getPos(), radius * 0.8, 0.12);
 		addHeat(player, (float) ctx.param("heat", 15.0));
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_FIRE, 1.2f, power.blue() ? 0.55f : 0.75f);
 		return true;
@@ -274,6 +278,10 @@ final class HeatblastAbilities {
 		Fx.flames(world, player.getPos(), new Vec3d(0, 0.7, 0), color, 0.35f, 30);
 		Fx.scorch(world, player.getPos(), (float) radius * 0.7f, 300);
 		Fx.shake(world, player.getPos(), 1.0f, 24, (int) (radius * 2.5));
+		// Supernova: gewaltiger Krater, alles ringsum brennt
+		float strength = com.santiq.kingdomomnitrix.power.AlienStrength.of(player) * (blue ? 2.5f : 1.6f);
+		com.santiq.kingdomomnitrix.power.Destruction.crater(world, player, player.getPos().add(0, 0.3, 0), radius * 0.7, 0.6, strength, 0.35, 0.7);
+		com.santiq.kingdomomnitrix.power.Destruction.ignite(world, player, player.getPos(), radius, 0.18);
 		if (blue) {
 			CORES.put(player.getUuid(), new Core(player.getPos(), world.getTime() + (long) ctx.param("core_ticks", 80.0),
 					(float) ctx.param("core_damage", 3.0), radius * 0.5));

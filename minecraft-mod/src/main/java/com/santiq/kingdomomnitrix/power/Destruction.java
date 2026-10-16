@@ -123,6 +123,35 @@ public final class Destruction {
 		return true;
 	}
 
+	/**
+	 * Feuer legen: auf freien Bodenstellen im Radius mit Wahrscheinlichkeit {@code chance} (Heatblast, Explosionen).
+	 * Nur wenn Zerstoerung erlaubt ist; Schutz-Mods werden wie beim Platzieren gefragt (ueber {@link #breakable} auf Luft
+	 * entfaellt das, darum zusaetzlich Spawnschutz/Abenteuer-Modus).
+	 */
+	public static int ignite(ServerWorld world, @Nullable ServerPlayerEntity owner, Vec3d center, double radius, double chance) {
+		if (!PowerConfig.griefingAllowed(world) || chance <= 0.0) {
+			return 0;
+		}
+		int r = MathHelper.ceil(radius);
+		BlockPos c = BlockPos.ofFloored(center);
+		int count = 0;
+		for (BlockPos pos : BlockPos.iterate(c.add(-r, -2, -r), c.add(r, 2, r))) {
+			if (pos.getSquaredDistance(c) > radius * radius || world.random.nextDouble() >= chance || !world.getBlockState(pos).isAir()) {
+				continue;
+			}
+			if (owner != null && (!world.canPlayerModifyAt(owner, pos)
+					|| owner.isBlockBreakingRestricted(world, pos, owner.interactionManager.getGameMode()))) {
+				continue;
+			}
+			BlockState fire = net.minecraft.block.AbstractFireBlock.getState(world, pos);
+			if (fire.canPlaceAt(world, pos)) {
+				world.setBlockState(pos.toImmutable(), fire, Block.NOTIFY_ALL);
+				count++;
+			}
+		}
+		return count;
+	}
+
 	/** Darf {@code owner} mit {@code strength} diesen Block zerstoeren? */
 	public static boolean breakable(ServerWorld world, BlockPos pos, BlockState state, @Nullable ServerPlayerEntity owner, float strength) {
 		if (state.isAir() || !state.getFluidState().isEmpty() && state.getBlock() instanceof net.minecraft.block.FluidBlock) {
