@@ -13,7 +13,11 @@ enum FxTexture {
 	SPARK("spark", 1, true),
 	SHARD("shard", 1, true),
 	FLAME("flame", 4, false),
+	/** Flamme in echten Feuerfarben (fuer warme Farben, ohne Einfaerben) */
+	FLAME_HOT("flame_hot", 4, false),
 	EXPLOSION("explosion", 4, false),
+	/** Feuerball in echten Feuerfarben (Weiss → Gelb → Orange → Glut → Russ) */
+	EXPLOSION_HOT("explosion_hot", 4, false),
 	SMOKE("smoke", 4, false),
 	SCORCH("scorch", 1, false);
 

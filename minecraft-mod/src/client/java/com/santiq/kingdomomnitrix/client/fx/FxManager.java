@@ -100,12 +100,26 @@ public final class FxManager {
 		add(new FxSprite(FxTexture.GLOW, FxSprite.Shape.BILLBOARD, pos, Vec3d.ZERO, life + 3, size * 1.6f, size * 2.2f, color, 0.7f));
 	}
 
+	/**
+	 * Warme Farben (Feuer, Glut, Explosion) bekommen die Textur in echten Feuerfarben, die nicht eingefaerbt wird —
+	 * dadurch entsteht der Verlauf Weiss → Gelb → Orange → Rot → Russ. Kalte Farben bleiben eingefaerbt.
+	 */
+	static boolean warm(int color) {
+		int r = color >> 16 & 0xFF;
+		int g = color >> 8 & 0xFF;
+		int b = color & 0xFF;
+		return r >= 200 && r >= g && g >= b && r - b >= 90;
+	}
+
 	public static void explosion(Vec3d pos, int color, float radius) {
-		FxSprite fireball = new FxSprite(FxTexture.EXPLOSION, FxSprite.Shape.BILLBOARD, pos, Vec3d.ZERO, 18, radius * 1.6f, radius * 2.4f, color,
+		boolean hot = warm(color);
+		FxTexture ball = hot ? FxTexture.EXPLOSION_HOT : FxTexture.EXPLOSION;
+		int tint = hot ? 0xFFFFFF : color;
+		FxSprite fireball = new FxSprite(ball, FxSprite.Shape.BILLBOARD, pos, Vec3d.ZERO, 18, radius * 1.6f, radius * 2.4f, tint,
 				1.0f);
 		fireball.rotation = RANDOM.nextFloat() * MathHelper.TAU;
 		add(fireball);
-		FxSprite core = new FxSprite(FxTexture.EXPLOSION, FxSprite.Shape.BILLBOARD, pos, Vec3d.ZERO, 14, radius * 0.9f, radius * 1.4f, 0xFFF4D0,
+		FxSprite core = new FxSprite(ball, FxSprite.Shape.BILLBOARD, pos, Vec3d.ZERO, 14, radius * 0.9f, radius * 1.4f, 0xFFF4D0,
 				0.9f);
 		core.rotation = RANDOM.nextFloat() * MathHelper.TAU;
 		add(core);
@@ -113,8 +127,8 @@ public final class FxManager {
 		int flames = 10 + (int) (radius * 6);
 		for (int i = 0; i < flames; i++) {
 			Vec3d dir = randomDir();
-			FxSprite f = new FxSprite(FxTexture.EXPLOSION, FxSprite.Shape.BILLBOARD, pos.add(dir.multiply(radius * 0.3)),
-					dir.multiply(0.12 + RANDOM.nextDouble() * 0.18 * radius), 10 + RANDOM.nextInt(8), radius * 0.6f, radius * 1.1f, color, 0.9f);
+			FxSprite f = new FxSprite(ball, FxSprite.Shape.BILLBOARD, pos.add(dir.multiply(radius * 0.3)),
+					dir.multiply(0.12 + RANDOM.nextDouble() * 0.18 * radius), 10 + RANDOM.nextInt(8), radius * 0.6f, radius * 1.1f, tint, 0.9f);
 			f.drag = 0.82f;
 			f.rotation = RANDOM.nextFloat() * MathHelper.TAU;
 			add(f);
@@ -154,8 +168,9 @@ public final class FxManager {
 		for (int i = 0; i < count; i++) {
 			Vec3d jitter = randomDir().multiply(spread);
 			Vec3d v = dir.add(jitter).normalize().multiply(speed * (0.7 + RANDOM.nextDouble() * 0.6));
-			FxSprite f = new FxSprite(FxTexture.FLAME, FxSprite.Shape.BILLBOARD, pos.add(v.multiply(RANDOM.nextDouble())), v, 12 + RANDOM.nextInt(8),
-					0.35f, 1.3f + spread, color, 0.95f);
+			boolean hot = warm(color);
+			FxSprite f = new FxSprite(hot ? FxTexture.FLAME_HOT : FxTexture.FLAME, FxSprite.Shape.BILLBOARD, pos.add(v.multiply(RANDOM.nextDouble())),
+					v, 12 + RANDOM.nextInt(8), 0.35f, 1.3f + spread, hot ? 0xFFFFFF : color, 0.95f);
 			f.drag = 0.9f;
 			f.gravity = -0.006f;
 			add(f);

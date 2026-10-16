@@ -60,7 +60,7 @@ public class FxProjectileRenderer extends EntityRenderer<HeroProjectileEntity> {
 			int frame = ((int) (time * 1.5f)) % 6;
 			float u0 = (frame % 4) / 4.0f;
 			float v0 = (frame / 4) / 4.0f;
-			billboardAlpha(entry, consumers.getBuffer(FxTexture.EXPLOSION.layer()), rotation, size * 1.4f, color, u0, v0, u0 + 0.25f, v0 + 0.25f,
+			billboardAlpha(entry, consumers.getBuffer((FxManager.warm(color) ? FxTexture.EXPLOSION_HOT : FxTexture.EXPLOSION).layer()), rotation, size * 1.4f, FxManager.warm(color) ? 0xFFFFFF : color, u0, v0, u0 + 0.25f, v0 + 0.25f,
 					time * 0.3f);
 		}
 		billboard(entry, consumers.getBuffer(FxTexture.FLARE.layer()), rotation, size * 1.2f, 0xFFFFFF, 0.9f, 0, 0, 1, 1, time * 0.2f);

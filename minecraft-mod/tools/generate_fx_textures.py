@@ -9,9 +9,11 @@ Ausgabe nach assets/kingdomomnitrix/textures/fx/:
   beam.png         Energiestrahl, laengs kachelbar (u laeuft)       256x64
   spark.png        Funken-Strich                                   64x64
   shard.png        Splitter/Kristall                               64x64
-  flame.png        Flammenzunge, 16 Bilder (4x4)                    512x512
-  explosion.png    Feuerball-Explosion, 16 Bilder (4x4)             512x512
-  smoke.png        Rauchwolke, 16 Bilder (4x4)                      512x512
+  flame.png        Flammenzunge, 16 Bilder (4x4), Graustufen        1024x1024
+  flame_hot.png    dieselbe Flamme in echten Feuerfarben            1024x1024
+  explosion.png    Feuerball-Explosion, 16 Bilder, Graustufen       1024x1024
+  explosion_hot.png  Feuerball in Feuerfarben (Weiss→Gelb→Rot→Russ)  1024x1024
+  smoke.png        beleuchtete Rauchwolke, 16 Bilder (4x4)          1024x1024
   scorch.png       Brandfleck/Riss am Boden                         128x128
 
 Deterministisch (fester Seed). Aufruf aus minecraft-mod/:
@@ -136,72 +138,166 @@ def sheet(frames: list[np.ndarray], alphas: list[np.ndarray], size: int, premult
     return out
 
 
-def flame() -> Image.Image:
-    """Flammenzunge: Rauschen scrollt nach oben, Raender zuengeln, Spitzen reissen ab."""
-    rng = np.random.default_rng(13)
-    size = 128
-    field = noise(rng, size * 4, 12, 4)
-    field2 = noise(np.random.default_rng(31), size * 4, 4, 3)
-    frames, alphas = [], []
+FRAME = 256
+
+
+def fbm(rng: np.random.Generator, size: int, cells: int, octaves: int = 5) -> np.ndarray:
+    """Fraktales Rauschen 0..1 (Summe von Wertrauschen-Oktaven), auf vollen Kontrast gestreckt."""
+    n = noise(rng, size, cells, octaves)
+    lo, hi = np.percentile(n, 2), np.percentile(n, 98)
+    return np.clip((n - lo) / max(hi - lo, 1e-6), 0, 1)
+
+
+def warp(field: np.ndarray, wx: np.ndarray, wy: np.ndarray, amount: float) -> np.ndarray:
+    """Domain-Warping: liest das Feld an verschobenen Stellen (wirbelige, organische Formen)."""
+    h, w = field.shape
+    ys, xs = np.mgrid[0:h, 0:w].astype(np.float64)
+    sx = np.clip(xs + (wx - 0.5) * amount * w, 0, w - 1).astype(int)
+    sy = np.clip(ys + (wy - 0.5) * amount * h, 0, h - 1).astype(int)
+    return field[sy, sx]
+
+
+def shade(height: np.ndarray, light=(-0.55, -0.75), strength: float = 6.0) -> np.ndarray:
+    """Beleuchtung aus dem Hoehenfeld (Licht von oben links): Ballen bekommen Licht- und Schattenseiten."""
+    gy, gx = np.gradient(height)
+    lit = -(gx * light[0] + gy * light[1]) * strength * height.shape[0] / 64.0
+    return np.clip(0.5 + lit, 0, 1)
+
+
+HEAT_STOPS = [(0.00, (0.10, 0.05, 0.04)), (0.22, (0.42, 0.06, 0.02)), (0.42, (0.85, 0.20, 0.03)), (0.60, (1.00, 0.48, 0.06)),
+              (0.78, (1.00, 0.78, 0.25)), (0.92, (1.00, 0.95, 0.65)), (1.00, (1.00, 1.00, 0.95))]
+
+
+def heat_ramp(h: np.ndarray) -> np.ndarray:
+    """Hitze 0..1 → Farbe (Russ → Glut → Orange → Gelb → Weiss)."""
+    h = np.clip(h, 0, 1)
+    out = np.zeros(h.shape + (3,))
+    for (a, ca), (b, cb) in zip(HEAT_STOPS, HEAT_STOPS[1:]):
+        m = (h >= a) & (h <= b)
+        t = ((h - a) / (b - a))[..., None]
+        out[m] = (np.array(ca) * (1 - t) + np.array(cb) * t)[m]
+    return out
+
+
+def rgb_image(color: np.ndarray, alpha: np.ndarray) -> Image.Image:
+    c8 = (np.clip(color, 0, 1) * 255).astype(np.uint8)
+    a8 = (np.clip(alpha, 0, 1) * 255).astype(np.uint8)
+    return Image.fromarray(np.dstack([c8, a8]), "RGBA")
+
+
+def sheet_images(images: list[Image.Image], size: int) -> Image.Image:
+    out = Image.new("RGBA", (size * 4, size * 4), (0, 0, 0, 0))
+    for i, im in enumerate(images):
+        out.paste(im, ((i % 4) * size, (i // 4) * size))
+    return out
+
+
+def _flame_frames():
+    """Flammenzunge, 16 Bilder: aufsteigendes, verwirbeltes Rauschen wird von einer Tropfenform maskiert; wo das
+    Rauschen schwach ist, reisst die Flamme in einzelne Zungen auf. Liefert je Bild (Hitze 0..1, Alpha)."""
+    size = FRAME
+    big = fbm(np.random.default_rng(113), size * 6, 6, 6)
+    fine = fbm(np.random.default_rng(117), size * 6, 18, 4)
+    wx = fbm(np.random.default_rng(114), size * 6, 3, 3)
+    wy = fbm(np.random.default_rng(115), size * 6, 3, 3)
+    field = warp(big * 0.65 + fine * 0.35, wx, wy, 0.06)
     ys, xs = np.mgrid[0:size, 0:size].astype(np.float64)
-    u = (xs - 63.5) / 63.5
+    u = (xs - (size - 1) / 2) / ((size - 1) / 2)
     v = ys / (size - 1)               # 0 oben, 1 unten
+    out = []
     for f in range(16):
-        off = f * 24
-        n = field[off:off + size, :size]
-        w2 = field2[off:off + size, :size]
-        sway = (w2 - 0.5) * 0.5 * (1 - v)
-        width = 0.2 + 0.7 * v ** 0.7
-        uu = (u + sway) / width
-        # mehrere Zungen: Kosinus quer, phasenverschoben je Bild
-        tongues = 0.5 + 0.5 * np.cos(uu * math.pi * 1.6 + f * 0.4 + (n - 0.5) * 3)
-        height = 0.15 + 0.55 * tongues + (n - 0.5) * 0.35
-        top = np.clip((v - (1 - height) * 0.85) * 5, 0, 1)
-        side = np.clip((1 - np.abs(uu)) * 2.5, 0, 1)
-        bottom = np.clip((1 - v) * 7, 0, 1)
-        a = np.clip(top * side * bottom * (0.65 + 0.5 * n), 0, 1)
-        lum = np.clip(0.45 + 0.6 * side * v + n * 0.2, 0, 1)
-        frames.append(lum)
-        alphas.append(a)
-    return sheet(frames, alphas, size, premultiply=False)
+        t = f / 15
+        life = min(1.0, 0.35 + t * 4) * (1 - max(0.0, (t - 0.65) / 0.35) ** 1.3)
+        off = int((15 - f) * size * 0.22)          # Rauschen steigt pro Bild nach oben
+        col = (f * 53) % (size * 4)
+        n = field[off:off + size, col:col + size]
+        sway = (n - 0.5) * 0.45 * (1 - v)
+        width = 0.18 + 0.5 * v ** 0.9
+        mask = np.exp(-((u + sway) / width) ** 2 * 1.6) * np.clip((1 - v) / 0.05, 0, 1)
+        lift = 1.0 - v                             # 1 oben
+        density = mask * (0.2 + 1.3 * n ** 1.3) * life - lift * (0.95 - 0.4 * life)
+        a = np.clip(density * 2.6, 0, 1)
+        heat = np.clip(density * 1.05 + mask * v * 0.15, 0, 1)
+        out.append((heat, a))
+    return out
+
+
+def flame() -> Image.Image:
+    """Graustufen-Flamme (wird je Alien eingefaerbt)."""
+    return sheet_images([rgb_image(np.repeat((0.35 + 0.65 * h)[..., None], 3, axis=2), a) for h, a in _flame_frames()], FRAME)
+
+
+def flame_hot() -> Image.Image:
+    """Echte Feuerfarben (fuer warme Farben: Heatblast, Explosionen)."""
+    return sheet_images([rgb_image(heat_ramp(h * 0.9 + 0.15), a) for h, a in _flame_frames()], FRAME)
+
+
+def _explosion_frames():
+    """Feuerball, 16 Bilder: weisser Blitzkern → brodelnde, beleuchtete Feuerballen → Glut → dunkler Rauchpilz.
+    Liefert je Bild (Hitze 0..1, Helligkeit 0..1, Alpha)."""
+    size = FRAME
+    r, ang = radial(size)
+    base = fbm(np.random.default_rng(214), size, 4, 6)
+    wx = fbm(np.random.default_rng(215), size, 3, 4)
+    wy = fbm(np.random.default_rng(216), size, 3, 4)
+    out = []
+    for f in range(16):
+        t = f / 15
+        radius = 0.22 + 0.72 * (1 - (1 - t) ** 2.2)
+        billow = warp(fbm(np.random.default_rng(300 + f // 2), size, 5, 6) * 0.6 + base * 0.4, wx, wy, 0.1 + t * 0.15)
+        edge = radius * (0.78 + 0.34 * billow)
+        body = np.clip((edge - r) / (0.08 + 0.1 * t), 0, 1)
+        # spaete Bilder: die Mitte reisst auf (Rauchring), Ballen loesen sich
+        if t > 0.55:
+            body *= np.clip((r / np.maximum(edge, 1e-3) - (t - 0.55) * 1.4 + billow * 0.5) * 2.5, 0, 1)
+        a = np.clip(body * (1.15 - t ** 2.5), 0, 1)
+        dome = np.sqrt(np.clip(1 - (r / np.maximum(edge, 1e-3)) ** 2, 0, 1))
+        height = dome * 0.6 + billow * 0.5
+        light = shade(height, strength=5.0)
+        core = np.clip(1 - r / np.maximum(edge * 0.75, 1e-3), 0, 1)
+        heat = np.clip((0.55 + core * 0.7 + (billow - 0.5) * 0.6) * (1.15 - t * 1.05), 0, 1)
+        lum = np.clip(0.35 + light * 0.75 + heat * 0.25 - t * 0.25, 0.05, 1)
+        out.append((heat, lum, a))
+    return out
 
 
 def explosion() -> Image.Image:
-    rng = np.random.default_rng(14)
-    size = 128
-    r, ang = radial(size)
-    frames, alphas = [], []
-    detail = noise(rng, size, 5, 5)
-    for f in range(16):
-        t = f / 15
-        radius = 0.25 + 0.75 * (1 - (1 - t) ** 2.5)
-        lumpy = radius * (0.85 + 0.3 * detail)
-        body = np.clip((lumpy - r) / 0.15, 0, 1)
-        hollow = np.clip((r - lumpy * t * 0.8) / 0.2, 0, 1) if t > 0.4 else 1.0
-        a = body * hollow * (1 - t ** 3)
-        heat = np.clip(1 - r / np.maximum(lumpy, 1e-3), 0, 1) * (1 - t)
-        # Wolkenstruktur: helle Ballen, dunkle Taeler, Rand dunkler (Russ)
-        billow = noise(np.random.default_rng(40 + f), size, 6, 4)
-        rim = np.clip((r / np.maximum(lumpy, 1e-3) - 0.6) / 0.4, 0, 1)
-        lum = np.clip(0.86 + heat * 0.3 + (billow - 0.5) * 0.45 - rim * 0.3 - t * 0.2, 0.15, 1)
-        frames.append(lum)
-        alphas.append(np.clip(a, 0, 1))
-    return sheet(frames, alphas, size, premultiply=False)
+    return sheet_images([rgb_image(np.repeat(l[..., None], 3, axis=2), a) for h, l, a in _explosion_frames()], FRAME)
+
+
+def explosion_hot() -> Image.Image:
+    images = []
+    for h, l, a in _explosion_frames():
+        color = heat_ramp(h) * (0.55 + 0.6 * l)[..., None]
+        images.append(rgb_image(color, a))
+    return sheet_images(images, FRAME)
 
 
 def smoke() -> Image.Image:
-    rng = np.random.default_rng(15)
-    size = 128
-    r, _ = radial(size)
-    frames, alphas = [], []
+    """Rauchwolke, 16 Bilder: mehrere beleuchtete Ballen (oben hell, unten Schatten), die quellen, aufreissen und
+    verwehen."""
+    size = FRAME
+    rng = np.random.default_rng(415)
+    ys, xs = np.mgrid[0:size, 0:size].astype(np.float64) / (size - 1) * 2 - 1
+    blobs = [(rng.uniform(-0.4, 0.4), rng.uniform(-0.3, 0.3), rng.uniform(0.32, 0.5)) for _ in range(11)]
+    wx = fbm(np.random.default_rng(416), size, 3, 4)
+    wy = fbm(np.random.default_rng(417), size, 3, 4)
+    images = []
     for f in range(16):
         t = f / 15
-        n = noise(rng, size, 3, 5)
-        a = np.clip((0.55 + 0.4 * t - r + (n - 0.5) * 0.5) / 0.3, 0, 1) * (1 - t) ** 1.2 * 0.85 * np.clip((1 - r) * 3, 0, 1)
-        lum = 0.75 + n * 0.25
-        frames.append(lum)
-        alphas.append(a)
-    return sheet(frames, alphas, size, premultiply=False)
+        grow = 0.95 + 0.35 * t
+        height = np.zeros((size, size))
+        for bx, by, br in blobs:
+            rr = br * grow
+            d2 = ((xs - bx * grow) ** 2 + (ys - by * grow) ** 2) / (rr * rr)
+            height = np.maximum(height, np.sqrt(np.clip(1 - d2, 0, 1)))
+        n = warp(fbm(np.random.default_rng(420 + f // 2), size, 5, 6), wx, wy, 0.05 + t * 0.15)
+        height = np.clip(height * (0.7 + 0.5 * n) - t * 0.25 * (1 - n), 0, 1)
+        a = np.clip(height ** 0.8 * 1.5, 0, 1) * (0.45 + 0.55 * n) * (1 - t) ** 1.2 * 0.9
+        light = shade(height, strength=3.5)
+        lum = np.clip(0.6 + light * 0.4 + (n - 0.5) * 0.15, 0, 1)
+        images.append(rgb_image(np.repeat(lum[..., None], 3, axis=2), a))
+    return sheet_images(images, FRAME)
 
 
 def scorch() -> Image.Image:
@@ -215,7 +311,7 @@ def scorch() -> Image.Image:
 
 
 TEXTURES = {"glow": glow, "flare": flare, "ring": ring, "beam": beam, "spark": spark, "shard": shard, "flame": flame,
-            "explosion": explosion, "smoke": smoke, "scorch": scorch}
+            "explosion": explosion, "smoke": smoke, "scorch": scorch, "flame_hot": flame_hot, "explosion_hot": explosion_hot}
 
 
 def main(argv: list[str] | None = None) -> int:
