@@ -1,5 +1,9 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.power.AlienStrength;
+import com.santiq.kingdomomnitrix.power.Debris;
+import com.santiq.kingdomomnitrix.power.Destruction;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
@@ -20,7 +24,6 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -34,7 +37,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Vector3f;
 
 /**
  * XLR8 (Kineceleran). Eigenes Dauer-System „Tempo“ (0–100):
@@ -59,7 +61,9 @@ final class Xlr8Abilities {
 	private static final float GAIN_PER_HIT = 3.0f;
 	/** ab dieser Geschwindigkeit (Bloecke/Tick) gilt XLR8 als rennend */
 	private static final double RUN_SPEED = 0.2;
-	private static final DustParticleEffect BLUE = new DustParticleEffect(new Vector3f(0.12f, 0.56f, 1.0f), 1.2f);
+	private static final int STREAK = 0x38B6FF;
+	private static final int CORE = 0xDDF4FF;
+	private static final int WIND = 0xE6F0F8;
 
 	private static final Map<UUID, Float> TEMPO = new HashMap<>();
 	private static final Map<UUID, double[]> LAST_POS = new HashMap<>();
@@ -104,7 +108,7 @@ final class Xlr8Abilities {
 				if (tempo >= BLUR) {
 					target.timeUntilRegen = 0;
 					target.damage(server.getServerWorld().getDamageSources().playerAttack(server), tempo / 25.0f);
-					server.getServerWorld().spawnParticles(BLUE, target.getX(), target.getBodyY(0.5), target.getZ(), 6, 0.3, 0.3, 0.3, 0.0);
+					Fx.sparks(server.getServerWorld(), new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), STREAK, 0.4f, 6);
 				}
 				addTempo(server, GAIN_PER_HIT);
 			}
@@ -129,7 +133,12 @@ final class Xlr8Abilities {
 		if (before < MAX && after >= MAX) {
 			ServerWorld world = player.getServerWorld();
 			Vec3d behind = player.getPos().add(0, 1.0, 0).subtract(BuiltinAbilities.horizontalLook(player).multiply(1.0));
-			world.spawnParticles(ParticleTypes.SONIC_BOOM, behind.x, behind.y, behind.z, 1, 0.0, 0.0, 0.0, 0.0);
+			// Ueberschallknall: Druckringe, Blitz, Fensterscheiben und Laub ringsum zerspringen
+			Fx.send(world, Fx.Kind.SHOCKWAVE, behind, BuiltinAbilities.horizontalLook(player), CORE, 3.5f, 10, 1, null);
+			Fx.shockwave(world, player.getPos().add(0, 0.1, 0), STREAK, 6.0f, 12);
+			Fx.flash(world, behind, CORE, 2.0f);
+			Fx.shake(world, player.getPos(), 0.4f, 8, 24);
+			Destruction.crater(world, player, player.getPos().add(0, 1.0, 0), 4.5, 0.6f, 0.0, 0.2);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 0.6f, 1.9f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.xlr8_sound_barrier").formatted(Formatting.AQUA), true);
 		}
@@ -180,10 +189,10 @@ final class Xlr8Abilities {
 		double power = ctx.param("power", 1.6) * boost(player).factor();
 		BuiltinAbilities.launch(player, -look.x * power, 0.25, -look.z * power);
 		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 12));
-		// Nachbild aus blauen Partikeln in Koerperform
-		for (int i = 0; i < 24; i++) {
-			world.spawnParticles(BLUE, spot.x, spot.y + (i % 12) * 0.16, spot.z, 1, 0.18, 0.02, 0.18, 0.0);
-		}
+		// Nachbild: blaue Silhouette bleibt kurz stehen, Streifen zur neuen Stelle
+		Fx.send(world, Fx.Kind.AURA, spot.add(0, 1.0, 0), Vec3d.ZERO, STREAK, 0.9f, 25, 0, null);
+		Fx.flash(world, spot.add(0, 1.0, 0), STREAK, 1.6f);
+		Fx.smoke(world, spot.add(0, 0.2, 0), WIND, 0.8f, 3);
 		double radius = ctx.param("radius", 12.0);
 		for (MobEntity mob : world.getEntitiesByClass(MobEntity.class, player.getBoundingBox().expand(radius),
 				m -> m.getTarget() == player)) {
@@ -208,15 +217,18 @@ final class Xlr8Abilities {
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().playerAttack(player), damage);
 			target.takeKnockback(boost.full() ? 1.4 : 0.6, -look.x, -look.z);
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+			Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), STREAK, 0.5f, 10);
+			Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), CORE, 1.2f);
 		}
-		for (int i = 0; i < (int) distance * 2; i++) {
-			Vec3d p = player.getPos().add(look.multiply(i * 0.5)).add(0, 0.9, 0);
-			world.spawnParticles(BLUE, p.x, p.y, p.z, 1, 0.1, 0.3, 0.1, 0.0);
+		for (double h : new double[] {0.4, 1.0, 1.6}) {
+			Fx.beam(world, player.getPos().add(0, h, 0), player.getPos().add(look.multiply(distance)).add(0, h, 0), STREAK, 0.12f, 8);
 		}
 		BuiltinAbilities.launch(player, look.x * ctx.param("speed", 2.6) * boost.factor(), 0.1, look.z * ctx.param("speed", 2.6) * boost.factor());
 		if (boost.full()) {
-			world.spawnParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+			Fx.send(world, Fx.Kind.SHOCKWAVE, player.getPos().add(0, 1.0, 0), look, CORE, 3.0f, 10, 1, null);
+			// mit Schallmauer bricht der Ansturm durch Waende
+			Destruction.carve(world, player, player.getPos().add(look.multiply(0.8)).add(0, 0.9, 0), look, distance, 1.0,
+					AlienStrength.of(player) * 1.5f, 0.3);
 		}
 		addTempo(player, (float) ctx.param("tempo", 10.0));
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_DASH, 0.9f, 1.1f);
@@ -231,6 +243,8 @@ final class Xlr8Abilities {
 				(float) ctx.param("damage", 5.0) * boost.factor(), ctx.param("radius", 4.5) * (boost.full() ? 1.5 : 1.0));
 		cyclone.home = player.getPos();
 		EFFECTS.put(player.getUuid(), cyclone);
+		// der Wirbelsturm reisst losen Boden (Laub, Gras, Sand, Erde) mit
+		Destruction.crater(ctx.world(), player, player.getPos(), cyclone.radius * 0.55, 0.35, 0.8f, 0.6, 0.6);
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.2f, 0.8f);
 		return true;
@@ -290,8 +304,8 @@ final class Xlr8Abilities {
 			if (now % INTERVAL == 0) {
 				tickTempo(world, player, now);
 			}
-			if (tempo(player) >= BLUR && now % 2 == 0) {
-				world.spawnParticles(BLUE, player.prevX, player.getY() + 0.9, player.prevZ, 2, 0.15, 0.5, 0.15, 0.0);
+			if (tempo(player) >= BLUR) {
+				speedRun(world, player, now);
 			}
 			if (tempo(player) >= MAX && player.isSprinting()) {
 				trample(world, player, now);
@@ -319,6 +333,47 @@ final class Xlr8Abilities {
 		AlienMeterSync.update(player, AlienMeterPayload.TEMPO, tempo(player));
 	}
 
+	/**
+	 * Ab „verschwommen“: Tempo-Streifen hinter XLR8, beim Sprinten ueber Wasser laufen (die Oberflaeche traegt, Gischt
+	 * spritzt) und Waende hinauflaufen.
+	 */
+	private static void speedRun(ServerWorld world, ServerPlayerEntity player, long now) {
+		Vec3d prev = new Vec3d(player.prevX, player.prevY, player.prevZ);
+		double moved = prev.squaredDistanceTo(player.getPos());
+		if (moved > 0.04 && now % 2 == 0) {
+			Vec3d back = prev.subtract(player.getPos()).normalize().multiply(2.5);
+			for (double h : new double[] {0.5, 1.1, 1.6}) {
+				Fx.beam(world, player.getPos().add(0, h, 0), player.getPos().add(back).add(0, h, 0), STREAK, 0.07f, 4);
+			}
+		}
+		if (!player.isSprinting()) {
+			return;
+		}
+		// Wasserlauf: steht XLR8 auf (nicht in) Wasser, traegt die Oberflaeche
+		net.minecraft.util.math.BlockPos below = net.minecraft.util.math.BlockPos.ofFloored(player.getX(), player.getY() - 0.05, player.getZ());
+		if (world.getFluidState(below).isIn(net.minecraft.registry.tag.FluidTags.WATER) && !player.isSubmergedInWater()) {
+			Vec3d v = player.getVelocity();
+			double surface = below.getY() + 1.0;
+			player.setVelocity(v.x * 1.05, Math.max(0.0, v.y) + (player.getY() < surface ? 0.12 : 0.0), v.z * 1.05);
+			player.velocityModified = true;
+			player.fallDistance = 0.0f;
+			if (now % 2 == 0) {
+				world.spawnParticles(ParticleTypes.SPLASH, player.getX(), surface + 0.05, player.getZ(), 8, 0.4, 0.05, 0.4, 0.2);
+				Fx.smoke(world, new Vec3d(player.getX(), surface + 0.1, player.getZ()), WIND, 0.6f, 1);
+			}
+		}
+		// Wandlauf: gegen eine Wand rennen fuehrt senkrecht hinauf
+		if (player.horizontalCollision) {
+			Vec3d v = player.getVelocity();
+			player.setVelocity(v.x, Math.max(v.y, 0.42), v.z);
+			player.velocityModified = true;
+			player.fallDistance = 0.0f;
+			if (now % 3 == 0) {
+				Fx.sparks(world, player.getPos().add(BuiltinAbilities.horizontalLook(player).multiply(0.4)).add(0, 0.3, 0), STREAK, 0.25f, 3);
+			}
+		}
+	}
+
 	/** Schallmauer beim Sprinten: was im Weg steht, wird umgerannt. */
 	private static void trample(ServerWorld world, ServerPlayerEntity player, long now) {
 		if (now % 4 != 0) {
@@ -330,8 +385,10 @@ final class Xlr8Abilities {
 			target.damage(world.getDamageSources().playerAttack(player), 4.0f);
 			target.takeKnockback(1.0, -look.x, -look.z);
 			target.addVelocity(0.0, 0.3, 0.0);
-			world.spawnParticles(ParticleTypes.CLOUD, target.getX(), target.getBodyY(0.5), target.getZ(), 6, 0.3, 0.3, 0.3, 0.05);
+			Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), CORE, 1.2f);
 		}
+		// mit Schallmauer rast XLR8 durch Waende
+		Destruction.carve(world, player, player.getPos().add(look.multiply(0.7)).add(0, 0.9, 0), look, 1.2, 0.9, AlienStrength.of(player) * 1.4f, 0.0);
 	}
 
 	/** @return false, wenn die Wirkung vorbei ist */
@@ -358,7 +415,9 @@ final class Xlr8Abilities {
 		for (LivingEntity target : effect.targets) {
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().playerAttack(player), effect.damage);
-			world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getBodyY(0.5), target.getZ(), 4, 0.3, 0.3, 0.3, 0.2);
+			Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5 + (effect.remaining % 3) * 0.15), target.getZ());
+			Fx.flash(world, body, CORE, 0.9f);
+			Fx.sparks(world, body, STREAK, 0.35f, 4);
 		}
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, SoundCategory.PLAYERS, 0.6f, 1.6f + effect.remaining * 0.03f);
 		addTempo(player, 1.0f);
@@ -371,11 +430,22 @@ final class Xlr8Abilities {
 		Vec3d around = effect.home.add(Math.cos(angle) * effect.radius * 0.6, 0, Math.sin(angle) * effect.radius * 0.6);
 		Vec3d to = around.subtract(player.getPos());
 		BuiltinAbilities.launch(player, to.x * 0.8, Math.min(player.getVelocity().y, 0.1), to.z * 0.8);
-		for (int i = 0; i < 6; i++) {
-			double a = angle + i * MathHelper.TAU / 6;
-			double h = (now % 20) / 20.0 * 3.0;
-			world.spawnParticles(ParticleTypes.CLOUD, effect.home.x + Math.cos(a) * effect.radius * 0.5, effect.home.y + h,
-					effect.home.z + Math.sin(a) * effect.radius * 0.5, 1, 0.0, 0.0, 0.0, 0.0);
+		// Trichter: Windringe, die nach oben breiter werden, Staub am Fuss
+		if (now % 2 == 0) {
+			for (int level = 0; level < 5; level++) {
+				double h = level * 1.1 + (now % 6) * 0.15;
+				Fx.shockwave(world, effect.home.add(0, h, 0), WIND, (float) (effect.radius * (0.35 + level * 0.14)), 6);
+			}
+			Fx.smoke(world, effect.home.add(Math.cos(angle) * effect.radius * 0.5, 0.4, Math.sin(angle) * effect.radius * 0.5), 0xB8A88A, 1.0f, 1);
+		}
+		// mitgerissene Brocken kreisen im Trichter nach oben
+		if (now % 3 == 0) {
+			net.minecraft.block.BlockState ground = world.getBlockState(net.minecraft.util.math.BlockPos.ofFloored(effect.home).down());
+			if (!ground.isAir()) {
+				Vec3d at = effect.home.add(Math.cos(angle + 1.5) * effect.radius * 0.4, 0.3, Math.sin(angle + 1.5) * effect.radius * 0.4);
+				Vec3d tangent = new Vec3d(-Math.sin(angle + 1.5), 0, Math.cos(angle + 1.5)).multiply(0.45);
+				Debris.chunk(world, ground, at, tangent.add(0, 0.75, 0), 0.4f);
+			}
 		}
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, Box.of(effect.home, effect.radius * 2, 6, effect.radius * 2),
 				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && e.getPos().squaredDistanceTo(effect.home) <= effect.radius * effect.radius)) {
@@ -406,12 +476,9 @@ final class Xlr8Abilities {
 			projectile.setVelocity(projectile.getVelocity().multiply(0.6));
 			projectile.velocityModified = true;
 		}
-		if (now % 5 == 0) {
-			for (int i = 0; i < 24; i++) {
-				double a = i * MathHelper.TAU / 24 + now * 0.05;
-				world.spawnParticles(ParticleTypes.END_ROD, player.getX() + Math.cos(a) * effect.radius, player.getY() + 0.5,
-						player.getZ() + Math.sin(a) * effect.radius, 1, 0.0, 0.0, 0.0, 0.0);
-			}
+		if (now % 10 == 0) {
+			Fx.shockwave(world, player.getPos().add(0, 0.6, 0), STREAK, (float) effect.radius, 12);
+			Fx.send(world, Fx.Kind.AURA, player.getPos(), Vec3d.ZERO, STREAK, 1.1f, 12, 0, player);
 		}
 		return true;
 	}
@@ -426,15 +493,14 @@ final class Xlr8Abilities {
 		LivingEntity target = effect.targets.remove(0);
 		Vec3d from = player.getPos().add(0, 1.0, 0);
 		Vec3d to = target.getPos().add(0.0, target.getHeight() * 0.5, 0.0);
-		for (int i = 1; i <= 8; i++) {
-			Vec3d p = from.lerp(to, i / 8.0);
-			world.spawnParticles(BLUE, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
-		}
+		Fx.beam(world, from, to, STREAK, 0.25f, 6);
+		Fx.beam(world, from, to, CORE, 0.08f, 6);
 		Vec3d beside = target.getPos().add(target.getPos().subtract(player.getPos()).multiply(1, 0, 1).normalize().multiply(-1.2));
 		player.teleport(world, beside.x, target.getY(), beside.z, player.getYaw(), player.getPitch());
 		target.timeUntilRegen = 0;
 		target.damage(world.getDamageSources().playerAttack(player), effect.damage);
-		world.spawnParticles(ParticleTypes.SWEEP_ATTACK, to.x, to.y, to.z, 1, 0.0, 0.0, 0.0, 0.0);
+		Fx.flash(world, to, CORE, 1.6f);
+		Fx.sparks(world, to, STREAK, 0.5f, 10);
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.8f, 1.5f);
 		return true;
 	}
@@ -448,7 +514,8 @@ final class Xlr8Abilities {
 						target.addVelocity(0.0, 1.0, 0.0);
 						target.velocityModified = true;
 					}
-					world.spawnParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0, 0, 0, 0);
+					Fx.shockwave(world, player.getPos().add(0, 1.0, 0), CORE, 4.0f, 10);
+					Fx.flash(world, player.getPos().add(0, 1.0, 0), CORE, 2.0f);
 				}
 			}
 			case CYCLONE -> {
@@ -462,7 +529,8 @@ final class Xlr8Abilities {
 			case BARRAGE -> {
 				if (effect.home != null) {
 					player.teleport(world, effect.home.x, effect.home.y, effect.home.z, player.getYaw(), player.getPitch());
-					world.spawnParticles(ParticleTypes.SONIC_BOOM, effect.home.x, effect.home.y + 1.0, effect.home.z, 1, 0, 0, 0, 0);
+					Fx.shockwave(world, effect.home.add(0, 0.2, 0), STREAK, 5.0f, 10);
+					Fx.flash(world, effect.home.add(0, 1.0, 0), CORE, 2.0f);
 				}
 			}
 			case SLOW_TIME -> {
