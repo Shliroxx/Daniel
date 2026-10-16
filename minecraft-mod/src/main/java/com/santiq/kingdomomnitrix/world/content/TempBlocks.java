@@ -171,4 +171,20 @@ public final class TempBlocks {
 		ENTRIES.clear();
 		INDEX.clear();
 	}
+
+	/** Oberste Luftstelle ueber festem Grund nahe der Hoehe (bis 2 hoch/runter), sonst null. */
+	public static BlockPos surface(ServerWorld world, BlockPos around) {
+		return surface(world, around, 2);
+	}
+
+	/** Wie {@link #surface(ServerWorld, BlockPos)}, sucht aber bis {@code depth} Bloecke nach unten (fuer fliegende Aliens). */
+	public static BlockPos surface(ServerWorld world, BlockPos around, int depth) {
+		for (int dy = 1; dy >= -depth; dy--) {
+			BlockPos pos = around.up(dy);
+			if (world.getBlockState(pos).isAir() && world.getBlockState(pos.down()).isSideSolidFullSquare(world, pos.down(), net.minecraft.util.math.Direction.UP)) {
+				return pos;
+			}
+		}
+		return null;
+	}
 }

@@ -313,7 +313,7 @@ final class DiamondheadAbilities {
 		ServerWorld world = ctx.world();
 		for (int i = 0; i < 16; i++) {
 			double angle = i * MathHelper.TAU / 16;
-			BlockPos ground = surface(world, BlockPos.ofFloored(player.getX() + Math.cos(angle) * 2.6, player.getY() + 0.5,
+			BlockPos ground = TempBlocks.surface(world, BlockPos.ofFloored(player.getX() + Math.cos(angle) * 2.6, player.getY() + 0.5,
 					player.getZ() + Math.sin(angle) * 2.6));
 			if (ground != null) {
 				TempBlocks.place(world, ground, PlanetBlocks.PETROSAPIEN_SPIKE.getDefaultState(), Math.min(ticks, 160), player, CRYSTAL, false);
@@ -509,7 +509,7 @@ final class DiamondheadAbilities {
 					continue;
 				}
 				Vec3d p = eruption.center.add(dir.multiply(front));
-				BlockPos ground = surface(world, BlockPos.ofFloored(p.x, eruption.center.y + 0.5, p.z));
+				BlockPos ground = TempBlocks.surface(world, BlockPos.ofFloored(p.x, eruption.center.y + 0.5, p.z));
 				if (ground != null && eruption.placed.add(ground)) {
 					boolean tall = (ground.getX() + ground.getZ()) % 3 == 0;
 					TempBlocks.place(world, ground, tall ? PlanetBlocks.PETROSAPIEN_CRYSTAL.getDefaultState()
@@ -543,17 +543,6 @@ final class DiamondheadAbilities {
 	}
 
 	// --- Kristallbloecke -------------------------------------------------------------------------
-
-	/** Oberste Luftstelle ueber festem Grund nahe der Hoehe (bis 2 hoch/runter), sonst null. */
-	private static BlockPos surface(ServerWorld world, BlockPos around) {
-		for (int dy = 1; dy >= -2; dy--) {
-			BlockPos pos = around.up(dy);
-			if (world.getBlockState(pos).isAir() && world.getBlockState(pos.down()).isSideSolidFullSquare(world, pos.down(), Direction.UP)) {
-				return pos;
-			}
-		}
-		return null;
-	}
 
 	private static void forgetState(UUID id) {
 		CHARGE.remove(id);

@@ -6,6 +6,8 @@ import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.util.Targeting;
+import com.santiq.kingdomomnitrix.vfx.EarthWave;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,8 +21,6 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -29,8 +29,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -58,6 +56,11 @@ import net.minecraft.util.math.Vec3d;
  */
 final class FourArmsAbilities {
 	static final float MAX = 100.0f;
+	private static final int RED = 0xFF3020;
+	private static final int IMPACT = 0xFFD890;
+	private static final int DUST = 0xA08A6A;
+	private static final int CLAP = 0xE8F0FF;
+	private static final int IRON = 0xC8D0DC;
 	static final float ANGRY = 50.0f;
 	private static final Identifier FOUR_ARMS = KingdomOmnitrix.id("four_arms");
 	/** Wut je Schadenspunkt: ausgeteilt / eingesteckt */
@@ -159,7 +162,9 @@ final class FourArmsAbilities {
 		}
 		if (before < MAX && after >= MAX) {
 			ServerWorld world = player.getServerWorld();
-			world.spawnParticles(ParticleTypes.ANGRY_VILLAGER, player.getX(), player.getBodyY(0.9), player.getZ(), 8, 0.6, 0.4, 0.6, 0.0);
+			Fx.aura(world, player, RED, 1.6f, 60);
+			Fx.flash(world, player.getPos().add(0, 1.2, 0), RED, 3.0f);
+			Fx.shockwave(world, player.getPos().add(0, 0.1, 0), RED, 5.0f, 12);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_RAVAGER_ROAR, SoundCategory.PLAYERS, 1.2f, 0.7f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.four_arms_rampage").formatted(Formatting.RED), true);
 		}
@@ -215,12 +220,16 @@ final class FourArmsAbilities {
 			target.takeKnockback(2.0, -dir.x, -dir.z);
 			target.addVelocity(0.0, 0.45, 0.0);
 			target.velocityModified = true;
-			world.spawnParticles(ParticleTypes.EXPLOSION, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
-			debris(world, target.getPos(), 1.5, 20);
+			Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), IMPACT, 2.6f);
+			Fx.shockwave(world, target.getPos().add(0, 0.1, 0), IMPACT, 3.5f, 8);
+			Fx.smoke(world, target.getPos(), DUST, 1.4f, 6);
+			EarthWave.ring(world, target.getPos(), 3.0, 4, 0.5f);
+			Fx.shake(world, target.getPos(), 0.35f, 8, 16);
 			world.playSound(null, target.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.2f, 0.8f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.four_arms_combo").formatted(Formatting.GOLD), true);
 		} else {
-			world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getBodyY(0.6), target.getZ(), 4 + (int) combo[0] * 2, 0.3, 0.3, 0.3, 0.2);
+			Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), IMPACT, 0.4f, 4 + (int) combo[0] * 3);
+			Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), IMPACT, 1.0f + combo[0] * 0.3f);
 		}
 	}
 
@@ -244,7 +253,7 @@ final class FourArmsAbilities {
 			target.damage(world.getDamageSources().playerAttack(player), damage * 2.5f);
 			target.setVelocity(0.0, -1.0, 0.0);
 			target.velocityModified = true;
-			debris(world, target.getPos(), 2.5, 40);
+			slamFx(world, target.getPos(), 4.0, 5, 0.9f, 0.0, Vec3d.ZERO);
 			world.playSound(null, target.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.4f, 0.6f);
 			return true;
 		}
@@ -265,7 +274,7 @@ final class FourArmsAbilities {
 		double radius = ctx.param("radius", 5.0) * (power.rampage() ? 2.0 : 1.0);
 		WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, (float) ctx.param("damage", 9.0) * power.factor(),
 				ctx.param("launch", 0.5) * power.factor(), ctx.world().getTime(), power.rampage() ? 12 : 8, 0.0, Vec3d.ZERO));
-		ctx.world().spawnParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 3, 0.5, 0.1, 0.5, 0.0);
+		slamFx(ctx.world(), player.getPos(), radius, power.rampage() ? 12 : 8, power.rampage() ? 1.4f : 1.0f, 0.0, Vec3d.ZERO);
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_SLAM, 1.3f, power.rampage() ? 0.6f : 0.9f);
 		return true;
 	}
@@ -279,8 +288,9 @@ final class FourArmsAbilities {
 				look.z * ctx.param("forward", 1.2));
 		LEAPS.put(player.getUuid(), new Leap(player.getY(), (float) ctx.param("damage", 8.0) * power.factor(), ctx.param("radius", 4.5),
 				ctx.world().getTime() + 100, power.rampage()));
-		ctx.world().spawnParticles(ParticleTypes.POOF, player.getX(), player.getY(), player.getZ(), 15, 0.4, 0.05, 0.4, 0.02);
-		debris(ctx.world(), player.getPos(), 1.0, 12);
+		Fx.shockwave(ctx.world(), player.getPos().add(0, 0.1, 0), DUST, 3.0f, 8);
+		Fx.smoke(ctx.world(), player.getPos(), DUST, 1.2f, 6);
+		EarthWave.ring(ctx.world(), player.getPos(), 2.5, 3, 0.4f);
 		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_SLAM, 1.0f, 1.2f);
 		return true;
 	}
@@ -308,12 +318,19 @@ final class FourArmsAbilities {
 				p -> p.getOwner() != player)) {
 			Vec3d flat = projectile.getPos().subtract(player.getPos()).multiply(1, 0, 1);
 			if (flat.lengthSquared() > 1.0E-4 && flat.normalize().dotProduct(look) >= cone) {
-				world.spawnParticles(ParticleTypes.CRIT, projectile.getX(), projectile.getY(), projectile.getZ(), 6, 0.1, 0.1, 0.1, 0.2);
+				Fx.sparks(world, projectile.getPos(), IMPACT, 0.3f, 8);
 				projectile.discard();
 			}
 		}
 		Vec3d front = player.getEyePos().add(look.multiply(1.5));
-		world.spawnParticles(ParticleTypes.SONIC_BOOM, front.x, front.y - 0.4, front.z, 1, 0.0, 0.0, 0.0, 0.0);
+		// vier Haende klatschen: Druckkegel aus Luftringen, der Boden davor bricht auf
+		for (int i = 0; i < 4; i++) {
+			Vec3d at = front.add(look.multiply(i * radius / 4.0)).add(0, -0.4, 0);
+			Fx.send(world, Fx.Kind.SHOCKWAVE, at, look, CLAP, (float) (1.2 + i * radius / 5.0), 8 + i * 2, 1, null);
+		}
+		Fx.flash(world, front, CLAP, 2.4f);
+		EarthWave.line(world, player.getPos(), look, radius, 6, 0.6f, cone);
+		Fx.shake(world, player.getPos(), 0.4f, 8, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.4f, 1.4f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.6f, 1.6f);
 		return true;
@@ -327,8 +344,9 @@ final class FourArmsAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, 1, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, ticks, 1, false, false));
 		knockbackImmunity(player, true);
-		ctx.world().spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.IRON_BLOCK.getDefaultState()),
-				player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.1);
+		Fx.aura(ctx.world(), player, IRON, 1.4f, ticks);
+		Fx.flash(ctx.world(), player.getPos().add(0, 1.2, 0), IRON, 2.6f);
+		Fx.sparks(ctx.world(), player.getPos().add(0, 1.2, 0), IRON, 0.5f, 24);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ANVIL_LAND, 0.9f, 0.8f);
 		return true;
 	}
@@ -360,8 +378,8 @@ final class FourArmsAbilities {
 				addRage(player, -RAGE_DECAY);
 			}
 			if (rage(player) >= ANGRY && now % 4 == 0) {
-				world.spawnParticles(rage(player) >= MAX ? ParticleTypes.ANGRY_VILLAGER : ParticleTypes.SMOKE,
-						player.getX(), player.getBodyY(0.8), player.getZ(), 1, 0.4, 0.3, 0.4, 0.01);
+				Fx.send(world, Fx.Kind.FLAMES, new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), new Vec3d(0, 0.08, 0),
+						rage(player) >= MAX ? RED : 0xB03018, 0.5f, 10, 2, null);
 			}
 			Long skin = IRON_SKIN.get(player.getUuid());
 			if (skin != null && now >= skin) {
@@ -394,8 +412,9 @@ final class FourArmsAbilities {
 			// Fallhoehe ueber dem Absprung verstaerkt den Einschlag
 			double height = Math.max(0.0, leap.startY() + 6.0 - player.getY());
 			float boost = (float) Math.min(2.0, 1.0 + height / 16.0);
-			WAVES.add(new Wave(player.getUuid(), player.getPos(), leap.radius() * (leap.rampage() ? 1.6 : 1.0) * Math.min(1.5, boost),
-					leap.damage() * boost, 0.5, now, 6, 0.0, Vec3d.ZERO));
+			double radius = leap.radius() * (leap.rampage() ? 1.6 : 1.0) * Math.min(1.5, boost);
+			WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, leap.damage() * boost, 0.5, now, 6, 0.0, Vec3d.ZERO));
+			slamFx(world, player.getPos(), radius, 6, boost, 0.0, Vec3d.ZERO);
 			world.playSound(null, player.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.4f, 0.7f);
 		}
 	}
@@ -415,8 +434,8 @@ final class FourArmsAbilities {
 			}
 			double radius = quake.radius() * (0.5 + 0.5 * (index + 1) / quake.waves());
 			WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, quake.damage(), quake.launch(), now, 10, 0.0, Vec3d.ZERO));
+			slamFx(world, player.getPos(), radius, 10, 0.8f + index * 0.15f, 0.0, Vec3d.ZERO);
 			world.playSound(null, player.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.5f, 0.5f + index * 0.08f);
-			world.spawnParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 2, 0.6, 0.1, 0.6, 0.0);
 		}
 	}
 
@@ -432,19 +451,6 @@ final class FourArmsAbilities {
 			ServerWorld world = player.getServerWorld();
 			long age = world.getTime() - wave.start;
 			double front = wave.radius * Math.min(1.0, (age + 1) / (double) wave.ticks);
-			// Ring aus Erdbrocken an der Front
-			BlockState ground = world.getBlockState(net.minecraft.util.math.BlockPos.ofFloored(wave.center).down());
-			BlockStateParticleEffect dirt = new BlockStateParticleEffect(ParticleTypes.BLOCK, ground.isAir() ? Blocks.DIRT.getDefaultState() : ground);
-			int points = Math.max(8, (int) (front * 6));
-			for (int i = 0; i < points; i++) {
-				double angle = i * MathHelper.TAU / points;
-				Vec3d dir = new Vec3d(Math.cos(angle), 0, Math.sin(angle));
-				if (wave.cone > 0.0 && dir.dotProduct(wave.facing) < wave.cone) {
-					continue;
-				}
-				Vec3d p = wave.center.add(dir.multiply(front));
-				world.spawnParticles(dirt, p.x, p.y + 0.1, p.z, 2, 0.1, 0.05, 0.1, 0.15);
-			}
 			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(wave.center, front * 2 + 1, 5, front * 2 + 1),
 					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && !wave.hit.contains(e.getUuid()))) {
 				Vec3d flat = target.getPos().subtract(wave.center).multiply(1, 0, 1);
@@ -498,8 +504,7 @@ final class FourArmsAbilities {
 					near.addVelocity(0.0, 0.35, 0.0);
 					near.velocityModified = true;
 				}
-				debris(world, flying.getPos(), 2.0, 30);
-				world.spawnParticles(ParticleTypes.EXPLOSION, flying.getX(), flying.getY(), flying.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+				slamFx(world, flying.getPos(), 3.5, 4, 0.8f, 0.0, Vec3d.ZERO);
 				world.playSound(null, flying.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.2f, 1.0f);
 			}
 		}
@@ -507,10 +512,19 @@ final class FourArmsAbilities {
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
-	private static void debris(ServerWorld world, Vec3d at, double spread, int count) {
-		BlockState ground = world.getBlockState(net.minecraft.util.math.BlockPos.ofFloored(at).down());
-		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground.isAir() ? Blocks.DIRT.getDefaultState() : ground),
-				at.x, at.y + 0.1, at.z, count, spread * 0.4, 0.1, spread * 0.4, 0.2);
+	/** Bodenschlag-Optik: echte Bodenbloecke springen ringfoermig hoch, Staubring, Druckwelle, Kamerawackeln. */
+	private static void slamFx(ServerWorld world, Vec3d at, double radius, int ticks, float strength, double cone, Vec3d facing) {
+		Vec3d ground = at.add(0, 0.1, 0);
+		if (cone > 0.0) {
+			EarthWave.line(world, at, facing, radius, ticks, 0.7f * strength, cone);
+		} else {
+			EarthWave.ring(world, at, radius, ticks, 0.7f * strength);
+		}
+		Fx.shockwave(world, ground, DUST, (float) radius * 1.1f, ticks + 6);
+		Fx.shockwave(world, ground, IMPACT, (float) radius * 0.6f, ticks);
+		Fx.flash(world, ground.add(0, 0.4, 0), IMPACT, 2.0f * strength);
+		Fx.smoke(world, ground, DUST, (float) (1.0 + radius * 0.15), (int) (6 + radius));
+		Fx.shake(world, at, Math.min(1.0f, 0.35f * strength), 10, (int) (radius * 3 + 10));
 	}
 
 	private static void knockbackImmunity(ServerPlayerEntity player, boolean on) {

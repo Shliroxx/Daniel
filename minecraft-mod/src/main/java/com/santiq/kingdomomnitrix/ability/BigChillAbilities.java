@@ -1,6 +1,9 @@
 package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.vfx.Fx;
+import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
+import com.santiq.kingdomomnitrix.world.content.TempBlocks;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
@@ -15,7 +18,6 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalEntityTypeTags;
 import net.minecraft.block.Block;
@@ -30,9 +32,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.Items;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.MinecraftServer;
@@ -44,11 +43,9 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.joml.Vector3f;
 
 /**
  * Big Chill (Necrofriggian). Eigenes System „Unterkuehlung“ — ohne Aura, die Kaelte sieht man an den Gegnern:
@@ -66,6 +63,9 @@ import org.joml.Vector3f;
  * </ul>
  */
 final class BigChillAbilities {
+	private static final int ICE_COLOR = 0x8AD0FF;
+	private static final int DEEP_COLOR = 0x3C6CD8;
+	private static final int FIRE_ICE = 0x6AFFC8;
 	static final float MAX_CHILL = 100.0f;
 	static final int FROZEN_TICKS = 60;
 	static final float SHATTER_HIT = 6.0f;
@@ -76,17 +76,11 @@ final class BigChillAbilities {
 	private static final int THAW_DELAY = 60;
 	private static final float THAW_PER_SECOND = 8.0f;
 	private static final int BOSS_FROZEN_TICKS = 15;
-	/** Eisbloecke ohne Nachbar-Updates und ohne Drops entfernen (kein Eis aus Faehigkeiten) */
-	private static final int QUIET = Block.NOTIFY_LISTENERS | Block.FORCE_STATE | Block.SKIP_DROPS;
-	private static final DustParticleEffect FROST = new DustParticleEffect(new Vector3f(0.7f, 0.9f, 1.0f), 1.1f);
-	private static final DustParticleEffect DEEP = new DustParticleEffect(new Vector3f(0.29f, 0.48f, 0.82f), 1.6f);
 
 	/** Unterkuehlung je Ziel */
 	private static final Map<UUID, Chill> CHILL = new HashMap<>();
 	/** erstarrte Ziele */
 	private static final Map<UUID, Frozen> FROZEN = new HashMap<>();
-	/** gesetzte Eisbloecke */
-	private static final List<IceBlock> ICE = new ArrayList<>();
 	/** Umhang bis */
 	private static final Map<UUID, Long> CLOAK = new HashMap<>();
 	/** Phasenflug: Ende und schon durchflogene Gegner */
@@ -104,9 +98,6 @@ final class BigChillAbilities {
 
 	/** {@code aiWasDisabled}: Ausgangszustand der KI, damit genau der wiederhergestellt wird. */
 	private record Frozen(RegistryKey<World> world, long until, boolean aiWasDisabled, UUID source) {
-	}
-
-	private record IceBlock(RegistryKey<World> world, BlockPos pos, long until) {
 	}
 
 	private record PhaseDash(long until, Vec3d direction, Set<UUID> touched) {
@@ -128,21 +119,6 @@ final class BigChillAbilities {
 		ServerTickEvents.END_SERVER_TICK.register(BigChillAbilities::tick);
 		ServerLifecycleEvents.SERVER_STOPPING.register(BigChillAbilities::shutdown);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forgetState(handler.getPlayer().getUuid()));
-		// Eis aus Faehigkeiten: abbauen zerbricht es ohne Drop
-		PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
-			if (!(world instanceof ServerWorld server) || ICE.isEmpty()) {
-				return true;
-			}
-			for (Iterator<IceBlock> it = ICE.iterator(); it.hasNext(); ) {
-				IceBlock ice = it.next();
-				if (ice.pos().equals(pos) && ice.world() == server.getRegistryKey()) {
-					melt(server, ice);
-					it.remove();
-					return false;
-				}
-			}
-			return true;
-		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(BigChillAbilities::allowDamage);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(BigChillAbilities::afterDamage);
 		// Chunk entlaedt waehrend der Starre: KI sofort zurueck, sonst landet „NoAI“ im Spielstand
@@ -187,9 +163,9 @@ final class BigChillAbilities {
 		// Ultimate: Feuereis — die Kaelte brennt
 		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
 			target.setOnFireFor(3.0f);
-			world.spawnParticles(ParticleTypes.SOUL_FIRE_FLAME, target.getX(), target.getBodyY(0.5), target.getZ(), 4, 0.3, 0.4, 0.3, 0.02);
+			Fx.flames(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), new Vec3d(0, 0.06, 0), FIRE_ICE, 0.4f, 3);
 		}
-		world.spawnParticles(FROST, target.getX(), target.getBodyY(0.6), target.getZ(), 3 + (int) (c.value / 15.0f), 0.3, 0.4, 0.3, 0.0);
+		Fx.shards(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), ICE_COLOR, 0.2f, 2 + (int) (c.value / 20.0f));
 		if (c.value >= MAX_CHILL) {
 			freeze(world, player, target);
 		}
@@ -219,8 +195,11 @@ final class BigChillAbilities {
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 9, false, false));
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, ticks, 4, false, false));
 		target.setFrozenTicks(target.getMinFreezeDamageTicks() - 1);
-		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.ICE.getDefaultState()), target.getX(), target.getBodyY(0.5),
-				target.getZ(), 30, target.getWidth() * 0.4, target.getHeight() * 0.4, target.getWidth() * 0.4, 0.1);
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());
+		Fx.flash(world, body, ICE_COLOR, 1.5f + target.getWidth());
+		Fx.shards(world, body, ICE_COLOR, 0.35f, 16);
+		// Eisblock-Kruste: Spitzen wachsen am Boden um das Ziel
+		iceRing(world, player, target.getBlockPos(), Math.max(1, (int) Math.ceil(target.getWidth() * 0.5 + 0.3)), ticks + 20, false);
 		world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_GLASS_PLACE, SoundCategory.PLAYERS, 1.0f, 0.6f);
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.PLAYERS, 1.0f, 0.8f);
 	}
@@ -256,9 +235,13 @@ final class BigChillAbilities {
 				e -> e != player && e != target && e.isAlive() && PartyRules.canHarm(player, e))) {
 			cool(player, near, 30.0f);
 		}
-		world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.PACKED_ICE.getDefaultState()), target.getX(),
-				target.getBodyY(0.5), target.getZ(), 60, target.getWidth() * 0.5, target.getHeight() * 0.4, target.getWidth() * 0.5, 0.3);
-		world.spawnParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getBodyY(0.5), target.getZ(), 30, 0.6, 0.6, 0.6, 0.2);
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());
+		TempBlocks.shatterAround(world, body, 2.5);
+		Fx.flash(world, body, 0xFFFFFF, 3.0f);
+		Fx.shockwave(world, target.getPos().add(0, 0.2, 0), ICE_COLOR, 4.0f, 10);
+		Fx.shards(world, body, ICE_COLOR, 0.7f, 40);
+		Fx.smoke(world, body, 0xDDEEFF, 1.4f, 6);
+		Fx.shake(world, body, 0.3f, 6, 14);
 		world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 1.4f, 0.7f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.big_chill_shatter").formatted(Formatting.AQUA), true);
 	}
@@ -327,12 +310,23 @@ final class BigChillAbilities {
 			target.damage(world.getDamageSources().freeze(), damage);
 			cool(player, target, chill);
 		}
-		for (int i = 1; i <= 12; i++) {
+		Vec3d mouth = eye.add(look.multiply(0.6)).add(0, -0.25, 0);
+		// Frostkegel: kalte Flammen + Splitter entlang des Atems, am Ende eine Frostwolke
+		Fx.send(world, Fx.Kind.FLAMES, mouth, look.multiply(0.9), ICE_COLOR, 0.18f, 0, 40, null);
+		Fx.send(world, Fx.Kind.FLAMES, mouth, look.multiply(0.7), 0xFFFFFF, 0.25f, 0, 16, null);
+		Fx.smoke(world, eye.add(look.multiply(range * 0.8)), 0xE6F4FF, 1.6f, 5);
+		for (int i = 2; i <= 12; i++) {
 			double d = range * i / 12.0;
 			Vec3d p = eye.add(look.multiply(d));
-			world.spawnParticles(ParticleTypes.SNOWFLAKE, p.x, p.y - 0.2, p.z, 3, d * 0.08, d * 0.08, d * 0.08, 0.02);
-			world.spawnParticles(FROST, p.x, p.y - 0.2, p.z, 2, d * 0.1, d * 0.1, d * 0.1, 0.0);
 			freezeWater(world, BlockPos.ofFloored(p.x, p.y - 1.0, p.z), 1);
+			// der Boden unter dem Atem gefriert: Eisspitzen wachsen aus dem Boden (nur in Luft, verschwinden wieder)
+			if (i % 2 == 0) {
+				BlockPos ground = TempBlocks.surface(world, BlockPos.ofFloored(p.x, player.getY(), p.z), 8);
+				if (ground != null && ground.getSquaredDistance(player.getBlockPos()) > 4) {
+					TempBlocks.place(world, ground, PlanetBlocks.NECROFRIGGIAN_SPIKE.getDefaultState(), 80, player, ICE_COLOR, false);
+					Fx.shards(world, Vec3d.ofCenter(ground), ICE_COLOR, 0.2f, 3);
+				}
+			}
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_SHOOT, 0.9f, 0.6f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_POWDER_SNOW_STEP, 1.0f, 0.6f);
@@ -390,7 +384,7 @@ final class BigChillAbilities {
 				for (int dz = -r; dz <= r; dz++) {
 					boolean shell = Math.abs(dx) == r || Math.abs(dz) == r || dy == h;
 					if (shell) {
-						placeIce(world, feet.add(dx, dy, dz), ticks);
+						TempBlocks.place(world, feet.add(dx, dy, dz), PlanetBlocks.NECROFRIGGIAN_ICE.getDefaultState(), ticks, player, ICE_COLOR, false);
 					}
 				}
 			}
@@ -402,6 +396,12 @@ final class BigChillAbilities {
 		if (frozen != null) {
 			FROZEN.put(target.getUuid(), new Frozen(frozen.world(), Math.max(frozen.until(), world.getTime() + ticks), frozen.aiWasDisabled(), frozen.source()));
 		}
+		iceRing(world, player, feet, r + 1, ticks, false);
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());
+		Fx.beam(world, player.getEyePos().add(0, -0.3, 0), body, ICE_COLOR, 0.5f, 6);
+		Fx.flash(world, body, ICE_COLOR, 3.0f);
+		Fx.shockwave(world, target.getPos().add(0, 0.2, 0), ICE_COLOR, r + 3.0f, 10);
+		Fx.shards(world, body, ICE_COLOR, 0.4f, 24);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_GLASS_PLACE, 1.4f, 0.5f);
 		return true;
 	}
@@ -413,7 +413,8 @@ final class BigChillAbilities {
 		CLOAK.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, ticks, 0, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, 0, false, false));
-		ctx.world().spawnParticles(DEEP, player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.0);
+		Fx.smoke(ctx.world(), player.getPos().add(0, 1.0, 0), DEEP_COLOR, 1.4f, 10);
+		Fx.flash(ctx.world(), player.getPos().add(0, 1.0, 0), DEEP_COLOR, 2.4f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 0.5f);
 		return true;
 	}
@@ -436,15 +437,15 @@ final class BigChillAbilities {
 		}
 		freezeWater(world, player.getBlockPos().down(), (int) Math.min(radius, 10));
 		ZERO.put(player.getUuid(), new ZeroField(world.getRegistryKey(), world.getTime() + (long) (ctx.param("shatter_seconds", 2.0) * 20), targets));
-		for (int ring = 1; ring <= 4; ring++) {
-			double rr = radius * ring / 4.0;
-			for (int i = 0; i < 36; i++) {
-				double a = i * MathHelper.TAU / 36;
-				world.spawnParticles(ParticleTypes.SNOWFLAKE, player.getX() + Math.cos(a) * rr, player.getY() + 0.3, player.getZ() + Math.sin(a) * rr,
-						1, 0.1, 0.2, 0.1, 0.01);
-			}
-		}
-		world.spawnParticles(DEEP, player.getX(), player.getBodyY(0.5), player.getZ(), 80, radius * 0.3, 1.0, radius * 0.3, 0.0);
+		// Eisfeld: Ringe aus Eisspitzen und Eisbrocken wachsen nach aussen
+		ZERO_FIELDS.add(new IceField(world, player, player.getBlockPos(), radius, 0));
+		Vec3d center = player.getPos().add(0, 0.2, 0);
+		Fx.flash(world, center.add(0, 1.0, 0), 0xFFFFFF, 6.0f);
+		Fx.shockwave(world, center, ICE_COLOR, (float) radius, 16);
+		Fx.shockwave(world, center, DEEP_COLOR, (float) radius * 0.6f, 12);
+		Fx.shards(world, center.add(0, 1.0, 0), ICE_COLOR, 0.9f, 60);
+		Fx.smoke(world, center, 0xE6F4FF, 2.4f, 14);
+		Fx.shake(world, center, 0.7f, 16, (int) radius * 3);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, 1.5f, 0.5f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_GLASS_BREAK, 1.2f, 0.4f);
 		return true;
@@ -474,8 +475,8 @@ final class BigChillAbilities {
 		if (server.getTicks() % 20 == 0 && !CHILL.isEmpty()) {
 			tickThaw(server);
 		}
-		if (!ICE.isEmpty()) {
-			tickIce(server);
+		if (!ZERO_FIELDS.isEmpty()) {
+			tickFields();
 		}
 	}
 
@@ -491,7 +492,9 @@ final class BigChillAbilities {
 					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
 				cool(player, near, 35.0f);
 			}
-			world.spawnParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getBodyY(0.5), player.getZ(), 50, 1.5, 0.8, 1.5, 0.05);
+			Fx.shockwave(world, player.getPos().add(0, 0.2, 0), ICE_COLOR, 5.0f, 10);
+			Fx.shards(world, player.getPos().add(0, 1.0, 0), ICE_COLOR, 0.6f, 30);
+			iceRing(world, player, player.getBlockPos(), 3, 60, false);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_HURT_FREEZE, SoundCategory.PLAYERS, 1.0f, 0.6f);
 			return;
 		}
@@ -501,8 +504,8 @@ final class BigChillAbilities {
 				cool(player, near, 8.0f);
 			}
 		}
-		if (now % 3 == 0) {
-			world.spawnParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.4, 0.6, 0.4, 0.0);
+		if (now % 6 == 0) {
+			Fx.smoke(world, player.getPos().add(0, 0.3, 0), 0xE6F4FF, 0.7f, 1);
 		}
 	}
 
@@ -515,7 +518,13 @@ final class BigChillAbilities {
 			DASHES.remove(player.getUuid());
 			return;
 		}
-		world.spawnParticles(DEEP, player.getX(), player.getBodyY(0.5), player.getZ(), 4, 0.3, 0.4, 0.3, 0.0);
+		Fx.smoke(world, player.getPos().add(0, 1.0, 0), DEEP_COLOR, 0.9f, 2);
+		Fx.shards(world, player.getPos().add(0, 1.0, 0), ICE_COLOR, 0.15f, 2);
+		// Phasenflug laesst eine Eisspur am Boden zurueck
+		BlockPos trail = TempBlocks.surface(world, player.getBlockPos(), 4);
+		if (trail != null) {
+			TempBlocks.place(world, trail, PlanetBlocks.NECROFRIGGIAN_SPIKE.getDefaultState(), 60, player, ICE_COLOR, false);
+		}
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(1.0),
 				e -> e != player && e.isAlive() && !dash.touched().contains(e.getUuid()) && PartyRules.canHarm(player, e))) {
 			dash.touched().add(target.getUuid());
@@ -550,7 +559,7 @@ final class BigChillAbilities {
 			if (world.getTime() >= frozen.until()) {
 				it.remove();
 				thaw(world, target, frozen, false);
-				world.spawnParticles(ParticleTypes.DRIPPING_WATER, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.4, 0.3, 0.0);
+				Fx.shards(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), ICE_COLOR, 0.2f, 8);
 				continue;
 			}
 			// erstarrt: keine Bewegung (Fallen bleibt erlaubt), Frostkoerper
@@ -559,12 +568,7 @@ final class BigChillAbilities {
 			target.setFrozenTicks(target.getMinFreezeDamageTicks() - 1);
 			if (world.getTime() % 4 == 0) {
 				// Eiskruste: Frost und Eiskristalle ueber den ganzen Koerper
-				world.spawnParticles(FROST, target.getX(), target.getBodyY(0.5), target.getZ(), 6, target.getWidth() * 0.45, target.getHeight() * 0.45,
-						target.getWidth() * 0.45, 0.0);
-				world.spawnParticles(ParticleTypes.SNOWFLAKE, target.getX(), target.getBodyY(0.5), target.getZ(), 2, target.getWidth() * 0.4,
-						target.getHeight() * 0.4, target.getWidth() * 0.4, 0.0);
-				world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.ICE.getDefaultState()), target.getX(), target.getBodyY(0.5),
-						target.getZ(), 2, target.getWidth() * 0.4, target.getHeight() * 0.4, target.getWidth() * 0.4, 0.0);
+				Fx.send(world, Fx.Kind.AURA, target.getPos(), Vec3d.ZERO, ICE_COLOR, target.getWidth() + 0.4f, 5, 0, target);
 			}
 		}
 	}
@@ -587,45 +591,76 @@ final class BigChillAbilities {
 		}
 	}
 
-	private static void tickIce(MinecraftServer server) {
-		for (Iterator<IceBlock> it = ICE.iterator(); it.hasNext(); ) {
-			IceBlock ice = it.next();
-			ServerWorld world = server.getWorld(ice.world());
-			if (world == null) {
-				it.remove();
-				continue;
-			}
-			if (world.getTime() >= ice.until() && melt(world, ice)) {
-				it.remove();
-			}
-		}
-	}
-
 	// --- Eis -------------------------------------------------------------------------------------
 
-	private static void placeIce(ServerWorld world, BlockPos pos, int ticks) {
-		if (!world.isChunkLoaded(pos.getX() >> 4, pos.getZ() >> 4) || !world.getBlockState(pos).isAir()
-				|| !world.getEntitiesByClass(ServerPlayerEntity.class, new Box(pos), e -> true).isEmpty()) {
-			return;
+	/** Absoluter Nullpunkt: das Eisfeld waechst Ring fuer Ring nach aussen. */
+	private static final List<IceField> ZERO_FIELDS = new ArrayList<>();
+
+	private static final class IceField {
+		final ServerWorld world;
+		final ServerPlayerEntity owner;
+		final BlockPos center;
+		final double radius;
+		int age;
+
+		IceField(ServerWorld world, ServerPlayerEntity owner, BlockPos center, double radius, int age) {
+			this.world = world;
+			this.owner = owner;
+			this.center = center;
+			this.radius = radius;
+			this.age = age;
 		}
-		world.setBlockState(pos, Blocks.ICE.getDefaultState());
-		ICE.add(new IceBlock(world.getRegistryKey(), pos, world.getTime() + ticks));
 	}
 
-	/** @return true, wenn erledigt (geschmolzen oder inzwischen anders bebaut); false = Chunk nicht geladen */
-	private static boolean melt(ServerWorld world, IceBlock ice) {
-		if (!world.isChunkLoaded(ice.pos().getX() >> 4, ice.pos().getZ() >> 4)) {
-			return false;
+	private static void tickFields() {
+		for (Iterator<IceField> it = ZERO_FIELDS.iterator(); it.hasNext(); ) {
+			IceField field = it.next();
+			field.age++;
+			double outer = Math.min(field.radius, field.age * 1.2);
+			double inner = outer - 1.2;
+			int r = (int) Math.ceil(outer);
+			for (int dx = -r; dx <= r; dx++) {
+				for (int dz = -r; dz <= r; dz++) {
+					double d = Math.sqrt(dx * dx + dz * dz);
+					if (d < 2.0 || d > outer || d <= inner || field.world.random.nextInt(3) == 0) {
+						continue;
+					}
+					BlockPos ground = TempBlocks.surface(field.world, field.center.add(dx, 0, dz), 8);
+					if (ground == null) {
+						continue;
+					}
+					boolean tall = field.world.random.nextInt(5) == 0;
+					int life = 100 + field.world.random.nextInt(40);
+					TempBlocks.place(field.world, ground, (tall ? PlanetBlocks.NECROFRIGGIAN_ICE : PlanetBlocks.NECROFRIGGIAN_SPIKE).getDefaultState(),
+							life, field.owner, ICE_COLOR, false);
+					if (tall) {
+						TempBlocks.place(field.world, ground.up(), PlanetBlocks.NECROFRIGGIAN_SPIKE.getDefaultState(), life, field.owner, ICE_COLOR, false);
+					}
+				}
+			}
+			if (outer >= field.radius) {
+				it.remove();
+			}
 		}
-		BlockState state = world.getBlockState(ice.pos());
-		if (state.isOf(Blocks.ICE)) {
-			// Eis wird zu Luft, nicht zu Wasser (kein Fluten durch Faehigkeiten)
-			world.setBlockState(ice.pos(), Blocks.AIR.getDefaultState(), QUIET);
-			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.ICE.getDefaultState()), ice.pos().getX() + 0.5,
-					ice.pos().getY() + 0.5, ice.pos().getZ() + 0.5, 6, 0.3, 0.3, 0.3, 0.1);
-		}
-		return true;
 	}
+
+	/** Ring aus Eisspitzen (oder Eisbloecken) am Boden um eine Stelle; nur in Luft, verschwindet wieder. */
+	private static void iceRing(ServerWorld world, ServerPlayerEntity owner, BlockPos center, int radius, int ticks, boolean blocks) {
+		for (int dx = -radius; dx <= radius; dx++) {
+			for (int dz = -radius; dz <= radius; dz++) {
+				double d = Math.sqrt(dx * dx + dz * dz);
+				if (d < radius - 0.5 || d > radius + 0.5) {
+					continue;
+				}
+				BlockPos ground = TempBlocks.surface(world, center.add(dx, 0, dz), 6);
+				if (ground != null) {
+					TempBlocks.place(world, ground, (blocks ? PlanetBlocks.NECROFRIGGIAN_ICE : PlanetBlocks.NECROFRIGGIAN_SPIKE).getDefaultState(),
+							ticks, owner, ICE_COLOR, false);
+				}
+			}
+		}
+	}
+
 
 	/** Wasseroberflaechen im Radius zu Frosteis (vanilla: schmilzt von selbst wieder). */
 	private static void freezeWater(ServerWorld world, BlockPos center, int radius) {
@@ -645,13 +680,6 @@ final class BigChillAbilities {
 
 	/** Server faehrt herunter: Eis weg, erstarrte Mobs bekommen ihre KI zurueck — nichts bleibt im Spielstand haengen. */
 	private static void shutdown(MinecraftServer server) {
-		for (IceBlock ice : ICE) {
-			ServerWorld world = server.getWorld(ice.world());
-			if (world != null && world.getBlockState(ice.pos()).isOf(Blocks.ICE)) {
-				world.setBlockState(ice.pos(), Blocks.AIR.getDefaultState(), QUIET);
-			}
-		}
-		ICE.clear();
 		for (Map.Entry<UUID, Frozen> entry : FROZEN.entrySet()) {
 			ServerWorld world = server.getWorld(entry.getValue().world());
 			if (world != null && world.getEntity(entry.getKey()) instanceof MobEntity mob) {
@@ -659,10 +687,12 @@ final class BigChillAbilities {
 			}
 		}
 		FROZEN.clear();
+		ZERO_FIELDS.clear();
 		CHILL.clear();
 	}
 
 	private static void forgetState(UUID id) {
+		ZERO_FIELDS.removeIf(field -> field.owner.getUuid().equals(id));
 		CLOAK.remove(id);
 		DASHES.remove(id);
 		ZERO.remove(id);
