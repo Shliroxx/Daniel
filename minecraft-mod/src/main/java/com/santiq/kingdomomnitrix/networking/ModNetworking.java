@@ -248,7 +248,11 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(AbilityRequestPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();
 			if (canAct(player) && payload.slot() >= 0 && payload.slot() < AlienDefinition.MAX_ABILITIES) {
-				report(player, TransformationManager.useAbility(player, payload.slot()));
+				if (payload.release()) {
+					com.santiq.kingdomomnitrix.ability.AbilityCharge.release(player, payload.slot());
+				} else {
+					report(player, TransformationManager.useAbility(player, payload.slot()));
+				}
 			}
 		});
 	}

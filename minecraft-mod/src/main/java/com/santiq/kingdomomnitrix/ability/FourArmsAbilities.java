@@ -6,6 +6,9 @@ import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.util.Targeting;
+import com.santiq.kingdomomnitrix.power.AlienStrength;
+import com.santiq.kingdomomnitrix.power.Debris;
+import com.santiq.kingdomomnitrix.power.Destruction;
 import com.santiq.kingdomomnitrix.vfx.EarthWave;
 import com.santiq.kingdomomnitrix.vfx.Fx;
 import java.util.ArrayList;
@@ -21,6 +24,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -123,7 +127,7 @@ final class FourArmsAbilities {
 
 	static void register() {
 		AbilityRegistry.register(KingdomOmnitrix.id("throw"), FourArmsAbilities::grabThrow);
-		AbilityRegistry.register(KingdomOmnitrix.id("ground_slam"), FourArmsAbilities::groundSlam);
+		AbilityRegistry.register(KingdomOmnitrix.id("ground_slam"), new GroundSlam());
 		AbilityRegistry.register(KingdomOmnitrix.id("titan_leap"), FourArmsAbilities::titanLeap);
 		AbilityRegistry.register(KingdomOmnitrix.id("thunder_clap"), FourArmsAbilities::thunderClap);
 		AbilityRegistry.register(KingdomOmnitrix.id("iron_skin"), FourArmsAbilities::ironSkin);
@@ -224,6 +228,7 @@ final class FourArmsAbilities {
 			Fx.shockwave(world, target.getPos().add(0, 0.1, 0), IMPACT, 3.5f, 8);
 			Fx.smoke(world, target.getPos(), DUST, 1.4f, 6);
 			EarthWave.ring(world, target.getPos(), 3.0, 4, 0.5f);
+			Destruction.crater(world, player, target.getPos().add(0, -0.9, 0), 1.3, AlienStrength.of(player) * 0.8f, 0.0, 0.3);
 			Fx.shake(world, target.getPos(), 0.35f, 8, 16);
 			world.playSound(null, target.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.2f, 0.8f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.four_arms_combo").formatted(Formatting.GOLD), true);
@@ -240,8 +245,8 @@ final class FourArmsAbilities {
 		ServerPlayerEntity player = ctx.player();
 		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 5.0));
 		if (found.isEmpty() || !PartyRules.canHarm(player, found.get())) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
-			return false;
+			// kein Ziel: wie in der Serie einen Brocken aus dem Boden reissen und werfen
+			return boulder(ctx);
 		}
 		LivingEntity target = found.get();
 		Power power = power(player);
@@ -268,14 +273,101 @@ final class FourArmsAbilities {
 		return true;
 	}
 
-	private static boolean groundSlam(AbilityContext ctx) {
+	/**
+	 * Bodenschlag (Halten laedt auf, bis 1,5 s): alle vier Faeuste in den Boden. Druckwelle, springende Bodenbloecke und
+	 * ein echter Krater, der mit der Ladung waechst.
+	 */
+	private static final class GroundSlam implements ChargeableAbility {
+		@Override
+		public int chargeTicks(AbilityContext ctx) {
+			return 30;
+		}
+
+		@Override
+		public void charging(AbilityContext ctx, int ticks, float charge) {
+			ServerPlayerEntity player = ctx.player();
+			player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 3, 2, false, false));
+			if (ticks % 4 == 0) {
+				Fx.charge(ctx.world(), player, charge >= 1.0f ? RED : IMPACT, 1.2f + charge, 6);
+				Fx.smoke(ctx.world(), player.getPos(), DUST, 0.6f + charge * 0.6f, 1);
+			}
+			if (ticks % 10 == 0) {
+				Fx.shake(ctx.world(), player.getPos(), 0.05f + charge * 0.15f, 6, 8);
+			}
+		}
+
+		@Override
+		public boolean release(AbilityContext ctx, float charge) {
+			ServerPlayerEntity player = ctx.player();
+			ServerWorld world = ctx.world();
+			Power power = power(player);
+			double radius = ctx.param("radius", 5.0) * (1.0 + charge * 1.2) * (power.rampage() ? 1.6 : 1.0);
+			float damage = (float) ctx.param("damage", 9.0) * power.factor() * (1.0f + charge * 0.8f);
+			WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, damage, ctx.param("launch", 0.5) * power.factor() * (1.0 + charge * 0.6),
+					world.getTime(), power.rampage() ? 12 : 8, 0.0, Vec3d.ZERO));
+			float strength = AlienStrength.of(player) * (1.0f + charge) * (power.rampage() ? 1.5f : 1.0f);
+			double crater = 2.2 + charge * 3.3 + (power.rampage() ? 1.5 : 0.0);
+			// Schuesselform: Mitte unter den Fuessen, damit der Krater flach statt kugelfoermig wird
+			Destruction.crater(world, player, player.getPos().add(0, -0.6, 0), crater, 0.45, strength, 0.7, 0.35 + charge * 0.25);
+			slamFx(world, player.getPos(), radius, power.rampage() ? 12 : 8, (power.rampage() ? 1.4f : 1.0f) + charge * 0.8f, 0.0, Vec3d.ZERO);
+			if (charge >= 1.0f) {
+				// Erdexplosionen am Kraterrand (nicht an der Kamera)
+				for (int i = 0; i < 6; i++) {
+					double a = i * MathHelper.TAU / 6;
+					Fx.explosion(world, player.getPos().add(Math.cos(a) * crater * 0.9, 0.3, Math.sin(a) * crater * 0.9), IMPACT, 1.6f);
+				}
+			}
+			BuiltinAbilities.sound(ctx, ModSounds.ALIEN_SLAM, 1.3f + charge * 0.5f, power.rampage() ? 0.6f : 0.9f - charge * 0.2f);
+			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.6f + charge * 0.6f, 0.7f);
+			return true;
+		}
+	}
+
+	/** Felsbrocken: reisst ein Stueck Boden heraus (echter Krater) und wirft es; Einschlag mit Krater und Flaechenschaden. */
+	private static boolean boulder(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
+		ServerWorld world = ctx.world();
+		Vec3d look = player.getRotationVec(1.0f);
+		Vec3d flat = BuiltinAbilities.horizontalLook(player);
+		net.minecraft.util.math.BlockPos source = net.minecraft.util.math.BlockPos.ofFloored(player.getPos().add(flat.multiply(1.6))).down();
+		BlockState state = world.getBlockState(source);
+		if (state.isAir() || !state.getFluidState().isEmpty()) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
+			return false;
+		}
 		Power power = power(player);
-		double radius = ctx.param("radius", 5.0) * (power.rampage() ? 2.0 : 1.0);
-		WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, (float) ctx.param("damage", 9.0) * power.factor(),
-				ctx.param("launch", 0.5) * power.factor(), ctx.world().getTime(), power.rampage() ? 12 : 8, 0.0, Vec3d.ZERO));
-		slamFx(ctx.world(), player.getPos(), radius, power.rampage() ? 12 : 8, power.rampage() ? 1.4f : 1.0f, 0.0, Vec3d.ZERO);
-		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_SLAM, 1.3f, power.rampage() ? 0.6f : 0.9f);
+		float strength = AlienStrength.of(player);
+		Destruction.crater(world, player, Vec3d.ofCenter(source), 1.5, strength, 0.0, 0.25);
+		Fx.smoke(world, Vec3d.ofCenter(source).add(0, 0.6, 0), DUST, 1.2f, 6);
+		world.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK, state),
+				source.getX() + 0.5, source.getY() + 1.0, source.getZ() + 0.5, 40, 0.8, 0.2, 0.8, 0.25);
+		float damage = (float) ctx.param("damage", 4.0) * 2.2f * power.factor();
+		float size = power.rampage() ? 2.6f : 1.9f;
+		double speed = ctx.param("power", 2.2) * 0.75;
+		Vec3d start = player.getEyePos().add(flat.multiply(1.2)).add(0, 0.6, 0);
+		Debris.projectile(world, player, state, start, look.multiply(speed).add(0, 0.18, 0), size, (w, at) -> {
+			for (LivingEntity near : w.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(at, 6, 4, 6),
+					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
+				double d = near.getPos().distanceTo(at);
+				if (d > 3.2) {
+					continue;
+				}
+				near.timeUntilRegen = 0;
+				near.damage(w.getDamageSources().playerAttack(player), (float) (damage * (1.0 - d / 6.4)));
+				Vec3d push = near.getPos().subtract(at).multiply(1, 0, 1);
+				if (push.lengthSquared() > 1.0E-4) {
+					near.takeKnockback(1.4, -push.x, -push.z);
+				}
+				near.addVelocity(0.0, 0.4, 0.0);
+				near.velocityModified = true;
+			}
+			Destruction.crater(w, player, at.add(0, -0.4, 0), size * 1.3, 0.6, strength, 0.5, 0.45);
+			slamFx(w, at, 3.5 + size, 5, 1.0f + size * 0.2f, 0.0, Vec3d.ZERO);
+			w.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.6f, 0.6f);
+			w.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.0f, 0.8f);
+		});
+		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_STONE_BREAK, 1.4f, 0.5f);
+		BuiltinAbilities.sound(ctx, ModSounds.WEAPON_THROW, 1.2f, 0.5f);
 		return true;
 	}
 
@@ -329,6 +421,8 @@ final class FourArmsAbilities {
 			Fx.send(world, Fx.Kind.SHOCKWAVE, at, look, CLAP, (float) (1.2 + i * radius / 5.0), 8 + i * 2, 1, null);
 		}
 		Fx.flash(world, front, CLAP, 2.4f);
+		// Schallwelle: Glas, Laub und andere zerbrechliche Bloecke im Kegel zerspringen
+		Destruction.carve(world, player, player.getEyePos(), player.getRotationVec(1.0f), radius, 1.8 + (power.rampage() ? 1.0 : 0.0), 0.6f, 0.4);
 		EarthWave.line(world, player.getPos(), look, radius, 6, 0.6f, cone);
 		Fx.shake(world, player.getPos(), 0.4f, 8, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 1.4f, 1.4f);
@@ -358,6 +452,16 @@ final class FourArmsAbilities {
 		QUAKES.put(player.getUuid(), new Quake(ctx.world().getTime(), power.rampage() ? 6 : 4, ctx.param("radius", 9.0),
 				(float) ctx.param("damage", 14.0) * power.factor() / 2.0f, ctx.param("launch", 0.8)));
 		ctx.grantInvulnerability(20);
+		// Erdspalten: Risse laufen sternfoermig vom Einschlag weg und reissen den Boden auf
+		int cracks = power.rampage() ? 8 : 5;
+		double offset = ctx.world().random.nextDouble() * MathHelper.TAU;
+		float strength = AlienStrength.of(player) * (power.rampage() ? 1.5f : 1.0f);
+		for (int i = 0; i < cracks; i++) {
+			double a = offset + i * MathHelper.TAU / cracks + (ctx.world().random.nextDouble() - 0.5) * 0.5;
+			Vec3d dir = new Vec3d(Math.cos(a), -0.08, Math.sin(a));
+			Destruction.carve(ctx.world(), player, player.getPos().add(dir.multiply(1.5)).add(0, -1.3, 0), dir, ctx.param("radius", 9.0) * 1.1,
+					1.2, strength, 1.6);
+		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.8f, 0.5f);
 		return true;
 	}
@@ -415,6 +519,8 @@ final class FourArmsAbilities {
 			double radius = leap.radius() * (leap.rampage() ? 1.6 : 1.0) * Math.min(1.5, boost);
 			WAVES.add(new Wave(player.getUuid(), player.getPos(), radius, leap.damage() * boost, 0.5, now, 6, 0.0, Vec3d.ZERO));
 			slamFx(world, player.getPos(), radius, 6, boost, 0.0, Vec3d.ZERO);
+			double crater = 1.3 + boost * 1.1 + (leap.rampage() ? 1.0 : 0.0);
+			Destruction.crater(world, player, player.getPos().add(0, -0.6, 0), crater, 0.5, AlienStrength.of(player) * boost, 0.6, 0.4);
 			world.playSound(null, player.getBlockPos(), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.4f, 0.7f);
 		}
 	}
@@ -521,9 +627,8 @@ final class FourArmsAbilities {
 			EarthWave.ring(world, at, radius, ticks, 0.7f * strength);
 		}
 		Fx.shockwave(world, ground, DUST, (float) radius * 1.1f, ticks + 6);
-		Fx.shockwave(world, ground, IMPACT, (float) radius * 0.6f, ticks);
-		Fx.flash(world, ground.add(0, 0.4, 0), IMPACT, 2.0f * strength);
-		Fx.smoke(world, ground, DUST, (float) (1.0 + radius * 0.15), (int) (6 + radius));
+		Fx.flash(world, ground, IMPACT, Math.min(1.6f, 1.0f * strength));
+		Fx.smoke(world, ground, DUST, (float) (0.8 + radius * 0.08), (int) (3 + radius * 0.4));
 		Fx.shake(world, at, Math.min(1.0f, 0.35f * strength), 10, (int) (radius * 3 + 10));
 	}
 

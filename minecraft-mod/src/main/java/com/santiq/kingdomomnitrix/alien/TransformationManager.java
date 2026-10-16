@@ -420,6 +420,14 @@ public final class TransformationManager {
 			return Result.NO_SUCH_ABILITY;
 		}
 		AbilityContext context = new AbilityContext(player, world, alienId, alien, slot);
+		if (ability.get() instanceof com.santiq.kingdomomnitrix.ability.ChargeableAbility chargeable) {
+			if (com.santiq.kingdomomnitrix.ability.AbilityCharge.charging(player)) {
+				return Result.FAILED;
+			}
+			// Halten laedt auf; Abklingzeit und Energie erst beim Loslassen (AbilityCharge → commitAbility)
+			com.santiq.kingdomomnitrix.ability.AbilityCharge.begin(player, slotIndex, chargeable, context);
+			return Result.SUCCESS;
+		}
 		boolean worked;
 		try {
 			worked = ability.get().activate(context);
@@ -430,13 +438,24 @@ public final class TransformationManager {
 		if (!worked) {
 			return Result.FAILED;
 		}
+		commitAbility(player, slotIndex, context);
+		return Result.SUCCESS;
+	}
+
+	/** Faehigkeit hat gewirkt: Energie, Abklingzeit, Unverwundbarkeit und Meisterschaft verbuchen. */
+	public static void commitAbility(ServerPlayerEntity player, int slotIndex, AbilityContext context) {
+		long now = player.getServerWorld().getTime();
+		Identifier alienId = context.alienId();
+		AbilitySlot slot = context.slot();
+		int mastery = AlienMasteryManager.get(player).level(alienId);
+		float energy = get(player).currentEnergy(context.alien(), now);
+		float cost = com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
 		update(player, s -> {
 			long cooldown = Math.round(slot.cooldown() * (1.0f - AlienMasteryManager.get(player).cooldownReduction(alienId)));
-			TransformationState next = s.afterAbility(slotIndex, energy - cost, now, cooldown);
+			TransformationState next = s.afterAbility(slotIndex, Math.max(0.0f, energy - cost), now, cooldown);
 			return context.invulnerabilityTicks() > 0 ? next.withInvulnerableUntil(now + context.invulnerabilityTicks()) : next;
 		});
 		AlienMasteryManager.add(player, alienId, AlienMasteryManager.PER_ABILITY);
-		return Result.SUCCESS;
 	}
 
 	/** Verwandlungsdauer mit Boni aus Heldenstufe, Faehigkeit „Verlaengerte Verwandlung“ und Alien-Meisterschaft. */

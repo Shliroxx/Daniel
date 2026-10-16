@@ -58,6 +58,8 @@ public final class ModKeyBindings {
 			GADGET_BELT, USE_GADGET, PACK_MODE, HERO_MENU, GALVAN_LAB,
 			COMMAND_UP, COMMAND_DOWN, COMMAND_SELECT, COMMAND_BACK};
 	private static boolean conflictsChecked;
+	/** gehaltene Faehigkeits-Taste → gesendeter Slot (-1 = nicht gehalten) */
+	private static final int[] HELD = {-1, -1, -1};
 
 	private ModKeyBindings() {
 	}
@@ -123,11 +125,18 @@ public final class ModKeyBindings {
 			}
 		}
 		boolean second = client.options.sneakKey.isPressed();
+		boolean transformed = TransformationManager.get(client.player).isTransformed();
 		for (int slot = 0; slot < ABILITIES.length; slot++) {
 			while (ABILITIES[slot].wasPressed()) {
-				if (client.currentScreen == null && TransformationManager.get(client.player).isTransformed()) {
-					ClientPlayNetworking.send(new AbilityRequestPayload(second ? slot + ABILITIES.length : slot));
+				if (client.currentScreen == null && transformed && HELD[slot] < 0) {
+					// Slot beim Druecken merken: Loslassen gehoert zur selben Faehigkeit, auch wenn Shift inzwischen los ist
+					HELD[slot] = second ? slot + ABILITIES.length : slot;
+					ClientPlayNetworking.send(new AbilityRequestPayload(HELD[slot], false));
 				}
+			}
+			if (HELD[slot] >= 0 && !ABILITIES[slot].isPressed()) {
+				ClientPlayNetworking.send(new AbilityRequestPayload(HELD[slot], true));
+				HELD[slot] = -1;
 			}
 		}
 	}

@@ -95,6 +95,10 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.world.content.PlanetItems.register();
 		com.santiq.kingdomomnitrix.world.content.TempBlocks.register();
 		com.santiq.kingdomomnitrix.vfx.EarthWave.register();
+		com.santiq.kingdomomnitrix.power.Destruction.register();
+		com.santiq.kingdomomnitrix.power.Debris.register();
+		com.santiq.kingdomomnitrix.ability.AbilityCharge.register();
+		com.santiq.kingdomomnitrix.power.AlienStrength.register();
 		ModItemGroup.register();
 		ModScreenHandlers.register();
 		GadgetManager.register();
