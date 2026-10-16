@@ -111,6 +111,17 @@ final class RipjawsAbilities {
 		ServerWorld world = ctx.world();
 		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 4.0), 0.7, e -> PartyRules.canHarm(player, e));
 		if (found.isEmpty()) {
+			// kein Ziel: die Kiefer beissen sich durch das, was vor Ripjaws ist — auch durch Metall
+			net.minecraft.util.hit.HitResult hit = player.raycast(ctx.param("range", 4.0), 0.0f, false);
+			if (hit instanceof net.minecraft.util.hit.BlockHitResult block && hit.getType() == net.minecraft.util.hit.HitResult.Type.BLOCK) {
+				int bitten = com.santiq.kingdomomnitrix.power.Destruction.crater(world, player, Vec3d.ofCenter(block.getBlockPos()), 1.2, 6.0f, 0.0, 0.2);
+				if (bitten > 0) {
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, block.getPos(), 0xE8F0FF, 0.5f, 14);
+					com.santiq.kingdomomnitrix.vfx.Fx.flash(world, block.getPos(), 0xE8F0FF, 1.2f);
+					world.playSound(null, block.getBlockPos(), SoundEvents.ENTITY_EVOKER_FANGS_ATTACK, SoundCategory.PLAYERS, 1.2f, 0.7f);
+					return true;
+				}
+			}
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
 		}
@@ -164,6 +175,7 @@ final class RipjawsAbilities {
 		zone(player, player.getPos().add(look.multiply(power * 4.0)), 2.5, 100);
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(wet ? ParticleTypes.BUBBLE_COLUMN_UP : ParticleTypes.SPLASH), 0.35f, Math.max(1, Math.min(20, 24)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_DOLPHIN_SPLASH, 1.0f, 0.9f);
+		PowerMoves.carveLook(ctx, 4.0, 1.0, 2.5f);
 		return true;
 	}
 

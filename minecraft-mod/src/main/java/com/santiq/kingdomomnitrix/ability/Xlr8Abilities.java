@@ -363,7 +363,7 @@ final class Xlr8Abilities {
 			}
 		}
 		// Wandlauf: gegen eine Wand rennen fuehrt senkrecht hinauf
-		if (player.horizontalCollision) {
+		if (!world.isSpaceEmpty(player, player.getBoundingBox().offset(BuiltinAbilities.horizontalLook(player).multiply(0.3)))) {
 			Vec3d v = player.getVelocity();
 			player.setVelocity(v.x, Math.max(v.y, 0.42), v.z);
 			player.velocityModified = true;

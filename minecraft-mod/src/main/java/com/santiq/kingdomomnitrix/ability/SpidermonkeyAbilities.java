@@ -195,11 +195,13 @@ final class SpidermonkeyAbilities {
 			}
 			ServerWorld world = monkey.getServerWorld();
 			// Wandlauf: gegen die Wand gelaufen → klettern (Schleichen = festhalten)
-			if (monkey.horizontalCollision && !monkey.isOnGround()) {
+			// serverseitig gibt es fuer Spieler kein verlaessliches Kollisions-Flag: Wand voraus selbst pruefen
+			boolean wall = !world.isSpaceEmpty(monkey, monkey.getBoundingBox().offset(BuiltinAbilities.horizontalLook(monkey).multiply(0.3)));
+			if (wall && !monkey.isOnGround()) {
 				monkey.setVelocity(monkey.getVelocity().x, monkey.isSneaking() ? 0.0 : 0.22, monkey.getVelocity().z);
 				monkey.velocityModified = true;
 				monkey.fallDistance = 0.0f;
-			} else if (monkey.horizontalCollision && monkey.forwardSpeed > 0) {
+			} else if (wall && monkey.isSprinting()) {
 				monkey.setVelocity(monkey.getVelocity().x, 0.3, monkey.getVelocity().z);
 				monkey.velocityModified = true;
 			}

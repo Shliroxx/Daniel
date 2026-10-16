@@ -261,7 +261,7 @@ final class CannonboltAbilities {
 		if (roll.momentum >= 0.5f) {
 			smashAhead(world, player, roll.direction, roll.momentum);
 		}
-		if (player.horizontalCollision) {
+		if (!world.isSpaceEmpty(player, player.getBoundingBox().offset(roll.direction.multiply(0.4)).offset(0, 0.1, 0))) {
 			// Aufprall an der Wand: Stoss je nach Schwung; solange Abpraller uebrig sind, springt die Kugel zurueck
 			shockwave(world, player, roll.damage * (0.4f + 0.6f * roll.momentum), 2.5 + 2.0 * roll.momentum, 0.6);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, SoundCategory.PLAYERS, 1.0f, 0.6f);

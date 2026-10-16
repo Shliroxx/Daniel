@@ -522,6 +522,45 @@ final class GhostfreakAbilities {
 		}
 	}
 
+	/**
+	 * Durch Waende gleiten: laeuft Ghostfreak in der Phasenform gegen eine Wand, taucht er auf der anderen Seite wieder
+	 * auf (bis 4 Bloecke dick); beim Schleichen sinkt er durch den Boden in den naechsten Hohlraum darunter.
+	 */
+	private static void phaseThrough(ServerWorld world, ServerPlayerEntity player) {
+		net.minecraft.util.math.Box box = player.getBoundingBox();
+		Vec3d dir = BuiltinAbilities.horizontalLook(player);
+		// Wand direkt voraus (serverseitig gibt es fuer Spieler kein verlaessliches Kollisions-Flag)
+		if (!world.isSpaceEmpty(player, box.offset(dir.multiply(0.35)))) {
+			for (double d = 1.0; d <= 4.6; d += 0.5) {
+				Vec3d offset = dir.multiply(d);
+				if (world.isSpaceEmpty(player, box.offset(offset)) && !world.isSpaceEmpty(player, box.offset(dir.multiply(d - 0.5)))) {
+					ghostMove(world, player, player.getPos().add(offset));
+					return;
+				}
+			}
+		}
+		if (player.isSneaking() && player.isOnGround() && world.getTime() % 4 == 0) {
+			for (int down = 2; down <= 6; down++) {
+				Vec3d offset = new Vec3d(0, -down, 0);
+				if (world.isSpaceEmpty(player, box.offset(offset)) && !world.isSpaceEmpty(player, box.offset(0, -down + 1, 0))
+						&& !world.isSpaceEmpty(player, box.offset(0, -down - 0.6, 0))) {
+					ghostMove(world, player, player.getPos().add(offset));
+					return;
+				}
+			}
+		}
+	}
+
+	private static void ghostMove(ServerWorld world, ServerPlayerEntity player, Vec3d to) {
+		Vec3d from = player.getPos().add(0, player.getHeight() * 0.5, 0);
+		com.santiq.kingdomomnitrix.vfx.Fx.beam(world, from, to.add(0, player.getHeight() * 0.5, 0), AlienKit.color(ECTO), 0.5f, 10);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, from, 0x9AA8B0, 1.0f, 3);
+		player.teleport(world, to.x, to.y, to.z, player.getYaw(), player.getPitch());
+		player.fallDistance = 0.0f;
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, to.add(0, 1.0, 0), 0x9AA8B0, 1.0f, 3);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_VEX_AMBIENT, SoundCategory.PLAYERS, 0.8f, 0.6f);
+	}
+
 	private static void tickPhase(ServerWorld world, ServerPlayerEntity player, long now) {
 		Long until = PHASE.get(player.getUuid());
 		if (until == null) {
@@ -536,6 +575,7 @@ final class GhostfreakAbilities {
 		if (now % 2 == 0) {
 			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ECTO), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
+		phaseThrough(world, player);
 		// wer von der Phasenform durchquert wird, erschauert (einmal je Sekunde)
 		if (now % 20 == 0) {
 			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(0.5),
