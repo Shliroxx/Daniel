@@ -2,7 +2,7 @@
 # Testlauf: je Alien alle 6 Faehigkeiten (R V B, Shift+R V B) gegen zwei Ziel-Dummies, Bildschirmfoto je Faehigkeit.
 # Vorher: tools/client_smoke.sh start. Aufruf: tools/alien_tour.sh <ausgabeordner> heatblast xlr8 ...
 set -u
-cd /home/user/Daniel/minecraft-mod
+cd "$(dirname "$0")/.."
 export DISPLAY=:99
 OUT=$1; shift
 C=tools/client_smoke.sh
