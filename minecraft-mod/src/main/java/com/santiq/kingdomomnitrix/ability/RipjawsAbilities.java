@@ -134,14 +134,14 @@ final class RipjawsAbilities {
 			target.setYaw(target.getYaw() + 180.0f);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 50, 4), player);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 80, 1), player);
-			world.spawnParticles(ParticleTypes.BUBBLE_COLUMN_UP, target.getX(), target.getBodyY(0.5), target.getZ(), 40, 0.4, 0.6, 0.4, 0.2);
-			world.spawnParticles(ParticleTypes.SPLASH, target.getX(), target.getBodyY(0.5), target.getZ(), 40, 0.6, 0.4, 0.6, 0.3);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.BUBBLE_COLUMN_UP), 0.35f, Math.max(1, Math.min(20, 40)));
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.SPLASH), 0.8f, Math.max(1, Math.min(6, (40) / 4)));
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PLAYER_SPLASH_HIGH_SPEED, SoundCategory.PLAYERS, 1.2f, 0.7f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.ripjaws_death_roll").formatted(Formatting.AQUA), true);
 		} else {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.ripjaws_combo", combo[0], ROLL_HITS).formatted(Formatting.AQUA), true);
 		}
-		world.spawnParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), target.getBodyY(0.6), target.getZ(), 6, 0.3, 0.3, 0.3, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.DAMAGE_INDICATOR), 0.35f, Math.max(1, Math.min(20, 6)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_EVOKER_FANGS_ATTACK, 1.0f, 0.8f);
 		return true;
 	}
@@ -162,8 +162,7 @@ final class RipjawsAbilities {
 		}
 		BuiltinAbilities.launch(player, look.x * power, wet ? look.y * power : 0.25, look.z * power);
 		zone(player, player.getPos().add(look.multiply(power * 4.0)), 2.5, 100);
-		world.spawnParticles(wet ? ParticleTypes.BUBBLE_COLUMN_UP : ParticleTypes.SPLASH, player.getX(), player.getBodyY(0.5), player.getZ(),
-				24, 0.4, 0.4, 0.4, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(wet ? ParticleTypes.BUBBLE_COLUMN_UP : ParticleTypes.SPLASH), 0.35f, Math.max(1, Math.min(20, 24)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_DOLPHIN_SPLASH, 1.0f, 0.9f);
 		return true;
 	}
@@ -201,8 +200,7 @@ final class RipjawsAbilities {
 		for (int i = -8; i <= 8; i++) {
 			double a = Math.atan2(look.z, look.x) + i * 0.12;
 			for (double d = 1.0; d <= radius; d += wet ? 0.8 : radius) {
-				world.spawnParticles(ParticleTypes.SPLASH, player.getX() + Math.cos(a) * d, player.getBodyY(0.5), player.getZ() + Math.sin(a) * d,
-						2, 0.05, 0.05, 0.05, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX() + Math.cos(a) * d, player.getBodyY(0.5), player.getZ() + Math.sin(a) * d), AlienKit.color(ParticleTypes.SPLASH), 0.8f, Math.max(1, Math.min(6, (2) / 4)));
 			}
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 0.7f);
@@ -217,7 +215,7 @@ final class RipjawsAbilities {
 		player.heal((float) (wet ? ctx.param("heal_water", 8.0) : ctx.param("heal", 3.0)));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, ticks, wet ? 1 : 0));
 		zone(player, player.getPos(), 4.0, ticks * 3);
-		ctx.world().spawnParticles(ParticleTypes.BUBBLE, player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.4, 0.6, 0.4, 0.05);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.BUBBLE), 0.8f, Math.max(1, Math.min(6, (30) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_DOLPHIN_PLAY, 1.0f, 1.0f);
 		return true;
 	}
@@ -295,8 +293,8 @@ final class RipjawsAbilities {
 					continue;
 				}
 				Vec3d p = wave.origin.add(dir.multiply(front));
-				world.spawnParticles(ParticleTypes.SPLASH, p.x, p.y + 0.5, p.z, 4, 0.1, 0.6, 0.1, 0.1);
-				world.spawnParticles(ParticleTypes.BUBBLE_POP, p.x, p.y + 1.2, p.z, 1, 0.1, 0.3, 0.1, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(p.x, p.y + 0.5, p.z), AlienKit.color(ParticleTypes.SPLASH), 0.8f, Math.max(1, Math.min(6, (4) / 4)));
+				com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(p.x, p.y + 1.2, p.z), AlienKit.color(ParticleTypes.BUBBLE_POP), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 			}
 			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, Box.of(wave.origin, front * 2 + 1, 5, front * 2 + 1),
 					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && !wave.hit.contains(e.getUuid()))) {

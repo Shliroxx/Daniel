@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.ability;
 
+import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
@@ -33,8 +34,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -52,7 +51,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
-import org.joml.Vector3f;
 
 /**
  * Upgrade (Galvanic Mechamorph). Eigenes Dauer-System „Integration“ (0–100) und Naniten:
@@ -87,10 +85,10 @@ final class UpgradeAbilities {
 	private static final float OVERCLOCK_BONUS = 0.4f;
 	private static final int NANITE_TICKS = 300;
 	private static final int PLASMA_CHARGE = 20;
-	private static final DustParticleEffect NEON = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.0f);
-	private static final DustParticleEffect NEON_BIG = new DustParticleEffect(new Vector3f(0.22f, 1.0f, 0.08f), 1.8f);
-	private static final DustParticleEffect CYAN = new DustParticleEffect(new Vector3f(0.0f, 0.9f, 1.0f), 1.6f);
-	private static final DustParticleEffect LIQUID = new DustParticleEffect(new Vector3f(0.04f, 0.04f, 0.04f), 1.6f);
+	private static final int NEON = 0x38FF14;
+	private static final int NEON_BIG = 0x7CFF4A;
+	private static final int CYAN = 0x00E6FF;
+	private static final int LIQUID = 0x141A1E;
 
 	private static final Map<UUID, Float> SYNC = new HashMap<>();
 	private static final Map<UUID, Long> LAST_GAIN = new HashMap<>();
@@ -199,8 +197,8 @@ final class UpgradeAbilities {
 		OVERCLOCK.put(player.getUuid(), world.getTime() + OVERCLOCK_TICKS);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, OVERCLOCK_TICKS, 1, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, OVERCLOCK_TICKS, 2, false, false));
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.6), player.getZ(), 60, 0.6, 0.9, 0.6, 0.4);
-		world.spawnParticles(CYAN, player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.5, 0.8, 0.5, 0.0);
+		Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.4f, Math.min(24, 60));
+		Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), CYAN, 0.3f, Math.min(20, 30));
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.4f, 1.6f);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.PLAYERS, 0.5f, 2.0f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.upgrade_overclock").formatted(Formatting.AQUA, Formatting.BOLD), true);
@@ -217,7 +215,7 @@ final class UpgradeAbilities {
 		int[] n = NANITES.computeIfAbsent(target.getUuid(), id -> new int[1]);
 		n[0] = Math.min(MAX_NANITES, n[0] + amount);
 		NANITE_UNTIL.put(target.getUuid(), world.getTime() + NANITE_TICKS);
-		world.spawnParticles(NEON, target.getX(), target.getBodyY(0.6), target.getZ(), 4 + 2 * n[0], 0.3, 0.4, 0.3, 0.0);
+		Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), NEON, 0.3f, Math.min(20, 4 + 2 * n[0]));
 	}
 
 	private static int purge(LivingEntity target) {
@@ -242,7 +240,7 @@ final class UpgradeAbilities {
 				// Techno-Fusion: die verschmolzene Waffe entlaedt einen Stromstoss
 				target.timeUntilRegen = 0;
 				target.damage(world.getDamageSources().indirectMagic(player, player), 2.0f * power(player));
-				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.4, 0.3, 0.2);
+				Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), NEON_BIG, 0.4f, Math.min(24, 10));
 			}
 			if (maces) {
 				maceShock(world, player, target, taken);
@@ -259,7 +257,7 @@ final class UpgradeAbilities {
 		if (stored > 0) {
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().indirectMagic(player, player), stored * 2.0f * factor);
-			world.spawnParticles(NEON_BIG, target.getX(), target.getBodyY(0.5), target.getZ(), 10 * stored, 0.4, 0.5, 0.4, 0.05);
+			Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), NEON_BIG, 0.3f, Math.min(20, 10 * stored));
 			world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE.value(), SoundCategory.PLAYERS, 0.7f, 1.8f);
 		}
 		for (LivingEntity near : world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(3.0),
@@ -273,7 +271,8 @@ final class UpgradeAbilities {
 				near.velocityModified = true;
 			}
 		}
-		world.spawnParticles(ParticleTypes.EXPLOSION, target.getX(), target.getBodyY(0.4), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		Fx.explosion(world, new Vec3d(target.getX(), target.getBodyY(0.4), target.getZ()), NEON, 1.8f);
+		Fx.shockwave(world, new Vec3d(target.getX(), target.getBodyY(0.4), target.getZ()), NEON, 3.0f, 8);
 		world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.5f, 1.6f);
 		if (sync(player) >= LINKED || overclocked(player)) {
 			chain(world, player, target, taken * 0.6f, 2, 6.0);
@@ -376,7 +375,7 @@ final class UpgradeAbilities {
 		for (MobEntity mob : ctx.world().getEntitiesByClass(MobEntity.class, player.getBoundingBox().expand(16.0), m -> m.getTarget() == player)) {
 			mob.setTarget(null);
 		}
-		ctx.world().spawnParticles(LIQUID, player.getX(), player.getY() + 0.1, player.getZ(), 40, 0.6, 0.05, 0.6, 0.0);
+		Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.1, player.getZ()), LIQUID, 0.8f, Math.max(1, (40) / 8));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_HONEY_BLOCK_SLIDE, 1.0f, 0.6f);
 		return true;
 	}
@@ -414,8 +413,8 @@ final class UpgradeAbilities {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.upgrade_armor").formatted(Formatting.GREEN), true);
 		}
 		addSync(player, SYNC_FUSION);
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.6), player.getZ(), 30, 0.4, 0.6, 0.4, 0.2);
-		world.spawnParticles(NEON, player.getX(), player.getBodyY(0.6), player.getZ(), 30, 0.4, 0.7, 0.4, 0.0);
+		Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.4f, Math.min(24, 30));
+		Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON, 0.3f, Math.min(20, 30));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 1.6f);
 		return true;
 	}
@@ -426,7 +425,7 @@ final class UpgradeAbilities {
 		int ticks = (int) Math.round(ctx.param("seconds", 12.0) * 20.0);
 		MACES.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, ticks, 1, false, false));
-		ctx.world().spawnParticles(NEON_BIG, player.getX(), player.getBodyY(0.6), player.getZ(), 30, 0.6, 0.4, 0.6, 0.0);
+		Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.3f, Math.min(20, 30));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_EXTEND, 1.0f, 0.7f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ANVIL_PLACE, 0.6f, 1.4f);
 		return true;
@@ -465,7 +464,7 @@ final class UpgradeAbilities {
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ticks, 0), player);
 		}
 		addSync(player, 4.0f + 2.0f * stored);
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getBodyY(0.6), target.getZ(), 30, 0.4, 0.6, 0.4, 0.2);
+		Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), NEON_BIG, 0.4f, Math.min(24, 30));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.6f);
 		return true;
 	}
@@ -512,6 +511,17 @@ final class UpgradeAbilities {
 		} else if (charge.explosion() > 0.0) {
 			world.createExplosion(player, stop.x, stop.y, stop.z, (float) charge.explosion(), World.ExplosionSourceType.NONE);
 		}
+		// Plasma brennt eine Schneise bis zum Hindernis und reisst am Ende einen Krater
+		float strength = com.santiq.kingdomomnitrix.power.AlienStrength.of(player) * (charge.omega() ? 3.0f : 1.6f);
+		Vec3d dir = stop.subtract(eye);
+		if (dir.lengthSquared() > 1.0E-4) {
+			com.santiq.kingdomomnitrix.power.Destruction.carve(world, player, eye.add(dir.normalize().multiply(1.5)), dir, dir.length() - 1.0,
+					width * 0.6, strength * 0.6f, 0.2);
+		}
+		com.santiq.kingdomomnitrix.power.Destruction.crater(world, player, stop, charge.omega() ? 3.5 : 1.8, strength, 0.3, 0.5);
+		Fx.explosion(world, stop, charge.omega() ? CYAN : NEON, charge.omega() ? 4.0f : 2.2f);
+		Fx.shockwave(world, stop, charge.omega() ? CYAN : NEON, charge.omega() ? 7.0f : 4.0f, 12);
+		Fx.shake(world, stop, charge.omega() ? 0.8f : 0.4f, 12, 32);
 		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 1.2f, charge.omega() ? 0.8f : 1.3f);
 	}
 
@@ -548,7 +558,7 @@ final class UpgradeAbilities {
 					firePlasma(world, player, charge);
 				} else {
 					Vec3d muzzle = muzzle(player);
-					world.spawnParticles(charge.omega() ? CYAN : NEON, muzzle.x, muzzle.y, muzzle.z, 6, 0.15, 0.15, 0.15, 0.0);
+					Fx.sparks(world, new Vec3d(muzzle.x, muzzle.y, muzzle.z), charge.omega() ? CYAN : NEON, 0.3f, Math.min(20, 6));
 				}
 			}
 			if (MACES.getOrDefault(id, Long.MAX_VALUE) <= now) {
@@ -589,7 +599,7 @@ final class UpgradeAbilities {
 		SYNC.put(player.getUuid(), left);
 		AlienMeterSync.update(player, AlienMeterPayload.SYNC, left);
 		if (now % 4 == 0) {
-			world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.5), player.getZ(), 3, 0.4, 0.7, 0.4, 0.1);
+			Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), NEON_BIG, 0.4f, Math.min(24, 3));
 		}
 	}
 
@@ -600,10 +610,10 @@ final class UpgradeAbilities {
 		}
 		if (now >= flow.until()) {
 			FLOWS.remove(player.getUuid());
-			world.spawnParticles(LIQUID, player.getX(), player.getY() + 0.5, player.getZ(), 30, 0.4, 0.6, 0.4, 0.0);
+			Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.5, player.getZ()), LIQUID, 0.8f, Math.max(1, (30) / 8));
 			return;
 		}
-		world.spawnParticles(LIQUID, player.getX(), player.getY() + 0.05, player.getZ(), 4, 0.3, 0.02, 0.3, 0.0);
+		Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.05, player.getZ()), LIQUID, 0.8f, Math.max(1, (4) / 8));
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(0.6),
 				e -> e != player && e.isAlive() && !flow.touched().contains(e.getUuid()) && PartyRules.canHarm(player, e) && !isAlly(player, e))) {
 			flow.touched().add(target.getUuid());
@@ -617,7 +627,7 @@ final class UpgradeAbilities {
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2), player);
 			infect(world, target, 2);
 			addSync(player, SYNC_FLOW);
-			world.spawnParticles(NEON, target.getX(), target.getBodyY(0.5), target.getZ(), 12, 0.3, 0.5, 0.3, 0.0);
+			Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), NEON, 0.3f, Math.min(20, 12));
 			world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_SLIME_BLOCK_STEP, SoundCategory.PLAYERS, 1.0f, 0.6f);
 		}
 	}
@@ -648,7 +658,7 @@ final class UpgradeAbilities {
 				mob.setTarget(null);
 			}
 			if (world.getTime() % 10 == 0) {
-				world.spawnParticles(NEON, mob.getX(), mob.getBodyY(0.9), mob.getZ(), 2, 0.2, 0.2, 0.2, 0.0);
+				Fx.sparks(world, new Vec3d(mob.getX(), mob.getBodyY(0.9), mob.getZ()), NEON, 0.3f, Math.min(20, 2));
 			}
 		}
 	}
@@ -657,7 +667,7 @@ final class UpgradeAbilities {
 		mob.setTarget(null);
 		mob.removeStatusEffect(StatusEffects.GLOWING);
 		mob.removeStatusEffect(StatusEffects.STRENGTH);
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, mob.getX(), mob.getBodyY(0.6), mob.getZ(), 12, 0.3, 0.4, 0.3, 0.1);
+		Fx.sparks(world, new Vec3d(mob.getX(), mob.getBodyY(0.6), mob.getZ()), NEON_BIG, 0.4f, Math.min(24, 12));
 	}
 
 	private static void releaseAll(MinecraftServer server, UUID owner) {
@@ -728,13 +738,10 @@ final class UpgradeAbilities {
 		return player.getEyePos().add(player.getRotationVec(1.0f)).add(0.0, -0.25, 0.0);
 	}
 
-	private static void drawLine(ServerWorld world, Vec3d from, Vec3d to, DustParticleEffect dust, double density) {
-		Vec3d step = to.subtract(from);
-		int points = Math.max(4, (int) (step.length() * density));
-		for (int i = 1; i <= points; i++) {
-			Vec3d p = from.add(step.multiply(i / (double) points));
-			world.spawnParticles(dust, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02, 0.0);
-		}
+	private static void drawLine(ServerWorld world, Vec3d from, Vec3d to, int color, double density) {
+		Fx.beam(world, from, to, color, (float) (density / 12.0), 8);
+		Fx.beam(world, from, to, 0xEFFFE8, (float) (density / 40.0), 8);
+		Fx.flash(world, to, color, (float) (0.6 + density * 0.25));
 	}
 
 	private static void forgetState(UUID id) {

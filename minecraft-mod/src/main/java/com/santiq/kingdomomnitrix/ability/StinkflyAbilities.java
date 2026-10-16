@@ -120,12 +120,12 @@ final class StinkflyAbilities {
 		toxin.stacks = Math.min(MAX_STACKS, toxin.stacks + amount);
 		toxin.last = owner.getServerWorld().getTime();
 		ServerWorld world = owner.getServerWorld();
-		world.spawnParticles(TOXIC, target.getX(), target.getBodyY(0.7), target.getZ(), 3 + toxin.stacks * 2, 0.3, 0.3, 0.3, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.7), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, 3 + toxin.stacks * 2)));
 		if (before < MAX_STACKS && toxin.stacks >= MAX_STACKS) {
 			// Zersetzung
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 60, 0), owner);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60, 1), owner);
-			world.spawnParticles(ParticleTypes.SNEEZE, target.getX(), target.getBodyY(0.6), target.getZ(), 20, 0.3, 0.4, 0.3, 0.05);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.SNEEZE), 0.8f, Math.max(1, Math.min(6, (20) / 4)));
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.0f, 0.5f);
 			owner.sendMessage(Text.translatable("message.kingdomomnitrix.stinkfly_rot", target.getDisplayName()).formatted(Formatting.GREEN), true);
 		}
@@ -165,8 +165,8 @@ final class StinkflyAbilities {
 				e -> e != target && e != owner && e.isAlive() && PartyRules.canHarm(owner, e))) {
 			addToxin(owner, near, 2);
 		}
-		world.spawnParticles(TOXIC, target.getX(), target.getBodyY(0.5), target.getZ(), 60, 1.2, 0.8, 1.2, 0.0);
-		world.spawnParticles(ParticleTypes.ITEM_SLIME, target.getX(), target.getBodyY(0.5), target.getZ(), 30, 0.6, 0.5, 0.6, 0.15);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, 60)));
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (30) / 4)));
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.6f);
 	}
 
@@ -205,7 +205,7 @@ final class StinkflyAbilities {
 			CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), start.add(look.multiply(i * 1.5)), 1.4,
 					ctx.world().getTime() + 60, false));
 		}
-		ctx.world().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getBodyY(0.5), player.getZ(), 10, 0.4, 0.3, 0.4, 0.02);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.CLOUD), 0.8f, Math.max(1, Math.min(6, (10) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 1.2f);
 		return true;
 	}
@@ -222,7 +222,7 @@ final class StinkflyAbilities {
 		for (int i = 1; i <= 16; i++) {
 			double t = i / 16.0;
 			Vec3d p = eye.lerp(at, t).add(0, Math.sin(t * Math.PI) * 2.0, 0);
-			world.spawnParticles(SLIME, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(SLIME), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 		float damage = (float) ctx.param("damage", 6.0);
 		double radius = ctx.param("explosion", 1.6) * 2.0;
@@ -232,8 +232,9 @@ final class StinkflyAbilities {
 			addToxin(player, target, 2);
 		}
 		CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(), at, radius, world.getTime() + 80, true));
-		world.spawnParticles(ParticleTypes.ITEM_SLIME, at.x, at.y + 0.3, at.z, 40, radius * 0.4, 0.3, radius * 0.4, 0.2);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(at.x, at.y + 0.3, at.z), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (40) / 4)));
 		world.playSound(null, at.x, at.y, at.z, SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.5f);
+		PowerMoves.encase(ctx, 18.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 80, 0xB8E04A);
 		return true;
 	}
 
@@ -248,7 +249,7 @@ final class StinkflyAbilities {
 			addToxin(player, target, 1);
 		}
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 100, 0, false, false));
-		ctx.world().spawnParticles(ParticleTypes.GUST, player.getX(), player.getY() + 0.5, player.getZ(), 6, 1.5, 0.3, 1.5, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.5, player.getZ()), AlienKit.color(ParticleTypes.GUST), 0.8f, Math.max(1, Math.min(6, (6) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, 1.0f);
 		return true;
 	}
@@ -306,8 +307,7 @@ final class StinkflyAbilities {
 				continue;
 			}
 			if (tick % 4 == 0) {
-				world.spawnParticles(cloud.slime() ? SLIME : TOXIC, cloud.pos().x, cloud.pos().y + 0.4, cloud.pos().z,
-						(int) (cloud.radius() * 4), cloud.radius() * 0.5, 0.3, cloud.radius() * 0.5, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(cloud.pos().x, cloud.pos().y + 0.4, cloud.pos().z), AlienKit.color(cloud.slime() ? SLIME : TOXIC), 0.35f, Math.max(1, Math.min(20, (int) (cloud.radius() * 4))));
 			}
 			if (tick % 20 != 0) {
 				continue;
@@ -344,7 +344,7 @@ final class StinkflyAbilities {
 					continue;
 				}
 			}
-			world.spawnParticles(TOXIC, target.getX(), target.getBodyY(0.8), target.getZ(), toxin.stacks, 0.25, 0.3, 0.25, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.8), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, toxin.stacks)));
 		}
 	}
 
@@ -360,7 +360,7 @@ final class StinkflyAbilities {
 			}
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().indirectMagic(player, player), 3.0f * toxin.stacks);
-			world.spawnParticles(ParticleTypes.ITEM_SLIME, target.getX(), target.getBodyY(0.5), target.getZ(), 10 + toxin.stacks * 4, 0.4, 0.4, 0.4, 0.15);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (10 + toxin.stacks * 4) / 4)));
 			count++;
 		}
 		if (count > 0) {

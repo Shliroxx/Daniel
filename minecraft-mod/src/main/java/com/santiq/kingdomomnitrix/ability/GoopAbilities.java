@@ -116,7 +116,7 @@ final class GoopAbilities {
 	private static boolean allowDamage(LivingEntity target, DamageSource source, float amount) {
 		if (target instanceof ServerPlayerEntity goop && isGoop(goop)) {
 			if (source.getSource() instanceof ProjectileEntity) {
-				goop.getServerWorld().spawnParticles(SLIME, goop.getX(), goop.getBodyY(0.5), goop.getZ(), 6, 0.3, 0.4, 0.3, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(goop.getServerWorld(), new Vec3d(goop.getX(), goop.getBodyY(0.5), goop.getZ()), AlienKit.color(SLIME), 0.35f, Math.max(1, Math.min(20, 6)));
 				return false;  // geht durch den Schleim
 			}
 			if (PUDDLE.containsKey(goop.getUuid())) {
@@ -137,7 +137,7 @@ final class GoopAbilities {
 		acid.source = goop.getUuid();
 		acid.world = world.getRegistryKey();
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, 100, Math.min(2, acid.level / 2)), goop);
-		world.spawnParticles(ACID, target.getX(), target.getBodyY(0.6), target.getZ(), 3 + acid.level * 2, 0.3, 0.4, 0.3, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ACID), 0.35f, Math.max(1, Math.min(20, 3 + acid.level * 2)));
 	}
 
 	private static boolean canAct(ServerPlayerEntity goop) {
@@ -165,6 +165,7 @@ final class GoopAbilities {
 			corrode(goop, target, 2);
 		});
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_LLAMA_SPIT, 1.2f, 0.7f);
+		PowerMoves.dissolveAt(ctx, PowerMoves.aim(ctx.player(), 18.0), 1.4);
 		return true;
 	}
 
@@ -228,6 +229,7 @@ final class GoopAbilities {
 		POOLS.add(new Pool(goop.getUuid(), ctx.world().getRegistryKey(), beam.end(), ctx.param("radius", 3.5),
 				ctx.world().getTime() + (long) (ctx.param("seconds", 8.0) * 20)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_JUMP, 1.4f, 0.5f);
+		PowerMoves.dissolveAt(ctx, ctx.player().getPos().add(0, -0.6, 0), 3.0);
 		return true;
 	}
 
@@ -243,6 +245,7 @@ final class GoopAbilities {
 		}
 		ctx.grantInvulnerability(30);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_SLIME_BLOCK_BREAK, 2.0f, 0.4f);
+		PowerMoves.dissolveAt(ctx, ctx.player().getPos().add(0, -0.6, 0), 5.5);
 		return true;
 	}
 
@@ -265,7 +268,7 @@ final class GoopAbilities {
 				if (now >= puddle) {
 					PUDDLE.remove(id);
 				} else {
-					world.spawnParticles(SLIME, goop.getX(), goop.getY() + 0.05, goop.getZ(), 5, 0.5, 0.0, 0.5, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(goop.getX(), goop.getY() + 0.05, goop.getZ()), AlienKit.color(SLIME), 0.35f, Math.max(1, Math.min(20, 5)));
 					for (LivingEntity target : AlienKit.around(world, goop, goop.getPos(), 1.2)) {
 						if (now % 10 == 0) {
 							corrode(goop, target, 1);
@@ -295,8 +298,7 @@ final class GoopAbilities {
 					continue;
 				}
 				if (world.getTime() % 4 == 0) {
-					world.spawnParticles(ACID, pool.center().x, pool.center().y + 0.1, pool.center().z, (int) (pool.radius() * 4), pool.radius() * 0.5,
-							0.02, pool.radius() * 0.5, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(pool.center().x, pool.center().y + 0.1, pool.center().z), AlienKit.color(ACID), 0.35f, Math.max(1, Math.min(20, (int) (pool.radius() * 4))));
 				}
 				if (world.getTime() % 20 == 0) {
 					for (LivingEntity target : AlienKit.around(world, owner, pool.center(), pool.radius())) {

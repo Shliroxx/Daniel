@@ -139,7 +139,7 @@ final class ChromastoneAbilities {
 		charge(player, amount * ABSORB);
 		player.extinguish();
 		for (int i = 0; i < 7; i++) {
-			world.spawnParticles(SPECTRUM[i], player.getX(), player.getBodyY(0.5), player.getZ(), 2, 0.4, 0.6, 0.4, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(SPECTRUM[i]), 0.35f, Math.max(1, Math.min(20, 2)));
 		}
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1.0f, 1.4f);
 		// Ueberladung: voller Speicher und noch mehr Energie → Nova
@@ -172,7 +172,7 @@ final class ChromastoneAbilities {
 			Vec3d p = from.add(step.multiply(i / (double) points));
 			for (int c = 0; c < SPECTRUM.length; c += 2) {
 				Vec3d q = p.add(side.multiply(c - 3));
-				world.spawnParticles(SPECTRUM[c], q.x, q.y, q.z, 1, 0.0, 0.0, 0.0, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(q.x, q.y, q.z), AlienKit.color(SPECTRUM[c]), 0.35f, Math.max(1, Math.min(20, 1)));
 			}
 		}
 	}
@@ -191,11 +191,10 @@ final class ChromastoneAbilities {
 			double r = radius * (ring + 1) / 7.0;
 			for (int i = 0; i < 20; i++) {
 				double a = i * MathHelper.TAU / 20 + ring * 0.2;
-				world.spawnParticles(SPECTRUM[ring], player.getX() + Math.cos(a) * r, player.getBodyY(0.5), player.getZ() + Math.sin(a) * r, 1,
-						0.0, 0.0, 0.0, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX() + Math.cos(a) * r, player.getBodyY(0.5), player.getZ() + Math.sin(a) * r), AlienKit.color(SPECTRUM[ring]), 0.35f, Math.max(1, Math.min(20, 1)));
 			}
 		}
-		world.spawnParticles(ParticleTypes.FLASH, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), 0xFFFFFF, 1.4f);
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.4f, 1.8f);
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK, SoundCategory.PLAYERS, 1.4f, 0.6f);
 	}
@@ -235,6 +234,7 @@ final class ChromastoneAbilities {
 		rainbow(world, muzzle, stop, 3.0);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 1.2f, 1.6f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.6f, 1.8f);
+		PowerMoves.carveLook(ctx, 20.0, 0.8, 3.0f);
 		return true;
 	}
 
@@ -289,7 +289,7 @@ final class ChromastoneAbilities {
 		int ticks = (int) Math.round(ctx.param("seconds", 5.0) * 20.0);
 		LATTICE.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 1, false, false));
-		ctx.world().spawnParticles(ParticleTypes.END_ROD, player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.05);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.END_ROD), 0.35f, Math.max(1, Math.min(20, 40)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_PLACE, 1.4f, 0.8f);
 		return true;
 	}
@@ -305,7 +305,7 @@ final class ChromastoneAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, 0, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, ticks, 1, false, false));
 		for (int i = 0; i < 7; i++) {
-			world.spawnParticles(SPECTRUM[i], player.getX(), player.getBodyY(0.5), player.getZ(), 8, 0.8, 1.0, 0.8, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(SPECTRUM[i]), 0.35f, Math.max(1, Math.min(20, 8)));
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_ACTIVATE, 1.0f, 1.8f);
 		return true;
@@ -320,6 +320,7 @@ final class ChromastoneAbilities {
 				ctx.param("range", 12.0), new HashSet<>()));
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_POWER_SELECT, 1.5f, 1.2f);
+		PowerMoves.craterHere(ctx, 4.5, 0.6, 1.2f, 0xD070FF);
 		return true;
 	}
 
@@ -343,8 +344,7 @@ final class ChromastoneAbilities {
 			// Funkeln je nach Ladung (die Ladung sieht man am Koerper, ohne Aura)
 			float store = store(player);
 			if (store > 0.0f && world.random.nextFloat() < store / 120.0f) {
-				world.spawnParticles(SPECTRUM[world.random.nextInt(SPECTRUM.length)], player.getX(), player.getBodyY(world.random.nextDouble()),
-						player.getZ(), 1, 0.35, 0.1, 0.35, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(world.random.nextDouble()), player.getZ()), AlienKit.color(SPECTRUM[world.random.nextInt(SPECTRUM.length)]), 0.35f, Math.max(1, Math.min(20, 1)));
 			}
 			Long lattice = LATTICE.get(id);
 			if (lattice != null && now >= lattice) {
@@ -378,7 +378,7 @@ final class ChromastoneAbilities {
 			if (age % 2 == 0) {
 				for (int i = 2; i <= (int) spectrum.range(); i += 1) {
 					Vec3d p = center.add(dir.multiply(i));
-					world.spawnParticles(SPECTRUM[c], p.x, p.y, p.z, 1, 0.05, 0.05, 0.05, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(SPECTRUM[c]), 0.35f, Math.max(1, Math.min(20, 1)));
 				}
 			}
 			for (LivingEntity target : near) {

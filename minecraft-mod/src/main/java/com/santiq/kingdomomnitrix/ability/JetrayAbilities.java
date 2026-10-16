@@ -134,8 +134,9 @@ final class JetrayAbilities {
 		Vec3d side = sideways(player).multiply(0.12);
 		beam(world, eye.add(side), stop, SHOCK);
 		beam(world, eye.subtract(side), stop, SHOCK);
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, stop.x, stop.y, stop.z, 10, 0.15, 0.15, 0.15, 0.2);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(stop.x, stop.y, stop.z), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 10)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GUARDIAN_ATTACK, 0.7f, 1.9f);
+		PowerMoves.blastAtAim(ctx, 30.0, 1.0, 0.8f, 0xFF4A6A);
 		return true;
 	}
 
@@ -181,15 +182,15 @@ final class JetrayAbilities {
 		ServerWorld world = ctx.world();
 		for (int i = 0; i < 8; i++) {
 			Vec3d p = player.getPos().add(0.0, 0.8, 0.0).subtract(look.multiply(i * 0.35));
-			world.spawnParticles(JET, p.x, p.y, p.z, 2, 0.08, 0.08, 0.08, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(JET), 0.35f, Math.max(1, Math.min(20, 2)));
 		}
 		// Ueberschall: Knall-Ring hinter Jetray, wer im Flugweg steht, wird mitgerissen und aufgeladen
 		Vec3d behind = player.getPos().add(0.0, 0.9, 0.0).subtract(look.multiply(0.8));
-		world.spawnParticles(ParticleTypes.SONIC_BOOM, behind.x, behind.y, behind.z, 1, 0.0, 0.0, 0.0, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, new Vec3d(behind.x, behind.y, behind.z), 0xC8E8FF, 3.5f, 10);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.5f, 1.8f);
 		start(player, new Run(Kind.BURST, world.getTime() + (long) ctx.param("ram_ticks", 8.0), (float) ctx.param("damage", 5.0),
 				(int) ctx.param("stun_ticks", 15.0), 1.4, 0.0, 1, 0, look));
-		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 10, 0.3, 0.2, 0.3, 0.05);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.5, player.getZ()), AlienKit.color(ParticleTypes.CLOUD), 0.8f, Math.max(1, Math.min(6, (10) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_WIND_BURST.value(), 1.0f, 1.3f);
 		return true;
 	}
@@ -217,7 +218,7 @@ final class JetrayAbilities {
 		player.sendAbilitiesUpdate();
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, (int) ctx.param("speed_level", 2.0), false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.DOLPHINS_GRACE, ticks, 0, false, false));
-		ctx.world().spawnParticles(ParticleTypes.GUST, player.getX(), player.getBodyY(0.5), player.getZ(), 3, 0.6, 0.3, 0.6, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.GUST), 0.8f, Math.max(1, Math.min(6, (3) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_CHARGE, 1.0f, 1.0f);
 		return true;
 	}
@@ -232,6 +233,7 @@ final class JetrayAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, (int) ctx.param("ticks", 60.0) + 20, 0, false, false));
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.0f, 1.5f);
+		PowerMoves.craterHere(ctx, 3.0, 0.5, 1.0f, 0xFF4A6A);
 		return true;
 	}
 
@@ -279,7 +281,7 @@ final class JetrayAbilities {
 	private static void tickStrafe(ServerWorld world, ServerPlayerEntity player, Run run, long now) {
 		BuiltinAbilities.launch(player, run.direction.x * run.speed, run.direction.y * run.speed, run.direction.z * run.speed);
 		Vec3d back = player.getPos().add(0.0, 0.7, 0.0).subtract(run.direction.multiply(0.8));
-		world.spawnParticles(JET, back.x, back.y, back.z, 3, 0.1, 0.1, 0.1, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(back.x, back.y, back.z), AlienKit.color(JET), 0.35f, Math.max(1, Math.min(20, 3)));
 		if (now % run.interval != 0) {
 			return;
 		}
@@ -303,7 +305,7 @@ final class JetrayAbilities {
 
 	private static void tickSlipstream(ServerWorld world, ServerPlayerEntity player, Run run, long now) {
 		if (player.getAbilities().flying) {
-			world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.6, player.getZ(), 1, 0.2, 0.1, 0.2, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.6, player.getZ()), AlienKit.color(ParticleTypes.CLOUD), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 		}
 		if (now % run.interval != 0) {
 			return;
@@ -312,12 +314,12 @@ final class JetrayAbilities {
 		for (ServerPlayerEntity other : world.getPlayers(p -> p != player && p.squaredDistanceTo(player) <= run.range * run.range
 				&& PartyRules.isAlly(player, p))) {
 			other.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, run.interval + 10, 1, false, true));
-			world.spawnParticles(ParticleTypes.GUST, other.getX(), other.getBodyY(0.5), other.getZ(), 1, 0.2, 0.2, 0.2, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(other.getX(), other.getBodyY(0.5), other.getZ()), AlienKit.color(ParticleTypes.GUST), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 		}
 	}
 
 	private static void tickStorm(ServerWorld world, ServerPlayerEntity player, Run run, long now) {
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.5), player.getZ(), 4, 0.5, 0.4, 0.5, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 4)));
 		if (now % run.interval != 0) {
 			return;
 		}
@@ -355,9 +357,9 @@ final class JetrayAbilities {
 			run.struck.add(target.getUuid());
 			shock(world, player, target, run.damage, run.stunTicks);
 			target.takeKnockback(1.2, -velocity.x, -velocity.z);
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), 0xFFFFFF, 1.4f);
 		}
-		world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.6, player.getZ(), 1, 0.1, 0.1, 0.1, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.6, player.getZ()), AlienKit.color(ParticleTypes.CLOUD), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 	}
 
 	private static void finish(ServerWorld world, ServerPlayerEntity player, Run run) {
@@ -367,8 +369,7 @@ final class JetrayAbilities {
 				// Schlussentladung: Ring aus Funken, alle Gegner im halben Umkreis werden noch einmal gelaehmt
 				for (int i = 0; i < 32; i++) {
 					double angle = i * MathHelper.TAU / 32;
-					world.spawnParticles(SHOCK, player.getX() + Math.cos(angle) * 3.0, player.getBodyY(0.5), player.getZ() + Math.sin(angle) * 3.0,
-							1, 0.0, 0.0, 0.0, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX() + Math.cos(angle) * 3.0, player.getBodyY(0.5), player.getZ() + Math.sin(angle) * 3.0), AlienKit.color(SHOCK), 0.35f, Math.max(1, Math.min(20, 1)));
 				}
 				double half = run.range * 0.5;
 				for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(half),
@@ -400,7 +401,7 @@ final class JetrayAbilities {
 		if (stunTicks > 0) {
 			stun(target, player, stunTicks);
 		}
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getBodyY(0.5), target.getZ(), 12, 0.3, 0.4, 0.3, 0.15);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 12)));
 	}
 
 	/** Ladung am Ziel erhoehen (abgelaufene verfallen); liefert die neue Anzahl. */
@@ -419,8 +420,7 @@ final class JetrayAbilities {
 		// sichtbare Ladung: je Stufe mehr Funken, die um das Ziel kreisen
 		for (int i = 0; i < entry[0] * 4; i++) {
 			double angle = i * MathHelper.TAU / (entry[0] * 4) + now * 0.3;
-			world.spawnParticles(SHOCK, target.getX() + Math.cos(angle) * 0.6, target.getBodyY(0.5 + 0.15 * (i % 3)),
-					target.getZ() + Math.sin(angle) * 0.6, 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX() + Math.cos(angle) * 0.6, target.getBodyY(0.5 + 0.15 * (i % 3)), target.getZ() + Math.sin(angle) * 0.6), AlienKit.color(SHOCK), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 		return (int) entry[0];
 	}
@@ -439,9 +439,9 @@ final class JetrayAbilities {
 			stun(near, player, stunTicks);
 			beam(world, at, center(near), SHOCK);
 		}
-		world.spawnParticles(ParticleTypes.FLASH, at.x, at.y, at.z, 1, 0.0, 0.0, 0.0, 0.0);
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, at.x, at.y, at.z, 60, 0.6, 0.6, 0.6, 0.6);
-		world.spawnParticles(SHOCK, at.x, at.y, at.z, 40, 1.2, 0.8, 1.2, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(at.x, at.y, at.z), 0xFFFFFF, 1.4f);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x, at.y, at.z), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 60)));
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x, at.y, at.z), AlienKit.color(SHOCK), 0.35f, Math.max(1, Math.min(20, 40)));
 		world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, SoundCategory.PLAYERS, 1.0f, 1.6f);
 		world.playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.5f, 1.8f);
 		player.sendMessage(net.minecraft.text.Text.translatable("message.kingdomomnitrix.jetray_overload")
@@ -458,7 +458,7 @@ final class JetrayAbilities {
 		int points = Math.max(4, (int) (step.length() * 3));
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = from.add(step.multiply(i / (double) points));
-			world.spawnParticles(dust, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(dust), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 	}
 

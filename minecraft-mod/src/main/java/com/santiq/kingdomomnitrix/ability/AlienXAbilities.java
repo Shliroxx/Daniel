@@ -82,7 +82,7 @@ final class AlienXAbilities {
 			council[0] = 0;
 			council[1] = 0;
 			x.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 9, false, false));
-			world.spawnParticles(ParticleTypes.ANGRY_VILLAGER, x.getX(), x.getEyeY() + 0.4, x.getZ(), 3, 0.3, 0.1, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(x.getX(), x.getEyeY() + 0.4, x.getZ()), AlienKit.color(ParticleTypes.ANGRY_VILLAGER), 0.35f, Math.max(1, Math.min(20, 3)));
 			x.sendMessage(Text.translatable("message.kingdomomnitrix.alien_x_dispute").formatted(Formatting.RED), true);
 			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_VILLAGER_NO, 1.0f, 0.5f);
 			return 0.0f;
@@ -91,7 +91,7 @@ final class AlienXAbilities {
 		if (council[1] >= 3) {
 			council[1] = 0;
 			x.sendMessage(Text.translatable("message.kingdomomnitrix.alien_x_omnipotence").formatted(Formatting.GOLD, Formatting.BOLD), true);
-			world.spawnParticles(GOLD, x.getX(), x.getBodyY(0.6), x.getZ(), 40, 0.6, 0.9, 0.6, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(x.getX(), x.getBodyY(0.6), x.getZ()), AlienKit.color(GOLD), 0.35f, Math.max(1, Math.min(20, 40)));
 			return 2.0f;
 		}
 		council[1]++;
@@ -117,6 +117,7 @@ final class AlienXAbilities {
 		AlienKit.line(world, AlienKit.muzzle(x), beam.end(), NEBULA, 3.0);
 		AlienKit.line(world, AlienKit.muzzle(x), beam.end(), STAR, 2.0);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, 1.2f, 0.7f);
+		PowerMoves.blastAtAim(ctx, 48.0, 3.0, 1.0f, 0xFFFFFF);
 		return true;
 	}
 
@@ -152,14 +153,15 @@ final class AlienXAbilities {
 			AlienKit.magic(world, x, target, (float) ctx.param("damage", 20.0) * power);
 			AlienKit.push(target, x.getPos(), 2.0, 0.8);
 		}
-		world.spawnParticles(ParticleTypes.FLASH, x.getX(), x.getBodyY(0.5), x.getZ(), 3, 0.5, 0.5, 0.5, 0.0);
-		world.spawnParticles(ParticleTypes.END_ROD, x.getX(), x.getBodyY(0.5), x.getZ(), 200, radius * 0.3, radius * 0.2, radius * 0.3, 0.3);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(x.getX(), x.getBodyY(0.5), x.getZ()), 0xFFFFFF, 1.4f);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(x.getX(), x.getBodyY(0.5), x.getZ()), AlienKit.color(ParticleTypes.END_ROD), 0.35f, Math.max(1, Math.min(20, 200)));
 		for (int r = 2; r <= (int) radius; r += 3) {
 			AlienKit.ring(world, x.getPos().add(0, 1.0, 0), r, r % 2 == 0 ? NEBULA : STAR);
 		}
 		ctx.grantInvulnerability(40);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 3.0f, 0.4f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_END_PORTAL_SPAWN, 1.5f, 1.2f);
+		PowerMoves.craterHere(ctx, 10.0, 0.7, 1.0f, 0xFFFFFF);
 		return true;
 	}
 
@@ -182,10 +184,10 @@ final class AlienXAbilities {
 		for (double d = reach; d >= 1.0; d -= 0.5) {
 			Vec3d feet = eye.add(look.multiply(d)).subtract(0.0, x.getStandingEyeHeight(), 0.0);
 			if (world.isSpaceEmpty(x, x.getBoundingBox().offset(feet.subtract(x.getPos())))) {
-				world.spawnParticles(STAR, x.getX(), x.getBodyY(0.5), x.getZ(), 30, 0.4, 0.8, 0.4, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(x.getX(), x.getBodyY(0.5), x.getZ()), AlienKit.color(STAR), 0.35f, Math.max(1, Math.min(20, 30)));
 				x.requestTeleport(feet.x, feet.y, feet.z);
 				x.fallDistance = 0.0f;
-				world.spawnParticles(NEBULA, feet.x, feet.y + 1, feet.z, 30, 0.4, 0.8, 0.4, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(feet.x, feet.y + 1, feet.z), AlienKit.color(NEBULA), 0.35f, Math.max(1, Math.min(20, 30)));
 				BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.4f);
 				return true;
 			}
@@ -227,7 +229,7 @@ final class AlienXAbilities {
 			ally.getStatusEffects().stream().filter(e -> !e.getEffectType().value().isBeneficial()).map(StatusEffectInstance::getEffectType).toList()
 					.forEach(ally::removeStatusEffect);
 			ally.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 400, (int) (2 * power), false, true));
-			world.spawnParticles(GOLD, ally.getX(), ally.getBodyY(0.6), ally.getZ(), 30, 0.4, 0.8, 0.4, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(ally.getX(), ally.getBodyY(0.6), ally.getZ()), AlienKit.color(GOLD), 0.35f, Math.max(1, Math.min(20, 30)));
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_ACTIVATE, 1.4f, 1.8f);
 		return true;

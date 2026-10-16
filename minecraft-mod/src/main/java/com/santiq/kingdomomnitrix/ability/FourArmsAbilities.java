@@ -339,8 +339,7 @@ final class FourArmsAbilities {
 		float strength = AlienStrength.of(player);
 		Destruction.crater(world, player, Vec3d.ofCenter(source), 1.5, strength, 0.0, 0.25);
 		Fx.smoke(world, Vec3d.ofCenter(source).add(0, 0.6, 0), DUST, 1.2f, 6);
-		world.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK, state),
-				source.getX() + 0.5, source.getY() + 1.0, source.getZ() + 0.5, 40, 0.8, 0.2, 0.8, 0.25);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(source.getX() + 0.5, source.getY() + 1.0, source.getZ() + 0.5), AlienKit.color(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK, state)), 0.35f, Math.max(1, Math.min(20, 40)));
 		float damage = (float) ctx.param("damage", 4.0) * 2.2f * power.factor();
 		float size = power.rampage() ? 2.6f : 1.9f;
 		double speed = ctx.param("power", 2.2) * 0.75;

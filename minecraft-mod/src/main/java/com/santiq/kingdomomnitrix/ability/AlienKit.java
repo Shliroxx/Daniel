@@ -135,21 +135,44 @@ final class AlienKit {
 		return player.getEyePos().add(player.getRotationVec(1.0f)).add(0.0, -0.25, 0.0);
 	}
 
+	/** Strahl (FX-Engine): leuchtender Strahl mit hellem Kern und Aufschlagblitz; Breite folgt der Dichte. */
 	static void line(ServerWorld world, Vec3d from, Vec3d to, ParticleEffect particle, double density) {
-		Vec3d step = to.subtract(from);
-		int points = Math.max(4, (int) (step.length() * density));
-		for (int i = 1; i <= points; i++) {
-			Vec3d p = from.add(step.multiply(i / (double) points));
-			world.spawnParticles(particle, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02, 0.0);
-		}
+		int color = color(particle);
+		float width = (float) Math.min(1.2, 0.08 + density * 0.06) * scale(particle);
+		com.santiq.kingdomomnitrix.vfx.Fx.beam(world, from, to, color, width, 8);
+		com.santiq.kingdomomnitrix.vfx.Fx.beam(world, from, to, 0xFFFFFF, width * 0.3f, 8);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, to, color, 0.8f + width * 1.5f);
 	}
 
+	/** Ring (FX-Engine): sich ausbreitende Druckwelle in der Farbe des Effekts. */
 	static void ring(ServerWorld world, Vec3d center, double radius, ParticleEffect particle) {
-		int points = Math.max(12, (int) (radius * 8));
-		for (int i = 0; i < points; i++) {
-			double a = i * MathHelper.TAU / points;
-			world.spawnParticles(particle, center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius, 1, 0.0, 0.05, 0.0, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, center, color(particle), (float) radius, 10);
+	}
+
+	/** Leuchtfarbe eines Partikel-Effekts: Staubfarbe, sonst eine passende Grundfarbe je Art. */
+	static int color(ParticleEffect particle) {
+		if (particle instanceof DustParticleEffect dust) {
+			org.joml.Vector3f c = dust.getColor();
+			return ((int) (c.x() * 255) & 0xFF) << 16 | ((int) (c.y() * 255) & 0xFF) << 8 | ((int) (c.z() * 255) & 0xFF);
 		}
+		var type = particle.getType();
+		if (type == net.minecraft.particle.ParticleTypes.FLAME || type == net.minecraft.particle.ParticleTypes.LAVA) {
+			return 0xFF7A20;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.SOUL_FIRE_FLAME || type == net.minecraft.particle.ParticleTypes.SOUL) {
+			return 0x50E8FF;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.ELECTRIC_SPARK || type == net.minecraft.particle.ParticleTypes.END_ROD) {
+			return 0xC8F0FF;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.SQUID_INK || type == net.minecraft.particle.ParticleTypes.SMOKE) {
+			return 0x303038;
+		}
+		return 0xF0F0FF;
+	}
+
+	private static float scale(ParticleEffect particle) {
+		return particle instanceof DustParticleEffect dust ? Math.max(0.6f, dust.getScale() / 1.4f) : 1.0f;
 	}
 
 	static void push(LivingEntity target, Vec3d from, double strength, double lift) {
@@ -189,9 +212,9 @@ final class AlienKit {
 			target.setVelocity(0.0, hold.lift() ? 0.03 : Math.min(0.0, target.getVelocity().y), 0.0);
 			target.velocityModified = true;
 			target.fallDistance = 0.0f;
-			if (world.getTime() % 5 == 0) {
-				world.spawnParticles(hold.particle(), target.getX(), target.getBodyY(0.5), target.getZ(), 3, target.getWidth() * 0.4,
-						target.getHeight() * 0.35, target.getWidth() * 0.4, 0.0);
+			if (world.getTime() % 10 == 0) {
+				com.santiq.kingdomomnitrix.vfx.Fx.send(world, com.santiq.kingdomomnitrix.vfx.Fx.Kind.AURA, target.getPos(), Vec3d.ZERO,
+						color(hold.particle()), target.getWidth() * 0.6f + 0.3f, 12, 0, target);
 			}
 		}
 	}

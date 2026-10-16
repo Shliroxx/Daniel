@@ -171,7 +171,7 @@ final class GhostfreakAbilities {
 			LAST_GAIN.put(player.getUuid(), world.getTime());
 		}
 		if (before < MAX && after >= MAX) {
-			world.spawnParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getBodyY(0.6), player.getZ(), 30, 0.6, 0.8, 0.6, 0.03);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), AlienKit.color(ParticleTypes.SCULK_SOUL), 0.8f, Math.max(1, Math.min(6, (30) / 4)));
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WARDEN_HEARTBEAT, SoundCategory.PLAYERS, 1.6f, 0.6f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.ghostfreak_harvest").formatted(Formatting.LIGHT_PURPLE, Formatting.BOLD), true);
 		}
@@ -201,7 +201,7 @@ final class GhostfreakAbilities {
 		t.level = Math.min(MAX_TERROR, t.level + amount);
 		t.until = now + TERROR_TICKS;
 		addDread(player, (t.level - before) * DREAD_PER_TERROR);
-		world.spawnParticles(ParticleTypes.SOUL, target.getX(), target.getBodyY(1.0) + 0.3, target.getZ(), 2 + 2 * t.level, 0.25, 0.15, 0.25, 0.01);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(1.0) + 0.3, target.getZ()), AlienKit.color(ParticleTypes.SOUL), 0.8f, Math.max(1, Math.min(6, (2 + 2 * t.level) / 4)));
 		if (t.level >= MAX_TERROR && !panicking(target)) {
 			panic(player, target, PANIC_TICKS);
 		}
@@ -220,7 +220,7 @@ final class GhostfreakAbilities {
 		}
 		if (fresh) {
 			addDread(player, DREAD_PANIC);
-			world.spawnParticles(ParticleTypes.SCULK_SOUL, target.getX(), target.getBodyY(0.6), target.getZ(), 14, 0.3, 0.5, 0.3, 0.03);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.SCULK_SOUL), 0.8f, Math.max(1, Math.min(6, (14) / 4)));
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_VEX_HURT, SoundCategory.HOSTILE, 1.0f, 0.5f);
 		}
 	}
@@ -238,7 +238,7 @@ final class GhostfreakAbilities {
 			AMBUSH.remove(player.getUuid());
 			bonus += taken;
 			frighten(player, target, 2);
-			world.spawnParticles(PALE, target.getX(), target.getBodyY(0.6), target.getZ(), 20, 0.3, 0.4, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(PALE), 0.35f, Math.max(1, Math.min(20, 20)));
 			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_PHANTOM_BITE, SoundCategory.PLAYERS, 1.0f, 0.6f);
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.ghostfreak_ambush").formatted(Formatting.LIGHT_PURPLE), true);
 		} else if (melee && dread(player) >= EERIE) {
@@ -323,7 +323,7 @@ final class GhostfreakAbilities {
 			mob.setTarget(null);
 		}
 		PHASE.put(player.getUuid(), world.getTime() + ticks);
-		world.spawnParticles(ParticleTypes.SOUL, player.getX(), player.getBodyY(0.5), player.getZ(), 20, 0.4, 0.6, 0.4, 0.02);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.SOUL), 0.8f, Math.max(1, Math.min(6, (20) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_VEX_CHARGE, 1.0f, 0.6f);
 		return true;
 	}
@@ -348,10 +348,9 @@ final class GhostfreakAbilities {
 		}
 		for (int i = 0; i < 24; i++) {
 			double angle = i * Math.PI * 2.0 / 24.0;
-			world.spawnParticles(ECTO, player.getX() + Math.cos(angle) * radius * 0.6, player.getBodyY(0.5), player.getZ() + Math.sin(angle) * radius * 0.6,
-					2, 0.2, 0.3, 0.2, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX() + Math.cos(angle) * radius * 0.6, player.getBodyY(0.5), player.getZ() + Math.sin(angle) * radius * 0.6), AlienKit.color(ECTO), 0.35f, Math.max(1, Math.min(20, 2)));
 		}
-		world.spawnParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getBodyY(0.5), player.getZ(), 40, radius * 0.3, 0.6, radius * 0.3, 0.02);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.SCULK_SOUL), 0.8f, Math.max(1, Math.min(6, (40) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GHAST_SCREAM, 0.9f, 0.7f);
 		return true;
 	}
@@ -391,7 +390,7 @@ final class GhostfreakAbilities {
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, Math.min(ticks, 40), 0), player);
 			frighten(player, target, 2);
 		}
-		world.spawnParticles(ParticleTypes.SOUL, target.getX(), target.getBodyY(0.5), target.getZ(), 30, 0.3, 0.6, 0.3, 0.03);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.SOUL), 0.8f, Math.max(1, Math.min(6, (30) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_VEX_AMBIENT, 1.2f, 0.5f);
 		return true;
 	}
@@ -435,12 +434,12 @@ final class GhostfreakAbilities {
 	}
 
 	private static void step(AbilityContext ctx, ServerPlayerEntity player, ServerWorld world, Vec3d to, float yaw) {
-		world.spawnParticles(ParticleTypes.SQUID_INK, player.getX(), player.getBodyY(0.5), player.getZ(), 20, 0.3, 0.5, 0.3, 0.02);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.SQUID_INK), 0.8f, Math.max(1, Math.min(6, (20) / 4)));
 		player.teleport(world, to.x, to.y, to.z, yaw, player.getPitch());
 		player.fallDistance = 0.0f;
 		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 10));
 		AMBUSH.put(player.getUuid(), world.getTime() + AMBUSH_TICKS);
-		world.spawnParticles(ParticleTypes.SOUL, to.x, to.y + 1.0, to.z, 20, 0.3, 0.5, 0.3, 0.02);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(to.x, to.y + 1.0, to.z), AlienKit.color(ParticleTypes.SOUL), 0.8f, Math.max(1, Math.min(6, (20) / 4)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_ENDERMAN_TELEPORT, 0.8f, 0.6f);
 	}
 
@@ -472,8 +471,8 @@ final class GhostfreakAbilities {
 			panic(player, target, ticks);
 		}
 		NIGHTMARES.put(player.getUuid(), new Nightmare(world.getTime() + ticks, radius, harvest));
-		world.spawnParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getBodyY(0.5), player.getZ(), 160, radius * 0.4, 1.0, radius * 0.4, 0.02);
-		world.spawnParticles(harvest ? PALE : ECTO, player.getX(), player.getBodyY(0.5), player.getZ(), 80, radius * 0.4, 1.2, radius * 0.4, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.SCULK_SOUL), 0.8f, Math.max(1, Math.min(6, (160) / 4)));
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(harvest ? PALE : ECTO), 0.35f, Math.max(1, Math.min(20, 80)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_ROAR, 1.2f, 0.8f);
 		if (harvest) {
 			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WITHER_AMBIENT, 1.0f, 0.6f);
@@ -531,11 +530,11 @@ final class GhostfreakAbilities {
 		if (now >= until) {
 			PHASE.remove(player.getUuid());
 			AMBUSH.put(player.getUuid(), now + AMBUSH_TICKS);
-			world.spawnParticles(PALE, player.getX(), player.getBodyY(0.5), player.getZ(), 16, 0.3, 0.6, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(PALE), 0.35f, Math.max(1, Math.min(20, 16)));
 			return;
 		}
 		if (now % 2 == 0) {
-			world.spawnParticles(ECTO, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.3, 0.5, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ECTO), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 		// wer von der Phasenform durchquert wird, erschauert (einmal je Sekunde)
 		if (now % 20 == 0) {
@@ -576,7 +575,7 @@ final class GhostfreakAbilities {
 			player.heal(1.0f);
 		}
 		if (now % 4 == 0) {
-			world.spawnParticles(ECTO, mob.getX(), mob.getBodyY(0.6), mob.getZ(), 3, mob.getWidth() * 0.4, mob.getHeight() * 0.3, mob.getWidth() * 0.4, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(mob.getX(), mob.getBodyY(0.6), mob.getZ()), AlienKit.color(ECTO), 0.35f, Math.max(1, Math.min(20, 3)));
 		}
 	}
 
@@ -614,8 +613,8 @@ final class GhostfreakAbilities {
 					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
 				frighten(player, near, 2);
 			}
-			world.spawnParticles(ParticleTypes.SCULK_SOUL, player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.6, 0.8, 0.6, 0.05);
-			world.spawnParticles(PALE, player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.6, 0.8, 0.6, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.SCULK_SOUL), 0.8f, Math.max(1, Math.min(6, (40) / 4)));
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(PALE), 0.35f, Math.max(1, Math.min(20, 30)));
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_VEX_DEATH, SoundCategory.PLAYERS, 1.2f, 0.5f);
 		}
 	}
@@ -667,7 +666,7 @@ final class GhostfreakAbilities {
 					}
 				}
 			}
-			world.spawnParticles(ParticleTypes.SOUL, living.getX(), living.getBodyY(1.0) + 0.2, living.getZ(), 1, 0.2, 0.1, 0.2, 0.01);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(living.getX(), living.getBodyY(1.0) + 0.2, living.getZ()), AlienKit.color(ParticleTypes.SOUL), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 		}
 	}
 
@@ -683,7 +682,7 @@ final class GhostfreakAbilities {
 		int points = Math.max(4, (int) (step.length() * density));
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = from.add(step.multiply(i / (double) points));
-			world.spawnParticles(dust, p.x, p.y, p.z, 1, 0.02, 0.02, 0.02, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(dust), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 	}
 

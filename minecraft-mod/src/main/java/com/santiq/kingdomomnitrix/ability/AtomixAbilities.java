@@ -129,7 +129,7 @@ final class AtomixAbilities {
 		rad.lastDecay = world.getTime();
 		rad.source = owner.getUuid();
 		rad.world = world.getRegistryKey();
-		world.spawnParticles(GLOW, target.getX(), target.getBodyY(0.6), target.getZ(), 3 + 2 * rad.level, 0.3, 0.4, 0.3, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 3 + 2 * rad.level)));
 	}
 
 	private static void hit(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage) {
@@ -144,8 +144,8 @@ final class AtomixAbilities {
 
 	/** Spaltung: kleiner Blitz, die zwei naechsten Gegner bekommen +2 Stufen. */
 	private static void fission(ServerWorld world, ServerPlayerEntity owner, Entity dead) {
-		world.spawnParticles(ParticleTypes.EXPLOSION, dead.getX(), dead.getBodyY(0.5), dead.getZ(), 2, 0.3, 0.3, 0.3, 0.0);
-		world.spawnParticles(CORE, dead.getX(), dead.getBodyY(0.5), dead.getZ(), 30, 0.6, 0.6, 0.6, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, new Vec3d(dead.getX(), dead.getBodyY(0.5), dead.getZ()), 0xFFB060, 2.0f);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(dead.getX(), dead.getBodyY(0.5), dead.getZ()), AlienKit.color(CORE), 0.35f, Math.max(1, Math.min(20, 30)));
 		world.playSound(null, dead.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 1.5f);
 		world.getEntitiesByClass(LivingEntity.class, dead.getBoundingBox().expand(6.0),
 						e -> e != owner && e != dead && e.isAlive() && PartyRules.canHarm(owner, e))
@@ -157,7 +157,7 @@ final class AtomixAbilities {
 					Vec3d to = next.getPos().add(0, next.getHeight() * 0.5, 0);
 					for (int i = 1; i <= 8; i++) {
 						Vec3d p = from.lerp(to, i / 8.0);
-						world.spawnParticles(GLOW, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+						com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 1)));
 					}
 				});
 	}
@@ -181,7 +181,7 @@ final class AtomixAbilities {
 			hit(world, player, target, (float) ctx.param("damage", 7.0) * (full ? 1.6f : 1.0f));
 			irradiate(player, target, 1);
 			if (full) {
-				world.spawnParticles(ParticleTypes.EXPLOSION, stop.x, stop.y, stop.z, 1, 0.0, 0.0, 0.0, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, new Vec3d(stop.x, stop.y, stop.z), 0xFFB060, 2.0f);
 			}
 		}
 		Vec3d muzzle = eye.add(player.getRotationVec(1.0f)).add(0, -0.25, 0);
@@ -189,9 +189,10 @@ final class AtomixAbilities {
 		int points = Math.max(6, (int) (step.length() * 3));
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = muzzle.add(step.multiply(i / (double) points));
-			world.spawnParticles(i % 3 == 0 ? CORE : GLOW, p.x, p.y, p.z, 1, 0.03, 0.03, 0.03, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(i % 3 == 0 ? CORE : GLOW), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_POWER_SELECT, 0.8f, 2.0f);
+		PowerMoves.blastAtAim(ctx, 32.0, 2.6, 0.5f, 0x7CFF6A);
 		return true;
 	}
 
@@ -210,6 +211,7 @@ final class AtomixAbilities {
 		}
 		ring(world, player.getPos().add(0, 1.0, 0), radius, GLOW);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 0.7f, 1.4f);
+		PowerMoves.craterHere(ctx, 5.0, 0.6, 0.7f, 0x7CFF6A);
 		return true;
 	}
 
@@ -220,7 +222,7 @@ final class AtomixAbilities {
 		BuiltinAbilities.launch(player, dir.x * ctx.param("forward", 1.3), ctx.param("lift", 1.0), dir.z * ctx.param("forward", 1.3));
 		player.fallDistance = 0.0f;
 		LEAPS.put(player.getUuid(), ctx.world().getTime());
-		ctx.world().spawnParticles(GLOW, player.getX(), player.getY() + 0.2, player.getZ(), 30, 0.5, 0.1, 0.5, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.2, player.getZ()), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 30)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, 0.7f);
 		return true;
 	}
@@ -251,7 +253,7 @@ final class AtomixAbilities {
 			}
 			RAD.remove(target.getUuid());
 			hit(world, player, target, (float) ctx.param("per_level", 3.0) * level);
-			world.spawnParticles(CORE, target.getX(), target.getBodyY(0.5), target.getZ(), 10 * level, 0.4, 0.5, 0.4, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(CORE), 0.35f, Math.max(1, Math.min(20, 10 * level)));
 			hits++;
 		}
 		if (hits == 0) {
@@ -270,6 +272,8 @@ final class AtomixAbilities {
 		ctx.grantInvulnerability(50);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.atomix_hero_time").formatted(Formatting.GREEN, Formatting.BOLD), true);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_POWER_SELECT, 1.5f, 0.6f);
+		PowerMoves.craterHere(ctx, 9.0, 0.7, 1.0f, 0x9CFF8A);
+		com.santiq.kingdomomnitrix.power.Destruction.ignite(ctx.world(), ctx.player(), ctx.player().getPos(), 10.0, 0.12);
 		return true;
 	}
 
@@ -294,7 +298,7 @@ final class AtomixAbilities {
 					HERO_TIME.remove(id);
 					nuke(world, player);
 				} else if (now % 2 == 0) {
-					world.spawnParticles(CORE, player.getX(), player.getBodyY(0.5), player.getZ(), 8, 0.6, 0.8, 0.6, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(CORE), 0.35f, Math.max(1, Math.min(20, 8)));
 				}
 			}
 		}
@@ -339,7 +343,7 @@ final class AtomixAbilities {
 		}
 		if (now % 3 == 0) {
 			double a = now * 0.4;
-			world.spawnParticles(GLOW, target.getX() + Math.cos(a) * 0.9, target.getBodyY(0.5), target.getZ() + Math.sin(a) * 0.9, 2, 0.0, 0.3, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX() + Math.cos(a) * 0.9, target.getBodyY(0.5), target.getZ() + Math.sin(a) * 0.9), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 2)));
 		}
 	}
 
@@ -355,8 +359,8 @@ final class AtomixAbilities {
 			target.addVelocity(away.x, 0.6, away.z);
 			target.velocityModified = true;
 		}
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getBodyY(0.5), player.getZ(), 3, 1.0, 1.0, 1.0, 0.0);
-		world.spawnParticles(ParticleTypes.FLASH, player.getX(), player.getBodyY(0.5), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), 0xFFB060, 2.0f);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), 0xFFFFFF, 1.4f);
 		for (int r = 1; r <= 4; r++) {
 			ring(world, player.getPos().add(0, 0.5, 0), radius * r / 4.0, r % 2 == 0 ? CORE : GLOW);
 		}
@@ -381,7 +385,7 @@ final class AtomixAbilities {
 				continue;
 			}
 			pending.add(new Pending(world, owner, target, rad.level));
-			world.spawnParticles(GLOW, target.getX(), target.getBodyY(0.6), target.getZ(), 2 + rad.level, 0.3, 0.4, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 2 + rad.level)));
 			if (world.getTime() - rad.lastDecay >= DECAY_TICKS) {
 				rad.level--;
 				rad.lastDecay = world.getTime();
@@ -401,7 +405,7 @@ final class AtomixAbilities {
 		int points = Math.max(12, (int) (radius * 8));
 		for (int i = 0; i < points; i++) {
 			double a = i * MathHelper.TAU / points;
-			world.spawnParticles(dust, center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius, 1, 0.0, 0.05, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius), AlienKit.color(dust), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 	}
 }

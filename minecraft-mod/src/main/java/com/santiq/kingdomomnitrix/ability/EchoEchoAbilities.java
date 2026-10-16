@@ -122,7 +122,7 @@ final class EchoEchoAbilities {
 			clone.initialize(world, world.getLocalDifficulty(BlockPos.ofFloored(at)), SpawnReason.MOB_SUMMONED, null);
 			world.spawnEntity(clone);
 			clone.taunt(world, player, 16.0);
-			world.spawnParticles(ParticleTypes.NOTE, at.x, at.y + 0.6, at.z, 4, 0.2, 0.2, 0.2, 0.5);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x, at.y + 0.6, at.z), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, 4)));
 			spawned++;
 		}
 		return spawned;
@@ -186,7 +186,7 @@ final class EchoEchoAbilities {
 				target.damage(world.getDamageSources().sonicBoom(owner), RESONANCE_BONUS * (heard[1] - 1));
 				target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 6), owner);
 				target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0), owner);
-				world.spawnParticles(ParticleTypes.NOTE, target.getX(), target.getBodyY(1.0) + 0.3, target.getZ(), (int) heard[1] * 2, 0.3, 0.2, 0.3, 1.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(1.0) + 0.3, target.getZ()), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, (int) heard[1] * 2)));
 				if (heard[1] == 2) {
 					world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.0f, 0.5f);
 				}
@@ -217,7 +217,7 @@ final class EchoEchoAbilities {
 	private static void screamFx(ServerWorld world, Vec3d from, Vec3d dir, double range) {
 		for (int i = 1; i <= (int) range; i++) {
 			Vec3d p = from.add(dir.multiply(i));
-			world.spawnParticles(ParticleTypes.SONIC_BOOM, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, new Vec3d(p.x, p.y, p.z), 0xC8E8FF, 3.5f, 10);
 		}
 	}
 
@@ -227,7 +227,7 @@ final class EchoEchoAbilities {
 			Vec3d v = projectile.getVelocity();
 			projectile.setVelocity(v.multiply(-0.8));
 			projectile.velocityModified = true;
-			player.getServerWorld().spawnParticles(ParticleTypes.NOTE, projectile.getX(), projectile.getY(), projectile.getZ(), 3, 0.1, 0.1, 0.1, 1.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(player.getServerWorld(), new Vec3d(projectile.getX(), projectile.getY(), projectile.getZ()), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, 3)));
 			return false;
 		}
 		return true;
@@ -247,6 +247,7 @@ final class EchoEchoAbilities {
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.0f, 2.0f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PARROT_IMITATE_WARDEN, 1.0f, 1.6f);
+		PowerMoves.carveLook(ctx, 14.0, 2.0, 0.7f);
 		return true;
 	}
 
@@ -293,10 +294,11 @@ final class EchoEchoAbilities {
 			double a = i * MathHelper.TAU / clones.size();
 			Vec3d at = player.getPos().add(Math.cos(a) * radius, 0, Math.sin(a) * radius);
 			clones.get(i).requestTeleport(at.x, at.y, at.z);
-			world.spawnParticles(ParticleTypes.NOTE, at.x, at.y + 0.6, at.z, 3, 0.2, 0.2, 0.2, 0.5);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x, at.y + 0.6, at.z), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, 3)));
 		}
 		WALLS.put(player.getUuid(), world.getTime() + (long) (ctx.param("seconds", 4.0) * 20));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BELL_RESONATE, 1.2f, 1.4f);
+		PowerMoves.shatterAround(ctx, 6.0, 0.7f);
 		return true;
 	}
 
@@ -317,6 +319,7 @@ final class EchoEchoAbilities {
 		CHORUS.put(player.getUuid(), ctx.world().getTime());
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.EVENT_RAID_HORN.value(), 1.0f, 1.8f);
+		PowerMoves.shatterAround(ctx, 11.0, 0.9f);
 		return true;
 	}
 
@@ -344,8 +347,7 @@ final class EchoEchoAbilities {
 				} else if (now % 4 == 0) {
 					for (int i = 0; i < 8; i++) {
 						double a = i * MathHelper.TAU / 8 + now * 0.2;
-						world.spawnParticles(ParticleTypes.NOTE, player.getX() + Math.cos(a) * 1.2, player.getBodyY(0.5), player.getZ() + Math.sin(a) * 1.2,
-								1, 0.0, 0.0, 0.0, 0.0);
+						com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX() + Math.cos(a) * 1.2, player.getBodyY(0.5), player.getZ() + Math.sin(a) * 1.2), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, 1)));
 					}
 				}
 			}
@@ -379,7 +381,7 @@ final class EchoEchoAbilities {
 								soundHit(world, player, target, 3.0f, voice.getPos(), 0.3);
 							}
 						}
-						world.spawnParticles(ParticleTypes.SONIC_BOOM, voice.getX(), voice.getBodyY(0.6), voice.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+						com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, new Vec3d(voice.getX(), voice.getBodyY(0.6), voice.getZ()), 0xC8E8FF, 3.5f, 10);
 					}
 					world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_WARDEN_SONIC_BOOM, SoundCategory.PLAYERS, 1.2f, 1.6f);
 				}

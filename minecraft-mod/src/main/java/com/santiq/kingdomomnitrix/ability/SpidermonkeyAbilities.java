@@ -76,7 +76,7 @@ final class SpidermonkeyAbilities {
 				for (int i = 0; i < 3; i++) {
 					AlienKit.melee(world, monkey, target, 1.5f);
 				}
-				world.spawnParticles(ParticleTypes.CRIT, target.getX(), target.getBodyY(0.6), target.getZ(), 10, 0.3, 0.3, 0.3, 0.2);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.CRIT), 0.35f, Math.max(1, Math.min(20, 10)));
 			}
 		});
 	}
@@ -103,6 +103,7 @@ final class SpidermonkeyAbilities {
 			webbed(world, target, (int) (ctx.param("seconds", 3.0) * 20));
 		});
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_STEP, 1.2f, 1.6f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 80, 0xF0F0F0);
 		return true;
 	}
 
@@ -118,9 +119,10 @@ final class SpidermonkeyAbilities {
 		Vec3d look = monkey.getRotationVec(1.0f);
 		for (int i = 1; i <= (int) range; i++) {
 			Vec3d p = monkey.getEyePos().add(look.multiply(i));
-			world.spawnParticles(WEB_THICK, p.x, p.y, p.z, 4, i * 0.15, i * 0.1, i * 0.15, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(WEB_THICK), 0.35f, Math.max(1, Math.min(20, 4)));
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_AMBIENT, 1.0f, 1.4f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 120, 0xF0F0F0);
 		return true;
 	}
 
@@ -160,6 +162,7 @@ final class SpidermonkeyAbilities {
 		AlienKit.ring(world, monkey.getPos().add(0, 0.2, 0), radius, WEB_THICK);
 		AlienKit.ring(world, monkey.getPos().add(0, 0.2, 0), radius * 0.6, WEB);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_COBWEB_PLACE, 1.4f, 0.8f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 160, 0xF0F0F0);
 		return true;
 	}
 
@@ -176,6 +179,7 @@ final class SpidermonkeyAbilities {
 			AlienKit.line(world, target.getPos().add(0, target.getHeight(), 0), target.getPos().add(0, target.getHeight() + 4, 0), WEB, 2.0);
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_AMBIENT, 1.4f, 0.8f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 200, 0xF0F0F0);
 		return true;
 	}
 
@@ -218,7 +222,7 @@ final class SpidermonkeyAbilities {
 			if (frenzy != null && world.getTime() % 3 == 0) {
 				for (LivingEntity target : AlienKit.cone(world, monkey, 3.5, 0.4)) {
 					AlienKit.melee(world, monkey, target, 2.5f);
-					world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.6), target.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), 0xFFFFFF, 1.4f);
 				}
 				world.playSound(null, monkey.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, net.minecraft.sound.SoundCategory.PLAYERS, 0.8f, 1.6f);
 				if (--frenzy[0] <= 0) {

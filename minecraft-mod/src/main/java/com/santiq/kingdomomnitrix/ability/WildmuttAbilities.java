@@ -170,7 +170,7 @@ final class WildmuttAbilities {
 		int frenzy = frenzy(player);
 		setFrenzy(player, frenzy + 1);
 		BLEEDS.put(target.getUuid(), new Bleed(player.getUuid(), player.getServerWorld().getTime() + BLEED_TICKS, BLEED_DAMAGE + frenzy * 0.3f));
-		player.getServerWorld().spawnParticles(BLOOD, target.getX(), target.getBodyY(0.6), target.getZ(), 6 + frenzy * 2, 0.3, 0.3, 0.3, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(player.getServerWorld(), new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(BLOOD), 0.35f, Math.max(1, Math.min(20, 6 + frenzy * 2)));
 		if (frenzy > 0 && target.isAlive()) {
 			bonusHit = true;
 			try {
@@ -238,11 +238,12 @@ final class WildmuttAbilities {
 		}
 		nearestEnemy(player, radius, null).ifPresent(target -> mark(player, target));
 		setFrenzy(player, frenzy(player) + 2);
-		ctx.world().spawnParticles(ParticleTypes.SONIC_BOOM, player.getX(), player.getEyeY(), player.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.shockwave(ctx.world(), new Vec3d(player.getX(), player.getEyeY(), player.getZ()), 0xC8E8FF, 3.5f, 10);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.0f, 1.3f);
 		if (count == 0) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.senses_nothing").formatted(Formatting.GRAY), true);
 		}
+		PowerMoves.shatterAround(ctx, 6.0, 0.6f);
 		return true;
 	}
 
@@ -260,7 +261,7 @@ final class WildmuttAbilities {
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, path, e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
 			target.damage(world.getDamageSources().playerAttack(player), damage);
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 30, 4), player);
-			world.spawnParticles(ParticleTypes.SWEEP_ATTACK, target.getX(), target.getBodyY(0.5), target.getZ(), 2, 0.2, 0.2, 0.2, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), 0xFFFFFF, 1.4f);
 		}
 		BuiltinAbilities.launch(player, dir.x * forward, ctx.param("up", 0.55), dir.z * forward);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WOLF_GROWL, 1.0f, 0.8f);
@@ -293,8 +294,9 @@ final class WildmuttAbilities {
 			setFrenzy(player, 0);
 		}
 		BLEEDS.put(target.getUuid(), new Bleed(player.getUuid(), ctx.world().getTime() + BLEED_TICKS * 2, BLEED_DAMAGE * (1 + frenzy)));
-		ctx.world().spawnParticles(BLOOD, target.getX(), target.getBodyY(0.6), target.getZ(), 30, 0.4, 0.4, 0.4, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(BLOOD), 0.35f, Math.max(1, Math.min(20, 30)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WOLF_GROWL, 1.0f, 0.6f);
+		PowerMoves.carveLook(ctx, 2.5, 1.0, com.santiq.kingdomomnitrix.power.AlienStrength.of(ctx.player()));
 		return true;
 	}
 
@@ -330,6 +332,7 @@ final class WildmuttAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, 1, false, false));
 		fearAround(player, ctx.param("radius", 8.0), (int) (ctx.param("seconds", 4.0) * 20));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 1.2f, 0.7f);
+		PowerMoves.craterHere(ctx, 3.0, 0.5, 1.0f, 0xFF9A40);
 		return true;
 	}
 
@@ -396,7 +399,7 @@ final class WildmuttAbilities {
 			} finally {
 				bonusHit = false;
 			}
-			owner.getServerWorld().spawnParticles(BLOOD, target.getX(), target.getBodyY(0.5), target.getZ(), 4, 0.2, 0.3, 0.2, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(owner.getServerWorld(), new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(BLOOD), 0.35f, Math.max(1, Math.min(20, 4)));
 		}
 	}
 
@@ -440,14 +443,14 @@ final class WildmuttAbilities {
 		int points = Math.min(40, Math.max(4, (int) (step.length() * 1.5)));
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = from.add(step.multiply(i / (double) points));
-			world.spawnParticles(SCENT, p.x, p.y, p.z, 1, 0.05, 0.05, 0.05, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(SCENT), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 	}
 
 	private static void ring(ServerWorld world, Vec3d center, double radius, DustParticleEffect dust) {
 		for (int i = 0; i < 16; i++) {
 			double a = i * MathHelper.TAU / 16;
-			world.spawnParticles(dust, center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius, 1, 0, 0, 0, 0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius), AlienKit.color(dust), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 	}
 

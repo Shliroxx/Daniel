@@ -144,7 +144,7 @@ final class SwampfireAbilities {
 			power *= 1.5f;
 		}
 		CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(), center, radius, world.getTime() + ticks, power));
-		world.spawnParticles(GAS, center.x, center.y, center.z, (int) (radius * 12), radius * 0.5, radius * 0.3, radius * 0.5, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(center.x, center.y, center.z), AlienKit.color(GAS), 0.35f, Math.max(1, Math.min(20, (int) (radius * 12))));
 	}
 
 	/** Feuer an dieser Stelle: jede Wolke, die sie beruehrt, explodiert (sofort). */
@@ -163,9 +163,8 @@ final class SwampfireAbilities {
 	private static void detonate(ServerWorld world, Cloud cloud) {
 		ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(cloud.owner);
 		double blast = cloud.radius + 1.0;
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, cloud.center.x, cloud.center.y, cloud.center.z, 1, 0.0, 0.0, 0.0, 0.0);
-		world.spawnParticles(ParticleTypes.FLAME, cloud.center.x, cloud.center.y, cloud.center.z, (int) (blast * 20), blast * 0.4, blast * 0.3,
-				blast * 0.4, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, new Vec3d(cloud.center.x, cloud.center.y, cloud.center.z), 0xFFB060, 2.0f);
+		com.santiq.kingdomomnitrix.vfx.Fx.flames(world, new Vec3d(cloud.center.x, cloud.center.y, cloud.center.z), new Vec3d(0, 0.06, 0), 0xFF7A20, 0.3f, Math.max(1, Math.min(12, (int) (blast * 20))));
 		world.playSound(null, BlockPos.ofFloored(cloud.center), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.4f, 0.9f);
 		if (owner != null) {
 			bonusHit = true;
@@ -220,8 +219,7 @@ final class SwampfireAbilities {
 		for (int i = 1; i <= points; i++) {
 			Vec3d p = eye.add(step.multiply(i / (double) points)).add(0, -0.2, 0);
 			if (i > 2) {
-				world.spawnParticles(com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME,
-						p.x, p.y, p.z, 2, 0.06, 0.06, 0.06, 0.01);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? ParticleTypes.SOUL_FIRE_FLAME : ParticleTypes.FLAME), 0.35f, Math.max(1, Math.min(20, 2)));
 			}
 			ignited |= igniteAt(world, p, 0.0);
 		}
@@ -229,6 +227,7 @@ final class SwampfireAbilities {
 		if (ignited) {
 			BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 1.0f, 0.6f);
 		}
+		com.santiq.kingdomomnitrix.power.Destruction.ignite(ctx.world(), ctx.player(), PowerMoves.aim(ctx.player(), 10.0), 2.5, 0.35);
 		return true;
 	}
 
@@ -261,7 +260,7 @@ final class SwampfireAbilities {
 		for (int i = 0; i < clouds; i++) {
 			addCloud(world, player, start.add(dir.multiply(-0.5 - 1.6 * i)), 1.6, 200, (float) ctx.param("damage", 5.0));
 		}
-		world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 0.2, player.getZ(), 20, 0.2, 0.1, 0.2, 0.05);
+		com.santiq.kingdomomnitrix.vfx.Fx.flames(world, new Vec3d(player.getX(), player.getY() + 0.2, player.getZ()), new Vec3d(0, 0.06, 0), 0xFF7A20, 0.3f, Math.max(1, Math.min(12, 20)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BLAZE_SHOOT, 1.0f, 0.5f);
 		return true;
 	}
@@ -285,11 +284,12 @@ final class SwampfireAbilities {
 		}
 		for (int i = 0; i < 24; i++) {
 			double a = i * MathHelper.TAU / 24;
-			world.spawnParticles(SAP, at.x + Math.cos(a) * radius * 0.8, at.y + 0.3, at.z + Math.sin(a) * radius * 0.8, 3, 0.1, 0.4, 0.1, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x + Math.cos(a) * radius * 0.8, at.y + 0.3, at.z + Math.sin(a) * radius * 0.8), AlienKit.color(SAP), 0.35f, Math.max(1, Math.min(20, 3)));
 		}
-		world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, at.x, at.y + 0.5, at.z, 30, radius * 0.5, 0.5, radius * 0.5, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(at.x, at.y + 0.5, at.z), AlienKit.color(ParticleTypes.HAPPY_VILLAGER), 0.35f, Math.max(1, Math.min(20, 30)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ROOTS_BREAK, 1.4f, 0.6f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_CAVE_VINES_PLACE, 1.4f, 0.6f);
+		PowerMoves.encase(ctx, 16.0, net.minecraft.block.Blocks.MANGROVE_ROOTS.getDefaultState(), 120, 0x6A8A3A);
 		return true;
 	}
 
@@ -311,10 +311,10 @@ final class SwampfireAbilities {
 			if (state.getBlock() instanceof Fertilizable plant && !state.isOf(net.minecraft.block.Blocks.GRASS_BLOCK)
 					&& plant.isFertilizable(world, pos, state) && plant.canGrow(world, world.random, pos, state)) {
 				plant.grow(world, world.random, pos.toImmutable(), state);
-				world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 4, 0.3, 0.3, 0.3, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5), AlienKit.color(ParticleTypes.HAPPY_VILLAGER), 0.35f, Math.max(1, Math.min(20, 4)));
 			}
 		}
-		world.spawnParticles(SAP, player.getX(), player.getBodyY(0.5), player.getZ(), 40, 0.5, 0.8, 0.5, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(SAP), 0.35f, Math.max(1, Math.min(20, 40)));
 		BuiltinAbilities.sound(ctx, SoundEvents.ITEM_BONE_MEAL_USE, 1.4f, 0.8f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AZALEA_LEAVES_PLACE, 1.4f, 0.8f);
 		return true;
@@ -335,6 +335,8 @@ final class SwampfireAbilities {
 		INFERNOS.put(player.getUuid(), new Inferno(world.getRegistryKey(), center, world.getTime() + (long) (ctx.param("delay_seconds", 1.5) * 20)));
 		ctx.grantInvulnerability(50);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_UP, 1.5f, 0.4f);
+		PowerMoves.craterHere(ctx, 4.0, 0.6, 1.0f, 0xFF8A20);
+		com.santiq.kingdomomnitrix.power.Destruction.ignite(ctx.world(), ctx.player(), ctx.player().getPos(), 8.0, 0.2);
 		return true;
 	}
 
@@ -355,7 +357,7 @@ final class SwampfireAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 100, 1, false, false));
 		// Pfuetze platzt: Gas um ihn herum
 		addCloud(world, player, player.getPos().add(0, 0.6, 0), 3.0, 200, 8.0f);
-		world.spawnParticles(SAP, player.getX(), player.getY() + 0.2, player.getZ(), 60, 0.8, 0.1, 0.8, 0.0);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getY() + 0.2, player.getZ()), AlienKit.color(SAP), 0.35f, Math.max(1, Math.min(20, 60)));
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_SLIME_BLOCK_BREAK, SoundCategory.PLAYERS, 1.5f, 0.5f);
 		world.playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AZALEA_LEAVES_PLACE, SoundCategory.PLAYERS, 1.5f, 0.6f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.swampfire_reform").formatted(Formatting.GREEN), true);
@@ -408,8 +410,7 @@ final class SwampfireAbilities {
 				continue;
 			}
 			if (now % 4 == 0) {
-				world.spawnParticles(now % 8 == 0 ? GAS : GAS_LIGHT, cloud.center.x, cloud.center.y, cloud.center.z, (int) (cloud.radius * 3),
-						cloud.radius * 0.45, cloud.radius * 0.3, cloud.radius * 0.45, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(cloud.center.x, cloud.center.y, cloud.center.z), AlienKit.color(now % 8 == 0 ? GAS : GAS_LIGHT), 0.35f, Math.max(1, Math.min(20, (int) (cloud.radius * 3))));
 			}
 			if (now % 20 == 0) {
 				ServerPlayerEntity owner = server.getPlayerManager().getPlayer(cloud.owner);
@@ -445,7 +446,7 @@ final class SwampfireAbilities {
 			target.setVelocity(0.0, Math.min(0.0, target.getVelocity().y), 0.0);
 			target.velocityModified = true;
 			if (world.getTime() % 5 == 0) {
-				world.spawnParticles(SAP, target.getX(), target.getY() + 0.4, target.getZ(), 4, target.getWidth() * 0.4, 0.4, target.getWidth() * 0.4, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getY() + 0.4, target.getZ()), AlienKit.color(SAP), 0.35f, Math.max(1, Math.min(20, 4)));
 			}
 		}
 	}

@@ -92,7 +92,7 @@ final class BrainstormAbilities {
 		if (target instanceof ServerPlayerEntity brain && FIELD.containsKey(brain.getUuid()) && amount > 0.0f
 				&& brain.getWorld().getTime() < FIELD.get(brain.getUuid())) {
 			STORED.merge(brain.getUuid(), amount, Float::sum);
-			brain.getServerWorld().spawnParticles(PINK, brain.getX(), brain.getBodyY(0.5), brain.getZ(), 10, 0.8, 0.8, 0.8, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(brain.getServerWorld(), new Vec3d(brain.getX(), brain.getBodyY(0.5), brain.getZ()), AlienKit.color(PINK), 0.35f, Math.max(1, Math.min(20, 10)));
 			brain.getServerWorld().playSound(null, brain.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_HIT, SoundCategory.PLAYERS, 1.0f, 1.6f);
 			return false;
 		}
@@ -125,7 +125,7 @@ final class BrainstormAbilities {
 			AlienKit.line(world, prev, p, BOLT, 4.0);
 			prev = p;
 		}
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, to.x, to.y, to.z, 8, 0.2, 0.2, 0.2, 0.2);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(to.x, to.y, to.z), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 8)));
 	}
 
 	private static float spendStored(ServerPlayerEntity brain) {
@@ -147,6 +147,7 @@ final class BrainstormAbilities {
 			zap(world, brain, head, beam.target().get(), (float) ctx.param("damage", 6.0) * spendStored(brain), new HashSet<>());
 		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_LIGHTNING_BOLT_IMPACT, 0.6f, 1.6f);
+		PowerMoves.blastAtAim(ctx, 26.0, 1.3, 1.5f, 0xA8E0FF);
 		return true;
 	}
 
@@ -188,7 +189,7 @@ final class BrainstormAbilities {
 		for (LivingEntity target : AlienKit.cone(world, brain, ctx.param("range", 20.0), 0.5)) {
 			ANALYZED.put(target.getUuid(), new long[]{world.getTime() + ticks});
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ticks, 0), brain);
-			world.spawnParticles(PINK, target.getX(), target.getBodyY(1.0) + 0.3, target.getZ(), 8, 0.3, 0.2, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(1.0) + 0.3, target.getZ()), AlienKit.color(PINK), 0.35f, Math.max(1, Math.min(20, 8)));
 			count++;
 		}
 		if (count == 0) {
@@ -205,6 +206,7 @@ final class BrainstormAbilities {
 		STORMS.put(ctx.player().getUuid(), ctx.world().getTime());
 		ctx.grantInvulnerability(20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, 1.5f, 1.2f);
+		PowerMoves.craterHere(ctx, 4.0, 0.5, 1.5f, 0xA8E0FF);
 		return true;
 	}
 
@@ -226,8 +228,7 @@ final class BrainstormAbilities {
 				} else if (now % 3 == 0) {
 					for (int i = 0; i < 10; i++) {
 						double a = i * MathHelper.TAU / 10 + now * 0.15;
-						world.spawnParticles(PINK, brain.getX() + Math.cos(a) * 1.3, brain.getBodyY(0.2 + (i % 3) * 0.35),
-								brain.getZ() + Math.sin(a) * 1.3, 1, 0.0, 0.0, 0.0, 0.0);
+						com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(brain.getX() + Math.cos(a) * 1.3, brain.getBodyY(0.2 + (i % 3) * 0.35), brain.getZ() + Math.sin(a) * 1.3), AlienKit.color(PINK), 0.35f, Math.max(1, Math.min(20, 1)));
 					}
 				}
 			}
@@ -240,7 +241,7 @@ final class BrainstormAbilities {
 					brain.velocityModified = true;
 					brain.fallDistance = 0.0f;
 					if (now % 4 == 0) {
-						world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, brain.getX(), brain.getY(), brain.getZ(), 3, 0.3, 0.05, 0.3, 0.05);
+						com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(brain.getX(), brain.getY(), brain.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 3)));
 					}
 				}
 			}

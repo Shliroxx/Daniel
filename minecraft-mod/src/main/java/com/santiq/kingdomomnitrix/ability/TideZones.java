@@ -79,11 +79,9 @@ public final class TideZones {
 				int points = (int) (zone.radius() * 6);
 				for (int i = 0; i < points; i++) {
 					double a = i * MathHelper.TAU / points + tick * 0.05;
-					world.spawnParticles(ParticleTypes.SPLASH, zone.center().x + Math.cos(a) * zone.radius(), zone.center().y + 0.2,
-							zone.center().z + Math.sin(a) * zone.radius(), 1, 0.0, 0.05, 0.0, 0.0);
+					com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(zone.center().x + Math.cos(a) * zone.radius(), zone.center().y + 0.2, zone.center().z + Math.sin(a) * zone.radius()), AlienKit.color(ParticleTypes.SPLASH), 0.8f, Math.max(1, Math.min(6, (1) / 4)));
 				}
-				world.spawnParticles(ParticleTypes.FALLING_WATER, zone.center().x, zone.center().y + 2.5, zone.center().z,
-						(int) (zone.radius() * 3), zone.radius() * 0.5, 0.3, zone.radius() * 0.5, 0.0);
+				com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(zone.center().x, zone.center().y + 2.5, zone.center().z), AlienKit.color(ParticleTypes.FALLING_WATER), 0.8f, Math.max(1, Math.min(6, ((int) (zone.radius() * 3)) / 4)));
 			}
 		}
 	}

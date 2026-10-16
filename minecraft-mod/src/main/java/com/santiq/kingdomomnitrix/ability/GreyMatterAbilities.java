@@ -126,7 +126,7 @@ final class GreyMatterAbilities {
 			factor += WEAK_BONUS;
 			WEAK.remove(target.getUuid());
 			ServerWorld world = attacker.getServerWorld();
-			world.spawnParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getBodyY(0.6), target.getZ(), 30, 0.4, 0.5, 0.4, 0.3);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.ENCHANTED_HIT), 0.35f, Math.max(1, Math.min(20, 30)));
 			world.playSound(null, target.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), SoundCategory.PLAYERS, 1.2f, 2.0f);
 		}
 		if (factor <= 0.0f) {
@@ -145,7 +145,7 @@ final class GreyMatterAbilities {
 	private static boolean allowDamage(LivingEntity target, DamageSource source, float amount) {
 		if (target instanceof ServerPlayerEntity player && source.getAttacker() instanceof LivingEntity
 				&& MASTERMIND.getOrDefault(player.getUuid(), 0L) > player.getServerWorld().getTime() && player.getRandom().nextBoolean()) {
-			player.getServerWorld().spawnParticles(TECH, player.getX(), player.getBodyY(0.5), player.getZ(), 12, 0.3, 0.3, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(player.getServerWorld(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(TECH), 0.35f, Math.max(1, Math.min(20, 12)));
 			player.getServerWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SILVERFISH_STEP, SoundCategory.PLAYERS, 1.0f, 2.0f);
 			return false;
 		}
@@ -179,7 +179,7 @@ final class GreyMatterAbilities {
 		Vec3d to = target.getPos().add(0, target.getHeight() * 0.5, 0);
 		for (int i = 1; i <= 10; i++) {
 			Vec3d p = from.lerp(to, i / 10.0);
-			ctx.world().spawnParticles(TECH, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(p.x, p.y, p.z), AlienKit.color(TECH), 0.35f, Math.max(1, Math.min(20, 1)));
 		}
 		BuiltinAbilities.sound(ctx, ModSounds.SHIP_AI, 0.7f, level > before ? 1.5f : 1.2f);
 		return true;
@@ -201,7 +201,7 @@ final class GreyMatterAbilities {
 		if (knowledge(player, target) >= 3) {
 			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 1), player);
 		}
-		ctx.world().spawnParticles(ParticleTypes.ENCHANTED_HIT, target.getX(), target.getBodyY(0.6), target.getZ(), 20, 0.3, 0.4, 0.3, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.ENCHANTED_HIT), 0.35f, Math.max(1, Math.min(20, 20)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_NOTE_BLOCK_BELL.value(), 1.0f, 1.6f);
 		return true;
 	}
@@ -243,9 +243,9 @@ final class GreyMatterAbilities {
 		for (ServerPlayerEntity ally : ctx.world().getPlayers(p -> p != player && p.squaredDistanceTo(player) <= 36.0
 				&& PartyRules.isAlly(player, p))) {
 			ally.heal(heal * 0.5f);
-			ctx.world().spawnParticles(ParticleTypes.HAPPY_VILLAGER, ally.getX(), ally.getBodyY(0.6), ally.getZ(), 8, 0.3, 0.4, 0.3, 0.0);
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(ally.getX(), ally.getBodyY(0.6), ally.getZ()), AlienKit.color(ParticleTypes.HAPPY_VILLAGER), 0.35f, Math.max(1, Math.min(20, 8)));
 		}
-		ctx.world().spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.6), player.getZ(), 20, 0.3, 0.3, 0.3, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 20)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.4f);
 		return true;
 	}
@@ -277,7 +277,7 @@ final class GreyMatterAbilities {
 		if (learned > 0) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.grey_matter_mastermind", learned).formatted(Formatting.GREEN), true);
 		}
-		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, player.getX(), player.getBodyY(0.5), player.getZ(), 80, 4.0, 1.0, 4.0, 0.1);
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 80)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_BEACON_ACTIVATE, 1.0f, 1.4f);
 		return true;
 	}
@@ -331,7 +331,7 @@ final class GreyMatterAbilities {
 			double angle = world.getTime() * 0.3;
 			for (int i = 0; i < 4; i++) {
 				double a = angle + i * MathHelper.HALF_PI;
-				world.spawnParticles(TECH, trap.pos().x + Math.cos(a) * 0.9, trap.pos().y + 0.1, trap.pos().z + Math.sin(a) * 0.9, 1, 0, 0, 0, 0);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(trap.pos().x + Math.cos(a) * 0.9, trap.pos().y + 0.1, trap.pos().z + Math.sin(a) * 0.9), AlienKit.color(TECH), 0.35f, Math.max(1, Math.min(20, 1)));
 			}
 			List<LivingEntity> caught = world.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(trap.pos(), 2.4, 2.0, 2.4),
 					e -> e != owner && e.isAlive() && PartyRules.canHarm(owner, e));
@@ -344,7 +344,7 @@ final class GreyMatterAbilities {
 					target.velocityModified = true;
 					GreyMatterKnowledge.mark(owner, target, GreyMatterKnowledge.MARK_TICKS);
 				}
-				world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, trap.pos().x, trap.pos().y + 0.4, trap.pos().z, 30, 0.6, 0.4, 0.6, 0.2);
+				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(trap.pos().x, trap.pos().y + 0.4, trap.pos().z), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 30)));
 				world.playSound(null, trap.pos().x, trap.pos().y, trap.pos().z, SoundEvents.BLOCK_TRIPWIRE_CLICK_ON, SoundCategory.PLAYERS, 1.2f, 1.6f);
 				it.remove();
 			}
