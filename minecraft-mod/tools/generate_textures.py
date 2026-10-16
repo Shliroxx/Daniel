@@ -448,107 +448,6 @@ def item_textures() -> dict[str, Image.Image]:
     return t
 
 
-def crate_textures(rng: random.Random) -> dict[str, Image.Image]:
-    wood_light, wood_dark, metal, metal_dark = hexc("E8963A"), hexc("B5651D"), hexc("C9CDD3"), hexc("6F757D")
-    side = Image.new("RGBA", (16, 16))
-    top = Image.new("RGBA", (16, 16))
-    for y in range(16):
-        for x in range(16):
-            base = wood_light if (y // 4) % 2 == 0 else wood_dark
-            jitter = rng.randint(-12, 12)
-            px = tuple(max(0, min(255, c + jitter)) for c in base[:3]) + (255,)
-            side.putpixel((x, y), px)
-            top.putpixel((x, y), px)
-    for img in (side, top):
-        for i in range(16):
-            for edge in (0, 15):
-                img.putpixel((i, edge), metal_dark)
-                img.putpixel((edge, i), metal_dark)
-        for i in range(1, 15):
-            img.putpixel((i, i), metal)
-            img.putpixel((i, 15 - i), metal)
-    # Bolt-Symbol auf der Seite
-    for x, y in [(6, 6), (7, 6), (8, 6), (9, 6), (6, 9), (7, 9), (8, 9), (9, 9), (6, 7), (6, 8), (9, 7), (9, 8)]:
-        side.putpixel((x, y), hexc("FFD84A"))
-    forge_side, forge_top, forge_bottom = Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16))
-    stone, stone_dark, gold, glow = hexc("5E636B"), hexc("3E4249"), hexc("F2C230"), hexc("7FE3FF")
-    for y in range(16):
-        for x in range(16):
-            jitter = rng.randint(-8, 8)
-            base = stone if (x + y) % 7 else stone_dark
-            px = tuple(max(0, min(255, c + jitter)) for c in base[:3]) + (255,)
-            forge_side.putpixel((x, y), px)
-            forge_bottom.putpixel((x, y), px)
-            forge_top.putpixel((x, y), px)
-    for i in range(16):
-        forge_side.putpixel((i, 0), gold)
-        forge_side.putpixel((i, 15), stone_dark)
-        forge_top.putpixel((i, 0), gold)
-        forge_top.putpixel((i, 15), gold)
-        forge_top.putpixel((0, i), gold)
-        forge_top.putpixel((15, i), gold)
-    # Krone auf der Seite, leuchtende Rune oben
-    for x, y in [(4, 9), (5, 7), (6, 9), (7, 6), (8, 6), (9, 9), (10, 7), (11, 9)] + [(x, 10) for x in range(4, 12)]:
-        forge_side.putpixel((x, y), gold)
-    for x, y in [(7, 4), (8, 4), (6, 5), (9, 5), (5, 7), (10, 7), (6, 9), (9, 9), (7, 10), (8, 10), (7, 7), (8, 7), (7, 8), (8, 8)]:
-        forge_top.putpixel((x, y), glow)
-    term_side, term_top = Image.new("RGBA", (16, 16)), Image.new("RGBA", (16, 16))
-    metal, metal_dark, screen, screen_dark = hexc("8C96A3"), hexc("3A3F47"), hexc("4FC3FF"), hexc("1B4F72")
-    for y in range(16):
-        for x in range(16):
-            edge = x in (0, 15) or y in (0, 15)
-            term_side.putpixel((x, y), metal_dark if edge else metal)
-            term_top.putpixel((x, y), metal_dark if edge else metal)
-    for y in range(3, 9):
-        for x in range(3, 13):
-            term_side.putpixel((x, y), screen if (x + y) % 5 else screen_dark)
-    for x, y in [(5, 11), (7, 11), (9, 11), (11, 11)]:
-        term_side.putpixel((x, y), hexc("FFD84A"))
-    for x, y in [(7, 5), (8, 5), (6, 6), (9, 6), (6, 7), (9, 7), (7, 8), (8, 8)]:
-        term_top.putpixel((x, y), hexc("FFD84A"))
-    arena_side = term_side.copy()
-    for x in range(3, 13):
-        for y in range(3, 9):
-            arena_side.putpixel((x, y), hexc("3A2A10") if x in (3, 12) or y in (3, 8) else hexc("F5C542") if (x + y) % 3 else hexc("FFE9A0"))
-    arena_top = term_top.copy()
-    for x, y in [(7, 4), (8, 4), (6, 5), (9, 5), (5, 7), (10, 7), (6, 9), (9, 9), (7, 10), (8, 10)]:
-        arena_top.putpixel((x, y), hexc("F5C542"))
-    return {"arena_terminal": arena_side, "arena_terminal_top": arena_top,
-            "bolt_crate": side, "bolt_crate_top": top, "weapon_terminal": term_side, "weapon_terminal_top": term_top,
-            "keyblade_forge": forge_side, "keyblade_forge_top": forge_top, "keyblade_forge_bottom": forge_bottom}
-
-
-def stone_base(rng: random.Random, light: str, dark: str, mid: str) -> Image.Image:
-    img = Image.new("RGBA", (16, 16))
-    for y in range(16):
-        for x in range(16):
-            roll = rng.random()
-            img.putpixel((x, y), hexc(dark) if roll < 0.18 else hexc(light) if roll > 0.85 else hexc(mid))
-    return img
-
-
-def ore_textures(rng: random.Random) -> dict[str, Image.Image]:
-    """Erze: Steinuntergrund mit farbigen Adern (je Erz eigene Form, damit sie unterscheidbar bleiben)."""
-    stone = ("9A9A9A", "6E6E6E", "828282")
-    deepslate = ("5A5A63", "36363E", "48484F")
-    veins = {
-        "raritanium_ore": (stone, ("9EE8FF", "38B8E8", "1E6E9E"), [(3, 3), (4, 3), (3, 4), (10, 5), (11, 5), (11, 6), (6, 10), (7, 10), (7, 11), (12, 12), (12, 11)]),
-        "mythril_ore": (stone, ("E8F4FF", "A8C8E8", "6888B0"), [(2, 6), (3, 6), (3, 7), (8, 2), (9, 2), (9, 3), (12, 8), (13, 8), (5, 12), (6, 12), (6, 13), (10, 13)]),
-        "deepslate_mythril_ore": (deepslate, ("E8F4FF", "A8C8E8", "6888B0"), [(2, 6), (3, 6), (3, 7), (8, 2), (9, 2), (9, 3), (12, 8), (13, 8), (5, 12), (6, 12), (6, 13), (10, 13)]),
-        "orichalcum_ore": (deepslate, ("FFE9A8", "F0B84A", "B07A1A"), [(4, 4), (5, 4), (5, 5), (4, 5), (10, 9), (11, 9), (11, 10), (10, 10), (7, 12)]),
-    }
-    out = {}
-    for name, (base, (hi, mid, lo), spots) in veins.items():
-        img = stone_base(rng, *base)
-        for x, y in spots:
-            img.putpixel((x, y), hexc(mid))
-            for nx, ny, color in ((x + 1, y + 1, lo), (x - 1, y, hi)):
-                if 0 <= nx < 16 and 0 <= ny < 16:
-                    img.putpixel((nx, ny), hexc(color))
-        out[name] = img
-    return out
-
-
 def material_textures() -> dict[str, Image.Image]:
     t: dict[str, Image.Image] = {}
     t["raritanium"] = from_ascii([
@@ -603,8 +502,7 @@ def mod_icon(items: dict[str, Image.Image]) -> Image.Image:
 def build_all(rng: random.Random) -> dict[str, Image.Image]:
     items = item_textures()
     out: dict[str, Image.Image] = {f"textures/item/{k}.png": v for k, v in items.items()}
-    out.update({f"textures/block/{k}.png": v for k, v in crate_textures(rng).items()})
-    out.update({f"textures/block/{k}.png": v for k, v in ore_textures(rng).items()})
+    # Bloecke (Maschinen, Kiste, Schmiede, Erze) erzeugt tools/generate_machine_textures.py in 128x128
     out.update({f"textures/item/{k}.png": v for k, v in material_textures().items()})
     out["icon.png"] = mod_icon(items)
     return out
