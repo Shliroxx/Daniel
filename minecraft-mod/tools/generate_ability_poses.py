@@ -329,6 +329,17 @@ ABILITY_POSE = {
     "headlock": "guard",
     "diving_splash": "slam",
     "rath_bomb": "slam",
+    "web_bola": "throw",
+    "web_yank": "beam",
+    "web_wall": "spread",
+    "monkey_leap": "leap",
+    "web_spinner": "spread",
+    "arachnid_ambush": "ultimate",
+    "swing_kick": "dodge",
+    "spider_drop": "slam",
+    "four_arm_flurry": "swipe",
+    "web_crash": "slam",
+    "cocoon_slam": "slam",
 }
 
 

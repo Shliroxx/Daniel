@@ -2,19 +2,15 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
-import com.santiq.kingdomomnitrix.util.Targeting;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -38,7 +34,7 @@ import net.minecraft.world.RaycastContext;
  */
 final class SpidermonkeyAbilities {
 	private static final Identifier SPIDERMONKEY = KingdomOmnitrix.id("spidermonkey");
-	private static final DustParticleEffect WEB = AlienKit.dust("#F2F2F2", 1.0f);
+	static final DustParticleEffect WEB = AlienKit.dust("#F2F2F2", 1.0f);
 	private static final DustParticleEffect WEB_THICK = AlienKit.dust("#E0E0E0", 1.6f);
 
 	/** Netzschwung: Zielpunkt und Ende */
@@ -60,32 +56,19 @@ final class SpidermonkeyAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("web_trap"), SpidermonkeyAbilities::webTrap);
 		AbilityRegistry.register(KingdomOmnitrix.id("web_cocoon"), SpidermonkeyAbilities::webCocoon);
 		ServerTickEvents.END_SERVER_TICK.register(SpidermonkeyAbilities::tick);
+		SpidermonkeyMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			SWINGS.remove(handler.getPlayer().getUuid());
 			FRENZY.remove(handler.getPlayer().getUuid());
 		});
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken <= 0.0f || AlienKit.bonusHit || !(source.getAttacker() instanceof ServerPlayerEntity monkey) || monkey == target
-					|| !isSpidermonkey(monkey) || !AlienKit.held(target)) {
-				return;
-			}
-			ServerWorld world = monkey.getServerWorld();
-			// eingewebt: +50 %, im Nahkampf drei Zusatzschlaege der uebrigen Arme
-			AlienKit.melee(world, monkey, target, taken * 0.5f);
-			if (source.getSource() == monkey) {
-				for (int i = 0; i < 3; i++) {
-					AlienKit.melee(world, monkey, target, 1.5f);
-				}
-				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.CRIT), 0.35f, Math.max(1, Math.min(20, 10)));
-			}
-		});
+		// Bonus gegen Eingewebte und die Zusatzschlaege laufen ueber die Passive „Netzjaeger“ (SpidermonkeyMoves)
 	}
 
 	private static boolean isSpidermonkey(ServerPlayerEntity player) {
 		return TransformationManager.get(player).activeAlien().filter(SPIDERMONKEY::equals).isPresent();
 	}
 
-	private static void webbed(ServerWorld world, LivingEntity target, int ticks) {
+	static void webbed(ServerWorld world, LivingEntity target, int ticks) {
 		AlienKit.hold(world, target, ticks, WEB, false);
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 5));
 	}
@@ -194,17 +177,7 @@ final class SpidermonkeyAbilities {
 				continue;
 			}
 			ServerWorld world = monkey.getServerWorld();
-			// Wandlauf: gegen die Wand gelaufen → klettern (Schleichen = festhalten)
-			// serverseitig gibt es fuer Spieler kein verlaessliches Kollisions-Flag: Wand voraus selbst pruefen
-			boolean wall = !world.isSpaceEmpty(monkey, monkey.getBoundingBox().offset(BuiltinAbilities.horizontalLook(monkey).multiply(0.3)));
-			if (wall && !monkey.isOnGround()) {
-				monkey.setVelocity(monkey.getVelocity().x, monkey.isSneaking() ? 0.0 : 0.22, monkey.getVelocity().z);
-				monkey.velocityModified = true;
-				monkey.fallDistance = 0.0f;
-			} else if (wall && monkey.isSprinting()) {
-				monkey.setVelocity(monkey.getVelocity().x, 0.3, monkey.getVelocity().z);
-				monkey.velocityModified = true;
-			}
+			// Wandlauf laeuft ueber die Passive „Kletteraffe“ (SpidermonkeyMoves)
 			Swing swing = SWINGS.get(id);
 			if (swing != null) {
 				Vec3d to = swing.anchor().subtract(monkey.getPos().add(0, 1, 0));

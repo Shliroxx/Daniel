@@ -1177,6 +1177,20 @@ def icons(c) -> dict[str, list]:
         "victory_lap": lambda: [L(m_crown(), FIRE_HOT, glow=FIRE_HOT), L(m_plus(190, 190, 40, 22), W)],
         "trash_talk": lambda: [L(m_mouth(), c, glow=FIRE), L(m_waves(190, 128, 3, -40, 40, 12, 28), W)],
         "royal_rumble": lambda: [L(m_ring(128, 128, 108, 10), FIRE_HOT, glow=FIRE), L(m_figure(-55, 30, 0.33), STONE), L(m_figure(55, 30, 0.33), STONE), L(m_fist(0, -20, 0.55), c)],
+        "web_bola": lambda: [L(m_web(70, 150, 34, 4), WEB, glow=WEB), L(m_web(128, 100, 34, 4), WEB), L(m_web(186, 150, 34, 4), WEB)],
+        "web_yank": lambda: [L(m_beam(128, 60, 220, 10), WEB, glow=WEB), L(m_figure(-80, 20, 0.35), STONE), L(m_arrow(120, 90, 50, 90, 12, 24), c)],
+        "web_wall": lambda: [L(m_box(40, 50, 216, 206, 10), WEB, glow=WEB), L(m_web(128, 128, 80, 5), WEB)],
+        "monkey_leap": lambda: [ground(), L(m_arrow(40, 190, 200, 60, 20, 40), c, glow=c), L(m_ring(200, 205, 50, 8, 190, 350), W)],
+        "web_spinner": lambda: [L(m_web(128, 128, 112, 6), WEB, glow=WEB), L(m_spiral(128, 128, 1.4, 60, 10), c)],
+        "arachnid_ambush": lambda: [L(m_web(128, 128, 112, 5), WEB, glow=WEB), L(m_figure(-70, -50, 0.25), STONE), L(m_figure(70, -50, 0.25), STONE), L(m_figure(0, 70, 0.25), STONE), L(m_fist(0, 0, 0.4), c)],
+        "swing_kick": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), WEB), L(m_footprint(), c, glow=c)],
+        "spider_drop": lambda: [ground(), L(m_beam(128, 0, 120, 8), WEB), L(m_figure(0, 0, 0.4), c, glow=c), L(m_web(128, 200, 50, 4), WEB)],
+        "web_crash": lambda: [ground(), L(m_arrow(128, 20, 128, 150, 24, 46), c, glow=c), L(m_web(128, 205, 70, 4), WEB)],
+        "cocoon_slam": lambda: [ground(), L(m_cocoon(), WEB, glow=WEB), L(m_burst(128, 205, 60, 20, 8), c, outline=None)],
+        "monkey_climber": lambda: [L(m_box(150, 20, 236, 236, 12), STONE), L(m_figure(-30, 10, 0.5), c, glow=c), L(m_arrow(110, 200, 110, 50, 14, 28), W)],
+        "four_arm_flurry": lambda: [L(m_figure(70, 20, 0.4), STONE), L(m_fist(-40, -40, 0.42), c, glow=c), L(m_fist(-40, 40, 0.42), c), L(m_speedlines(70, 190, 0, 50, 4, 8), W)],
+        "web_hunter": lambda: [L(m_reticle(), c, glow=c), L(m_web(128, 128, 56, 4), WEB)],
+        "spider_sense": lambda: [L(m_eye(128, 150, 180, 90), c, glow=c), L(m_waves(128, 70, 2, 200, 340, 10, 24), W), L(m_arrow(10, 220, 80, 190, 12, 24), STONE)],
     }
 
 
