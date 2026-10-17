@@ -175,6 +175,17 @@ ABILITY_POSE = {
     "wire_trip": "clap",
     "precision_drop": "leap",
     "logical_conclusion": "focus",
+    "crunch_bite": "swipe",
+    "wall_leap": "leap",
+    "quill_carpet": "spread",
+    "hunting_howl": "roar",
+    "drag_down": "leap",
+    "wild_hunt": "ultimate",
+    "tackle_pounce": "leap",
+    "quill_dive": "spread",
+    "throat_bite": "swipe",
+    "predator_drop": "leap",
+    "rip_apart": "roar",
 }
 
 

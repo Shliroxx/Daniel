@@ -981,6 +981,20 @@ def icons(c) -> dict[str, list]:
         "keen_observer": lambda: [L(m_eye(), c, glow=c), L(m_circle(128, 128, 26), DARK, outline=None)],
         "tiny_target": lambda: [L(m_reticle(128, 128, 100), STONE), L(m_figure(0, 20, 0.35), c, glow=c)],
         "wall_crawler": lambda: [L(m_box(150, 20, 236, 236, 0), STONE), L(m_figure(-20, 0, 0.5), c, glow=c), L(m_arrow(70, 200, 70, 60, 14, 30), cl)],
+        "crunch_bite": lambda: [L(m_jaw(), c, glow=FIRE, glow_alpha=0.5), L(jaw_teeth(), W, outline=None)],
+        "wall_leap": lambda: [L(m_box(196, 30, 236, 236, 0), STONE), L(m_arrow(40, 200, 180, 90, 18, 36), c, glow=c), L(m_arrow(180, 90, 80, 30, 14, 28), cl)],
+        "quill_carpet": lambda: [ground(), L(m_quills(), W, glow=c)],
+        "hunting_howl": lambda: [L(m_nose(), c, glow=c), L(nose_holes(), DARK, outline=None), L(m_waves(128, 60, 3, 220, 320, 12, 30), W)],
+        "drag_down": lambda: [ground(), L(m_figure(0, 40, 0.5), STONE), L(m_claws(0.3, 3), c, glow=c)],
+        "wild_hunt": lambda: [L(m_claws(-0.3, 3), c, glow=c, glow_alpha=0.8), L(m_speedlines(60, 196, 150, 240, 4, 10), cl), L(m_jaw(), mix(c, DARK, 0.2))],
+        "tackle_pounce": lambda: [L(m_speedlines(70, 190, 10, 100, 4, 12), cl), L(m_claws(0.0, 3), c, glow=c)],
+        "quill_dive": lambda: [L(m_quills(), W, glow=c), L(m_arrow(128, 120, 128, 230, 16, 30), c)],
+        "throat_bite": lambda: [L(m_jaw(), c), L(jaw_teeth(), W, outline=None), L(m_drop(196, 190, 30), rgb("9A0A0A"))],
+        "predator_drop": lambda: [ground(), L(m_figure(0, 50, 0.45), STONE), L(m_claws(math.pi / 2, 3), c, glow=c)],
+        "rip_apart": lambda: [L(m_claws(0.4, 3), c, glow=FIRE, glow_alpha=0.7), L(m_claws(-0.4, 3), mix(c, W, 0.3))],
+        "vulpimancer_hunt": lambda: [L(m_reticle(), c, glow=c), L(m_claws(0.0, 3), W)],
+        "scent_sight": lambda: [L(m_nose(), c, glow=c), L(nose_holes(), DARK, outline=None)],
+        "survival_instinct": lambda: [L(m_heart(0, 0, 0.9), rgb("9A0A0A"), glow=FIRE, glow_alpha=0.5), L(m_claws(0.0, 3), c)],
     }
 
 

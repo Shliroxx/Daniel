@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.Entity;
@@ -93,8 +92,20 @@ final class WildmuttAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("scent_track"), WildmuttAbilities::scentTrack);
 		AbilityRegistry.register(KingdomOmnitrix.id("primal_rampage"), WildmuttAbilities::primalRampage);
 		ServerTickEvents.END_SERVER_TICK.register(WildmuttAbilities::tick);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(WildmuttAbilities::afterDamage);
-		ServerLivingEntityEvents.AFTER_DEATH.register(WildmuttAbilities::afterDeath);
+		// die Jagd (Beute, Blutrausch, Kettenjagd) ist die passive Kraft „Vulpimancer-Jagd“
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("vulpimancer_hunt"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float damage) {
+						afterDamage(target, source, damage, damage, false);
+					}
+
+					@Override
+					public void onKill(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target) {
+						afterDeath(target, ctx.world().getDamageSources().playerAttack(ctx.player()));
+					}
+				});
+		WildmuttMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			forgetState(handler.getPlayer().getUuid());
 		});
@@ -114,7 +125,7 @@ final class WildmuttAbilities {
 		return f == null ? 0 : (int) f[0];
 	}
 
-	private static void setFrenzy(ServerPlayerEntity player, int level) {
+	static void setFrenzy(ServerPlayerEntity player, int level) {
 		long[] f = FRENZY.computeIfAbsent(player.getUuid(), id -> new long[2]);
 		int before = (int) f[0];
 		f[0] = MathHelper.clamp(level, 0, MAX_FRENZY);
@@ -125,7 +136,7 @@ final class WildmuttAbilities {
 		}
 	}
 
-	private static Optional<LivingEntity> prey(ServerPlayerEntity player) {
+	static Optional<LivingEntity> prey(ServerPlayerEntity player) {
 		UUID id = PREY.get(player.getUuid());
 		if (id == null) {
 			return Optional.empty();
@@ -135,7 +146,7 @@ final class WildmuttAbilities {
 	}
 
 	/** Neue Beute: leuchtet, Witterungs-Ring, kurzer Hinweis. */
-	private static void mark(ServerPlayerEntity player, LivingEntity target) {
+	static void mark(ServerPlayerEntity player, LivingEntity target) {
 		if (target.getUuid().equals(PREY.get(player.getUuid()))) {
 			return;
 		}
@@ -145,7 +156,7 @@ final class WildmuttAbilities {
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.wildmutt_prey", target.getDisplayName()).formatted(Formatting.GOLD), true);
 	}
 
-	private static Optional<LivingEntity> nearestEnemy(ServerPlayerEntity player, double radius, LivingEntity except) {
+	static Optional<LivingEntity> nearestEnemy(ServerPlayerEntity player, double radius, LivingEntity except) {
 		double radiusSq = radius * radius;
 		return player.getServerWorld().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
 						e -> e != player && e != except && e.isAlive() && e.squaredDistanceTo(player) <= radiusSq && PartyRules.canHarm(player, e))
@@ -202,6 +213,11 @@ final class WildmuttAbilities {
 			mark(player, next);
 			trail(player.getServerWorld(), player.getPos().add(0, 0.6, 0), next.getPos().add(0, 0.6, 0));
 		});
+	}
+
+	/** Blutung setzen (laeuft ueber den Wildmutt-Takt). */
+	static void bleed(ServerPlayerEntity player, LivingEntity target, int ticks, float damage) {
+		BLEEDS.put(target.getUuid(), new Bleed(player.getUuid(), player.getServerWorld().getTime() + ticks, damage));
 	}
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------

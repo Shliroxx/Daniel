@@ -106,6 +106,131 @@
         "seconds": 4.0,
         "radius": 8.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:crunch_bite",
+      "energy": 15,
+      "cooldown": 60,
+      "params": {
+        "range": 3.5,
+        "damage": 8.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:wall_leap",
+      "energy": 15,
+      "cooldown": 80,
+      "params": {
+        "power": 1.5,
+        "bounces": 2
+      },
+      "role": "movement",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:quill_carpet",
+      "energy": 25,
+      "cooldown": 200,
+      "params": {
+        "radius": 4.5,
+        "damage": 2.0,
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:hunting_howl",
+      "energy": 30,
+      "cooldown": 360,
+      "params": {
+        "radius": 24.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:drag_down",
+      "energy": 35,
+      "cooldown": 240,
+      "params": {
+        "range": 12.0,
+        "seconds": 3.0,
+        "damage": 2.5
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:wild_hunt",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "seconds": 6.0,
+        "damage": 7.0,
+        "range": 12.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:tackle_pounce",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:quill_dive",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:throat_bite",
+      "energy": 8,
+      "cooldown": 70,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:predator_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "radius": 6.0,
+        "damage": 7.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:rip_apart",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0,
+        "heal": 0.3
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -130,6 +255,24 @@
       }
     ],
     "senses_radius": 16,
-    "transform_style": "beast"
+    "transform_style": "beast",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:vulpimancer_hunt"
+      },
+      {
+        "type": "kingdomomnitrix:scent_sight",
+        "params": {
+          "radius": 16.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:survival_instinct",
+        "unlock_level": 4,
+        "params": {
+          "threshold": 0.4
+        }
+      }
+    ]
   }
 }
