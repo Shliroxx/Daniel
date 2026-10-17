@@ -1149,6 +1149,20 @@ def icons(c) -> dict[str, list]:
         "sonorosian_resonance": lambda: [L(m_fist(-20, 10, 0.7), c, glow=ICE), L(m_waves(180, 128, 2, -40, 40, 10, 26), W)],
         "echolocation": lambda: [L(m_eye(), c, glow=ICE), L(m_ring(128, 128, 110, 8), W)],
         "sound_dampening": lambda: [L(m_shield(), c, glow=ICE), L(m_waves(128, 128, 2, -40, 40, 10, 26), W)],
+        "proton_volley": lambda: [L(m_circle(70, 128, 26), ACID, glow=ACID), L(m_circle(140, 128, 26), ACID), L(m_circle(210, 128, 26), ACID), L(m_speedlines(100, 156, 0, 60, 2, 8), W)],
+        "gamma_burst": lambda: [L(m_rays(40, 128, 7, -0.6, 0.6, 40, 220, 12), ACID, glow=ACID), L(m_atom(40, 128, 34, 6), c)],
+        "atomic_barrier": lambda: [L(m_shield(), c, glow=ACID), L(m_atom(128, 120, 50, 6), ACID)],
+        "meltdown_zone": lambda: [ground(), L(m_ring(128, 200, 100, 12, 190, 350), ACID, glow=ACID), L(m_drop(128, 120, 46), ACID)],
+        "chain_reaction": lambda: [L(m_burst(60, 160, 46, 16, 8), FIRE, glow=FIRE), L(m_burst(128, 90, 46, 16, 8), FIRE), L(m_burst(196, 160, 46, 16, 8), FIRE), L(m_arrow(80, 140, 110, 110, 8, 16), ACID), L(m_arrow(146, 110, 176, 140, 8, 16), ACID)],
+        "fusion_sun": lambda: [L(m_burst(128, 110, 110, 60, 14), FIRE_HOT, glow=FIRE), L(m_circle(128, 110, 50), W), L(m_ground(220, 36), STONE)],
+        "atom_smash": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), ACID), L(m_fist(30, 0, 0.75), c, glow=ACID)],
+        "fallout_strike": lambda: [ground(), L(m_fist(0, -20, 0.7, 3.14159), c, glow=ACID), L(m_ring(128, 205, 90, 10, 190, 350), ACID)],
+        "isotope_grip": lambda: [L(m_figure(0, 10, 0.45), STONE), L(m_atom(128, 110, 70, 8), ACID, glow=ACID)],
+        "nuclear_dive": lambda: [ground(), L(m_arrow(128, 20, 128, 150, 26, 48), c, glow=ACID), L(m_burst(128, 200, 64, 22, 10), ACID, outline=None)],
+        "radioactive_touch": lambda: [L(m_fist(0, 10, 0.75), c, glow=ACID), L(m_atom(190, 70, 40, 6), ACID)],
+        "reactor_core": lambda: [L(m_atom(), ACID, glow=ACID), L(m_circle(128, 128, 30), FIRE_HOT)],
+        "radiation_shield": lambda: [L(m_shield(), c, glow=ACID), L(m_plus(128, 120, 40, 20), W)],
+        "critical_mass": lambda: [L(m_shards_ring(128, 128, 104, 8, 24), ACID, glow=ACID), L(m_circle(128, 128, 58), c), L(m_burst(128, 128, 50, 18, 8), FIRE_HOT, outline=None)],
     }
 
 

@@ -50,8 +50,8 @@ final class AtomixAbilities {
 	static final int MAX_RAD = 5;
 	private static final Identifier ATOMIX = KingdomOmnitrix.id("atomix");
 	private static final int DECAY_TICKS = 60;
-	private static final DustParticleEffect GLOW = new DustParticleEffect(new Vector3f(0.25f, 1.0f, 0.4f), 1.4f);
-	private static final DustParticleEffect CORE = new DustParticleEffect(new Vector3f(0.85f, 1.0f, 0.3f), 2.0f);
+	static final DustParticleEffect GLOW = new DustParticleEffect(new Vector3f(0.25f, 1.0f, 0.4f), 1.4f);
+	static final DustParticleEffect CORE = new DustParticleEffect(new Vector3f(0.85f, 1.0f, 0.3f), 2.0f);
 
 	/** Strahlung je Ziel: Stufe, letzter Zerfall, Verursacher */
 	private static final Map<UUID, Rad> RAD = new HashMap<>();
@@ -62,7 +62,7 @@ final class AtomixAbilities {
 	/** Kernsprung: Landung pruefen */
 	private static final Map<UUID, Long> LEAPS = new HashMap<>();
 	/** verhindert, dass Strahlungsschaden erneut etwas ausloest */
-	private static boolean bonusHit;
+	static boolean bonusHit;
 
 	private static final class Rad {
 		int level;
@@ -85,18 +85,14 @@ final class AtomixAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("half_life"), AtomixAbilities::halfLife);
 		AbilityRegistry.register(KingdomOmnitrix.id("hero_time"), AtomixAbilities::heroTime);
 		ServerTickEvents.END_SERVER_TICK.register(AtomixAbilities::tick);
+		AtomixMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
 			FIELDS.remove(id);
 			HERO_TIME.remove(id);
 			LEAPS.remove(id);
 		});
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken > 0.0f && !bonusHit && source.getAttacker() instanceof ServerPlayerEntity attacker && attacker != target
-					&& source.getSource() == attacker && isAtomix(attacker)) {
-				irradiate(attacker, target, 1);
-			}
-		});
+		// Nahkampf-Strahlung laeuft ueber die Passive „Radioaktive Beruehrung“ (AtomixMoves)
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			Rad rad = RAD.remove(entity.getUuid());
 			if (rad != null && rad.level >= 2 && entity.getWorld() instanceof ServerWorld world) {
@@ -114,12 +110,18 @@ final class AtomixAbilities {
 
 	// --- Strahlung -------------------------------------------------------------------------------
 
+	/** Strahlung des Ziels abrufen und entfernen. */
+	static int consume(LivingEntity target) {
+		Rad rad = RAD.remove(target.getUuid());
+		return rad == null ? 0 : rad.level;
+	}
+
 	static int radiation(LivingEntity target) {
 		Rad rad = RAD.get(target.getUuid());
 		return rad == null ? 0 : rad.level;
 	}
 
-	private static void irradiate(ServerPlayerEntity owner, LivingEntity target, int amount) {
+	static void irradiate(ServerPlayerEntity owner, LivingEntity target, int amount) {
 		if (amount <= 0 || !target.isAlive() || target == owner || !PartyRules.canHarm(owner, target)) {
 			return;
 		}
@@ -132,7 +134,7 @@ final class AtomixAbilities {
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(GLOW), 0.35f, Math.max(1, Math.min(20, 3 + 2 * rad.level)));
 	}
 
-	private static void hit(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage) {
+	static void hit(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage) {
 		bonusHit = true;
 		try {
 			target.timeUntilRegen = 0;
@@ -143,7 +145,7 @@ final class AtomixAbilities {
 	}
 
 	/** Spaltung: kleiner Blitz, die zwei naechsten Gegner bekommen +2 Stufen. */
-	private static void fission(ServerWorld world, ServerPlayerEntity owner, Entity dead) {
+	static void fission(ServerWorld world, ServerPlayerEntity owner, Entity dead) {
 		com.santiq.kingdomomnitrix.vfx.Fx.explosion(world, new Vec3d(dead.getX(), dead.getBodyY(0.5), dead.getZ()), 0xFFB060, 2.0f);
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(dead.getX(), dead.getBodyY(0.5), dead.getZ()), AlienKit.color(CORE), 0.35f, Math.max(1, Math.min(20, 30)));
 		world.playSound(null, dead.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 1.5f);

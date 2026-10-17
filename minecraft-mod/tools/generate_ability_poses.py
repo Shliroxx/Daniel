@@ -307,6 +307,17 @@ ABILITY_POSE = {
     "point_blank": "roar",
     "boom_landing": "slam",
     "shatter_frequency": "roar",
+    "proton_volley": "shoot",
+    "gamma_burst": "spread",
+    "atomic_barrier": "guard",
+    "meltdown_zone": "slam",
+    "chain_reaction": "focus",
+    "fusion_sun": "ultimate",
+    "atom_smash": "dodge",
+    "fallout_strike": "slam",
+    "isotope_grip": "guard",
+    "nuclear_dive": "slam",
+    "critical_mass": "beam",
 }
 
 

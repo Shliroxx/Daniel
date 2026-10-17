@@ -20,11 +20,14 @@ for alien in "$@"; do
 	# flache, freie Testflaeche: Hang oder Schlucht duerfen das Ziel nicht in eine Wand setzen
 	$C cmd "/fill ~-8 ~ ~-8 ~8 ~8 ~8 minecraft:air"
 	$C cmd "/fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 minecraft:stone"
+	# Arenamitte merken: Bewegungs-Kraefte tragen den Spieler sonst aus der Testflaeche
+	$C cmd "/kill @e[type=minecraft:marker,tag=power_tour]"
+	$C cmd "/summon minecraft:marker ~ ~ ~ {Tags:[\"power_tour\"]}"
 	$C cmd "/hero transform kingdomomnitrix:$alien"
 	sleep 4
 	for ((n=0; n<count; n++)); do
 		$C cmd "/kill @e[type=husk]"
-		$C cmd "/execute positioned over motion_blocking_no_leaves run tp @s ~ ~ ~ 0 8"
+		$C cmd "/execute at @e[type=minecraft:marker,tag=power_tour,limit=1] run tp @s ~ ~ ~ 0 8"
 		$C cmd "/summon husk ^ ^1 ^4 $DUMMY"
 		sleep 0.6
 		$C cmd "/hero power $n"
