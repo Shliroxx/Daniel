@@ -97,6 +97,130 @@
         "damage": 16.0,
         "explosion": 2.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:stretch_grab",
+      "energy": 15,
+      "cooldown": 70,
+      "params": {
+        "range": 14.0,
+        "damage": 3.0
+      },
+      "role": "movement",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:gear_upgrade",
+      "energy": 30,
+      "cooldown": 360,
+      "params": {
+        "seconds": 10.0
+      },
+      "role": "utility",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:nano_drones",
+      "energy": 35,
+      "cooldown": 300,
+      "params": {
+        "seconds": 8.0,
+        "damage": 2.0,
+        "range": 12.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:laser_grid",
+      "energy": 30,
+      "cooldown": 260,
+      "params": {
+        "width": 4.0,
+        "damage": 3.0,
+        "seconds": 6.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:emp_pulse",
+      "energy": 35,
+      "cooldown": 260,
+      "params": {
+        "radius": 8.0,
+        "damage": 5.0
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:omega_overdrive",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "range": 16.0,
+        "damage": 4.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:liquid_ram",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:hammer_morph",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:nanite_inject",
+      "energy": 8,
+      "cooldown": 60,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:liquid_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 1.8,
+        "damage": 6.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:system_crash",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 6.0,
+        "per_nanite": 3.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -121,6 +245,25 @@
         "effect": "minecraft:night_vision"
       }
     ],
-    "transform_style": "tech"
+    "transform_style": "tech",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:mechamorph_integration"
+      },
+      {
+        "type": "kingdomomnitrix:self_repair",
+        "unlock_level": 3,
+        "params": {
+          "heal": 1.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:liquid_body",
+        "unlock_level": 5,
+        "params": {
+          "melee": 0.75
+        }
+      }
+    ]
   }
 }

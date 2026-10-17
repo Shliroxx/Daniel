@@ -1023,6 +1023,20 @@ def icons(c) -> dict[str, list]:
         "tidal_strength": lambda: [L(m_wave(150), rgb("3A8CFF"), glow=c), *fist(c, 0, -30, 0.45)],
         "deep_hunter": lambda: [L(m_eye(128, 110, 160, 80), rgb("1A4A9A"), glow=c), L(m_bubble(60, 200, 20), W), L(m_bubble(200, 180, 16), W)],
         "blood_scent": lambda: [L(m_drop(128, 140, 70), rgb("9A0A0A"), glow=FIRE, glow_alpha=0.4), L(m_jaw(), c)],
+        "stretch_grab": lambda: [L(m_beam(128, 30, 190, 20), DARK, glow=rgb("38FF14")), *fist(c, 70, 0, 0.45, glow=rgb("38FF14"))],
+        "gear_upgrade": lambda: [L(m_gear(), DARK, glow=rgb("38FF14")), L(m_arrow(128, 200, 128, 60, 20, 40), rgb("38FF14"))],
+        "nano_drones": lambda: [L(m_ring(128, 128, 90, 8), rgb("38FF14")), L(m_circle(60, 60, 22), DARK, glow=rgb("38FF14")), L(m_circle(196, 60, 22), DARK, glow=rgb("38FF14")), L(m_circle(60, 196, 22), DARK, glow=rgb("38FF14")), L(m_circle(196, 196, 22), DARK, glow=rgb("38FF14"))],
+        "laser_grid": lambda: [L(m_beam(60, 20, 236, 10), rgb("00E6FF"), glow=rgb("00E6FF")), L(m_beam(110, 20, 236, 10), rgb("00E6FF"), glow=rgb("00E6FF")), L(m_beam(160, 20, 236, 10), rgb("00E6FF"), glow=rgb("00E6FF")), L(m_beam(210, 20, 236, 10), rgb("00E6FF"), glow=rgb("00E6FF"))],
+        "emp_pulse": lambda: [L(m_ring(128, 128, 104, 10), rgb("00E6FF"), glow=rgb("00E6FF")), L(m_ring(128, 128, 70, 10), rgb("00E6FF")), L(m_bolt(0, 0, 0.6), W)],
+        "omega_overdrive": lambda: [L(m_eye(128, 128, 200, 100), DARK, glow=rgb("38FF14"), glow_alpha=0.9), L(m_circle(128, 128, 30), rgb("38FF14"), outline=None), L(m_rays(128, 128, 9, -1.4, 1.4, 70, 124, 10), rgb("38FF14"))],
+        "liquid_ram": lambda: [L(m_figure(0, 0, 0.6), STONE), L(m_beam(128, 20, 236, 26), DARK, glow=rgb("38FF14"))],
+        "hammer_morph": lambda: [ground(), L(m_mace(), DARK, glow=rgb("38FF14")), L(m_cracks(128, 206), rgb("38FF14"), outline=None)],
+        "nanite_inject": lambda: [L(m_spike(128, 210, 160, 30), DARK, glow=rgb("38FF14")), L(m_shards_ring(128, 70, 40, 6, 12), rgb("38FF14"))],
+        "liquid_drop": lambda: [ground(), L(m_drop(128, 120, 60), DARK, glow=rgb("38FF14")), L(m_arrow(128, 10, 128, 50, 14, 26), rgb("38FF14"))],
+        "system_crash": lambda: [L(m_chip(), DARK, glow=rgb("38FF14")), L(m_burst(128, 128, 60, 26, 10), rgb("38FF14"), outline=None)],
+        "mechamorph_integration": lambda: [L(m_chip(), DARK, glow=rgb("38FF14")), L(chip_core(), rgb("38FF14"), outline=None)],
+        "self_repair": lambda: [L(m_gear(128, 128, 80, 8), DARK, glow=rgb("38FF14")), L(m_plus(180, 180, 36, 18), rgb("38FF14"))],
+        "liquid_body": lambda: [L(m_drop(128, 140, 80), DARK, glow=rgb("38FF14")), *fist(c, -40, -60, 0.35)],
     }
 
 

@@ -136,16 +136,22 @@ final class UpgradeAbilities {
 			AlienMeterSync.forget(id);
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(UpgradeAbilities::allowDamage);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken <= 0.0f || bonusHit || !(source.getAttacker() instanceof ServerPlayerEntity attacker) || attacker == target
-					|| !isUpgrade(attacker)) {
-				return;
-			}
-			addSync(attacker, taken * SYNC_DEALT);
-			if (source.isOf(DamageTypes.PLAYER_ATTACK) && source.getSource() == attacker) {
-				onMelee(attacker, target, taken);
-			}
-		});
+		// Integration aus Treffern und Naniten aus Nahkampf: passive Kraft „Mechamorph-Integration“
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("mechamorph_integration"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float taken) {
+						if (bonusHit) {
+							return;
+						}
+						ServerPlayerEntity attacker = ctx.player();
+						addSync(attacker, taken * SYNC_DEALT);
+						if (source.isOf(DamageTypes.PLAYER_ATTACK) && source.getSource() == attacker) {
+							onMelee(attacker, target, taken);
+						}
+					}
+				});
+		UpgradeMoves.register();
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			NANITES.remove(entity.getUuid());
 			NANITE_UNTIL.remove(entity.getUuid());
@@ -163,16 +169,16 @@ final class UpgradeAbilities {
 		return SYNC.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static boolean overclocked(ServerPlayerEntity player) {
+	static boolean overclocked(ServerPlayerEntity player) {
 		return OVERCLOCK.containsKey(player.getUuid());
 	}
 
 	/** Schadensfaktor aus dem aktuellen Zustand. */
-	private static float power(ServerPlayerEntity player) {
+	static float power(ServerPlayerEntity player) {
 		return overclocked(player) ? 1.0f + OVERCLOCK_BONUS : 1.0f + sync(player) / 400.0f;
 	}
 
-	private static void addSync(ServerPlayerEntity player, float amount) {
+	static void addSync(ServerPlayerEntity player, float amount) {
 		if (overclocked(player) && amount > 0.0f) {
 			return; // waehrend Overclock laeuft die Anzeige nur leer
 		}
@@ -192,7 +198,7 @@ final class UpgradeAbilities {
 		AlienMeterSync.update(player, AlienMeterPayload.SYNC, after);
 	}
 
-	private static void startOverclock(ServerPlayerEntity player) {
+	static void startOverclock(ServerPlayerEntity player) {
 		ServerWorld world = player.getServerWorld();
 		OVERCLOCK.put(player.getUuid(), world.getTime() + OVERCLOCK_TICKS);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, OVERCLOCK_TICKS, 1, false, false));
@@ -211,14 +217,14 @@ final class UpgradeAbilities {
 		return n == null ? 0 : n[0];
 	}
 
-	private static void infect(ServerWorld world, LivingEntity target, int amount) {
+	static void infect(ServerWorld world, LivingEntity target, int amount) {
 		int[] n = NANITES.computeIfAbsent(target.getUuid(), id -> new int[1]);
 		n[0] = Math.min(MAX_NANITES, n[0] + amount);
 		NANITE_UNTIL.put(target.getUuid(), world.getTime() + NANITE_TICKS);
 		Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), NEON, 0.3f, Math.min(20, 4 + 2 * n[0]));
 	}
 
-	private static int purge(LivingEntity target) {
+	static int purge(LivingEntity target) {
 		int[] n = NANITES.remove(target.getUuid());
 		NANITE_UNTIL.remove(target.getUuid());
 		return n == null ? 0 : n[0];
@@ -280,7 +286,7 @@ final class UpgradeAbilities {
 	}
 
 	/** Kettenblitz: springt vom Ziel auf bis zu {@code jumps} weitere naechste Gegner. */
-	private static void chain(ServerWorld world, ServerPlayerEntity player, LivingEntity from, float damage, int jumps, double reach) {
+	static void chain(ServerWorld world, ServerPlayerEntity player, LivingEntity from, float damage, int jumps, double reach) {
 		Set<UUID> done = new HashSet<>();
 		done.add(from.getUuid());
 		LivingEntity current = from;

@@ -208,6 +208,17 @@ ABILITY_POSE = {
     "drag_under": "slam",
     "splash_down": "slam",
     "death_bite": "swipe",
+    "stretch_grab": "shoot",
+    "gear_upgrade": "focus",
+    "nano_drones": "spread",
+    "laser_grid": "beam",
+    "emp_pulse": "spread",
+    "omega_overdrive": "ultimate",
+    "liquid_ram": "dodge",
+    "hammer_morph": "slam",
+    "nanite_inject": "shoot",
+    "liquid_drop": "slam",
+    "system_crash": "beam",
 }
 
 
