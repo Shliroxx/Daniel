@@ -27,6 +27,9 @@ for alien in "$@"; do
 	sleep 4
 	for ((n=0; n<count; n++)); do
 		$C cmd "/kill @e[type=husk]"
+		# Krater frueherer Kraefte einebnen
+		$C cmd "/execute at @e[type=minecraft:marker,tag=power_tour,limit=1] run fill ~-8 ~ ~-8 ~8 ~8 ~8 minecraft:air"
+		$C cmd "/execute at @e[type=minecraft:marker,tag=power_tour,limit=1] run fill ~-8 ~-3 ~-8 ~8 ~-1 ~8 minecraft:stone"
 		$C cmd "/execute at @e[type=minecraft:marker,tag=power_tour,limit=1] run tp @s ~ ~ ~ 0 8"
 		$C cmd "/summon husk ^ ^1 ^4 $DUMMY"
 		sleep 0.6

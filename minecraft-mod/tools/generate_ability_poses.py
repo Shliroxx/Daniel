@@ -362,6 +362,17 @@ ABILITY_POSE = {
     "stasis_touch": "guard",
     "starfall_dive": "slam",
     "erase": "beam",
+    "electro_whip": "swipe",
+    "chain_lightning": "beam",
+    "telekinetic_lift": "focus",
+    "ball_lightning": "shoot",
+    "tactical_genius": "focus",
+    "thunderdome": "ultimate",
+    "shell_ram": "dodge",
+    "skull_crack": "slam",
+    "pincer_grip": "guard",
+    "thunder_drop": "slam",
+    "neural_overload": "beam",
 }
 
 

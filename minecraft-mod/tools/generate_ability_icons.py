@@ -1219,6 +1219,20 @@ def icons(c) -> dict[str, list]:
         "serenas_grace": lambda: [L(m_heart(), GOLD, glow=GOLD), L(m_plus(190, 190, 40, 22), W)],
         "void_rift": lambda: [L(m_portal(), PURPLE, glow=PURPLE), L(m_arrow(20, 60, 80, 100, 10, 20), W), L(m_arrow(236, 60, 176, 100, 10, 20), W), L(m_arrow(20, 200, 80, 160, 10, 20), W), L(m_arrow(236, 200, 176, 160, 10, 20), W)],
         "rewind": lambda: [L(m_figure(-60, 30, 0.35), mix(c, W, 0.5)), L(m_figure(60, 30, 0.35), c, glow=ICE), L(m_ring(128, 110, 70, 10, 190, 350), W), L(m_arrow(70, 100, 50, 140, 10, 22), W)],
+        "chain_lightning": lambda: [L(m_bolt(-60, 20, 0.4), ELEC, glow=ELEC), L(m_bolt(0, -20, 0.4), ELEC), L(m_bolt(60, 20, 0.4), ELEC), L(m_figure(-60, 60, 0.2), STONE), L(m_figure(60, 60, 0.2), STONE)],
+        "telekinetic_lift": lambda: [L(m_figure(0, -20, 0.4), STONE), L(m_ring(128, 110, 70, 10), rgb("F07AC8"), glow=rgb("F07AC8")), L(m_arrow(128, 230, 128, 170, 14, 28), W)],
+        "ball_lightning": lambda: [L(m_circle(150, 128, 54), ELEC, glow=ELEC), L(m_bolt(150, 128, 0.3), W), L(m_speedlines(90, 166, 10, 80, 3, 10), rgb("F07AC8"))],
+        "tactical_genius": lambda: [L(m_brain(), rgb("F07AC8"), glow=rgb("F07AC8")), L(m_reticle(), W)],
+        "thunderdome": lambda: [ground(), L(m_dome(), ELEC, glow=ELEC), L(m_bolt(0, 20, 0.4), W), L(m_brain(), rgb("F07AC8"))],
+        "shell_ram": lambda: [L(m_speedlines(60, 196, 10, 90, 4, 12), ELEC), L(m_shield(30, 0, 0.6), c, glow=ELEC)],
+        "skull_crack": lambda: [ground(), L(m_brain(), rgb("F07AC8"), glow=rgb("F07AC8")), L(m_cracks(128, 206), DARK, outline=None)],
+        "pincer_grip": lambda: [L(m_claws(0.0, 2), c, glow=ELEC), L(m_bolt(0, 40, 0.3), ELEC)],
+        "thunder_drop": lambda: [ground(), L(m_bolt(0, -20, 0.6), ELEC, glow=ELEC), L(m_ring(128, 205, 90, 10, 190, 350), rgb("F07AC8"))],
+        "neural_overload": lambda: [L(m_brain(), rgb("F07AC8"), glow=ELEC), L(m_burst(128, 128, 116, 70, 10), ELEC, outline=None)],
+        "superior_intellect": lambda: [L(m_brain(), rgb("F07AC8"), glow=rgb("F07AC8")), L(m_eye(128, 200, 100, 50), W)],
+        "crab_shell": lambda: [L(m_shield(), c, glow=c), L(m_claws(0.0, 2), W)],
+        "static_discharge": lambda: [L(m_shield(0, 0, 0.7), c), L(m_bolt(60, -40, 0.4), ELEC, glow=ELEC)],
+        "electro_whip": lambda: [L(m_circle(40, 200, 26), rgb("F07AC8")), L(m_tentacle(0.0, 14), ELEC, glow=ELEC)],
     }
 
 

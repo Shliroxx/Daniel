@@ -41,8 +41,8 @@ import net.minecraft.util.math.Vec3d;
  */
 final class BrainstormAbilities {
 	private static final Identifier BRAINSTORM = KingdomOmnitrix.id("brainstorm");
-	private static final DustParticleEffect PINK = AlienKit.dust("#F07AC8", 1.4f);
-	private static final DustParticleEffect BOLT = AlienKit.dust("#E6F4FF", 1.0f);
+	static final DustParticleEffect PINK = AlienKit.dust("#F07AC8", 1.4f);
+	static final DustParticleEffect BOLT = AlienKit.dust("#E6F4FF", 1.0f);
 
 	/** analysierte Gegner: bis wann, von wem */
 	private static final Map<UUID, long[]> ANALYZED = new HashMap<>();
@@ -66,6 +66,7 @@ final class BrainstormAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("brain_analysis"), BrainstormAbilities::analysis);
 		AbilityRegistry.register(KingdomOmnitrix.id("mind_storm"), BrainstormAbilities::mindStorm);
 		ServerTickEvents.END_SERVER_TICK.register(BrainstormAbilities::tick);
+		BrainstormMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.getPlayer().getUuid()));
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(BrainstormAbilities::allowDamage);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
@@ -79,11 +80,19 @@ final class BrainstormAbilities {
 		});
 	}
 
+	/** Ziel analysieren: leuchtet, +30 % Schaden von allen, leitet Blitze weiter. */
+	static void analyze(ServerWorld world, ServerPlayerEntity brain, LivingEntity target, int ticks) {
+		long[] until = ANALYZED.get(target.getUuid());
+		long end = world.getTime() + ticks;
+		ANALYZED.put(target.getUuid(), new long[]{until == null ? end : Math.max(until[0], end)});
+		target.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, ticks, 0), brain);
+	}
+
 	private static boolean isBrainstorm(ServerPlayerEntity player) {
 		return TransformationManager.get(player).activeAlien().filter(BRAINSTORM::equals).isPresent();
 	}
 
-	private static boolean analyzed(LivingEntity target) {
+	static boolean analyzed(LivingEntity target) {
 		long[] until = ANALYZED.get(target.getUuid());
 		return until != null && target.getWorld().getTime() < until[0];
 	}
@@ -100,7 +109,7 @@ final class BrainstormAbilities {
 	}
 
 	/** Blitz von einem Punkt auf ein Ziel; analysierte Ziele leiten auf zwei weitere weiter. */
-	private static void zap(ServerWorld world, ServerPlayerEntity brain, Vec3d from, LivingEntity target, float damage, Set<UUID> done) {
+	static void zap(ServerWorld world, ServerPlayerEntity brain, Vec3d from, LivingEntity target, float damage, Set<UUID> done) {
 		done.add(target.getUuid());
 		Vec3d to = target.getPos().add(0, target.getHeight() * 0.5, 0);
 		jagged(world, from, to);
@@ -114,7 +123,7 @@ final class BrainstormAbilities {
 	}
 
 	/** Zackige Blitzlinie. */
-	private static void jagged(ServerWorld world, Vec3d from, Vec3d to) {
+	static void jagged(ServerWorld world, Vec3d from, Vec3d to) {
 		Vec3d prev = from;
 		int segments = Math.max(3, (int) (from.distanceTo(to) / 1.5));
 		for (int i = 1; i <= segments; i++) {
@@ -128,7 +137,7 @@ final class BrainstormAbilities {
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(to.x, to.y, to.z), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 8)));
 	}
 
-	private static float spendStored(ServerPlayerEntity brain) {
+	static float spendStored(ServerPlayerEntity brain) {
 		Float stored = STORED.remove(brain.getUuid());
 		return stored == null ? 1.0f : 1.0f + stored / 5.0f;
 	}
