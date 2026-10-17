@@ -373,6 +373,17 @@ ABILITY_POSE = {
     "pincer_grip": "guard",
     "thunder_drop": "slam",
     "neural_overload": "beam",
+    "acid_volley": "throw",
+    "goo_trap": "throw",
+    "slime_spikes": "spread",
+    "bounce_blob": "leap",
+    "regenerate_mass": "focus",
+    "acid_tsunami": "ultimate",
+    "slime_slide": "dodge",
+    "goo_drop": "slam",
+    "acid_grip": "guard",
+    "splat": "slam",
+    "total_corrosion": "beam",
 }
 
 

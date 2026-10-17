@@ -1233,6 +1233,20 @@ def icons(c) -> dict[str, list]:
         "crab_shell": lambda: [L(m_shield(), c, glow=c), L(m_claws(0.0, 2), W)],
         "static_discharge": lambda: [L(m_shield(0, 0, 0.7), c), L(m_bolt(60, -40, 0.4), ELEC, glow=ELEC)],
         "electro_whip": lambda: [L(m_circle(40, 200, 26), rgb("F07AC8")), L(m_tentacle(0.0, 14), ELEC, glow=ELEC)],
+        "acid_volley": lambda: [L(m_drop(60, 150, 26), ACID, glow=ACID), L(m_drop(110, 110, 26), ACID), L(m_drop(160, 90, 26), ACID), L(m_drop(210, 110, 26), ACID)],
+        "goo_trap": lambda: [ground(), L(m_ring(128, 200, 100, 22, 190, 350), c, glow=c), L(m_figure(0, 10, 0.4), STONE)],
+        "slime_spikes": lambda: [L(m_burst(128, 128, 116, 50, 12), c, glow=ACID), L(m_circle(128, 128, 44), mix(c, W, 0.3))],
+        "bounce_blob": lambda: [ground(), L(m_drop(128, 90, 50), c, glow=c), L(m_arrow(60, 200, 60, 80, 14, 28), W), L(m_ring(128, 205, 70, 10, 190, 350), ACID)],
+        "regenerate_mass": lambda: [L(m_drop(128, 130, 70), c, glow=c), L(m_plus(190, 70, 40, 22), W)],
+        "slime_slide": lambda: [ground(), L(m_speedlines(150, 196, 10, 200, 3, 12), c, glow=c), L(m_figure(40, -30, 0.35), STONE)],
+        "goo_drop": lambda: [L(m_figure(0, 40, 0.5), STONE), L(m_drop(128, 70, 50), c, glow=c)],
+        "acid_grip": lambda: [L(m_fist(0, 10, 0.75), c, glow=ACID), L(m_drop(190, 190, 26), ACID)],
+        "splat": lambda: [ground(), L(m_ring(128, 205, 110, 20, 190, 350), c, glow=c), L(m_drop(70, 150, 18), ACID), L(m_drop(186, 150, 18), ACID)],
+        "total_corrosion": lambda: [L(m_skull(), ACID, glow=ACID), L(m_drop(60, 200, 20), c), L(m_drop(196, 200, 20), c)],
+        "slime_body": lambda: [L(m_shield(), c, glow=c), L(m_drop(128, 120, 40), ACID)],
+        "anti_gravity_projector": lambda: [L(m_chip(), STONE, glow=c), L(m_arrow(128, 220, 128, 140, 14, 28), W)],
+        "acid_tsunami": lambda: [L(m_waves(30, 128, 4, -45, 45, 18, 42), ACID, glow=ACID), L(m_figure(80, 20, 0.3), STONE)],
+        "corrosive_touch": lambda: [L(m_drop(128, 128, 84), ACID, glow=ACID), L(m_fist(0, 30, 0.4), c)],
     }
 
 

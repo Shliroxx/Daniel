@@ -47,8 +47,8 @@ import net.minecraft.world.World;
 final class GoopAbilities {
 	static final int MAX_ACID = 5;
 	private static final Identifier GOOP = KingdomOmnitrix.id("goop");
-	private static final DustParticleEffect SLIME = AlienKit.dust("#5FD13A", 1.5f);
-	private static final DustParticleEffect ACID = AlienKit.dust("#B6FF3A", 1.1f);
+	static final DustParticleEffect SLIME = AlienKit.dust("#5FD13A", 1.5f);
+	static final DustParticleEffect ACID = AlienKit.dust("#B6FF3A", 1.1f);
 
 	/** Saeure im Gegner: Stufe, Ablauf, Verursacher */
 	private static final Map<UUID, Acid> ACIDS = new HashMap<>();
@@ -82,6 +82,7 @@ final class GoopAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("acid_pool"), GoopAbilities::acidPool);
 		AbilityRegistry.register(KingdomOmnitrix.id("acid_flood"), GoopAbilities::acidFlood);
 		ServerTickEvents.END_SERVER_TICK.register(GoopAbilities::tick);
+		GoopMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
 			PUDDLE.remove(id);
@@ -94,9 +95,7 @@ final class GoopAbilities {
 			if (taken <= 0.0f || AlienKit.bonusHit) {
 				return;
 			}
-			if (source.getAttacker() instanceof ServerPlayerEntity goop && goop != target && source.getSource() == goop && isGoop(goop)) {
-				corrode(goop, target, 1);
-			}
+			// Saeure durch Nahkampf laeuft ueber die Passive „Aetzende Beruehrung“ (GoopMoves)
 			// Projektor getroffen: Goop faellt kurz zusammen
 			if (target instanceof ServerPlayerEntity goop && isGoop(goop) && taken >= 8.0f && !PUDDLE.containsKey(goop.getUuid())) {
 				COLLAPSED.put(goop.getUuid(), goop.getServerWorld().getTime() + 40);
@@ -107,6 +106,19 @@ final class GoopAbilities {
 			}
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> ACIDS.remove(entity.getUuid()));
+	}
+
+	/** Saeurestufe des Ziels (0, wenn verflogen). */
+	static int acid(LivingEntity target) {
+		Acid acid = ACIDS.get(target.getUuid());
+		return acid == null || target.getWorld().getTime() > acid.until ? 0 : acid.level;
+	}
+
+	/** Saeure des Ziels abrufen und entfernen. */
+	static int consumeAcid(LivingEntity target) {
+		int level = acid(target);
+		ACIDS.remove(target.getUuid());
+		return level;
 	}
 
 	private static boolean isGoop(ServerPlayerEntity player) {
@@ -126,7 +138,7 @@ final class GoopAbilities {
 		return true;
 	}
 
-	private static void corrode(ServerPlayerEntity goop, LivingEntity target, int amount) {
+	static void corrode(ServerPlayerEntity goop, LivingEntity target, int amount) {
 		if (!AlienKit.foe(goop, target)) {
 			return;
 		}
