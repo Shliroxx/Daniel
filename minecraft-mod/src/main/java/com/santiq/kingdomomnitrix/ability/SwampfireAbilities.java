@@ -58,9 +58,9 @@ final class SwampfireAbilities {
 	/** Neubildung hoechstens so oft */
 	static final int REFORM_COOLDOWN = 1800;
 	private static final int CHAIN_DELAY = 4;
-	private static final DustParticleEffect GAS = new DustParticleEffect(new Vector3f(0.55f, 0.68f, 0.25f), 1.8f);
+	static final DustParticleEffect GAS = new DustParticleEffect(new Vector3f(0.55f, 0.68f, 0.25f), 1.8f);
 	private static final DustParticleEffect GAS_LIGHT = new DustParticleEffect(new Vector3f(0.72f, 0.82f, 0.4f), 1.2f);
-	private static final DustParticleEffect SAP = new DustParticleEffect(new Vector3f(0.3f, 0.55f, 0.2f), 1.3f);
+	static final DustParticleEffect SAP = new DustParticleEffect(new Vector3f(0.3f, 0.55f, 0.2f), 1.3f);
 
 	private static final List<Cloud> CLOUDS = new ArrayList<>();
 	/** gefesselte Gegner: bis wann, von wem */
@@ -69,8 +69,6 @@ final class SwampfireAbilities {
 	private static final Map<UUID, Long> REFORMED = new HashMap<>();
 	/** Sumpfinferno: Zuendzeitpunkt und Mitte */
 	private static final Map<UUID, Inferno> INFERNOS = new HashMap<>();
-	/** verhindert, dass Explosionsschaden erneut etwas ausloest */
-	private static boolean bonusHit;
 
 	private static final class Cloud {
 		final UUID owner;
@@ -113,22 +111,20 @@ final class SwampfireAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("regrowth"), SwampfireAbilities::regrowth);
 		AbilityRegistry.register(KingdomOmnitrix.id("swamp_inferno"), SwampfireAbilities::swampInferno);
 		ServerTickEvents.END_SERVER_TICK.register(SwampfireAbilities::tick);
+		SwampfireMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
 			INFERNOS.remove(id);
 			CLOUDS.removeIf(c -> c.owner.equals(id));
 		});
 		ServerLivingEntityEvents.ALLOW_DEATH.register(SwampfireAbilities::allowDeath);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken <= 0.0f || bonusHit || !(source.getAttacker() instanceof ServerPlayerEntity attacker) || attacker == target
-					|| !isSwampfire(attacker) || source.getSource() != attacker) {
-				return;
-			}
-			// brennende Faeuste: Nahkampf setzt in Brand und zuendet Gas am Ziel
-			target.setOnFireFor(3.0f);
-			igniteAt(attacker.getServerWorld(), target.getPos().add(0, target.getHeight() * 0.5, 0), 0.5);
-		});
+		// brennende Faeuste laufen ueber die Passive „Methanfaeuste“ (SwampfireMoves)
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> ROOTS.remove(entity.getUuid()));
+	}
+
+	/** Wurzelfessel: Ziel kann sich {@code ticks} lang nicht bewegen. */
+	static void root(ServerWorld world, ServerPlayerEntity player, LivingEntity target, int ticks) {
+		ROOTS.put(target.getUuid(), new Root(world.getRegistryKey(), player.getUuid(), world.getTime() + ticks));
 	}
 
 	private static boolean isSwampfire(ServerPlayerEntity player) {
@@ -137,7 +133,7 @@ final class SwampfireAbilities {
 
 	// --- Gas -------------------------------------------------------------------------------------
 
-	private static void addCloud(ServerWorld world, ServerPlayerEntity player, Vec3d center, double radius, int ticks, float power) {
+	static void addCloud(ServerWorld world, ServerPlayerEntity player, Vec3d center, double radius, int ticks, float power) {
 		// Ultimate: blaues Feuer — groessere, heftigere Wolken
 		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
 			radius += 1.0;
@@ -148,7 +144,7 @@ final class SwampfireAbilities {
 	}
 
 	/** Feuer an dieser Stelle: jede Wolke, die sie beruehrt, explodiert (sofort). */
-	private static boolean igniteAt(ServerWorld world, Vec3d pos, double margin) {
+	static boolean igniteAt(ServerWorld world, Vec3d pos, double margin) {
 		boolean any = false;
 		for (Cloud cloud : CLOUDS) {
 			if (cloud.world == world.getRegistryKey() && cloud.igniteAt < 0 && cloud.contains(pos, margin)) {
@@ -167,20 +163,15 @@ final class SwampfireAbilities {
 		com.santiq.kingdomomnitrix.vfx.Fx.flames(world, new Vec3d(cloud.center.x, cloud.center.y, cloud.center.z), new Vec3d(0, 0.06, 0), 0xFF7A20, 0.3f, Math.max(1, Math.min(12, (int) (blast * 20))));
 		world.playSound(null, BlockPos.ofFloored(cloud.center), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.4f, 0.9f);
 		if (owner != null) {
-			bonusHit = true;
-			try {
-				for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, new Box(cloud.center, cloud.center).expand(blast),
-						e -> e != owner && e.isAlive() && PartyRules.canHarm(owner, e) && e.getPos().distanceTo(cloud.center) <= blast + e.getWidth())) {
-					target.timeUntilRegen = 0;
-					target.damage(world.getDamageSources().explosion(owner, owner), cloud.power);
-					target.setOnFireFor(4.0f);
-					Vec3d away = target.getPos().subtract(cloud.center).multiply(1, 0, 1);
-					away = away.lengthSquared() < 1.0E-4 ? Vec3d.ZERO : away.normalize().multiply(0.9);
-					target.addVelocity(away.x, 0.45, away.z);
-					target.velocityModified = true;
-				}
-			} finally {
-				bonusHit = false;
+			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, new Box(cloud.center, cloud.center).expand(blast),
+					e -> e != owner && e.isAlive() && PartyRules.canHarm(owner, e) && e.getPos().distanceTo(cloud.center) <= blast + e.getWidth())) {
+				target.timeUntilRegen = 0;
+				target.damage(world.getDamageSources().explosion(owner, owner), cloud.power);
+				target.setOnFireFor(4.0f);
+				Vec3d away = target.getPos().subtract(cloud.center).multiply(1, 0, 1);
+				away = away.lengthSquared() < 1.0E-4 ? Vec3d.ZERO : away.normalize().multiply(0.9);
+				target.addVelocity(away.x, 0.45, away.z);
+				target.velocityModified = true;
 			}
 		}
 		// Kettenreaktion: ueberlappende Wolken zuenden kurz danach

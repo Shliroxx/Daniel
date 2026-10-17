@@ -1107,6 +1107,20 @@ def icons(c) -> dict[str, list]:
         "spike_plates": lambda: [L(m_burst(128, 128, 118, 66, 10), W, glow=c), L(m_shield(0, 0, 0.7), c)],
         "vaxasaurian_growth": lambda: [L(m_figure(-60, 50, 0.35), mix(c, W, 0.4)), L(m_figure(40, 10, 0.75), c, glow=c)],
         "titan_clap": lambda: [L(m_fist(-50, 0, 0.6, 0.6), c, glow=c), L(m_fist(50, 0, 0.6, -0.6), c), L(m_burst(128, 128, 70, 20, 8), W, outline=None)],
+        "seed_bombs": lambda: [L(m_circle(70, 150, 26), c, glow=c), L(m_circle(128, 110, 26), c), L(m_circle(186, 150, 26), c), L(m_cloud(128, 200, 0.5), mix(c, W, 0.3))],
+        "vine_whip": lambda: [L(m_tentacle(0.0, 22), rgb("4C8C34"), glow=c), L(m_leaf(200, 70, 30), c)],
+        "fire_wall": lambda: [ground(), L(m_flame(-70, 20, 0.45), FIRE, glow=FIRE), L(m_flame(0, 10, 0.55), FIRE_HOT), L(m_flame(70, 20, 0.45), FIRE)],
+        "thorn_bark": lambda: [L(m_shield(), rgb("6A4A2A"), glow=c), L(m_spike(90, 110, 40, 18), c), L(m_spike(166, 110, 40, 18), c), L(m_spike(128, 170, 40, 18), c)],
+        "swamp_geyser": lambda: [ground(), L(m_drop(128, 110, 50), rgb("5C4630"), glow=c), L(m_arrow(128, 200, 128, 40, 20, 40), mix(c, W, 0.3))],
+        "jungle_wrath": lambda: [L(m_roots(), rgb("4C8C34"), glow=c), L(m_flame(0, -30, 0.5), FIRE, glow=FIRE)],
+        "flame_dash": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), FIRE), L(m_fist(30, 0, 0.75), c, glow=FIRE)],
+        "mud_slam": lambda: [ground(), L(m_fist(0, -20, 0.7, 3.14159), rgb("5C4630"), glow=c), L(m_cloud(128, 200, 0.5), mix(c, W, 0.3))],
+        "root_grab": lambda: [L(m_figure(0, 0, 0.45), STONE), L(m_roots(), rgb("4C8C34"), glow=c)],
+        "swamp_crash": lambda: [ground(), L(m_arrow(128, 20, 128, 150, 26, 48), c, glow=c), L(m_burst(128, 200, 60, 20, 10), FIRE, outline=None)],
+        "combustion": lambda: [L(m_burst(128, 128, 116, 40, 12), FIRE, glow=FIRE), L(m_flame(0, 0, 0.5), FIRE_HOT)],
+        "burning_fists": lambda: [L(m_fist(0, 10, 0.8), c, glow=FIRE), L(m_flame(50, -60, 0.35), FIRE)],
+        "methane_body": lambda: [L(m_cloud(), mix(c, W, 0.3), glow=c), L(m_shield(0, 30, 0.4), c)],
+        "photosynthesis": lambda: [L(m_burst(190, 66, 56, 30, 10), FIRE_HOT, glow=FIRE_HOT), L(m_leaf(110, 150, 80), rgb("4C8C34"), glow=c)],
     }
 
 

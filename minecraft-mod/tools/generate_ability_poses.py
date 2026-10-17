@@ -274,6 +274,17 @@ ABILITY_POSE = {
     "quake_landing": "slam",
     "giant_toss": "throw",
     "titan_clap": "clap",
+    "seed_bombs": "throw",
+    "vine_whip": "swipe",
+    "fire_wall": "spread",
+    "thorn_bark": "guard",
+    "swamp_geyser": "slam",
+    "jungle_wrath": "ultimate",
+    "flame_dash": "dodge",
+    "mud_slam": "slam",
+    "root_grab": "swipe",
+    "swamp_crash": "slam",
+    "combustion": "beam",
 }
 
 
