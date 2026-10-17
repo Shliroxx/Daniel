@@ -1093,6 +1093,20 @@ def icons(c) -> dict[str, list]:
         "hypothermia": lambda: [L(m_snowflake(), ICE, glow=ICE), L(m_circle(128, 128, 30), W)],
         "frost_body": lambda: [L(m_shield(), c, glow=ICE), L(m_snowflake(128, 120, 50, 10), W)],
         "phantom_wings": lambda: [L(m_wing(True), mix(c, W, 0.4), glow=c, glow_alpha=0.6), L(m_wing(False), mix(c, W, 0.4)), L(m_arrow(20, 200, 236, 60, 14, 30), W)],
+        "boulder_toss": lambda: [L(m_boulder(150, 100, 60), STONE, glow=EARTH), L(m_speedlines(60, 140, 10, 90, 3, 10), W), L(m_debris(150, 200, 60, 4, 14), EARTH)],
+        "primal_roar": lambda: [L(m_mouth(), c, glow=c), L(m_waves(150, 128, 3, -45, 45, 14, 34), W)],
+        "belly_flop": lambda: [ground(), L(m_figure(0, 10, 0.6), c, glow=c), L(m_cracks(128, 206), DARK, outline=None), L(m_ring(128, 200, 100, 10, 190, 350), W)],
+        "extinction": lambda: [ground(), L(m_meteor(150, 80, 50), c, glow=FIRE, glow_alpha=0.7), L(m_ring(128, 210, 110, 10, 190, 350), W), L(m_ring(128, 210, 70, 10, 190, 350), W)],
+        "dino_charge": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), cl), L(m_fist(30, 0, 0.8), c, glow=c)],
+        "hammer_drop": lambda: [ground(), L(m_fist(0, -20, 0.7, 3.14159), c, glow=c), L(m_cracks(128, 206), DARK, outline=None)],
+        "bear_hug": lambda: [L(m_figure(0, 20, 0.45), STONE), L(m_arrow(20, 128, 90, 128, 22, 40), c, glow=c), L(m_arrow(236, 128, 166, 128, 22, 40), c)],
+        "quake_landing": lambda: [ground(), L(m_footprint(), c, glow=c), L(m_waves(128, 200, 2, 200, 340, 12, 30), W)],
+        "giant_toss": lambda: [L(m_figure(60, -40, 0.4), STONE), L(m_arrow(60, 200, 200, 60, 22, 44), c, glow=c)],
+        "thick_hide": lambda: [L(m_shield(), c, glow=c), L(m_arrow(10, 60, 80, 100, 12, 24), STONE)],
+        "earthshaker": lambda: [ground(), L(m_fist(0, -10, 0.6, 3.14159), c, glow=c), L(m_waves(128, 200, 3, 200, 340, 12, 30), W)],
+        "spike_plates": lambda: [L(m_burst(128, 128, 118, 66, 10), W, glow=c), L(m_shield(0, 0, 0.7), c)],
+        "vaxasaurian_growth": lambda: [L(m_figure(-60, 50, 0.35), mix(c, W, 0.4)), L(m_figure(40, 10, 0.75), c, glow=c)],
+        "titan_clap": lambda: [L(m_fist(-50, 0, 0.6, 0.6), c, glow=c), L(m_fist(50, 0, 0.6, -0.6), c), L(m_burst(128, 128, 70, 20, 8), W, outline=None)],
     }
 
 

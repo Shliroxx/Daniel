@@ -263,6 +263,17 @@ ABILITY_POSE = {
     "frost_grip": "swipe",
     "glacier_fall": "slam",
     "shatter_strike": "swipe",
+    "boulder_toss": "throw",
+    "primal_roar": "roar",
+    "belly_flop": "leap",
+    "spike_plates": "guard",
+    "extinction": "ultimate",
+    "dino_charge": "dodge",
+    "hammer_drop": "slam",
+    "bear_hug": "guard",
+    "quake_landing": "slam",
+    "giant_toss": "throw",
+    "titan_clap": "clap",
 }
 
 

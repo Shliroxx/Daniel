@@ -52,8 +52,8 @@ final class HumungousaurAbilities {
 	static final float MAX = 100.0f;
 	private static final Identifier HUMUNGOUSAUR = KingdomOmnitrix.id("humungousaur");
 	private static final float[] STAGE_AT = {34.0f, 67.0f, 100.0f};
-	private static final float GROWTH_DEALT = 0.6f;
-	private static final float GROWTH_TAKEN = 1.2f;
+	static final float GROWTH_DEALT = 0.6f;
+	static final float GROWTH_TAKEN = 1.2f;
 	private static final int CALM_TICKS = 160;
 	private static final float SHRINK = 2.0f;
 	/** Zuwachs je Stufe */
@@ -85,10 +85,10 @@ final class HumungousaurAbilities {
 	/** letzte Position fuer Schritt-Beben */
 	private static final Map<UUID, Vec3d> LAST_STEP = new HashMap<>();
 	/** verhindert, dass Bonus-Schaden erneut Bonus-Schaden ausloest */
-	private static boolean bonusHit;
-	private static final int DUST = 0x9C8466;
-	private static final int IMPACT = 0xFFE2A8;
-	private static final int SKIN = 0xC8A070;
+	static boolean bonusHit;
+	static final int DUST = 0x9C8466;
+	static final int IMPACT = 0xFFE2A8;
+	static final int SKIN = 0xC8A070;
 
 	private record Charge(long until, Vec3d direction, float damage, Set<UUID> rammed) {
 	}
@@ -107,6 +107,7 @@ final class HumungousaurAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("bone_guard"), HumungousaurAbilities::boneGuard);
 		AbilityRegistry.register(KingdomOmnitrix.id("titanic_growth"), HumungousaurAbilities::titanicGrowth);
 		ServerTickEvents.END_SERVER_TICK.register(HumungousaurAbilities::tick);
+		HumungousaurMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			removeModifiers(handler.getPlayer());
 			forgetState(handler.getPlayer().getUuid());
@@ -115,14 +116,9 @@ final class HumungousaurAbilities {
 			if (taken <= 0.0f || bonusHit) {
 				return;
 			}
-			if (target instanceof ServerPlayerEntity victim && isHumungousaur(victim)) {
-				addGrowth(victim, taken * GROWTH_TAKEN);
-				if (GUARD.containsKey(victim.getUuid())) {
-					counter(victim, source);
-				}
-			}
-			if (source.getAttacker() instanceof ServerPlayerEntity attacker && attacker != target && isHumungousaur(attacker)) {
-				addGrowth(attacker, taken * GROWTH_DEALT);
+			// Wachstum selbst laeuft ueber die Passive „Vaxasaurier-Wachstum“ (HumungousaurMoves)
+			if (target instanceof ServerPlayerEntity victim && isHumungousaur(victim) && GUARD.containsKey(victim.getUuid())) {
+				counter(victim, source);
 			}
 		});
 	}
@@ -147,19 +143,19 @@ final class HumungousaurAbilities {
 		return stage;
 	}
 
-	private static int stage(ServerPlayerEntity player) {
+	static int stage(ServerPlayerEntity player) {
 		return stage(growth(player));
 	}
 
 	/** Faktor fuer Reichweite/Schaden der Faehigkeiten: Stufe 0 = 1, Stufe 3 = 1,6; Riesenwuchs 2. */
-	private static double size(ServerPlayerEntity player) {
+	static double size(ServerPlayerEntity player) {
 		if (com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player)) {
 			return TITAN.containsKey(player.getUuid()) ? 2.4 : 1.8;
 		}
 		return TITAN.containsKey(player.getUuid()) ? 2.0 : 1.0 + 0.2 * stage(player);
 	}
 
-	private static void addGrowth(ServerPlayerEntity player, float amount) {
+	static void addGrowth(ServerPlayerEntity player, float amount) {
 		if (TITAN.containsKey(player.getUuid()) && amount < 0.0f) {
 			return;
 		}
@@ -224,7 +220,7 @@ final class HumungousaurAbilities {
 	// --- Bausteine -------------------------------------------------------------------------------
 
 	/** Bodenstoss um den Spieler: Erdbrocken, Schaden und Anheben fuer Bodennahe. */
-	private static void stomp(ServerWorld world, ServerPlayerEntity player, double radius, float damage, double launch) {
+	static void stomp(ServerWorld world, ServerPlayerEntity player, double radius, float damage, double launch) {
 		EarthWave.ring(world, player.getPos(), radius, 4, (float) Math.min(1.2, 0.25 * radius));
 		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), DUST, (float) radius, 10);
 		Fx.smoke(world, player.getPos(), DUST, (float) (0.6 + radius * 0.1), (int) (2 + radius * 0.5));
@@ -241,7 +237,7 @@ final class HumungousaurAbilities {
 		}
 	}
 
-	private static void hit(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage) {
+	static void hit(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage) {
 		bonusHit = true;
 		try {
 			target.timeUntilRegen = 0;
