@@ -129,14 +129,20 @@ final class GhostfreakAbilities {
 			AlienMeterSync.forget(id);
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(GhostfreakAbilities::allowDamage);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken <= 0.0f || bonusHit || !(source.getAttacker() instanceof ServerPlayerEntity attacker) || attacker == target
-					|| !isGhostfreak(attacker)) {
-				return;
-			}
-			addDread(attacker, taken * DREAD_DEALT);
-			onHit(attacker, target, taken, source.isOf(DamageTypes.PLAYER_ATTACK) && source.getSource() == attacker);
-		});
+		// Spuk aus Treffern, Hinterhalt und Angst im Nahkampf: passive Kraft „Ectonurit-Spuk“
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("ectonurite_dread"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float taken) {
+						if (bonusHit) {
+							return;
+						}
+						ServerPlayerEntity attacker = ctx.player();
+						addDread(attacker, taken * DREAD_DEALT);
+						onHit(attacker, target, taken, source.isOf(DamageTypes.PLAYER_ATTACK) && source.getSource() == attacker);
+					}
+				});
+		GhostfreakMoves.register();
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			TERROR.remove(entity.getUuid());
 			PANIC.remove(entity.getUuid());
@@ -154,6 +160,11 @@ final class GhostfreakAbilities {
 
 	// --- Spuk ------------------------------------------------------------------------------------
 
+	/** Hinterhalt vorbereiten: der naechste Nahkampftreffer macht doppelten Schaden. */
+	static void ambush(ServerPlayerEntity player, int ticks) {
+		AMBUSH.put(player.getUuid(), player.getServerWorld().getTime() + ticks);
+	}
+
 	private static boolean isGhostfreak(ServerPlayerEntity player) {
 		return TransformationManager.get(player).activeAlien().filter(GHOSTFREAK::equals).isPresent();
 	}
@@ -162,7 +173,7 @@ final class GhostfreakAbilities {
 		return DREAD.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static void addDread(ServerPlayerEntity player, float amount) {
+	static void addDread(ServerPlayerEntity player, float amount) {
 		float before = dread(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		DREAD.put(player.getUuid(), after);
@@ -185,12 +196,12 @@ final class GhostfreakAbilities {
 		return t == null ? 0 : t.level;
 	}
 
-	private static boolean panicking(LivingEntity target) {
+	static boolean panicking(LivingEntity target) {
 		return PANIC.containsKey(target.getUuid());
 	}
 
 	/** Angst saeen; bei voller Angst Panik. */
-	private static void frighten(ServerPlayerEntity player, LivingEntity target, int amount) {
+	static void frighten(ServerPlayerEntity player, LivingEntity target, int amount) {
 		if (amount <= 0 || !target.isAlive()) {
 			return;
 		}
@@ -207,7 +218,7 @@ final class GhostfreakAbilities {
 		}
 	}
 
-	private static void panic(ServerPlayerEntity player, LivingEntity target, int ticks) {
+	static void panic(ServerPlayerEntity player, LivingEntity target, int ticks) {
 		ServerWorld world = player.getServerWorld();
 		boolean fresh = !panicking(target);
 		PANIC.put(target.getUuid(), new Panic(player.getUuid(), world.getRegistryKey(), world.getTime() + ticks));
@@ -526,7 +537,7 @@ final class GhostfreakAbilities {
 	 * Durch Waende gleiten: laeuft Ghostfreak in der Phasenform gegen eine Wand, taucht er auf der anderen Seite wieder
 	 * auf (bis 4 Bloecke dick); beim Schleichen sinkt er durch den Boden in den naechsten Hohlraum darunter.
 	 */
-	private static void phaseThrough(ServerWorld world, ServerPlayerEntity player) {
+	static void phaseThrough(ServerWorld world, ServerPlayerEntity player) {
 		net.minecraft.util.math.Box box = player.getBoundingBox();
 		Vec3d dir = BuiltinAbilities.horizontalLook(player);
 		// Wand direkt voraus (serverseitig gibt es fuer Spieler kein verlaessliches Kollisions-Flag)

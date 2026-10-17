@@ -219,6 +219,17 @@ ABILITY_POSE = {
     "nanite_inject": "shoot",
     "liquid_drop": "slam",
     "system_crash": "beam",
+    "soul_drain": "beam",
+    "ghost_flight": "dodge",
+    "spectral_chains": "beam",
+    "vanish": "dodge",
+    "haunting": "focus",
+    "phantom_legion": "ultimate",
+    "spectral_rush": "dodge",
+    "shadow_drop": "slam",
+    "chilling_touch": "shoot",
+    "haunt_crash": "slam",
+    "soul_rend": "beam",
 }
 
 

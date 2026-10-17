@@ -1037,6 +1037,20 @@ def icons(c) -> dict[str, list]:
         "mechamorph_integration": lambda: [L(m_chip(), DARK, glow=rgb("38FF14")), L(chip_core(), rgb("38FF14"), outline=None)],
         "self_repair": lambda: [L(m_gear(128, 128, 80, 8), DARK, glow=rgb("38FF14")), L(m_plus(180, 180, 36, 18), rgb("38FF14"))],
         "liquid_body": lambda: [L(m_drop(128, 140, 80), DARK, glow=rgb("38FF14")), *fist(c, -40, -60, 0.35)],
+        "soul_drain": lambda: [L(m_beam(128, 30, 220, 24), rgb("5AE0E0"), glow=rgb("5AE0E0")), L(m_ghost(-50, 0, 0.5), c), L(m_heart(70, 0, 0.4), rgb("C02040"))],
+        "ghost_flight": lambda: [L(m_box(150, 30, 190, 226, 0), STONE), flat(m_ghost(-40, 0, 0.7), c, 140), L(m_speedlines(60, 196, 10, 60, 3, 10), cl)],
+        "spectral_chains": lambda: [L(m_ring(90, 128, 50, 14), c, glow=c), L(m_ring(166, 128, 50, 14), c, glow=c), L(m_ring(128, 128, 50, 14), cl)],
+        "vanish": lambda: [flat(m_ghost(0, 0, 0.9), c, 90), L(m_eye(128, 110, 120, 50), W, glow=c)],
+        "haunting": lambda: [L(m_figure(0, 20, 0.55), STONE), L(m_ghost(-60, -50, 0.4), c, glow=c), L(m_ghost(60, -50, 0.4), c, glow=c)],
+        "phantom_legion": lambda: [L(m_ghost(-60, -40, 0.42), c, glow=c), L(m_ghost(60, -40, 0.42), c, glow=c), L(m_ghost(-60, 50, 0.42), c, glow=c), L(m_ghost(60, 50, 0.42), c, glow=c), L(m_ghost(0, 0, 0.55), W, glow=c)],
+        "spectral_rush": lambda: [L(m_figure(0, 0, 0.55), STONE), flat(m_ghost(-30, 0, 0.6), c, 160), L(m_speedlines(60, 196, 10, 70, 3, 10), cl)],
+        "shadow_drop": lambda: [ground(), L(m_tentacle(1.6), c, glow=c), L(m_arrow(128, 60, 128, 170, 16, 30), W)],
+        "chilling_touch": lambda: [L(m_claws(0.0, 3), mix(c, W, 0.4), glow=ICE), L(m_snowflake(190, 70, 36, 8), ICE)],
+        "haunt_crash": lambda: [ground(), L(m_ghost(0, -20, 0.6), c, glow=c), L(m_waves(128, 210, 3, 200, 340, 12, 30), cl)],
+        "soul_rend": lambda: [L(m_figure(-40, 10, 0.5), STONE), L(m_ghost(50, -20, 0.5), rgb("5AE0E0"), glow=rgb("5AE0E0")), L(m_arrow(70, 128, 150, 100, 12, 24), W)],
+        "ectonurite_dread": lambda: [L(m_ghost(), c, glow=c), L(ghost_eyes(), DARK, outline=None)],
+        "intangible": lambda: [flat(m_ghost(0, 0, 0.9), c, 120), L(m_arrow(30, 128, 226, 128, 14, 28), STONE)],
+        "night_stalker": lambda: [L(m_circle(170, 80, 40), mix(W, c, 0.2), glow=W, glow_alpha=0.3), L(m_ghost(-30, 30, 0.6), c, glow=c)],
     }
 
 
