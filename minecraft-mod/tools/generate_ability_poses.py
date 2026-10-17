@@ -18,7 +18,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ALIENS = ROOT / "src/main/resources/data/kingdomomnitrix/kingdomomnitrix/alien"
 RENDER = ROOT / "src/main/resources/assets/kingdomomnitrix/alien_render"
-SLOTS = 6
 LOG = logging.getLogger("ability_poses")
 
 
@@ -74,6 +73,9 @@ ABILITY_POSE = {
     # Vierarm
     "ground_slam": "slam", "throw": "throw", "thunder_clap": "clap", "iron_skin": "guard",
     "earthquake": "slam",
+    "four_fist_barrage": "swipe", "rising_uppercut": "throw", "slab_heave": "slam", "giant_swing": "spread", "war_cry": "roar",
+    "titan_meteor": "ultimate", "shoulder_ram": "dodge", "hammer_fist": "slam", "grapple_toss": "throw", "meteor_fist": "slam",
+    "quad_finisher": "ultimate",
     # Diamondhead
     "crystal_volley": "shoot", "crystal_blade": "swipe", "spike_eruption": "slam", "crystal_armor": "guard",
     "crystal_storm": "ultimate",
@@ -154,7 +156,7 @@ def build(check: bool) -> int:
         abilities = ability_ids(alien_file)
         poses += [None] * (len(abilities) - len(poses))
         filled = 0
-        for index, ability in enumerate(abilities[:SLOTS]):
+        for index, ability in enumerate(abilities):
             if poses[index] is not None:
                 continue
             kind = ABILITY_POSE.get(ability)
