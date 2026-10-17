@@ -1009,6 +1009,20 @@ def icons(c) -> dict[str, list]:
         "lepidopterran_toxin": lambda: [L(m_drop(128, 140, 70), rgb("C8F040"), glow=c), L(m_skull(), DARK)],
         "compound_eyes": lambda: [L(m_eye(90, 110, 90, 60), c, glow=c), L(m_eye(166, 110, 90, 60), c, glow=c), L(m_eye(110, 170, 70, 46), cl), L(m_eye(146, 170, 70, 46), cl)],
         "stench": lambda: [L(m_waves(128, 200, 3, 220, 320, 14, 30), c, glow=c), L(m_cloud(128, 110, 0.7), mix(c, W, 0.2))],
+        "water_jet": lambda: [L(m_beam(128, 40, 236, 40), rgb("3A8CFF"), glow=c), L(m_beam(128, 40, 236, 14), W, outline=None), L(m_jaw(), c)],
+        "geyser": lambda: [ground(), L(m_drop(128, 120, 50), rgb("3A8CFF"), glow=c), L(m_arrow(128, 200, 128, 30, 20, 40), W)],
+        "feeding_frenzy": lambda: [L(m_jaw(), c, glow=c), L(jaw_teeth(), W, outline=None), L(m_burst(200, 60, 40, 16, 8), rgb("9A0A0A"), outline=None)],
+        "bubble_shield": lambda: [L(m_bubble(), rgb("3A8CFF"), glow=c), L(m_figure(0, 10, 0.5), c)],
+        "riptide_pull": lambda: [L(m_spiral(128, 128, 1.8, 100, 14), rgb("3A8CFF"), glow=c), L(m_arrow(230, 128, 160, 128, 16, 30), W)],
+        "maelstrom": lambda: [L(m_spiral(128, 128, 3.0, 112, 12), rgb("3A8CFF"), glow=c, glow_alpha=0.9), L(m_circle(128, 128, 24), rgb("1A4A9A"), outline=None)],
+        "shark_ram": lambda: [L(m_speedlines(70, 190, 10, 100, 4, 12), rgb("3A8CFF")), L(m_jaw(), c, glow=c)],
+        "jaw_dive": lambda: [ground(), L(m_jaw(), c, glow=c), L(m_arrow(200, 40, 200, 150, 14, 28), W)],
+        "drag_under": lambda: [L(m_wave(110), rgb("3A8CFF"), glow=c), L(m_figure(0, 40, 0.45), STONE), L(m_bubble(190, 60, 20), W)],
+        "splash_down": lambda: [L(m_wave(190), rgb("3A8CFF"), glow=c), L(m_drop(128, 100, 46), rgb("3A8CFF")), L(m_arrow(128, 10, 128, 60, 14, 26), W)],
+        "death_bite": lambda: [L(m_jaw(), rgb("1A4A9A"), glow=c, glow_alpha=0.9), L(jaw_teeth(), W, outline=None), L(m_skull(), DARK)],
+        "tidal_strength": lambda: [L(m_wave(150), rgb("3A8CFF"), glow=c), *fist(c, 0, -30, 0.45)],
+        "deep_hunter": lambda: [L(m_eye(128, 110, 160, 80), rgb("1A4A9A"), glow=c), L(m_bubble(60, 200, 20), W), L(m_bubble(200, 180, 16), W)],
+        "blood_scent": lambda: [L(m_drop(128, 140, 70), rgb("9A0A0A"), glow=FIRE, glow_alpha=0.4), L(m_jaw(), c)],
     }
 
 

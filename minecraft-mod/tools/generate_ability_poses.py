@@ -197,6 +197,17 @@ ABILITY_POSE = {
     "slime_grab": "shoot",
     "toxic_plunge": "slam",
     "dissolve": "ultimate",
+    "water_jet": "beam",
+    "geyser": "leap",
+    "feeding_frenzy": "swipe",
+    "bubble_shield": "guard",
+    "riptide_pull": "clap",
+    "maelstrom": "ultimate",
+    "shark_ram": "dodge",
+    "jaw_dive": "slam",
+    "drag_under": "slam",
+    "splash_down": "slam",
+    "death_bite": "swipe",
 }
 
 

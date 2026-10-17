@@ -88,6 +88,7 @@ final class RipjawsAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("hydro_heal"), RipjawsAbilities::hydroHeal);
 		AbilityRegistry.register(KingdomOmnitrix.id("tidal_wave"), RipjawsAbilities::tidalWave);
 		ServerTickEvents.END_SERVER_TICK.register(RipjawsAbilities::tick);
+		RipjawsMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			COMBO.remove(handler.getPlayer().getUuid());
 			TideZones.forget(handler.getPlayer().getUuid());
@@ -98,7 +99,7 @@ final class RipjawsAbilities {
 		return TransformationManager.get(player).activeAlien().filter(RIPJAWS::equals).isPresent();
 	}
 
-	private static void zone(ServerPlayerEntity player, Vec3d center, double radius, int ticks) {
+	static void zone(ServerPlayerEntity player, Vec3d center, double radius, int ticks) {
 		TideZones.add(new TideZones.Zone(player.getUuid(), player.getServerWorld().getRegistryKey(), center, radius,
 				player.getServerWorld().getTime() + ticks));
 	}
