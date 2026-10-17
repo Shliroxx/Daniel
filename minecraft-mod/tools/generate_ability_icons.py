@@ -967,6 +967,20 @@ def icons(c) -> dict[str, list]:
         "petrosapien_resonance": lambda: [L(m_crystal(128, 128, 180, 70), c, glow=c, glow_alpha=0.7), L(m_waves(200, 128, 3, 150, 210, 10, 26), W)],
         "crystal_regrowth": lambda: [L(m_crystal(100, 140, 140, 56), c, glow=c), L(m_plus(180, 80, 40, 20), W)],
         "diamond_hide": lambda: [L(m_shield(), c, glow=c), L(m_hex(128, 120, 46, 14), W), L(m_shards_ring(128, 120, 90, 6, 14), cl)],
+        "head_hop": lambda: [L(m_figure(0, 40, 0.75), STONE), L(m_brain(), c, glow=c), L(m_arrow(40, 220, 100, 120, 14, 30), cl)],
+        "calculated_strike": lambda: [L(m_reticle(), c, glow=c), *fist(c, 0, 0, 0.45)],
+        "overload_device": lambda: [L(m_chip(), c, glow=ELEC), L(chip_core(), W, outline=None), L(m_bolt(60, -60, 0.4), ELEC)],
+        "mini_turret": lambda: [L(m_gear(128, 150, 70, 8), STONE), L(m_cannon(), c, glow=c)],
+        "weakness_grid": lambda: [L(m_hex(128, 128, 104, 10), c, glow=c), L(m_reticle(128, 128, 50), W)],
+        "galvan_device": lambda: [L(m_spiral(128, 128, 2.2, 108, 12), c, glow=c), L(m_gear(128, 128, 40, 8), W)],
+        "ankle_bite": lambda: [L(m_jaw(), c, glow=c), L(jaw_teeth(), W, outline=None)],
+        "skull_hop": lambda: [L(m_skull(), STONE), L(skull_holes(), DARK, outline=None), L(m_arrow(128, 90, 128, 10, 16, 30), c, glow=c)],
+        "wire_trip": lambda: [L(m_figure(0, -10, 0.6), STONE), L(m_spiral(128, 200, 1.6, 50, 8), c, glow=ELEC)],
+        "precision_drop": lambda: [L(m_reticle(128, 170, 60), c, glow=c), L(m_arrow(128, 20, 128, 120, 18, 34), W)],
+        "logical_conclusion": lambda: [L(m_brain(), c, glow=c, glow_alpha=0.8), L(brain_folds(), mix(c, DARK, 0.5), outline=None), L(m_reticle(128, 128, 110), W)],
+        "keen_observer": lambda: [L(m_eye(), c, glow=c), L(m_circle(128, 128, 26), DARK, outline=None)],
+        "tiny_target": lambda: [L(m_reticle(128, 128, 100), STONE), L(m_figure(0, 20, 0.35), c, glow=c)],
+        "wall_crawler": lambda: [L(m_box(150, 20, 236, 236, 0), STONE), L(m_figure(-20, 0, 0.5), c, glow=c), L(m_arrow(70, 200, 70, 60, 14, 30), cl)],
     }
 
 

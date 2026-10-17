@@ -164,6 +164,17 @@ ABILITY_POSE = {
     "crystal_shackle": "slam",
     "diamond_drop": "slam",
     "crystallize": "ultimate",
+    "head_hop": "leap",
+    "calculated_strike": "swipe",
+    "overload_device": "throw",
+    "mini_turret": "focus",
+    "weakness_grid": "focus",
+    "galvan_device": "ultimate",
+    "ankle_bite": "swipe",
+    "skull_hop": "leap",
+    "wire_trip": "clap",
+    "precision_drop": "leap",
+    "logical_conclusion": "focus",
 }
 
 

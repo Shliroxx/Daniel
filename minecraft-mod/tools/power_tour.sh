@@ -14,11 +14,13 @@ for alien in "$@"; do
 	i=$((i+1))
 	count=$(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))['abilities']))" "$DATA/$alien.json")
 	$C cmd "/spreadplayers ~$((i*40)) ~$((i*25)) 0 1 false @s"
+	# immer an die Oberflaeche (nicht in Hoehlen), damit das Ziel frei vor dem Alien steht
+	$C cmd "/execute positioned over motion_blocking_no_leaves run tp @s ~ ~ ~"
 	$C cmd "/hero transform kingdomomnitrix:$alien"
 	sleep 4
 	for ((n=0; n<count; n++)); do
 		$C cmd "/kill @e[type=husk]"
-		$C cmd "/tp @s ~ ~ ~ 0 8"
+		$C cmd "/execute positioned over motion_blocking_no_leaves run tp @s ~ ~ ~ 0 8"
 		$C cmd "/summon husk ^ ^1 ^4 $DUMMY"
 		sleep 0.6
 		$C cmd "/hero power $n"

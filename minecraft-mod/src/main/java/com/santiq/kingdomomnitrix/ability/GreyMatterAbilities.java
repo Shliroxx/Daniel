@@ -83,6 +83,7 @@ final class GreyMatterAbilities {
 		ServerTickEvents.END_SERVER_TICK.register(GreyMatterAbilities::tick);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(GreyMatterAbilities::afterDamage);
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(GreyMatterAbilities::allowDamage);
+		GreyMatterMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
 			GreyMatterKnowledge.forget(id);
@@ -100,6 +101,15 @@ final class GreyMatterAbilities {
 
 	private static int learn(ServerPlayerEntity player, LivingEntity target) {
 		return GreyMatterKnowledge.learn(player, target);
+	}
+
+	/** Schwachstelle setzen: der naechste Treffer irgendeines Spielers macht 150 % Zusatzschaden. */
+	static void weaken(LivingEntity target, int ticks) {
+		WEAK.put(target.getUuid(), target.getWorld().getTime() + ticks);
+	}
+
+	static int learnFrom(ServerPlayerEntity player, LivingEntity target) {
+		return learn(player, target);
 	}
 
 	private static boolean isGreyMatter(ServerPlayerEntity player) {
@@ -157,7 +167,7 @@ final class GreyMatterAbilities {
 	/** Analyse: Werte des Ziels, Wissen ueber die Art +1, Ziel ist fuer die Gruppe markiert. */
 	private static boolean scan(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 24.0));
+		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 24.0), 0.93, e -> AlienKit.foe(player, e));
 		if (found.isEmpty()) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
@@ -187,7 +197,7 @@ final class GreyMatterAbilities {
 
 	private static boolean weakSpot(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 16.0));
+		Optional<LivingEntity> found = Targeting.findMeleeTarget(player, ctx.param("range", 16.0), 0.93, e -> AlienKit.foe(player, e));
 		if (found.isEmpty() || !PartyRules.canHarm(player, found.get())) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
