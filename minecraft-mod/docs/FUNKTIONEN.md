@@ -130,7 +130,7 @@ AE liefert nur Modelle und Texturen; Fähigkeiten und Systeme sind eigene Entwic
 | **Jetray** | Überladung + Flugmodell | Jeder Neuroschock-Treffer lädt das Ziel auf (sichtbare Funkenringe, 5 s). Bei 3 Ladungen: Entladung mit 150 % Schaden, Teilschaden und Lähmung im Umkreis 3,5. Düsenstoß durchbricht die Schallmauer (Knall-Ring) und reißt alles im Flugweg mit. Tiefflug feuert auf 2 Ziele je Salve. Im Flug: Kurvenlage beim Drehen, Vorlage mit dem Tempo, Flügelschlag beim Steigen. |
 
 ### Kräfte 2.0: Pool, Loadout, Kombos, Passive
-Jedes Alien hat mehr Kräfte als Tasten. Ziel: 15–20 Kräfte je Alien; ausgebaut ist bisher **Vierarm** (12 Tasten-Fähigkeiten, 5 Kombos, 3 Passive).
+Jedes Alien hat mehr Kräfte als Tasten: **alle 24 Aliens** haben 12 Tasten-Fähigkeiten, 5 Kombos und 3 Passive (20 Kräfte). Die Beschreibung jeder Kraft steht im Loadout-Bildschirm als Tooltip.
 
 | Art | Wie | Regeln |
 |---|---|---|
@@ -138,10 +138,56 @@ Jedes Alien hat mehr Kräfte als Tasten. Ziel: 15–20 Kräfte je Alien; ausgeba
 | **Kombos** | entstehen beim Schlag aus der Bewegung, kein Platz nötig | Angriffsbalken mindestens 85 %. Reihenfolge: *Finisher* (Ziel ≤ 30 % Leben) → *Luft* → *Sprint* → *Schleichen*; *Sturz* = hoch in der Luft (ab 1,5 Blöcken Fall, nicht im Flug) Schleichen drücken. Eigene Abklingzeit und Energie; ist eine nicht bereit, gilt die nächstpassende, sonst bleibt es ein normaler Schlag. HUD: Kombo-Leiste unter den Tasten (» Sprint, ↑ Luft, ▾ Schleichen, ⇓ Sturz, ✖ Finisher). |
 | **Passive** | immer aktiv (ab Freischaltstufe) | wirken auf ausgeteilten/genommenen Schaden, Treffer, Siege oder jeden Tick. |
 
-**Vierarm** — Pool: Bodenschlag, Wurf, Titanensprung, Donnerklatschen, Eisenhaut, Erdbeben (Ultimate), Vier-Faust-Salve ★2, Aufwärtshaken ★3, Bodenplatte ★4, Riesenschwung ★6, Tetramand-Kriegsschrei ★7, Titanen-Meteor ★10 (Ultimate). Kombos: Rammstoß (Sprint), Hammerfaust ★2 (Luft), Schulterwurf ★3 (Schleichen), Meteorfaust ★4 (Sturz), Vierfach-Finale ★6 (Finisher). Passive: Tetramand-Wut, Vier-Faust-Kombo, Tetramand-Haut ★4 (−30 % Geschosse, −25 % Explosionen, −12 % sonst).
+**Heatblast** — Pool: Feuerstoß, Feuerexplosion, Flammenschub, Infernowelle ★3, Flammenschild ★5, Supernova (Ultimate) ★8, Flammenwerfer ★2, Feuerrolle ★2, Hitze aufnehmen ★3, Feuertornado ★4, Lavafontäne ★6, Meteorhagel (Ultimate) ★10. Kombos: Glutansturm (Sprint), Feuerkomet ★2 (Luft), Glutgriff ★3 (Schleichen), Phoenix-Sturz ★4 (Sturz), Einäschern ★6 (Finisher). Passive: Pyronit-Kern, Glutkörper, Hitzeschleier ★4.
+
+**XLR8** — Pool: Sturmangriff, Ausweichen, Schlaghagel, Zyklonlauf ★3, Zeitsprung ★5, Lichtgeschwindigkeits-Hagel (Ultimate) ★8, Schwanzpeitsche ★2, Blitz-Entwaffnung ★3, Sogspur ★4, Reibungsfeuer ★5, Phantom-Hiebe ★7, Mach-Sprint (Ultimate) ★10. Kombos: Überschallstoß (Sprint), Sprungtritt ★2 (Luft), Fußfeger ★3 (Schleichen), Sturzflug ★4 (Sturz), Hundert Schläge ★6 (Finisher). Passive: Kineceleran-Tempo, Tempo-Lauf ★3, Reflexe ★5.
+
+**Vierarm** — Pool: Bodenschlag, Werfen, Titanensprung, Donnerklatschen ★3, Eisenhaut ★5, Erdbeben (Ultimate) ★8, Vier-Faust-Salve ★2, Aufwärtshaken ★3, Bodenplatte ★4, Riesenschwung ★6, Tetramand-Kriegsschrei ★7, Titanen-Meteor (Ultimate) ★10. Kombos: Rammstoß (Sprint), Hammerfaust ★2 (Luft), Schulterwurf ★3 (Schleichen), Meteorfaust ★4 (Sturz), Vierfach-Finale ★6 (Finisher). Passive: Tetramand-Wut, Vier-Faust-Kombo, Tetramand-Haut ★4.
+
+**Diamondhead** — Pool: Kristallsalve, Kristallklinge, Kristallsurfen, Stachelausbruch ★3, Kristallpanzer ★5, Kristallsturm (Ultimate) ★8, Kristalllanze ★2, Kristallhammer ★3, Kristallwand ★4, Kristallkäfig ★5, Diamantbohrer ★6, Kristallkathedrale (Ultimate) ★10. Kombos: Kristallramme (Sprint), Splitterfall ★2 (Luft), Kristallfessel ★3 (Schleichen), Diamantsturz ★4 (Sturz), Kristallisieren ★6 (Finisher). Passive: Petrosapien-Resonanz, Nachwachsen ★3, Diamanthaut ★5.
+
+**Grey Matter** — Pool: Analyse, Schwachstelle, Huschen, Technikfalle ★3, Notreparatur ★5, Superhirn (Ultimate) ★8, Kopfsprung ★2, Berechneter Schlag ★2, Überladung ★3, Mini-Geschütz ★5, Schwachstellen-Netz ★6, Galvan-Gerät (Ultimate) ★10. Kombos: Wadenbiss (Sprint), Kopfnuss ★2 (Luft), Kabelfalle ★3 (Schleichen), Präzisionssturz ★4 (Sturz), Logisches Ende ★6 (Finisher). Passive: Beobachtung, Kleines Ziel, Kletterkünstler ★3.
+
+**Wildmutt** — Pool: Ansprung, Stachelsalve, Wildes Gebrüll, Wildes Zerfleischen ★3, Witterung ★5, Urwut (Ultimate) ★8, Knochenbrecher-Biss ★2, Wandsprung ★3, Stachelteppich ★4, Jagdgeheul ★5, Niederreißen ★6, Wilde Hatz (Ultimate) ★10. Kombos: Rammsprung (Sprint), Stachelsturz ★2 (Luft), Kehlenbiss ★3 (Schleichen), Raubtiersprung ★4 (Sturz), Zerfleischen ★6 (Finisher). Passive: Vulpimancer-Jagd, Witterung, Überlebensinstinkt ★4.
+
+**Stinkfly** — Pool: Schleimspucke, Stinkwolke, Flügelstoß, Schleimbombe ★3, Aufwind ★5, Giftsturm (Ultimate) ★8, Säuretropfen ★2, Stachelstich ★3, Schleimfalle ★4, Gasdüse ★5, Ätzspray ★6, Seuchenwolke (Ultimate) ★10. Kombos: Flügelhieb (Sprint), Sturzstich ★2 (Luft), Schleimgriff ★3 (Schleichen), Giftbombe ★4 (Sturz), Zersetzen ★6 (Finisher). Passive: Lepidopterran-Gift, Facettenaugen, Gestank ★4.
+
+**Ripjaws** — Pool: Kieferbiss, Flutstoß, Strudel, Schwanzhieb ★3, Hydroheilung ★5, Flutwelle (Ultimate) ★8, Wasserstrahl ★2, Wasserfontäne ★3, Fressrausch ★4, Blasenschild ★5, Sogströmung ★6, Mahlstrom (Ultimate) ★10. Kombos: Hairamme (Sprint), Kiefersturz ★2 (Luft), Unterwasserzug ★3 (Schleichen), Wasserbombe ★4 (Sturz), Todesbiss ★6 (Finisher). Passive: Gezeitenkraft, Tiefseejäger, Blutwitterung ★4.
+
+**Upgrade** — Pool: Optikstrahl, Flüssige Form, Technik-Upgrade, Keulenfäuste ★3, Systemübernahme ★5, Plasmakanone (Ultimate) ★8, Dehngriff ★2, Ausrüstungs-Upgrade ★3, Nanodrohnen ★4, Laserraster ★5, EMP-Puls ★6, Omega-Übertaktung (Ultimate) ★10. Kombos: Flüssigramme (Sprint), Hammerarm ★2 (Luft), Naniten-Injektion ★3 (Schleichen), Flüssigsturz ★4 (Sturz), Systemabsturz ★6 (Finisher). Passive: Mechamorph-Integration, Selbstreparatur ★3, Flüssiger Körper ★5.
+
+**Ghostfreak** — Pool: Tentakelhieb, Phasenverschiebung, Spuk, Besessenheit ★3, Schattenschritt ★5, Albtraum (Ultimate) ★8, Seelenraub ★2, Geisterflug ★2, Geisterketten ★3, Unsichtbarkeit ★4, Heimsuchung ★6, Geisterlegion (Ultimate) ★10. Kombos: Geisterstoß (Sprint), Schattenfall ★2 (Luft), Kalter Griff ★3 (Schleichen), Spukeinschlag ★4 (Sturz), Seelenriss ★6 (Finisher). Passive: Ectonurit-Spuk, Körperlos, Nachtgestalt ★4.
+
+**Cannonbolt** — Pool: Kanonenkugel, Panzerkugel, Kugelsprung, Abpraller ★3, Rollmodus ★5, Kanonade (Ultimate) ★8, Bowlingkugel ★2, Abrissbirne ★3, Flipperkugel ★4, Stachelpanzer ★5, Kreiselpanzer ★6, Kanonenhagel (Ultimate) ★10. Kombos: Kugelrammbock (Sprint), Kugelstampfer ★2 (Luft), Panzerkonter ★3 (Schleichen), Kanonenschlag ★4 (Sturz), Volltreffer ★6 (Finisher). Passive: Panzerschale, Rollschwung, Abprallen ★4.
+
+**Jetray** — Pool: Neuroschock, Schwanzblitz, Düsenstoß, Tiefflug ★3, Windschatten ★5, Neuroschock-Sturm (Ultimate) ★8, Neuro-Salve ★2, Sturzbomber ★3, Schallmauer ★4, Fassrolle ★5, Statikfeld ★6, Mach Zehn (Ultimate) ★10. Kombos: Flügelschnitt (Sprint), Himmelsgriff ★2 (Luft), Schwanzstachel ★3 (Schleichen), Sturzflug ★4 (Sturz), Totalentladung ★6 (Finisher). Passive: Neuro-Ladung, Aerodynamik, Aerophibie ★4.
+
+**Big Chill** — Pool: Eisatem, Eissplitter, Phasenflug, Eisgefängnis ★3, Kälteumhang ★5, Absoluter Nullpunkt (Ultimate) ★8, Frostlanze ★2, Frostboden ★3, Flügelhülle ★4, Eisdornen ★5, Blizzard ★6, Eiskomet (Ultimate) ★10. Kombos: Kältesturm (Sprint), Eiszapfen ★2 (Luft), Frostgriff ★3 (Schleichen), Gletschersturz ★4 (Sturz), Zersplitterschlag ★6 (Finisher). Passive: Unterkühlung, Frostkörper, Phantomflügel ★4.
+
+**Humungousaur** — Pool: Megaschlag, Schwanzfeger, Stampede, Tektonikbeben ★3, Panzerblock ★5, Riesenwuchs (Ultimate) ★8, Felsbrocken ★2, Urschrei ★3, Bauchklatscher ★4, Stachelplatten ★5, Aussterben (Ultimate) ★10, Donnerklatschen ★6. Kombos: Dino-Ansturm (Sprint), Hammerschlag ★2 (Luft), Bärengriff ★3 (Schleichen), Bebenlandung ★4 (Sturz), Riesenwurf ★6 (Finisher). Passive: Vaxasaurier-Wachstum, Dicke Haut, Erderschütterer ★4.
+
+**Swampfire** — Pool: Methanflamme, Methanwolke, Methandüse, Wurzelfessel ★3, Nachwachsen ★5, Sumpfinferno (Ultimate) ★8, Samenbomben ★2, Rankenpeitsche ★3, Feuerwand ★4, Dornenrinde ★5, Sumpfgeysir ★6, Dschungelzorn (Ultimate) ★10. Kombos: Flammensturm (Sprint), Schlammschlag ★2 (Luft), Wurzelgriff ★3 (Schleichen), Sumpfsturz ★4 (Sturz), Selbstentzündung ★6 (Finisher). Passive: Methanfäuste, Methankörper, Photosynthese ★4.
+
+**Chromastone** — Pool: Prismenstrahl, Spektralblitz, Lichtsprung, Kristallgitter ★3, Spektralladung ★5, Vollspektrum (Ultimate) ★8, Lichtlanze ★2, Kristallspitzen ★3, Spiegelprisma ★4, Blendblitz ★5, Energieentladung ★6, Spektraler Kataklysmus (Ultimate) ★10. Kombos: Prismenansturm (Sprint), Sternenfall ★2 (Luft), Absorptionsgriff ★3 (Schleichen), Prismenmeteor ★4 (Sturz), Spektralbruch ★6 (Finisher). Passive: Solarzellen, Kristallresonanz, Brechung ★4.
+
+**Echo Echo** — Pool: Schallschrei, Echo-Teilung, Schallstoß, Schallmauer ★3, Schallschild ★5, Echo-Chor (Ultimate) ★8, Schallkugel ★2, Echo-Tausch ★3, Rückkopplung ★4, Bassdruck ★5, Klon-Detonation ★6, Schall-Symphonie (Ultimate) ★10. Kombos: Echo-Rempler (Sprint), Tonfall ★2 (Luft), Volle Breitseite ★3 (Schleichen), Knalllandung ★4 (Sturz), Resonanzbruch ★6 (Finisher). Passive: Sonorosianische Resonanz, Echoortung, Schalldämpfung ★4.
+
+**Atomix** — Pool: Atomstrahl, Kernpuls, Kernsprung, Eindämmungsfeld ★3, Halbwertszeit ★5, Hero Time (Ultimate) ★8, Protonensalve ★2, Gammastoß ★3, Atombarriere ★4, Kernschmelze ★5, Kettenreaktion ★6, Fusionssonne (Ultimate) ★10. Kombos: Atomschlag (Sprint), Fallout ★2 (Luft), Isotopengriff ★3 (Schleichen), Kernsturz ★4 (Sturz), Kritische Masse ★6 (Finisher). Passive: Radioaktive Berührung, Reaktorkern, Strahlenschutz ★4.
+
+**Rath** — Pool: Handgelenk-Kralle, Herausforderung, Sturmangriff, Suplex ★3, Appoplexian-Gebrüll ★5, Rath-Finale (Ultimate) ★8, Krallenwirbel ★2, Wäscheleine ★3, Piledriver ★4, Ellbogensturz ★5, Großmaul ★6, Königliche Keilerei (Ultimate) ★10. Kombos: Speer-Tackle (Sprint), Fliegender Ellbogen ★2 (Luft), Schwitzkasten ★3 (Schleichen), Bauchplatscher ★4 (Sturz), Rath-Bombe ★6 (Finisher). Passive: Unbeugsam, Appoplexisches Temperament, Ehrenrunde ★4.
+
+**Spidermonkey** — Pool: Netzschuss, Netzfächer, Netzschwung, Affenwirbel ★3, Netzfalle ★5, Netzkokon (Ultimate) ★8, Netzbola ★2, Netzzug ★3, Netzwand ★4, Affensprung ★5, Netzwirbel ★6, Spinnenhinterhalt (Ultimate) ★10. Kombos: Schwungtritt (Sprint), Spinnenfall ★2 (Luft), Vier-Arm-Wirbel ★3 (Schleichen), Netzsturz ★4 (Sturz), Kokonschlag ★6 (Finisher). Passive: Netzjäger, Kletteraffe, Spinnensinn ★4.
+
+**Way Big** — Pool: Kosmischer Strahl, Titanenstampfer, Riesensprung, Klatschwelle ★3, To'kustar-Panzer ★5, Sternensturz (Ultimate) ★8, Kosmische Salve ★2, Bodenwischer ★3, Himmelshaken ★4, Riesengriff ★5, Kosmische Kuppel ★6, Kosmische Kanone (Ultimate) ★10. Kombos: Titanentritt (Sprint), Himmelshammer ★2 (Luft), Riesenschnipser ★3 (Schleichen), Kolosssturz ★4 (Sturz), Kosmischer Gnadenstoß ★6 (Finisher). Passive: Kosmische Ladung, Titanenschritt, To'kustar-Haut ★4.
+
+**Alien X** — Pool: Realitätsblitz, Schwerkraftbruch, Raumsprung, Zeitstillstand ★3, Schöpfung ★5, Urknall (Ultimate) ★8, Sternenlanze ★2, Realitätsanker ★3, Leerenriss ★4, Zurückspulen ★5, Sternbild ★6, Genesis (Ultimate) ★10. Kombos: Kometenschlag (Sprint), Schwerkraftsturz ★2 (Luft), Stasisberührung ★3 (Schleichen), Sternensturz ★4 (Sturz), Auslöschen ★6 (Finisher). Passive: Himmlischer Einklang, Celestialsapien-Körper, Serenas Gnade ★4.
+
+**Brainstorm** — Pool: Blitzbogen, Statikgitter, Elektro-Levitation, Kraftfeld ★3, Analyse ★5, Gedankensturm (Ultimate) ★8, Elektropeitsche ★2, Kettenblitz ★3, Telekinese-Feld ★4, Kugelblitz ★5, Taktisches Genie ★6, Donnerkuppel (Ultimate) ★10. Kombos: Panzerramme (Sprint), Schädelknacker ★2 (Luft), Scherengriff ★3 (Schleichen), Donnersturz ★4 (Sturz), Neuronale Überlastung ★6 (Finisher). Passive: Überlegener Intellekt, Krabbenpanzer, Statische Entladung ★4.
+
+**Goop** — Pool: Säurespucke, Schleimpeitsche, Pfützenform, Verschlingen ★3, Säurepfütze ★5, Säureflut (Ultimate) ★8, Säuresalve ★2, Schleimfalle ★3, Schleimstacheln ★4, Hüpfblob ★5, Masse-Neubildung ★6, Säure-Tsunami (Ultimate) ★10. Kombos: Schleimrutsche (Sprint), Schleimkappe ★2 (Luft), Säuregriff ★3 (Schleichen), Platsch ★4 (Sturz), Totale Zersetzung ★6 (Finisher). Passive: Ätzende Berührung, Schleimkörper, Antigrav-Projektor ★4.
 
 ### Meisterschaft ★1–10 (je Alien)
-Steigt durch Benutzen. Je Stufe +5 % Dauer, −3 % Abklingzeit; schaltet Fähigkeit 4 (★3), 5 (★5), 6 (★8) frei;
+Steigt durch Benutzen. Je Stufe +5 % Dauer, −3 % Abklingzeit; schaltet Kräfte, Kombos und Passive auf ihrer Stufe frei (★ in der Liste oben);
 ★10 = gemeistert (keine Fehlfunktionen).
 
 ### Gerätezustand: Hitze, Sperre, Fehlfunktionen
