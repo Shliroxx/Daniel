@@ -42,6 +42,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playS2C().register(FxPayload.ID, FxPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RevertRequestPayload.ID, RevertRequestPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(AbilityRequestPayload.ID, AbilityRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SetLoadoutPayload.ID, SetLoadoutPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(OmnitrixCodePayload.ID, OmnitrixCodePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(ComboAttackPayload.ID, ComboAttackPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(DodgePayload.ID, DodgePayload.CODEC);
@@ -245,14 +246,25 @@ public final class ModNetworking {
 				com.santiq.kingdomomnitrix.omnitrix.OmnitrixCodes.enter(player, wellFormed ? code : "");
 			}
 		});
+		registerLoadout();
 		ServerPlayNetworking.registerGlobalReceiver(AbilityRequestPayload.ID, (payload, context) -> {
 			ServerPlayerEntity player = context.player();
-			if (canAct(player) && payload.slot() >= 0 && payload.slot() < AlienDefinition.MAX_ABILITIES) {
+			if (canAct(player) && payload.slot() >= 0 && payload.slot() < AlienDefinition.LOADOUT_SIZE) {
 				if (payload.release()) {
-					com.santiq.kingdomomnitrix.ability.AbilityCharge.release(player, payload.slot());
+					// Aufladungen laufen unter der Faehigkeits-Nummer, die Taste zeigt per Loadout darauf
+					com.santiq.kingdomomnitrix.ability.AbilityCharge.release(player,
+							com.santiq.kingdomomnitrix.alien.LoadoutManager.poolIndex(player, payload.slot()));
 				} else {
 					report(player, TransformationManager.useAbility(player, payload.slot()));
 				}
+			}
+		});
+	}
+
+	private static void registerLoadout() {
+		ServerPlayNetworking.registerGlobalReceiver(SetLoadoutPayload.ID, (payload, context) -> {
+			if (canAct(context.player()) && payload.loadout().size() <= AlienDefinition.LOADOUT_SIZE) {
+				com.santiq.kingdomomnitrix.alien.LoadoutManager.set(context.player(), payload.alien(), payload.loadout());
 			}
 		});
 	}

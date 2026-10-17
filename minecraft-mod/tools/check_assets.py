@@ -150,13 +150,16 @@ def check_loot(report: Report, items: set[str]) -> None:
 
 # Registrierung direkt oder ueber die Kurzform reg("name", …) in MasteryAbilities
 ABILITY_PATTERN = re.compile(r'(?:AbilityRegistry\.register\(KingdomOmnitrix\.id\(|\breg\()"([a-z0-9_]+)"')
-MAX_ABILITIES_PATTERN = re.compile(r'MAX_ABILITIES\s*=\s*(\d+)')
+MAX_POOL_PATTERN = re.compile(r'MAX_POOL\s*=\s*(\d+)')
+MAX_COMBOS_PATTERN = re.compile(r'MAX_COMBOS\s*=\s*(\d+)')
 
 
 def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
     abilities = set(ABILITY_PATTERN.findall(source))
-    found_max = MAX_ABILITIES_PATTERN.search(source)
-    max_abilities = int(found_max.group(1)) if found_max else 3
+    found_pool = MAX_POOL_PATTERN.search(source)
+    found_combos = MAX_COMBOS_PATTERN.search(source)
+    max_pool = int(found_pool.group(1)) if found_pool else 6
+    max_combos = int(found_combos.group(1)) if found_combos else 0
     alien_dir = DATA / MOD_ID / "alien"
     files = sorted(alien_dir.glob("*.json"))
     if not files:
@@ -178,8 +181,11 @@ def check_aliens(report: Report, source: str, lang: dict[str, str]) -> int:
                 if not (ASSETS / rel).is_file():
                     report.error("Alien %s: Koerper-Datei fehlt: %s", name, rel)
         slots = alien.get("abilities", [])
-        if not 1 <= len(slots) <= max_abilities:
-            report.error("Alien %s: 1 bis %d Faehigkeiten erlaubt, gefunden %d", name, max_abilities, len(slots))
+        keys = [slot for slot in slots if slot.get("trigger", "key") == "key"]
+        if not 1 <= len(keys) <= max_pool:
+            report.error("Alien %s: 1 bis %d Tasten-Faehigkeiten erlaubt, gefunden %d", name, max_pool, len(keys))
+        if len(slots) - len(keys) > max_combos:
+            report.error("Alien %s: hoechstens %d Kombos erlaubt, gefunden %d", name, max_combos, len(slots) - len(keys))
         for slot in slots:
             namespace, _, ability = str(slot.get("type", "")).partition(":")
             if namespace == MOD_ID and ability not in abilities:
@@ -313,7 +319,7 @@ def check_icons(report: Report) -> None:
     for path in (DATA / MOD_ID / "alien").glob("*.json"):
         alien = load_json(path, report)
         if isinstance(alien, dict):
-            for ability in alien.get("abilities", []):
+            for ability in alien.get("abilities", []) + alien.get("traits", {}).get("passives", []):
                 kind = str(ability.get("type", ""))
                 if kind.startswith(MOD_ID + ":"):
                     wanted.append("alien_ability/" + kind.split(":", 1)[1])

@@ -329,6 +329,17 @@ public final class HeroCommand {
 							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.ability_clear", target.getDisplayName()), true);
 							return 1;
 						})))
+				// Kraft Nummer n des aktiven Aliens ausloesen (Tasten und Kombos; Ziel = Gegner im Blick) — fuer Tests
+				.then(CommandManager.literal("power")
+						.then(targeted(CommandManager.argument("index", IntegerArgumentType.integer(0, com.santiq.kingdomomnitrix.alien.AlienDefinition.MAX_ABILITIES - 1)),
+								(ctx, target) -> {
+									int index = IntegerArgumentType.getInteger(ctx, "index");
+									net.minecraft.entity.LivingEntity victim = com.santiq.kingdomomnitrix.util.Targeting.findMeleeTarget(target, 8.0, 0.5,
+											e -> com.santiq.kingdomomnitrix.party.PartyRules.canHarm(target, e)).orElse(null);
+									TransformationManager.Result result = TransformationManager.runAbility(target, index, victim);
+									ctx.getSource().sendFeedback(() -> Text.literal("power " + index + ": " + result), false);
+									return result == TransformationManager.Result.SUCCESS ? 1 : 0;
+								})))
 				.then(CommandManager.literal("mastery")
 						.then(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS)
 								.then(targeted(CommandManager.argument("level", IntegerArgumentType.integer(1, AlienMastery.MAX_LEVEL)),

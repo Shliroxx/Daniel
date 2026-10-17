@@ -14,6 +14,7 @@ public final class AbilityContext {
 	private final AlienDefinition alien;
 	private final AbilitySlot slot;
 	private int invulnerabilityTicks;
+	private net.minecraft.entity.LivingEntity target;
 
 	public AbilityContext(ServerPlayerEntity player, ServerWorld world, Identifier alienId, AlienDefinition alien, AbilitySlot slot) {
 		this.player = player;
@@ -50,6 +51,16 @@ public final class AbilityContext {
 	/** Macht den Spieler fuer die angegebene Zeit unverwundbar (z. B. Ausweichen). */
 	public void grantInvulnerability(int ticks) {
 		invulnerabilityTicks = Math.max(invulnerabilityTicks, ticks);
+	}
+
+	/** Kombos: das getroffene Ziel (Tasten-Faehigkeiten: null). */
+	public net.minecraft.entity.LivingEntity target() {
+		return target;
+	}
+
+	public AbilityContext withTarget(net.minecraft.entity.LivingEntity target) {
+		this.target = target;
+		return this;
 	}
 
 	public int invulnerabilityTicks() {

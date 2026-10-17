@@ -116,6 +116,142 @@
         "launch": 0.8,
         "seconds": 4.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:four_fist_barrage",
+      "energy": 35,
+      "cooldown": 140,
+      "params": {
+        "hits": 8,
+        "damage": 2.5,
+        "range": 3.5
+      },
+      "role": "special",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:rising_uppercut",
+      "energy": 25,
+      "cooldown": 100,
+      "params": {
+        "range": 4.0,
+        "damage": 7.0,
+        "launch": 1.5,
+        "jump": 1.1
+      },
+      "role": "movement",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:slab_heave",
+      "energy": 30,
+      "cooldown": 120,
+      "params": {
+        "chunks": 3,
+        "damage": 6.0,
+        "speed": 1.5
+      },
+      "role": "basic",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:giant_swing",
+      "energy": 40,
+      "cooldown": 200,
+      "params": {
+        "range": 4.0,
+        "ticks": 24,
+        "damage": 6.0,
+        "max_width": 2.5
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:war_cry",
+      "energy": 45,
+      "cooldown": 600,
+      "params": {
+        "radius": 10.0,
+        "seconds": 8.0,
+        "rage": 40.0
+      },
+      "role": "utility",
+      "unlock_level": 7
+    },
+    {
+      "type": "kingdomomnitrix:titan_meteor",
+      "energy": 90,
+      "cooldown": 1000,
+      "params": {
+        "up": 2.6,
+        "damage": 22.0,
+        "radius": 12.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:shoulder_ram",
+      "energy": 10,
+      "cooldown": 60,
+      "params": {
+        "damage": 6.0,
+        "power": 2.2
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:hammer_fist",
+      "energy": 12,
+      "cooldown": 80,
+      "params": {
+        "damage": 8.0,
+        "slam": 1.8
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:grapple_toss",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 7.0,
+        "max_width": 2.5
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:meteor_fist",
+      "energy": 15,
+      "cooldown": 100,
+      "params": {
+        "dive": 2.2,
+        "damage": 9.0,
+        "radius": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:quad_finisher",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 12.0,
+        "missing": 0.25,
+        "radius": 5.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -132,6 +268,23 @@
   "failsafe_tags": [],
   "failsafe_priority": 5,
   "traits": {
-    "transform_style": "slam"
+    "transform_style": "slam",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:tetramand_rage"
+      },
+      {
+        "type": "kingdomomnitrix:four_fist_combo"
+      },
+      {
+        "type": "kingdomomnitrix:tetramand_hide",
+        "unlock_level": 4,
+        "params": {
+          "projectile": 0.7,
+          "explosion": 0.75,
+          "other": 0.88
+        }
+      }
+    ]
   }
 }

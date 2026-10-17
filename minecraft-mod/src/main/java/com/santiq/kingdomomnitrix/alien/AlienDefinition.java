@@ -30,7 +30,9 @@ import net.minecraft.util.Identifier;
  * @param scale          Koerpergroesse relativ zum Menschen
  * @param attributes     Attribut-Boni waehrend der Verwandlung
  * @param immunities     Schadensarten (Tags), die das Alien nicht verletzen
- * @param abilities      Faehigkeiten in Slot-Reihenfolge (hoechstens {@link #MAX_ABILITIES})
+ * @param abilities      Faehigkeiten: Tasten-Pool ({@link AbilitySlot#isKey()}, hoechstens {@link #MAX_POOL}, davon
+ *                       {@link #LOADOUT_SIZE} ausgeruestet) und Kombos (hoechstens {@link #MAX_COMBOS}). Der Index in
+ *                       dieser Liste ist die feste Nummer der Faehigkeit (Abklingzeit, Pose, Loadout).
  * @param dnaSources     Gegner, die DNA-Proben dieses Aliens fallen lassen koennen
  * @param model          Modell-ID fuer den Alien-Koerper
  * @param prototype      true = Inhalt noch nicht final (wird im Rad markiert)
@@ -55,7 +57,14 @@ public record AlienDefinition(
 		int failsafePriority,
 		AlienTraits traits) {
 
-	public static final int MAX_ABILITIES = 6;
+	/** Tasten je Alien (R V B, Shift + R V B) */
+	public static final int LOADOUT_SIZE = 6;
+	/** Tasten-Faehigkeiten, aus denen das Loadout gewaehlt wird */
+	public static final int MAX_POOL = 12;
+	/** Kombos (Sprint-, Luft-, Schleich-, Sturz-Angriff, Finisher) */
+	public static final int MAX_COMBOS = 6;
+	/** alle Faehigkeiten zusammen */
+	public static final int MAX_ABILITIES = MAX_POOL + MAX_COMBOS;
 	public static final float MIN_SCALE = 0.25f;
 	public static final float MAX_SCALE = 3.0f;
 
@@ -112,13 +121,49 @@ public record AlienDefinition(
 	}
 
 	private static DataResult<AlienDefinition> validate(AlienDefinition definition) {
-		if (definition.abilities.isEmpty() || definition.abilities.size() > MAX_ABILITIES) {
-			return DataResult.error(() -> "Ein Alien braucht 1 bis " + MAX_ABILITIES + " Faehigkeiten, hat aber " + definition.abilities.size());
+		long keys = definition.abilities.stream().filter(AbilitySlot::isKey).count();
+		long combos = definition.abilities.size() - keys;
+		if (keys < 1 || keys > MAX_POOL) {
+			return DataResult.error(() -> "Ein Alien braucht 1 bis " + MAX_POOL + " Tasten-Faehigkeiten, hat aber " + keys);
+		}
+		if (combos > MAX_COMBOS) {
+			return DataResult.error(() -> "Hoechstens " + MAX_COMBOS + " Kombos erlaubt, gefunden: " + combos);
+		}
+		if (!definition.abilities.get(0).isKey()) {
+			return DataResult.error(() -> "Die erste Faehigkeit muss eine Tasten-Faehigkeit sein");
 		}
 		if (definition.abilities.get(0).unlockLevel() != 1) {
 			return DataResult.error(() -> "Die erste Faehigkeit muss ab Meisterschaft 1 frei sein");
 		}
 		return DataResult.success(definition);
+	}
+
+	/** Indizes aller Tasten-Faehigkeiten (Pool) in Datenreihenfolge. */
+	public java.util.List<Integer> keyIndices() {
+		java.util.List<Integer> out = new java.util.ArrayList<>();
+		for (int i = 0; i < abilities.size(); i++) {
+			if (abilities.get(i).isKey()) {
+				out.add(i);
+			}
+		}
+		return out;
+	}
+
+	/** Indizes aller Kombos in Datenreihenfolge. */
+	public java.util.List<Integer> comboIndices() {
+		java.util.List<Integer> out = new java.util.ArrayList<>();
+		for (int i = 0; i < abilities.size(); i++) {
+			if (!abilities.get(i).isKey()) {
+				out.add(i);
+			}
+		}
+		return out;
+	}
+
+	/** Standard-Loadout: die ersten {@link #LOADOUT_SIZE} Tasten-Faehigkeiten in Datenreihenfolge. */
+	public java.util.List<Integer> defaultLoadout() {
+		java.util.List<Integer> keys = keyIndices();
+		return java.util.List.copyOf(keys.subList(0, Math.min(LOADOUT_SIZE, keys.size())));
 	}
 
 	/** Translation key des Namens, z. B. {@code alien.kingdomomnitrix.heatblast}. */

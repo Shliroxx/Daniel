@@ -50,6 +50,9 @@ public final class OmnitrixHud implements HudElement {
 	private static final int ICON = 11;
 	private static final int ICON_IN_SLOT = 22;
 	private static final int PER_ROW = 3;
+	/** Kombo-Leiste unter den Tasten: kleine Felder mit Ausloeser-Zeichen */
+	private static final int COMBO_SIZE = 16;
+	private static final int COMBO_GAP = 4;
 	private static final int TIMER_WARNING_COLOR = 0xFFFF5555;
 	private static final int ENERGY_COLOR = 0x4FC3FF;
 	private static final int GOLD = 0xFFC94A;
@@ -120,7 +123,7 @@ public final class OmnitrixHud implements HudElement {
 		if (client.player == null || client.world == null) {
 			return 1;
 		}
-		int count = shown(client, TransformationManager.get(client.player)).map(a -> a.abilities().size()).orElse(1);
+		int count = shown(client, TransformationManager.get(client.player)).map(a -> a.defaultLoadout().size()).orElse(1);
 		return Math.max(1, (count + PER_ROW - 1) / PER_ROW);
 	}
 
@@ -129,8 +132,17 @@ public final class OmnitrixHud implements HudElement {
 		int font = client.textRenderer.fontHeight;
 		int rows = slotRows(client);
 		return (transformed(client)
-				? PADDING + BADGE + 6 + ENERGY_HEIGHT + 8 + rows * SLOT_SIZE + (rows - 1) * ROW_GAP + CHIP_OVERHANG + 4 + PADDING
+				? PADDING + BADGE + 6 + ENERGY_HEIGHT + 8 + rows * SLOT_SIZE + (rows - 1) * ROW_GAP + CHIP_OVERHANG + 4 + comboHeight(client) + PADDING
 				: PADDING + font * 2 + 2 + PADDING) + HEAT_HEIGHT + 2;
+	}
+
+	/** Hoehe der Kombo-Leiste (0 ohne Kombos). */
+	private static int comboHeight(MinecraftClient client) {
+		if (client.player == null || client.world == null || !transformed(client)) {
+			return 0;
+		}
+		boolean any = shown(client, TransformationManager.get(client.player)).map(a -> !a.comboIndices().isEmpty()).orElse(false);
+		return any ? COMBO_SIZE + 4 : 0;
 	}
 
 	@Override
@@ -243,11 +255,63 @@ public final class OmnitrixHud implements HudElement {
 
 		int rowWidth = PER_ROW * SLOT_SIZE + (PER_ROW - 1) * SLOT_GAP;
 		int left = (WIDTH - rowWidth) / 2 + 1;
-		for (int i = 0; i < alien.abilities().size(); i++) {
+		// sechs Tasten zeigen das ausgeruestete Loadout (Menue „Aliens“ → Loadout)
+		java.util.List<Integer> loadout = client.player != null
+				? com.santiq.kingdomomnitrix.alien.LoadoutManager.get(client.player).resolve(alienId, alien)
+				: alien.defaultLoadout();
+		for (int i = 0; i < loadout.size(); i++) {
 			int col = i % PER_ROW;
 			int row = i / PER_ROW;
-			drawSlot(context, font, left + col * (SLOT_SIZE + SLOT_GAP), cy + row * (SLOT_SIZE + ROW_GAP), i,
-					alien.abilities().get(i), state, energy, now, mastery, rgb);
+			int index = loadout.get(i);
+			drawSlot(context, font, left + col * (SLOT_SIZE + SLOT_GAP), cy + row * (SLOT_SIZE + ROW_GAP), i, index,
+					alien.abilities().get(index), state, energy, now, mastery, rgb);
+		}
+		int rows = (loadout.size() + PER_ROW - 1) / PER_ROW;
+		cy += rows * SLOT_SIZE + (rows - 1) * ROW_GAP + CHIP_OVERHANG + 4;
+		drawCombos(context, font, alien, state, energy, now, mastery, rgb, cy);
+	}
+
+	/**
+	 * Kombo-Leiste: je Kombo ein kleines Feld mit Bild, Ausloeser-Zeichen (» Sprint, ↑ Luft, ▾ Schleichen, ⇓ Sturz,
+	 * ✖ Finisher) und Abklingzeit als Fuellstand von unten.
+	 */
+	private static void drawCombos(DrawContext context, TextRenderer font, AlienDefinition alien, TransformationState state, float energy,
+			long now, int mastery, int rgb, int y) {
+		java.util.List<Integer> combos = alien.comboIndices();
+		if (combos.isEmpty()) {
+			return;
+		}
+		int total = combos.size() * COMBO_SIZE + (combos.size() - 1) * COMBO_GAP;
+		int x = (WIDTH - total) / 2 + 1;
+		boolean master = masterControl();
+		for (int index : combos) {
+			AbilitySlot slot = alien.abilities().get(index);
+			boolean open = slot.unlocked(mastery) || master;
+			long cooldown = state.cooldownRemaining(index, now);
+			boolean affordable = energy >= com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
+			boolean ready = open && cooldown <= 0 && affordable;
+			HudGfx.roundedGradient(context, x, y, COMBO_SIZE, COMBO_SIZE, 2, ready ? 0xF0000000 | HudGfx.mul(rgb, 0.4f) : 0xF0181C20, 0xF0080A0C);
+			int tint = !open ? 0x3A3E44 : cooldown > 0 ? 0x70747A : !affordable ? 0xFF9090 : 0xFFFFFF;
+			UiDraw.art(context, Icons.alienAbilityArt(slot.type()), Icons.alienAbility(slot.type()), x + 2, y + 2, COMBO_SIZE - 4, tint, 1.0f);
+			if (open && cooldown > 0 && slot.cooldown() > 0) {
+				int filled = Math.round((COMBO_SIZE - 2) * (float) cooldown / slot.cooldown());
+				context.fill(x + 1, y + COMBO_SIZE - 1 - filled, x + COMBO_SIZE - 1, y + COMBO_SIZE - 1, 0xA0000000);
+			}
+			HudGfx.roundedBorder(context, x, y, COMBO_SIZE, COMBO_SIZE, ready ? 0xFF000000 | HudGfx.mix(rgb, 0xFFFFFF, 0.25f) : 0xFF3A4048);
+			String glyph = switch (slot.trigger()) {
+				case SPRINT_ATTACK -> "»";
+				case AIR_ATTACK -> "↑";
+				case SNEAK_ATTACK -> "▾";
+				case PLUNGE -> "⇓";
+				case FINISHER -> "✖";
+				case KEY -> "";
+			};
+			context.getMatrices().push();
+			context.getMatrices().translate(x + COMBO_SIZE - 5, y - 2, 220);
+			context.getMatrices().scale(0.75f, 0.75f, 1.0f);
+			context.drawTextWithShadow(font, glyph, 0, 0, open ? 0xFF000000 | GOLD : 0xFF6E767E);
+			context.getMatrices().pop();
+			x += COMBO_SIZE + COMBO_GAP;
 		}
 	}
 
@@ -276,7 +340,8 @@ public final class OmnitrixHud implements HudElement {
 		return player != null && OmnitrixCore.state(player).masterControl();
 	}
 
-	private static void drawSlot(DrawContext context, TextRenderer font, int x, int y, int index, AbilitySlot slot,
+	/** @param index Taste 0..5 (Beschriftung, Bereit-Blitz), @param pool Nummer der Faehigkeit (Abklingzeit) */
+	private static void drawSlot(DrawContext context, TextRenderer font, int x, int y, int index, int pool, AbilitySlot slot,
 			TransformationState state, float energy, long now, int mastery, int rgb) {
 		int s = SLOT_SIZE;
 		int iconX = x + (s - ICON_IN_SLOT) / 2;
@@ -295,7 +360,7 @@ public final class OmnitrixHud implements HudElement {
 			return;
 		}
 		boolean affordable = energy >= com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
-		long cooldown = state.cooldownRemaining(index, now);
+		long cooldown = state.cooldownRemaining(pool, now);
 		boolean cooling = cooldown > 0;
 		int slotIndex = Math.min(index, READY_AT.length - 1);
 		if (COOLING[slotIndex] && !cooling) {

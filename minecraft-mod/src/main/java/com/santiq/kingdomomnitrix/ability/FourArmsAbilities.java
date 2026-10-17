@@ -137,14 +137,42 @@ final class FourArmsAbilities {
 			forgetState(handler.getPlayer().getUuid());
 			AlienMeterSync.forget(handler.getPlayer().getUuid());
 		});
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(FourArmsAbilities::afterDamage);
-		AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
-			if (!world.isClient && player instanceof ServerPlayerEntity server && entity instanceof LivingEntity target
-					&& isFourArms(server) && PartyRules.canHarm(server, target)) {
-				combo(server, target);
-			}
-			return ActionResult.PASS;
-		});
+		// Wut und Vier-Schlag-Kombo sind passive Kraefte: Gegner-Schaden, eigener Schaden und Schlaege kommen ueber
+		// PassiveHooks (nur wenn freigeschaltet)
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("tetramand_rage"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float damage) {
+						addRage(ctx.player(), damage * RAGE_DEALT);
+					}
+
+					@Override
+					public void afterHurt(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, DamageSource source, float damage) {
+						hurt(ctx.player(), source, damage);
+					}
+				});
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("four_fist_combo"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void melee(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, boolean fullSwing) {
+						combo(ctx.player(), target);
+					}
+				});
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("tetramand_hide"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public float incoming(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, DamageSource source, float amount) {
+						// dicke Tetramand-Haut: Geschosse und Explosionen prallen ab, alles andere etwas weniger
+						if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.IS_PROJECTILE)) {
+							return amount * (float) ctx.param("projectile", 0.7);
+						}
+						if (source.isIn(net.minecraft.registry.tag.DamageTypeTags.IS_EXPLOSION)) {
+							return amount * (float) ctx.param("explosion", 0.75);
+						}
+						return amount * (float) ctx.param("other", 0.88);
+					}
+				});
+		FourArmsMoves.register();
 	}
 
 	// --- Wut -------------------------------------------------------------------------------------
@@ -175,7 +203,7 @@ final class FourArmsAbilities {
 		AlienMeterSync.update(player, AlienMeterPayload.RAGE, after);
 	}
 
-	private static Power power(ServerPlayerEntity player) {
+	static Power power(ServerPlayerEntity player) {
 		float rage = rage(player);
 		if (rage >= MAX) {
 			RAGE.put(player.getUuid(), 0.0f);
@@ -185,22 +213,39 @@ final class FourArmsAbilities {
 		return new Power(1.0f + (rage >= ANGRY ? 0.25f : 0.0f), false);
 	}
 
-	private record Power(float factor, boolean rampage) {
+	record Power(float factor, boolean rampage) {
 	}
 
-	/** Schaden austeilen/einstecken fuellt die Wut; Eisenhaut wirft einen Teil auf Nahkaempfer zurueck. */
-	private static void afterDamage(LivingEntity target, DamageSource source, float baseDamage, float damageTaken, boolean blocked) {
-		if (target instanceof ServerPlayerEntity victim && isFourArms(victim) && damageTaken > 0.0f) {
-			boolean skin = IRON_SKIN.containsKey(victim.getUuid());
-			addRage(victim, damageTaken * RAGE_TAKEN * (skin ? 2.0f : 1.0f));
-			if (skin && source.getAttacker() instanceof LivingEntity attacker && attacker != victim
-					&& attacker.squaredDistanceTo(victim) < 16.0 && PartyRules.canHarm(victim, attacker)) {
-				attacker.damage(victim.getServerWorld().getDamageSources().thorns(victim), baseDamage * 0.3f);
-			}
+	/** Eingesteckter Schaden fuellt die Wut; Eisenhaut verdoppelt das und wirft einen Teil auf Nahkaempfer zurueck. */
+	private static void hurt(ServerPlayerEntity victim, DamageSource source, float damageTaken) {
+		boolean skin = IRON_SKIN.containsKey(victim.getUuid());
+		addRage(victim, damageTaken * RAGE_TAKEN * (skin ? 2.0f : 1.0f));
+		if (skin && source.getAttacker() instanceof LivingEntity attacker && attacker != victim
+				&& attacker.squaredDistanceTo(victim) < 16.0 && PartyRules.canHarm(victim, attacker)) {
+			attacker.damage(victim.getServerWorld().getDamageSources().thorns(victim), damageTaken * 0.3f);
 		}
-		if (source.getAttacker() instanceof ServerPlayerEntity attacker && attacker != target && isFourArms(attacker) && damageTaken > 0.0f) {
-			addRage(attacker, damageTaken * RAGE_DEALT);
-		}
+	}
+
+	// --- Schnittstelle fuer FourArmsMoves -----------------------------------------------------------
+
+	/** Laufende Druckwelle (Ring oder Kegel), trifft jeden einmal. */
+	static void wave(ServerPlayerEntity player, Vec3d center, double radius, float damage, double launch, int ticks) {
+		WAVES.add(new Wave(player.getUuid(), center, radius, damage, launch, player.getServerWorld().getTime(), ticks, 0.0, Vec3d.ZERO));
+	}
+
+	/** Geworfenes Ziel: schlaegt beim Aufprall (Boden, Wand, anderes Wesen) in die Umgebung ein. */
+	static void thrown(ServerPlayerEntity thrower, LivingEntity target, float impactDamage, int ticks) {
+		THROWN.put(target.getUuid(), new Thrown(thrower.getUuid(), impactDamage, thrower.getServerWorld().getTime() + ticks));
+	}
+
+	/** Landung mit Einschlag: Wucht nach Fallhoehe ueber {@code startY + 6}. */
+	static void landing(ServerPlayerEntity player, double startY, float damage, double radius, boolean rampage) {
+		LEAPS.put(player.getUuid(), new Leap(startY, damage, radius, player.getServerWorld().getTime() + 100, rampage));
+	}
+
+	static float gainRage(ServerPlayerEntity player, float amount) {
+		addRage(player, amount);
+		return rage(player);
 	}
 
 	/** Vier-Schlag-Kombo: zaehlt Nahkampftreffer; der vierte ist ein Vierfach-Schlag. */
@@ -618,7 +663,7 @@ final class FourArmsAbilities {
 	// --- Hilfen ----------------------------------------------------------------------------------
 
 	/** Bodenschlag-Optik: echte Bodenbloecke springen ringfoermig hoch, Staubring, Druckwelle, Kamerawackeln. */
-	private static void slamFx(ServerWorld world, Vec3d at, double radius, int ticks, float strength, double cone, Vec3d facing) {
+	static void slamFx(ServerWorld world, Vec3d at, double radius, int ticks, float strength, double cone, Vec3d facing) {
 		Vec3d ground = at.add(0, 0.1, 0);
 		if (cone > 0.0) {
 			EarthWave.line(world, at, facing, radius, ticks, 0.7f * strength, cone);

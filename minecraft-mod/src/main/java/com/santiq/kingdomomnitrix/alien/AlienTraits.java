@@ -18,14 +18,17 @@ import net.minecraft.registry.entry.RegistryEntry;
  *   "dry_out_seconds": 30,                            // so lange an Land ohne Nachteil, dann Schwaeche (Ripjaws)
  *   "senses_radius": 16,                              // Gegner im Umkreis leuchten (Wildmutt)
  *   "immune_effects": ["minecraft:poison"],           // diese Effekte wirken nicht (Stinkfly: eigener Gestank)
- *   "transform_style": "fire"                         // eigene Verwandlungs-Signatur ({@link TransformStyle})
+ *   "transform_style": "fire",                        // eigene Verwandlungs-Signatur ({@link TransformStyle})
+ *   "passives": [{"type": "kingdomomnitrix:ember_body"}] // passive Kraefte ({@link PassiveSlot})
  * }
  * </pre>
  * Effekte laufen „ambient“ (ohne Partikel) und werden beim Zurueckverwandeln entfernt — echte Traenke bleiben.
  */
 public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> waterEffects, int dryOutSeconds, float sensesRadius,
-		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle) {
-	public static final AlienTraits NONE = new AlienTraits(false, List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD);
+		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle, List<PassiveSlot> passives) {
+	public static final AlienTraits NONE = new AlienTraits(false, List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD, List.of());
+	/** hoechstens so viele passive Kraefte je Alien */
+	public static final int MAX_PASSIVES = 4;
 
 	/** Status-Effekt mit Stufe (0 = I). */
 	public record Effect(RegistryEntry<StatusEffect> effect, int amplifier) {
@@ -42,12 +45,14 @@ public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> wat
 			Codec.intRange(0, 3600).optionalFieldOf("dry_out_seconds", 0).forGetter(AlienTraits::dryOutSeconds),
 			Codec.floatRange(0.0f, 48.0f).optionalFieldOf("senses_radius", 0.0f).forGetter(AlienTraits::sensesRadius),
 			Registries.STATUS_EFFECT.getEntryCodec().listOf().optionalFieldOf("immune_effects", List.of()).forGetter(AlienTraits::immuneEffects),
-			TransformStyle.CODEC.optionalFieldOf("transform_style", TransformStyle.STANDARD).forGetter(AlienTraits::transformStyle)
+			TransformStyle.CODEC.optionalFieldOf("transform_style", TransformStyle.STANDARD).forGetter(AlienTraits::transformStyle),
+			PassiveSlot.CODEC.listOf(0, MAX_PASSIVES).optionalFieldOf("passives", List.of()).forGetter(AlienTraits::passives)
 	).apply(instance, AlienTraits::new));
 
 	public AlienTraits {
 		effects = List.copyOf(effects);
 		waterEffects = List.copyOf(waterEffects);
 		immuneEffects = List.copyOf(immuneEffects);
+		passives = List.copyOf(passives);
 	}
 }

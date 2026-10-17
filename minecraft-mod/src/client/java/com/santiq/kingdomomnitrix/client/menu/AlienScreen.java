@@ -39,6 +39,8 @@ public class AlienScreen extends Screen {
 	private int panelWidth;
 	private int panelHeight;
 	private Identifier selected;
+	/** Knopf „Loadout & Kraefte“: x, y, Breite, Hoehe (null = nicht sichtbar) */
+	private int[] loadoutButton;
 
 	public AlienScreen() {
 		super(Text.translatable("menu.kingdomomnitrix.tab.aliens"));
@@ -113,6 +115,7 @@ public class AlienScreen extends Screen {
 				context.drawTextWithShadow(textRenderer, star, left + 4 + LIST_WIDTH - 4 - textRenderer.getWidth(star), y + 5, 0xFFFFC94A);
 			}
 		}
+		loadoutButton = null;
 		if (selected != null) {
 			AlienRegistry.get(registries, selected).ifPresent(alien -> renderDetail(context, player, selected, alien, mastery));
 		}
@@ -176,38 +179,27 @@ public class AlienScreen extends Screen {
 
 		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.abilities"), x, y, UiTheme.OMNITRIX.accent());
 		y += 11;
-		// zwei Spalten zu je drei (R/V/B, darunter Shift + R/V/B); gesperrte grau mit benoetigter Stufe
-		int column = (width - 4) / 2;
-		int top = y;
+		// Kurzuebersicht: ausgeruestete sechs Tasten, Anzahl im Pool, Kombos und Passive; Details im Loadout-Fenster
 		boolean masterControl = client != null && client.player != null
 				&& com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.state(client.player).masterControl();
-		for (int i = 0; i < alien.abilities().size(); i++) {
-			AbilitySlot slot = alien.abilities().get(i);
-			int ax = x + (i / 3) * (column + 4);
-			int ay = top + (i % 3) * 22;
+		List<Integer> loadout = com.santiq.kingdomomnitrix.alien.LoadoutManager.get(player).resolve(id, alien);
+		int top = y;
+		for (int i = 0; i < loadout.size(); i++) {
+			AbilitySlot slot = alien.abilities().get(loadout.get(i));
+			int ax = x + i * 22;
 			boolean open = slot.unlocked(level) || masterControl;
-			UiDraw.icon(context, Icons.alienAbility(slot.type()), Icons.command("omnitrix"), ax, ay, UiDraw.ICON_SIZE);
-			if (!open) {
-				context.fill(ax, ay, ax + UiDraw.ICON_SIZE, ay + UiDraw.ICON_SIZE, 0xB0101010);
-			}
-			Text abilityName = Text.translatable(slot.translationKey());
-			context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, abilityName, column - 20), ax + 19, ay + 1,
-					open ? (slot.role() == AbilitySlot.Role.ULTIMATE ? 0xFFFFC94A : UiTheme.TEXT) : UiTheme.TEXT_DISABLED);
-			Text info;
-			if (open) {
-				long cooldown = Math.round(slot.cooldown() * (1.0f - mastery.cooldownReduction(id)));
-				info = Text.translatable("screen.kingdomomnitrix.aliens.ability_short",
-						Math.round(AlienMastery.energyCost(slot.energy(), level)), String.format("%.1f", cooldown / 20.0f));
-			} else {
-				info = Text.translatable("screen.kingdomomnitrix.aliens.unlock_at", slot.unlockLevel());
-			}
-			context.getMatrices().push();
-			context.getMatrices().translate(ax + 19, ay + 11, 0.0f);
-			context.getMatrices().scale(0.8f, 0.8f, 1.0f);
-			context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, info, (int) ((column - 20) / 0.8f)), 0, 0,
-					open ? UiTheme.TEXT_SOFT : 0xFFB08A2E);
-			context.getMatrices().pop();
+			UiDraw.art(context, Icons.alienAbilityArt(slot.type()), Icons.alienAbility(slot.type()), ax, y, 20, open ? 0xFFFFFF : 0x4A4E54, 1.0f);
 		}
+		y += 24;
+		Text counts = Text.translatable("screen.kingdomomnitrix.aliens.power_counts", alien.keyIndices().size(), alien.comboIndices().size(),
+				alien.traits().passives().size());
+		context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, counts, width), x, y, UiTheme.TEXT_SOFT);
+		y += 12;
+		Text button = Text.translatable("screen.kingdomomnitrix.aliens.open_loadout");
+		loadoutButton = new int[] {x, y, textRenderer.getWidth(button) + 12, 14};
+		com.santiq.kingdomomnitrix.client.ui.HudGfx.rounded(context, x, y, loadoutButton[2], 14, 3, 0xC0000000 | (alien.color() & 0x7F7F7F));
+		com.santiq.kingdomomnitrix.client.ui.HudGfx.roundedBorder(context, x, y, loadoutButton[2], 14, 0xFF000000 | alien.color());
+		context.drawTextWithShadow(textRenderer, button, x + 6, y + 3, UiTheme.TEXT);
 		y = top + 3 * 22;
 		if (alien.prototype()) {
 			context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.prototype"), x, y, UiTheme.TEXT_DISABLED);
@@ -217,6 +209,12 @@ public class AlienScreen extends Screen {
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		if (super.mouseClicked(mouseX, mouseY, button)) {
+			return true;
+		}
+		if (button == 0 && loadoutButton != null && selected != null && client != null && mouseX >= loadoutButton[0]
+				&& mouseX < loadoutButton[0] + loadoutButton[2] && mouseY >= loadoutButton[1] && mouseY < loadoutButton[1] + loadoutButton[3]) {
+			client.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.3f));
+			client.setScreen(new LoadoutScreen(this, selected));
 			return true;
 		}
 		List<Identifier> ids = aliens();

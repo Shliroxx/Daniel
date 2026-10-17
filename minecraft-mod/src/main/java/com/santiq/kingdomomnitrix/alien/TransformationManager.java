@@ -381,7 +381,21 @@ public final class TransformationManager {
 		return true;
 	}
 
-	public static Result useAbility(ServerPlayerEntity player, int slotIndex) {
+	/** Taste {@code keySlot} (0..5) gedrueckt: die dort ausgeruestete Faehigkeit ausloesen. */
+	public static Result useAbility(ServerPlayerEntity player, int keySlot) {
+		if (!get(player).isTransformed()) {
+			return Result.NOT_TRANSFORMED;
+		}
+		int index = LoadoutManager.poolIndex(player, keySlot);
+		return index < 0 ? Result.NO_SUCH_ABILITY : runAbility(player, index, null);
+	}
+
+	/**
+	 * Faehigkeit Nummer {@code index} (Index in {@link AlienDefinition#abilities()}) ausloesen — fuer Tasten und Kombos.
+	 *
+	 * @param target bei Kombos das getroffene Ziel, sonst null
+	 */
+	public static Result runAbility(ServerPlayerEntity player, int index, net.minecraft.entity.LivingEntity target) {
 		TransformationState state = get(player);
 		if (!state.isTransformed()) {
 			return Result.NOT_TRANSFORMED;
@@ -392,26 +406,31 @@ public final class TransformationManager {
 			return Result.UNKNOWN_ALIEN;
 		}
 		AlienDefinition alien = found.get();
-		if (slotIndex < 0 || slotIndex >= alien.abilities().size()) {
+		if (index < 0 || index >= alien.abilities().size()) {
 			return Result.NO_SUCH_ABILITY;
 		}
 		ServerWorld world = player.getServerWorld();
 		long now = world.getTime();
-		AbilitySlot slot = alien.abilities().get(slotIndex);
+		AbilitySlot slot = alien.abilities().get(index);
+		boolean combo = !slot.isKey();
 		int mastery = AlienMasteryManager.get(player).level(alienId);
 		// Master Control: volle Kontrolle ueber die DNA — alle Faehigkeiten frei, unabhaengig von der Meisterschaft
 		if (!slot.unlocked(mastery) && !OmnitrixCore.state(player).masterControl()) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.ability_locked", Text.translatable(slot.translationKey()),
-					slot.unlockLevel()).formatted(Formatting.GOLD), true);
+			if (!combo) {
+				player.sendMessage(Text.translatable("message.kingdomomnitrix.ability_locked", Text.translatable(slot.translationKey()),
+						slot.unlockLevel()).formatted(Formatting.GOLD), true);
+			}
 			return Result.ABILITY_LOCKED;
 		}
-		if (state.cooldownRemaining(slotIndex, now) > 0) {
+		if (state.cooldownRemaining(index, now) > 0) {
 			return Result.ON_COOLDOWN;
 		}
 		float energy = state.currentEnergy(alien, now);
 		float cost = com.santiq.kingdomomnitrix.progression.AlienMastery.energyCost(slot.energy(), mastery);
 		if (energy < cost) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_energy").formatted(Formatting.RED), true);
+			if (!combo) {
+				player.sendMessage(Text.translatable("message.kingdomomnitrix.no_energy").formatted(Formatting.RED), true);
+			}
 			return Result.NO_ENERGY;
 		}
 		Optional<AlienAbility> ability = AbilityRegistry.get(slot.type());
@@ -419,13 +438,13 @@ public final class TransformationManager {
 			KingdomOmnitrix.LOGGER.warn("Alien {} verweist auf unbekannte Faehigkeit {}", alienId, slot.type());
 			return Result.NO_SUCH_ABILITY;
 		}
-		AbilityContext context = new AbilityContext(player, world, alienId, alien, slot);
-		if (ability.get() instanceof com.santiq.kingdomomnitrix.ability.ChargeableAbility chargeable) {
+		AbilityContext context = new AbilityContext(player, world, alienId, alien, slot).withTarget(target);
+		if (!combo && ability.get() instanceof com.santiq.kingdomomnitrix.ability.ChargeableAbility chargeable) {
 			if (com.santiq.kingdomomnitrix.ability.AbilityCharge.charging(player)) {
 				return Result.FAILED;
 			}
 			// Halten laedt auf; Abklingzeit und Energie erst beim Loslassen (AbilityCharge → commitAbility)
-			com.santiq.kingdomomnitrix.ability.AbilityCharge.begin(player, slotIndex, chargeable, context);
+			com.santiq.kingdomomnitrix.ability.AbilityCharge.begin(player, index, chargeable, context);
 			return Result.SUCCESS;
 		}
 		boolean worked;
@@ -438,7 +457,7 @@ public final class TransformationManager {
 		if (!worked) {
 			return Result.FAILED;
 		}
-		commitAbility(player, slotIndex, context);
+		commitAbility(player, index, context);
 		return Result.SUCCESS;
 	}
 

@@ -69,8 +69,8 @@ public final class ModKeyBindings {
 	}
 
 	public static void register() {
-		if (ABILITIES.length * 2 != AlienDefinition.MAX_ABILITIES) {
-			throw new IllegalStateException("Anzahl der Faehigkeiten-Tasten passt nicht zu MAX_ABILITIES");
+		if (ABILITIES.length * 2 != AlienDefinition.LOADOUT_SIZE) {
+			throw new IllegalStateException("Anzahl der Faehigkeiten-Tasten passt nicht zu LOADOUT_SIZE");
 		}
 		ClientTickEvents.END_CLIENT_TICK.register(ModKeyBindings::tick);
 	}

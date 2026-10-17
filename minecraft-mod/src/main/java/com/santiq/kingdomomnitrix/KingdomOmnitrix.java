@@ -113,6 +113,9 @@ public class KingdomOmnitrix implements ModInitializer {
 		TraverseTown.register();
 		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.register();
 		TransformationManager.register();
+		com.santiq.kingdomomnitrix.alien.LoadoutManager.register();
+		com.santiq.kingdomomnitrix.ability.ComboManager.register();
+		com.santiq.kingdomomnitrix.ability.passive.PassiveHooks.register();
 		DnaDrops.register();
 		CombatManager.register();
 		com.santiq.kingdomomnitrix.combat.CombatFeedback.register();

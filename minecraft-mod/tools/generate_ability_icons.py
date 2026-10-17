@@ -758,6 +758,25 @@ def icons(c) -> dict[str, list]:
         "thunder_clap": lambda: [L(m_waves(40, 128, 3, -45, 45, 18, 40), W, glow=ELEC), *fist(c, -60, -40, 0.42, -0.6), *fist(c, -60, 40, 0.42, 0.6)],
         "iron_skin": lambda: [L(m_shield(), STONE, glow=W, glow_alpha=0.3), L(m_hex(128, 120, 48, 14), W)],
         "earthquake": lambda: [ground(), L(m_cracks(128, 206), DARK, outline=None), L(m_waves(128, 210, 3, 200, 340, 14, 36), c, glow=c)],
+        "four_fist_barrage": lambda: [*fist(c, -56, -50, 0.4), *fist(c, 10, -56, 0.4), *fist(c, -56, 30, 0.4), *fist(c, 14, 26, 0.48, glow=FIRE_HOT, glow_alpha=0.5),
+                              L(m_burst(196, 128, 50, 20, 8), W, outline=None)],
+        "rising_uppercut": lambda: [ground(), *fist(c, 0, 10, 0.62, -math.pi / 2, glow=c), L(m_arrow(200, 210, 200, 40, 22, 46), cl), L(m_debris(128, 200, 60, 4, 12), EARTH)],
+        "slab_heave": lambda: [ground(), L(m_box(40, 60, 216, 120, 0), STONE), L(m_cracks(128, 206), DARK, outline=None), L(m_debris(128, 150, 90, 5, 18), EARTH),
+                       L(m_arrow(60, 40, 196, 40, 18, 36), cl)],
+        "giant_swing": lambda: [L(m_spiral(128, 128, 1.6, 104, 14), cl, glow=c), L(m_figure(60, -40, 0.55), STONE), *fist(c, 0, 0, 0.45)],
+        "war_cry": lambda: [L(m_mouth(), c, glow=FIRE, glow_alpha=0.7), L(m_waves(150, 128, 3, -50, 50, 14, 34), FIRE)],
+        "titan_meteor": lambda: [ground(), L(m_meteor(150, 90, 48), FIRE_HOT, glow=FIRE, glow_alpha=0.9), *fist(c, -40, 10, 0.5, math.pi * 0.75),
+                         L(m_cracks(128, 206), DARK, outline=None)],
+        "shoulder_ram": lambda: [L(m_speedlines(70, 190, 10, 110, 4, 12), cl), L(m_shield(30, 0, 0.75), c, glow=c), L(m_burst(206, 128, 46, 18, 8), W, outline=None)],
+        "hammer_fist": lambda: [ground(), *fist(c, -30, -30, 0.48, math.pi), *fist(c, 30, -30, 0.48, math.pi, glow=FIRE_HOT, glow_alpha=0.4),
+                        L(m_arrow(128, 100, 128, 190, 20, 40), cl)],
+        "grapple_toss": lambda: [L(m_ring(128, 140, 90, 16, 200, 340), cl, glow=c), L(m_figure(-60, 30, 0.55), STONE), L(m_arrow(150, 60, 200, 150, 18, 40), c)],
+        "meteor_fist": lambda: [ground(), *fist(c, 0, -20, 0.6, math.pi, glow=FIRE, glow_alpha=0.6), L(m_speedlines(10, 90, 60, 200, 3, 10), FIRE_HOT)],
+        "quad_finisher": lambda: [L(m_burst(128, 150, 120, 50, 14), FIRE_HOT, glow=FIRE, glow_alpha=0.7), *fist(c, -40, -40, 0.42, math.pi), *fist(c, 40, -40, 0.42, math.pi),
+                          *fist(c, -40, 20, 0.42, math.pi), *fist(c, 40, 20, 0.42, math.pi)],
+        "tetramand_rage": lambda: [L(m_flame(0, 10, 0.95), FIRE, glow=FIRE, glow_alpha=0.8), *fist(c, 0, 30, 0.45)],
+        "four_fist_combo": lambda: [L(m_ring(128, 128, 104, 12), cl), *fist(c, -44, -44, 0.36), *fist(c, 44, -44, 0.36), *fist(c, -44, 44, 0.36), *fist(c, 44, 44, 0.36, glow=c)],
+        "tetramand_hide": lambda: [L(m_shield(), c, glow=c, glow_alpha=0.4), L(m_hex(128, 120, 46, 14), STONE)],
         # Diamondhead
         "crystal_volley": lambda: [L(m_volley(), c, glow=c)],
         "crystal_blade": lambda: [L(m_crystal(128, 128, 230, 52, math.pi / 4), cl, glow=c), L(m_ring(128, 128, 104, 10, 200, 330), W, outline=None)],
@@ -914,7 +933,8 @@ def alien_abilities() -> dict[str, tuple[str, tuple[int, int, int]]]:
     for f in sorted(ALIENS.glob("*.json")):
         data = json.loads(f.read_text(encoding="utf-8"))
         color = rgb(data.get("color", "#FFFFFF"))
-        for slot in data.get("abilities", []):
+        slots = data.get("abilities", []) + data.get("traits", {}).get("passives", [])
+        for slot in slots:
             t = slot.get("type", "")
             if t.startswith("kingdomomnitrix:"):
                 out[t.split(":", 1)[1]] = (f.stem, color)

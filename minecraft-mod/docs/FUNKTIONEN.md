@@ -129,6 +129,17 @@ AE liefert nur Modelle und Texturen; Fähigkeiten und Systeme sind eigene Entwic
 | **Cannonbolt** | Schwung | Kanonenkugel beschleunigt von 60 % auf 160 %, Rammschaden wächst mit; prallt bis zu 3× von Wänden ab (Druckwelle je Aufprall). Rollmodus schaltet nach je 2 s Vollgas einen Gang hoch (bis +2, Anzeige „Schwung-Gang“), Stillstand setzt zurück. Panzerkugel schickt Geschosse die ganze Dauer zum Schützen zurück und schleudert Nahkämpfer weg. Abpraller-Kette: jeder Treffer +25 %, der letzte mit Druckwelle. Kanonade: Sturzhöhe verstärkt Schaden und Radius (bis doppelt). |
 | **Jetray** | Überladung + Flugmodell | Jeder Neuroschock-Treffer lädt das Ziel auf (sichtbare Funkenringe, 5 s). Bei 3 Ladungen: Entladung mit 150 % Schaden, Teilschaden und Lähmung im Umkreis 3,5. Düsenstoß durchbricht die Schallmauer (Knall-Ring) und reißt alles im Flugweg mit. Tiefflug feuert auf 2 Ziele je Salve. Im Flug: Kurvenlage beim Drehen, Vorlage mit dem Tempo, Flügelschlag beim Steigen. |
 
+### Kräfte 2.0: Pool, Loadout, Kombos, Passive
+Jedes Alien hat mehr Kräfte als Tasten. Ziel: 15–20 Kräfte je Alien; ausgebaut ist bisher **Vierarm** (12 Tasten-Fähigkeiten, 5 Kombos, 3 Passive).
+
+| Art | Wie | Regeln |
+|---|---|---|
+| **Tasten-Fähigkeiten (Pool)** | bis zu 12 je Alien, 6 davon ausgerüstet auf R V B, Shift + R V B | Menü „Aliens“ → *Loadout & Kräfte*: Fähigkeit anklicken, dann Taste (oder umgekehrt); liegt sie schon auf einer anderen Taste, tauschen beide. Rechtsklick auf eine Taste = Standard. Höchstens **eine Ultimate** ausgerüstet. Gesperrte Fähigkeiten dürfen ausgerüstet werden und bleiben bis zur Meisterschaftsstufe grau. |
+| **Kombos** | entstehen beim Schlag aus der Bewegung, kein Platz nötig | Angriffsbalken mindestens 85 %. Reihenfolge: *Finisher* (Ziel ≤ 30 % Leben) → *Luft* → *Sprint* → *Schleichen*; *Sturz* = hoch in der Luft (ab 1,5 Blöcken Fall, nicht im Flug) Schleichen drücken. Eigene Abklingzeit und Energie; ist eine nicht bereit, gilt die nächstpassende, sonst bleibt es ein normaler Schlag. HUD: Kombo-Leiste unter den Tasten (» Sprint, ↑ Luft, ▾ Schleichen, ⇓ Sturz, ✖ Finisher). |
+| **Passive** | immer aktiv (ab Freischaltstufe) | wirken auf ausgeteilten/genommenen Schaden, Treffer, Siege oder jeden Tick. |
+
+**Vierarm** — Pool: Bodenschlag, Wurf, Titanensprung, Donnerklatschen, Eisenhaut, Erdbeben (Ultimate), Vier-Faust-Salve ★2, Aufwärtshaken ★3, Bodenplatte ★4, Riesenschwung ★6, Tetramand-Kriegsschrei ★7, Titanen-Meteor ★10 (Ultimate). Kombos: Rammstoß (Sprint), Hammerfaust ★2 (Luft), Schulterwurf ★3 (Schleichen), Meteorfaust ★4 (Sturz), Vierfach-Finale ★6 (Finisher). Passive: Tetramand-Wut, Vier-Faust-Kombo, Tetramand-Haut ★4 (−30 % Geschosse, −25 % Explosionen, −12 % sonst).
+
 ### Meisterschaft ★1–10 (je Alien)
 Steigt durch Benutzen. Je Stufe +5 % Dauer, −3 % Abklingzeit; schaltet Fähigkeit 4 (★3), 5 (★5), 6 (★8) frei;
 ★10 = gemeistert (keine Fehlfunktionen).
@@ -346,6 +357,7 @@ Krater und Feuer nur mit `mobGriefing`. Auf „Friedlich“ nur der Meteor.
 | Befehl | Wirkung |
 |---|---|
 | `/hero debug [spieler]` | alle Heldendaten |
+| `/hero power <nummer> [spieler]` | Kraft Nummer *n* des aktiven Aliens auslösen (Tasten und Kombos, Ziel = Gegner im Blick) — zum Testen |
 | `/hero bolts add\|set <anzahl> [spieler]` | Bolt-Konto |
 | `/hero level set <stufe>` · `/hero xp add <menge>` | Heldenstufe, Erfahrung |
 | `/hero ability toggle <id>` · `/hero ability clear` | Heldenfähigkeiten |
