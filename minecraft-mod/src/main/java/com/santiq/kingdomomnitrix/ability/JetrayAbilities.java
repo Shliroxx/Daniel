@@ -56,8 +56,8 @@ final class JetrayAbilities {
 	/** Normale Fluggeschwindigkeit (Vanilla) und Windschatten-Wert — nur genau dieser Wert wird beim Betreten zurueckgesetzt. */
 	static final float BASE_FLY_SPEED = 0.05f;
 	static final float SLIPSTREAM_FLY_SPEED = 0.105f;
-	private static final DustParticleEffect SHOCK = new DustParticleEffect(new Vector3f(0.55f, 1.0f, 0.25f), 1.1f);
-	private static final DustParticleEffect JET = new DustParticleEffect(new Vector3f(0.95f, 0.2f, 0.18f), 1.4f);
+	static final DustParticleEffect SHOCK = new DustParticleEffect(new Vector3f(0.55f, 1.0f, 0.25f), 1.1f);
+	static final DustParticleEffect JET = new DustParticleEffect(new Vector3f(0.95f, 0.2f, 0.18f), 1.4f);
 
 	/** Laufendes Manoever eines Spielers; Zahlen aus den Faehigkeits-Parametern beim Start. */
 	private static final class Run {
@@ -106,6 +106,7 @@ final class JetrayAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("slipstream"), JetrayAbilities::slipstream);
 		AbilityRegistry.register(KingdomOmnitrix.id("neuroshock_storm"), JetrayAbilities::neuroshockStorm);
 		ServerTickEvents.END_SERVER_TICK.register(JetrayAbilities::tick);
+		JetrayMoves.register();
 		// Windschatten-Tempo darf nicht im Spielstand haengen bleiben (Server beendet waehrend des Manoevers)
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> resetFlySpeed(handler.getPlayer()));
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -389,7 +390,7 @@ final class JetrayAbilities {
 	// --- Hilfen ----------------------------------------------------------------------------------
 
 	/** Neuroschock: Schaden und Laehmung (starke Langsamkeit, Schwaeche), Funken am Ziel, eine Ladung mehr. */
-	private static void shock(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+	static void shock(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
 		int charges = charge(world, target);
 		if (charges >= OVERLOAD_CHARGES) {
 			CHARGES.remove(target.getUuid());
@@ -404,8 +405,28 @@ final class JetrayAbilities {
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 12)));
 	}
 
+	/** Nur aufladen (kein Neuroschock-Schaden); bei voller Ladung entlaedt sich das Ziel trotzdem. */
+	static void chargeOnly(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+		if (charge(world, target) >= OVERLOAD_CHARGES) {
+			CHARGES.remove(target.getUuid());
+			overload(world, player, target, damage, stunTicks);
+		}
+	}
+
+	/** Sofortige Ueberladung, egal wie viele Ladungen das Ziel hat. */
+	static void forceOverload(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+		CHARGES.remove(target.getUuid());
+		overload(world, player, target, damage, stunTicks);
+	}
+
+	/** aktuelle (nicht verfallene) Ladungen am Ziel */
+	static int charges(ServerWorld world, LivingEntity target) {
+		long[] entry = CHARGES.get(target.getUuid());
+		return entry == null || entry[1] < world.getTime() ? 0 : (int) entry[0];
+	}
+
 	/** Ladung am Ziel erhoehen (abgelaufene verfallen); liefert die neue Anzahl. */
-	private static int charge(ServerWorld world, LivingEntity target) {
+	static int charge(ServerWorld world, LivingEntity target) {
 		long now = world.getTime();
 		if (CHARGES.size() > 64) {
 			CHARGES.values().removeIf(c -> c[1] < now);
@@ -426,7 +447,7 @@ final class JetrayAbilities {
 	}
 
 	/** Ueberladung: Entladung am Ziel, Teilschaden im Umkreis, lange Laehmung — ohne Blockschaden. */
-	private static void overload(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
+	static void overload(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage, int stunTicks) {
 		Vec3d at = center(target);
 		target.timeUntilRegen = 0;
 		target.damage(world.getDamageSources().indirectMagic(player, player), damage * OVERLOAD_FACTOR);
@@ -448,12 +469,12 @@ final class JetrayAbilities {
 				.formatted(net.minecraft.util.Formatting.GREEN), true);
 	}
 
-	private static void stun(LivingEntity target, ServerPlayerEntity player, int ticks) {
+	static void stun(LivingEntity target, ServerPlayerEntity player, int ticks) {
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 4, false, true), player);
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 1, false, true), player);
 	}
 
-	private static void beam(ServerWorld world, Vec3d from, Vec3d to, DustParticleEffect dust) {
+	static void beam(ServerWorld world, Vec3d from, Vec3d to, DustParticleEffect dust) {
 		Vec3d step = to.subtract(from);
 		int points = Math.max(4, (int) (step.length() * 3));
 		for (int i = 1; i <= points; i++) {
@@ -462,7 +483,7 @@ final class JetrayAbilities {
 		}
 	}
 
-	private static boolean visible(ServerWorld world, ServerPlayerEntity player, Vec3d from, Vec3d to) {
+	static boolean visible(ServerWorld world, ServerPlayerEntity player, Vec3d from, Vec3d to) {
 		return world.raycast(new RaycastContext(from, to, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player))
 				.getType() == HitResult.Type.MISS;
 	}
@@ -483,7 +504,7 @@ final class JetrayAbilities {
 		return best;
 	}
 
-	private static Vec3d center(LivingEntity entity) {
+	static Vec3d center(LivingEntity entity) {
 		return entity.getPos().add(0.0, entity.getHeight() * 0.5, 0.0);
 	}
 

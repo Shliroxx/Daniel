@@ -111,6 +111,142 @@
       },
       "role": "ultimate",
       "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:neuro_volley",
+      "energy": 18,
+      "cooldown": 60,
+      "params": {
+        "damage": 3.0,
+        "stun_ticks": 15,
+        "range": 24.0,
+        "shots": 5
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:dive_bomb",
+      "energy": 25,
+      "cooldown": 110,
+      "params": {
+        "range": 20.0,
+        "damage": 7.0,
+        "stun_ticks": 25,
+        "radius": 4.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:sonic_barrier",
+      "energy": 30,
+      "cooldown": 180,
+      "params": {
+        "range": 10.0,
+        "damage": 6.0,
+        "daze_ticks": 60
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:barrel_roll",
+      "energy": 15,
+      "cooldown": 60,
+      "params": {
+        "power": 1.6,
+        "invulnerable_ticks": 15,
+        "radius": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:static_field",
+      "energy": 30,
+      "cooldown": 260,
+      "params": {
+        "seconds": 6.0,
+        "radius": 5.0,
+        "damage": 2.0,
+        "stun_ticks": 10
+      },
+      "role": "utility",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:mach_ten",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "radius": 18.0,
+        "passes": 6,
+        "damage": 8.0,
+        "stun_ticks": 40
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:wing_cut",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:sky_snatch",
+      "energy": 10,
+      "cooldown": 80,
+      "params": {
+        "damage": 4.0,
+        "lift": 1.3
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:tail_sting",
+      "energy": 8,
+      "cooldown": 70,
+      "params": {
+        "damage": 5.0,
+        "stun_ticks": 50
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:power_dive",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.2,
+        "damage": 7.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:total_discharge",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0,
+        "radius": 6.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -142,6 +278,29 @@
         "amplifier": 0
       }
     ],
-    "transform_style": "jet"
+    "transform_style": "jet",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:neuro_charge",
+        "params": {
+          "overload_damage": 6.0,
+          "stun_ticks": 20
+        }
+      },
+      {
+        "type": "kingdomomnitrix:aerodynamics",
+        "params": {
+          "air_bonus": 1.2,
+          "projectile": 0.7
+        }
+      },
+      {
+        "type": "kingdomomnitrix:aerophibian",
+        "unlock_level": 4,
+        "params": {
+          "strength_level": 0.0
+        }
+      }
+    ]
   }
 }

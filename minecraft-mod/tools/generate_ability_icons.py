@@ -1065,6 +1065,20 @@ def icons(c) -> dict[str, list]:
         "armored_shell": lambda: [L(m_ball(), c, glow=c), L(ball_plates(), mix(c, DARK, 0.3), outline=None), L(m_arrow(10, 60, 70, 90, 12, 24), STONE)],
         "rolling_momentum": lambda: [L(m_speedlines(70, 190, 10, 90, 4, 12), cl), L(m_ball(170, 128, 56), c, glow=c), L(ball_plates(170, 128, 56), mix(c, DARK, 0.3), outline=None)],
         "bounce_back": lambda: [ground(), L(m_ball(128, 100, 46), c, glow=c), L(m_arrow(200, 190, 200, 60, 14, 28), W)],
+        "neuro_volley": lambda: [L(m_eye(70, 128, 110, 60), DARK), L(m_beam(100, 120, 256, 14), rgb("FFE84A"), glow=rgb("FFE84A")), L(m_beam(128, 120, 256, 14), rgb("FFE84A")), L(m_beam(156, 120, 256, 14), rgb("FFE84A"))],
+        "dive_bomb": lambda: [ground(), L(m_arrow(60, 30, 150, 170, 26, 50), c, glow=c), L(m_ring(150, 200, 70, 10, 190, 350), rgb("FFE84A"), glow=rgb("FFE84A"))],
+        "sonic_barrier": lambda: [L(m_waves(50, 128, 4, -40, 40, 14, 40), W, glow=ICE), L(m_wing(True), c)],
+        "barrel_roll": lambda: [L(m_spiral(128, 128, 1.2, 104, 14), cl, glow=c), L(m_wing(True), c), L(m_wing(False), c)],
+        "static_field": lambda: [L(m_ring(128, 128, 100, 10), rgb("FFE84A"), glow=rgb("FFE84A")), L(m_bolt(-60, 0, 0.35), rgb("FFE84A")), L(m_bolt(60, 0, 0.35), rgb("FFE84A")), L(m_circle(128, 128, 36), c)],
+        "mach_ten": lambda: [L(m_star(128, 128, 110), rgb("FFE84A"), glow=rgb("FFE84A")), L(m_speedlines(40, 216, 10, 200, 5, 10), c), L(m_wing(True), c)],
+        "wing_cut": lambda: [L(m_wing(True), c, glow=c), L(m_claws(0.4, 1), W)],
+        "sky_snatch": lambda: [L(m_figure(0, 40, 0.45), STONE), L(m_arrow(128, 160, 128, 30, 22, 44), c, glow=c), L(m_wing(True), c)],
+        "tail_sting": lambda: [L(m_tail(), c, glow=c), L(m_burst(180, 70, 50, 16, 8), rgb("FFE84A"), outline=None)],
+        "power_dive": lambda: [ground(), L(m_arrow(128, 20, 128, 170, 28, 50), c, glow=c), L(m_ring(128, 200, 80, 10, 190, 350), rgb("FFE84A"))],
+        "total_discharge": lambda: [L(m_burst(128, 128, 116, 40, 12), rgb("FFE84A"), glow=rgb("FFE84A")), L(m_circle(128, 128, 36), W)],
+        "neuro_charge": lambda: [L(m_circle(128, 128, 70), c), L(m_bolt(0, 0, 0.6), rgb("FFE84A"), glow=rgb("FFE84A"))],
+        "aerodynamics": lambda: [L(m_wing(True), c, glow=c), L(m_wing(False), c), L(m_speedlines(200, 240, 0, 256, 3, 8), W)],
+        "aerophibian": lambda: [L(m_wave(150), WATER, glow=WATER), L(m_wing(True), c), L(m_plus(190, 70, 34, 20), W)],
     }
 
 

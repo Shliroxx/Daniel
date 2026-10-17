@@ -241,6 +241,17 @@ ABILITY_POSE = {
     "shell_counter": "guard",
     "cannon_drop": "slam",
     "bullseye": "dodge",
+    "neuro_volley": "beam",
+    "dive_bomb": "leap",
+    "sonic_barrier": "spread",
+    "barrel_roll": "dodge",
+    "static_field": "focus",
+    "mach_ten": "ultimate",
+    "wing_cut": "swipe",
+    "sky_snatch": "leap",
+    "tail_sting": "swipe",
+    "power_dive": "slam",
+    "total_discharge": "beam",
 }
 
 
