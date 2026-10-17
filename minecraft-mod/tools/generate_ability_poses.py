@@ -131,6 +131,17 @@ ABILITY_POSE = {
     "reality_bolt": "beam", "gravity_warp": "spread", "blink": "dodge", "time_stop": "focus", "creation": "focus", "big_bang": "ultimate",
     "lightning_arc": "beam", "static_grid": "throw", "electro_levitation": "leap", "force_field": "guard", "brain_analysis": "focus", "mind_storm": "ultimate",
     "acid_spit": "shoot", "slime_whip": "swipe", "puddle_form": "dodge", "engulf": "clap", "acid_pool": "throw", "acid_flood": "ultimate",
+    "flamethrower": "beam",
+    "blaze_roll": "dodge",
+    "heat_absorb": "focus",
+    "fire_tornado": "spread",
+    "magma_eruption": "slam",
+    "meteor_rain": "ultimate",
+    "blazing_rush": "swipe",
+    "comet_kick": "slam",
+    "ember_grip": "shoot",
+    "phoenix_dive": "leap",
+    "incinerate": "ultimate",
 }
 
 

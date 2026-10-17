@@ -925,6 +925,20 @@ def icons(c) -> dict[str, list]:
         "creation": lambda: [L(m_star(128, 128, 104), W, glow=c), L(m_plus(190, 190, 34, 18), c)],
         "big_bang": lambda: [L(m_burst(128, 128, 128, 80, 18), W, glow=c, glow_alpha=1.0), L(m_circle(128, 128, 40), DARK, outline=None),
                      L(m_star(128, 128, 30), W, outline=None)],
+        "flamethrower": lambda: [L(m_flame(-40, 0, 0.55, 1.4), FIRE, glow=FIRE), L(m_flame(30, 0, 0.7, 1.45), FIRE_HOT, glow=FIRE), L(m_speedlines(70, 190, 10, 60, 3, 10), FIRE)],
+        "blaze_roll": lambda: [L(m_ring(128, 128, 80, 22), FIRE, glow=FIRE), L(m_circle(128, 128, 40), FIRE_HOT, outline=None), L(m_speedlines(60, 196, 0, 50, 4, 10), FIRE)],
+        "heat_absorb": lambda: [L(m_spiral(128, 128, 2.0, 104, 12), FIRE, glow=FIRE), L(m_circle(128, 128, 30), FIRE_HOT, outline=None)],
+        "fire_tornado": lambda: [L(m_tornado(), FIRE, glow=FIRE), L(m_flame(0, 60, 0.35), FIRE_HOT, outline=None)],
+        "magma_eruption": lambda: [ground(), L(m_flame(-50, 20, 0.5), FIRE, glow=FIRE), L(m_flame(0, -10, 0.7), FIRE_HOT, glow=FIRE), L(m_flame(50, 20, 0.5), FIRE, glow=FIRE)],
+        "meteor_rain": lambda: [ground(), L(m_meteor(170, 80, 34), FIRE_HOT, glow=FIRE, glow_alpha=0.8), L(m_meteor(90, 120, 26), FIRE, glow=FIRE), L(m_meteor(190, 160, 22), FIRE, glow=FIRE)],
+        "blazing_rush": lambda: [L(m_speedlines(70, 190, 10, 110, 4, 12), FIRE), *fist(c, 30, 0, 0.6, glow=FIRE, glow_alpha=0.8)],
+        "comet_kick": lambda: [ground(), L(m_meteor(128, 110, 46), FIRE_HOT, glow=FIRE, glow_alpha=0.8), L(m_cracks(128, 206), DARK, outline=None)],
+        "ember_grip": lambda: [*fist(c, 0, 10, 0.7, glow=FIRE, glow_alpha=0.9), L(m_flame(0, -60, 0.4), FIRE_HOT, outline=None)],
+        "phoenix_dive": lambda: [ground(), flat(m_wing(True), FIRE, 200), flat(m_wing(False), FIRE, 200), L(m_flame(0, 10, 0.6, math.pi), FIRE_HOT, glow=FIRE)],
+        "incinerate": lambda: [L(m_burst(128, 128, 120, 60, 14), FIRE_HOT, glow=FIRE, glow_alpha=0.8), L(m_skull(), DARK)],
+        "pyronite_core": lambda: [L(m_circle(128, 128, 90), FIRE, glow=FIRE, glow_alpha=0.8), L(m_circle(128, 128, 50), FIRE_HOT, outline=None), L(m_ring(128, 128, 112, 8), BLUE_FIRE)],
+        "molten_touch": lambda: [*fist(c, 0, 0, 0.7, glow=FIRE, glow_alpha=0.7), L(m_flame(50, -50, 0.35), FIRE_HOT, outline=None)],
+        "heat_haze": lambda: [L(m_waves(128, 200, 3, 200, 340, 12, 30), FIRE_HOT, glow=FIRE), L(m_arrow(40, 90, 150, 90, 14, 30), STONE), L(m_burst(170, 90, 40, 16, 8), FIRE, outline=None)],
     }
 
 

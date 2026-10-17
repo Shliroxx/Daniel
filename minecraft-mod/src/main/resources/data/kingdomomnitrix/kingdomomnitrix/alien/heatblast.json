@@ -104,6 +104,140 @@
         "core_ticks": 80,
         "core_damage": 3.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:flamethrower",
+      "energy": 30,
+      "cooldown": 110,
+      "params": {
+        "ticks": 30,
+        "range": 7.0,
+        "damage": 1.6,
+        "heat": 12
+      },
+      "role": "special",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:blaze_roll",
+      "energy": 18,
+      "cooldown": 60,
+      "params": {
+        "power": 1.6,
+        "damage": 4.0,
+        "invulnerable_ticks": 10,
+        "heat": 6
+      },
+      "role": "movement",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:heat_absorb",
+      "energy": 15,
+      "cooldown": 300,
+      "params": {
+        "radius": 6.0,
+        "heat_per_source": 4.0
+      },
+      "role": "utility",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:fire_tornado",
+      "energy": 45,
+      "cooldown": 320,
+      "params": {
+        "range": 14.0,
+        "seconds": 5.0,
+        "damage": 2.5,
+        "radius": 3.0,
+        "heat": 18
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:magma_eruption",
+      "energy": 45,
+      "cooldown": 260,
+      "params": {
+        "range": 16.0,
+        "damage": 9.0,
+        "heat": 18
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:meteor_rain",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "range": 24.0,
+        "area": 7.0,
+        "damage": 8.0,
+        "seconds": 4.0,
+        "heat": 30
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:blazing_rush",
+      "energy": 10,
+      "cooldown": 60,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:comet_kick",
+      "energy": 12,
+      "cooldown": 80,
+      "params": {
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:ember_grip",
+      "energy": 10,
+      "cooldown": 90,
+      "params": {
+        "damage": 2.5
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:phoenix_dive",
+      "energy": 15,
+      "cooldown": 100,
+      "params": {
+        "dive": 2.0,
+        "damage": 8.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:incinerate",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0,
+        "per_heat": 0.12
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -122,6 +256,25 @@
   ],
   "failsafe_priority": 2,
   "traits": {
-    "transform_style": "fire"
+    "transform_style": "fire",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:pyronite_core"
+      },
+      {
+        "type": "kingdomomnitrix:molten_touch",
+        "params": {
+          "fire_seconds": 4.0,
+          "glow_damage": 2.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:heat_haze",
+        "unlock_level": 4,
+        "params": {
+          "chance": 0.25
+        }
+      }
+    ]
   }
 }

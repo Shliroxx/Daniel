@@ -111,6 +111,16 @@ final class HeatblastAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("supernova"), HeatblastAbilities::supernova);
 		ServerTickEvents.END_SERVER_TICK.register(HeatblastAbilities::tick);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.getPlayer().getUuid()));
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("pyronite_core"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void tick(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx) {
+						if (ctx.now() % PASSIVE_INTERVAL == 0) {
+							tickPassive(ctx.world(), ctx.player(), ctx.now());
+						}
+					}
+				});
+		HeatblastMoves.register();
 	}
 
 	// --- Kernhitze -------------------------------------------------------------------------------
@@ -119,7 +129,7 @@ final class HeatblastAbilities {
 		return HEAT.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static void addHeat(ServerPlayerEntity player, float amount) {
+	static void addHeat(ServerPlayerEntity player, float amount) {
 		float before = heat(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		HEAT.put(player.getUuid(), after);
@@ -133,7 +143,7 @@ final class HeatblastAbilities {
 	}
 
 	/** Schadensfaktor der aktuellen Stufe; im Ueberhitzt-Zustand wird der Kern entladen (blau). */
-	private static Power power(ServerPlayerEntity player) {
+	static Power power(ServerPlayerEntity player) {
 		float heat = heat(player);
 		if (heat >= MAX) {
 			HEAT.put(player.getUuid(), 0.0f);
@@ -142,7 +152,7 @@ final class HeatblastAbilities {
 		return new Power(heat >= GLOW ? GLOW_FACTOR : 1.0f, false);
 	}
 
-	private record Power(float factor, boolean blue) {
+	record Power(float factor, boolean blue) {
 		int color() {
 			return blue ? BLUE : FIRE;
 		}
@@ -307,9 +317,7 @@ final class HeatblastAbilities {
 			long now = world.getTime();
 			tickSurf(world, player, now);
 			tickShield(world, player, now);
-			if (now % PASSIVE_INTERVAL == 0) {
-				tickPassive(world, player, now);
-			}
+			// Kernhitze (Umgebung, Aura, Anzeige) laeuft als passive Kraft „Pyronit-Kern“ ueber PassiveHooks
 		}
 		if (!WAVES.isEmpty()) {
 			tickWaves(server);
@@ -477,13 +485,13 @@ final class HeatblastAbilities {
 
 	// --- Hilfen ----------------------------------------------------------------------------------
 
-	private static List<LivingEntity> around(ServerPlayerEntity player, double radius) {
+	static List<LivingEntity> around(ServerPlayerEntity player, double radius) {
 		double radiusSq = radius * radius;
 		return player.getServerWorld().getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
 				e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= radiusSq && PartyRules.canHarm(player, e));
 	}
 
-	private static void hit(ServerPlayerEntity player, LivingEntity target, float damage, float fireSeconds) {
+	static void hit(ServerPlayerEntity player, LivingEntity target, float damage, float fireSeconds) {
 		target.timeUntilRegen = 0;
 		if (target.damage(player.getServerWorld().getDamageSources().playerAttack(player), damage)) {
 			// jeder Treffer heizt den Kern nach — Angriff lohnt sich

@@ -131,6 +131,39 @@ final class AlienKit {
 		return out;
 	}
 
+	/** Zielpunkt im Blick: erstes Wesen oder Block, sonst das Ende der Reichweite. */
+	static Vec3d aim(ServerWorld world, ServerPlayerEntity owner, double range) {
+		return beam(world, owner, range).end();
+	}
+
+	/** Boden unter einem Punkt (bis {@code depth} Bloecke tief), sonst der Punkt selbst. */
+	static Vec3d ground(ServerWorld world, Vec3d at, double depth) {
+		HitResult hit = world.raycast(new RaycastContext(at.add(0.0, 1.0, 0.0), at.subtract(0.0, depth, 0.0),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, net.minecraft.block.ShapeContext.absent()));
+		return hit.getType() == HitResult.Type.MISS ? at : hit.getPos();
+	}
+
+	/**
+	 * Flaechentreffer: Schaden faellt zum Rand auf die Haelfte ab, Stoss weg von der Mitte, Anheben.
+	 *
+	 * @return getroffene Wesen
+	 */
+	static List<LivingEntity> blast(ServerWorld world, ServerPlayerEntity owner, Vec3d center, double radius, float damage, double knockback,
+			double lift) {
+		List<LivingEntity> hits = around(world, owner, center, radius);
+		for (LivingEntity target : hits) {
+			double d = target.getPos().add(0, target.getHeight() * 0.5, 0).distanceTo(center);
+			melee(world, owner, target, (float) (damage * (1.0 - 0.5 * Math.min(1.0, d / radius))));
+			push(target, center, knockback, lift);
+		}
+		return hits;
+	}
+
+	/** Mitte des Koerpers. */
+	static Vec3d body(LivingEntity entity) {
+		return entity.getPos().add(0, entity.getHeight() * 0.5, 0);
+	}
+
 	static Vec3d muzzle(ServerPlayerEntity player) {
 		return player.getEyePos().add(player.getRotationVec(1.0f)).add(0.0, -0.25, 0.0);
 	}
