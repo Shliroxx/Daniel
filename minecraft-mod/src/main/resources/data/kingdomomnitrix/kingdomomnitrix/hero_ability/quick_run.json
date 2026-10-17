@@ -1,0 +1,8 @@
+{
+  "category": "exploration",
+  "unlock_level": 2,
+  "ap_cost": 1,
+  "sort_order": 0,
+  "effect": "quick_run",
+  "value": 0.1
+}

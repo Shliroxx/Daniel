@@ -25,3 +25,4 @@ Thumbs.db
 # Nacht-Auftraege und Logs
 logs/
 auftraege*.md
+release/

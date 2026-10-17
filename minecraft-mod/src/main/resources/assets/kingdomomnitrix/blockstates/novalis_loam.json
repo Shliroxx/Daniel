@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/novalis_loam"
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_loam",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_loam",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/novalis_loam",
+        "y": 270
+      }
+    ]
+  }
+}

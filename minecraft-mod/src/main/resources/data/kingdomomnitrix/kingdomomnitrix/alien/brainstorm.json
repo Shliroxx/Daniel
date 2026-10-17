@@ -1,0 +1,269 @@
+{
+  "color": "#C99A5E",
+  "sort_order": 22,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 120,
+  "energy_regen": 8,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 8.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_lightning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:lightning_arc",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 20.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:static_grid",
+      "energy": 25,
+      "cooldown": 120,
+      "params": {
+        "range": 14.0,
+        "seconds": 5.0,
+        "radius": 4.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:electro_levitation",
+      "energy": 20,
+      "cooldown": 100,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:force_field",
+      "energy": 30,
+      "cooldown": 240,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:brain_analysis",
+      "energy": 20,
+      "cooldown": 300,
+      "params": {
+        "range": 20.0,
+        "seconds": 15.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:mind_storm",
+      "energy": 90,
+      "cooldown": 900,
+      "params": {},
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:electro_whip",
+      "energy": 12,
+      "cooldown": 45,
+      "params": {
+        "range": 10.0,
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:chain_lightning",
+      "energy": 20,
+      "cooldown": 80,
+      "params": {
+        "range": 12.0,
+        "damage": 6.0,
+        "jumps": 4
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:telekinetic_lift",
+      "energy": 25,
+      "cooldown": 160,
+      "params": {
+        "range": 16.0,
+        "height": 5.0,
+        "seconds": 3.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:ball_lightning",
+      "energy": 25,
+      "cooldown": 140,
+      "params": {
+        "seconds": 4.0,
+        "speed": 0.35,
+        "damage": 3.0,
+        "reach": 3.5
+      },
+      "role": "special",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:tactical_genius",
+      "energy": 20,
+      "cooldown": 300,
+      "params": {
+        "seconds": 10.0,
+        "radius": 16.0
+      },
+      "role": "utility",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:thunderdome",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "radius": 9.0,
+        "damage": 3.0,
+        "seconds": 6.0,
+        "final_damage": 10.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:shell_ram",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:skull_crack",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:pincer_grip",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:thunder_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.0,
+        "damage": 6.0,
+        "radius": 4.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:neural_overload",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0,
+        "radius": 12.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:tropical_fish",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:brainstorm",
+  "failsafe_tags": [
+    "#minecraft:is_lightning"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:water_breathing"
+      }
+    ],
+    "transform_style": "electric",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:superior_intellect",
+        "params": {
+          "analyze_ticks": 100,
+          "weak_spot": 1.2
+        }
+      },
+      {
+        "type": "kingdomomnitrix:crab_shell",
+        "params": {
+          "projectile": 0.6,
+          "melee": 0.85
+        }
+      },
+      {
+        "type": "kingdomomnitrix:static_discharge",
+        "unlock_level": 4,
+        "params": {
+          "damage": 3.0
+        }
+      }
+    ]
+  }
+}

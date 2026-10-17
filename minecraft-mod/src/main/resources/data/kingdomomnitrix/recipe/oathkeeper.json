@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " AH",
+    " KA",
+    "S  "
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "H": {
+      "item": "kingdomomnitrix:heart"
+    },
+    "K": {
+      "item": "kingdomomnitrix:kingdom_key"
+    },
+    "S": {
+      "item": "minecraft:quartz"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:oathkeeper",
+    "count": 1
+  }
+}

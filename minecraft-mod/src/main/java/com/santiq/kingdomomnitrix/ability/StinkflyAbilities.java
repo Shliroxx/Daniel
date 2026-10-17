@@ -1,0 +1,447 @@
+package com.santiq.kingdomomnitrix.ability;
+
+import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.party.PartyRules;
+import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.Items;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
+import net.minecraft.world.World;
+import org.joml.Vector3f;
+import com.santiq.kingdomomnitrix.vfx.Fx;
+
+/**
+ * Stinkfly (Lepidopterran). Eigenes Dauer-System „Toxin-Schichten“ — keine Aura, sichtbar an den Gegnern:
+ *
+ * <ul>
+ *   <li>Jeder Treffer von Stinkfly und jede Sekunde in seinen Giftwolken legt eine Schicht auf (0–{@link #MAX_STACKS},
+ *       gruene Blasen am Ziel, je Schicht mehr). Ohne Nachschub faellt alle {@link #DECAY_TICKS} Ticks eine weg.</li>
+ *   <li>Bei {@link #MAX_STACKS} <b>Zersetzung</b>: Verdorren, verlangsamt, jeder Treffer (von wem auch immer) macht
+ *       {@link #ROT_BONUS} mehr Schaden.</li>
+ *   <li><b>Ansteckung</b>: stirbt ein Ziel mit mindestens {@link #BURST_STACKS} Schichten, platzt es — Giftwolke am
+ *       Todesort, Nachbarn bekommen zwei Schichten.</li>
+ * </ul>
+ * Giftwolken sind eigene, leichte Objekte (kein AreaEffectCloud), damit sie Schichten statt nur Effekte geben.
+ */
+final class StinkflyAbilities {
+	static final int MAX_STACKS = 5;
+	static final int BURST_STACKS = 3;
+	static final float ROT_BONUS = 0.3f;
+	private static final int DECAY_TICKS = 60;
+	private static final DustParticleEffect TOXIC = new DustParticleEffect(new Vector3f(0.55f, 0.75f, 0.15f), 1.5f);
+	private static final DustParticleEffect SLIME = new DustParticleEffect(new Vector3f(0.45f, 0.9f, 0.3f), 1.1f);
+	/** Gas: giftgruen, Schleim: hellgruen, Kern: gelbgruen (Leuchten) */
+	private static final int GAS = 0x7FB52A;
+	private static final int GOO = 0x8EEA4E;
+	private static final int CORE = 0xD8F25A;
+
+	/** Schichten je Ziel */
+	private static final Map<UUID, Toxin> TOXINS = new HashMap<>();
+	private static final List<Cloud> CLOUDS = new ArrayList<>();
+	/** Giftsturm: Ende (danach Entladung) */
+	private static final Map<UUID, Long> STORMS = new HashMap<>();
+	private static boolean bonusHit;
+
+	private static final class Toxin {
+		final UUID owner;
+		int stacks;
+		long last;
+
+		Toxin(UUID owner) {
+			this.owner = owner;
+		}
+	}
+
+	/** Giftwolke: gibt Personen darin je Sekunde eine Schicht; {@code slime} macht zusaetzlich klebrig. */
+	private record Cloud(UUID owner, RegistryKey<World> world, Vec3d pos, double radius, long until, boolean slime) {
+	}
+
+	private StinkflyAbilities() {
+	}
+
+	static void register() {
+		AbilityRegistry.register(KingdomOmnitrix.id("slime_spit"), StinkflyAbilities::slimeSpit);
+		AbilityRegistry.register(KingdomOmnitrix.id("stink_cloud"), StinkflyAbilities::stinkCloud);
+		AbilityRegistry.register(KingdomOmnitrix.id("wing_dash"), StinkflyAbilities::wingDash);
+		AbilityRegistry.register(KingdomOmnitrix.id("slime_bomb"), StinkflyAbilities::slimeBomb);
+		AbilityRegistry.register(KingdomOmnitrix.id("updraft"), StinkflyAbilities::updraft);
+		AbilityRegistry.register(KingdomOmnitrix.id("toxic_storm"), StinkflyAbilities::toxicStorm);
+		ServerTickEvents.END_SERVER_TICK.register(StinkflyAbilities::tick);
+		ServerLivingEntityEvents.AFTER_DAMAGE.register(StinkflyAbilities::afterDamage);
+		ServerLivingEntityEvents.AFTER_DEATH.register(StinkflyAbilities::afterDeath);
+		// Treffer von Stinkfly legen Schichten auf: passive Kraft „Lepidopterran-Gift“ (Zersetzung und Ansteckung gelten fuer alle)
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("lepidopterran_toxin"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float damage) {
+						if (!bonusHit) {
+							addToxin(ctx.player(), target, 1);
+						}
+					}
+				});
+		StinkflyMoves.register();
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			UUID id = handler.getPlayer().getUuid();
+			STORMS.remove(id);
+			CLOUDS.removeIf(c -> c.owner().equals(id));
+		});
+	}
+
+	// --- Toxin -----------------------------------------------------------------------------------
+
+	static int stacks(LivingEntity target) {
+		Toxin toxin = TOXINS.get(target.getUuid());
+		return toxin == null ? 0 : toxin.stacks;
+	}
+
+	static void addToxin(ServerPlayerEntity owner, LivingEntity target, int amount) {
+		if (!target.isAlive() || target == owner || !PartyRules.canHarm(owner, target)) {
+			return;
+		}
+		Toxin toxin = TOXINS.computeIfAbsent(target.getUuid(), id -> new Toxin(owner.getUuid()));
+		int before = toxin.stacks;
+		toxin.stacks = Math.min(MAX_STACKS, toxin.stacks + amount);
+		toxin.last = owner.getServerWorld().getTime();
+		ServerWorld world = owner.getServerWorld();
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.7), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, 3 + toxin.stacks * 2)));
+		if (before < MAX_STACKS && toxin.stacks >= MAX_STACKS) {
+			// Zersetzung
+			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 60, 0), owner);
+			target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 60, 1), owner);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), AlienKit.color(ParticleTypes.SNEEZE), 0.8f, Math.max(1, Math.min(6, (20) / 4)));
+			world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_SQUISH, SoundCategory.PLAYERS, 1.0f, 0.5f);
+			owner.sendMessage(Text.translatable("message.kingdomomnitrix.stinkfly_rot", target.getDisplayName()).formatted(Formatting.GREEN), true);
+		}
+	}
+
+	/** Stinkfly-Treffer legen eine Schicht auf; zersetzte Ziele nehmen von jedem mehr Schaden. */
+	private static void afterDamage(LivingEntity target, DamageSource source, float baseDamage, float damageTaken, boolean blocked) {
+		if (bonusHit || damageTaken <= 0.0f) {
+			return;
+		}
+		if (stacks(target) >= MAX_STACKS && source.getAttacker() instanceof LivingEntity attacker && attacker != target && target.isAlive()) {
+			bonusHit = true;
+			try {
+				target.timeUntilRegen = 0;
+				target.damage(target.getWorld().getDamageSources().magic(), damageTaken * ROT_BONUS);
+			} finally {
+				bonusHit = false;
+			}
+		}
+	}
+
+	/** Ansteckung: stark vergiftete Ziele platzen beim Tod. */
+	private static void afterDeath(LivingEntity target, DamageSource source) {
+		Toxin toxin = TOXINS.remove(target.getUuid());
+		if (toxin == null || toxin.stacks < BURST_STACKS || !(target.getWorld() instanceof ServerWorld world)) {
+			return;
+		}
+		ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(toxin.owner);
+		if (owner == null) {
+			return;
+		}
+		CLOUDS.add(new Cloud(owner.getUuid(), world.getRegistryKey(), target.getPos(), 3.0, world.getTime() + 100, false));
+		for (LivingEntity near : world.getEntitiesByClass(LivingEntity.class, target.getBoundingBox().expand(4.0),
+				e -> e != target && e != owner && e.isAlive() && PartyRules.canHarm(owner, e))) {
+			addToxin(owner, near, 2);
+		}
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());
+		Fx.explosion(world, body, GAS, 2.0f);
+		Fx.shards(world, body, GOO, 0.45f, 16);
+		Fx.smoke(world, body, GAS, 1.4f, 6);
+		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.6f);
+	}
+
+	/** Giftwolke setzen (gibt Schichten je Sekunde; {@code slime} macht klebrig). */
+	static void cloud(ServerPlayerEntity owner, Vec3d pos, double radius, int ticks, boolean slime) {
+		CLOUDS.add(new Cloud(owner.getUuid(), owner.getServerWorld().getRegistryKey(), pos, radius, owner.getServerWorld().getTime() + ticks, slime));
+	}
+
+	// --- Faehigkeiten ----------------------------------------------------------------------------
+
+	/** Schleimspucke: jede Kugel legt beim Treffer eine Schicht auf. */
+	private static boolean slimeSpit(AbilityContext ctx) {
+		int count = (int) Math.max(1, ctx.param("count", 2));
+		float speed = (float) ctx.param("speed", 1.8);
+		for (int i = 0; i < count; i++) {
+			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), Items.SLIME_BALL, speed, (float) ctx.param("spread", 3.0))
+					.withDamage((float) ctx.param("damage", 3.0));
+		}
+		Vec3d mouth = AlienKit.muzzle(ctx.player());
+		Fx.flash(ctx.world(), mouth, GOO, 0.6f);
+		Fx.sparks(ctx.world(), mouth, GOO, 0.3f, 6);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_SQUISH, 1.0f, 1.3f);
+		return true;
+	}
+
+	private static boolean stinkCloud(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		Vec3d at = groundBelow(ctx.world(), player.getPos().add(BuiltinAbilities.horizontalLook(player).multiply(2.0)));
+		double radius = ctx.param("radius", 3.5);
+		CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), at, radius,
+				ctx.world().getTime() + (long) ctx.param("ticks", 120), false));
+		// Ausstoss: Gasschwall aus dem Hinterleib, der sich am Boden ausbreitet
+		Fx.smoke(ctx.world(), at.add(0, 0.6, 0), GAS, (float) (radius * 0.55), 8);
+		Fx.shockwave(ctx.world(), at.add(0, 0.1, 0), GAS, (float) radius * 1.2f, 12);
+		AlienKit.line(ctx.world(), player.getPos().add(0, 0.8, 0), at.add(0, 0.5, 0), SLIME, 2.0);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.0f, 0.6f);
+		return true;
+	}
+
+	/** Fluegelstoss: Ausweichen in Blickrichtung, hinterlaesst eine Giftschleppe aus kleinen Wolken. */
+	private static boolean wingDash(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		Vec3d start = player.getPos();
+		Vec3d look = player.getRotationVec(1.0f);
+		double power = ctx.param("power", 1.8);
+		BuiltinAbilities.launch(player, look.x * power, look.y * power + 0.15, look.z * power);
+		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 8));
+		for (int i = 0; i < 3; i++) {
+			CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), start.add(look.multiply(i * 1.5)), 1.4,
+					ctx.world().getTime() + 60, false));
+		}
+		// Fluegelschlag: Druckring hinter Stinkfly, Gasschleppe entlang der Bahn
+		Fx.shockwave(ctx.world(), start.add(0, 0.6, 0), 0xC9E59A, 3.0f, 8);
+		Fx.flash(ctx.world(), start.add(0, 1.0, 0), CORE, 1.0f);
+		for (int i = 0; i < 4; i++) {
+			Fx.smoke(ctx.world(), start.add(look.multiply(i * 1.2)).add(0, 0.8, 0), GAS, 1.0f, 2);
+		}
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 1.2f);
+		return true;
+	}
+
+	/** Schleimbombe: landet am Zielpunkt, platzt — drei Schichten im Umkreis und ein klebriges Schleimfeld. */
+	private static boolean slimeBomb(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		ServerWorld world = ctx.world();
+		Vec3d eye = player.getEyePos();
+		Vec3d end = eye.add(player.getRotationVec(1.0f).multiply(20.0));
+		HitResult hit = world.raycast(new RaycastContext(eye, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
+		Vec3d at = hit.getType() == HitResult.Type.MISS ? groundBelow(world, end) : hit.getPos();
+		// Flugbahn als Bogen aus Schleim
+		for (int i = 1; i <= 16; i++) {
+			double t = i / 16.0;
+			Vec3d p = eye.lerp(at, t).add(0, Math.sin(t * Math.PI) * 2.0, 0);
+			Fx.sparks(world, p, GOO, 0.12f, 2);
+			if (i % 3 == 0) {
+				Fx.smoke(world, p, GOO, 0.35f, 1);
+			}
+		}
+		float damage = (float) ctx.param("damage", 6.0);
+		double radius = ctx.param("explosion", 1.6) * 2.0;
+		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, Box.of(at, radius * 2, radius * 2, radius * 2),
+				e -> e != player && e.isAlive() && e.squaredDistanceTo(at) <= radius * radius && PartyRules.canHarm(player, e))) {
+			target.damage(world.getDamageSources().indirectMagic(player, player), damage);
+			addToxin(player, target, 2);
+		}
+		CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(), at, radius, world.getTime() + 80, true));
+		// Einschlag: Schleimexplosion, Spritzer, Gasschwall und Schleimfleck am Boden
+		Fx.explosion(world, at.add(0, 0.4, 0), GOO, (float) radius * 0.7f);
+		Fx.shards(world, at.add(0, 0.4, 0), GOO, 0.5f, 18);
+		Fx.smoke(world, at.add(0, 0.5, 0), GAS, (float) radius * 0.5f, 8);
+		Fx.shockwave(world, at.add(0, 0.1, 0), GOO, (float) radius * 1.3f, 10);
+		Fx.shake(world, at, 0.25f, 6, 14);
+		world.playSound(null, at.x, at.y, at.z, SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.5f);
+		PowerMoves.encase(ctx, 18.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 80, 0xB8E04A);
+		return true;
+	}
+
+	/** Aufwind: schleudert Gegner hoch und vergiftet sie; Stinkfly segelt danach sanft. */
+	private static boolean updraft(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		double launch = ctx.param("launch", 1.2);
+		for (LivingEntity target : BuiltinAbilities.livingAround(ctx, ctx.param("radius", 5.0))) {
+			target.damage(ctx.world().getDamageSources().playerAttack(player), (float) ctx.param("damage", 3.0));
+			target.addVelocity(0.0, launch, 0.0);
+			target.velocityModified = true;
+			addToxin(player, target, 1);
+		}
+		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 100, 0, false, false));
+		// Aufwind: Gaswirbel als Saeule, Druckring am Boden
+		double radius = ctx.param("radius", 5.0);
+		Fx.shockwave(ctx.world(), player.getPos().add(0, 0.1, 0), 0xC9E59A, (float) radius, 10);
+		for (int i = 0; i < 10; i++) {
+			double angle = i * 0.9;
+			double r = 0.6 + i * 0.25;
+			Fx.smoke(ctx.world(), player.getPos().add(Math.cos(angle) * r, i * 0.5, Math.sin(angle) * r), GAS, 0.7f + i * 0.06f, 1);
+		}
+		Fx.sparks(ctx.world(), player.getPos().add(0, 1.0, 0), CORE, 0.5f, 12);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, 1.0f);
+		return true;
+	}
+
+	/** Giftsturm: Wolkenring um Stinkfly; am Ende entladen sich alle Schichten im Umkreis als Schaden. */
+	private static boolean toxicStorm(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		ServerWorld world = ctx.world();
+		int clouds = (int) Math.max(3, ctx.param("clouds", 6));
+		double ring = ctx.param("ring", 4.0);
+		long until = world.getTime() + (long) ctx.param("ticks", 160);
+		for (int i = 0; i < clouds; i++) {
+			double angle = i * MathHelper.TAU / clouds;
+			CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(),
+					player.getPos().add(Math.cos(angle) * ring, 0, Math.sin(angle) * ring), ctx.param("radius", 2.5), until, false));
+		}
+		STORMS.put(player.getUuid(), until);
+		Fx.charge(world, player, CORE, (float) ring, (int) (until - world.getTime()));
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), GAS, (float) ring * 1.5f, 16);
+		Fx.smoke(world, player.getPos().add(0, 1.0, 0), GAS, 1.4f, 6);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.2f, 0.4f);
+		return true;
+	}
+
+	// --- Tick ------------------------------------------------------------------------------------
+
+	private static void tick(MinecraftServer server) {
+		long tick = server.getTicks();
+		if (!CLOUDS.isEmpty()) {
+			tickClouds(server, tick);
+		}
+		if (!TOXINS.isEmpty() && tick % 20 == 0) {
+			tickToxins(server);
+		}
+		if (!STORMS.isEmpty()) {
+			Iterator<Map.Entry<UUID, Long>> it = STORMS.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<UUID, Long> entry = it.next();
+				ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
+				if (player == null) {
+					it.remove();
+				} else if (player.getServerWorld().getTime() >= entry.getValue()) {
+					it.remove();
+					detonate(player);
+				} else if (tick % 3 == 0) {
+					// Sturm: Gaswirbel kreist um Stinkfly
+					double angle = tick * 0.35;
+					for (int arm = 0; arm < 3; arm++) {
+						double a = angle + arm * MathHelper.TAU / 3;
+						Fx.smoke(player.getServerWorld(), player.getPos().add(Math.cos(a) * 3.5, 0.6 + arm * 0.5, Math.sin(a) * 3.5), GAS, 0.9f, 1);
+					}
+				}
+			}
+		}
+	}
+
+	private static void tickClouds(MinecraftServer server, long tick) {
+		Iterator<Cloud> it = CLOUDS.iterator();
+		while (it.hasNext()) {
+			Cloud cloud = it.next();
+			ServerWorld world = server.getWorld(cloud.world());
+			ServerPlayerEntity owner = server.getPlayerManager().getPlayer(cloud.owner());
+			if (world == null || owner == null || world.getTime() >= cloud.until()) {
+				it.remove();
+				continue;
+			}
+			if (tick % 5 == 0) {
+				// dichte, wabernde Gaswolke: Schwaden an zufaelligen Punkten im Radius, dazu aufsteigende Blasen
+				var random = world.getRandom();
+				int puffs = (int) Math.max(1, Math.min(4, cloud.radius()));
+				for (int i = 0; i < puffs; i++) {
+					double angle = random.nextDouble() * MathHelper.TAU;
+					double r = Math.sqrt(random.nextDouble()) * cloud.radius() * 0.8;
+					Fx.smoke(world, cloud.pos().add(Math.cos(angle) * r, 0.3 + random.nextDouble() * 0.6, Math.sin(angle) * r),
+							cloud.slime() ? GOO : GAS, (float) (0.5 + cloud.radius() * 0.18), 1);
+				}
+				Fx.sparks(world, cloud.pos().add(0, 0.4, 0), cloud.slime() ? GOO : CORE, 0.12f, 2);
+			}
+			if (tick % 20 != 0) {
+				continue;
+			}
+			for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, Box.of(cloud.pos(), cloud.radius() * 2, 3, cloud.radius() * 2),
+					e -> e != owner && e.isAlive() && e.getPos().squaredDistanceTo(cloud.pos()) <= cloud.radius() * cloud.radius()
+							&& PartyRules.canHarm(owner, e))) {
+				addToxin(owner, target, 1);
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 100, 0), owner);
+				if (cloud.slime()) {
+					target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 2), owner);
+				}
+			}
+		}
+	}
+
+	/** Schichten zerfallen ohne Nachschub; zersetzte Ziele blubbern. */
+	private static void tickToxins(MinecraftServer server) {
+		Iterator<Map.Entry<UUID, Toxin>> it = TOXINS.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry<UUID, Toxin> entry = it.next();
+			Toxin toxin = entry.getValue();
+			ServerPlayerEntity owner = server.getPlayerManager().getPlayer(toxin.owner);
+			if (owner == null || !(owner.getServerWorld().getEntity(entry.getKey()) instanceof LivingEntity target) || !target.isAlive()) {
+				it.remove();
+				continue;
+			}
+			ServerWorld world = owner.getServerWorld();
+			if (world.getTime() - toxin.last > DECAY_TICKS) {
+				toxin.stacks--;
+				toxin.last = world.getTime() - DECAY_TICKS / 2;
+				if (toxin.stacks <= 0) {
+					it.remove();
+					continue;
+				}
+			}
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.8), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, toxin.stacks)));
+		}
+	}
+
+	/** Entladung des Giftsturms: jedes Ziel im Umkreis nimmt Schaden nach seinen Schichten, die Schichten sind weg. */
+	private static void detonate(ServerPlayerEntity player) {
+		ServerWorld world = player.getServerWorld();
+		int count = 0;
+		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(10.0),
+				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
+			Toxin toxin = TOXINS.remove(target.getUuid());
+			if (toxin == null) {
+				continue;
+			}
+			target.timeUntilRegen = 0;
+			target.damage(world.getDamageSources().indirectMagic(player, player), 3.0f * toxin.stacks);
+			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (10 + toxin.stacks * 4) / 4)));
+			count++;
+		}
+		// Entladung: das gesammelte Gas zuendet in einem Ring um Stinkfly
+		Fx.flash(world, player.getPos().add(0, 1.0, 0), CORE, 3.0f);
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), GAS, 10.0f, 14);
+		for (int i = 0; i < 8; i++) {
+			double a = i * MathHelper.TAU / 8;
+			Fx.explosion(world, player.getPos().add(Math.cos(a) * 3.5, 0.8, Math.sin(a) * 3.5), GAS, 1.4f);
+		}
+		Fx.shake(world, player.getPos(), 0.35f, 10, 16);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.4f, 0.4f);
+		if (count > 0) {
+			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.9f, 1.4f);
+		}
+	}
+
+	private static Vec3d groundBelow(ServerWorld world, Vec3d at) {
+		HitResult hit = world.raycast(new RaycastContext(at.add(0.0, 1.0, 0.0), at.subtract(0.0, 6.0, 0.0),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, net.minecraft.block.ShapeContext.absent()));
+		return hit.getType() == HitResult.Type.MISS ? at : hit.getPos();
+	}
+}

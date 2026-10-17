@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "HH",
+    "HH"
+  ],
+  "key": {
+    "H": {
+      "item": "kingdomomnitrix:hull_plate"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:pad_plate",
+    "count": 4
+  }
+}

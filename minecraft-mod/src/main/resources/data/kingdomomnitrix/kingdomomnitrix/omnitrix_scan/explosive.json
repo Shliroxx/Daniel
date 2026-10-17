@@ -1,0 +1,1 @@
+{"condition": {"type": "explosive_near", "radius": 7}, "weights": {"kingdomomnitrix:diamondhead": 5, "kingdomomnitrix:xlr8": 3, "kingdomomnitrix:cannonbolt": 4}, "reason": "scan.kingdomomnitrix.explosive"}

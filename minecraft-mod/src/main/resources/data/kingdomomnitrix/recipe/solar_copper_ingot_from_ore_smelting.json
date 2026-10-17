@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": {
+    "item": "kingdomomnitrix:solar_copper_ore"
+  },
+  "result": {
+    "id": "kingdomomnitrix:solar_copper_ingot"
+  },
+  "experience": 0.8,
+  "cookingtime": 200
+}

@@ -1,0 +1,8 @@
+{
+  "category": "omnitrix",
+  "unlock_level": 10,
+  "ap_cost": 3,
+  "sort_order": 60,
+  "effect": "extended_transformation",
+  "value": 0.25
+}

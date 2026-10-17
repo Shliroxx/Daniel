@@ -1,0 +1,18 @@
+{
+  "model": "kingdomomnitrix:ultimate_cannonbolt",
+  "seconds": 60,
+  "cooldown": 300,
+  "unlock_level": 6,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.3,
+      "operation": "add_value"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "raritanium_meteor",
+  "weight": 12,
+  "min_level": 1,
+  "duration_seconds": 120,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 50,
+    "experience": 80
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "keyblade_shrine",
+  "weight": 8,
+  "min_level": 5,
+  "duration_seconds": 240,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 200,
+    "experience": 300,
+    "mythril": 4,
+    "orichalcum": 1
+  }
+}

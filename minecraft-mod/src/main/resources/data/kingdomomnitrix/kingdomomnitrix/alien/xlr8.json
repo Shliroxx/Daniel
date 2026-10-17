@@ -1,0 +1,267 @@
+{
+  "color": "#1E90FF",
+  "sort_order": 1,
+  "duration": 1200,
+  "recharge": 400,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.6,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.step_height",
+      "amount": 0.65,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_speed",
+      "amount": 2.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:dash_strike",
+      "energy": 15,
+      "cooldown": 20,
+      "params": {
+        "distance": 8.0,
+        "damage": 5.0,
+        "speed": 2.6,
+        "tempo": 10
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:blur_dodge",
+      "energy": 10,
+      "cooldown": 25,
+      "params": {
+        "power": 1.6,
+        "invulnerable_ticks": 12,
+        "radius": 12.0,
+        "tempo": 20
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:rapid_strikes",
+      "energy": 25,
+      "cooldown": 50,
+      "params": {
+        "range": 3.0,
+        "damage": 9.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:cyclone_run",
+      "energy": 30,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 4.5,
+        "damage": 5.0,
+        "pull": 0.8,
+        "seconds": 3.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:time_slip",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "self_seconds": 8.0,
+        "seconds": 6.0,
+        "radius": 8.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:lightspeed_barrage",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 12.0,
+        "targets": 6.0,
+        "damage": 6.0,
+        "invulnerable_ticks": 20.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:tail_whip",
+      "energy": 15,
+      "cooldown": 50,
+      "params": {
+        "radius": 3.5,
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:rapid_disarm",
+      "energy": 25,
+      "cooldown": 240,
+      "params": {
+        "radius": 10.0,
+        "seconds": 8.0,
+        "damage": 2.0
+      },
+      "role": "utility",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:vacuum_trail",
+      "energy": 30,
+      "cooldown": 160,
+      "params": {
+        "distance": 16.0,
+        "damage": 4.0,
+        "width": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:friction_fire",
+      "energy": 30,
+      "cooldown": 220,
+      "params": {
+        "radius": 4.0,
+        "damage": 2.0,
+        "seconds": 4.0
+      },
+      "role": "special",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:phantom_strikes",
+      "energy": 40,
+      "cooldown": 300,
+      "params": {
+        "radius": 8.0,
+        "damage": 2.5,
+        "hits": 5
+      },
+      "role": "special",
+      "unlock_level": 7
+    },
+    {
+      "type": "kingdomomnitrix:mach_sprint",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "seconds": 3.0,
+        "damage": 7.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:supersonic_shove",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0,
+        "power": 1.6
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:blitz_kick",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:leg_sweep",
+      "energy": 8,
+      "cooldown": 60,
+      "params": {
+        "damage": 4.0,
+        "seconds": 2.5
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:speed_dive",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:hundred_blows",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 1.6
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "kingdomomnitrix:shadow",
+      "chance": 0.06
+    },
+    {
+      "entity": "minecraft:ocelot",
+      "chance": 0.5
+    }
+  ],
+  "model": "kingdomomnitrix:xlr8",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "transform_style": "speed",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:kineceleran_tempo"
+      },
+      {
+        "type": "kingdomomnitrix:blur_runner",
+        "unlock_level": 3
+      },
+      {
+        "type": "kingdomomnitrix:quick_reflexes",
+        "unlock_level": 5,
+        "params": {
+          "chance": 0.2
+        }
+      }
+    ]
+  }
+}

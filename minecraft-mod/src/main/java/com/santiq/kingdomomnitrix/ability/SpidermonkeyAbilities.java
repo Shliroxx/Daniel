@@ -1,0 +1,209 @@
+package com.santiq.kingdomomnitrix.ability;
+
+import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
+
+/**
+ * Spidermonkey (Arachnachimmia). Eigenes System „Netzjaeger“ — ohne Aura:
+ *
+ * <ul>
+ *   <li><b>Netze</b> halten Gegner fest (keine Bewegung). Eingewebte Ziele nehmen von Spidermonkey +50 % Schaden — und
+ *       sein Nahkampf trifft mit allen vier Armen (drei Zusatzschlaege).</li>
+ *   <li><b>Netzschwung</b> zieht ihn zu jedem Punkt, den er anvisiert (Wand, Decke, Boden).</li>
+ *   <li><b>Wandlauf</b> (passiv): wer gegen eine Wand laeuft, klettert sie hoch.</li>
+ * </ul>
+ */
+final class SpidermonkeyAbilities {
+	private static final Identifier SPIDERMONKEY = KingdomOmnitrix.id("spidermonkey");
+	static final DustParticleEffect WEB = AlienKit.dust("#F2F2F2", 1.0f);
+	private static final DustParticleEffect WEB_THICK = AlienKit.dust("#E0E0E0", 1.6f);
+
+	/** Netzschwung: Zielpunkt und Ende */
+	private static final Map<UUID, Swing> SWINGS = new HashMap<>();
+	/** Affenwirbel: Schlaege uebrig */
+	private static final Map<UUID, int[]> FRENZY = new HashMap<>();
+
+	private record Swing(Vec3d anchor, long until) {
+	}
+
+	private SpidermonkeyAbilities() {
+	}
+
+	static void register() {
+		AbilityRegistry.register(KingdomOmnitrix.id("web_shot"), SpidermonkeyAbilities::webShot);
+		AbilityRegistry.register(KingdomOmnitrix.id("web_net"), SpidermonkeyAbilities::webNet);
+		AbilityRegistry.register(KingdomOmnitrix.id("web_swing"), SpidermonkeyAbilities::webSwing);
+		AbilityRegistry.register(KingdomOmnitrix.id("monkey_frenzy"), SpidermonkeyAbilities::monkeyFrenzy);
+		AbilityRegistry.register(KingdomOmnitrix.id("web_trap"), SpidermonkeyAbilities::webTrap);
+		AbilityRegistry.register(KingdomOmnitrix.id("web_cocoon"), SpidermonkeyAbilities::webCocoon);
+		ServerTickEvents.END_SERVER_TICK.register(SpidermonkeyAbilities::tick);
+		SpidermonkeyMoves.register();
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			SWINGS.remove(handler.getPlayer().getUuid());
+			FRENZY.remove(handler.getPlayer().getUuid());
+		});
+		// Bonus gegen Eingewebte und die Zusatzschlaege laufen ueber die Passive „Netzjaeger“ (SpidermonkeyMoves)
+	}
+
+	private static boolean isSpidermonkey(ServerPlayerEntity player) {
+		return TransformationManager.get(player).activeAlien().filter(SPIDERMONKEY::equals).isPresent();
+	}
+
+	static void webbed(ServerWorld world, LivingEntity target, int ticks) {
+		AlienKit.hold(world, target, ticks, WEB, false);
+		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 5));
+	}
+
+	// --- Faehigkeiten ----------------------------------------------------------------------------
+
+	/** Netzschuss: Netzfaden auf das erste Ziel — haelt fest. */
+	private static boolean webShot(AbilityContext ctx) {
+		ServerPlayerEntity monkey = ctx.player();
+		ServerWorld world = ctx.world();
+		AlienKit.Beam beam = AlienKit.beam(world, monkey, ctx.param("range", 20.0));
+		AlienKit.line(world, AlienKit.muzzle(monkey), beam.end(), WEB, 4.0);
+		beam.target().ifPresent(target -> {
+			AlienKit.magic(world, monkey, target, (float) ctx.param("damage", 3.0));
+			webbed(world, target, (int) (ctx.param("seconds", 3.0) * 20));
+		});
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_STEP, 1.2f, 1.6f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 80, 0xF0F0F0);
+		return true;
+	}
+
+	/** Netzfaecher: breites Netz nach vorn — alle im Kegel festgehalten. */
+	private static boolean webNet(AbilityContext ctx) {
+		ServerPlayerEntity monkey = ctx.player();
+		ServerWorld world = ctx.world();
+		double range = ctx.param("range", 8.0);
+		for (LivingEntity target : AlienKit.cone(world, monkey, range, 0.6)) {
+			webbed(world, target, (int) (ctx.param("seconds", 3.0) * 20));
+			AlienKit.line(world, AlienKit.muzzle(monkey), target.getPos().add(0, target.getHeight() * 0.5, 0), WEB, 3.0);
+		}
+		Vec3d look = monkey.getRotationVec(1.0f);
+		for (int i = 1; i <= (int) range; i++) {
+			Vec3d p = monkey.getEyePos().add(look.multiply(i));
+			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(WEB_THICK), 0.35f, Math.max(1, Math.min(20, 4)));
+		}
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_AMBIENT, 1.0f, 1.4f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 120, 0xF0F0F0);
+		return true;
+	}
+
+	/** Netzschwung: Faden zum anvisierten Punkt, zieht Spidermonkey in hohem Bogen hin. */
+	private static boolean webSwing(AbilityContext ctx) {
+		ServerPlayerEntity monkey = ctx.player();
+		ServerWorld world = ctx.world();
+		double range = ctx.param("range", 28.0);
+		Vec3d eye = monkey.getEyePos();
+		HitResult hit = world.raycast(new RaycastContext(eye, eye.add(monkey.getRotationVec(1.0f).multiply(range)),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, monkey));
+		if (hit.getType() == HitResult.Type.MISS) {
+			monkey.sendMessage(Text.translatable("message.kingdomomnitrix.spidermonkey_no_anchor").formatted(Formatting.GRAY), true);
+			return false;
+		}
+		SWINGS.put(monkey.getUuid(), new Swing(hit.getPos(), world.getTime() + 25));
+		AlienKit.line(world, AlienKit.muzzle(monkey), hit.getPos(), WEB, 2.0);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_FISHING_BOBBER_THROW, 1.0f, 1.4f);
+		return true;
+	}
+
+	/** Affenwirbel: acht schnelle Schlaege aller vier Arme auf alles direkt vor Spidermonkey. */
+	private static boolean monkeyFrenzy(AbilityContext ctx) {
+		FRENZY.put(ctx.player().getUuid(), new int[]{(int) ctx.param("hits", 8)});
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.5f);
+		return true;
+	}
+
+	/** Netzfalle: Netzring um Spidermonkey — wer hineinlaeuft (auch spaeter, 10 s), haengt fest. */
+	private static boolean webTrap(AbilityContext ctx) {
+		ServerPlayerEntity monkey = ctx.player();
+		ServerWorld world = ctx.world();
+		double radius = ctx.param("radius", 5.0);
+		for (LivingEntity target : AlienKit.around(world, monkey, monkey.getPos(), radius)) {
+			webbed(world, target, (int) (ctx.param("seconds", 5.0) * 20));
+		}
+		AlienKit.ring(world, monkey.getPos().add(0, 0.2, 0), radius, WEB_THICK);
+		AlienKit.ring(world, monkey.getPos().add(0, 0.2, 0), radius * 0.6, WEB);
+		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_COBWEB_PLACE, 1.4f, 0.8f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 160, 0xF0F0F0);
+		return true;
+	}
+
+	/** Netzkokon: alle Gegner im Umkreis werden eingesponnen und hochgezogen — 6 s haengend, wehrlos. */
+	private static boolean webCocoon(AbilityContext ctx) {
+		ServerPlayerEntity monkey = ctx.player();
+		ServerWorld world = ctx.world();
+		int ticks = (int) (ctx.param("seconds", 6.0) * 20);
+		for (LivingEntity target : AlienKit.around(world, monkey, monkey.getPos(), ctx.param("radius", 10.0))) {
+			target.setVelocity(0, 0.6, 0);
+			target.velocityModified = true;
+			AlienKit.hold(world, target, ticks, WEB_THICK, true);
+			target.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ticks, 2), monkey);
+			AlienKit.line(world, target.getPos().add(0, target.getHeight(), 0), target.getPos().add(0, target.getHeight() + 4, 0), WEB, 2.0);
+		}
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SPIDER_AMBIENT, 1.4f, 0.8f);
+		PowerMoves.encase(ctx, 20.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 200, 0xF0F0F0);
+		return true;
+	}
+
+	// --- Tick ------------------------------------------------------------------------------------
+
+	private static void tick(MinecraftServer server) {
+		for (ServerPlayerEntity monkey : server.getPlayerManager().getPlayerList()) {
+			UUID id = monkey.getUuid();
+			if (!isSpidermonkey(monkey)) {
+				SWINGS.remove(id);
+				FRENZY.remove(id);
+				continue;
+			}
+			ServerWorld world = monkey.getServerWorld();
+			// Wandlauf laeuft ueber die Passive „Kletteraffe“ (SpidermonkeyMoves)
+			Swing swing = SWINGS.get(id);
+			if (swing != null) {
+				Vec3d to = swing.anchor().subtract(monkey.getPos().add(0, 1, 0));
+				if (world.getTime() >= swing.until() || to.length() < 1.5) {
+					SWINGS.remove(id);
+				} else {
+					Vec3d pull = to.normalize().multiply(Math.min(1.6, 0.5 + to.length() * 0.08));
+					monkey.setVelocity(pull.add(0, 0.08, 0));
+					monkey.velocityModified = true;
+					monkey.fallDistance = 0.0f;
+					if (world.getTime() % 2 == 0) {
+						AlienKit.line(world, monkey.getPos().add(0, 1.4, 0), swing.anchor(), WEB, 1.0);
+					}
+				}
+			}
+			int[] frenzy = FRENZY.get(id);
+			if (frenzy != null && world.getTime() % 3 == 0) {
+				for (LivingEntity target : AlienKit.cone(world, monkey, 3.5, 0.4)) {
+					AlienKit.melee(world, monkey, target, 2.5f);
+					com.santiq.kingdomomnitrix.vfx.Fx.flash(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), 0xFFFFFF, 1.4f);
+				}
+				world.playSound(null, monkey.getBlockPos(), SoundEvents.ENTITY_PLAYER_ATTACK_WEAK, net.minecraft.sound.SoundCategory.PLAYERS, 0.8f, 1.6f);
+				if (--frenzy[0] <= 0) {
+					FRENZY.remove(id);
+				}
+			}
+		}
+	}
+}

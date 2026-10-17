@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "kingdomomnitrix:block/novalis_leaves"
+  }
+}

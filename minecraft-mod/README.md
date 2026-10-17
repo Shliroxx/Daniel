@@ -1,0 +1,296 @@
+# Kingdom Omnitrix — Minecraft-Mod
+
+made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 0.10.0-alpha
+
+Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
+**Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.
+
+> Nicht-kommerzielles Fanprojekt. Kingdom Hearts gehört Square Enix/Disney, Ben 10 Cartoon Network,
+> Ratchet & Clank Insomniac Games/Sony. Alle Texturen sind selbst erzeugt (`tools/generate_textures.py`).
+
+> **Vollständige Funktionsdokumentation:** [`docs/FUNKTIONEN.md`](docs/FUNKTIONEN.md) — Steuerung, alle 12 Aliens, Omnitrix-Gerät, Welten, Ereignisse, Dungeon, Befehle, Spielregeln.
+
+> **Offene Aufgaben für dich:** [`docs/TODO_SANTIQ.md`](docs/TODO_SANTIQ.md) — Netzwerk-Freigaben, Installationen, Testliste.
+
+## Inhalt
+
+### Kingdom Hearts
+| Ding | Was es tut |
+|---|---|
+| **Königsschlüssel**, **Oathkeeper** (Keyblades) | Kampfwaffen mit Combo-System, Werte und Passiv-Fähigkeiten aus JSON (`data/<ns>/kingdomomnitrix/keyblade/`) |
+| **Keyblade-Schmiede** | Rechtsklick mit einem Keyblade: Upgrade gegen Bolts vom Konto + Materialien |
+| Zauber **Feuer, Eis, Donner, Vita** | Rechtsklick mit Keyblade oder **Kommandomenü → Magie** wirkt den Zauber (kostet MP); **M + Mausrad** wählt. Stufen 1–3 über **Magie-Kristalle** |
+| **Herzlose** | Schatten, Soldat, Großkörper, Luftsoldat, Dunkelball — erscheinen nur aus **Dunkelheitsrissen** (nachts, 3 Wellen, Belohnung). Gamerule `kingdomomnitrixDarknessRifts` schaltet Risse ab |
+| **Hi-Potion**, **Paopu-Frucht** | Heilung bzw. Regeneration + Absorption |
+
+**Kampf mit Keyblade/OmniWrench:** Linksklick = Combo (letzter Schlag Finisher), Linksklick halten = schwerer Schlag,
+in der Luft = Luft-Combo, **Linke Alt** = Ausweichen, **Feststelltaste** halten = Blocken (perfekter Block betäubt),
+**Z** = Ziel erfassen (Kamera folgt). MP laden sich mit der Zeit und durch Treffer auf; ist die Leiste leer, startet die MP-Ladezeit.
+
+### Ben 10 — das Omnitrix
+
+Das Omnitrix muss nur im Inventar liegen.
+
+- **DNA-Proben** schalten Aliens frei. Gegner lassen sie fallen (siehe Tabelle); Rechtsklick auf die Probe speichert das Alien.
+- **G** (oder Rechtsklick mit dem Omnitrix) öffnet das **Alien-Rad**: Alien mit der Maus wählen und klicken, die Taste loslassen oder 1–9 drücken. Die Mitte verwandelt zurück.
+- **R / V / B** lösen die drei Fähigkeiten des Aliens aus (kosten Energie, haben Abklingzeiten).
+- Eine Verwandlung dauert 60 Sekunden. Danach lädt das Omnitrix nach (bei vorzeitiger Rückverwandlung nur halb so lang).
+- Das HUD unten rechts zeigt Alien, Restzeit, Energie und die Fähigkeiten.
+- Verwandelte Spieler sehen für alle wie das Alien aus (animierter Körper).
+
+| Alien | Körper | R | V | B | DNA von |
+|---|---|---|---|---|---|
+| **Heatblast** | immun gegen Feuer/Lava, +3 Angriff | Feuerstoß | Feuerexplosion (Umkreis) | Flammenschub (Sprung) | Lohe, Magmawürfel |
+| **XLR8** | +60 % Tempo, kein Fallschaden, schnelle Schläge | Sturmangriff (Dash mit Schaden) | Ausweichen (kurz unverwundbar) | Schlaghagel | Schatten, Ozelot |
+| **Vierarm** | 1,4× groß, +6 Angriff, +5 Herzen, kaum Rückstoß | Bodenschlag | Werfen | Riesensprung | Eisengolem, Verwüster |
+| **Diamondhead** *(Prototyp)* | +12 Rüstung, immun gegen Geschosse | Kristallsalve | – | – | Wächter |
+| **Grey Matter** *(Prototyp)* | 0,3× groß, schnell | Analyse | – | – | Silberfischchen |
+
+Neue Aliens: JSON-Datei in `data/<namespace>/kingdomomnitrix/alien/` + Übersetzung + Körper-Dateien.
+
+### Ratchet & Clank
+| Ding | Was es tut |
+|---|---|
+| **Bolts** | Währung. Aufgehobene Bolts landen sofort auf dem **Bolt-Konto** (Status-Panel oben links). Monster lassen 1–4 fallen, Bolt-Kisten 3–8 |
+| **Waffen-Terminal** | Rechtsklick: Waffen kaufen, **aufrüsten (nur hier)**, Munition nachfüllen — bezahlt vom Bolt-Konto |
+| **OmniWrench 8000** | Nahkampf-Combo; **Rechtsklick** wirft ihn als Bumerang — trifft Gegner, legt Hebel/Knöpfe um, zerschlägt Bolt-Kisten |
+| **Combuster** | Rechtsklick halten = Dauerfeuer (Plasma). Stufe 5: explosive Schüsse ohne Blockschaden |
+| **Fusionsgranate** | Wurf, Explosion ohne Blockschaden |
+| **Heli-Pack / Heli-Jet** | Rücken-Gadget, **J** wechselt den Modus. Heli: Sprungtaste in der Luft = Doppelsprung, halten = Gleiten. Jet: Sprungtaste in der Luft = Schub nach vorn (2×), halten = Sinkflug. Kein Fallschaden beim Gleiten |
+| **Swingshot** | Werkzeug-Gadget: **Y** schießt den Haken an jeden festen Block (24 Blöcke) und zieht dich hin. Am Ziel hängst du (bis 10 s): Springen = Absprung, Schleichen oder Y = loslassen |
+
+Waffenstufe und Munition stehen im Waffen-HUD am rechten Rand. Gadgets liegen im **Gadget-Gürtel** (**H** öffnet ihn,
+oder Rechtsklick mit dem Gadget). Beim Tod fallen Gadgets wie normale Items (außer mit `keepInventory`).
+
+### Raumfahrt und Welten
+- **Aphelion** (Raumschiff mit Bord-KI aus Ratchet & Clank 3): auf den Boden setzen, Rechtsklick zum Einsteigen.
+  W/S fliegt in Blickrichtung, A/D seitlich, Leertaste steigt, Schleichen steigt aus. Cockpit-Anzeige mit Tempo und Höhe.
+- Hoch genug fliegen (16 Blöcke unter der Bauhöhe) → **Weltall**: Sternenhimmel, Asteroiden mit **Raritanium**, geringe Schwerkraft.
+  Ohne Schiff ins Leere gefallen → Wiedereintritt über der Oberwelt (mit Sanftem Fall).
+- **Weltraumrisse** (Wirbel mit Name und Entfernung, Navigation im Cockpit): hineinfliegen = Reise. „Heimatwelt“ führt zurück,
+  ebenso ein Sinkflug unter Y 0. In einer Welt wieder hoch genug fliegen → zurück ins All neben deren Riss.
+- **Traverse Town**: eigene Welt in ewiger Nacht, jedes Mal anders generiert: Stadtrand mit Laternen, Schattenwald,
+  Kristallfelder, dunkles Meer. Erze **Mythril**, **Raritanium**, **Orichalcum**. Herzlose streifen draußen umher.
+  Die **Stadt** entsteht beim ersten Besuch: Platz mit Brunnen, Straßen, Häuser, Waffenladen (Clank, Terminal), Schmiede,
+  Yen Sid und Max auf dem Platz. In der Stadt entstehen keine Monster; bauen und abbauen ist erlaubt.
+- **Arena** (Ratchet & Clank): Arena-Terminal → Pokal wählen → Countdown, Runden, Zeitlimit, Bossleiste.
+  Sieg: Bolts, Helden-EP, Material, Bestzeit. Ein Arena-Terminal lässt sich auch selbst bauen (Kampffläche: Radius 12 um das Terminal).
+- **Materialien**: Raritanium → Waffen-Aufrüstungen (Stufe 4–5), Mythril und Orichalcum → Keyblade-Upgrades.
+
+### Boss: Dr. Nefarious
+Der Erzschurke aus Ratchet & Clank in seinem Kampf-Mech. **Nefarious-Kommunikator** benutzen → er landet 8 Blöcke vor dir;
+oder im Arena-Terminal den **Platin-Pokal** wählen (ab Heldenstufe 8).
+- Jeder Angriff wird angekündigt: **rote Linie** = Laser (danach überhitzt er), **rote Ringe** = Raketeneinschläge,
+  **gelber Ring** = Stampfer. Aus den Markierungen gehen!
+- **Schwachstellen:** Rücken doppelter Schaden, Panzerfront nur halber; überhitzt (Rauch, Lava-Tropfen) 2,5-facher Schaden.
+- **Phase 2** (60 %): die Arena steht unter Strom, Elektrofelder wandern über den Boden.
+  **Wut** (25 %): regelmäßige Überladung — schnell 30 Schaden auf ihn, sonst gibt es eine große Explosion.
+- Erster Sieg: **Omega-Schlüssel** (neues Keyblade), Orichalcum, Raritanium, 800 Bolts. Danach jederzeit wiederholbar
+  für Raritanium und Bolts. Mit mehreren Spielern hat er mehr Leben.
+
+### Heldenstufe und Fähigkeiten
+Helden-EP gibt es für Quests, besiegte **Herzlose** (Elite ×3), Bosse, Arena, Dunkelheitsrisse, **Entdeckungen**
+(erster Besuch im Nether, Ende, Weltall, Traverse Town und in den Traverse-Town-Biomen) und Meisterschafts-Aufstiege.
+Höchststufe **50**; jeder Aufstieg heilt komplett.
+- **Automatisch pro Stufe:** +1 Herz alle 5 Stufen, +0,04 Angriff, +2 MP (100 → 198), +1 % Omnitrix-Dauer
+- **Heldenmenü [K]** (wie die Fähigkeitenliste in Kingdom Hearts): Fähigkeiten werden ab einer Stufe frei und kosten
+  **AP** (2 + eine je zwei Stufen, Stufe 50 = 27). Klick legt an/ab. 14 Fähigkeiten in fünf Ästen:
+  Kampf (Combo-Plus, Luftcombo-Plus, Zweite Chance, Luftrolle-Plus), Keyblade (MP-Eile, EP-Boost, Magie-Boost),
+  Omnitrix (Lange Verwandlung, Schnellladung), Technik (Bolt-Bonus, Nanotech-Heilung),
+  Erkunden (Schnelllauf, Hochsprung, Gleiten).
+- **Alien-Meisterschaft ★1–10:** jedes Alien lernt durch Benutzen (Schaden als Alien, Fähigkeiten, Zeit).
+  Je Stufe +5 % Verwandlungsdauer und −3 % Abklingzeit der Fähigkeiten; Anzeige im Omnitrix-HUD und im Heldenmenü.
+- Alles bleibt optional: Combo, Ausweichen und Blocken gibt es ohne Fähigkeiten. Neue Fähigkeiten:
+  JSON in `data/<namespace>/kingdomomnitrix/hero_ability/` (Effekt aus der Liste in `HeroAbilityEffect`).
+
+### Menüs und HUD
+Farben je System: Held blau-gold, Keyblade gold, Omnitrix grün, Technik blau-orange, Erkunden violett; eigene Symbole
+für alle Fähigkeiten, Zauber und Alien-Fähigkeiten (`tools/generate_icons.py`).
+- **Kommandomenü** (wie Kingdom Hearts, Standard links oben): Angriff · Magie · Items · Omnitrix. **↑/↓** wählen,
+  **→** öffnet bzw. führt aus, **←** zurück. Magie wirkt den gewählten Zauber (Keyblade in der Hand), Items benutzt
+  Hi-Potion, Paopu-Frucht, Goldäpfel, Tränke und Honig sofort aus dem Inventar (Tag `#kingdomomnitrix:command_items`),
+  Omnitrix verwandelt bzw. verwandelt zurück. Sichtbar mit Keyblade/Waffe in der Hand oder mit Omnitrix.
+- **Menü-Reiter** links im Inventar (auch Kreativ) und in jedem Mod-Menü: Inventar · Held & Fähigkeiten · Aliens ·
+  Quests · Weltkarte · HUD anpassen.
+- **Aliens:** alle Aliens mit Meisterschaft, Dauer mit allen Boni, Nachladezeit, Fähigkeiten; gesperrte zeigen, wer DNA fallen lässt.
+- **Weltkarte:** die Galaxie mit allen Weltraumrissen; unentdeckte Welten bleiben „???“, „Du bist hier“-Markierung, im All mit Schiffsposition.
+- **HUD anpassen:** jede Anzeige (Status, Kommandomenü, Waffe, Omnitrix, Gadgets, Cockpit) ziehen, mit dem Mausrad
+  vergrößern/verkleinern (50–200 %), mit Rechtsklick ausblenden. Gespeichert in `config/kingdomomnitrix-hud.json`.
+
+### Effekte
+Eigene Partikel (`tools/generate_particles.py`, 14 Arten, animiert, leuchtend), immer in voller Stärke:
+- **Verwandlung:** grüner Bildschirmblitz, Omnitrix-Stern, aufsteigende DNA-Doppelhelix; zurück: roter Funkenregen und roter Blitz
+- **Kampf:** durchgehende Schwung-Spur bei jedem Combo-Schlag, Trefferfunken, goldene Keyblade-Funken, Finisher-Ring, Perfekt-Blocken
+- **Magie:** Glut (Feuer), Eissplitter (Eis), Blitzfunken (Donner), Heil-Blätter (Vita)
+- **Technik:** Mündungsfeuer und Plasma-Spur (Combuster), Explosion der Fusionsgranate, Rotor-Wind beim Gleiten, Düsenglut am Heli-Jet, Funken am Swingshot-Haken
+- **Bildschirm:** pulsierende rote Vignette bei wenig Leben (unter 30 %)
+
+### Sounds
+45 eigene Sound-Ereignisse (57 Dateien), synthetisch erzeugt mit `tools/generate_sounds.py` (rechtefrei, numpy + ffmpeg),
+mit Untertiteln auf Deutsch und Englisch. Lautstärke über die normalen Minecraft-Regler (Spieler, Feindselige Kreaturen …).
+- **Omnitrix & Aliens:** Verwandlung, Abschalten, Warnpiepen in den letzten 5 Sekunden, Klick im Alien-Rad, Feuer, Bodenschlag, Sprint, Kristalle
+- **Kampf & Magie:** Schwung, Treffer, Finisher, Blocken, Ausweichen, Feuer/Eis/Donner/Vita, keine MP, Stufenaufstieg, Entdeckung
+- **Technik & Welten:** Combuster, leer, Wurf, Bolts, Terminal-Kauf, Heli-Pack/-Jet, Swingshot, Raumschiff-Start, Bord-KI, Weltraumriss, Arena-Runde und Sieg
+- **Gegner & Boss:** Herzlose (Laute, Treffer, „Herz wird befreit“ beim Besiegen, Erscheinen), Nefarious-Mech (Laser laden/feuern, Raketen, Stampfer, Überladung, Treffer, Explosion)
+- Eigene Aufnahmen: gleichnamige `.ogg` in `assets/kingdomomnitrix/sounds/` ablegen und in `KEEP` im Generator eintragen.
+
+### Mehrspieler und Gruppe
+- `/party invite <Spieler>` · `/party accept` · `/party leave` · `/party kick <Spieler>` · `/party list` — bis zu 4 Spieler
+- Je mehr Gruppenmitglieder in der Nähe (48 Blöcke), desto stärker die Gegner: +50 % Leben und +15 % Schaden pro weiterem Mitglied (Herzlose, Arena, Risse, Dr. Nefarious)
+- Quest-Fortschritt und Herzlosen-EP werden mit Mitgliedern in der Nähe geteilt
+- Gruppenmitglieder können sich nicht verletzen; sonst gilt die Server-Einstellung `pvp`
+- Vita heilt auch Mitspieler im Umkreis; das Raumschiff hat zwei Plätze
+- Gruppen-HUD links mit Stufe und Leben jedes Mitglieds
+
+### Quests
+Beim ersten Einloggen bekommt jeder Spieler ein **Quest-Buch** (Rechtsklick). Es ist aufgebaut wie ein Gespräch mit einem
+Auftraggeber (Yen Sid, Max Tennyson, Clank): Dialog, Ziele, Belohnung und die Knöpfe *Annehmen*, *Abgeben*, *Aufgeben*.
+
+- Reiter **Tracker**: laufende Quests mit Fortschrittsbalken · **Aufträge**: verfügbare und gesperrte · **Erledigt**
+- Ziel-Typen: **Besiegen** (Mob oder Tag, z. B. alle Herzlosen), **Herstellen** (Werkbank, Ofen …), **Bringen** (Items im Inventar, werden beim Abgeben abgezogen)
+- Belohnungen: Bolts, Helden-EP (mit Stufenaufstieg) und Items, auch mit Komponenten (Magie-Kristall, DNA-Probe)
+- Story-Quests schalten weitere frei; Kopfgelder sind wiederholbar
+- Neue Quests: JSON-Datei in `data/<namespace>/kingdomomnitrix/quest/` (Beispiele im Mod) + Übersetzungen
+
+### NPCs
+**Meister Yen Sid**, **Max Tennyson** und **Clank** stehen als Figuren in der Welt (NPC-Setzer aus dem Kreativ-Tab oder
+`/hero npc spawn <npc>`). Über dem Kopf zeigt ein gelbes **!** einen neuen Auftrag, ein goldenes **?** eine Quest zum Abgeben.
+Rechtsklick öffnet das Gespräch: Text läuft Buchstabe für Buchstabe ein (Klick/Leertaste = weiter), danach Antworten wie
+*Auftrag annehmen*, *Wie läuft es?*, *Abgeben* oder *Tschüss*. NPCs sind unverwundbar und verschwinden nicht;
+entfernen mit Schleichen + Schlag im Kreativmodus oder `/kill`. Neue NPCs: JSON in `data/<namespace>/kingdomomnitrix/npc/`
++ Modell unter `entity/npc/`; Quests verweisen über `giver.npc` auf ihren NPC.
+
+## Rezepte (Werkbank)
+
+```
+Königsschlüssel       Oathkeeper              Omnitrix
+.     .    Herz       .     Amethyst Herz     Eisen   Smaragd Eisen
+.  Goldblock .        .     Königs-  Amethyst Smaragd Diamant Smaragd
+Stock .    .          Quarz schlüssel .       Eisen   Smaragd Eisen
+
+Keyblade-Schmiede     Waffen-Terminal         OmniWrench 8000
+Gold  Herz  Gold      Eisen Glasscheibe Eisen  .     Nugget Nugget
+Eisen Amboss Eisen    Redstone Diamant Redstone .    Eisen  Nugget
+Eisen Eisen Eisen     Eisen Eisen Eisen        Eisen .      .
+
+Combuster             Fusionsgranate          Heli-Pack               Swingshot
+Kupfer Kupfer Lohenstaub  .     Nugget .      Eisen  Feder    Eisen   .     .     Haken
+Eisen Redstone Eisen  Nugget TNT  Nugget      Nugget Redstone Nugget  .     Kette .
+Eisen .    .          .     Nugget .          .      Nugget   .       Eisen Redstone .
+
+Bolt-Kiste: 8 Bretter um 1 Eisennugget
+Quest-Buch (formlos): Buch + Goldnugget + Feder
+Aphelion: Glas Enderauge Glas / Eisenblock Diamantblock Eisenblock / Schmelzofen Redstoneblock Schmelzofen
+Arena-Terminal: Gold Glocke Gold / Eisen Raritanium Eisen / Eisen Eisen Eisen
+Nefarious-Kommunikator: Raritanium Amethyst Raritanium / Kupfer Echo-Splitter Kupfer / Raritanium Amethyst Raritanium
+Hi-Potion (formlos): Glasflasche + glitzernde Melonenscheibe + Zucker
+Paopu-Frucht (formlos): Apfel + Glowstonestaub + Herz
+```
+
+Bolts sind bewusst keine Zutat: sie landen sofort auf dem Konto. (Nugget = Eisennugget, Haken = Haken der Stolperdrahtfalle.)
+
+Alles ist außerdem im eigenen Kreativ-Tab **Kingdom Omnitrix**.
+
+## Bauen
+
+Voraussetzung: **Java 21** (z. B. [Adoptium](https://adoptium.net)).
+
+- **Windows**: Doppelklick auf `Mod bauen.bat`
+- **Linux/macOS**: `./gradlew build`
+
+Die fertige Datei liegt danach in `build/libs/kingdomomnitrix-0.10.0-alpha.jar`.
+
+Jeder Push auf GitHub baut die Mod automatisch (Workflow **Mod bauen**). Die fertige `.jar` liegt beim Workflow-Lauf unter *Artifacts*.
+
+Vor dem Bauen lassen sich die Ressourcen schnell prüfen:
+
+```
+python tools/check_assets.py          # Übersetzungen, Modelle, Texturen, Rezepte, Loot
+python tools/generate_textures.py --check
+python tools/generate_icons.py --check     # GUI-Symbole
+python tools/generate_particles.py --check # Partikel
+python tools/generate_sounds.py --check    # Sounds (Erzeugen braucht numpy + ffmpeg)
+```
+
+## Heldendaten, HUD und Befehle
+
+Jeder Spieler hat **Heldendaten**: Stufe, Erfahrung, Bolt-Konto, freigeschaltete Aliens und Story-Flags.
+Sie werden mit dem Spieler gespeichert, bleiben beim Tod erhalten und werden nur an den eigenen Client gesendet.
+Oben links zeigt ein Status-Panel Stufe, Erfahrungsbalken und Bolts (ausgeblendet mit F1 und im F3-Menü).
+
+Befehle (nur OP, Stufe 2). `[spieler]` ist optional, ohne Angabe wirkt der Befehl auf dich selbst:
+
+| Befehl | Wirkung |
+|---|---|
+| `/hero debug [spieler]` | zeigt alle Heldendaten |
+| `/hero bolts add <anzahl> [spieler]` | bucht Bolts (negativ = abbuchen) |
+| `/hero bolts set <anzahl> [spieler]` | setzt das Bolt-Konto |
+| `/hero level set <stufe> [spieler]` | setzt die Stufe (1–50) |
+| `/hero xp add <menge> [spieler]` | gibt Erfahrung wie im Spiel (Aufstieg, Heilung, neue Fähigkeiten) |
+| `/hero ability toggle <id> [spieler]` · `/hero ability clear [spieler]` | Fähigkeit an/ab (prüft Stufe und AP) · alle ablegen |
+| `/hero mastery <alien> <stufe> [spieler]` | setzt die Alien-Meisterschaft (1–10) |
+| `/hero alien unlock\|lock <id> [spieler]` | schaltet ein Alien frei oder sperrt es |
+| `/hero flag set\|clear <flag> [spieler]` | setzt oder löscht ein Story-Flag |
+| `/hero reset [spieler]` | setzt alle Heldendaten zurück |
+| `/hero transform <alien> [spieler]` | verwandelt sofort (ohne Freischaltung/Nachladen) |
+| `/hero revert [spieler]` | verwandelt zurück |
+| `/hero dna <alien> [spieler]` | gibt eine DNA-Probe |
+| `/hero quest start\|complete <quest> [spieler]` | startet eine Quest bzw. schließt sie sofort mit Belohnung ab |
+| `/hero quest reset <quest>\|all [spieler]` | setzt Quest-Fortschritt zurück |
+| `/hero quest list [spieler]` | zeigt alle Quests mit Status |
+| `/hero npc spawn <npc>` | stellt einen NPC an deiner Position auf |
+| `/hero world traverse_town [spieler]` | teleportiert nach Traverse Town (baut die Stadt beim ersten Mal) |
+| `/hero world traverse_town rebuild` | baut die Stadt nach einem Update neu (überschreibt das Stadtgebiet samt Spielerbauten) |
+
+## Installieren
+
+1. [Fabric Loader](https://fabricmc.net/use/installer/) (mindestens 0.17) für Minecraft **1.21.1** installieren.
+2. [Fabric API](https://modrinth.com/mod/fabric-api) und [GeckoLib](https://modrinth.com/mod/geckolib) (jeweils für 1.21.1) in den `mods`-Ordner legen — auch auf dem Server.
+3. `kingdomomnitrix-0.10.0-alpha.jar` ebenfalls in den `mods`-Ordner legen.
+4. Minecraft mit dem Fabric-Profil starten.
+
+Zum Testen ohne Installation: `./gradlew runClient` startet ein Minecraft mit der Mod.
+
+## Projektaufbau
+
+```
+src/main/java/com/santiq/kingdomomnitrix/      Server + gemeinsamer Code
+  KingdomOmnitrix.java      Einstieg: Registrierung, Alien-Resistenzen, Bolt-Drops
+  player/                   HeroData (gespeichert + synchronisiert), HeroDataAccess
+  command/                  /hero-Befehle
+  registry/                 Items, Block, Entities, Statuseffekte, Kreativ-Tab
+  alien/                    Omnitrix, AlienDefinition, AlienRegistry, TransformationManager, DNA
+  ability/                  Fähigkeits-Typen (AbilityRegistry, BuiltinAbilities)
+  networking/               Pakete Client ↔ Server
+  keyblade/  magic/         Schlüsselschwert, Zauber (Prototyp, Phasen 4–6)
+  weapon/                   R&C-Waffen, Bolt-Konto, Waffen-Terminal (Phase 8)
+  gadget/                   Heli-Pack (Prototyp, Phase 9)
+  enemy/                    Herzlose, Dunkelheitsrisse (Phase 7)
+  item/  util/              Hi-Potion, Hilfsklassen
+src/client/java/com/santiq/kingdomomnitrix/client/   nur Client (eigenes Source-Set)
+  hud/                      HUD-Elemente, Anordnung (HudManager, HudLayout), Status-Panel, Omnitrix
+  ui/ menu/ command/        Farben/Symbole, Menü-Reiter, Aliens, Weltkarte, HUD-Editor, Kommandomenü
+  input/                    Tastenbelegung
+  screen/                   Alien-Rad
+  render/                   Renderer, Alien-Körper (GeckoLib)
+  mixin/                    Spielermodell durch Alien-Körper ersetzen
+src/main/resources/
+  assets/kingdomomnitrix/   Modelle, Texturen, Übersetzungen (de_de, en_us)
+  data/kingdomomnitrix/     Rezepte, Loot-Tabellen
+tools/generate_textures.py  erzeugt alle Texturen neu (pip install pillow)
+tools/generate_alien_models.py  erzeugt Alien-Körper (Geometrie, Animation, Textur)
+tools/check_assets.py       prüft alle Ressourcen auf Lücken
+docs/TODO_SANTIQ.md         was nur SANTIQ erledigen kann (Downloads, Freigaben, Tests)
+docs/ANALYSE_UND_ROADMAP.md Bestandsaufnahme, Architektur, Roadmap
+```
+
+## Werte anpassen
+
+| Was | Wo |
+|---|---|
+| Alien-Werte, Dauer, Nachladen, Energie, Fähigkeiten, DNA-Quellen | `data/kingdomomnitrix/kingdomomnitrix/alien/*.json` |
+| Verhalten der Fähigkeits-Typen | `ability/BuiltinAbilities.java` |
+| Zauber-Schaden, Abklingzeiten | `Spell.java` |
+| Geschoss-Schaden | `HeroProjectileEntity.Kind` |
+| Magazin, Bolts pro Nachladen | `CombusterItem.MAGAZINE`, `AMMO_PER_BOLT` |
+| Häufigkeit der Herzlosen | `ModEntities.register()` (Gewicht 40, Gruppen 1–3) |

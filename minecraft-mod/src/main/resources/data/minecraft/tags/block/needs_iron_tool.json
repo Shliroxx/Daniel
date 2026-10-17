@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:raritanium_ore",
+    "kingdomomnitrix:mythril_ore",
+    "kingdomomnitrix:deepslate_mythril_ore",
+    "kingdomomnitrix:station_plate",
+    "kingdomomnitrix:station_trim",
+    "kingdomomnitrix:azurite_ore",
+    "kingdomomnitrix:azurite_block",
+    "kingdomomnitrix:viridium_ore",
+    "kingdomomnitrix:viridium_block"
+  ]
+}

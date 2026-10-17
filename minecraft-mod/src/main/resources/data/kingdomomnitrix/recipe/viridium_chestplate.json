@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "X X",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:viridium_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:viridium_chestplate",
+    "count": 1
+  }
+}

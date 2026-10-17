@@ -1,0 +1,282 @@
+{
+  "color": "#C36BE8",
+  "sort_order": 15,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.1,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 8.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.3,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:prism_beam",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:spectral_burst",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "radius": 5.0,
+        "damage": 5.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:photon_dash",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "distance": 10.0,
+        "damage": 5.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:crystal_lattice",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:solar_charge",
+      "energy": 20,
+      "cooldown": 400,
+      "params": {
+        "bright": 40.0,
+        "dark": 15.0,
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:full_spectrum",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "damage": 6.0,
+        "seconds": 3.0,
+        "range": 12.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:light_lance",
+      "energy": 15,
+      "cooldown": 50,
+      "params": {
+        "range": 22.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:crystal_spires",
+      "energy": 25,
+      "cooldown": 120,
+      "params": {
+        "radius": 4.0,
+        "seconds": 4.0,
+        "damage": 6.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:mirror_prism",
+      "energy": 30,
+      "cooldown": 220,
+      "params": {
+        "range": 12.0,
+        "reach": 10.0,
+        "damage": 4.0,
+        "seconds": 8.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:blinding_flash",
+      "energy": 20,
+      "cooldown": 200,
+      "params": {
+        "range": 12.0,
+        "seconds": 5.0,
+        "charge": 5.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:energy_release",
+      "energy": 30,
+      "cooldown": 240,
+      "params": {
+        "range": 26.0,
+        "damage": 6.0,
+        "per_store": 0.25
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:spectral_cataclysm",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "charge_seconds": 2.0,
+        "radius": 14.0,
+        "damage": 18.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:prism_rush",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:starfall_strike",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:absorb_touch",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0,
+        "charge": 20.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:meteor_prism",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.2,
+        "damage": 7.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:spectrum_break",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0,
+        "radius": 6.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:allay",
+      "chance": 0.3
+    },
+    {
+      "entity": "minecraft:shulker",
+      "chance": 0.2
+    },
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:chromastone",
+  "failsafe_tags": [
+    "#minecraft:is_explosion",
+    "#minecraft:is_lightning"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "prism",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:solar_cells",
+        "params": {
+          "per_second": 1.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:crystal_resonance",
+        "params": {
+          "charge": 3.0,
+          "charged_bonus": 1.2
+        }
+      },
+      {
+        "type": "kingdomomnitrix:refraction",
+        "unlock_level": 4,
+        "params": {
+          "rate": 2.0
+        }
+      }
+    ]
+  }
+}

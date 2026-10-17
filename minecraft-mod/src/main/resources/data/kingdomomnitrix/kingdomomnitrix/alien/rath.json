@@ -1,0 +1,268 @@
+{
+  "color": "#E8862A",
+  "sort_order": 18,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 8,
+  "scale": 1.25,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 5.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 6.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 0.4,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:wrist_claw",
+      "energy": 10,
+      "cooldown": 16,
+      "params": {
+        "range": 4.5,
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:challenge",
+      "energy": 15,
+      "cooldown": 200,
+      "params": {
+        "range": 16.0,
+        "seconds": 15.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:rath_charge",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "ticks": 14
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:suplex",
+      "energy": 30,
+      "cooldown": 120,
+      "params": {
+        "range": 4.0,
+        "damage": 10.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:appoplexian_roar",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "seconds": 8.0,
+        "radius": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:rath_finale",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "range": 5.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:claw_flurry",
+      "energy": 15,
+      "cooldown": 60,
+      "params": {
+        "damage": 2.5,
+        "range": 3.5,
+        "hits": 5
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:clothesline",
+      "energy": 20,
+      "cooldown": 90,
+      "params": {
+        "damage": 6.0,
+        "ticks": 10
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:piledriver",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "range": 4.0,
+        "damage": 12.0,
+        "jump": 1.1
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:elbow_drop",
+      "energy": 20,
+      "cooldown": 110,
+      "params": {
+        "range": 14.0,
+        "damage": 8.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:trash_talk",
+      "energy": 15,
+      "cooldown": 300,
+      "params": {
+        "radius": 12.0,
+        "seconds": 6.0,
+        "resistance": 1
+      },
+      "role": "utility",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:royal_rumble",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "seconds": 8.0,
+        "damage": 9.0,
+        "reach": 7.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:spear_tackle",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:flying_elbow",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:headlock",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0,
+        "seconds": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:diving_splash",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 1.8,
+        "damage": 8.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:rath_bomb",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 12.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:ravager",
+      "chance": 0.15
+    },
+    {
+      "entity": "minecraft:fox",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:rath",
+  "failsafe_tags": [
+    "#minecraft:is_projectile"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "effects": [],
+    "transform_style": "fury",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:unbreakable_fury",
+        "params": {
+          "max_bonus": 0.6
+        }
+      },
+      {
+        "type": "kingdomomnitrix:appoplexian_temper",
+        "params": {
+          "min_damage": 3.0,
+          "ticks": 80
+        }
+      },
+      {
+        "type": "kingdomomnitrix:victory_lap",
+        "unlock_level": 4,
+        "params": {
+          "heal": 3.0
+        }
+      }
+    ]
+  }
+}

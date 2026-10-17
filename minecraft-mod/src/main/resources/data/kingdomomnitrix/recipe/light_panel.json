@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " G ",
+    "GAG",
+    " G "
+  ],
+  "key": {
+    "G": {
+      "item": "kingdomomnitrix:tech_glass"
+    },
+    "A": {
+      "item": "kingdomomnitrix:azurite_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:light_panel",
+    "count": 4
+  }
+}

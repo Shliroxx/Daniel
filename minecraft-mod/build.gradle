@@ -1,0 +1,89 @@
+plugins {
+	id 'fabric-loom' version '1.17-SNAPSHOT'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+loom {
+	// Client-Code liegt in src/client/java und kann so nie auf einem Dedicated Server geladen werden.
+	splitEnvironmentSourceSets()
+
+	runs {
+		// Eigener Ordner, damit Client und Dedicated Server gleichzeitig laufen koennen (Mehrspieler-Test)
+		server {
+			runDir "run-server"
+		}
+	}
+
+	mods {
+		"kingdomomnitrix" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+repositories {
+	maven {
+		name = 'GeckoLib'
+		url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+		content {
+			includeGroup 'software.bernie.geckolib'
+		}
+	}
+	maven {
+		name = 'KosmX'
+		url = 'https://maven.kosmx.dev/'
+		content {
+			includeGroup 'dev.kosmx.player-anim'
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+	// playerAnimator wird in die Mod-Jar eingebettet (Jar-in-Jar): Spieler muessen es nicht extra installieren.
+	include(modImplementation("dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim_version}"))
+
+	// Tests: reine Logik und Datenpaket-Codecs (Minecraft-Bootstrap ueber fabric-loader-junit, ohne Spielstart)
+	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+	testImplementation platform("org.junit:junit-bom:5.11.4")
+	testImplementation "org.junit.jupiter:junit-jupiter"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		events "failed"
+		exceptionFormat "full"
+	}
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.encoding = 'UTF-8'
+	it.options.compilerArgs << '-Xlint:deprecation'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}

@@ -1,0 +1,54 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.omnitrix.title"
+  },
+  "category": "story",
+  "sort_order": 2,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.max"
+    },
+    "icon": "kingdomomnitrix:omnitrix",
+    "npc": "kingdomomnitrix:max"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.omnitrix.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.omnitrix.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.omnitrix.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.omnitrix.complete.1"
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "type": "craft",
+      "target": "kingdomomnitrix:omnitrix",
+      "count": 1
+    }
+  ],
+  "rewards": {
+    "bolts": 100,
+    "experience": 100,
+    "items": [
+      {
+        "id": "kingdomomnitrix:dna_sample",
+        "count": 1,
+        "components": {
+          "kingdomomnitrix:dna_alien": "kingdomomnitrix:heatblast"
+        }
+      }
+    ]
+  }
+}

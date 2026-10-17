@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/bolt_crate_top",
+    "bottom": "kingdomomnitrix:block/bolt_crate_top",
+    "side": "kingdomomnitrix:block/bolt_crate"
+  }
+}

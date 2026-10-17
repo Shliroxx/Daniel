@@ -1,0 +1,272 @@
+{
+  "color": "#2D63C8",
+  "sort_order": 19,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 8,
+  "scale": 0.9,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.15,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 10.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_fall"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:web_shot",
+      "energy": 10,
+      "cooldown": 20,
+      "params": {
+        "range": 20.0,
+        "damage": 3.0,
+        "seconds": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:web_net",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "range": 8.0,
+        "seconds": 3.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:web_swing",
+      "energy": 10,
+      "cooldown": 15,
+      "params": {
+        "range": 28.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:monkey_frenzy",
+      "energy": 30,
+      "cooldown": 160,
+      "params": {
+        "hits": 8
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:web_trap",
+      "energy": 25,
+      "cooldown": 240,
+      "params": {
+        "radius": 5.0,
+        "seconds": 5.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:web_cocoon",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 10.0,
+        "seconds": 6.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:web_bola",
+      "energy": 15,
+      "cooldown": 60,
+      "params": {
+        "seconds": 2.0,
+        "damage": 2.0,
+        "speed": 1.4
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:web_yank",
+      "energy": 15,
+      "cooldown": 70,
+      "params": {
+        "range": 20.0,
+        "damage": 3.0,
+        "hold_ticks": 30
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:web_wall",
+      "energy": 20,
+      "cooldown": 200,
+      "params": {
+        "distance": 3.0,
+        "width": 5.0,
+        "height": 3.0,
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:monkey_leap",
+      "energy": 12,
+      "cooldown": 60,
+      "params": {
+        "power": 1.5,
+        "lift": 1.0,
+        "damage": 4.0
+      },
+      "role": "movement",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:web_spinner",
+      "energy": 30,
+      "cooldown": 220,
+      "params": {
+        "radius": 6.0,
+        "seconds": 3.0
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:arachnid_ambush",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "radius": 16.0,
+        "targets": 6,
+        "damage": 3.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:swing_kick",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:spider_drop",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 5.0,
+        "hold_ticks": 40
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:four_arm_flurry",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 2.5
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:web_crash",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.0,
+        "damage": 5.0,
+        "radius": 3.5,
+        "seconds": 2.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:cocoon_slam",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 10.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:spider",
+      "chance": 0.25
+    },
+    {
+      "entity": "minecraft:cave_spider",
+      "chance": 0.25
+    }
+  ],
+  "model": "kingdomomnitrix:spidermonkey",
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      }
+    ],
+    "transform_style": "web",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:web_hunter",
+        "params": {
+          "webbed_bonus": 1.5,
+          "extra_hit": 1.5
+        }
+      },
+      {
+        "type": "kingdomomnitrix:monkey_climber",
+        "params": {
+          "climb_speed": 0.22
+        }
+      },
+      {
+        "type": "kingdomomnitrix:spider_sense",
+        "unlock_level": 4,
+        "params": {
+          "dodge": 0.3
+        }
+      }
+    ]
+  }
+}

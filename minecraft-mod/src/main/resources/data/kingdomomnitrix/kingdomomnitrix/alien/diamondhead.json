@@ -1,0 +1,254 @@
+{
+  "color": "#2ECC71",
+  "sort_order": 3,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 100,
+  "energy_regen": 6,
+  "scale": 1.0,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 12.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor_toughness",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_projectile"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:crystal_volley",
+      "energy": 20,
+      "cooldown": 30,
+      "params": {
+        "count": 5,
+        "spread": 6.0,
+        "speed": 2.0,
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:crystal_blade",
+      "energy": 15,
+      "cooldown": 25,
+      "role": "basic_2",
+      "unlock_level": 1,
+      "params": {
+        "range": 4.0,
+        "damage": 9.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_vault",
+      "energy": 20,
+      "cooldown": 40,
+      "role": "movement",
+      "unlock_level": 1,
+      "params": {
+        "up": 1.1,
+        "forward": 1.3
+      }
+    },
+    {
+      "type": "kingdomomnitrix:spike_eruption",
+      "energy": 35,
+      "cooldown": 120,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 6.0,
+        "damage": 9.0,
+        "launch": 0.7
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_armor",
+      "energy": 40,
+      "cooldown": 300,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "seconds": 12.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_storm",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "count": 24.0,
+        "damage": 6.0,
+        "speed": 1.8
+      }
+    },
+    {
+      "type": "kingdomomnitrix:crystal_lance",
+      "energy": 25,
+      "cooldown": 90,
+      "params": {
+        "length": 14.0,
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:crystal_hammer",
+      "energy": 30,
+      "cooldown": 120,
+      "params": {
+        "damage": 10.0,
+        "radius": 3.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:crystal_wall",
+      "energy": 25,
+      "cooldown": 240,
+      "params": {
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:crystal_cage",
+      "energy": 35,
+      "cooldown": 260,
+      "params": {
+        "range": 16.0,
+        "seconds": 4.0
+      },
+      "role": "special",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:diamond_drill",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "ticks": 14,
+        "damage": 6.0
+      },
+      "role": "movement",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:crystal_cathedral",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "damage": 12.0,
+        "radius": 12.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:crystal_ram",
+      "energy": 10,
+      "cooldown": 60,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:shard_fall",
+      "energy": 12,
+      "cooldown": 80,
+      "params": {
+        "damage": 7.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:crystal_shackle",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0,
+        "seconds": 2.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:diamond_drop",
+      "energy": 15,
+      "cooldown": 100,
+      "params": {
+        "dive": 2.0,
+        "damage": 8.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:crystallize",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 12.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna_sources": [
+    {
+      "entity": "minecraft:guardian",
+      "chance": 0.1
+    }
+  ],
+  "model": "kingdomomnitrix:diamondhead",
+  "prototype": true,
+  "failsafe_tags": [
+    "#minecraft:is_explosion"
+  ],
+  "failsafe_priority": 4,
+  "traits": {
+    "transform_style": "crystal",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:petrosapien_resonance"
+      },
+      {
+        "type": "kingdomomnitrix:crystal_regrowth",
+        "unlock_level": 3,
+        "params": {
+          "calm_seconds": 4.0,
+          "heal": 1.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:diamond_hide",
+        "unlock_level": 5,
+        "params": {
+          "melee": 0.8,
+          "thorns_chance": 0.35,
+          "thorns": 3.0
+        }
+      }
+    ]
+  }
+}
