@@ -36,6 +36,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.joml.Vector3f;
+import com.santiq.kingdomomnitrix.vfx.Fx;
 
 /**
  * Stinkfly (Lepidopterran). Eigenes Dauer-System „Toxin-Schichten“ — keine Aura, sichtbar an den Gegnern:
@@ -58,6 +59,10 @@ final class StinkflyAbilities {
 	private static final Identifier STINKFLY = KingdomOmnitrix.id("stinkfly");
 	private static final DustParticleEffect TOXIC = new DustParticleEffect(new Vector3f(0.55f, 0.75f, 0.15f), 1.5f);
 	private static final DustParticleEffect SLIME = new DustParticleEffect(new Vector3f(0.45f, 0.9f, 0.3f), 1.1f);
+	/** Gas: giftgruen, Schleim: hellgruen, Kern: gelbgruen (Leuchten) */
+	private static final int GAS = 0x7FB52A;
+	private static final int GOO = 0x8EEA4E;
+	private static final int CORE = 0xD8F25A;
 
 	/** Schichten je Ziel */
 	private static final Map<UUID, Toxin> TOXINS = new HashMap<>();
@@ -165,8 +170,10 @@ final class StinkflyAbilities {
 				e -> e != target && e != owner && e.isAlive() && PartyRules.canHarm(owner, e))) {
 			addToxin(owner, near, 2);
 		}
-		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(TOXIC), 0.35f, Math.max(1, Math.min(20, 60)));
-		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (30) / 4)));
+		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());
+		Fx.explosion(world, body, GAS, 2.0f);
+		Fx.shards(world, body, GOO, 0.45f, 16);
+		Fx.smoke(world, body, GAS, 1.4f, 6);
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.6f);
 	}
 
@@ -180,6 +187,9 @@ final class StinkflyAbilities {
 			HeroProjectileEntity.shoot(ctx.world(), ctx.player(), Items.SLIME_BALL, speed, (float) ctx.param("spread", 3.0))
 					.withDamage((float) ctx.param("damage", 3.0));
 		}
+		Vec3d mouth = AlienKit.muzzle(ctx.player());
+		Fx.flash(ctx.world(), mouth, GOO, 0.6f);
+		Fx.sparks(ctx.world(), mouth, GOO, 0.3f, 6);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_SQUISH, 1.0f, 1.3f);
 		return true;
 	}
@@ -187,8 +197,13 @@ final class StinkflyAbilities {
 	private static boolean stinkCloud(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		Vec3d at = groundBelow(ctx.world(), player.getPos().add(BuiltinAbilities.horizontalLook(player).multiply(2.0)));
-		CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), at, ctx.param("radius", 3.5),
+		double radius = ctx.param("radius", 3.5);
+		CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), at, radius,
 				ctx.world().getTime() + (long) ctx.param("ticks", 120), false));
+		// Ausstoss: Gasschwall aus dem Hinterleib, der sich am Boden ausbreitet
+		Fx.smoke(ctx.world(), at.add(0, 0.6, 0), GAS, (float) (radius * 0.55), 8);
+		Fx.shockwave(ctx.world(), at.add(0, 0.1, 0), GAS, (float) radius * 1.2f, 12);
+		AlienKit.line(ctx.world(), player.getPos().add(0, 0.8, 0), at.add(0, 0.5, 0), SLIME, 2.0);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.0f, 0.6f);
 		return true;
 	}
@@ -205,7 +220,12 @@ final class StinkflyAbilities {
 			CLOUDS.add(new Cloud(player.getUuid(), ctx.world().getRegistryKey(), start.add(look.multiply(i * 1.5)), 1.4,
 					ctx.world().getTime() + 60, false));
 		}
-		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()), AlienKit.color(ParticleTypes.CLOUD), 0.8f, Math.max(1, Math.min(6, (10) / 4)));
+		// Fluegelschlag: Druckring hinter Stinkfly, Gasschleppe entlang der Bahn
+		Fx.shockwave(ctx.world(), start.add(0, 0.6, 0), 0xC9E59A, 3.0f, 8);
+		Fx.flash(ctx.world(), start.add(0, 1.0, 0), CORE, 1.0f);
+		for (int i = 0; i < 4; i++) {
+			Fx.smoke(ctx.world(), start.add(look.multiply(i * 1.2)).add(0, 0.8, 0), GAS, 1.0f, 2);
+		}
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PHANTOM_FLAP, 1.0f, 1.2f);
 		return true;
 	}
@@ -222,7 +242,10 @@ final class StinkflyAbilities {
 		for (int i = 1; i <= 16; i++) {
 			double t = i / 16.0;
 			Vec3d p = eye.lerp(at, t).add(0, Math.sin(t * Math.PI) * 2.0, 0);
-			com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(p.x, p.y, p.z), AlienKit.color(SLIME), 0.35f, Math.max(1, Math.min(20, 1)));
+			Fx.sparks(world, p, GOO, 0.12f, 2);
+			if (i % 3 == 0) {
+				Fx.smoke(world, p, GOO, 0.35f, 1);
+			}
 		}
 		float damage = (float) ctx.param("damage", 6.0);
 		double radius = ctx.param("explosion", 1.6) * 2.0;
@@ -232,7 +255,12 @@ final class StinkflyAbilities {
 			addToxin(player, target, 2);
 		}
 		CLOUDS.add(new Cloud(player.getUuid(), world.getRegistryKey(), at, radius, world.getTime() + 80, true));
-		com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(at.x, at.y + 0.3, at.z), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (40) / 4)));
+		// Einschlag: Schleimexplosion, Spritzer, Gasschwall und Schleimfleck am Boden
+		Fx.explosion(world, at.add(0, 0.4, 0), GOO, (float) radius * 0.7f);
+		Fx.shards(world, at.add(0, 0.4, 0), GOO, 0.5f, 18);
+		Fx.smoke(world, at.add(0, 0.5, 0), GAS, (float) radius * 0.5f, 8);
+		Fx.shockwave(world, at.add(0, 0.1, 0), GOO, (float) radius * 1.3f, 10);
+		Fx.shake(world, at, 0.25f, 6, 14);
 		world.playSound(null, at.x, at.y, at.z, SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.5f);
 		PowerMoves.encase(ctx, 18.0, net.minecraft.block.Blocks.COBWEB.getDefaultState(), 80, 0xB8E04A);
 		return true;
@@ -249,7 +277,15 @@ final class StinkflyAbilities {
 			addToxin(player, target, 1);
 		}
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING, 100, 0, false, false));
-		com.santiq.kingdomomnitrix.vfx.Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.5, player.getZ()), AlienKit.color(ParticleTypes.GUST), 0.8f, Math.max(1, Math.min(6, (6) / 4)));
+		// Aufwind: Gaswirbel als Saeule, Druckring am Boden
+		double radius = ctx.param("radius", 5.0);
+		Fx.shockwave(ctx.world(), player.getPos().add(0, 0.1, 0), 0xC9E59A, (float) radius, 10);
+		for (int i = 0; i < 10; i++) {
+			double angle = i * 0.9;
+			double r = 0.6 + i * 0.25;
+			Fx.smoke(ctx.world(), player.getPos().add(Math.cos(angle) * r, i * 0.5, Math.sin(angle) * r), GAS, 0.7f + i * 0.06f, 1);
+		}
+		Fx.sparks(ctx.world(), player.getPos().add(0, 1.0, 0), CORE, 0.5f, 12);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BREEZE_JUMP, 1.0f, 1.0f);
 		return true;
 	}
@@ -267,6 +303,9 @@ final class StinkflyAbilities {
 					player.getPos().add(Math.cos(angle) * ring, 0, Math.sin(angle) * ring), ctx.param("radius", 2.5), until, false));
 		}
 		STORMS.put(player.getUuid(), until);
+		Fx.charge(world, player, CORE, (float) ring, (int) (until - world.getTime()));
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), GAS, (float) ring * 1.5f, 16);
+		Fx.smoke(world, player.getPos().add(0, 1.0, 0), GAS, 1.4f, 6);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PUFFER_FISH_BLOW_OUT, 1.2f, 0.4f);
 		return true;
 	}
@@ -291,6 +330,13 @@ final class StinkflyAbilities {
 				} else if (player.getServerWorld().getTime() >= entry.getValue()) {
 					it.remove();
 					detonate(player);
+				} else if (tick % 3 == 0) {
+					// Sturm: Gaswirbel kreist um Stinkfly
+					double angle = tick * 0.35;
+					for (int arm = 0; arm < 3; arm++) {
+						double a = angle + arm * MathHelper.TAU / 3;
+						Fx.smoke(player.getServerWorld(), player.getPos().add(Math.cos(a) * 3.5, 0.6 + arm * 0.5, Math.sin(a) * 3.5), GAS, 0.9f, 1);
+					}
 				}
 			}
 		}
@@ -306,8 +352,17 @@ final class StinkflyAbilities {
 				it.remove();
 				continue;
 			}
-			if (tick % 4 == 0) {
-				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(cloud.pos().x, cloud.pos().y + 0.4, cloud.pos().z), AlienKit.color(cloud.slime() ? SLIME : TOXIC), 0.35f, Math.max(1, Math.min(20, (int) (cloud.radius() * 4))));
+			if (tick % 5 == 0) {
+				// dichte, wabernde Gaswolke: Schwaden an zufaelligen Punkten im Radius, dazu aufsteigende Blasen
+				var random = world.getRandom();
+				int puffs = (int) Math.max(1, Math.min(4, cloud.radius()));
+				for (int i = 0; i < puffs; i++) {
+					double angle = random.nextDouble() * MathHelper.TAU;
+					double r = Math.sqrt(random.nextDouble()) * cloud.radius() * 0.8;
+					Fx.smoke(world, cloud.pos().add(Math.cos(angle) * r, 0.3 + random.nextDouble() * 0.6, Math.sin(angle) * r),
+							cloud.slime() ? GOO : GAS, (float) (0.5 + cloud.radius() * 0.18), 1);
+				}
+				Fx.sparks(world, cloud.pos().add(0, 0.4, 0), cloud.slime() ? GOO : CORE, 0.12f, 2);
 			}
 			if (tick % 20 != 0) {
 				continue;
@@ -363,8 +418,17 @@ final class StinkflyAbilities {
 			com.santiq.kingdomomnitrix.vfx.Fx.smoke(world, new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), AlienKit.color(ParticleTypes.ITEM_SLIME), 0.8f, Math.max(1, Math.min(6, (10 + toxin.stacks * 4) / 4)));
 			count++;
 		}
+		// Entladung: das gesammelte Gas zuendet in einem Ring um Stinkfly
+		Fx.flash(world, player.getPos().add(0, 1.0, 0), CORE, 3.0f);
+		Fx.shockwave(world, player.getPos().add(0, 0.1, 0), GAS, 10.0f, 14);
+		for (int i = 0; i < 8; i++) {
+			double a = i * MathHelper.TAU / 8;
+			Fx.explosion(world, player.getPos().add(Math.cos(a) * 3.5, 0.8, Math.sin(a) * 3.5), GAS, 1.4f);
+		}
+		Fx.shake(world, player.getPos(), 0.35f, 10, 16);
+		world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.4f, 0.4f);
 		if (count > 0) {
-			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.4f, 0.4f);
+			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.9f, 1.4f);
 		}
 	}
 

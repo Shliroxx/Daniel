@@ -128,6 +128,7 @@ final class CannonboltAbilities {
 				ctx.world().getTime() + (long) ctx.param("ticks", 26.0), BuiltinAbilities.horizontalLook(player));
 		roll.wallBounces = (int) ctx.param("wall_bounces", 3.0);
 		start(ctx, roll);
+		launchFx(ctx.world(), player, roll.direction, 1.0f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 0.6f, 1.6f);
 		return true;
 	}
@@ -139,6 +140,11 @@ final class CannonboltAbilities {
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 3, false, false));
 		knockbackImmunity(player, true);
 		// waehrend der ganzen Dauer: Geschosse fliegen zum Schuetzen zurueck, Nahkaempfer werden weggeschleudert
+		// Panzer schliesst sich: Schalen-Leuchten fuer die ganze Dauer, Klang-Ring
+		Fx.aura(ctx.world(), player, SHELL, 1.3f, ticks);
+		Fx.flash(ctx.world(), player.getPos().add(0, 0.8, 0), SHELL, 2.0f);
+		Fx.shockwave(ctx.world(), player.getPos().add(0, 0.1, 0), SHELL, 4.0f, 10);
+		Fx.shards(ctx.world(), player.getPos().add(0, 0.8, 0), SHELL, 0.25f, 10);
 		start(ctx, new Roll(Kind.GUARD, (float) (ctx.param("damage", 4.0) * spikes(ctx.player())), ctx.param("reflect_speed", 1.5), ctx.param("radius", 4.0),
 				ctx.world().getTime() + ticks, Vec3d.ZERO));
 		BuiltinAbilities.sound(ctx, SoundEvents.ITEM_ARMOR_EQUIP_NETHERITE.value(), 1.0f, 0.7f);
@@ -154,6 +160,7 @@ final class CannonboltAbilities {
 				ctx.world().getTime() + 80, look);
 		roll.airborne = true;
 		start(ctx, roll);
+		launchFx(ctx.world(), player, new Vec3d(0, 1, 0), 0.8f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_SLIME_JUMP, 1.0f, 0.5f);
 		return true;
 	}
@@ -172,6 +179,7 @@ final class CannonboltAbilities {
 		roll.targets.addAll(targets.subList(0, Math.min(max, targets.size())));
 		roll.segmentStart = ctx.world().getTime();
 		start(ctx, roll);
+		launchFx(ctx.world(), player, roll.targets.get(0).getPos().subtract(player.getPos()).normalize(), 0.9f);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_ROAR, 0.6f, 1.9f);
 		return true;
 	}
@@ -185,6 +193,8 @@ final class CannonboltAbilities {
 		roll.baseSpeedLevel = (int) ctx.param("speed_level", 2.0);
 		roll.speedLevel = roll.baseSpeedLevel;
 		start(ctx, roll);
+		Fx.aura(ctx.world(), player, SHELL, 1.0f, 20);
+		launchFx(ctx.world(), player, BuiltinAbilities.horizontalLook(player), 0.7f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_EXTEND, 1.0f, 0.6f);
 		return true;
 	}
@@ -197,6 +207,8 @@ final class CannonboltAbilities {
 		roll.airborne = true;
 		roll.peakY = player.getY();
 		start(ctx, roll);
+		launchFx(ctx.world(), player, new Vec3d(0, 1, 0), 1.3f);
+		Fx.charge(ctx.world(), player, HEAT, 2.0f, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 1.0f, 1.2f);
 		return true;
 	}
@@ -254,7 +266,9 @@ final class CannonboltAbilities {
 				roll.direction.z * speed);
 		trail(world, player);
 		if (roll.momentum >= 1.0f) {
-			Fx.sparks(world, player.getPos().add(0, 0.6, 0), SHELL, 0.3f, 2);
+			// volle Fahrt: Reibungsglut und Funken hinter der Kugel
+			Fx.sparks(world, player.getPos().add(0, 0.3, 0), HEAT, 0.35f, 3);
+			Fx.flames(world, player.getPos().add(0, 0.6, 0).subtract(roll.direction.multiply(0.8)), roll.direction.multiply(-0.15), HEAT, 0.2f, 1);
 		}
 		ram(world, player, roll, false);
 		// mit Schwung bricht die Kugel durch Waende, statt abzuprallen
@@ -497,7 +511,21 @@ final class CannonboltAbilities {
 			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), player.getX(), player.getY() + 0.05, player.getZ(),
 					4, 0.4, 0.0, 0.4, 0.1);
 		}
-		Fx.smoke(world, player.getPos().add(0, 0.2, 0), DUST, 0.6f, 1);
+		// Staub hinter der Kugel, nicht auf Augenhoehe (sonst verdeckt er in der Ich-Ansicht die Sicht)
+		Vec3d velocity = player.getVelocity().multiply(1, 0, 1);
+		Vec3d behind = velocity.lengthSquared() > 1.0E-3 ? velocity.normalize().multiply(-1.2) : Vec3d.ZERO;
+		Fx.smoke(world, player.getPos().add(behind).add(0, 0.1, 0), DUST, 0.7f, 1);
+	}
+
+	/** Abrollen: Staubring am Boden, Druckblitz und Staubwolke entgegen der Fahrtrichtung. */
+	private static void launchFx(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float power) {
+		Vec3d feet = player.getPos();
+		Fx.shockwave(world, feet.add(0, 0.1, 0), DUST, 3.0f * power, 8);
+		Fx.flash(world, feet.add(0, 0.7, 0), SHELL, 1.2f * power);
+		Fx.smoke(world, feet.subtract(direction.multiply(1.8)).add(0, 0.1, 0), DUST, 0.8f * power, 3);
+		Fx.sparks(world, feet.add(0, 0.4, 0), SHELL, 0.4f * power, 8);
+		Fx.shake(world, feet, 0.12f * power, 5, 10);
+		trail(world, player);
 	}
 
 	private static void knockbackImmunity(ServerPlayerEntity player, boolean on) {
