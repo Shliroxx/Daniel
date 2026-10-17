@@ -340,6 +340,17 @@ ABILITY_POSE = {
     "four_arm_flurry": "swipe",
     "web_crash": "slam",
     "cocoon_slam": "slam",
+    "cosmic_bolts": "shoot",
+    "ground_swipe": "swipe",
+    "skyward_uppercut": "slam",
+    "giant_grab": "guard",
+    "cosmic_dome": "guard",
+    "cosmic_cannon": "ultimate",
+    "titan_kick": "dodge",
+    "sky_hammer": "slam",
+    "giant_flick": "swipe",
+    "colossus_drop": "slam",
+    "cosmic_finisher": "beam",
 }
 
 

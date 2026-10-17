@@ -1191,6 +1191,20 @@ def icons(c) -> dict[str, list]:
         "four_arm_flurry": lambda: [L(m_figure(70, 20, 0.4), STONE), L(m_fist(-40, -40, 0.42), c, glow=c), L(m_fist(-40, 40, 0.42), c), L(m_speedlines(70, 190, 0, 50, 4, 8), W)],
         "web_hunter": lambda: [L(m_reticle(), c, glow=c), L(m_web(128, 128, 56, 4), WEB)],
         "spider_sense": lambda: [L(m_eye(128, 150, 180, 90), c, glow=c), L(m_waves(128, 70, 2, 200, 340, 10, 24), W), L(m_arrow(10, 220, 80, 190, 12, 24), STONE)],
+        "cosmic_bolts": lambda: [L(m_burst(70, 160, 40, 14, 8), ICE, glow=ICE), L(m_burst(128, 100, 40, 14, 8), ICE), L(m_burst(186, 160, 40, 14, 8), ICE), L(m_star(128, 200, 24), W)],
+        "ground_swipe": lambda: [ground(), L(m_ring(128, 200, 100, 22, 180, 360), c, glow=c), L(m_debris(128, 170, 90, 5, 14), EARTH)],
+        "skyward_uppercut": lambda: [L(m_fist(0, 40, 0.7, 3.14159), c, glow=c), L(m_arrow(128, 120, 128, 10, 22, 42), W)],
+        "giant_grab": lambda: [L(m_fist(0, 20, 0.8), c, glow=c), L(m_figure(0, -70, 0.25), STONE)],
+        "cosmic_dome": lambda: [ground(), L(m_dome(), ICE, glow=ICE), L(m_star(128, 150, 30), W)],
+        "cosmic_cannon": lambda: [L(m_rays(40, 200, 5, -1.4, -0.2, 40, 250, 18), ICE, glow=ICE), L(m_circle(40, 200, 34), W)],
+        "titan_kick": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), ICE), L(m_footprint(), c, glow=c)],
+        "sky_hammer": lambda: [ground(), L(m_fist(0, -20, 0.7, 3.14159), c, glow=c), L(m_waves(128, 205, 3, 200, 340, 12, 30), W)],
+        "giant_flick": lambda: [L(m_figure(-60, 40, 0.3), STONE), L(m_ring(128, 160, 90, 10, 200, 340), W), L(m_arrow(200, 130, 230, 170, 10, 22), W)],
+        "colossus_drop": lambda: [ground(), L(m_figure(0, -30, 0.5), c, glow=c), L(m_cracks(128, 206), DARK, outline=None), L(m_ring(128, 205, 110, 10, 190, 350), W)],
+        "cosmic_finisher": lambda: [L(m_beam(128, 40, 256, 40), ICE, glow=ICE), L(m_figure(40, 0, 0.35), STONE), L(m_burst(170, 128, 60, 20, 8), W, outline=None)],
+        "cosmic_charge": lambda: [L(m_star(), ICE, glow=ICE), L(m_ring(128, 128, 110, 8), W)],
+        "tokustar_hide": lambda: [L(m_shield(), c, glow=ICE), L(m_figure(0, 10, 0.3), STONE)],
+        "titan_step": lambda: [L(m_figure(0, -10, 0.6), c, glow=c), L(m_waves(128, 225, 2, 200, 340, 10, 24), W)],
     }
 
 

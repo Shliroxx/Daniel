@@ -96,6 +96,134 @@
       "params": {},
       "role": "ultimate",
       "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:cosmic_bolts",
+      "energy": 18,
+      "cooldown": 60,
+      "params": {
+        "damage": 7.0,
+        "range": 40.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:ground_swipe",
+      "energy": 20,
+      "cooldown": 90,
+      "params": {
+        "range": 10.0,
+        "damage": 8.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:skyward_uppercut",
+      "energy": 25,
+      "cooldown": 140,
+      "params": {
+        "range": 9.0,
+        "damage": 9.0,
+        "launch": 2.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:giant_grab",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "range": 12.0,
+        "damage": 16.0,
+        "seconds": 2.0
+      },
+      "role": "special",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:cosmic_dome",
+      "energy": 30,
+      "cooldown": 300,
+      "params": {
+        "radius": 7.0,
+        "seconds": 5.0
+      },
+      "role": "utility",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:cosmic_cannon",
+      "energy": 95,
+      "cooldown": 1200,
+      "params": {
+        "charge_seconds": 2.0,
+        "sweep_seconds": 2.0,
+        "range": 60.0,
+        "damage": 10.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:titan_kick",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 9.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:sky_hammer",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 10.0,
+        "radius": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:giant_flick",
+      "energy": 8,
+      "cooldown": 60,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:colossus_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.0,
+        "damage": 10.0,
+        "radius": 7.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:cosmic_finisher",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 14.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -113,6 +241,28 @@
   "failsafe_priority": 4,
   "traits": {
     "effects": [],
-    "transform_style": "cosmic"
+    "transform_style": "cosmic",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:cosmic_charge",
+        "params": {
+          "per_second": 5.0,
+          "per_damage": 1.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:titan_step",
+        "params": {
+          "radius": 3.5
+        }
+      },
+      {
+        "type": "kingdomomnitrix:tokustar_hide",
+        "unlock_level": 4,
+        "params": {
+          "melee": 0.75
+        }
+      }
+    ]
   }
 }

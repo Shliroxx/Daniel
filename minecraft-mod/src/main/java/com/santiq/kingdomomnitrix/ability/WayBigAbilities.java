@@ -38,14 +38,13 @@ import net.minecraft.util.math.Vec3d;
  * </ul>
  */
 final class WayBigAbilities {
-	private static final int RAY = 0x7FE3FF;
-	private static final int CORE = 0xFFFFFF;
-	private static final int DUST = 0x9C8466;
+	static final int RAY = 0x7FE3FF;
+	static final int CORE = 0xFFFFFF;
+	static final int DUST = 0x9C8466;
 	static final float MAX = 100.0f;
 	private static final Identifier WAY_BIG = KingdomOmnitrix.id("way_big");
 
 	private static final Map<UUID, Float> CHARGE = new HashMap<>();
-	private static final Map<UUID, Vec3d> LAST_STEP = new HashMap<>();
 	private static final Map<UUID, Long> LEAPS = new HashMap<>();
 	/** Sternensturz: Start und Zentrum */
 	private static final Map<UUID, Object[]> STARFALL = new HashMap<>();
@@ -62,11 +61,10 @@ final class WayBigAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("tokustar_guard"), WayBigAbilities::guard);
 		AbilityRegistry.register(KingdomOmnitrix.id("starfall"), WayBigAbilities::starfall);
 		ServerTickEvents.END_SERVER_TICK.register(WayBigAbilities::tick);
+		WayBigMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.getPlayer().getUuid()));
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken > 0.0f && !AlienKit.bonusHit && source.getAttacker() instanceof ServerPlayerEntity big && big != target && isWayBig(big)) {
-				charge(big, taken);
-			}
+			// Ladung durch Treffer laeuft ueber die Passive „Kosmische Ladung“ (WayBigMoves)
 			// To'kustar-Panzer: Nahkampf-Angreifer werden zurueckgestossen
 			if (target instanceof ServerPlayerEntity big && GUARD.containsKey(big.getUuid()) && source.getAttacker() instanceof LivingEntity attacker
 					&& source.getSource() == attacker && AlienKit.foe(big, attacker)) {
@@ -84,7 +82,7 @@ final class WayBigAbilities {
 		return CHARGE.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static void charge(ServerPlayerEntity player, float amount) {
+	static void charge(ServerPlayerEntity player, float amount) {
 		float before = charge(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		CHARGE.put(player.getUuid(), after);
@@ -99,7 +97,7 @@ final class WayBigAbilities {
 	}
 
 	/** Beben mit Krater ({@code crater} = Radius, 0 = keiner): springende Bodenbloecke, Druckwelle, Staub, Wackeln. */
-	private static void quake(ServerWorld world, ServerPlayerEntity big, Vec3d center, double radius, float damage, double launch, double crater) {
+	static void quake(ServerWorld world, ServerPlayerEntity big, Vec3d center, double radius, float damage, double launch, double crater) {
 		for (LivingEntity target : AlienKit.around(world, big, center, radius)) {
 			if (damage > 0.0f) {
 				AlienKit.melee(world, big, target, damage);
@@ -246,25 +244,10 @@ final class WayBigAbilities {
 			}
 			ServerWorld world = big.getServerWorld();
 			long now = world.getTime();
-			if (now % 20 == 0) {
-				charge(big, 5.0f);
-			}
 			if (charge(big) >= MAX && now % 4 == 0) {
 				Fx.sparks(world, new Vec3d(big.getX(), big.getBodyY(0.6), big.getZ()), RAY, 0.4f, 3);
 			}
-			// Titanenschritt
-			Vec3d last = LAST_STEP.get(id);
-			if (big.isOnGround() && (last == null || last.squaredDistanceTo(big.getPos()) > 9.0)) {
-				LAST_STEP.put(id, big.getPos());
-				for (LivingEntity near : AlienKit.around(world, big, big.getPos(), 3.5)) {
-					near.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 1), big);
-				}
-				world.playSound(null, big.getBlockPos(), SoundEvents.ENTITY_RAVAGER_STEP, SoundCategory.PLAYERS, 1.2f, 0.4f);
-				// Fussabdruck: weicher Boden gibt unter dem Riesen nach
-				Destruction.crater(world, big, big.getPos().add(0, -0.4, 0), 2.2, 0.35, 1.0f, 0.0, 0.1);
-				Fx.smoke(world, big.getPos(), DUST, 1.0f, 2);
-				Fx.shake(world, big.getPos(), 0.15f, 6, 24);
-			}
+			// Titanenschritt laeuft ueber die gleichnamige Passive (WayBigMoves)
 			Long leap = LEAPS.get(id);
 			if (leap != null && now - leap > 5 && big.isOnGround()) {
 				LEAPS.remove(id);
@@ -304,7 +287,6 @@ final class WayBigAbilities {
 
 	private static void forget(UUID id) {
 		CHARGE.remove(id);
-		LAST_STEP.remove(id);
 		LEAPS.remove(id);
 		STARFALL.remove(id);
 		GUARD.remove(id);
