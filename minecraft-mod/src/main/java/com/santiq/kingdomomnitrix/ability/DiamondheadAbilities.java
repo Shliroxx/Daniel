@@ -130,17 +130,20 @@ final class DiamondheadAbilities {
 			AlienMeterSync.forget(handler.getPlayer().getUuid());
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(DiamondheadAbilities::allowDamage);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
-			if (taken <= 0.0f) {
-				return;
-			}
-			if (target instanceof ServerPlayerEntity victim && isDiamondhead(victim)) {
-				addCharge(victim, taken * CHARGE_TAKEN);
-			}
-			if (source.getAttacker() instanceof ServerPlayerEntity attacker && attacker != target && isDiamondhead(attacker)) {
-				addCharge(attacker, taken * CHARGE_DEALT);
-			}
-		});
+		// Resonanz aus Kampfschaden: passive Kraft „Petrosapien-Resonanz“ (abprallende Geschosse zaehlen immer)
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("petrosapien_resonance"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float damage) {
+						addCharge(ctx.player(), damage * CHARGE_DEALT);
+					}
+
+					@Override
+					public void afterHurt(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, DamageSource source, float damage) {
+						addCharge(ctx.player(), damage * CHARGE_TAKEN);
+					}
+				});
+		DiamondheadMoves.register();
 	}
 
 	// --- Resonanz --------------------------------------------------------------------------------
@@ -153,7 +156,7 @@ final class DiamondheadAbilities {
 		return CHARGE.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static void addCharge(ServerPlayerEntity player, float amount) {
+	static void addCharge(ServerPlayerEntity player, float amount) {
 		float before = charge(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		CHARGE.put(player.getUuid(), after);
@@ -170,7 +173,7 @@ final class DiamondheadAbilities {
 		AlienMeterSync.update(player, AlienMeterPayload.RESONANCE, after);
 	}
 
-	private static Power power(ServerPlayerEntity player) {
+	static Power power(ServerPlayerEntity player) {
 		float charge = charge(player);
 		if (charge >= MAX) {
 			CHARGE.put(player.getUuid(), 0.0f);
@@ -180,7 +183,7 @@ final class DiamondheadAbilities {
 		return new Power(charge >= FACETED ? 1.3f : 1.0f, false);
 	}
 
-	private record Power(float factor, boolean prism) {
+	record Power(float factor, boolean prism) {
 	}
 
 	/** Geschoss prallt ab (Immunitaet entscheidet woanders): Resonanz, ab „facettiert“ Rueckwurf als Splitter. */
@@ -285,6 +288,11 @@ final class DiamondheadAbilities {
 		Fx.shards(world, player.getPos(), CRYSTAL, 0.4f, 14);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_PLACE, 1.4f, 0.8f);
 		return true;
+	}
+
+	/** Spitzen-Welle an beliebigem Ort (auch fuer die neuen Kraefte). */
+	static void eruption(ServerPlayerEntity player, Vec3d center, double radius, float damage, double launch, int ticks) {
+		ERUPTIONS.add(new Eruption(player.getUuid(), center, radius, damage, launch, player.getServerWorld().getTime(), ticks, Vec3d.ZERO, 0.0));
 	}
 
 	private static boolean spikeEruption(AbilityContext ctx) {

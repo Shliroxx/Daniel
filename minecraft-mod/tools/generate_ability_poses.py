@@ -153,6 +153,17 @@ ABILITY_POSE = {
     "leg_sweep": "dodge",
     "speed_dive": "leap",
     "hundred_blows": "swipe",
+    "crystal_lance": "slam",
+    "crystal_hammer": "slam",
+    "crystal_wall": "guard",
+    "crystal_cage": "beam",
+    "diamond_drill": "beam",
+    "crystal_cathedral": "ultimate",
+    "crystal_ram": "dodge",
+    "shard_fall": "slam",
+    "crystal_shackle": "slam",
+    "diamond_drop": "slam",
+    "crystallize": "ultimate",
 }
 
 

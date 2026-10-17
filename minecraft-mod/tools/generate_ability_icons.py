@@ -953,6 +953,20 @@ def icons(c) -> dict[str, list]:
         "kineceleran_tempo": lambda: [L(m_clock(128, 128, 90), c, glow=c), L(m_speedlines(200, 230, 20, 230, 2, 8), cl)],
         "blur_runner": lambda: [L(m_wave(170), ICE, glow=ICE), L(m_figure(0, -20, 0.55), c), L(m_speedlines(70, 150, 10, 70, 3, 8), cl)],
         "quick_reflexes": lambda: [flat(m_figure(-40, 0, 0.7), c, 100), L(m_figure(30, 0, 0.7), c, glow=c), L(m_arrow(10, 70, 110, 70, 12, 26), STONE)],
+        "crystal_lance": lambda: [ground(), L(m_spike(60, 200, 70, 30), c, glow=c), L(m_spike(110, 200, 100, 34), c, glow=c), L(m_spike(170, 200, 140, 40), cl, glow=c)],
+        "crystal_hammer": lambda: [ground(), L(m_mace(), c, glow=c), L(m_cracks(128, 206), DARK, outline=None)],
+        "crystal_wall": lambda: [ground(), L(m_hex(80, 130, 40, 0, True), c, glow=c), L(m_hex(176, 130, 40, 0, True), c, glow=c), L(m_hex(128, 100, 40, 0, True), cl, glow=c)],
+        "crystal_cage": lambda: [L(m_box(), c, glow=c), L(m_figure(0, 6, 0.55), mix(c, DARK, 0.4))],
+        "diamond_drill": lambda: [L(m_spike(128, 230, 210, 70), c, glow=c), L(m_speedlines(40, 216, 10, 90, 4, 10), cl), L(m_debris(190, 128, 50, 4, 12), STONE)],
+        "crystal_cathedral": lambda: [ground(), L(m_spike(50, 200, 90, 30), c, glow=c), L(m_spike(206, 200, 90, 30), c, glow=c), L(m_spike(90, 200, 140, 36), cl, glow=c), L(m_spike(166, 200, 140, 36), cl, glow=c), L(m_spike(128, 200, 190, 44), W, glow=c)],
+        "crystal_ram": lambda: [L(m_speedlines(70, 190, 10, 110, 4, 12), cl), L(m_shield(30, 0, 0.75), c, glow=c), L(m_shards_ring(200, 128, 30, 6, 12), W)],
+        "shard_fall": lambda: [ground(), L(m_spike(128, 200, 150, 50), c, glow=c), L(m_arrow(128, 20, 128, 70, 16, 30), W)],
+        "crystal_shackle": lambda: [ground(), L(m_figure(0, -30, 0.6), STONE), L(m_spike(90, 210, 60, 26), c, glow=c), L(m_spike(166, 210, 60, 26), c, glow=c)],
+        "diamond_drop": lambda: [ground(), L(m_crystal(128, 110, 120, 50, math.pi), c, glow=c), L(m_spike(50, 200, 60, 24), cl), L(m_spike(206, 200, 60, 24), cl)],
+        "crystallize": lambda: [L(m_crystal(128, 128, 170, 80), c, glow=c, glow_alpha=0.8), L(m_shards_ring(128, 128, 100, 8, 22), W)],
+        "petrosapien_resonance": lambda: [L(m_crystal(128, 128, 180, 70), c, glow=c, glow_alpha=0.7), L(m_waves(200, 128, 3, 150, 210, 10, 26), W)],
+        "crystal_regrowth": lambda: [L(m_crystal(100, 140, 140, 56), c, glow=c), L(m_plus(180, 80, 40, 20), W)],
+        "diamond_hide": lambda: [L(m_shield(), c, glow=c), L(m_hex(128, 120, 46, 14), W), L(m_shards_ring(128, 120, 90, 6, 14), cl)],
     }
 
 
