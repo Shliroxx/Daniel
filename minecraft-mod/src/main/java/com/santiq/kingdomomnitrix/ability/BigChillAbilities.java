@@ -63,14 +63,13 @@ import net.minecraft.world.World;
  * </ul>
  */
 final class BigChillAbilities {
-	private static final int ICE_COLOR = 0x8AD0FF;
-	private static final int DEEP_COLOR = 0x3C6CD8;
+	static final int ICE_COLOR = 0x8AD0FF;
+	static final int DEEP_COLOR = 0x3C6CD8;
 	private static final int FIRE_ICE = 0x6AFFC8;
 	static final float MAX_CHILL = 100.0f;
 	static final int FROZEN_TICKS = 60;
 	static final float SHATTER_HIT = 6.0f;
 	private static final Identifier BIG_CHILL = KingdomOmnitrix.id("big_chill");
-	private static final float CHILL_MELEE = 15.0f;
 	private static final float CHILL_SHARD = 20.0f;
 	private static final float AFTER_THAW = 40.0f;
 	private static final int THAW_DELAY = 60;
@@ -117,6 +116,7 @@ final class BigChillAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("cryo_cloak"), BigChillAbilities::cryoCloak);
 		AbilityRegistry.register(KingdomOmnitrix.id("absolute_zero"), BigChillAbilities::absoluteZero);
 		ServerTickEvents.END_SERVER_TICK.register(BigChillAbilities::tick);
+		BigChillMoves.register();
 		ServerLifecycleEvents.SERVER_STOPPING.register(BigChillAbilities::shutdown);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forgetState(handler.getPlayer().getUuid()));
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(BigChillAbilities::allowDamage);
@@ -150,7 +150,7 @@ final class BigChillAbilities {
 	}
 
 	/** Unterkuehlen; bei 100 erstarrt das Ziel. */
-	private static void cool(ServerPlayerEntity player, LivingEntity target, float amount) {
+	static void cool(ServerPlayerEntity player, LivingEntity target, float amount) {
 		if (amount <= 0.0f || !target.isAlive() || frozen(target) || target == player) {
 			return;
 		}
@@ -217,7 +217,7 @@ final class BigChillAbilities {
 	}
 
 	/** Zersplittern: Bonusschaden, Splitter unterkuehlen die Nachbarn (Kettenreaktion). */
-	private static void shatter(ServerWorld world, ServerPlayerEntity player, LivingEntity target) {
+	static void shatter(ServerWorld world, ServerPlayerEntity player, LivingEntity target) {
 		Frozen frozen = FROZEN.remove(target.getUuid());
 		if (frozen == null) {
 			return;
@@ -283,9 +283,8 @@ final class BigChillAbilities {
 		if (source.getAttacker() instanceof ServerPlayerEntity attacker && attacker != target && isBigChill(attacker)) {
 			if (source.getSource() instanceof HeroProjectileEntity) {
 				cool(attacker, target, CHILL_SHARD);
-			} else if (source.getSource() == attacker) {
-				cool(attacker, target, CHILL_MELEE);
 			}
+			// direkte Treffer unterkuehlen ueber die Passive „Unterkuehlung“ (BigChillMoves)
 		}
 	}
 
@@ -647,7 +646,7 @@ final class BigChillAbilities {
 	}
 
 	/** Ring aus Eisspitzen (oder Eisbloecken) am Boden um eine Stelle; nur in Luft, verschwindet wieder. */
-	private static void iceRing(ServerWorld world, ServerPlayerEntity owner, BlockPos center, int radius, int ticks, boolean blocks) {
+	static void iceRing(ServerWorld world, ServerPlayerEntity owner, BlockPos center, int radius, int ticks, boolean blocks) {
 		for (int dx = -radius; dx <= radius; dx++) {
 			for (int dz = -radius; dz <= radius; dz++) {
 				double d = Math.sqrt(dx * dx + dz * dz);
@@ -665,7 +664,7 @@ final class BigChillAbilities {
 
 
 	/** Wasseroberflaechen im Radius zu Frosteis (vanilla: schmilzt von selbst wieder). */
-	private static void freezeWater(ServerWorld world, BlockPos center, int radius) {
+	static void freezeWater(ServerWorld world, BlockPos center, int radius) {
 		BlockState frosted = Blocks.FROSTED_ICE.getDefaultState();
 		for (BlockPos pos : BlockPos.iterate(center.add(-radius, -1, -radius), center.add(radius, 1, radius))) {
 			if (pos.getSquaredDistance(center) > radius * radius + 1) {

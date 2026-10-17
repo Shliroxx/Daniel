@@ -252,6 +252,17 @@ ABILITY_POSE = {
     "tail_sting": "swipe",
     "power_dive": "slam",
     "total_discharge": "beam",
+    "frost_lance": "beam",
+    "frost_ground": "slam",
+    "wing_wrap": "guard",
+    "ice_spikes": "slam",
+    "blizzard": "spread",
+    "ice_comet": "ultimate",
+    "cold_rush": "dodge",
+    "icicle_drop": "slam",
+    "frost_grip": "swipe",
+    "glacier_fall": "slam",
+    "shatter_strike": "swipe",
 }
 
 

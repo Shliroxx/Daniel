@@ -1079,6 +1079,20 @@ def icons(c) -> dict[str, list]:
         "neuro_charge": lambda: [L(m_circle(128, 128, 70), c), L(m_bolt(0, 0, 0.6), rgb("FFE84A"), glow=rgb("FFE84A"))],
         "aerodynamics": lambda: [L(m_wing(True), c, glow=c), L(m_wing(False), c), L(m_speedlines(200, 240, 0, 256, 3, 8), W)],
         "aerophibian": lambda: [L(m_wave(150), WATER, glow=WATER), L(m_wing(True), c), L(m_plus(190, 70, 34, 20), W)],
+        "frost_lance": lambda: [L(m_beam(128, 20, 236, 30), ICE, glow=ICE), L(m_crystal(210, 128, 90, 40, 1.57), W)],
+        "frost_ground": lambda: [ground(), L(m_ring(128, 200, 100, 12, 190, 350), ICE, glow=ICE), L(m_snowflake(128, 110, 60, 12), W)],
+        "wing_wrap": lambda: [L(m_wing(True), c, glow=ICE), L(m_wing(False), c), L(m_shield(0, 10, 0.5), ICE)],
+        "ice_spikes": lambda: [ground(), L(m_spike(60, 200, 70, 30), ICE, glow=ICE), L(m_spike(120, 200, 110, 36), ICE), L(m_spike(190, 200, 150, 44), W)],
+        "blizzard": lambda: [L(m_cloud(128, 70, 0.8), mix(ICE, W, 0.5), glow=ICE), L(m_snowflake(70, 180, 34, 8), W), L(m_snowflake(140, 200, 30, 8), W), L(m_snowflake(200, 170, 26, 8), W)],
+        "ice_comet": lambda: [ground(), L(m_meteor(150, 90, 48), ICE, glow=ICE), L(m_speedlines(10, 70, 20, 110, 3, 10), W), L(m_burst(128, 210, 60, 20, 10), W, outline=None)],
+        "cold_rush": lambda: [L(m_figure(-10, 30, 0.45), STONE), L(m_arrow(20, 128, 236, 128, 22, 44), c, glow=ICE)],
+        "icicle_drop": lambda: [ground(), L(m_crystal(128, 100, 170, 50, 3.14159), ICE, glow=ICE)],
+        "frost_grip": lambda: [L(m_claws(0.0, 3), c, glow=ICE), L(m_snowflake(190, 190, 44, 10), W)],
+        "glacier_fall": lambda: [ground(), L(m_arrow(128, 20, 128, 160, 28, 50), c, glow=ICE), L(m_spike(50, 210, 50, 24), ICE), L(m_spike(206, 210, 50, 24), ICE)],
+        "shatter_strike": lambda: [L(m_shards_ring(128, 128, 96, 8, 28), ICE, glow=ICE), L(m_crystal(128, 128, 120, 50), W)],
+        "hypothermia": lambda: [L(m_snowflake(), ICE, glow=ICE), L(m_circle(128, 128, 30), W)],
+        "frost_body": lambda: [L(m_shield(), c, glow=ICE), L(m_snowflake(128, 120, 50, 10), W)],
+        "phantom_wings": lambda: [L(m_wing(True), mix(c, W, 0.4), glow=c, glow_alpha=0.6), L(m_wing(False), mix(c, W, 0.4)), L(m_arrow(20, 200, 236, 60, 14, 30), W)],
     }
 
 
