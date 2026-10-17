@@ -38,11 +38,11 @@ import net.minecraft.world.RaycastContext;
  */
 final class AlienXAbilities {
 	private static final Identifier ALIEN_X = KingdomOmnitrix.id("alien_x");
-	private static final int SERENA = 1;
-	private static final int BELLICUS = 2;
-	private static final DustParticleEffect STAR = AlienKit.dust("#FFFFFF", 1.0f);
-	private static final DustParticleEffect NEBULA = AlienKit.dust("#9FD8FF", 1.6f);
-	private static final DustParticleEffect GOLD = AlienKit.dust("#FFE27A", 1.4f);
+	static final int SERENA = 1;
+	static final int BELLICUS = 2;
+	static final DustParticleEffect STAR = AlienKit.dust("#FFFFFF", 1.0f);
+	static final DustParticleEffect NEBULA = AlienKit.dust("#9FD8FF", 1.6f);
+	static final DustParticleEffect GOLD = AlienKit.dust("#FFE27A", 1.4f);
 
 	/** [letzte Stimme, Einklang] je Spieler */
 	private static final Map<UUID, int[]> COUNCIL = new HashMap<>();
@@ -60,10 +60,17 @@ final class AlienXAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("creation"), AlienXAbilities::creation);
 		AbilityRegistry.register(KingdomOmnitrix.id("big_bang"), AlienXAbilities::bigBang);
 		ServerTickEvents.END_SERVER_TICK.register(AlienXAbilities::tick);
+		AlienXMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			COUNCIL.remove(handler.getPlayer().getUuid());
 			TIME_STOP.remove(handler.getPlayer().getUuid());
 		});
+	}
+
+	/** aktueller Einklang (0–3) */
+	static int harmony(ServerPlayerEntity player) {
+		int[] council = COUNCIL.get(player.getUuid());
+		return council == null ? 0 : council[1];
 	}
 
 	private static boolean isAlienX(ServerPlayerEntity player) {
@@ -74,7 +81,7 @@ final class AlienXAbilities {
 	 * Abstimmung fuer eine Faehigkeit der Stimme {@code voice}. Rueckgabe: Staerkefaktor (2 = Allmacht) oder 0, wenn die
 	 * Stimmen uneins sind (Faehigkeit verpufft, Alien X erstarrt).
 	 */
-	private static float vote(AbilityContext ctx, int voice) {
+	static float vote(AbilityContext ctx, int voice) {
 		ServerPlayerEntity x = ctx.player();
 		ServerWorld world = ctx.world();
 		int[] council = COUNCIL.computeIfAbsent(x.getUuid(), id -> new int[2]);

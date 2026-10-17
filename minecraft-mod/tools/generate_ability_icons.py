@@ -1205,6 +1205,20 @@ def icons(c) -> dict[str, list]:
         "cosmic_charge": lambda: [L(m_star(), ICE, glow=ICE), L(m_ring(128, 128, 110, 8), W)],
         "tokustar_hide": lambda: [L(m_shield(), c, glow=ICE), L(m_figure(0, 10, 0.3), STONE)],
         "titan_step": lambda: [L(m_figure(0, -10, 0.6), c, glow=c), L(m_waves(128, 225, 2, 200, 340, 10, 24), W)],
+        "star_lance": lambda: [ground(), L(m_beam(128, 0, 200, 30), ICE, glow=ICE), L(m_star(128, 200, 40), W)],
+        "reality_anchor": lambda: [L(m_figure(-50, 30, 0.35), STONE), L(m_figure(50, 30, 0.35), STONE), L(m_beam(78, 10, 100, 8), ICE, glow=ICE), L(m_beam(178, 10, 100, 8), ICE), L(m_star(128, 60, 30), W)],
+        "constellation": lambda: [L(m_star(50, 180, 24), W, glow=ICE), L(m_star(100, 70, 24), W), L(m_star(170, 120, 24), W), L(m_star(210, 40, 24), W), L(m_arrow(55, 175, 95, 78, 6, 12), ICE), L(m_arrow(105, 75, 165, 115, 6, 12), ICE)],
+        "genesis": lambda: [L(m_ring(128, 128, 108, 10), GOLD, glow=GOLD), L(m_heart(0, 0, 0.6), W), L(m_star(200, 60, 22), GOLD)],
+        "comet_strike": lambda: [L(m_meteor(150, 110, 44), c, glow=ICE), L(m_star(200, 80, 20), W)],
+        "gravity_slam": lambda: [ground(), L(m_arrow(128, 20, 128, 150, 24, 46), PURPLE, glow=PURPLE), L(m_arrow(80, 40, 80, 130, 12, 24), W), L(m_arrow(176, 40, 176, 130, 12, 24), W)],
+        "stasis_touch": lambda: [L(m_hourglass(), c, glow=ICE), L(m_figure(60, 20, 0.3), STONE)],
+        "starfall_dive": lambda: [ground(), L(m_star(128, 90, 50), W, glow=ICE), L(m_speedlines(100, 156, 0, 60, 3, 8), ICE), L(m_ring(128, 205, 90, 10, 190, 350), W)],
+        "erase": lambda: [L(m_figure(0, 10, 0.5), mix(STONE, W, 0.6)), L(m_shards_ring(128, 128, 100, 10, 20), W, glow=ICE)],
+        "celestial_harmony": lambda: [L(m_star(80, 128, 40), ICE, glow=ICE), L(m_star(176, 128, 40), GOLD, glow=GOLD), L(m_ring(128, 128, 110, 8), W)],
+        "celestialsapien_body": lambda: [L(m_shield(), c, glow=ICE), L(m_star(128, 120, 34), W)],
+        "serenas_grace": lambda: [L(m_heart(), GOLD, glow=GOLD), L(m_plus(190, 190, 40, 22), W)],
+        "void_rift": lambda: [L(m_portal(), PURPLE, glow=PURPLE), L(m_arrow(20, 60, 80, 100, 10, 20), W), L(m_arrow(236, 60, 176, 100, 10, 20), W), L(m_arrow(20, 200, 80, 160, 10, 20), W), L(m_arrow(236, 200, 176, 160, 10, 20), W)],
+        "rewind": lambda: [L(m_figure(-60, 30, 0.35), mix(c, W, 0.5)), L(m_figure(60, 30, 0.35), c, glow=ICE), L(m_ring(128, 110, 70, 10, 190, 350), W), L(m_arrow(70, 100, 50, 140, 10, 22), W)],
     }
 
 

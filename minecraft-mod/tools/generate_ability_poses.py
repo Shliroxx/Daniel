@@ -351,6 +351,17 @@ ABILITY_POSE = {
     "giant_flick": "swipe",
     "colossus_drop": "slam",
     "cosmic_finisher": "beam",
+    "star_lance": "beam",
+    "reality_anchor": "focus",
+    "void_rift": "spread",
+    "rewind": "focus",
+    "constellation": "beam",
+    "genesis": "ultimate",
+    "comet_strike": "dodge",
+    "gravity_slam": "slam",
+    "stasis_touch": "guard",
+    "starfall_dive": "slam",
+    "erase": "beam",
 }
 
 
