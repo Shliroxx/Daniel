@@ -113,12 +113,13 @@ final class CannonboltAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("rolling_mode"), CannonboltAbilities::rollingMode);
 		AbilityRegistry.register(KingdomOmnitrix.id("cannonade"), CannonboltAbilities::cannonade);
 		ServerTickEvents.END_SERVER_TICK.register(CannonboltAbilities::tick);
+		CannonboltMoves.register();
 	}
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------
 
 	/** Ultimate: Stachelpanzer — jeder Roll-Treffer 50 % staerker. */
-	private static double spikes(ServerPlayerEntity player) {
+	static double spikes(ServerPlayerEntity player) {
 		return com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? 1.5 : 1.0;
 	}
 
@@ -466,7 +467,7 @@ final class CannonboltAbilities {
 		}
 	}
 
-	private static void shockwave(ServerWorld world, ServerPlayerEntity player, float damage, double radius, double lift) {
+	static void shockwave(ServerWorld world, ServerPlayerEntity player, float damage, double radius, double lift) {
 		double radiusSq = radius * radius;
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius, 2.0, radius),
 				e -> e != player && e.isAlive() && e.squaredDistanceTo(player) <= radiusSq && PartyRules.canHarm(player, e))) {
@@ -494,7 +495,7 @@ final class CannonboltAbilities {
 	}
 
 	/** Durchbrechen: Kugelquerschnitt vor Cannonbolt, Staerke waechst mit dem Schwung. */
-	private static void smashAhead(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float momentum) {
+	static void smashAhead(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float momentum) {
 		Vec3d center = player.getPos().add(0, player.getHeight() * 0.5, 0);
 		int broken = Destruction.carve(world, player, center.add(direction.multiply(player.getWidth() * 0.5 + 0.4)), direction, 0.8,
 				Math.max(0.9, player.getWidth() * 0.65), AlienStrength.of(player) * (0.5f + momentum), 0.0);
@@ -505,7 +506,7 @@ final class CannonboltAbilities {
 		}
 	}
 
-	private static void trail(ServerWorld world, ServerPlayerEntity player) {
+	static void trail(ServerWorld world, ServerPlayerEntity player) {
 		var ground = world.getBlockState(player.getBlockPos().down());
 		if (!ground.isAir()) {
 			world.spawnParticles(new BlockStateParticleEffect(ParticleTypes.BLOCK, ground), player.getX(), player.getY() + 0.05, player.getZ(),
@@ -518,7 +519,7 @@ final class CannonboltAbilities {
 	}
 
 	/** Abrollen: Staubring am Boden, Druckblitz und Staubwolke entgegen der Fahrtrichtung. */
-	private static void launchFx(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float power) {
+	static void launchFx(ServerWorld world, ServerPlayerEntity player, Vec3d direction, float power) {
 		Vec3d feet = player.getPos();
 		Fx.shockwave(world, feet.add(0, 0.1, 0), DUST, 3.0f * power, 8);
 		Fx.flash(world, feet.add(0, 0.7, 0), SHELL, 1.2f * power);

@@ -230,6 +230,17 @@ ABILITY_POSE = {
     "chilling_touch": "shoot",
     "haunt_crash": "slam",
     "soul_rend": "beam",
+    "bowling_strike": "dodge",
+    "wrecking_ball": "leap",
+    "pinball": "dodge",
+    "spike_shell": "guard",
+    "shell_spin": "spread",
+    "bounce_barrage": "ultimate",
+    "curl_charge": "dodge",
+    "ball_stomp": "slam",
+    "shell_counter": "guard",
+    "cannon_drop": "slam",
+    "bullseye": "dodge",
 }
 
 

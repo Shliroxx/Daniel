@@ -128,6 +128,137 @@
         "dive": 2.6,
         "ball_ticks": 60.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:bowling_strike",
+      "energy": 20,
+      "cooldown": 70,
+      "params": {
+        "damage": 7.0,
+        "ticks": 22,
+        "ball_ticks": 24.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:wrecking_ball",
+      "energy": 30,
+      "cooldown": 140,
+      "params": {
+        "range": 16.0,
+        "damage": 10.0,
+        "ball_ticks": 40.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:pinball",
+      "energy": 35,
+      "cooldown": 220,
+      "params": {
+        "damage": 5.0,
+        "seconds": 4.0,
+        "ball_ticks": 80.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:spike_shell",
+      "energy": 25,
+      "cooldown": 260,
+      "params": {
+        "seconds": 8.0,
+        "damage": 3.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:shell_spin",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "damage": 3.0,
+        "radius": 4.5,
+        "seconds": 3.0,
+        "ball_ticks": 60.0
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:bounce_barrage",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "damage": 12.0,
+        "bounces": 4,
+        "ball_ticks": 160.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:curl_charge",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 6.0,
+        "ball_ticks": 10.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:ball_stomp",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 7.0,
+        "ball_ticks": 10.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:shell_counter",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:cannon_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.4,
+        "damage": 9.0,
+        "ball_ticks": 40.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:bullseye",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 12.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -146,6 +277,25 @@
   ],
   "failsafe_priority": 2,
   "traits": {
-    "transform_style": "roll"
+    "transform_style": "roll",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:armored_shell",
+        "params": {
+          "projectile": 0.6,
+          "explosion": 0.7
+        }
+      },
+      {
+        "type": "kingdomomnitrix:rolling_momentum",
+        "params": {
+          "sprint_bonus": 1.2
+        }
+      },
+      {
+        "type": "kingdomomnitrix:bounce_back",
+        "unlock_level": 4
+      }
+    ]
   }
 }

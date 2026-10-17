@@ -1051,6 +1051,20 @@ def icons(c) -> dict[str, list]:
         "ectonurite_dread": lambda: [L(m_ghost(), c, glow=c), L(ghost_eyes(), DARK, outline=None)],
         "intangible": lambda: [flat(m_ghost(0, 0, 0.9), c, 120), L(m_arrow(30, 128, 226, 128, 14, 28), STONE)],
         "night_stalker": lambda: [L(m_circle(170, 80, 40), mix(W, c, 0.2), glow=W, glow_alpha=0.3), L(m_ghost(-30, 30, 0.6), c, glow=c)],
+        "bowling_strike": lambda: [ground(), L(m_ball(70, 160, 46), c, glow=c), L(ball_plates(70, 160, 46), mix(c, DARK, 0.3), outline=None), L(m_figure(150, 0, 0.4), STONE), L(m_figure(200, -20, 0.4), STONE)],
+        "wrecking_ball": lambda: [ground(), L(m_ball(150, 90, 50), c, glow=c), L(ball_plates(150, 90, 50), mix(c, DARK, 0.3), outline=None), L(m_cracks(128, 206), DARK, outline=None), L(m_ring(110, 180, 90, 10, 200, 300), W)],
+        "pinball": lambda: [L(m_ball(128, 128, 50), c, glow=c), L(ball_plates(128, 128, 50), mix(c, DARK, 0.3), outline=None), L(m_arrow(40, 200, 90, 160, 12, 24), W), L(m_arrow(200, 60, 170, 100, 12, 24), W)],
+        "spike_shell": lambda: [L(m_burst(128, 128, 116, 70, 12), W, glow=c), L(m_ball(128, 128, 70), c), L(ball_plates(128, 128, 70), mix(c, DARK, 0.3), outline=None)],
+        "shell_spin": lambda: [L(m_spiral(128, 128, 1.6, 108, 12), cl, glow=c), L(m_ball(128, 128, 46), c), L(ball_plates(128, 128, 46), mix(c, DARK, 0.3), outline=None)],
+        "bounce_barrage": lambda: [ground(), L(m_ball(190, 70, 36), c, glow=FIRE, glow_alpha=0.6), L(m_ring(110, 200, 60, 10, 190, 350), W), L(m_ring(50, 200, 40, 10, 190, 350), W), L(m_burst(170, 200, 40, 16, 8), FIRE_HOT, outline=None)],
+        "curl_charge": lambda: [L(m_speedlines(70, 190, 10, 100, 4, 12), cl), L(m_ball(170, 128, 50), c, glow=c), L(ball_plates(170, 128, 50), mix(c, DARK, 0.3), outline=None)],
+        "ball_stomp": lambda: [ground(), L(m_ball(128, 110, 50), c, glow=c), L(ball_plates(128, 110, 50), mix(c, DARK, 0.3), outline=None), L(m_waves(128, 210, 2, 200, 340, 12, 30), W)],
+        "shell_counter": lambda: [L(m_shield(), c, glow=c), L(m_arrow(120, 128, 30, 128, 14, 28), W)],
+        "cannon_drop": lambda: [ground(), L(m_ball(128, 100, 46), c, glow=FIRE, glow_alpha=0.6), L(m_speedlines(20, 60, 100, 160, 3, 8), FIRE_HOT), L(m_cracks(128, 206), DARK, outline=None)],
+        "bullseye": lambda: [L(m_reticle(), W), L(m_ball(128, 128, 40), c, glow=FIRE, glow_alpha=0.7)],
+        "armored_shell": lambda: [L(m_ball(), c, glow=c), L(ball_plates(), mix(c, DARK, 0.3), outline=None), L(m_arrow(10, 60, 70, 90, 12, 24), STONE)],
+        "rolling_momentum": lambda: [L(m_speedlines(70, 190, 10, 90, 4, 12), cl), L(m_ball(170, 128, 56), c, glow=c), L(ball_plates(170, 128, 56), mix(c, DARK, 0.3), outline=None)],
+        "bounce_back": lambda: [ground(), L(m_ball(128, 100, 46), c, glow=c), L(m_arrow(200, 190, 200, 60, 14, 28), W)],
     }
 
 
