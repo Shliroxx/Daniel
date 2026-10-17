@@ -939,6 +939,20 @@ def icons(c) -> dict[str, list]:
         "pyronite_core": lambda: [L(m_circle(128, 128, 90), FIRE, glow=FIRE, glow_alpha=0.8), L(m_circle(128, 128, 50), FIRE_HOT, outline=None), L(m_ring(128, 128, 112, 8), BLUE_FIRE)],
         "molten_touch": lambda: [*fist(c, 0, 0, 0.7, glow=FIRE, glow_alpha=0.7), L(m_flame(50, -50, 0.35), FIRE_HOT, outline=None)],
         "heat_haze": lambda: [L(m_waves(128, 200, 3, 200, 340, 12, 30), FIRE_HOT, glow=FIRE), L(m_arrow(40, 90, 150, 90, 14, 30), STONE), L(m_burst(170, 90, 40, 16, 8), FIRE, outline=None)],
+        "tail_whip": lambda: [L(m_ring(128, 128, 96, 18, 20, 330), cl, glow=c), L(m_tail(), c), L(m_speedlines(80, 176, 150, 240, 3, 10), W)],
+        "rapid_disarm": lambda: [L(m_speedlines(60, 196, 10, 120, 4, 10), cl), L(m_box(130, 70, 200, 190, 0), STONE), L(m_arrow(200, 128, 120, 128, 16, 34), c, glow=c)],
+        "vacuum_trail": lambda: [L(m_speedlines(40, 216, 10, 230, 5, 10), cl, glow=c), L(m_spiral(70, 128, 1.4, 50, 10), W)],
+        "friction_fire": lambda: [L(m_ring(128, 140, 90, 16), FIRE, glow=FIRE), L(m_flame(-60, 40, 0.3), FIRE_HOT, outline=None), L(m_flame(60, 40, 0.3), FIRE_HOT, outline=None), L(m_speedlines(100, 156, 90, 170, 2, 8), cl)],
+        "phantom_strikes": lambda: [flat(m_figure(-60, 0, 0.6), c, 90), flat(m_figure(60, 0, 0.6), c, 90), L(m_figure(0, 0, 0.7), c, glow=c), L(m_burst(128, 60, 30, 12, 6), W, outline=None)],
+        "mach_sprint": lambda: [L(m_waves(70, 128, 4, -45, 45, 16, 34), W, glow=c, glow_alpha=0.9), L(m_speedlines(50, 206, 10, 140, 5, 12), c)],
+        "supersonic_shove": lambda: [L(m_waves(150, 128, 3, -50, 50, 14, 32), W, glow=c), *fist(c, -30, 0, 0.55)],
+        "blitz_kick": lambda: [L(m_spiral(128, 128, 1.2, 90, 14), cl, glow=c), L(m_arrow(128, 200, 128, 40, 20, 40), W)],
+        "leg_sweep": lambda: [L(m_ground(200, 56), EARTH), L(m_ring(128, 190, 90, 14, 180, 360), cl, glow=c), L(m_figure(40, 30, 0.45), STONE)],
+        "speed_dive": lambda: [L(m_ground(200, 56), EARTH), L(m_arrow(50, 40, 190, 180, 22, 46), c, glow=c), L(m_speedlines(20, 80, 10, 90, 3, 8), cl)],
+        "hundred_blows": lambda: [*fist(c, -50, -40, 0.35), *fist(c, 40, -50, 0.35), *fist(c, -40, 40, 0.35), *fist(c, 50, 30, 0.35), L(m_burst(128, 128, 54, 22, 10), W, glow=c)],
+        "kineceleran_tempo": lambda: [L(m_clock(128, 128, 90), c, glow=c), L(m_speedlines(200, 230, 20, 230, 2, 8), cl)],
+        "blur_runner": lambda: [L(m_wave(170), ICE, glow=ICE), L(m_figure(0, -20, 0.55), c), L(m_speedlines(70, 150, 10, 70, 3, 8), cl)],
+        "quick_reflexes": lambda: [flat(m_figure(-40, 0, 0.7), c, 100), L(m_figure(30, 0, 0.7), c, glow=c), L(m_arrow(10, 70, 110, 70, 12, 26), STONE)],
     }
 
 

@@ -142,6 +142,17 @@ ABILITY_POSE = {
     "ember_grip": "shoot",
     "phoenix_dive": "leap",
     "incinerate": "ultimate",
+    "tail_whip": "spread",
+    "rapid_disarm": "dodge",
+    "vacuum_trail": "leap",
+    "friction_fire": "spread",
+    "phantom_strikes": "swipe",
+    "mach_sprint": "ultimate",
+    "supersonic_shove": "shoot",
+    "blitz_kick": "leap",
+    "leg_sweep": "dodge",
+    "speed_dive": "leap",
+    "hundred_blows": "swipe",
 }
 
 

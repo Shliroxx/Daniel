@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -31,7 +30,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
@@ -61,8 +59,8 @@ final class Xlr8Abilities {
 	private static final float GAIN_PER_HIT = 3.0f;
 	/** ab dieser Geschwindigkeit (Bloecke/Tick) gilt XLR8 als rennend */
 	private static final double RUN_SPEED = 0.2;
-	private static final int STREAK = 0x38B6FF;
-	private static final int CORE = 0xDDF4FF;
+	static final int STREAK = 0x38B6FF;
+	static final int CORE = 0xDDF4FF;
 	private static final int WIND = 0xE6F0F8;
 
 	private static final Map<UUID, Float> TEMPO = new HashMap<>();
@@ -100,20 +98,42 @@ final class Xlr8Abilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("lightspeed_barrage"), Xlr8Abilities::barrage);
 		ServerTickEvents.END_SERVER_TICK.register(Xlr8Abilities::tick);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.getPlayer().getUuid()));
-		// Nahkampf ab „verschwommen“: Zusatzschaden nach Tempo, jeder Treffer legt Tempo nach
-		AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
-			if (!world.isClient && player instanceof ServerPlayerEntity server && entity instanceof LivingEntity target
-					&& isXlr8(server) && PartyRules.canHarm(server, target)) {
-				float tempo = tempo(server);
-				if (tempo >= BLUR) {
-					target.timeUntilRegen = 0;
-					target.damage(server.getServerWorld().getDamageSources().playerAttack(server), tempo / 25.0f);
-					Fx.sparks(server.getServerWorld(), new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), STREAK, 0.4f, 6);
-				}
-				addTempo(server, GAIN_PER_HIT);
-			}
-			return ActionResult.PASS;
-		});
+		// Tempo (Aufbau, Nahkampf-Bonus) und Tempo-Lauf (Wasser, Waende, Schallmauer) sind passive Kraefte
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("kineceleran_tempo"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void tick(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx) {
+						if (ctx.now() % INTERVAL == 0) {
+							tickTempo(ctx.world(), ctx.player(), ctx.now());
+						}
+					}
+
+					@Override
+					public void melee(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, boolean fullSwing) {
+						// ab „verschwommen“: Zusatzschaden nach Tempo; jeder Treffer legt Tempo nach
+						ServerPlayerEntity server = ctx.player();
+						float tempo = tempo(server);
+						if (tempo >= BLUR) {
+							AlienKit.melee(ctx.world(), server, target, tempo / 25.0f);
+							Fx.sparks(ctx.world(), new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ()), STREAK, 0.4f, 6);
+						}
+						addTempo(server, GAIN_PER_HIT);
+					}
+				});
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("blur_runner"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void tick(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx) {
+						ServerPlayerEntity player = ctx.player();
+						if (tempo(player) >= BLUR) {
+							speedRun(ctx.world(), player, ctx.now());
+						}
+						if (tempo(player) >= MAX && player.isSprinting()) {
+							trample(ctx.world(), player, ctx.now());
+						}
+					}
+				});
+		Xlr8Moves.register();
 	}
 
 	// --- Tempo -----------------------------------------------------------------------------------
@@ -126,7 +146,7 @@ final class Xlr8Abilities {
 		return TransformationManager.get(player).activeAlien().filter(XLR8::equals).isPresent();
 	}
 
-	private static void addTempo(ServerPlayerEntity player, float amount) {
+	static void addTempo(ServerPlayerEntity player, float amount) {
 		float before = tempo(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		TEMPO.put(player.getUuid(), after);
@@ -145,7 +165,7 @@ final class Xlr8Abilities {
 	}
 
 	/** Faktor 1..2 nach Tempo; bei voller Schallmauer wird das Tempo verbraucht ({@code full}). */
-	private static Boost boost(ServerPlayerEntity player) {
+	static Boost boost(ServerPlayerEntity player) {
 		float tempo = tempo(player);
 		if (tempo >= MAX) {
 			TEMPO.put(player.getUuid(), 0.0f);
@@ -154,7 +174,7 @@ final class Xlr8Abilities {
 		return new Boost(1.0f + tempo / (MAX * 1.5f), false);
 	}
 
-	private record Boost(float factor, boolean full) {
+	record Boost(float factor, boolean full) {
 	}
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------
@@ -301,15 +321,6 @@ final class Xlr8Abilities {
 			}
 			ServerWorld world = player.getServerWorld();
 			long now = world.getTime();
-			if (now % INTERVAL == 0) {
-				tickTempo(world, player, now);
-			}
-			if (tempo(player) >= BLUR) {
-				speedRun(world, player, now);
-			}
-			if (tempo(player) >= MAX && player.isSprinting()) {
-				trample(world, player, now);
-			}
 			Effect effect = EFFECTS.get(player.getUuid());
 			if (effect != null && !tickEffect(world, player, effect, now)) {
 				EFFECTS.remove(player.getUuid());
