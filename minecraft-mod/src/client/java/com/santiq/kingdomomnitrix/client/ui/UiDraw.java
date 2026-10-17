@@ -55,6 +55,21 @@ public final class UiDraw {
 		context.drawTexture(used, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
 	}
 
+	/**
+	 * Eingefaerbte Glyphe (16x16, weiss) in beliebiger Groesse; fehlt sie, wird das gerahmte Ersatzsymbol gezeichnet.
+	 */
+	public static void glyph(DrawContext context, Identifier glyph, Identifier fallback, int x, int y, int size, int rgb, float alpha) {
+		if (!exists(glyph)) {
+			icon(context, fallback, fallback, x, y, size);
+			return;
+		}
+		RenderSystem.enableBlend();
+		context.setShaderColor(((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f, alpha);
+		context.drawTexture(glyph, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+		context.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+		RenderSystem.disableBlend();
+	}
+
 	/** Groesse der Alien-Symbole und -Silhouetten in der Textur. */
 	public static final int ALIEN_ICON_SIZE = 64;
 
