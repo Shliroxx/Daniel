@@ -1135,6 +1135,20 @@ def icons(c) -> dict[str, list]:
         "refraction": lambda: [L(m_prism(), c, glow=PURPLE), L(m_arrow(10, 128, 90, 128, 14, 28), STONE)],
         "mirror_prism": lambda: [L(m_hex(80, 100, 56, 12, True), c, glow=PURPLE), L(m_beam(170, 120, 250, 12), W), L(m_figure(70, 40, 0.3), STONE)],
         "prism_rush": lambda: [L(m_crystal(90, 128, 110, 46, 1.57), c, glow=PURPLE), L(m_arrow(150, 110, 236, 40, 12, 26), W), L(m_arrow(150, 146, 236, 216, 12, 26), W)],
+        "sound_bullet": lambda: [L(m_circle(190, 128, 34), W, glow=ICE), L(m_waves(60, 128, 3, -30, 30, 12, 30), c)],
+        "echo_swap": lambda: [L(m_figure(-60, 20, 0.4), c, glow=c), L(m_figure(60, 20, 0.4), mix(c, W, 0.4)), L(m_arrow(80, 70, 176, 70, 12, 24), W), L(m_arrow(176, 200, 80, 200, 12, 24), W)],
+        "feedback_loop": lambda: [L(m_figure(0, 10, 0.4), STONE), L(m_ring(128, 128, 100, 12), c, glow=ICE), L(m_arrow(20, 128, 70, 128, 10, 20), W), L(m_arrow(236, 128, 186, 128, 10, 20), W)],
+        "bass_drop": lambda: [ground(), L(m_waves(128, 200, 3, 200, 340, 14, 32), c, glow=ICE), L(m_circle(128, 90, 30), W)],
+        "clone_burst": lambda: [L(m_burst(80, 150, 60, 20, 10), W, glow=ICE), L(m_burst(176, 150, 60, 20, 10), W), L(m_burst(128, 70, 60, 20, 10), W)],
+        "sonic_symphony": lambda: [L(m_ring(128, 128, 104, 10), c, glow=ICE), L(m_figure(-80, -30, 0.25), W), L(m_figure(80, -30, 0.25), W), L(m_figure(0, 70, 0.25), W), L(m_star(128, 128, 40), W)],
+        "echo_tackle": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), ICE), L(m_figure(40, 20, 0.5), c, glow=ICE)],
+        "drop_note": lambda: [ground(), L(m_arrow(128, 30, 128, 150, 24, 46), c, glow=ICE), L(m_waves(128, 200, 2, 200, 340, 12, 30), W)],
+        "point_blank": lambda: [L(m_mouth(), c, glow=ICE), L(m_waves(170, 128, 3, -40, 40, 12, 26), W)],
+        "boom_landing": lambda: [ground(), L(m_figure(0, -20, 0.4), c, glow=ICE), L(m_ring(128, 205, 100, 10, 190, 350), W), L(m_ring(128, 205, 60, 10, 190, 350), W)],
+        "shatter_frequency": lambda: [L(m_shards_ring(128, 128, 96, 8, 26), W, glow=ICE), L(m_waves(128, 128, 3, 0, 360, 10, 24), c)],
+        "sonorosian_resonance": lambda: [L(m_fist(-20, 10, 0.7), c, glow=ICE), L(m_waves(180, 128, 2, -40, 40, 10, 26), W)],
+        "echolocation": lambda: [L(m_eye(), c, glow=ICE), L(m_ring(128, 128, 110, 8), W)],
+        "sound_dampening": lambda: [L(m_shield(), c, glow=ICE), L(m_waves(128, 128, 2, -40, 40, 10, 26), W)],
     }
 
 

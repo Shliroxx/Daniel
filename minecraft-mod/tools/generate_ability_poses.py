@@ -296,6 +296,17 @@ ABILITY_POSE = {
     "absorb_touch": "guard",
     "meteor_prism": "slam",
     "spectrum_break": "beam",
+    "sound_bullet": "shoot",
+    "echo_swap": "dodge",
+    "feedback_loop": "focus",
+    "bass_drop": "slam",
+    "clone_burst": "spread",
+    "sonic_symphony": "ultimate",
+    "echo_tackle": "dodge",
+    "drop_note": "slam",
+    "point_blank": "roar",
+    "boom_landing": "slam",
+    "shatter_frequency": "roar",
 }
 
 

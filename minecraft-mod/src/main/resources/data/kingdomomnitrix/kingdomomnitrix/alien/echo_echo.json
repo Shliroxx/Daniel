@@ -94,6 +94,133 @@
       "params": {},
       "role": "ultimate",
       "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:sound_bullet",
+      "energy": 12,
+      "cooldown": 40,
+      "params": {
+        "range": 20.0,
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:echo_swap",
+      "energy": 15,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "movement",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:feedback_loop",
+      "energy": 30,
+      "cooldown": 220,
+      "params": {
+        "range": 14.0,
+        "damage": 2.0,
+        "seconds": 3.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:bass_drop",
+      "energy": 25,
+      "cooldown": 140,
+      "params": {
+        "radius": 4.5,
+        "damage": 4.0
+      },
+      "role": "basic_2",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:clone_burst",
+      "energy": 25,
+      "cooldown": 200,
+      "params": {
+        "damage": 5.0,
+        "radius": 3.5
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:sonic_symphony",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "range": 20.0,
+        "ring": 6.0,
+        "radius": 5.0,
+        "damage": 2.0,
+        "seconds": 5.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:echo_tackle",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:drop_note",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:point_blank",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:boom_landing",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.0,
+        "damage": 5.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:shatter_frequency",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 8.0,
+        "per_clone": 2.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -117,6 +244,28 @@
   "failsafe_priority": 1,
   "traits": {
     "effects": [],
-    "transform_style": "echo"
+    "transform_style": "echo",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:sonorosian_resonance",
+        "params": {
+          "damage": 1.5
+        }
+      },
+      {
+        "type": "kingdomomnitrix:echolocation",
+        "params": {
+          "radius": 16.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:sound_dampening",
+        "unlock_level": 4,
+        "params": {
+          "reduction": 0.5,
+          "retaliate": 1.5
+        }
+      }
+    ]
   }
 }

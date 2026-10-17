@@ -52,7 +52,7 @@ final class EchoEchoAbilities {
 	static final int RESONANCE_TICKS = 10;
 	private static final Identifier ECHO_ECHO = KingdomOmnitrix.id("echo_echo");
 	private static final float RESONANCE_BONUS = 3.0f;
-	private static final int CLONE_LIFE = 600;
+	static final int CLONE_LIFE = 600;
 
 	/** Schalltreffer je Ziel: Zeit des ersten Treffers im Fenster und Zahl der Quellen */
 	private static final Map<UUID, long[]> HEARD = new HashMap<>();
@@ -84,6 +84,7 @@ final class EchoEchoAbilities {
 			}
 		});
 		ServerTickEvents.END_SERVER_TICK.register(EchoEchoAbilities::tick);
+		EchoEchoMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			dismissClones(handler.getPlayer());
 			forgetState(handler.getPlayer().getUuid());
@@ -103,7 +104,7 @@ final class EchoEchoAbilities {
 				c -> c.isAlive() && player.getUuid().equals(c.ownerId()));
 	}
 
-	private static int spawnClones(ServerWorld world, ServerPlayerEntity player, int count, int life) {
+	static int spawnClones(ServerWorld world, ServerPlayerEntity player, int count, int life) {
 		int existing = clones(player).size();
 		int spawned = 0;
 		int max = maxClones(player);
@@ -129,7 +130,7 @@ final class EchoEchoAbilities {
 	}
 
 	/** Ultimate: mehr Stimmen im Chor. */
-	private static int maxClones(ServerPlayerEntity player) {
+	static int maxClones(ServerPlayerEntity player) {
 		return com.santiq.kingdomomnitrix.alien.Evolution.isUltimate(player) ? MAX_CLONES + 2 : MAX_CLONES;
 	}
 
@@ -153,7 +154,7 @@ final class EchoEchoAbilities {
 	}
 
 	/** Zielpunkt des Chors: was Echo Echo anvisiert (Block oder Luft in Reichweite). */
-	private static Vec3d aimPoint(ServerWorld world, ServerPlayerEntity player, double range) {
+	static Vec3d aimPoint(ServerWorld world, ServerPlayerEntity player, double range) {
 		Vec3d eye = player.getEyePos();
 		Vec3d end = eye.add(player.getRotationVec(1.0f).multiply(range));
 		HitResult hit = world.raycast(new RaycastContext(eye, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player));
@@ -165,7 +166,7 @@ final class EchoEchoAbilities {
 	/**
 	 * Ein Schalltreffer: Schaden, Rueckstoss von der Quelle weg; zweite und weitere Quelle im Fenster → Resonanz.
 	 */
-	private static void soundHit(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage, Vec3d from, double knockback) {
+	static void soundHit(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage, Vec3d from, double knockback) {
 		if (!target.isAlive() || target == owner || target instanceof EchoCloneEntity || !PartyRules.canHarm(owner, target)) {
 			return;
 		}
@@ -203,7 +204,7 @@ final class EchoEchoAbilities {
 	}
 
 	/** Kegel aus einer Quelle: trifft alles im Kegel bis {@code range}. */
-	private static void cone(ServerWorld world, ServerPlayerEntity owner, Vec3d from, Vec3d dir, double range, double dot, float damage, double knockback) {
+	static void cone(ServerWorld world, ServerPlayerEntity owner, Vec3d from, Vec3d dir, double range, double dot, float damage, double knockback) {
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, new net.minecraft.util.math.Box(from, from).expand(range),
 				e -> e.isAlive() && e != owner && !(e instanceof EchoCloneEntity))) {
 			Vec3d to = target.getPos().add(0, target.getHeight() * 0.5, 0).subtract(from);
@@ -214,7 +215,7 @@ final class EchoEchoAbilities {
 		screamFx(world, from, dir, range);
 	}
 
-	private static void screamFx(ServerWorld world, Vec3d from, Vec3d dir, double range) {
+	static void screamFx(ServerWorld world, Vec3d from, Vec3d dir, double range) {
 		for (int i = 1; i <= (int) range; i++) {
 			Vec3d p = from.add(dir.multiply(i));
 			com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, new Vec3d(p.x, p.y, p.z), 0xC8E8FF, 3.5f, 10);

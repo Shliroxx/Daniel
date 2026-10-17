@@ -13,9 +13,13 @@ i=0
 for alien in "$@"; do
 	i=$((i+1))
 	count=$(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))['abilities']))" "$DATA/$alien.json")
-	$C cmd "/spreadplayers ~$((i*40)) ~$((i*25)) 0 1 false @s"
+	# zufaelliger Versatz: nicht jeder Lauf an derselben (evtl. engen) Stelle
+	$C cmd "/spreadplayers ~$((i*40 + RANDOM % 600)) ~$((i*25 + RANDOM % 600)) 0 1 false @s"
 	# immer an die Oberflaeche (nicht in Hoehlen), damit das Ziel frei vor dem Alien steht
 	$C cmd "/execute positioned over motion_blocking_no_leaves run tp @s ~ ~ ~"
+	# flache, freie Testflaeche: Hang oder Schlucht duerfen das Ziel nicht in eine Wand setzen
+	$C cmd "/fill ~-8 ~ ~-8 ~8 ~8 ~8 minecraft:air"
+	$C cmd "/fill ~-8 ~-1 ~-8 ~8 ~-1 ~8 minecraft:stone"
 	$C cmd "/hero transform kingdomomnitrix:$alien"
 	sleep 4
 	for ((n=0; n<count; n++)); do
