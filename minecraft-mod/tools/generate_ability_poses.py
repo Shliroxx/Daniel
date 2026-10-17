@@ -285,6 +285,17 @@ ABILITY_POSE = {
     "root_grab": "swipe",
     "swamp_crash": "slam",
     "combustion": "beam",
+    "light_lance": "beam",
+    "crystal_spires": "slam",
+    "mirror_prism": "focus",
+    "blinding_flash": "spread",
+    "energy_release": "beam",
+    "spectral_cataclysm": "ultimate",
+    "prism_rush": "dodge",
+    "starfall_strike": "slam",
+    "absorb_touch": "guard",
+    "meteor_prism": "slam",
+    "spectrum_break": "beam",
 }
 
 

@@ -1121,6 +1121,20 @@ def icons(c) -> dict[str, list]:
         "burning_fists": lambda: [L(m_fist(0, 10, 0.8), c, glow=FIRE), L(m_flame(50, -60, 0.35), FIRE)],
         "methane_body": lambda: [L(m_cloud(), mix(c, W, 0.3), glow=c), L(m_shield(0, 30, 0.4), c)],
         "photosynthesis": lambda: [L(m_burst(190, 66, 56, 30, 10), FIRE_HOT, glow=FIRE_HOT), L(m_leaf(110, 150, 80), rgb("4C8C34"), glow=c)],
+        "light_lance": lambda: [L(m_beam(128, 0, 256, 22), W, glow=PURPLE), L(m_beam(110, 0, 256, 8), rgb("FF4A4A"), outline=None), L(m_beam(146, 0, 256, 8), rgb("4A8AFF"), outline=None)],
+        "crystal_spires": lambda: [ground(), L(m_crystal(60, 170, 90, 30), PURPLE, glow=PURPLE), L(m_crystal(128, 150, 130, 40), c), L(m_crystal(196, 170, 90, 30), PURPLE)],
+        "blinding_flash": lambda: [L(m_eye(), DARK), L(m_burst(128, 128, 110, 30, 12), W, glow=W, glow_alpha=0.7)],
+        "energy_release": lambda: [L(m_beam(128, 30, 256, 56), W, glow=PURPLE), L(m_circle(50, 128, 46), c)],
+        "spectral_cataclysm": lambda: [L(m_ring(128, 128, 110, 10), rgb("FF4A4A"), glow=PURPLE), L(m_ring(128, 128, 90, 10), rgb("FFD44A")), L(m_ring(128, 128, 70, 10), rgb("4AE84A")), L(m_ring(128, 128, 50, 10), rgb("4A8AFF")), L(m_star(128, 128, 36), W)],
+        "starfall_strike": lambda: [ground(), L(m_star(128, 90, 60), W, glow=PURPLE), L(m_ring(128, 205, 80, 10, 190, 350), c)],
+        "absorb_touch": lambda: [L(m_figure(-40, 20, 0.45), STONE), L(m_arrow(110, 128, 230, 128, 20, 40), c, glow=PURPLE)],
+        "meteor_prism": lambda: [ground(), L(m_crystal(128, 90, 120, 44, 3.14159), c, glow=PURPLE), L(m_ring(128, 205, 90, 10, 190, 350), W)],
+        "spectrum_break": lambda: [L(m_rays(128, 128, 7, -3.14, 3.14, 40, 124, 12), W, glow=PURPLE), L(m_crystal(128, 128, 90, 40), c)],
+        "solar_cells": lambda: [L(m_burst(128, 100, 90, 50, 12), FIRE_HOT, glow=FIRE_HOT), L(m_crystal(128, 170, 90, 40), c)],
+        "crystal_resonance": lambda: [L(m_fist(0, 10, 0.75), c, glow=PURPLE), L(m_waves(190, 90, 2, -45, 45, 10, 26), W)],
+        "refraction": lambda: [L(m_prism(), c, glow=PURPLE), L(m_arrow(10, 128, 90, 128, 14, 28), STONE)],
+        "mirror_prism": lambda: [L(m_hex(80, 100, 56, 12, True), c, glow=PURPLE), L(m_beam(170, 120, 250, 12), W), L(m_figure(70, 40, 0.3), STONE)],
+        "prism_rush": lambda: [L(m_crystal(90, 128, 110, 46, 1.57), c, glow=PURPLE), L(m_arrow(150, 110, 236, 40, 12, 26), W), L(m_arrow(150, 146, 236, 216, 12, 26), W)],
     }
 
 

@@ -35,7 +35,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.LightType;
 import net.minecraft.world.RaycastContext;
 import org.joml.Vector3f;
 
@@ -56,9 +55,8 @@ final class ChromastoneAbilities {
 	private static final Identifier CHROMASTONE = KingdomOmnitrix.id("chromastone");
 	/** Speicher je absorbiertem Schadenspunkt */
 	private static final float ABSORB = 5.0f;
-	private static final float SUN_PER_SECOND = 1.0f;
 	/** Regenbogenfarben fuer Strahlen und Funkeln */
-	private static final DustParticleEffect[] SPECTRUM = {
+	static final DustParticleEffect[] SPECTRUM = {
 			dust(1.0f, 0.2f, 0.2f), dust(1.0f, 0.55f, 0.1f), dust(1.0f, 0.95f, 0.2f), dust(0.3f, 1.0f, 0.3f),
 			dust(0.2f, 0.8f, 1.0f), dust(0.3f, 0.35f, 1.0f), dust(0.75f, 0.35f, 1.0f)};
 
@@ -88,6 +86,7 @@ final class ChromastoneAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("solar_charge"), ChromastoneAbilities::solarCharge);
 		AbilityRegistry.register(KingdomOmnitrix.id("full_spectrum"), ChromastoneAbilities::fullSpectrum);
 		ServerTickEvents.END_SERVER_TICK.register(ChromastoneAbilities::tick);
+		ChromastoneMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forgetState(handler.getPlayer().getUuid()));
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(ChromastoneAbilities::allowDamage);
 	}
@@ -100,7 +99,7 @@ final class ChromastoneAbilities {
 		return STORE.getOrDefault(player.getUuid(), 0.0f);
 	}
 
-	private static void charge(ServerPlayerEntity player, float amount) {
+	static void charge(ServerPlayerEntity player, float amount) {
 		float before = store(player);
 		float after = MathHelper.clamp(before + amount, 0.0f, MAX);
 		STORE.put(player.getUuid(), after);
@@ -112,7 +111,7 @@ final class ChromastoneAbilities {
 	}
 
 	/** Bis zu {@code max} Speicher abgeben; Rueckgabe: abgegebene Menge. */
-	private static float spend(ServerPlayerEntity player, float max) {
+	static float spend(ServerPlayerEntity player, float max) {
 		float used = Math.min(store(player), max);
 		STORE.put(player.getUuid(), store(player) - used);
 		return used;
@@ -152,7 +151,7 @@ final class ChromastoneAbilities {
 
 	// --- Bausteine -------------------------------------------------------------------------------
 
-	private static void hit(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage) {
+	static void hit(ServerWorld world, ServerPlayerEntity player, LivingEntity target, float damage) {
 		bonusHit = true;
 		try {
 			target.timeUntilRegen = 0;
@@ -163,7 +162,7 @@ final class ChromastoneAbilities {
 	}
 
 	/** Regenbogenlinie: Farbbaender nebeneinander entlang der Strecke. */
-	private static void rainbow(ServerWorld world, Vec3d from, Vec3d to, double density) {
+	static void rainbow(ServerWorld world, Vec3d from, Vec3d to, double density) {
 		Vec3d step = to.subtract(from);
 		int points = Math.max(6, (int) (step.length() * density));
 		Vec3d side = step.crossProduct(new Vec3d(0, 1, 0));
@@ -177,7 +176,7 @@ final class ChromastoneAbilities {
 		}
 	}
 
-	private static void nova(ServerWorld world, ServerPlayerEntity player, double radius, float damage) {
+	static void nova(ServerWorld world, ServerPlayerEntity player, double radius, float damage) {
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius),
 				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && e.distanceTo(player) <= radius)) {
 			hit(world, player, target, damage);
@@ -258,8 +257,16 @@ final class ChromastoneAbilities {
 				RaycastContext.FluidHandling.NONE, player));
 		double reach = wall.getType() == HitResult.Type.MISS ? distance : Math.max(0.0, eye.distanceTo(wall.getPos()) - 0.8);
 		for (double d = reach; d >= 1.0; d -= 0.5) {
-			Vec3d feet = eye.add(look.multiply(d)).subtract(0.0, player.getStandingEyeHeight(), 0.0);
-			if (world.isSpaceEmpty(player, player.getBoundingBox().offset(feet.subtract(player.getPos())))) {
+			Vec3d aimed = eye.add(look.multiply(d)).subtract(0.0, player.getStandingEyeHeight(), 0.0);
+			// leicht nach unten geblickt: Zielpunkt bis 1,2 Bloecke anheben, statt im Boden zu landen
+			Vec3d feet = null;
+			for (double lift = 0.0; lift <= 1.2 && feet == null; lift += 0.6) {
+				Vec3d candidate = aimed.add(0.0, lift, 0.0);
+				if (world.isSpaceEmpty(player, player.getBoundingBox().offset(candidate.subtract(player.getPos())))) {
+					feet = candidate;
+				}
+			}
+			if (feet != null) {
 				Vec3d from = player.getPos();
 				float damage = (float) ctx.param("damage", 5.0);
 				Set<UUID> done = new HashSet<>();
@@ -337,10 +344,7 @@ final class ChromastoneAbilities {
 			}
 			ServerWorld world = player.getServerWorld();
 			long now = world.getTime();
-			// Sonnenlicht laedt nach
-			if (now % 20 == 0 && world.isDay() && world.getLightLevel(LightType.SKY, player.getBlockPos()) >= 14 && !world.isRaining()) {
-				charge(player, SUN_PER_SECOND);
-			}
+			// Sonnenlicht laedt ueber die Passive „Solarzellen“ nach (ChromastoneMoves)
 			// Funkeln je nach Ladung (die Ladung sieht man am Koerper, ohne Aura)
 			float store = store(player);
 			if (store > 0.0f && world.random.nextFloat() < store / 120.0f) {
