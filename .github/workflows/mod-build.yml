@@ -65,6 +65,7 @@ jobs:
           python tools/generate_planet_worlds.py --check
           python tools/generate_fx_textures.py --check
           python tools/generate_machine_textures.py --check
+          python tools/generate_ability_icons.py --check
           python tools/generate_boss_models.py --check
           python tools/generate_icons.py --check
           python tools/generate_particles.py --check

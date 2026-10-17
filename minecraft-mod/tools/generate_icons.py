@@ -682,32 +682,8 @@ def build_icon(name: str, theme: str, glyph_name: str, plus: bool) -> Image.Imag
     return img
 
 
-def build_hud_glyph(glyph_name: str, plus: bool) -> Image.Image:
-    """Rahmenloses Symbol fuer das Faehigkeiten-HUD: weisse Glyphe mit dunkler Kontur (wird im Spiel eingefaerbt)."""
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
-    g = glyph(glyph_name, "D8DEE6", "FFFFFF")
-    img.alpha_composite(g, (2, 2))
-    if plus:
-        img.alpha_composite(glyph("plus", "FFE14A", "FFE14A"), (10, 10))
-    # 1-px-Kontur: jedes leere Pixel neben einem gefuellten wird dunkel
-    src = img.copy()
-    for y in range(16):
-        for x in range(16):
-            if src.getpixel((x, y))[3] > 0:
-                continue
-            if any(0 <= x + dx < 16 and 0 <= y + dy < 16 and src.getpixel((x + dx, y + dy))[3] > 0
-                   for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
-                img.putpixel((x, y), hexc("0A0C10", 220))
-    return img
-
-
 def build_all() -> dict[str, Image.Image]:
-    out = {f"textures/gui/icon/{name}.png": build_icon(name, *spec) for name, spec in ICONS.items()}
-    # HUD-Glyphen ohne Plakette fuer die Alien-Faehigkeiten
-    for name, (theme, glyph_name, plus) in ICONS.items():
-        if name.startswith("alien_ability/"):
-            out[f"textures/gui/icon/hud_glyph/{name.split('/', 1)[1]}.png"] = build_hud_glyph(glyph_name, plus)
-    return out
+    return {f"textures/gui/icon/{name}.png": build_icon(name, *spec) for name, spec in ICONS.items()}
 
 
 def main(argv: list[str] | None = None) -> int:

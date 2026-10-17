@@ -29,9 +29,9 @@ public final class Icons {
 		return texture(type.getNamespace(), "alien_ability/" + type.getPath());
 	}
 
-	/** Rahmenlose weisse Glyphe derselben Faehigkeit fuer das HUD (wird eingefaerbt). */
-	public static Identifier alienAbilityGlyph(Identifier type) {
-		return texture(type.getNamespace(), "hud_glyph/" + type.getPath());
+	/** Eigenes farbiges Symbol der Faehigkeit fuer das HUD (64x64, {@code tools/generate_ability_icons.py}). */
+	public static Identifier alienAbilityArt(Identifier type) {
+		return texture(type.getNamespace(), "ability_art/" + type.getPath());
 	}
 
 	/** Farbiges Alien-Symbol ({@code textures/gui/alien/<alien>.png}, erzeugt von {@code tools/generate_alien_icons.py}). */

@@ -55,17 +55,21 @@ public final class UiDraw {
 		context.drawTexture(used, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
 	}
 
+	/** Groesse der Faehigkeits-Bilder ({@code ability_art}) in der Textur. */
+	public static final int ART_SIZE = 64;
+
 	/**
-	 * Eingefaerbte Glyphe (16x16, weiss) in beliebiger Groesse; fehlt sie, wird das gerahmte Ersatzsymbol gezeichnet.
+	 * Farbiges Faehigkeits-Bild (64x64) in beliebiger Groesse, mit Faerbung ({@code rgb} 0xFFFFFF = unveraendert);
+	 * fehlt es (fremdes Datenpaket), das gerahmte Ersatzsymbol.
 	 */
-	public static void glyph(DrawContext context, Identifier glyph, Identifier fallback, int x, int y, int size, int rgb, float alpha) {
-		if (!exists(glyph)) {
+	public static void art(DrawContext context, Identifier art, Identifier fallback, int x, int y, int size, int rgb, float alpha) {
+		if (!exists(art)) {
 			icon(context, fallback, fallback, x, y, size);
 			return;
 		}
 		RenderSystem.enableBlend();
 		context.setShaderColor(((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f, alpha);
-		context.drawTexture(glyph, x, y, size, size, 0, 0, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+		context.drawTexture(art, x, y, size, size, 0, 0, ART_SIZE, ART_SIZE, ART_SIZE, ART_SIZE);
 		context.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderSystem.disableBlend();
 	}

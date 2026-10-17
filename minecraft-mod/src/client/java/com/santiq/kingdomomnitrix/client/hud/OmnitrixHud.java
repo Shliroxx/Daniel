@@ -48,7 +48,7 @@ public final class OmnitrixHud implements HudElement {
 	/** Tasten-Chip ragt unten aus dem Feld */
 	private static final int CHIP_OVERHANG = 5;
 	private static final int ICON = 11;
-	private static final int ICON_IN_SLOT = 20;
+	private static final int ICON_IN_SLOT = 22;
 	private static final int PER_ROW = 3;
 	private static final int TIMER_WARNING_COLOR = 0xFFFF5555;
 	private static final int ENERGY_COLOR = 0x4FC3FF;
@@ -287,8 +287,8 @@ public final class OmnitrixHud implements HudElement {
 			// gesperrt: dunkles Feld, blasses Symbol, Schloss mit benoetigter Meisterschaft
 			HudGfx.roundedGradient(context, x, y, s, s, 3, 0xF0161A1E, 0xF00A0C0E);
 			HudGfx.roundedBorder(context, x, y, s, s, 0xFF30363C);
-			UiDraw.glyph(context, Icons.alienAbilityGlyph(slot.type()), Icons.alienAbility(slot.type()), iconX, iconY, ICON_IN_SLOT,
-					0x5A6068, 1.0f);
+			UiDraw.art(context, Icons.alienAbilityArt(slot.type()), Icons.alienAbility(slot.type()), iconX, iconY, ICON_IN_SLOT,
+					0x4A4E54, 0.8f);
 			String need = "★" + slot.unlockLevel();
 			drawCentered(context, font, need, x + s / 2, y + (s - font.fontHeight) / 2 + 1, 0xFFB08A2E);
 			chip(context, font, key, x + s / 2, y + s - 4, 0xFF30363C, 0xFF6E767E);
@@ -315,9 +315,9 @@ public final class OmnitrixHud implements HudElement {
 			float pulse = 0.55f + 0.25f * MathHelper.sin(now * 0.15f + index);
 			HudGfx.glow(context, x, y, s, s, frame, ultimate ? pulse + 0.2f : pulse * 0.6f, ultimate ? 3 : 2);
 		}
-		int glyphColor = cooling ? 0x8A9098 : !affordable ? 0xE08080 : HudGfx.mix(frame, 0xFFFFFF, 0.55f);
-		UiDraw.glyph(context, Icons.alienAbilityGlyph(slot.type()), Icons.alienAbility(slot.type()), iconX, iconY, ICON_IN_SLOT,
-				glyphColor, 1.0f);
+		// eigenes Bild je Faehigkeit; abklingend abgedunkelt, ohne Energie roetlich
+		int tint = cooling ? 0x80848A : !affordable ? 0xFF9090 : 0xFFFFFF;
+		UiDraw.art(context, Icons.alienAbilityArt(slot.type()), Icons.alienAbility(slot.type()), iconX, iconY, ICON_IN_SLOT, tint, 1.0f);
 
 		// Abklingzeit: dunkler Kreissektor, der im Uhrzeigersinn zurueckweicht, dazu die Sekunden
 		if (cooling && slot.cooldown() > 0) {
