@@ -318,6 +318,17 @@ ABILITY_POSE = {
     "isotope_grip": "guard",
     "nuclear_dive": "slam",
     "critical_mass": "beam",
+    "claw_flurry": "swipe",
+    "clothesline": "dodge",
+    "piledriver": "slam",
+    "elbow_drop": "leap",
+    "trash_talk": "roar",
+    "royal_rumble": "ultimate",
+    "spear_tackle": "dodge",
+    "flying_elbow": "slam",
+    "headlock": "guard",
+    "diving_splash": "slam",
+    "rath_bomb": "slam",
 }
 
 

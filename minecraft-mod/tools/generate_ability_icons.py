@@ -1163,6 +1163,20 @@ def icons(c) -> dict[str, list]:
         "reactor_core": lambda: [L(m_atom(), ACID, glow=ACID), L(m_circle(128, 128, 30), FIRE_HOT)],
         "radiation_shield": lambda: [L(m_shield(), c, glow=ACID), L(m_plus(128, 120, 40, 20), W)],
         "critical_mass": lambda: [L(m_shards_ring(128, 128, 104, 8, 24), ACID, glow=ACID), L(m_circle(128, 128, 58), c), L(m_burst(128, 128, 50, 18, 8), FIRE_HOT, outline=None)],
+        "claw_flurry": lambda: [L(m_claws(0.3, 3), W, glow=FIRE), L(m_claws(-0.3, 3), mix(W, c, 0.4))],
+        "clothesline": lambda: [L(m_speedlines(60, 196, 10, 90, 4, 12), cl), L(m_beam(110, 100, 236, 30), c, glow=FIRE), L(m_figure(60, 60, 0.3), STONE)],
+        "piledriver": lambda: [ground(), L(m_figure(0, -30, 0.45), STONE), L(m_arrow(128, 60, 128, 190, 22, 40), c, glow=FIRE), L(m_cracks(128, 206), DARK, outline=None)],
+        "elbow_drop": lambda: [ground(), L(m_arrow(50, 50, 160, 180, 22, 44), c, glow=FIRE), L(m_ring(160, 205, 70, 10, 190, 350), W)],
+        "spear_tackle": lambda: [L(m_speedlines(60, 196, 10, 100, 4, 12), cl), L(m_figure(40, 30, 0.45), c, glow=FIRE)],
+        "flying_elbow": lambda: [ground(), L(m_arrow(60, 40, 128, 170, 22, 42), c, glow=FIRE), L(m_waves(128, 205, 2, 200, 340, 10, 26), W)],
+        "headlock": lambda: [L(m_figure(0, 10, 0.45), STONE), L(m_ring(128, 90, 50, 14), c, glow=FIRE)],
+        "diving_splash": lambda: [ground(), L(m_figure(0, -10, 0.55), c, glow=FIRE), L(m_ring(128, 205, 110, 10, 190, 350), W)],
+        "rath_bomb": lambda: [ground(), L(m_burst(128, 200, 80, 26, 10), FIRE, glow=FIRE), L(m_figure(0, -40, 0.4), STONE)],
+        "unbreakable_fury": lambda: [L(m_fist(0, 10, 0.8), c, glow=FIRE), L(m_heart(60, -60, 0.35), rgb("C83A3A"))],
+        "appoplexian_temper": lambda: [L(m_flame(0, 0, 0.8), FIRE, glow=FIRE), L(m_fist(0, 40, 0.4), c)],
+        "victory_lap": lambda: [L(m_crown(), FIRE_HOT, glow=FIRE_HOT), L(m_plus(190, 190, 40, 22), W)],
+        "trash_talk": lambda: [L(m_mouth(), c, glow=FIRE), L(m_waves(190, 128, 3, -40, 40, 12, 28), W)],
+        "royal_rumble": lambda: [L(m_ring(128, 128, 108, 10), FIRE_HOT, glow=FIRE), L(m_figure(-55, 30, 0.33), STONE), L(m_figure(55, 30, 0.33), STONE), L(m_fist(0, -20, 0.55), c)],
     }
 
 

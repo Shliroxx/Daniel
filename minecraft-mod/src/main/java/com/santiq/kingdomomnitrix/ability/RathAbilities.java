@@ -41,8 +41,8 @@ import net.minecraft.util.math.Vec3d;
  * </ul>
  */
 final class RathAbilities {
-	private static final int FURY = 0xFF8A1E;
-	private static final int DUST = 0x9C8466;
+	static final int FURY = 0xFF8A1E;
+	static final int DUST = 0x9C8466;
 	private static final Identifier RATH = KingdomOmnitrix.id("rath");
 	private static final int CHAIN_WINDOW = 60;
 
@@ -75,6 +75,7 @@ final class RathAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("appoplexian_roar"), RathAbilities::roar);
 		AbilityRegistry.register(KingdomOmnitrix.id("rath_finale"), RathAbilities::finale);
 		ServerTickEvents.END_SERVER_TICK.register(RathAbilities::tick);
+		RathMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.getPlayer().getUuid()));
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(RathAbilities::allowDamage);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((target, source, base, taken, blocked) -> {
@@ -83,12 +84,7 @@ final class RathAbilities {
 				return;
 			}
 			ServerWorld world = rath.getServerWorld();
-			// Unbeugsam: Zusatzschaden je fehlendem Leben
-			float missing = 1.0f - rath.getHealth() / rath.getMaxHealth();
-			float fury = Math.min(0.6f, Math.max(0.0f, (missing - 0.2f) / 0.6f * 0.6f));
-			if (fury > 0.05f) {
-				AlienKit.melee(world, rath, target, taken * fury);
-			}
+			// Unbeugsam (mehr Schaden bei wenig Leben) laeuft ueber die gleichnamige Passive (RathMoves)
 			Rival rival = RIVALS.get(rath.getUuid());
 			if (rival != null && rival.target().equals(target.getUuid())) {
 				long now = world.getTime();
@@ -122,7 +118,7 @@ final class RathAbilities {
 	}
 
 	/** Wurf: hochreissen und hinter Rath auf den Boden schmettern; Nachbarn bekommen den Aufprall ab. */
-	private static void throwBehind(ServerWorld world, ServerPlayerEntity rath, LivingEntity target, float taken) {
+	static void throwBehind(ServerWorld world, ServerPlayerEntity rath, LivingEntity target, float taken) {
 		Vec3d back = rath.getRotationVec(1.0f).multiply(-1, 0, -1).normalize();
 		target.setVelocity(back.x * 1.1, 0.9, back.z * 1.1);
 		target.velocityModified = true;
