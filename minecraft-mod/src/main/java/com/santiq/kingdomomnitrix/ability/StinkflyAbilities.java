@@ -1,7 +1,6 @@
 package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
-import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.weapon.HeroProjectileEntity;
 import java.util.ArrayList;
@@ -56,7 +55,6 @@ final class StinkflyAbilities {
 	static final int BURST_STACKS = 3;
 	static final float ROT_BONUS = 0.3f;
 	private static final int DECAY_TICKS = 60;
-	private static final Identifier STINKFLY = KingdomOmnitrix.id("stinkfly");
 	private static final DustParticleEffect TOXIC = new DustParticleEffect(new Vector3f(0.55f, 0.75f, 0.15f), 1.5f);
 	private static final DustParticleEffect SLIME = new DustParticleEffect(new Vector3f(0.45f, 0.9f, 0.3f), 1.1f);
 	/** Gas: giftgruen, Schleim: hellgruen, Kern: gelbgruen (Leuchten) */
@@ -98,6 +96,17 @@ final class StinkflyAbilities {
 		ServerTickEvents.END_SERVER_TICK.register(StinkflyAbilities::tick);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(StinkflyAbilities::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(StinkflyAbilities::afterDeath);
+		// Treffer von Stinkfly legen Schichten auf: passive Kraft „Lepidopterran-Gift“ (Zersetzung und Ansteckung gelten fuer alle)
+		com.santiq.kingdomomnitrix.ability.passive.PassiveRegistry.register(KingdomOmnitrix.id("lepidopterran_toxin"),
+				new com.santiq.kingdomomnitrix.ability.passive.AlienPassive() {
+					@Override
+					public void afterHit(com.santiq.kingdomomnitrix.ability.passive.PassiveContext ctx, LivingEntity target, DamageSource source, float damage) {
+						if (!bonusHit) {
+							addToxin(ctx.player(), target, 1);
+						}
+					}
+				});
+		StinkflyMoves.register();
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			UUID id = handler.getPlayer().getUuid();
 			STORMS.remove(id);
@@ -107,16 +116,12 @@ final class StinkflyAbilities {
 
 	// --- Toxin -----------------------------------------------------------------------------------
 
-	private static boolean isStinkfly(ServerPlayerEntity player) {
-		return TransformationManager.get(player).activeAlien().filter(STINKFLY::equals).isPresent();
-	}
-
 	static int stacks(LivingEntity target) {
 		Toxin toxin = TOXINS.get(target.getUuid());
 		return toxin == null ? 0 : toxin.stacks;
 	}
 
-	private static void addToxin(ServerPlayerEntity owner, LivingEntity target, int amount) {
+	static void addToxin(ServerPlayerEntity owner, LivingEntity target, int amount) {
 		if (!target.isAlive() || target == owner || !PartyRules.canHarm(owner, target)) {
 			return;
 		}
@@ -140,9 +145,6 @@ final class StinkflyAbilities {
 	private static void afterDamage(LivingEntity target, DamageSource source, float baseDamage, float damageTaken, boolean blocked) {
 		if (bonusHit || damageTaken <= 0.0f) {
 			return;
-		}
-		if (source.getAttacker() instanceof ServerPlayerEntity player && player != target && isStinkfly(player)) {
-			addToxin(player, target, 1);
 		}
 		if (stacks(target) >= MAX_STACKS && source.getAttacker() instanceof LivingEntity attacker && attacker != target && target.isAlive()) {
 			bonusHit = true;
@@ -175,6 +177,11 @@ final class StinkflyAbilities {
 		Fx.shards(world, body, GOO, 0.45f, 16);
 		Fx.smoke(world, body, GAS, 1.4f, 6);
 		world.playSound(null, target.getBlockPos(), SoundEvents.ENTITY_SLIME_DEATH, SoundCategory.PLAYERS, 1.2f, 0.6f);
+	}
+
+	/** Giftwolke setzen (gibt Schichten je Sekunde; {@code slime} macht klebrig). */
+	static void cloud(ServerPlayerEntity owner, Vec3d pos, double radius, int ticks, boolean slime) {
+		CLOUDS.add(new Cloud(owner.getUuid(), owner.getServerWorld().getRegistryKey(), pos, radius, owner.getServerWorld().getTime() + ticks, slime));
 	}
 
 	// --- Faehigkeiten ----------------------------------------------------------------------------

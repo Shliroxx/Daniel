@@ -93,6 +93,129 @@
         "radius": 2.5,
         "ticks": 160.0
       }
+    },
+    {
+      "type": "kingdomomnitrix:acid_drop",
+      "energy": 18,
+      "cooldown": 70,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:stinger_strike",
+      "energy": 15,
+      "cooldown": 60,
+      "params": {
+        "range": 6.0,
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:slime_trap",
+      "energy": 20,
+      "cooldown": 140,
+      "params": {
+        "range": 16.0,
+        "seconds": 3.0
+      },
+      "role": "utility",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:gas_jet",
+      "energy": 18,
+      "cooldown": 80,
+      "params": {
+        "power": 2.4
+      },
+      "role": "movement",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:corrosive_spray",
+      "energy": 30,
+      "cooldown": 200,
+      "params": {
+        "range": 7.0,
+        "damage": 3.0
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:plague_cloud",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "radius": 8.0,
+        "seconds": 8.0,
+        "damage": 2.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:wing_slash",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:dive_sting",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 6.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:slime_grab",
+      "energy": 8,
+      "cooldown": 70,
+      "params": {
+        "damage": 3.0,
+        "seconds": 2.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:toxic_plunge",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 1.8,
+        "damage": 6.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:dissolve",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 6.0,
+        "per_stack": 3.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
     }
   ],
   "dna_sources": [
@@ -117,6 +240,24 @@
       "minecraft:nausea",
       "minecraft:weakness"
     ],
-    "transform_style": "insect"
+    "transform_style": "insect",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:lepidopterran_toxin"
+      },
+      {
+        "type": "kingdomomnitrix:compound_eyes",
+        "params": {
+          "dodge": 0.3
+        }
+      },
+      {
+        "type": "kingdomomnitrix:stench",
+        "unlock_level": 4,
+        "params": {
+          "radius": 3.0
+        }
+      }
+    ]
   }
 }

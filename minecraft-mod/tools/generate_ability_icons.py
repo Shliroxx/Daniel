@@ -995,6 +995,20 @@ def icons(c) -> dict[str, list]:
         "vulpimancer_hunt": lambda: [L(m_reticle(), c, glow=c), L(m_claws(0.0, 3), W)],
         "scent_sight": lambda: [L(m_nose(), c, glow=c), L(nose_holes(), DARK, outline=None)],
         "survival_instinct": lambda: [L(m_heart(0, 0, 0.9), rgb("9A0A0A"), glow=FIRE, glow_alpha=0.5), L(m_claws(0.0, 3), c)],
+        "acid_drop": lambda: [L(m_drop(80, 90, 34), rgb("C8F040"), glow=c), L(m_drop(140, 130, 34), rgb("C8F040"), glow=c), L(m_drop(196, 170, 34), rgb("C8F040"), glow=c), ground()],
+        "stinger_strike": lambda: [L(m_spike(128, 230, 210, 46), c, glow=c), L(m_speedlines(60, 196, 10, 80, 3, 10), cl)],
+        "slime_trap": lambda: [L(m_bubble(), rgb("8EEA4E"), glow=c), L(m_figure(0, 10, 0.5), mix(c, DARK, 0.4))],
+        "gas_jet": lambda: [L(m_cloud(80, 140, 0.6), mix(c, W, 0.2), glow=c), L(m_arrow(110, 128, 230, 128, 22, 44), c, glow=c)],
+        "corrosive_spray": lambda: [L(m_waves(40, 128, 3, -40, 40, 18, 40), rgb("C8F040"), glow=c), L(m_drop(200, 128, 26), rgb("C8F040"))],
+        "plague_cloud": lambda: [L(m_cloud(128, 128, 1.3), c, glow=c, glow_alpha=0.8), L(m_skull(), DARK), L(skull_holes(), c, outline=None)],
+        "wing_slash": lambda: [flat(m_wing(True), c, 220), L(m_ring(128, 128, 96, 14, 200, 340), cl, glow=c)],
+        "dive_sting": lambda: [L(m_spike(128, 40, -160, 44), c, glow=c), L(m_drop(128, 210, 24), rgb("C8F040"))],
+        "slime_grab": lambda: [L(m_bubble(128, 140, 80), rgb("8EEA4E"), glow=c), L(m_mouth(), DARK)],
+        "toxic_plunge": lambda: [ground(), L(m_cloud(128, 170, 1.0), c, glow=c), L(m_arrow(128, 20, 128, 110, 18, 34), W)],
+        "dissolve": lambda: [L(m_burst(128, 128, 120, 60, 12), c, glow=c, glow_alpha=0.8), L(m_drop(128, 140, 50), rgb("C8F040"))],
+        "lepidopterran_toxin": lambda: [L(m_drop(128, 140, 70), rgb("C8F040"), glow=c), L(m_skull(), DARK)],
+        "compound_eyes": lambda: [L(m_eye(90, 110, 90, 60), c, glow=c), L(m_eye(166, 110, 90, 60), c, glow=c), L(m_eye(110, 170, 70, 46), cl), L(m_eye(146, 170, 70, 46), cl)],
+        "stench": lambda: [L(m_waves(128, 200, 3, 220, 320, 14, 30), c, glow=c), L(m_cloud(128, 110, 0.7), mix(c, W, 0.2))],
     }
 
 

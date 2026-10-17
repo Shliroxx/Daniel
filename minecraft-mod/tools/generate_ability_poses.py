@@ -186,6 +186,17 @@ ABILITY_POSE = {
     "throat_bite": "swipe",
     "predator_drop": "leap",
     "rip_apart": "roar",
+    "acid_drop": "throw",
+    "stinger_strike": "leap",
+    "slime_trap": "shoot",
+    "gas_jet": "leap",
+    "corrosive_spray": "beam",
+    "plague_cloud": "ultimate",
+    "wing_slash": "swipe",
+    "dive_sting": "leap",
+    "slime_grab": "shoot",
+    "toxic_plunge": "slam",
+    "dissolve": "ultimate",
 }
 
 
