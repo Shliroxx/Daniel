@@ -74,12 +74,8 @@ public final class OmnitrixWrist {
 
 	public static void register() {
 		ModelLoadingPlugin.register(context -> context.addModels(BASE, CORE, GLOW));
-		// Omnitrix-Item: Akzent-Schicht in der Farbe des eigenen Farbmoduls (der Stapel kennt seinen Traeger nicht)
-		net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register((stack, tintIndex) -> {
-			var player = MinecraftClient.getInstance().player;
-			return tintIndex == 0 && player != null ? 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player)
-					: tintIndex == 0 ? 0xFF000000 | com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.CLASSIC : -1;
-		}, com.santiq.kingdomomnitrix.registry.ModItems.OMNITRIX);
+		// Omnitrix-Item: dasselbe 3D-Modell wie am Arm, in der Farbe seines Energiekerns
+		OmnitrixItemRenderer.register();
 		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public Identifier getFabricId() {

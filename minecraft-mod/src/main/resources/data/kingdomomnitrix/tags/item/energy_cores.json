@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:energy_core_green",
+    "kingdomomnitrix:energy_core_blue",
+    "kingdomomnitrix:energy_core_red",
+    "kingdomomnitrix:energy_core_yellow",
+    "kingdomomnitrix:energy_core_purple",
+    "kingdomomnitrix:energy_core_white",
+    "kingdomomnitrix:energy_core_orange",
+    "kingdomomnitrix:energy_core_pink",
+    "kingdomomnitrix:energy_core_cyan"
+  ]
+}

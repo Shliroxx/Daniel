@@ -62,6 +62,7 @@ jobs:
           python tools/generate_npc_models.py --check
           python tools/generate_ship_mesh.py --check
           python tools/generate_planet_content.py --check
+          python tools/generate_ben10_content.py --check
           python tools/generate_planet_worlds.py --check
           python tools/generate_fx_textures.py --check
           python tools/generate_machine_textures.py --check

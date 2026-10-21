@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CCC",
+    "ITI",
+    "III"
+  ],
+  "key": {
+    "C": {
+      "item": "kingdomomnitrix:corrodium_crystal"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "T": {
+      "item": "minecraft:crafting_table"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:omnitrix_workbench",
+    "count": 1
+  }
+}

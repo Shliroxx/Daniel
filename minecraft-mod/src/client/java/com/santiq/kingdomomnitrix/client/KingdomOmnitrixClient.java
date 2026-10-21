@@ -28,6 +28,10 @@ import com.santiq.kingdomomnitrix.client.weapon.WeaponHud;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetHud;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetInput;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
+import com.santiq.kingdomomnitrix.client.render.OmnitrixWorkbenchRenderer;
+import com.santiq.kingdomomnitrix.client.screen.OmnitrixWorkbenchScreen;
+import com.santiq.kingdomomnitrix.registry.ModBlockEntities;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import com.santiq.kingdomomnitrix.client.gadget.SwingshotRopes;
 import com.santiq.kingdomomnitrix.client.quest.QuestBookScreen;
 import com.santiq.kingdomomnitrix.client.npc.NpcDialogScreen;
@@ -146,6 +150,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			}
 		});
 		HandledScreens.register(ModScreenHandlers.GADGET_BELT, GadgetScreen::new);
+		HandledScreens.register(ModScreenHandlers.OMNITRIX_WORKBENCH, OmnitrixWorkbenchScreen::new);
+		BlockEntityRendererFactories.register(ModBlockEntities.OMNITRIX_WORKBENCH, OmnitrixWorkbenchRenderer::new);
 		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
 				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
 		CombatAnimations.register();

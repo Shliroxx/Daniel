@@ -514,47 +514,94 @@ def plant(name: str, stem: Color, leaf: Color, blossom: Color | None, style: str
     return Image.fromarray(arr.astype(np.uint8), "RGBA")
 
 
+ORE_GRID = 16   # Erze im klassischen 16x16-Pixelstil (je Rasterpunkt 8x8 Pixel), wie Vanilla- und Mod-Erze
+
+# Edelstein-Sprites: w Glanz, l hell, m Mitte, d dunkel, . frei (oben links beleuchtet wie Vanilla)
+_GEM_SPRITES = {
+    "crystal": (
+        (".wl.", "wlmd", "lmmd", ".dd."),
+        ("wl.", "lmd", ".d."),
+        ("wl", "md"),
+        ("w.", "lm", "md", ".d"),
+        (".w.", "lmd", "lmd", ".d."),
+        ("wl..", "lmm.", ".mmd", "..dd"),
+        (".wl", "wmd", "ld."),
+    ),
+    "metal": (
+        ("wl.", "lmm", ".md"),
+        ("lm", "md"),
+        ("wlm", "mmd"),
+        (".wl", "lmd", "md."),
+        ("wm", "md", "d."),
+    ),
+}
+
+
+def _pixel_stone(stone: Image.Image, rng: np.random.Generator) -> np.ndarray:
+    """Gestein als 16x16-Pixelbild in vier Toenen (aus den Farben der 128er-Textur, damit es zur Welt passt)."""
+    g = ORE_GRID
+    small = np.asarray(stone.convert("RGB").resize((g, g), Image.BOX), dtype=np.float64) / 255
+    lum = small @ np.array([0.299, 0.587, 0.114])
+    lum = lum + (rng.random((g, g)) - 0.5) * (lum.std() + 0.03) * 1.2
+    edges = np.quantile(lum, [0.25, 0.5, 0.8])
+    band = np.digitize(lum, edges)
+    tones = []
+    for i, gain in enumerate((0.84, 0.95, 1.02, 1.1)):
+        sel = band == i
+        tone = small[sel].mean(axis=0) if sel.any() else small.reshape(-1, 3).mean(axis=0)
+        tones.append(np.clip(tone * gain, 0, 1))
+    return np.asarray(tones)[band]
+
+
 def ore(name: str, stone: Image.Image, gem_dark: Color, gem: Color, gem_light: Color, clusters: int = 6,
-        style: str = "crystal") -> Image.Image:
-    """Erz: Gestein mit eingewachsenen Kristallen (facettiert, Glanzpunkte) oder Metallnestern."""
+        style: str = "crystal", glow: float = 0.0) -> Image.Image:
+    """Erz im klassischen Pixelstil: 16x16-Gestein in vier Toenen, darauf kleine Edelstein-/Nugget-Flecken
+    (dunkle Kante unten rechts, heller Rand oben links, weisser Glanzpixel) mit Schlagschatten im Stein; auf 128x128
+    pixelgenau vergroessert. ``style="metal"`` nimmt rundere Nuggets; ``glow`` > 0 laesst den Stein um die Flecken
+    in der Erzfarbe schimmern statt ihn abzudunkeln."""
     rng = rng_for(name)
-    base = np.asarray(stone.convert("RGB"), dtype=np.float64) / 255
-    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
-    mask = np.zeros((N, N))
-    centers = rng.random((clusters, 2)) * N
-    for cx, cy in centers:
-        dx = np.abs(xs - cx)
-        dy = np.abs(ys - cy)
-        dx = np.minimum(dx, N - dx)
-        dy = np.minimum(dy, N - dy)
-        r = 13 + rng.random() * 9
-        mask = np.maximum(mask, np.clip(1 - np.hypot(dx, dy) / r, 0, 1))
-    blob = mask * (0.75 + 0.5 * fbm(rng, 10, 3))
-    inside = blob > 0.35
-    f1, f2, idx, pts = voronoi(rng_for(name + "x"), 55)
-    facet = np.clip((f2 - f1) / 2.5, 0, 1)
-    # Facetten: Helligkeit je Zelle aus zufaelliger Kippung
-    tilt = rng.random((55, 2)) * 2 - 1
-    dxp = xs - pts[idx, 0]
-    dyp = ys - pts[idx, 1]
-    dxp = (dxp + N / 2) % N - N / 2
-    dyp = (dyp + N / 2) % N - N / 2
-    shade = 0.5 + 0.5 * np.tanh((tilt[idx, 0] * dxp + tilt[idx, 1] * dyp) / 5)
-    if style == "metal":
-        t = shade * 0.6 + fbm(rng, 12, 3) * 0.4
+    g = ORE_GRID
+    grid = _pixel_stone(stone, rng)
+    palette = {
+        "w": np.clip(np.asarray(gem_light, dtype=np.float64) * 0.5 + 0.5, 0, 1),
+        "l": np.asarray(gem_light, dtype=np.float64),
+        "m": np.asarray(gem, dtype=np.float64),
+        "d": np.asarray(gem_dark, dtype=np.float64),
+    }
+    sprites = _GEM_SPRITES["metal" if style == "metal" else "crystal"]
+    taken = np.zeros((g, g), dtype=bool)
+    gem_mask = np.zeros((g, g), dtype=bool)
+    wanted = clusters + 2
+    placed = 0
+    for _ in range(wanted * 60):
+        if placed == wanted:
+            break
+        sprite = sprites[int(rng.integers(0, len(sprites)))]
+        y0, x0 = (int(v) for v in rng.integers(0, g, 2))
+        cells = [((y0 + dy) % g, (x0 + dx) % g, ch) for dy, row in enumerate(sprite) for dx, ch in enumerate(row) if ch != "."]
+        if any(taken[y, x] for y, x, _ in cells):
+            continue
+        for y, x, ch in cells:
+            grid[y, x] = palette[ch]
+            gem_mask[y, x] = True
+        # ein Pixel Abstand zum naechsten Fleck
+        for y, x, _ in cells:
+            for oy in (-1, 0, 1):
+                for ox in (-1, 0, 1):
+                    taken[(y + oy) % g, (x + ox) % g] = True
+        placed += 1
+    # Kante um jeden Fleck in dunkler Erzfarbe (hebt ihn vom Stein ab), unten/rechts kraeftiger als Schlagschatten;
+    # strahlende Erze schimmern dort stattdessen in der Erzfarbe
+    ring = (np.roll(gem_mask, 1, 0) | np.roll(gem_mask, -1, 0) | np.roll(gem_mask, 1, 1) | np.roll(gem_mask, -1, 1)) & ~gem_mask
+    shadow = (np.roll(gem_mask, 1, 0) | np.roll(gem_mask, 1, 1)) & ~gem_mask
+    dark = palette["d"]
+    grid[ring] = grid[ring] * 0.7 + dark * 0.3
+    if glow > 0:
+        grid[shadow] = grid[shadow] * (1 - glow * 0.5) + palette["m"] * (glow * 0.5)
     else:
-        t = shade
-    gem_col = gradient_map(t, [(0, gem_dark), (0.55, gem), (1, gem_light)])
-    gem_col = gem_col * (0.65 + 0.35 * facet[..., None])
-    sparkle = (rng.random((N, N)) < 0.012) & inside & (shade > 0.7)
-    gem_col = np.where(sparkle[..., None], 1.0, gem_col)
-    rim = (blob > 0.25) & ~inside
-    out = np.where(inside[..., None], gem_col, base)
-    out = np.where(rim[..., None], base * 0.45, out)
-    height = np.where(inside, 0.6 + shade * 0.4, 0.0)
-    light, gloss = lighting(height, 4.0, ambient=0.8)
-    out = out * np.where(inside, light, 1.0)[..., None] + (np.where(inside, gloss, 0))[..., None]
-    return finish(out)
+        grid[shadow] = grid[shadow] * 0.75 + dark * 0.1
+    px = N // g
+    return finish(np.repeat(np.repeat(grid, px, 0), px, 1))
 
 
 # --- Technik ------------------------------------------------------------------------------------------------------

@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.omnitrix;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 
 /**
  * Farbmodule des Omnitrix (Kalibrier-Werkbank). Die Farbe ist rein optisch: Kern-Leuchten, Hologramm-Rad, Bedien-
@@ -20,9 +21,27 @@ public final class OmnitrixColors {
 			new Color("red", 0xFF3A2A, 0xFFB8B0),
 			new Color("yellow", 0xFFD21A, 0xFFF0A8),
 			new Color("purple", 0xB04AFF, 0xE2BEFF),
-			new Color("white", 0xE8F4FF, 0xFFFFFF));
+			new Color("white", 0xE8F4FF, 0xFFFFFF),
+			new Color("orange", 0xFF8A1E, 0xFFD8B0),
+			new Color("pink", 0xFF5AC8, 0xFFD0EE),
+			new Color("cyan", 0x2FFFE8, 0xC0FFF8));
 
 	private OmnitrixColors() {
+	}
+
+	/** Uebersetzungsschluessel des Farbnamens (vollstaendig je Farbe, siehe Sprachdateien). */
+	public static String nameKey(Color color) {
+		return switch (color.id()) {
+			case "blue" -> "calibration.kingdomomnitrix.color.blue";
+			case "red" -> "calibration.kingdomomnitrix.color.red";
+			case "yellow" -> "calibration.kingdomomnitrix.color.yellow";
+			case "purple" -> "calibration.kingdomomnitrix.color.purple";
+			case "white" -> "calibration.kingdomomnitrix.color.white";
+			case "orange" -> "calibration.kingdomomnitrix.color.orange";
+			case "pink" -> "calibration.kingdomomnitrix.color.pink";
+			case "cyan" -> "calibration.kingdomomnitrix.color.cyan";
+			default -> "calibration.kingdomomnitrix.color.green";
+		};
 	}
 
 	public static boolean exists(String id) {
@@ -33,9 +52,18 @@ public final class OmnitrixColors {
 		return ALL.stream().filter(color -> color.id().equals(id)).findFirst();
 	}
 
-	/** Farbmodul des Spielers (unbekannte Werte: Gruen). */
+	/**
+	 * Farbmodul des Spielers (unbekannte Werte: Gruen). Die Farbe stammt vom Energiekern des Omnitrix (Omnitrix-Werkbank);
+	 * das Omnitrix gleicht sie serverseitig in die synchronisierte Kalibrierung ab, damit auch andere Spieler sie sehen.
+	 */
 	public static Color of(PlayerEntity player) {
 		return byId(OmnitrixCore.calibration(player).color()).orElse(ALL.getFirst());
+	}
+
+	/** Farbmodul eines Omnitrix-Stapels (Energiekern), leer ohne Kern. */
+	public static Optional<Color> ofStack(ItemStack stack) {
+		String id = stack.get(com.santiq.kingdomomnitrix.registry.ModComponents.OMNITRIX_CORE);
+		return id == null ? Optional.empty() : byId(id);
 	}
 
 	public static int primary(PlayerEntity player) {

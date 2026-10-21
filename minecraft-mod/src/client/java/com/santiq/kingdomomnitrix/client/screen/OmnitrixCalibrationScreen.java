@@ -122,7 +122,7 @@ public class OmnitrixCalibrationScreen extends Screen {
 			renderModule(context, mouseX, mouseY, modules[i], calibration, rowY(i), accent);
 		}
 
-		// Farbmodule
+		// Farbanzeige: aktive Farbe markiert; geaendert wird sie ueber den Energiekern in der Omnitrix-Werkbank
 		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.calibration.color"), x + 10, rowY(3), 0xFFCFFFC8);
 		for (int i = 0; i < OmnitrixColors.ALL.size(); i++) {
 			OmnitrixColors.Color option = OmnitrixColors.ALL.get(i);
@@ -130,11 +130,15 @@ public class OmnitrixCalibrationScreen extends Screen {
 			int sy = swatchY();
 			boolean chosen = option.id().equals(color.id());
 			boolean hover = inside(mouseX, mouseY, sx, sy, SWATCH, SWATCH);
-			context.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, chosen ? 0xFFFFFFFF : hover ? 0xFF7A7A7A : 0xFF202820);
-			context.fill(sx, sy, sx + SWATCH, sy + SWATCH, 0xFF000000 | option.primary());
-			context.fill(sx + 4, sy + 4, sx + SWATCH - 4, sy + SWATCH - 4, 0xFF000000 | option.light());
+			context.fill(sx - 1, sy - 1, sx + SWATCH + 1, sy + SWATCH + 1, chosen ? 0xFFFFFFFF : 0xFF202820);
+			int fill = chosen ? option.primary() : OmnitrixColors.mix(option.primary(), 0x202820, 0.7f);
+			context.fill(sx, sy, sx + SWATCH, sy + SWATCH, 0xFF000000 | fill);
+			if (chosen) {
+				context.fill(sx + 4, sy + 4, sx + SWATCH - 4, sy + SWATCH - 4, 0xFF000000 | option.light());
+			}
 			if (hover) {
-				context.drawTooltip(textRenderer, Text.translatable("calibration.kingdomomnitrix.color." + option.id()), mouseX, mouseY);
+				context.drawTooltip(textRenderer, java.util.List.of(Text.translatable(OmnitrixColors.nameKey(option)),
+						Text.translatable("screen.kingdomomnitrix.calibration.color_hint").formatted(net.minecraft.util.Formatting.GRAY)), mouseX, mouseY);
 			}
 		}
 
@@ -286,12 +290,6 @@ public class OmnitrixCalibrationScreen extends Screen {
 				} else {
 					OmnitrixFeedback.play(OmnitrixCue.ERROR);
 				}
-				return true;
-			}
-		}
-		for (int i = 0; i < OmnitrixColors.ALL.size(); i++) {
-			if (inside(mouseX, mouseY, swatchX(i), swatchY(), SWATCH, SWATCH)) {
-				send("color", OmnitrixColors.ALL.get(i).id());
 				return true;
 			}
 		}

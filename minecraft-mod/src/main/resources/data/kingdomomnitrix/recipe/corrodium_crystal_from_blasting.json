@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": {
+    "item": "kingdomomnitrix:raw_corrodium"
+  },
+  "result": {
+    "id": "kingdomomnitrix:corrodium_crystal"
+  },
+  "experience": 1.0,
+  "cookingtime": 100
+}

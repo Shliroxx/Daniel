@@ -12,6 +12,11 @@ public final class ModScreenHandlers {
 	public static final ScreenHandlerType<GadgetScreenHandler> GADGET_BELT = Registry.register(Registries.SCREEN_HANDLER,
 			KingdomOmnitrix.id("gadget_belt"), new ScreenHandlerType<>(GadgetScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
 
+	public static final ScreenHandlerType<com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchScreenHandler> OMNITRIX_WORKBENCH =
+			Registry.register(Registries.SCREEN_HANDLER, KingdomOmnitrix.id("omnitrix_workbench"),
+					new ScreenHandlerType<>(com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchScreenHandler::new,
+							FeatureFlags.VANILLA_FEATURES));
+
 	private ModScreenHandlers() {
 	}
 

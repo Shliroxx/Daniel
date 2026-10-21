@@ -322,30 +322,6 @@ def fusion_grenade() -> list[Box]:
     return b
 
 
-def omnitrix() -> list[Box]:
-    """Omnitrix der Originalserie (wie das AE-Prototyp-Modell am Arm): weiss-graues Armband, schwarzes Gehaeuse,
-    weisse Eck-Roehren, graue Fassung, Zifferblatt mit Sanduhr und Eck-Lichtern (Zifferblatt zeigt nach +z)."""
-    b: list[Box] = []
-    b.append(box((6.0, -0.5, 7.0), (10.0, 2.2, 9.0), "white"))                   # Armband: weisse Glieder …
-    b.append(box((6.1, 2.2, 7.1), (9.9, 3.0, 8.9), "steel"))                     # … mit grauen Fugen
-    b.append(box((6.0, 3.0, 7.0), (10.0, 4.6, 9.0), "white"))
-    b.append(box((6.0, 11.4, 7.0), (10.0, 13.0, 9.0), "white"))
-    b.append(box((6.1, 13.0, 7.1), (9.9, 13.8, 8.9), "steel"))
-    b.append(box((6.0, 13.8, 7.0), (10.0, 16.5, 9.0), "white"))
-    b.append(box((4.8, 4.8, 6.4), (11.2, 11.2, 9.4), "dark"))                    # Gehaeuse
-    for x in (4.0, 11.2):                                                         # Eck-Roehren
-        for y in (4.0, 11.2):
-            b.append(box((x, y, 6.8), (x + 0.8, y + 0.8, 9.2), "white"))
-    b.append(box((5.0, 5.0, 9.4), (11.0, 11.0, 9.8), "omni_bezel"))              # Fassung
-    b.append(box((5.6, 5.6, 9.8), (10.4, 10.4, 10.2), "omni_face"))              # Zifferblatt (Sanduhr)
-    for x in (5.1, 10.3):                                                         # Eck-Lichter
-        for y in (5.1, 10.3):
-            b.append(box((x, y, 9.8), (x + 0.6, y + 0.6, 10.0), "omni_light"))
-    b.append(box((3.6, 7.2, 7.4), (4.8, 8.8, 8.6), "steel"))                     # Seitentasten
-    b.append(box((11.2, 7.2, 7.4), (12.4, 8.8, 8.6), "steel"))
-    return b
-
-
 # Heli-Pack (Ratchet & Clank): Rucksack-Roboter mit Mast und Doppelrotor; Heli-Jet mit zwei Schubduesen.
 # Lage im Item-Raum: Rueckenplatte bei z = 0 (am Spieler), Gehaeuse waechst nach +z, Mitte bei x = 8.
 
@@ -463,7 +439,6 @@ WEAPONS = {
     "combuster": (combuster, "orange_paint", "gun"),
     "swingshot": (swingshot, "steel", "gun"),
     "fusion_grenade": (fusion_grenade, "red_paint", "small"),
-    "omnitrix": (omnitrix, "dark", "small"),
     "heli_pack": (heli_pack, "silver", "small"),
     "heli_jet": (heli_jet, "silver", "small"),
 }
@@ -624,8 +599,8 @@ def dial_color(px: int, py: int, w: int, h: int, face: str, m: Material) -> Colo
 # Omnitrix-Gruen: diese Materialien bekommen eine deckungsgleiche Akzent-Schicht (tintindex 0), die der Renderer im
 # Farbmodul einfaerbt (OmnitrixColors; Klassisch = Gruen). Die Grundschicht bleibt als Rueckfall unveraendert.
 ACCENT_MATERIALS = {"omni_green", "omni_face", "omni_light", "omni_dial_x"}
-# nur Modelle mit Farbgeber (Omnitrix-Item und Armteile); das Omega-Key-Keyblade bleibt fest gruen
-TINTED = {"omnitrix", "wrist_base", "wrist_core"}
+# nur Modelle mit Farbgeber (Armteile; das Omnitrix-Item zeichnet das 3D-Armmodell selbst); das Omega-Key-Keyblade bleibt fest gruen
+TINTED = {"wrist_base", "wrist_core"}
 
 
 def is_accent(color: Color) -> bool:

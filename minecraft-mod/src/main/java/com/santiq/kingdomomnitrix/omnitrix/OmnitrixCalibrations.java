@@ -21,7 +21,7 @@ public final class OmnitrixCalibrations {
 	private static final double MAX_DISTANCE_SQ = 8.0 * 8.0;
 
 	public enum Result {
-		RAISED, LOWERED, COLOR, TOO_FAR, TRANSFORMED, MAX_LEVEL, NO_CAPACITY, ALREADY_ZERO, MISSING, UNKNOWN
+		RAISED, LOWERED, TOO_FAR, TRANSFORMED, MAX_LEVEL, NO_CAPACITY, ALREADY_ZERO, MISSING, UNKNOWN
 	}
 
 	private OmnitrixCalibrations() {
@@ -41,13 +41,6 @@ public final class OmnitrixCalibrations {
 			return Result.TRANSFORMED;
 		}
 		OmnitrixCalibration calibration = OmnitrixCore.calibration(player);
-		if ("color".equals(module)) {
-			if (!OmnitrixColors.exists(value)) {
-				return Result.UNKNOWN;
-			}
-			player.setAttached(OmnitrixCore.CALIBRATION, calibration.withColor(value));
-			return Result.COLOR;
-		}
 		Optional<OmnitrixCalibration.Module> found = OmnitrixCalibration.Module.byKey(module);
 		if (found.isEmpty()) {
 			return Result.UNKNOWN;
@@ -109,11 +102,6 @@ public final class OmnitrixCalibrations {
 						Optional.of(Text.translatable("holo.kingdomomnitrix.calibration.points", c.used(), OmnitrixCalibration.CAPACITY)),
 						Optional.empty());
 				OmnitrixCore.cue(player, result == Result.RAISED ? OmnitrixCue.CONFIRM : OmnitrixCue.CANCEL);
-			}
-			case COLOR -> {
-				OmnitrixOs.send(player, OmnitrixOs.Event.RECALIBRATED, Text.translatable("holo.kingdomomnitrix.calibration.color",
-						Text.translatable("calibration.kingdomomnitrix.color." + OmnitrixCore.calibration(player).color())));
-				OmnitrixCore.cue(player, OmnitrixCue.CONFIRM);
 			}
 			default -> {
 				OmnitrixOs.send(player, OmnitrixOs.Event.REFUSED,

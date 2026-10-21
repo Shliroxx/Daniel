@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "XXX",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:corrodium_crystal"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:corrodium_block",
+    "count": 1
+  }
+}

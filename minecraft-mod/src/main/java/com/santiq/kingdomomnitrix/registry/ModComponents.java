@@ -41,6 +41,11 @@ public final class ModComponents {
 			KingdomOmnitrix.id("jet_mode"),
 			ComponentType.<Boolean>builder().codec(Codec.BOOL).packetCodec(PacketCodecs.BOOL).build());
 
+	/** Farbe des Energiekerns im Omnitrix (Farbmodul-ID, siehe OmnitrixColors); eingesetzt in der Omnitrix-Werkbank. */
+	public static final ComponentType<String> OMNITRIX_CORE = Registry.register(Registries.DATA_COMPONENT_TYPE,
+			KingdomOmnitrix.id("omnitrix_core"),
+			ComponentType.<String>builder().codec(Codec.STRING).packetCodec(PacketCodecs.STRING).build());
+
 	private ModComponents() {
 	}
 

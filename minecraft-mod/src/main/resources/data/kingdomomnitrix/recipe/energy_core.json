@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " C ",
+    "CEC",
+    " C "
+  ],
+  "key": {
+    "C": {
+      "item": "kingdomomnitrix:corrodium_crystal"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:energy_core",
+    "count": 1
+  }
+}

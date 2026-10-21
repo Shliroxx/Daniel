@@ -36,6 +36,9 @@
     "kingdomomnitrix:aquarine_ore",
     "kingdomomnitrix:aquarine_block",
     "kingdomomnitrix:pyronite_ore",
-    "kingdomomnitrix:pyronite_block"
+    "kingdomomnitrix:pyronite_block",
+    "kingdomomnitrix:corrodium_ore",
+    "kingdomomnitrix:corrodium_block",
+    "kingdomomnitrix:omnitrix_workbench"
   ]
 }

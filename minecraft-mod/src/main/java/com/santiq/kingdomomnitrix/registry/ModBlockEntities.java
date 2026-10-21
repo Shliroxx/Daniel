@@ -12,6 +12,11 @@ public final class ModBlockEntities {
 			KingdomOmnitrix.id("arena_terminal"),
 			BlockEntityType.Builder.create(ArenaTerminalBlockEntity::new, ModBlocks.ARENA_TERMINAL).build());
 
+	public static final BlockEntityType<com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlockEntity> OMNITRIX_WORKBENCH =
+			Registry.register(Registries.BLOCK_ENTITY_TYPE, KingdomOmnitrix.id("omnitrix_workbench"),
+					BlockEntityType.Builder.create(com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlockEntity::new,
+							com.santiq.kingdomomnitrix.world.content.Ben10Blocks.OMNITRIX_WORKBENCH).build());
+
 	private ModBlockEntities() {
 	}
 
