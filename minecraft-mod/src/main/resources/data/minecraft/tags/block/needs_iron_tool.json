@@ -11,6 +11,8 @@
     "kingdomomnitrix:viridium_ore",
     "kingdomomnitrix:viridium_block",
     "kingdomomnitrix:corrodium_ore",
-    "kingdomomnitrix:corrodium_block"
+    "kingdomomnitrix:corrodium_block",
+    "kingdomomnitrix:plumber_hull",
+    "kingdomomnitrix:plumber_hull_dark"
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/plumber_console_top",
+    "side": "kingdomomnitrix:block/plumber_console",
+    "bottom": "kingdomomnitrix:block/plumber_console_bottom"
+  }
+}

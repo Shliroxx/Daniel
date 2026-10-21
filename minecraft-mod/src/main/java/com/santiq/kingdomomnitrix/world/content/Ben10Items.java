@@ -26,6 +26,14 @@ public final class Ben10Items {
 	public static final Item CORRODIUM_BLOCK = register("corrodium_block", new BlockItem(Ben10Blocks.CORRODIUM_BLOCK, new Item.Settings()));
 	public static final Item OMNITRIX_WORKBENCH = register("omnitrix_workbench", new BlockItem(Ben10Blocks.OMNITRIX_WORKBENCH, new Item.Settings()));
 	public static final Item OMNITRIX_STABILIZER = register("omnitrix_stabilizer", new BlockItem(Ben10Blocks.OMNITRIX_STABILIZER, new Item.Settings()));
+	public static final Item PLUMBER_HULL = register("plumber_hull", new BlockItem(Ben10Blocks.PLUMBER_HULL, new Item.Settings()));
+	public static final Item PLUMBER_HULL_DARK = register("plumber_hull_dark", new BlockItem(Ben10Blocks.PLUMBER_HULL_DARK, new Item.Settings()));
+	public static final Item PLUMBER_HULL_SCORCHED = register("plumber_hull_scorched", new BlockItem(Ben10Blocks.PLUMBER_HULL_SCORCHED, new Item.Settings()));
+	public static final Item PLUMBER_FLOOR = register("plumber_floor", new BlockItem(Ben10Blocks.PLUMBER_FLOOR, new Item.Settings()));
+	public static final Item PLUMBER_LIGHT = register("plumber_light", new BlockItem(Ben10Blocks.PLUMBER_LIGHT, new Item.Settings()));
+	public static final Item PLUMBER_CONSOLE = register("plumber_console", new BlockItem(Ben10Blocks.PLUMBER_CONSOLE, new Item.Settings()));
+	public static final Item CONTAINMENT_POD_SHELL = register("containment_pod_shell", new BlockItem(Ben10Blocks.CONTAINMENT_POD_SHELL, new Item.Settings()));
+	public static final Item CONTAINMENT_POD_CONSOLE = register("containment_pod_console", new BlockItem(Ben10Blocks.CONTAINMENT_POD_CONSOLE, new Item.Settings()));
 
 	public static final Item RAW_CORRODIUM = register("raw_corrodium", new Ben10Item(new Item.Settings().maxCount(64).rarity(Rarity.UNCOMMON), "item.kingdomomnitrix.raw_corrodium.tooltip"));
 	public static final Item CORRODIUM_CRYSTAL = register("corrodium_crystal", new Ben10Item(new Item.Settings().maxCount(64).rarity(Rarity.UNCOMMON), null));

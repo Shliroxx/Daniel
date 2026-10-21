@@ -262,6 +262,55 @@ public final class HeroCommand {
 									origin.get().getX(), origin.get().getY(), origin.get().getZ()), false);
 							return 1;
 						})))
+				.then(CommandManager.literal("plumber")
+						.then(targeted(CommandManager.literal("crash"), (ctx, target) -> {
+							if (target.getServerWorld() != ctx.getSource().getServer().getOverworld()) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.overworld"));
+								return 0;
+							}
+							if (!com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.beginNear(target)) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.no_site"));
+								return 0;
+							}
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.incoming"), true);
+							return 1;
+						}))
+						.then(targeted(CommandManager.literal("here"), (ctx, target) -> {
+							if (target.getServerWorld() != ctx.getSource().getServer().getOverworld()) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.overworld"));
+								return 0;
+							}
+							net.minecraft.util.math.Direction facing = target.getHorizontalFacing();
+							com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.begin(target.getServerWorld(),
+									target.getBlockPos().offset(facing, 40), facing.getOpposite());
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.incoming"), true);
+							return 1;
+						}))
+						.then(targeted(CommandManager.literal("tp"), (ctx, target) -> {
+							var site = com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.site(ctx.getSource().getServer());
+							if (site.isEmpty()) {
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.missing"));
+								return 0;
+							}
+							BlockPos at = site.get().up(12);
+							target.teleport(ctx.getSource().getServer().getOverworld(), at.getX() + 0.5, at.getY(), at.getZ() + 0.5, target.getYaw(), 30.0f);
+							return 1;
+						}))
+						.then(CommandManager.literal("status").executes(ctx -> {
+							var server = ctx.getSource().getServer();
+							var phase = com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.phase(server);
+							long left = com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.ticksUntilIncoming(server);
+							BlockPos at = com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.site(server).orElse(BlockPos.ORIGIN);
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.status",
+									phase.name().toLowerCase(java.util.Locale.ROOT), left < 0 ? "-" : String.valueOf(left / 20),
+									at.getX(), at.getY(), at.getZ()), false);
+							return 1;
+						}))
+						.then(CommandManager.literal("reset").executes(ctx -> {
+							com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.reset(ctx.getSource().getServer());
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.reset"), true);
+							return 1;
+						})))
 				.then(CommandManager.literal("event")
 						.then(CommandManager.literal("start")
 								.executes(ctx -> startEvent(ctx, Optional.empty()))

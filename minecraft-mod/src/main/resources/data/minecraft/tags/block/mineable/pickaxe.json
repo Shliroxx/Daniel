@@ -40,6 +40,12 @@
     "kingdomomnitrix:corrodium_ore",
     "kingdomomnitrix:corrodium_block",
     "kingdomomnitrix:omnitrix_workbench",
-    "kingdomomnitrix:omnitrix_stabilizer"
+    "kingdomomnitrix:omnitrix_stabilizer",
+    "kingdomomnitrix:plumber_hull",
+    "kingdomomnitrix:plumber_hull_dark",
+    "kingdomomnitrix:plumber_hull_scorched",
+    "kingdomomnitrix:plumber_floor",
+    "kingdomomnitrix:plumber_light",
+    "kingdomomnitrix:plumber_console"
   ]
 }

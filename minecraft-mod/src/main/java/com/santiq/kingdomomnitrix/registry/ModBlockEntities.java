@@ -17,6 +17,12 @@ public final class ModBlockEntities {
 					BlockEntityType.Builder.create(com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlockEntity::new,
 							com.santiq.kingdomomnitrix.world.content.Ben10Blocks.OMNITRIX_WORKBENCH).build());
 
+	public static final BlockEntityType<com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlockEntity> CONTAINMENT_POD =
+			Registry.register(Registries.BLOCK_ENTITY_TYPE, KingdomOmnitrix.id("containment_pod"),
+					BlockEntityType.Builder.create(com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlockEntity::new,
+							com.santiq.kingdomomnitrix.world.content.Ben10Blocks.CONTAINMENT_POD_SHELL,
+							com.santiq.kingdomomnitrix.world.content.Ben10Blocks.CONTAINMENT_POD_CONSOLE).build());
+
 	private ModBlockEntities() {
 	}
 

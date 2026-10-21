@@ -85,6 +85,41 @@ BLOCKS: list[Ben10Block] = [
                "LIME", 4.0, 9.0, "METAL", tier="stone", light=8, planet="plumber", model="bottom_top"),
 ]
 
+# Klempner-Kreuzer "Proctor" (Wrack): Rumpf, Deck, Licht, Konsole und die beiden Containment-Kapseln mit den
+# Omnitrix-Teilen (unzerstoerbar, geben jedem Spieler sein Teil einmal; Block-Entity in Java)
+_POD = ("new com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIME)"
+        ".strength(-1.0f, 3600000.0f).dropsNothing().luminance(state -> 10).sounds(BlockSoundGroup.METAL), "
+        "com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock.Part.{part})")
+BLOCKS += [
+    Ben10Block("plumber_hull", "Klempner-Rumpfplatte", "Plumber Hull Plate", "block", single("plumber_hull", bx.plumber_hull),
+               "LIGHT_GRAY", 5.0, 12.0, "METAL", tier="iron", planet="plumber"),
+    Ben10Block("plumber_hull_dark", "Dunkle Klempner-Rumpfplatte", "Dark Plumber Hull Plate", "block",
+               single("plumber_hull_dark", bx.plumber_hull_dark), "BLACK", 5.0, 12.0, "METAL", tier="iron", light=3, planet="plumber"),
+    Ben10Block("plumber_hull_scorched", "Ausgebrannte Rumpfplatte", "Scorched Hull Plate", "block",
+               single("plumber_hull_scorched", bx.plumber_hull_scorched), "BLACK", 4.0, 10.0, "METAL", tier="stone", planet="plumber"),
+    Ben10Block("plumber_floor", "Klempner-Deckplatte", "Plumber Deck Plate", "block", single("plumber_floor", bx.plumber_floor),
+               "IRON_GRAY", 4.0, 10.0, "METAL", tier="stone", planet="plumber"),
+    Ben10Block("plumber_light", "Klempner-Leuchtpaneel", "Plumber Light Panel", "light", single("plumber_light", bx.plumber_light),
+               "LIME", 1.5, 4.0, "GLASS", light=15, planet="plumber"),
+    Ben10Block("plumber_console", "Klempner-Bordkonsole", "Plumber Console", "block",
+               lambda: {"plumber_console": bx.plumber_console("plumber_console"),
+                        "plumber_console_top": bx.containment_pod_top("plumber_console_top"),
+                        "plumber_console_bottom": bx.plumber_floor("plumber_console_bottom")},
+               "BLACK", 3.0, 8.0, "METAL", tier="stone", light=7, planet="plumber", model="bottom_top"),
+    Ben10Block("containment_pod_shell", "Containment-Kapsel (Hülle)", "Containment Pod (Shell)", "block",
+               lambda: {"containment_pod_shell": bx.containment_pod("containment_pod_shell", "shell"),
+                        "containment_pod_shell_top": bx.containment_pod_top("containment_pod_shell_top"),
+                        "containment_pod_shell_bottom": bx.containment_pod_top("containment_pod_shell_bottom")},
+               "LIME", -1.0, 3600000.0, "METAL", tool=None, light=10, drop="none", planet="plumber", model="bottom_top",
+               ctor=_POD.format(part="SHELL")),
+    Ben10Block("containment_pod_console", "Containment-Kapsel (Konsole)", "Containment Pod (Console)", "block",
+               lambda: {"containment_pod_console": bx.containment_pod("containment_pod_console", "console"),
+                        "containment_pod_console_top": bx.containment_pod_top("containment_pod_console_top"),
+                        "containment_pod_console_bottom": bx.containment_pod_top("containment_pod_console_bottom")},
+               "LIME", -1.0, 3600000.0, "METAL", tool=None, light=10, drop="none", planet="plumber", model="bottom_top",
+               ctor=_POD.format(part="CONSOLE")),
+]
+
 # Reaktor-Texturen fuer die Werkbank-Animation (vom Block-Entity-Renderer gezeichnet, Graustufe/weiss zum Einfaerben)
 REACTOR_TEXTURES = {
     "field": lambda: bx.reactor_field("reactor_field"),
@@ -174,6 +209,44 @@ def recipes() -> dict[str, dict]:
     for color, (_, _, dye) in CORE_NAMES.items():
         r[f"energy_core_{color}"] = gpc.shapeless([m_("energy_core"), dye], m_(f"energy_core_{color}"))
     return r
+
+
+def _entry(item: str, weight: int, low: int = 1, high: int = 1) -> dict:
+    e: dict = {"type": "minecraft:item", "name": item, "weight": weight}
+    if high > 1:
+        e["functions"] = [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": low, "max": high}}]
+    return e
+
+
+# Truhen im Klempner-Wrack (Bereich -> Wuerfe min/max, Eintraege); Bau in world/plumber/PlumberShipBuilder.java
+SHIP_LOOT = {
+    "quarters": ((3, 5), [("minecraft:bread", 10, 2, 5), ("minecraft:cooked_beef", 8, 1, 4), ("minecraft:golden_carrot", 4, 1, 3),
+                          ("minecraft:paper", 6, 2, 6), ("minecraft:book", 4, 1, 2), ("kingdomomnitrix:hi_potion", 3, 1, 2),
+                          ("minecraft:compass", 2), ("minecraft:clock", 2), ("minecraft:emerald", 3, 1, 4)]),
+    "armory": ((4, 6), [("minecraft:iron_ingot", 10, 2, 7), ("minecraft:arrow", 8, 8, 24), ("minecraft:crossbow", 3),
+                        ("minecraft:iron_chestplate", 2), ("minecraft:iron_helmet", 2), ("minecraft:iron_sword", 3),
+                        ("minecraft:tnt", 3, 1, 3), ("minecraft:diamond", 2, 1, 2), ("minecraft:shield", 3),
+                        ("minecraft:golden_apple", 1)]),
+    "lab": ((3, 5), [(f"{MOD}:corrodium_crystal", 8, 1, 4), (f"{MOD}:raw_corrodium", 8, 2, 5), (f"{MOD}:energy_core", 3),
+                     ("minecraft:ender_pearl", 6, 1, 3), ("minecraft:redstone", 8, 4, 12), ("minecraft:glowstone_dust", 6, 2, 8),
+                     ("minecraft:experience_bottle", 5, 2, 6), ("minecraft:amethyst_shard", 5, 2, 6)]),
+    "cargo": ((5, 8), [("minecraft:iron_ingot", 10, 2, 8), ("minecraft:copper_ingot", 10, 4, 12), ("minecraft:gold_ingot", 6, 1, 5),
+                       ("minecraft:coal", 8, 4, 12), ("minecraft:redstone", 6, 4, 10), ("minecraft:quartz", 5, 2, 8),
+                       (f"{MOD}:raw_corrodium", 3, 1, 3), ("minecraft:emerald", 3, 1, 3), ("minecraft:name_tag", 1)]),
+    "engineering": ((3, 5), [(f"{MOD}:corrodium_crystal", 8, 2, 5), (f"{MOD}:corrodium_block", 1), (f"{MOD}:energy_core", 4),
+                             ("minecraft:ender_eye", 3, 1, 2), ("minecraft:blaze_rod", 4, 1, 3), ("minecraft:redstone_block", 4, 1, 3),
+                             ("minecraft:iron_block", 2), ("minecraft:diamond", 2, 1, 2)]),
+}
+
+
+def ship_loot() -> dict[Path, dict]:
+    out = {}
+    for area, ((low, high), entries) in SHIP_LOOT.items():
+        pool = {"rolls": {"type": "minecraft:uniform", "min": low, "max": high}, "bonus_rolls": 0,
+                "entries": [_entry(*e) for e in entries]}
+        out[DATA / "loot_table" / "chests" / f"plumber_ship_{area}.json"] = {
+            "type": "minecraft:chest", "pools": [pool], "random_sequence": f"{MOD}:chests/plumber_ship_{area}"}
+    return out
 
 
 def our_tags() -> dict[str, dict[str, list[str]]]:
@@ -353,6 +426,7 @@ def outputs(with_images: bool = True) -> dict[Path, object]:
     for name, recipe in recipes().items():
         files[DATA / "recipe" / f"{name}.json"] = recipe
     files.update(worldgen())
+    files.update(ship_loot())
     all_ours = {f"{MOD}:{b.name}" for b in BLOCKS} | {f"{MOD}:{i.name}" for i in ITEMS}
     for kind, entries in our_tags().items():
         for tag, values in entries.items():

@@ -23,6 +23,22 @@ public final class Ben10Blocks {
 	public static final Block OMNITRIX_WORKBENCH = register("omnitrix_workbench", new com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlock(base(MapColor.LIME, 4.0f, 9.0f, BlockSoundGroup.METAL, 6, true).nonOpaque()));
 	/** Omnitrix-Stabilisator */
 	public static final Block OMNITRIX_STABILIZER = register("omnitrix_stabilizer", new Block(base(MapColor.LIME, 4.0f, 9.0f, BlockSoundGroup.METAL, 8, true)));
+	/** Klempner-Rumpfplatte */
+	public static final Block PLUMBER_HULL = register("plumber_hull", new Block(base(MapColor.LIGHT_GRAY, 5.0f, 12.0f, BlockSoundGroup.METAL, 0, true)));
+	/** Dunkle Klempner-Rumpfplatte */
+	public static final Block PLUMBER_HULL_DARK = register("plumber_hull_dark", new Block(base(MapColor.BLACK, 5.0f, 12.0f, BlockSoundGroup.METAL, 3, true)));
+	/** Ausgebrannte Rumpfplatte */
+	public static final Block PLUMBER_HULL_SCORCHED = register("plumber_hull_scorched", new Block(base(MapColor.BLACK, 4.0f, 10.0f, BlockSoundGroup.METAL, 0, true)));
+	/** Klempner-Deckplatte */
+	public static final Block PLUMBER_FLOOR = register("plumber_floor", new Block(base(MapColor.IRON_GRAY, 4.0f, 10.0f, BlockSoundGroup.METAL, 0, true)));
+	/** Klempner-Leuchtpaneel */
+	public static final Block PLUMBER_LIGHT = register("plumber_light", new Block(base(MapColor.LIME, 1.5f, 4.0f, BlockSoundGroup.GLASS, 15, false)));
+	/** Klempner-Bordkonsole */
+	public static final Block PLUMBER_CONSOLE = register("plumber_console", new Block(base(MapColor.BLACK, 3.0f, 8.0f, BlockSoundGroup.METAL, 7, true)));
+	/** Containment-Kapsel (Hülle) */
+	public static final Block CONTAINMENT_POD_SHELL = register("containment_pod_shell", new com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIME).strength(-1.0f, 3600000.0f).dropsNothing().luminance(state -> 10).sounds(BlockSoundGroup.METAL), com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock.Part.SHELL));
+	/** Containment-Kapsel (Konsole) */
+	public static final Block CONTAINMENT_POD_CONSOLE = register("containment_pod_console", new com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIME).strength(-1.0f, 3600000.0f).dropsNothing().luminance(state -> 10).sounds(BlockSoundGroup.METAL), com.santiq.kingdomomnitrix.world.plumber.ContainmentPodBlock.Part.CONSOLE));
 
 	private Ben10Blocks() {
 	}

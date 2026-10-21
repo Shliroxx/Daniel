@@ -162,11 +162,16 @@ entfernen mit Schleichen + Schlag im Kreativmodus oder `/kill`. Neue NPCs: JSON 
 
 ## Rezepte (Werkbank)
 
+Das **Omnitrix** hat kein Werkbank-Rezept mehr. Hülle und Konsole liegen in den Containment-Kapseln des abgestürzten
+Klempner-Kreuzers PROCTOR (Story-Absturz nach `kingdomomnitrixPlumberCrashMinutes` Minuten, sofort mit
+`/hero plumber crash` oder `/hero plumber here`). Zusammengebaut wird es in der **Omnitrix-Werkbank** (Reaktor mit vier
+Omnitrix-Stabilisatoren, 3 Blöcke höher, 3–7 Blöcke entfernt) mit einem Energiekern; ein gefärbter Kern bestimmt die Farbe.
+
 ```
-Königsschlüssel       Oathkeeper              Omnitrix
-.     .    Herz       .     Amethyst Herz     Eisen   Smaragd Eisen
-.  Goldblock .        .     Königs-  Amethyst Smaragd Diamant Smaragd
-Stock .    .          Quarz schlüssel .       Eisen   Smaragd Eisen
+Königsschlüssel       Oathkeeper              Omnitrix-Werkbank
+.     .    Herz       .     Amethyst Herz     Corrodium Corrodium Corrodium
+.  Goldblock .        .     Königs-  Amethyst Eisen     Werkbank  Eisen
+Stock .    .          Quarz schlüssel .       Eisen     Eisen     Eisen
 
 Keyblade-Schmiede     Waffen-Terminal         OmniWrench 8000
 Gold  Herz  Gold      Eisen Glasscheibe Eisen  .     Nugget Nugget

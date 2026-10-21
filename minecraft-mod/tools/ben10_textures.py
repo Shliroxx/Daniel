@@ -292,3 +292,111 @@ def reactor_plasma(name: str) -> Image.Image:
     veins = np.clip(1 - np.abs(noise - 0.5) * 7, 0, 1)
     v = np.clip(noise * 0.45 + veins * 0.8, 0, 1)
     return tx.finish(np.repeat(v[..., None], 3, axis=2))
+
+
+# --- Klempner-Kreuzer (Wrack) ------------------------------------------------------------------------------------
+
+def plumber_hull(name: str) -> Image.Image:
+    """Aussenhaut: helle Klempner-Panzerplatten mit Nieten."""
+    return tx.hull(name, PLUMBER_LIGHT, panels=2, wear=0.5)
+
+
+def plumber_hull_dark(name: str) -> Image.Image:
+    """Dunkles Rumpfband mit gruener Leuchtfuge (Klempner-Farben)."""
+    return tx.hull(name, PLUMBER_DARK, panels=2, accent=PLUMBER_GLOW, wear=0.6)
+
+
+def plumber_hull_scorched(name: str) -> Image.Image:
+    """Ausgebrannte Platte: Russ, Hitzeverfaerbung, glimmende Risse."""
+    rng = tx.rng_for(name)
+    base = np.asarray(tx.hull(name + "_base", PLUMBER_LIGHT, panels=2, wear=1.4).convert("RGB"), dtype=np.float64) / 255
+    soot = tx.fbm(rng, 4, 5)
+    soot = np.clip((soot - 0.3) * 1.8, 0, 1)
+    heat = tx.fbm(tx.rng_for(name + "h"), 3, 4)
+    tint = tx.gradient_map(heat, [(0, H("1A1410")), (0.5, H("4A3A5A")), (1, H("6A5A3A"))])
+    out = base * (1 - soot[..., None] * 0.85) + tint * soot[..., None] * 0.6
+    cracks = tx.ridged(tx.rng_for(name + "c"), 6, 4)
+    glow = np.clip((cracks - 0.88) * 9, 0, 1) * soot
+    out = out * (1 - glow[..., None]) + H("FF7A1A") * glow[..., None]
+    return tx.finish(out)
+
+
+def plumber_floor(name: str) -> Image.Image:
+    """Deckplatte: dunkles Riffelblech mit vier Feldern."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 2, bevel=3.0)
+    # Riffel: kurze diagonale Stege im Wechsel
+    cell = 12
+    fx = xs % cell - cell / 2
+    fy = ys % cell - cell / 2
+    flip = ((xs // cell + ys // cell) % 2) * 2 - 1
+    rib = np.clip(1 - np.abs(fx * flip - fy) / 1.6, 0, 1) * (np.hypot(fx, fy) < cell * 0.38)
+    color = np.asarray(H("4A4E56")) * (0.85 + 0.25 * tx.fbm(rng, 4, 4)[..., None])
+    height = h * 0.8 + rib * 0.5
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.4, shininess=30, ambient=0.6))
+
+
+def plumber_light(name: str) -> Image.Image:
+    return tx.light_panel(name, PLUMBER_DARK, H("C8FFB8"))
+
+
+def plumber_console(name: str) -> Image.Image:
+    """Bordkonsole: Bildschirm mit gruenen Anzeigebalken und Sanduhr-Logo, darunter Tastenreihe."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=4.0)
+    color = np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    screen = (xs > 14) & (xs < N - 15) & (ys > 14) & (ys < 78)
+    scr = np.asarray(H("051A08")) + np.asarray(H("0C3A12")) * ((ys.astype(int) // 3) % 2)[..., None] * 0.6
+    color = np.where(screen[..., None], scr, color)
+    for i, level in enumerate((0.7, 0.45, 0.9, 0.3, 0.6)):
+        x0 = 22 + i * 10
+        bar = (xs >= x0) & (xs < x0 + 6) & (ys < 70) & (ys > 70 - level * 48)
+        color = np.where(bar[..., None], np.asarray(PLUMBER_GLOW) * 0.9, color)
+    glass = _hourglass_mask(96, 46, 18) * screen
+    color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    keys = (ys > 88) & (ys < 104) & (xs > 14) & (xs < N - 15) & (((xs - 14) % 14) < 10)
+    key_col = np.where(((xs.astype(int) - 14) // 14 % 3 == 0)[..., None], H("FF5A3A"), PLUMBER_LIGHT)
+    color = np.where(keys[..., None], key_col, color)
+    height = h * 0.6 + keys * 0.4 - screen * 0.2
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.5, shininess=40, ambient=0.7))
+
+
+def containment_pod(name: str, part: str) -> Image.Image:
+    """Containment-Kapsel: Panzerrahmen oben/unten, in der Mitte Glasfenster mit Schwebefeld und dem Teil darin
+    (part = "shell": Armband, "console": Sanduhr-Zifferblatt)."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    color = np.asarray(PLUMBER_LIGHT) * (0.85 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    window = (xs > 18) & (xs < N - 19) & (ys > 24) & (ys < N - 25)
+    field = tx.gradient_map(np.clip(1 - np.abs(xs - N / 2) / 46, 0, 1), [(0, H("06200A")), (1, H("2AA83A"))])
+    scan = ((ys.astype(int) // 4) % 2) * 0.12
+    color = np.where(window[..., None], field * (0.9 + scan[..., None]), color)
+    frame = window ^ ((xs > 15) & (xs < N - 16) & (ys > 21) & (ys < N - 22))
+    color = np.where(frame[..., None], np.asarray(PLUMBER_GLOW), color)
+    if part == "shell":
+        band = window & (np.abs(xs - N / 2) < 12) & ((ys < 52) | (ys > 76))
+        ring = window & (np.abs(np.hypot(xs - N / 2, ys - N / 2) - 16) < 4)
+        color = np.where((band | ring)[..., None], np.asarray(OMNITRIX_BLACK[2]), color)
+    else:
+        ring = window & (np.hypot(xs - N / 2, ys - N / 2) < 22)
+        color = np.where(ring[..., None], np.asarray(OMNITRIX_GREY[1]), color)
+        glass = _hourglass_mask(N / 2 - 0.5, N / 2 - 0.5, 15) * ring
+        color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    band = (ys < 12) | (ys > N - 13)
+    color = np.where(band[..., None], np.asarray(PLUMBER_DARK), color)
+    height = h * 0.7 - window * 0.3 + frame * 0.2
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.55, shininess=42, ambient=0.72))
+
+
+def containment_pod_top(name: str) -> Image.Image:
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    color = np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    r = np.hypot(xs - N / 2 + 0.5, ys - N / 2 + 0.5)
+    ring = np.clip(1 - np.abs(r - 40) / 3, 0, 1)
+    color = color * (1 - ring[..., None]) + np.asarray(PLUMBER_GLOW) * ring[..., None]
+    return tx.finish(tx.compose(color, h * 0.7 + ring * 0.2, strength=5.0, spec=0.4, ambient=0.66))
