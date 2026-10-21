@@ -25,6 +25,7 @@ public final class Ben10Items {
 	public static final Item CORRODIUM_ORE = register("corrodium_ore", new BlockItem(Ben10Blocks.CORRODIUM_ORE, new Item.Settings()));
 	public static final Item CORRODIUM_BLOCK = register("corrodium_block", new BlockItem(Ben10Blocks.CORRODIUM_BLOCK, new Item.Settings()));
 	public static final Item OMNITRIX_WORKBENCH = register("omnitrix_workbench", new BlockItem(Ben10Blocks.OMNITRIX_WORKBENCH, new Item.Settings()));
+	public static final Item OMNITRIX_STABILIZER = register("omnitrix_stabilizer", new BlockItem(Ben10Blocks.OMNITRIX_STABILIZER, new Item.Settings()));
 
 	public static final Item RAW_CORRODIUM = register("raw_corrodium", new Ben10Item(new Item.Settings().maxCount(64).rarity(Rarity.UNCOMMON), "item.kingdomomnitrix.raw_corrodium.tooltip"));
 	public static final Item CORRODIUM_CRYSTAL = register("corrodium_crystal", new Ben10Item(new Item.Settings().maxCount(64).rarity(Rarity.UNCOMMON), null));

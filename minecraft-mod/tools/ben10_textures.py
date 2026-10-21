@@ -212,3 +212,83 @@ def energy_core(name: str, color_id: str | None) -> Image.Image:
         draw.polygon([(26 * s, 25 * s), (38 * s, 25 * s), (32 * s, 33 * s)], fill=_rgba(OMNITRIX_BLACK[1]))
         draw.polygon([(26 * s, 41 * s), (38 * s, 41 * s), (32 * s, 33 * s)], fill=_rgba(OMNITRIX_BLACK[1]))
     return tx._finish_item(img)
+
+
+# --- Reaktor der Omnitrix-Werkbank -------------------------------------------------------------------------------
+
+def stabilizer_side(name: str) -> Image.Image:
+    """Stabilisator: dunkle Klempner-Platte mit Emitter (Ringe, gruene Linse); alle vier Seiten zeigen den Emitter."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    brushed = tx.fbm(rng, 3, 4, stretch=(5.0, 0.25))
+    color = np.asarray(PLUMBER_DARK) * (0.85 + 0.25 * brushed[..., None])
+    r = np.hypot(xs - N / 2 + 0.5, ys - N / 2 + 0.5)
+    collar = ((r > 34) & (r < 48)).astype(np.float64)
+    color = np.where(collar[..., None] > 0, np.asarray(PLUMBER_LIGHT) * (0.8 + 0.2 * brushed[..., None]), color)
+    # Kuehlrippen im Kragen
+    angle = np.arctan2(ys - N / 2, xs - N / 2)
+    ribs = collar * (np.cos(angle * 16) > 0.6)
+    color = color * (1 - ribs[..., None] * 0.45)
+    glow_ring = np.clip(1 - np.abs(r - 31) / 2.5, 0, 1)
+    lens = np.clip(1 - r / 28, 0, 1)
+    color = color * (1 - glow_ring[..., None]) + np.asarray(PLUMBER_GLOW) * glow_ring[..., None]
+    lens_col = tx.gradient_map(lens, [(0, H("0A3A0A")), (0.5, PLUMBER_GLOW), (1, H("E8FFE0"))])
+    color = np.where((r < 28)[..., None], lens_col, color)
+    height = h * 0.6 + collar * 0.35 - ribs * 0.2 + lens * 0.3 + brushed * 0.05
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.45, shininess=34, ambient=0.66))
+
+
+def stabilizer_top(name: str) -> Image.Image:
+    return tx.hull(name, PLUMBER_DARK, panels=2, accent=PLUMBER_GLOW, wear=0.4)
+
+
+def reactor_field(name: str) -> Image.Image:
+    """Feld der Reaktorkugel (Kugelkoordinaten, 256x128): weisse Sechseck-Waben mit hellen Knoten, schwarz/transparent
+    dazwischen (vormultipliziert fuer additive Schichten). Weiss, damit die Kernfarbe als Vertex-Farbe darueberliegt."""
+    w, h = 256, 128
+    ss = 4
+    img = Image.new("L", (w * ss, h * ss), 0)
+    draw = ImageDraw.Draw(img)
+    size = 13.0 * ss                     # Wabenradius (Pixel, ueberabgetastet)
+    dx = math.sqrt(3) * size
+    dy = 1.5 * size
+    rows = int(h * ss / dy) + 2
+    cols = int(w * ss / dx) + 2
+    for row in range(-1, rows):
+        for col in range(-1, cols):
+            cx = col * dx + (dx / 2 if row % 2 else 0)
+            cy = row * dy
+            pts = [(cx + math.cos(math.radians(60 * k + 30)) * size, cy + math.sin(math.radians(60 * k + 30)) * size) for k in range(7)]
+            draw.line(pts, fill=230, width=int(1.6 * ss))
+            for px, py in pts[:6]:
+                draw.ellipse([px - 2.2 * ss, py - 2.2 * ss, px + 2.2 * ss, py + 2.2 * ss], fill=255)
+    alpha = np.asarray(img.resize((w, h), Image.LANCZOS), dtype=np.float64) / 255
+    # Pole ausduennen (dort draengen sich die Waben)
+    lat = np.abs(np.linspace(-1, 1, h))[:, None]
+    alpha = alpha * np.clip(1.15 - lat ** 4, 0, 1)
+    # vormultipliziert: die additive Schicht addiert RGB unabhaengig von Alpha, transparent muss also schwarz sein
+    return tx.finish(np.repeat(alpha[..., None], 3, axis=2), alpha)
+
+
+def reactor_ring(name: str) -> Image.Image:
+    """Leuchtring der Stabilisatoren und der Schockwelle: segmentierter Doppelring, weiss auf schwarz/transparent."""
+    n = 128
+    ys, xs = np.mgrid[0:n, 0:n].astype(np.float64)
+    r = np.hypot(xs - n / 2 + 0.5, ys - n / 2 + 0.5) / (n / 2)
+    angle = np.arctan2(ys - n / 2, xs - n / 2)
+    outer = np.clip(1 - np.abs(r - 0.88) / 0.06, 0, 1)
+    inner = np.clip(1 - np.abs(r - 0.66) / 0.04, 0, 1) * (np.cos(angle * 12) > -0.2)
+    ticks = np.clip(1 - np.abs(r - 0.77) / 0.05, 0, 1) * (np.cos(angle * 36) > 0.75)
+    alpha = np.clip(outer + inner * 0.8 + ticks * 0.9, 0, 1)
+    return tx.finish(np.repeat(alpha[..., None], 3, axis=2), alpha)
+
+
+def reactor_plasma(name: str) -> Image.Image:
+    """Plasma im Inneren der Kugel: kachelbares Rauschen, Graustufen (fuer die Energie-Wirbel-Schicht)."""
+    rng = tx.rng_for(name)
+    noise = tx.fbm(rng, 4, 5)
+    noise = (noise - noise.min()) / (np.ptp(noise) + 1e-9)
+    veins = np.clip(1 - np.abs(noise - 0.5) * 7, 0, 1)
+    v = np.clip(noise * 0.45 + veins * 0.8, 0, 1)
+    return tx.finish(np.repeat(v[..., None], 3, axis=2))

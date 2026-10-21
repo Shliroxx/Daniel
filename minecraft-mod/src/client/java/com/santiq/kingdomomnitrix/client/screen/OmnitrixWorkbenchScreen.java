@@ -12,7 +12,8 @@ import net.minecraft.text.Text;
 
 /**
  * Omnitrix-Werkbank: dunkles Klempner-Paneel mit gruenen Leuchtkanten, ohne Hintergrundtextur gezeichnet. Mitte: Pfeil
- * als Sanduhr, die sich mit dem Fortschritt fuellt; ueber Huelle und Konsole, links vom Kern ihr Name.
+ * als Sanduhr, die sich mit dem Fortschritt fuellt; ueber Huelle und Konsole, links vom Kern ihr Name;  unten rechts der
+ * Reaktorstatus (fehlende Stabilisatoren, Aufbau als Tooltip) oder der naechste Schritt.
  */
 public class OmnitrixWorkbenchScreen extends HandledScreen<OmnitrixWorkbenchScreenHandler> {
 	private static final int PANEL = 0xFF23272E;
@@ -21,6 +22,8 @@ public class OmnitrixWorkbenchScreen extends HandledScreen<OmnitrixWorkbenchScre
 	private static final int EDGE_DIM = 0xFF1C6A10;
 	private static final int SLOT = 0xFF14171B;
 	private static final int TEXT = 0xFFB8FFB0;
+	/** Maus ueber der Stabilisator-Zeile: Aufbau als Tooltip (nach den Slots gezeichnet) */
+	private boolean reactorHint;
 
 	public OmnitrixWorkbenchScreen(OmnitrixWorkbenchScreenHandler handler, PlayerInventory inventory, Text title) {
 		super(handler, inventory, title);
@@ -34,6 +37,9 @@ public class OmnitrixWorkbenchScreen extends HandledScreen<OmnitrixWorkbenchScre
 	public void render(DrawContext context, int mouseX, int mouseY, float delta) {
 		super.render(context, mouseX, mouseY, delta);
 		drawMouseoverTooltip(context, mouseX, mouseY);
+		if (reactorHint) {
+			context.drawTooltip(textRenderer, Text.translatable("screen.kingdomomnitrix.workbench.hint_reactor"), mouseX, mouseY);
+		}
 	}
 
 	@Override
@@ -66,9 +72,22 @@ public class OmnitrixWorkbenchScreen extends HandledScreen<OmnitrixWorkbenchScre
 				top + OmnitrixWorkbenchScreenHandler.CORE_Y + 4, 0xFF8AE08A, false);
 		// Sanduhr mittig auf Hoehe der Ausgabe, Pfeil fuehrt zur Ausgabe
 		hourglass(context, left + 108, top + OmnitrixWorkbenchScreenHandler.OUTPUT_Y + 8 - 12, handler.progress(), handler.working());
-		if (!handler.working() && !handler.getSlot(WorkbenchRecipe.OUTPUT).hasStack()) {
-			Text hint = Text.translatable("screen.kingdomomnitrix.workbench.hint");
-			context.drawText(textRenderer, hint, left + backgroundWidth - 7 - textRenderer.getWidth(hint), top + 60, 0xFF6A7A6A, false);
+		// Statuszeile: fehlende Stabilisatoren (rot, Aufbau als Tooltip), sonst der naechste Schritt
+		int count = handler.stabilizers();
+		Text line = null;
+		int lineColor = 0xFF6A7A6A;
+		if (count < 4) {
+			line = Text.translatable("screen.kingdomomnitrix.workbench.stabilizers", count);
+			lineColor = 0xFFFF6A5A;
+		} else if (!handler.working() && !handler.getSlot(WorkbenchRecipe.OUTPUT).hasStack()) {
+			line = Text.translatable("screen.kingdomomnitrix.workbench.hint");
+		}
+		if (line != null) {
+			int lx = left + backgroundWidth - 7 - textRenderer.getWidth(line);
+			context.drawText(textRenderer, line, lx, top + 60, lineColor, false);
+			reactorHint = count < 4 && mouseX >= lx && mouseX < left + backgroundWidth - 7 && mouseY >= top + 59 && mouseY < top + 69;
+		} else {
+			reactorHint = false;
 		}
 	}
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Ben-10-Inhalte: Corrodium (End), Omnitrix-Werkbank, Omnitrix-Teile, Energiekerne.
+"""Ben-10-Inhalte: Corrodium (End), Omnitrix-Werkbank mit Reaktor-Stabilisatoren, Omnitrix-Teile, Energiekerne.
 
 Einzige Quelle fuer Bloecke und Items der Ben-10-Story (eigener Kreativ-Reiter). Nutzt die Bausteine von
 tools/generate_planet_content.py (Blockzustaende, Modelle, Loot, Rezepte, Tags) und die Texturen aus
 tools/ben10_textures.py. Erzeugt:
-  * Texturen (Bloecke 128x128, Items 64x64), Blockzustaende, Block-/Item-Modelle, Loot-Tabellen, Rezepte, Tags
+  * Texturen (Bloecke 128x128, Items 64x64, Reaktor-Feld/-Ring/-Plasma der Werkbank), Blockzustaende, Block-/Item-Modelle, Loot-Tabellen, Rezepte, Tags
   * Weltgenerierung: Corrodium-Erz im End (configured/placed feature; eingefuegt per BiomeModifications in Java)
   * Uebersetzungen (de_de, en_us)
   * Java: world/content/Ben10Blocks.java und Ben10Items.java (nicht von Hand aendern)
@@ -78,7 +78,19 @@ BLOCKS: list[Ben10Block] = [
                ctor="new com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlock("
                     "base(MapColor.LIME, 4.0f, 9.0f, BlockSoundGroup.METAL, 6, true).nonOpaque())",
                model="bottom_top"),
+    Ben10Block("omnitrix_stabilizer", "Omnitrix-Stabilisator", "Omnitrix Stabilizer", "block",
+               lambda: {"omnitrix_stabilizer": bx.stabilizer_side("omnitrix_stabilizer"),
+                        "omnitrix_stabilizer_top": bx.stabilizer_top("omnitrix_stabilizer_top"),
+                        "omnitrix_stabilizer_bottom": bx.stabilizer_top("omnitrix_stabilizer_bottom")},
+               "LIME", 4.0, 9.0, "METAL", tier="stone", light=8, planet="plumber", model="bottom_top"),
 ]
+
+# Reaktor-Texturen fuer die Werkbank-Animation (vom Block-Entity-Renderer gezeichnet, Graustufe/weiss zum Einfaerben)
+REACTOR_TEXTURES = {
+    "field": lambda: bx.reactor_field("reactor_field"),
+    "ring": lambda: bx.reactor_ring("reactor_ring"),
+    "plasma": lambda: bx.reactor_plasma("reactor_plasma"),
+}
 
 ITEMS: list[ItemDef] = [
     ItemDef("raw_corrodium", "Roh-Corrodium", "Raw Corrodium", lambda: bx.raw_corrodium("raw_corrodium"), "UNCOMMON"),
@@ -155,6 +167,8 @@ def recipes() -> dict[str, dict]:
         "corrodium_crystal_from_block": gpc.shapeless([m_("corrodium_block")], m_("corrodium_crystal"), 9),
         "omnitrix_workbench": gpc.shaped(["CCC", "ITI", "III"], {"C": m_("corrodium_crystal"), "I": "minecraft:iron_ingot",
                                                                 "T": "minecraft:crafting_table"}, m_("omnitrix_workbench")),
+        "omnitrix_stabilizer": gpc.shaped(["ICI", "CEC", "ICI"], {"C": m_("corrodium_crystal"), "I": "minecraft:iron_ingot",
+                                                                 "E": "minecraft:ender_pearl"}, m_("omnitrix_stabilizer")),
         "energy_core": gpc.shaped([" C ", "CEC", " C "], {"C": m_("corrodium_crystal"), "E": "minecraft:ender_eye"}, m_("energy_core")),
     }
     for color, (_, _, dye) in CORE_NAMES.items():
@@ -328,6 +342,9 @@ def outputs(with_images: bool = True) -> dict[Path, object]:
         if with_images:
             for tname, img in b.textures().items():
                 files[ASSETS / "textures" / "block" / f"{tname}.png"] = img
+    if with_images:
+        for tname, fn in REACTOR_TEXTURES.items():
+            files[ASSETS / "textures" / "entity" / "omnitrix_reactor" / f"{tname}.png"] = fn()
     for i in ITEMS:
         files[ASSETS / "models" / "item" / f"{i.name}.json"] = {"parent": "minecraft:item/generated",
                                                                 "textures": {"layer0": f"{MOD}:item/{i.name}"}}
@@ -378,6 +395,7 @@ def check() -> int:
             errors += 1
     textures = [f"textures/block/{n}.png" for b in BLOCKS for n in texture_names(b)]
     textures += [f"textures/item/{i.name}.png" for i in ITEMS]
+    textures += [f"textures/entity/omnitrix_reactor/{n}.png" for n in REACTOR_TEXTURES]
     for rel in textures:
         p = ASSETS / rel
         if not p.is_file():

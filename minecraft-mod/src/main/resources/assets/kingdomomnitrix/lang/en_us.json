@@ -2103,5 +2103,8 @@
   "screen.kingdomomnitrix.workbench.console": "Console",
   "screen.kingdomomnitrix.workbench.core": "Core",
   "screen.kingdomomnitrix.workbench.hint": "Insert parts + core",
-  "screen.kingdomomnitrix.calibration.color_hint": "Change it with an energy core in the Omnitrix Workbench"
+  "screen.kingdomomnitrix.calibration.color_hint": "Change it with an energy core in the Omnitrix Workbench",
+  "block.kingdomomnitrix.omnitrix_stabilizer": "Omnitrix Stabilizer",
+  "screen.kingdomomnitrix.workbench.stabilizers": "Stabilizers: %s/4",
+  "screen.kingdomomnitrix.workbench.hint_reactor": "One stabilizer north, east, south and west: 3 blocks higher, 3–7 blocks away"
 }

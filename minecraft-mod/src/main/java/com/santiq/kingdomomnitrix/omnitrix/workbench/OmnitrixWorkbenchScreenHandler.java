@@ -26,7 +26,7 @@ public class OmnitrixWorkbenchScreenHandler extends ScreenHandler {
 
 	/** Client-Konstruktor: Inhalt und Fortschritt kommen ueber die normale Synchronisierung. */
 	public OmnitrixWorkbenchScreenHandler(int syncId, PlayerInventory playerInventory) {
-		this(syncId, playerInventory, new SimpleInventory(WorkbenchRecipe.SIZE), new ArrayPropertyDelegate(2));
+		this(syncId, playerInventory, new SimpleInventory(WorkbenchRecipe.SIZE), new ArrayPropertyDelegate(3));
 	}
 
 	public OmnitrixWorkbenchScreenHandler(int syncId, PlayerInventory playerInventory, Inventory bench, PropertyDelegate properties) {
@@ -58,6 +58,11 @@ public class OmnitrixWorkbenchScreenHandler extends ScreenHandler {
 
 	public boolean working() {
 		return properties.get(1) > 0;
+	}
+
+	/** gefundene Reaktor-Stabilisatoren (0..4) */
+	public int stabilizers() {
+		return properties.get(2);
 	}
 
 	@Override

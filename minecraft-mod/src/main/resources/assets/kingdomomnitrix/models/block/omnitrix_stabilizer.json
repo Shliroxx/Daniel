@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/omnitrix_stabilizer_top",
+    "side": "kingdomomnitrix:block/omnitrix_stabilizer",
+    "bottom": "kingdomomnitrix:block/omnitrix_stabilizer_bottom"
+  }
+}

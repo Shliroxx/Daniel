@@ -90,6 +90,48 @@ public final class OmnitrixGeo {
 		return true;
 	}
 
+	/**
+	 * Explosionsansicht fuer die Omnitrix-Werkbank: dasselbe Modell, die Bauteile um {@code explode} (0 = zusammengebaut,
+	 * 1 = ganz auseinander) entlang ihrer Achse verschoben und gedreht — Armband-Schichten nach innen/oben/unten, Knopf zur
+	 * Seite, Zylinder, Zifferblatt, Lichter und Sanduhr gestaffelt nach vorn.
+	 */
+	public static boolean renderExploded(MatrixStack matrices, VertexConsumerProvider consumers, int light, float explode, float[] glow) {
+		BakedGeoModel baked = GeckoLibCache.getBakedModels().get(GEO);
+		if (baked == null) {
+			return false;
+		}
+		GeoBone root = baked.getBone("os_omnitrix").orElse(null);
+		if (root == null) {
+			return false;
+		}
+		Map<String, Offset> offsets = offsets(0.0f, 0.0f, 0.0f);
+		float e = MathHelper.clamp(explode, 0.0f, 1.0f);
+		EXPLODED.forEach((bone, full) -> {
+			Offset base = offsets.get(bone);
+			float bx = base == null ? 0.0f : base.x();
+			float rot = base == null ? 0.0f : base.rotX();
+			offsets.put(bone, new Offset(bx + full.x() * e, full.y() * e, full.z() * e, rot + full.rotX() * e));
+		});
+		matrices.push();
+		matrices.translate(-5.0f / 16.0f, 22.0f / 16.0f, 0.0f);
+		matrices.scale(-1.0f, -1.0f, 1.0f);
+		renderBone(matrices, consumers.getBuffer(RenderLayer.getEntityCutoutNoCull(TEXTURE)), root, offsets, 1.0f, 1.0f, 1.0f, light);
+		renderBone(matrices, consumers.getBuffer(RenderLayer.getEyes(GLOW)), root, offsets, glow[0], glow[1], glow[2], 0xF000F0);
+		matrices.pop();
+		return true;
+	}
+
+	/** Lage der Bauteile ganz auseinander (Bedrock-Pixel; x = Zifferblatt-Achse nach aussen) und ihre Drehung (Grad). */
+	private static final Map<String, Offset> EXPLODED = Map.of(
+			"black", new Offset(-5.0f, 0.0f, 0.0f, 0.0f),
+			"grey", new Offset(-1.0f, 6.0f, 0.0f, 0.0f),
+			"white", new Offset(-1.0f, -6.0f, 0.0f, 0.0f),
+			"button", new Offset(1.0f, 0.0f, -6.0f, 0.0f),
+			"cylinder", new Offset(4.0f, 0.0f, 0.0f, 0.0f),
+			"dial", new Offset(7.0f, 0.0f, 0.0f, 120.0f),
+			"lights", new Offset(3.0f, 0.0f, 0.0f, 0.0f),
+			"arrows", new Offset(11.0f, 0.0f, 0.0f, -90.0f));
+
 	private static Map<String, Offset> offsets(float lift, float dialDeg, float lockDeg) {
 		Map<String, Offset> offsets = new HashMap<>();
 		float open = MathHelper.clamp(lift, 0.0f, 1.0f);

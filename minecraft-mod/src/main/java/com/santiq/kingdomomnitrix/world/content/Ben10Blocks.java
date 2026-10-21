@@ -21,6 +21,8 @@ public final class Ben10Blocks {
 	public static final Block CORRODIUM_BLOCK = register("corrodium_block", new Block(base(MapColor.LIME, 5.0f, 9.0f, BlockSoundGroup.AMETHYST_BLOCK, 9, true)));
 	/** Omnitrix-Werkbank */
 	public static final Block OMNITRIX_WORKBENCH = register("omnitrix_workbench", new com.santiq.kingdomomnitrix.omnitrix.workbench.OmnitrixWorkbenchBlock(base(MapColor.LIME, 4.0f, 9.0f, BlockSoundGroup.METAL, 6, true).nonOpaque()));
+	/** Omnitrix-Stabilisator */
+	public static final Block OMNITRIX_STABILIZER = register("omnitrix_stabilizer", new Block(base(MapColor.LIME, 4.0f, 9.0f, BlockSoundGroup.METAL, 8, true)));
 
 	private Ben10Blocks() {
 	}

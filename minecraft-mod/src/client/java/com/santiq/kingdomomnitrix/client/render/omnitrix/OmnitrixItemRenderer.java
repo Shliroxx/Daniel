@@ -26,15 +26,24 @@ public final class OmnitrixItemRenderer implements BuiltinItemRendererRegistry.D
 	@Override
 	public void render(ItemStack stack, ModelTransformationMode mode, MatrixStack matrices, VertexConsumerProvider consumers, int light,
 			int overlay) {
-		int rgb = OmnitrixColors.ofStack(stack).map(OmnitrixColors.Color::primary).orElse(OmnitrixColors.CLASSIC);
-		float[] glow = {((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f};
+		float[] glow = glow(stack);
 		matrices.push();
 		matrices.translate(0.5f, 0.5f, 0.5f);
 		matrices.scale(SCALE, SCALE, SCALE);
-		// Zifferblatt (Armraum +x) zum Betrachter (+z) drehen
-		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90.0f));
-		matrices.translate(-CENTER_X, -CENTER_Y, 0.0f);
+		toDialCenter(matrices);
 		OmnitrixGeo.render(matrices, consumers, false, light, 0.0f, 0.0f, 0.0f, glow);
 		matrices.pop();
+	}
+
+	/** Armraum von {@link OmnitrixGeo} so legen, dass die Zifferblatt-Mitte im Ursprung liegt und zum Betrachter (+z) zeigt. */
+	public static void toDialCenter(MatrixStack matrices) {
+		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-90.0f));
+		matrices.translate(-CENTER_X, -CENTER_Y, 0.0f);
+	}
+
+	/** Leuchtfarbe des Omnitrix-Stapels (Energiekern) als RGB 0..1. */
+	public static float[] glow(ItemStack stack) {
+		int rgb = OmnitrixColors.ofStack(stack).map(OmnitrixColors.Color::primary).orElse(OmnitrixColors.CLASSIC);
+		return new float[]{((rgb >> 16) & 0xFF) / 255.0f, ((rgb >> 8) & 0xFF) / 255.0f, (rgb & 0xFF) / 255.0f};
 	}
 }

@@ -2103,5 +2103,8 @@
   "screen.kingdomomnitrix.workbench.console": "Konsole",
   "screen.kingdomomnitrix.workbench.core": "Kern",
   "screen.kingdomomnitrix.workbench.hint": "Teile + Kern einsetzen",
-  "screen.kingdomomnitrix.calibration.color_hint": "Ändern: Energiekern in der Omnitrix-Werkbank"
+  "screen.kingdomomnitrix.calibration.color_hint": "Ändern: Energiekern in der Omnitrix-Werkbank",
+  "block.kingdomomnitrix.omnitrix_stabilizer": "Omnitrix-Stabilisator",
+  "screen.kingdomomnitrix.workbench.stabilizers": "Stabilisatoren: %s/4",
+  "screen.kingdomomnitrix.workbench.hint_reactor": "Je 1 Stabilisator nördlich, östlich, südlich, westlich: 3 Blöcke höher, 3–7 Blöcke entfernt"
 }

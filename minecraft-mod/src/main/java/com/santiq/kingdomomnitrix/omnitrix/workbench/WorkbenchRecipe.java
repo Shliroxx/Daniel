@@ -23,8 +23,8 @@ public final class WorkbenchRecipe {
 	public static final int OUTPUT = 3;
 	public static final int SIZE = 4;
 	/** Dauer der Zusammenbau-Animation und des Umfaerbens (Ticks) */
-	public static final int ASSEMBLE_TICKS = 120;
-	public static final int RECOLOR_TICKS = 50;
+	public static final int ASSEMBLE_TICKS = 240;
+	public static final int RECOLOR_TICKS = 100;
 	/** Farbe eines Basis-Kerns */
 	public static final String BASE_COLOR = "green";
 
