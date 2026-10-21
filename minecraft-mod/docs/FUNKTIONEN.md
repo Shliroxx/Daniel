@@ -69,12 +69,15 @@ Es gibt kein Werkbank-Rezept. Das Omnitrix entsteht in vier Schritten:
 
 1. **Absturz der PROCTOR.** Einmal pro Welt stürzt nach `kingdomomnitrixPlumberCrashMinutes` Minuten Spielzeit
    (Standard 10) ein Klempner-Kreuzer 110–170 Blöcke neben einem Spieler ab: Warnung „⚠ NOTSIGNAL“, Feuerschweif am
-   Himmel, Einschlag mit Explosion. Jeder Spieler bekommt einen **Klempner-Peilsender** (Kompass auf das Wrack), auch wer
+   Himmel, Einschlag mit Explosion. Der Ort wird ohne Chunk-Generierung aus dem Geländerauschen gewählt (trocken, nicht
+   zu steil); die Chunks unter dem Wrack lädt der Server während des Anflugs vor. Jeder Spieler bekommt einen **Klempner-Peilsender** (Kompass auf das Wrack), auch wer
    später beitritt.
 2. **Das Wrack (212 Blöcke).** Bugteil schräg im Boden mit Krater: Cockpit (Logbuch des Kapitäns), Quartiere,
-   Waffenkammer, Containment-Labor mit der **Hülle**. Heckteil versetzt dahinter: Frachtraum, Maschinenraum (Notizen des
-   Chefingenieurs) mit der **Konsole**, Triebwerke und Finne. Schleifspur, Trümmer, Feuer und Rauchsäulen ringsum.
-   Die beiden **Containment-Kapseln** sind unzerstörbar und geben jedem Spieler sein Teil genau einmal. Truhen je Bereich
+   Waffenkammer und eine runde **Containment-Kammer** (Grube mit grünem Leuchtschacht, orange leuchtender Ring,
+   vier Stege) mit dem **kaputten Omnitrix (Hülle)**. Heckteil versetzt dahinter: Frachtraum, Maschinenraum (Notizen des
+   Chefingenieurs) mit einer zweiten Kammer und der **Konsole**, Triebwerke und Finne. Schleifspur, Trümmer, Feuer und Rauchsäulen ringsum.
+   Die beiden **Containment-Kapseln** (3D, der Deckel klappt per Rechtsklick auf, das Teil schwebt heraus) sind
+   unzerstörbar und geben jedem Spieler sein Teil genau einmal. Truhen je Bereich
    (Quartiere, Waffenkammer, Labor, Fracht, Maschinenraum) mit eigener Beute, darunter Klempner-Ausrüstung.
 3. **Corrodium aus dem End.** Giftgrünes Erz im Endstein (Höhe 10–90). Abbau ohne Behutsamkeit vergiftet kurz (der
    Klempner-Helm filtert den Staub). Roh-Corrodium → Ofen → Corrodium-Kristall.

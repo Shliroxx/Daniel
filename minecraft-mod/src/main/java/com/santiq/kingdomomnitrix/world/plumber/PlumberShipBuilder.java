@@ -15,8 +15,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.loot.LootTable;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
@@ -28,10 +30,13 @@ import net.minecraft.world.Heightmap;
  *
  * <ul>
  *   <li><b>Bugteil</b> (Schiffslaenge 0–118): mit der Nase schraeg im Boden, Einschlagkrater. Cockpit (Konsolen,
- *       Logbuch 1), Mannschaftsquartiere, Waffenkammer, Containment-Labor mit der Kapsel der <b>Huelle</b>.</li>
+ *       Logbuch 1), Mannschaftsquartiere, Waffenkammer, runde Containment-Kammer mit der Kapsel des kaputten Omnitrix
+ *       (<b>Huelle</b>).</li>
  *   <li><b>Heckteil</b> (132–212, zehn Bloecke weiter hinten und seitlich versetzt): Frachtraum, Maschinenraum mit
- *       Reaktorsaeulen, Logbuch 2 und der Kapsel der <b>Konsole</b>; zwei Triebwerksgondeln und Rueckenfinne.</li>
- *   <li>Aussen: Schleifspur hinter dem Heck, Truemmer, Brandstellen und Rauchsaeulen (Lagerfeuer an den Bruchkanten).</li>
+ *       Logbuch 2 und einer zweiten Containment-Kammer mit der Kapsel der <b>Konsole</b>; zwei Triebwerksgondeln und
+ *       Rueckenfinne.</li>
+ *   <li>Aussen: Schneise (Baeume und Pflanzen entlang des Wracks umgerissen), Schleifspur hinter dem Heck, Truemmer,
+ *       Brandstellen nur auf Rumpfplatten (kein Waldbrand) und Rauchsaeulen (Lagerfeuer an den Bruchkanten).</li>
  * </ul>
  *
  * Koordinaten: u entlang des Schiffs (0 = Nasenspitze, nach hinten), v quer (rechts positiv), w senkrecht zur
@@ -48,6 +53,8 @@ final class PlumberShipBuilder {
 	private static final int B_SHIFT = 10;
 	private static final int B_LATERAL = 3;
 	private static final double EXP = 2.5;
+	private static final int CHAMBER_RADIUS = 10;
+	private static final int CHAMBER_DEPTH = 12;
 
 	/** Ergebnis: wo die Story-Punkte liegen. */
 	record Site(BlockPos nose, BlockPos shellPod, BlockPos consolePod) {
@@ -63,6 +70,8 @@ final class PlumberShipBuilder {
 	private final Direction right;
 	private final Random random;
 	private final int ground;
+	/** Lage der Truhen (Bereich → Position) und Lesepulte, fuers Log (Server-Betreiber, Tests) */
+	private final java.util.List<String> landmarks = new java.util.ArrayList<>();
 	private final Section front;
 	private final Section rear;
 
@@ -82,6 +91,7 @@ final class PlumberShipBuilder {
 		long started = System.currentTimeMillis();
 		PlumberShipBuilder b = new PlumberShipBuilder(world, nose, forward, random);
 		b.loadChunks();
+		b.clearVegetation();
 		b.crater();
 		b.trench();
 		b.hull(b.front);
@@ -94,7 +104,8 @@ final class PlumberShipBuilder {
 		BlockPos consolePod = b.rearRooms();
 		b.debris();
 		b.fires();
-		KingdomOmnitrix.LOGGER.info("Klempner-Wrack bei {} gebaut ({} ms)", nose, System.currentTimeMillis() - started);
+		KingdomOmnitrix.LOGGER.info("Klempner-Wrack bei {} gebaut ({} ms): Kapsel Huelle {}, Kapsel Konsole {}, {}", nose,
+				System.currentTimeMillis() - started, shellPod.toShortString(), consolePod.toShortString(), String.join(", ", b.landmarks));
 		return new Site(nose, shellPod, consolePod);
 	}
 
@@ -338,11 +349,19 @@ final class PlumberShipBuilder {
 	// --- Umgebung ---------------------------------------------------------------------------------------------------
 
 	private void loadChunks() {
+		for (ChunkPos chunk : footprint(nose, forward)) {
+			world.getChunk(chunk.x, chunk.z);
+		}
+	}
+
+	/** Alle Chunks, die das Wrack samt Krater, Schneise und Schleifspur beruehrt (fuer Vorladen und Bau). */
+	static java.util.List<ChunkPos> footprint(BlockPos nose, Direction forward) {
+		Direction right = forward.rotateYClockwise();
 		int minX = Integer.MAX_VALUE;
 		int maxX = Integer.MIN_VALUE;
 		int minZ = Integer.MAX_VALUE;
 		int maxZ = Integer.MIN_VALUE;
-		for (int u : new int[]{-20, LENGTH + B_SHIFT + 75}) {
+		for (int u : new int[]{-22, LENGTH + B_SHIFT + 75}) {
 			for (int v : new int[]{-35, 35}) {
 				BlockPos p = nose.offset(forward, -u).offset(right, v);
 				minX = Math.min(minX, p.getX());
@@ -351,9 +370,40 @@ final class PlumberShipBuilder {
 				maxZ = Math.max(maxZ, p.getZ());
 			}
 		}
+		java.util.List<ChunkPos> chunks = new java.util.ArrayList<>();
 		for (int cx = minX >> 4; cx <= maxX >> 4; cx++) {
 			for (int cz = minZ >> 4; cz <= maxZ >> 4; cz++) {
-				world.getChunk(cx, cz);
+				chunks.add(new ChunkPos(cx, cz));
+			}
+		}
+		return chunks;
+	}
+
+	/**
+	 * Schneise: der Absturz hat Baeume und Pflanzen entlang Wrack und Schleifspur umgerissen. Je Spalte von oben nach
+	 * unten Stamm, Laub und Pflanzen entfernen, bis fester Boden kommt; auf dem Boden bleibt eine Brandspur.
+	 */
+	private void clearVegetation() {
+		for (int u = -22; u <= LENGTH + B_SHIFT + 64; u++) {
+			for (int v = -27; v <= 27 + B_LATERAL; v++) {
+				BlockPos column = nose.offset(forward, -u).offset(right, v);
+				BlockPos pos = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, column);
+				boolean cleared = false;
+				for (int i = 0; i < 40; i++) {
+					BlockPos below = pos.down();
+					BlockState state = world.getBlockState(below);
+					if (state.isIn(BlockTags.LOGS) || state.isIn(BlockTags.LEAVES) || (state.isReplaceable() && !state.isAir()
+							&& world.getFluidState(below).isEmpty()) || state.isIn(BlockTags.FLOWERS) || state.isOf(Blocks.BAMBOO)) {
+						set(below, of(Blocks.AIR));
+						cleared = true;
+					} else if (!state.isAir()) {
+						break;
+					}
+					pos = below;
+				}
+				if (cleared && world.getBlockState(pos.down()).isOf(Blocks.GRASS_BLOCK) && hash(column.getX(), 3, column.getZ()) < 0.35) {
+					set(pos.down(), of(Blocks.COARSE_DIRT));
+				}
 			}
 		}
 	}
@@ -393,9 +443,6 @@ final class PlumberShipBuilder {
 				BlockPos floor = top.down(depth);
 				double h = hash(floor.getX(), floor.getY(), floor.getZ());
 				set(floor, h < 0.08 ? of(Blocks.MAGMA_BLOCK) : h < 0.6 ? of(Blocks.COARSE_DIRT) : of(Blocks.DIRT_PATH));
-				if (h > 0.97) {
-					set(floor.up(), of(Blocks.FIRE));
-				}
 				// aufgeworfene Raender
 				if (Math.abs(v) == half) {
 					set(top.offset(right, Integer.signum(v)).up(), of(Blocks.COARSE_DIRT));
@@ -420,8 +467,9 @@ final class PlumberShipBuilder {
 				double h = random.nextDouble();
 				set(p, h < 0.6 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : h < 0.85 ? of(Ben10Blocks.PLUMBER_HULL) : of(Ben10Blocks.PLUMBER_HULL_DARK));
 			}
-			if (random.nextFloat() < 0.25) {
-				set(top.up(size == 3 ? 2 : 1), of(Blocks.FIRE));
+			// Glut nur auf der (nicht brennbaren) Platte, nie am Boden: kein Waldbrand
+			if (random.nextFloat() < 0.25 && size == 3) {
+				set(top.up(2), of(Blocks.FIRE));
 			}
 		}
 	}
@@ -490,20 +538,9 @@ final class PlumberShipBuilder {
 		chest(at(s, 66, 8, FLOOR + 1), side(-1), "armory");
 		chest(at(s, 74, -8, FLOOR + 1), side(1), "armory");
 		set(at(s, 70, 8, FLOOR + 1), of(Blocks.TNT));
-		// Labor: Kapsel auf Lichtsockel, Konsolen an den Waenden, Labortruhe
-		BlockPos pod = at(s, 98, 0, FLOOR + 1);
-		for (int du = -1; du <= 1; du++) {
-			for (int dv = -1; dv <= 1; dv++) {
-				set(at(s, 98 + du, dv, FLOOR), of(Ben10Blocks.PLUMBER_LIGHT));
-			}
-		}
-		set(pod, of(Ben10Blocks.CONTAINMENT_POD_SHELL));
-		set(pod.up(), of(PlanetBlocks.TECH_GLASS));
-		for (int u = 88; u <= 108; u += 4) {
-			set(at(s, u, 8, FLOOR + 1), of(Ben10Blocks.PLUMBER_CONSOLE));
-			set(at(s, u, -8, FLOOR + 1), of(Ben10Blocks.PLUMBER_CONSOLE));
-		}
-		chest(at(s, 106, 6, FLOOR + 1), side(-1), "lab");
+		// Labor: runde Containment-Kammer mit der Kapsel des kaputten Omnitrix (Huelle), Labortruhe davor
+		BlockPos pod = chamber(s, 98, Ben10Blocks.CONTAINMENT_POD_SHELL);
+		chest(at(s, 112, 6, FLOOR + 1), side(-1), "lab");
 		return pod;
 	}
 
@@ -522,28 +559,96 @@ final class PlumberShipBuilder {
 		chest(at(s, 142, 8, FLOOR + 1), side(-1), "cargo");
 		chest(at(s, 150, -8, FLOOR + 1), side(1), "cargo");
 		chest(at(s, 162, 8, FLOOR + 1), side(-1), "cargo");
-		// Maschinenraum: Reaktorsaeulen, Konsolen, Logbuch 2, Kapsel der Konsole
-		for (int u : new int[]{178, 198}) {
-			for (int side = -1; side <= 1; side += 2) {
-				for (int w = FLOOR + 1; w <= FLOOR + 6; w++) {
-					set(at(s, u, side * 5, w), w % 2 == 0 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.CORRODIUM_BLOCK));
+		// Maschinenraum: Containment-Kammer mit der Kapsel der Konsole, Logbuch 2, Maschinentruhe
+		BlockPos pod = chamber(s, 188, Ben10Blocks.CONTAINMENT_POD_CONSOLE);
+		lectern(at(s, 174, 3, FLOOR + 1), PlumberLogs.engineer());
+		chest(at(s, 204, -5, FLOOR + 1), side(1), "engineering");
+		return pod;
+	}
+
+	/**
+	 * Runde Containment-Kammer (Radius {@value #CHAMBER_RADIUS}) um Schiffsstelle {@code u}: eine Grube bis
+	 * {@value #CHAMBER_DEPTH} Bloecke unter das Deck, Boden mit gruenem Leuchtmuster, gruener Leuchtschacht in der Mitte,
+	 * Wandringe aus orangem Licht. Auf Deckhoehe ein Laufring mit orange leuchtender Kante, vier Stege zur Mittelplattform;
+	 * dort steht die Kapsel zwischen vier Saeulen, darueber faellt ein gruener Lichtstrahl von der Decke. Die Kammer ist
+	 * waagrecht (das Schiff ist leicht geneigt), Tueren zum Gang vorn und hinten.
+	 */
+	private BlockPos chamber(Section s, int u, Block pod) {
+		BlockPos center = at(s, u, 0, FLOOR);
+		int deck = center.getY();
+		double hw = halfWidth(u);
+		double hh = halfHeight(u);
+		int mid = ground + (int) Math.round(s.center().applyAsDouble(u));
+		for (int du = -CHAMBER_RADIUS - 1; du <= CHAMBER_RADIUS + 1; du++) {
+			for (int dv = -CHAMBER_RADIUS - 1; dv <= CHAMBER_RADIUS + 1; dv++) {
+				double r = Math.sqrt(du * du + dv * dv);
+				if (r > CHAMBER_RADIUS + 0.5) {
+					continue;
+				}
+				boolean wall = r > CHAMBER_RADIUS - 0.5;
+				boolean door = Math.abs(dv) <= 1 && Math.abs(du) > CHAMBER_RADIUS - 2;
+				BlockPos column = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral());
+				for (int y = deck - CHAMBER_DEPTH - 1; y <= deck + 12; y++) {
+					int rel = y - deck;
+					// oberhalb des Decks nur innerhalb des Rumpfs bauen, die Huelle ist dort die Wand
+					if (rel > 0 && shape(dv, y - mid, hw - 1.3, hh - 1.3) > 1.0) {
+						continue;
+					}
+					BlockPos pos = column.withY(y);
+					if (y == deck - CHAMBER_DEPTH - 1) {
+						set(pos, r < 2.5 || (int) r % 3 == 0 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.CORRODIUM_BLOCK));
+					} else if (wall) {
+						if (door && rel >= 1 && rel <= 3) {
+							set(pos, of(Blocks.AIR));
+						} else {
+							set(pos, Math.floorMod(rel, 4) == 2 ? of(Blocks.SHROOMLIGHT) : of(Ben10Blocks.PLUMBER_HULL_DARK));
+						}
+					} else if (rel == 0) {
+						set(pos, deckBlock(du, dv, r));
+					} else if (rel < 0 && r < 1.6) {
+						// Leuchtschacht unter der Plattform
+						set(pos, r < 0.5 ? of(Ben10Blocks.PLUMBER_LIGHT) : Math.floorMod(rel, 3) == 0 ? of(Ben10Blocks.CORRODIUM_BLOCK)
+								: of(PlanetBlocks.TECH_GLASS));
+					} else {
+						set(pos, of(Blocks.AIR));
+					}
 				}
 			}
 		}
-		BlockPos pod = at(s, 188, 0, FLOOR + 1);
-		for (int du = -1; du <= 1; du++) {
-			for (int dv = -1; dv <= 1; dv++) {
-				set(at(s, 188 + du, dv, FLOOR), of(Ben10Blocks.PLUMBER_LIGHT));
+		// Saeulen um die Kapsel, Lichtstrahl von der Decke
+		for (int du = -2; du <= 2; du += 4) {
+			for (int dv = -2; dv <= 2; dv += 4) {
+				BlockPos column = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral());
+				for (int y = deck + 1; y <= deck + 3; y++) {
+					set(column.withY(y), y == deck + 3 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.PLUMBER_HULL_DARK));
+				}
 			}
 		}
-		set(pod, of(Ben10Blocks.CONTAINMENT_POD_CONSOLE));
-		set(pod.up(), of(PlanetBlocks.TECH_GLASS));
-		for (int u = 182; u <= 194; u += 4) {
-			set(at(s, u, 8, FLOOR + 1), of(Ben10Blocks.PLUMBER_CONSOLE));
+		BlockPos podPos = center.up();
+		BlockPos beam = podPos.up(4);
+		while (beam.getY() < deck + 12 && world.getBlockState(beam).isAir()) {
+			beam = beam.up();
 		}
-		lectern(at(s, 174, 3, FLOOR + 1), PlumberLogs.engineer());
-		chest(at(s, 196, -7, FLOOR + 1), side(1), "engineering");
-		return pod;
+		set(beam, of(Ben10Blocks.PLUMBER_LIGHT));
+		set(podPos, of(pod));
+		return podPos;
+	}
+
+	/** Boden der Kammer auf Deckhoehe: Laufring mit orange leuchtender Innenkante, vier Stege, Mittelplattform. */
+	private static BlockState deckBlock(int du, int dv, double r) {
+		if (r > CHAMBER_RADIUS - 2.5) {
+			return of(Ben10Blocks.PLUMBER_FLOOR);
+		}
+		if (r > CHAMBER_RADIUS - 3.5) {
+			return of(Blocks.SHROOMLIGHT);
+		}
+		if (r <= 3.5) {
+			return r > 2.5 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.PLUMBER_FLOOR);
+		}
+		if (Math.abs(du) <= 1 || Math.abs(dv) <= 1) {
+			return Math.abs(du) == 1 || Math.abs(dv) == 1 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : of(Ben10Blocks.PLUMBER_FLOOR);
+		}
+		return of(Blocks.AIR);
 	}
 
 	/** Blickrichtung fuer Truhen an der Wand: zur Schiffsmitte */
@@ -557,11 +662,13 @@ final class PlumberShipBuilder {
 			RegistryKey<LootTable> table = RegistryKey.of(RegistryKeys.LOOT_TABLE, KingdomOmnitrix.id("chests/plumber_ship_" + area));
 			chest.setLootTable(table, random.nextLong());
 		}
+		landmarks.add(area + " " + pos.toShortString());
 	}
 
 	private void lectern(BlockPos pos, ItemStack book) {
 		BlockState state = of(Blocks.LECTERN).with(LecternBlock.FACING, forward);
 		set(pos, state);
 		LecternBlock.putBookIfAbsent(null, world, pos, world.getBlockState(pos), book);
+		landmarks.add("lectern " + pos.toShortString());
 	}
 }

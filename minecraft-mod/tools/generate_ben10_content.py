@@ -129,11 +129,17 @@ REACTOR_TEXTURES = {
     "ring": lambda: bx.reactor_ring("reactor_ring"),
     "plasma": lambda: bx.reactor_plasma("reactor_plasma"),
 }
+# Containment-Kapsel (3D im Block-Entity-Renderer)
+POD_TEXTURES = {
+    "side": lambda: bx.pod_side("pod_side"),
+    "top": lambda: bx.pod_top("pod_top"),
+    "glow": lambda: Image.new("RGBA", (4, 4), (255, 255, 255, 255)),
+}
 
 ITEMS: list[ItemDef] = [
     ItemDef("raw_corrodium", "Roh-Corrodium", "Raw Corrodium", lambda: bx.raw_corrodium("raw_corrodium"), "UNCOMMON"),
     ItemDef("corrodium_crystal", "Corrodium-Kristall", "Corrodium Crystal", lambda: bx.corrodium_crystal("corrodium_crystal"), "UNCOMMON"),
-    ItemDef("omnitrix_shell", "Omnitrix-Hülle", "Omnitrix Shell", lambda: bx.omnitrix_shell("omnitrix_shell"), "EPIC", 1),
+    ItemDef("omnitrix_shell", "Kaputtes Omnitrix (Hülle)", "Broken Omnitrix (Shell)", lambda: bx.omnitrix_shell("omnitrix_shell"), "EPIC", 1),
     ItemDef("omnitrix_console", "Omnitrix-Konsole", "Omnitrix Console", lambda: bx.omnitrix_console("omnitrix_console"), "EPIC", 1),
     ItemDef("energy_core", "Basis-Energiekern", "Base Energy Core", lambda: bx.energy_core("energy_core", None), "RARE", 16),
 ]
@@ -183,8 +189,8 @@ TOOLTIPS = {
     "plumber_leggings": ("Volles Set: immun gegen Gift.", "Full set: immune to poison."),
     "plumber_boots": ("Volles Set: immun gegen Gift.", "Full set: immune to poison."),
     "raw_corrodium": ("Giftig. Nur im End zu finden.", "Toxic. Found only in the End."),
-    "omnitrix_shell": ("Aus dem Klempner-Schiff. In der Omnitrix-Werkbank mit Konsole und Energiekern zusammensetzen.",
-                       "From the Plumber ship. Assemble it with the console and an energy core in the Omnitrix Workbench."),
+    "omnitrix_shell": ("Beim Absturz zerbrochen – die Konsole fehlt. In der Omnitrix-Werkbank mit Konsole und Energiekern reparieren.",
+                       "Broken in the crash – the console is missing. Repair it in the Omnitrix Workbench with the console and an energy core."),
     "omnitrix_console": ("Aus dem Klempner-Schiff. In der Omnitrix-Werkbank mit Hülle und Energiekern zusammensetzen.",
                          "From the Plumber ship. Assemble it with the shell and an energy core in the Omnitrix Workbench."),
     "energy_core": ("Mit einem Farbstoff einfärben. Der Kern bestimmt die Farbe des Omnitrix.",
@@ -471,6 +477,8 @@ def outputs(with_images: bool = True) -> dict[Path, object]:
         files[ASSETS / "textures" / "models" / "armor" / "plumber_layer_2.png"] = bx.plumber_armor_layer("plumber_layer_2", True)
         for tname, fn in REACTOR_TEXTURES.items():
             files[ASSETS / "textures" / "entity" / "omnitrix_reactor" / f"{tname}.png"] = fn()
+        for tname, fn in POD_TEXTURES.items():
+            files[ASSETS / "textures" / "entity" / "containment_pod" / f"{tname}.png"] = fn()
     for i in ITEMS:
         files[ASSETS / "models" / "item" / f"{i.name}.json"] = {"parent": "minecraft:item/handheld" if i.handheld else "minecraft:item/generated",
                                                                 "textures": {"layer0": f"{MOD}:item/{i.name}"}}
@@ -523,6 +531,7 @@ def check() -> int:
     textures = [f"textures/block/{n}.png" for b in BLOCKS for n in texture_names(b)]
     textures += [f"textures/item/{i.name}.png" for i in ITEMS]
     textures += [f"textures/entity/omnitrix_reactor/{n}.png" for n in REACTOR_TEXTURES]
+    textures += [f"textures/entity/containment_pod/{n}.png" for n in POD_TEXTURES]
     textures += ["textures/models/armor/plumber_layer_1.png", "textures/models/armor/plumber_layer_2.png"]
     for rel in textures:
         p = ASSETS / rel

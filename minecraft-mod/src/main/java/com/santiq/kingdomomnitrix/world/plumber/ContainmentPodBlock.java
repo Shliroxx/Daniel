@@ -2,7 +2,9 @@ package com.santiq.kingdomomnitrix.world.plumber;
 
 import com.mojang.serialization.MapCodec;
 import com.santiq.kingdomomnitrix.world.content.Ben10Items;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.entity.BlockEntity;
@@ -18,12 +20,14 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Containment-Kapsel im Klempner-Wrack: haelt ein Omnitrix-Teil (Huelle oder Konsole) in einem Schwebefeld.
- * Rechtsklick oeffnet sie — jeder Spieler bekommt sein Teil genau einmal (Mehrspieler: jeder baut sein eigenes
+ * Containment-Kapsel im Klempner-Wrack: gepanzerter Kasten mit dem kaputten Omnitrix (Huelle) bzw. der Konsole.
+ * Rechtsklick klappt den Deckel auf — jeder Spieler bekommt sein Teil genau einmal (Mehrspieler: jeder baut sein eigenes
  * Omnitrix). Unzerstoerbar, damit die Story im Wrack bleibt.
  */
 public class ContainmentPodBlock extends BlockWithEntity {
@@ -38,6 +42,7 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		}
 	}
 
+	private static final VoxelShape SHAPE = Block.createCuboidShape(1.0, 0.0, 1.0, 15.0, 12.0, 15.0);
 	private final Part part;
 
 	public ContainmentPodBlock(Settings settings, Part part) {
@@ -54,9 +59,15 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		return CODEC;
 	}
 
+	/** Gezeichnet wird die Kapsel vom Block-Entity-Renderer (3D, Deckel klappt auf). */
 	@Override
 	protected BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+		return BlockRenderType.ENTITYBLOCK_ANIMATED;
+	}
+
+	@Override
+	protected VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+		return SHAPE;
 	}
 
 	@Nullable
@@ -70,6 +81,7 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		if (world.isClient() || !(world.getBlockEntity(pos) instanceof ContainmentPodBlockEntity pod)) {
 			return ActionResult.success(world.isClient());
 		}
+		pod.open();
 		if (!pod.claim(player.getUuid())) {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.empty").formatted(Formatting.GRAY), true);
 			world.playSound(null, pos, SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 0.6f, 1.4f);

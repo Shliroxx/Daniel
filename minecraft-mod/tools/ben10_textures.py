@@ -166,6 +166,12 @@ def omnitrix_shell(name: str) -> Image.Image:
         rad = math.radians(a)
         cx, cy = 32 + math.cos(rad) * 7, 32 + math.sin(rad) * 7
         draw.ellipse([(cx - 1.4) * s, (cy - 1.4) * s, (cx + 1.4) * s, (cy + 1.4) * s], fill=_rgba(grey[2]))
+    # Absturzschaden: Risse ueber Ring und Armband, Funken-gruener Rest
+    crack = _rgba((0.02, 0.02, 0.03))
+    draw.line([(19 * s, 21 * s), (24 * s, 27 * s), (22 * s, 33 * s)], fill=crack, width=s)
+    draw.line([(45 * s, 37 * s), (40 * s, 41 * s), (42 * s, 47 * s), (39 * s, 53 * s)], fill=crack, width=s)
+    draw.line([(27 * s, 9 * s), (31 * s, 14 * s)], fill=crack, width=s)
+    draw.ellipse([35 * s, 24 * s, 38 * s, 27 * s], fill=_rgba(PLUMBER_GLOW, 220))
     return tx._finish_item(img)
 
 
@@ -459,3 +465,37 @@ def plumber_armor_item(kind: str) -> Image.Image:
 
 def plumber_armor_layer(name: str, legs: bool) -> Image.Image:
     return tx.armor_layer(name, *PLUMBER_ARMOR_COLORS, PLUMBER_GLOW, legs=legs)
+
+
+# --- Containment-Kapsel (3D, vom Block-Entity-Renderer gezeichnet) ------------------------------------------------
+
+POD_METAL = H("5C6478")
+POD_LINE = H("0C0E14")
+
+
+def _pod_canvas(base: Color, size: int = 64):
+    ys, xs = np.mgrid[0:size, 0:size].astype(np.float64)
+    shade = 1.08 - ys / size * 0.22
+    img = Image.fromarray((np.clip(np.asarray(base) * shade[..., None], 0, 1) * 255).astype(np.uint8), "RGB")
+    return img, ImageDraw.Draw(img)
+
+
+def pod_side(name: str) -> Image.Image:
+    """Seitenwand der Kapsel (64x64, flacher Cartoon-Stil): blaugraues Metall, dickes schwarzes Band, Risslinien."""
+    img, draw = _pod_canvas(POD_METAL)
+    line = tuple(int(c * 255) for c in POD_LINE)
+    draw.rectangle([0, 14, 63, 19], fill=line)
+    for pts in ([(6, 19), (12, 38), (4, 58)], [(12, 38), (30, 44), (40, 63)], [(30, 44), (46, 30), (58, 34)],
+                [(46, 30), (52, 19)], [(58, 34), (63, 50)]):
+        draw.line(pts, fill=line, width=4)
+    draw.rectangle([0, 0, 63, 1], fill=tuple(int(c * 255) for c in np.clip(np.asarray(POD_METAL) * 1.35, 0, 1)))
+    return img.convert("RGBA")
+
+
+def pod_top(name: str) -> Image.Image:
+    """Deckel der Kapsel: hellere Platte, schwarzer Rand, ein Riss quer ueber die Flaeche."""
+    img, draw = _pod_canvas(np.clip(np.asarray(POD_METAL) * 1.15, 0, 1))
+    line = tuple(int(c * 255) for c in POD_LINE)
+    draw.rectangle([0, 0, 63, 63], outline=line, width=4)
+    draw.line([(10, 54), (26, 36), (34, 40), (54, 12)], fill=line, width=3)
+    return img.convert("RGBA")
