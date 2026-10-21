@@ -13,7 +13,7 @@ import net.minecraft.world.gen.feature.PlacedFeature;
 
 /**
  * Corrodium: giftgruenes Erz, nur im End (Endstein, alle End-Biome). Wer es ohne Behutsamkeits-Verzauberung abbaut,
- * atmet den Staub ein — kurz Gift und Uebelkeit. Aus dem Kristall entstehen die Omnitrix-Werkbank und die Energiekerne.
+ * atmet den Staub ein — kurz Gift und Uebelkeit (ausser mit Klempner-Helm). Aus dem Kristall entstehen die Omnitrix-Werkbank und die Energiekerne.
  */
 public final class Corrodium {
 	public static final RegistryKey<PlacedFeature> ORE = RegistryKey.of(RegistryKeys.PLACED_FEATURE, KingdomOmnitrix.id("ore_corrodium"));
@@ -32,7 +32,8 @@ public final class Corrodium {
 			boolean careful = net.minecraft.enchantment.EnchantmentHelper.getLevel(
 					world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).entryOf(net.minecraft.enchantment.Enchantments.SILK_TOUCH),
 					player.getMainHandStack()) > 0;
-			if (!careful) {
+			// Klempner-Helm filtert den Staub
+			if (!careful && !com.santiq.kingdomomnitrix.world.plumber.PlumberArmorItem.hasHelmet(player)) {
 				player.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, TOXIC_TICKS, 0));
 				player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, TOXIC_TICKS, 0));
 			}

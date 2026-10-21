@@ -59,6 +59,9 @@ class ItemDef:
     texture: Callable[[], Image.Image]
     rarity: str = "COMMON"
     max_count: int = 64
+    # eigene Java-Klasse: Ausdruck mit {settings} (Item.Settings) und {tip} (Tooltip-Schluessel oder null)
+    ctor: str | None = None
+    handheld: bool = False
 
 
 def single(name: str, fn: Callable[[str], Image.Image]):
@@ -134,6 +137,24 @@ ITEMS: list[ItemDef] = [
     ItemDef("omnitrix_console", "Omnitrix-Konsole", "Omnitrix Console", lambda: bx.omnitrix_console("omnitrix_console"), "EPIC", 1),
     ItemDef("energy_core", "Basis-Energiekern", "Base Energy Core", lambda: bx.energy_core("energy_core", None), "RARE", 16),
 ]
+_PLUMBER = "com.santiq.kingdomomnitrix.world.plumber"
+ITEMS += [
+    ItemDef("plumber_plating", "Klempner-Panzerplatte", "Plumber Plating", lambda: bx.plumber_plating("plumber_plating"), "UNCOMMON"),
+    ItemDef("plumber_blaster", "Klempner-Blaster", "Plumber Blaster", lambda: bx.plumber_blaster("plumber_blaster"), "RARE", 1,
+            ctor=f"new {_PLUMBER}.PlumberBlasterItem({{settings}}.maxDamage(320), {{tip}})", handheld=True),
+    ItemDef("plumber_badge", "Klempner-Abzeichen", "Plumber Badge", lambda: bx.plumber_badge("plumber_badge"), "RARE", 1,
+            ctor=f"new {_PLUMBER}.PlumberBadgeItem({{settings}}, {{tip}})"),
+]
+# Klempner-Ruestung (Material in world/plumber/PlumberArmor.java, Schichten unter textures/models/armor/plumber_layer_*)
+PLUMBER_ARMOR = [("helmet", "Klempner-Helm", "Plumber Helmet", "HELMET"),
+                 ("chestplate", "Klempner-Brustpanzer", "Plumber Chestplate", "CHESTPLATE"),
+                 ("leggings", "Klempner-Beinschutz", "Plumber Leggings", "LEGGINGS"),
+                 ("boots", "Klempner-Stiefel", "Plumber Boots", "BOOTS")]
+for _piece, _de, _en, _type in PLUMBER_ARMOR:
+    ITEMS.append(ItemDef(f"plumber_{_piece}", _de, _en, (lambda k=_piece: bx.plumber_armor_item(k)), "RARE", 1,
+                         ctor=f"new {_PLUMBER}.PlumberArmorItem(net.minecraft.item.ArmorItem.Type.{_type}, {{settings}}"
+                              f".maxDamage(net.minecraft.item.ArmorItem.Type.{_type}.getMaxDamage(30)), {{tip}})"))
+
 CORE_NAMES = {
     "green": ("Grün", "Green", "minecraft:green_dye"),
     "blue": ("Blau", "Blue", "minecraft:blue_dye"),
@@ -150,6 +171,17 @@ for _color, (_de, _en, _dye) in CORE_NAMES.items():
                          (lambda c=_color: bx.energy_core(f"energy_core_{c}", c)), "RARE", 16))
 
 TOOLTIPS = {
+    "plumber_plating": ("Panzerplatte der Klempner. Baustoff und Reparaturmaterial der Klempner-Ausrüstung.",
+                        "Plumber armour plating. Material and repair item for Plumber gear."),
+    "plumber_blaster": ("Rechtsklick: Energiestrahl (Reichweite 32). Reparatur mit Klempner-Panzerplatten.",
+                        "Right-click: energy beam (range 32). Repair with Plumber plating."),
+    "plumber_badge": ("Rechtsklick: Bedrohungs-Scan – Feinde im Umkreis leuchten auf; zeigt den Weg zum Wrack der PROCTOR.",
+                      "Right-click: threat scan – nearby enemies glow; shows the way to the PROCTOR wreck."),
+    "plumber_helmet": ("Filtert Corrodium-Staub: kein Gift beim Abbau. Volles Set: immun gegen Gift.",
+                       "Filters Corrodium dust: no poison when mining. Full set: immune to poison."),
+    "plumber_chestplate": ("Volles Set: immun gegen Gift.", "Full set: immune to poison."),
+    "plumber_leggings": ("Volles Set: immun gegen Gift.", "Full set: immune to poison."),
+    "plumber_boots": ("Volles Set: immun gegen Gift.", "Full set: immune to poison."),
     "raw_corrodium": ("Giftig. Nur im End zu finden.", "Toxic. Found only in the End."),
     "omnitrix_shell": ("Aus dem Klempner-Schiff. In der Omnitrix-Werkbank mit Konsole und Energiekern zusammensetzen.",
                        "From the Plumber ship. Assemble it with the console and an energy core in the Omnitrix Workbench."),
@@ -206,6 +238,14 @@ def recipes() -> dict[str, dict]:
                                                                  "E": "minecraft:ender_pearl"}, m_("omnitrix_stabilizer")),
         "energy_core": gpc.shaped([" C ", "CEC", " C "], {"C": m_("corrodium_crystal"), "E": "minecraft:ender_eye"}, m_("energy_core")),
     }
+    plating = m_("plumber_plating")
+    r["plumber_plating"] = gpc.shapeless(["minecraft:iron_ingot", "minecraft:iron_ingot", m_("corrodium_crystal")], plating, 2)
+    r["plumber_blaster"] = gpc.shaped(["  C", "PRP", "P  "], {"C": m_("corrodium_crystal"), "P": plating, "R": "minecraft:redstone_block"},
+                                      m_("plumber_blaster"))
+    r["plumber_badge"] = gpc.shaped([" G ", "GCG", " G "], {"G": "minecraft:gold_ingot", "C": m_("corrodium_crystal")}, m_("plumber_badge"))
+    shapes = {"helmet": ["PPP", "P P"], "chestplate": ["P P", "PPP", "PPP"], "leggings": ["PPP", "P P", "P P"], "boots": ["P P", "P P"]}
+    for piece, _, _, _ in PLUMBER_ARMOR:
+        r[f"plumber_{piece}"] = gpc.shaped(shapes[piece], {"P": plating}, m_(f"plumber_{piece}"))
     for color, (_, _, dye) in CORE_NAMES.items():
         r[f"energy_core_{color}"] = gpc.shapeless([m_("energy_core"), dye], m_(f"energy_core_{color}"))
     return r
@@ -226,13 +266,16 @@ SHIP_LOOT = {
     "armory": ((4, 6), [("minecraft:iron_ingot", 10, 2, 7), ("minecraft:arrow", 8, 8, 24), ("minecraft:crossbow", 3),
                         ("minecraft:iron_chestplate", 2), ("minecraft:iron_helmet", 2), ("minecraft:iron_sword", 3),
                         ("minecraft:tnt", 3, 1, 3), ("minecraft:diamond", 2, 1, 2), ("minecraft:shield", 3),
-                        ("minecraft:golden_apple", 1)]),
+                        ("minecraft:golden_apple", 1), (f"{MOD}:plumber_blaster", 2), (f"{MOD}:plumber_helmet", 1),
+                        (f"{MOD}:plumber_chestplate", 1), (f"{MOD}:plumber_leggings", 1), (f"{MOD}:plumber_boots", 1),
+                        (f"{MOD}:plumber_plating", 4, 1, 3)]),
     "lab": ((3, 5), [(f"{MOD}:corrodium_crystal", 8, 1, 4), (f"{MOD}:raw_corrodium", 8, 2, 5), (f"{MOD}:energy_core", 3),
                      ("minecraft:ender_pearl", 6, 1, 3), ("minecraft:redstone", 8, 4, 12), ("minecraft:glowstone_dust", 6, 2, 8),
-                     ("minecraft:experience_bottle", 5, 2, 6), ("minecraft:amethyst_shard", 5, 2, 6)]),
+                     ("minecraft:experience_bottle", 5, 2, 6), ("minecraft:amethyst_shard", 5, 2, 6), (f"{MOD}:plumber_badge", 3)]),
     "cargo": ((5, 8), [("minecraft:iron_ingot", 10, 2, 8), ("minecraft:copper_ingot", 10, 4, 12), ("minecraft:gold_ingot", 6, 1, 5),
                        ("minecraft:coal", 8, 4, 12), ("minecraft:redstone", 6, 4, 10), ("minecraft:quartz", 5, 2, 8),
-                       (f"{MOD}:raw_corrodium", 3, 1, 3), ("minecraft:emerald", 3, 1, 3), ("minecraft:name_tag", 1)]),
+                       (f"{MOD}:raw_corrodium", 3, 1, 3), ("minecraft:emerald", 3, 1, 3), ("minecraft:name_tag", 1),
+                       (f"{MOD}:plumber_plating", 6, 2, 5)]),
     "engineering": ((3, 5), [(f"{MOD}:corrodium_crystal", 8, 2, 5), (f"{MOD}:corrodium_block", 1), (f"{MOD}:energy_core", 4),
                              ("minecraft:ender_eye", 3, 1, 2), ("minecraft:blaze_rod", 4, 1, 3), ("minecraft:redstone_block", 4, 1, 3),
                              ("minecraft:iron_block", 2), ("minecraft:diamond", 2, 1, 2)]),
@@ -261,6 +304,10 @@ def our_tags() -> dict[str, dict[str, list[str]]]:
         if "beacon" in b.tags:
             block.setdefault("minecraft:beacon_base_blocks", []).append(bid)
     item[f"{MOD}:energy_cores"] = [f"{MOD}:energy_core_{c}" for c in CORE_NAMES]
+    slots = {"helmet": "head_armor", "chestplate": "chest_armor", "leggings": "leg_armor", "boots": "foot_armor"}
+    for piece, _, _, _ in PLUMBER_ARMOR:
+        item.setdefault(f"minecraft:{slots[piece]}", []).append(f"{MOD}:plumber_{piece}")
+        item.setdefault("minecraft:trimmable_armor", []).append(f"{MOD}:plumber_{piece}")
     return {"block": block, "item": item}
 
 
@@ -355,8 +402,12 @@ def java_items() -> str:
     lines.append("")
     for i in ITEMS:
         tip = f"\"item.{MOD}.{i.name}.tooltip\"" if i.name in TOOLTIPS else "null"
-        lines.append(f"\tpublic static final Item {gpc.const(i.name)} = register(\"{i.name}\", new Ben10Item(new Item.Settings()"
-                     f".maxCount({i.max_count}).rarity(Rarity.{i.rarity}), {tip}));")
+        settings = f"new Item.Settings().maxCount({i.max_count}).rarity(Rarity.{i.rarity})"
+        if i.ctor:
+            expr = i.ctor.format(settings=f"new Item.Settings().rarity(Rarity.{i.rarity})", tip=tip)
+        else:
+            expr = f"new Ben10Item({settings}, {tip})"
+        lines.append(f"\tpublic static final Item {gpc.const(i.name)} = register(\"{i.name}\", {expr});")
     lines += ["",
               "\t/** Farbige Energiekerne und ihre Omnitrix-Farbe (siehe OmnitrixColors). */",
               "\tpublic static final Map<Item, String> CORE_COLORS = coreColors();",
@@ -416,10 +467,12 @@ def outputs(with_images: bool = True) -> dict[Path, object]:
             for tname, img in b.textures().items():
                 files[ASSETS / "textures" / "block" / f"{tname}.png"] = img
     if with_images:
+        files[ASSETS / "textures" / "models" / "armor" / "plumber_layer_1.png"] = bx.plumber_armor_layer("plumber_layer_1", False)
+        files[ASSETS / "textures" / "models" / "armor" / "plumber_layer_2.png"] = bx.plumber_armor_layer("plumber_layer_2", True)
         for tname, fn in REACTOR_TEXTURES.items():
             files[ASSETS / "textures" / "entity" / "omnitrix_reactor" / f"{tname}.png"] = fn()
     for i in ITEMS:
-        files[ASSETS / "models" / "item" / f"{i.name}.json"] = {"parent": "minecraft:item/generated",
+        files[ASSETS / "models" / "item" / f"{i.name}.json"] = {"parent": "minecraft:item/handheld" if i.handheld else "minecraft:item/generated",
                                                                 "textures": {"layer0": f"{MOD}:item/{i.name}"}}
         if with_images:
             files[ASSETS / "textures" / "item" / f"{i.name}.png"] = i.texture()
@@ -470,6 +523,7 @@ def check() -> int:
     textures = [f"textures/block/{n}.png" for b in BLOCKS for n in texture_names(b)]
     textures += [f"textures/item/{i.name}.png" for i in ITEMS]
     textures += [f"textures/entity/omnitrix_reactor/{n}.png" for n in REACTOR_TEXTURES]
+    textures += ["textures/models/armor/plumber_layer_1.png", "textures/models/armor/plumber_layer_2.png"]
     for rel in textures:
         p = ASSETS / rel
         if not p.is_file():

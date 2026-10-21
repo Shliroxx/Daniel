@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "P P",
+    "PPP",
+    "PPP"
+  ],
+  "key": {
+    "P": {
+      "item": "kingdomomnitrix:plumber_plating"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:plumber_chestplate",
+    "count": 1
+  }
+}

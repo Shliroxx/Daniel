@@ -118,6 +118,11 @@
               }
             }
           ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:plumber_badge",
+          "weight": 3
         }
       ]
     }

@@ -400,3 +400,62 @@ def containment_pod_top(name: str) -> Image.Image:
     ring = np.clip(1 - np.abs(r - 40) / 3, 0, 1)
     color = color * (1 - ring[..., None]) + np.asarray(PLUMBER_GLOW) * ring[..., None]
     return tx.finish(tx.compose(color, h * 0.7 + ring * 0.2, strength=5.0, spec=0.4, ambient=0.66))
+
+
+# --- Klempner-Ausruestung ----------------------------------------------------------------------------------------
+
+def plumber_blaster(name: str) -> Image.Image:
+    """Klempner-Blaster: weisser Lauf mit gruener Energiezelle, schwarzer Griff (diagonal wie Vanilla-Waffen)."""
+    img, draw = tx._canvas()
+    s = SS
+    light, dark, glow = PLUMBER_LIGHT, PLUMBER_DARK, PLUMBER_GLOW
+    # Lauf (von unten links nach oben rechts)
+    barrel = [(14 * s, 36 * s), (46 * s, 10 * s), (54 * s, 18 * s), (22 * s, 44 * s)]
+    tx._shaded_polygon(img, barrel, np.asarray(light) * 0.55, light, (1, 1, 1))
+    muzzle = [(46 * s, 10 * s), (52 * s, 5 * s), (59 * s, 12 * s), (54 * s, 18 * s)]
+    tx._shaded_polygon(img, muzzle, np.asarray(dark) * 0.8, dark, OMNITRIX_GREY[1])
+    # Energiezelle und Leuchtstreifen
+    cell = [(28 * s, 26 * s), (38 * s, 18 * s), (42 * s, 22 * s), (32 * s, 30 * s)]
+    tx._shaded_polygon(img, cell, H("0A6A10"), glow, H("E0FFD0"))
+    draw = ImageDraw.Draw(img)
+    draw.line([(19 * s, 37 * s), (45 * s, 15 * s)], fill=tx._rgba(glow), width=s)
+    # Griff und Abzugsbuegel
+    grip = [(18 * s, 40 * s), (26 * s, 44 * s), (16 * s, 58 * s), (8 * s, 54 * s)]
+    tx._shaded_polygon(img, grip, np.asarray(dark) * 0.7, dark, OMNITRIX_GREY[0])
+    draw.line([(24 * s, 46 * s), (28 * s, 52 * s), (22 * s, 54 * s)], fill=tx._rgba(dark), width=2 * s)
+    return tx._finish_item(img)
+
+
+def plumber_badge(name: str) -> Image.Image:
+    """Klempner-Abzeichen: runde Plakette, Ring mit drei Strahlen um die gruene Sanduhr."""
+    img, draw = tx._canvas()
+    s = SS
+    c = 32
+    draw.ellipse([(c - 26) * s, (c - 26) * s, (c + 26) * s, (c + 26) * s], fill=tx._rgba(OMNITRIX_GREY[1]))
+    draw.ellipse([(c - 22) * s, (c - 22) * s, (c + 22) * s, (c + 22) * s], fill=tx._rgba(OMNITRIX_BLACK[1]))
+    for a in (90, 210, 330):
+        rad = math.radians(a)
+        x0, y0 = c + math.cos(rad) * 10, c - math.sin(rad) * 10
+        x1, y1 = c + math.cos(rad) * 21, c - math.sin(rad) * 21
+        draw.line([(x0 * s, y0 * s), (x1 * s, y1 * s)], fill=tx._rgba(OMNITRIX_GREY[2]), width=3 * s)
+    draw.ellipse([(c - 11) * s, (c - 11) * s, (c + 11) * s, (c + 11) * s], fill=tx._rgba(PLUMBER_GLOW))
+    draw.polygon([((c - 8) * s, (c - 8) * s), ((c + 8) * s, (c - 8) * s), (c * s, c * s)], fill=tx._rgba(OMNITRIX_BLACK[0]))
+    draw.polygon([((c - 8) * s, (c + 8) * s), ((c + 8) * s, (c + 8) * s), (c * s, c * s)], fill=tx._rgba(OMNITRIX_BLACK[0]))
+    draw.ellipse([(c - 20) * s, (c - 20) * s, (c - 13) * s, (c - 13) * s], fill=tx._rgba((1, 1, 1), 1.0, 120))
+    return tx._finish_item(img)
+
+
+def plumber_plating(name: str) -> Image.Image:
+    """Klempner-Panzerplatte: helle Platte mit gruener Fuge (Bauteil der Ruestung)."""
+    return tx.item_ingot(np.asarray(PLUMBER_LIGHT) * 0.55, PLUMBER_LIGHT, (1, 1, 1))
+
+
+PLUMBER_ARMOR_COLORS = (H("3A3E46"), H("C8CCD2"), H("F2F4F6"))
+
+
+def plumber_armor_item(kind: str) -> Image.Image:
+    return tx.item_armor(kind, *PLUMBER_ARMOR_COLORS, accent=PLUMBER_GLOW)
+
+
+def plumber_armor_layer(name: str, legs: bool) -> Image.Image:
+    return tx.armor_layer(name, *PLUMBER_ARMOR_COLORS, PLUMBER_GLOW, legs=legs)

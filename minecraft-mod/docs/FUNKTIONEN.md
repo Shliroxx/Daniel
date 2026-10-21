@@ -61,7 +61,39 @@ Belohnung), bei Welt-Ereignissen, im Dungeon und draußen in Traverse Town.
 
 ## 3. Ben 10 — das Omnitrix
 
-Das Omnitrix muss nur im Inventar liegen. Am linken Arm sitzt das 3D-Gerät im Stil der Originalserie.
+Das Omnitrix muss nur im Inventar liegen. Am linken Arm sitzt das 3D-Gerät im Stil der Originalserie; als Item
+(Inventar, Hand, Werkbank) zeigt es dasselbe 3D-Modell, mit der Leuchtfarbe seines Energiekerns.
+
+### Story: Wie man das Omnitrix bekommt
+Es gibt kein Werkbank-Rezept. Das Omnitrix entsteht in vier Schritten:
+
+1. **Absturz der PROCTOR.** Einmal pro Welt stürzt nach `kingdomomnitrixPlumberCrashMinutes` Minuten Spielzeit
+   (Standard 10) ein Klempner-Kreuzer 110–170 Blöcke neben einem Spieler ab: Warnung „⚠ NOTSIGNAL“, Feuerschweif am
+   Himmel, Einschlag mit Explosion. Jeder Spieler bekommt einen **Klempner-Peilsender** (Kompass auf das Wrack), auch wer
+   später beitritt.
+2. **Das Wrack (212 Blöcke).** Bugteil schräg im Boden mit Krater: Cockpit (Logbuch des Kapitäns), Quartiere,
+   Waffenkammer, Containment-Labor mit der **Hülle**. Heckteil versetzt dahinter: Frachtraum, Maschinenraum (Notizen des
+   Chefingenieurs) mit der **Konsole**, Triebwerke und Finne. Schleifspur, Trümmer, Feuer und Rauchsäulen ringsum.
+   Die beiden **Containment-Kapseln** sind unzerstörbar und geben jedem Spieler sein Teil genau einmal. Truhen je Bereich
+   (Quartiere, Waffenkammer, Labor, Fracht, Maschinenraum) mit eigener Beute, darunter Klempner-Ausrüstung.
+3. **Corrodium aus dem End.** Giftgrünes Erz im Endstein (Höhe 10–90). Abbau ohne Behutsamkeit vergiftet kurz (der
+   Klempner-Helm filtert den Staub). Roh-Corrodium → Ofen → Corrodium-Kristall.
+4. **Omnitrix-Werkbank als Reaktor.** Werkbank (3 Kristalle, Werkbank, Eisen) plus **vier Omnitrix-Stabilisatoren** —
+   je einer nördlich, östlich, südlich, westlich, 3 Blöcke höher, 3–7 Blöcke entfernt. Hülle + Konsole + Energiekern
+   einlegen: über der Werkbank lädt sich ein Wabenfeld auf, die Stabilisatoren feuern Strahlen hinein, die echten
+   Bauteile der Uhr setzen sich als Explosionsansicht zusammen, der Kern taucht ins Zifferblatt, Blitz und Schockwelle —
+   fertig (12 s). Das Menü zeigt fehlende Stabilisatoren an.
+
+**Farbe:** Basis-Energiekern (4 Kristalle + Enderauge) = Klassisch Grün; Kern + Farbstoff = farbiger Kern (Grün, Blau,
+Rot, Gelb, Lila, Weiß, Orange, Pink, Türkis). Fertiges Omnitrix + farbiger Kern in der Werkbank = umgefärbt (5 s).
+
+### Klempner-Ausrüstung
+| Gegenstand | Wirkung | Rezept |
+|---|---|---|
+| Klempner-Panzerplatte | Baustoff, Reparatur | 2 Eisen + 1 Corrodium-Kristall → 2 |
+| Klempner-Blaster | Rechtsklick: Energiestrahl, 7 Schaden, 32 Blöcke, 320 Schuss | Panzerplatten, Kristall, Redstone-Block |
+| Klempner-Abzeichen | Rechtsklick: Feinde in 32 Blöcken leuchten 10 s; zeigt Entfernung/Richtung zum Wrack | 4 Gold + Kristall |
+| Klempner-Rüstung | knapp unter Diamant; Helm: kein Corrodium-Gift; volles Set: giftimmun | Panzerplatten |
 
 ### Grundlagen
 - **DNA-Proben** schalten Aliens frei (Gegner lassen sie fallen; Rechtsklick speichert). Hologramm „DNA ERFASST“.
@@ -223,9 +255,9 @@ Block mit eigenem Bildschirm. 5 Kalibrierpunkte für drei Module zu je 3 Stufen:
 | Bandbreite | −12 % Nachladezeit | +25 % Fehlfunktions-Chance |
 
 Kosten: Stufe 1 300 Bolts + 2 Raritanium · Stufe 2 700 Bolts + 4 Raritanium + 3 Mythril · Stufe 3 1500 Bolts +
-6 Raritanium + 4 Mythril + 1 Orichalcum. **Farbmodule** (kostenlos): Klassisch Grün, Blau, Rot, Gelb, Violett, Weiß —
-färben Gerät, Licht, Hologramm, Oberfläche, Effekte und Alien-Abzeichen; andere Spieler sehen die Farbe mit.
-Warnfarben bleiben immer gleich.
+6 Raritanium + 4 Mythril + 1 Orichalcum. Die **Farbanzeige** zeigt die aktive Gerätefarbe; geändert wird sie über
+einen farbigen Energiekern in der Omnitrix-Werkbank. Die Farbe färbt Gerät, Licht, Hologramm, Oberfläche, Effekte und
+Alien-Abzeichen; andere Spieler sehen sie mit. Warnfarben bleiben immer gleich.
 
 ---
 
@@ -419,6 +451,8 @@ Krater und Feuer nur mit `mobGriefing`. Auf „Friedlich“ nur der Meteor.
 | `/hero rift [riss]` | Dunkelheitsriss öffnen |
 | `/hero event start [id]\|stop\|status` | Welt-Ereignisse |
 | `/hero dungeon tp\|status\|reset` | Geheime Wasserstraße |
+| `/hero plumber crash\|here [spieler]` | Klempner-Kreuzer stürzt ab (zufälliger Ort in der Nähe · 40 Blöcke vor dem Spieler), nur Oberwelt |
+| `/hero plumber tp\|status\|reset` | zum Wrack · Zustand · Ereignis zurücksetzen (Wrack bleibt) |
 | `/hero world traverse_town [spieler]` | nach Traverse Town |
 | `/hero world traverse_town rebuild` | Stadt neu bauen (überschreibt Stadtgebiet) |
 | `/hero reset [spieler]` | Heldendaten zurücksetzen |
@@ -435,6 +469,8 @@ Krater und Feuer nur mit `mobGriefing`. Auf „Friedlich“ nur der Meteor.
 | `kingdomomnitrixWorldEventMinutes` | 40 | mittlerer Abstand der Ereignisse (5–600) |
 | `kingdomomnitrixOmnitrixMalfunctions` | true | Omnitrix-Fehlfunktionen |
 | `kingdomomnitrixSelfDestruct` | **false** | Selbstzerstörungs-Code 0000 erlaubt |
+| `kingdomomnitrixPlumberCrash` | true | Story-Absturz der PROCTOR (einmal pro Welt) |
+| `kingdomomnitrixPlumberCrashMinutes` | 10 | Spielzeit bis zum Absturz (0–1440) |
 
 ---
 
