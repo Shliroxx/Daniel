@@ -63,7 +63,8 @@ def java_sources() -> str:
 
 def registered_items() -> list[str]:
     base = ROOT / "src" / "main" / "java" / "com" / "santiq" / MOD_ID
-    paths = [base / "registry" / "ModItems.java", base / "world" / "content" / "PlanetItems.java"]
+    paths = [base / "registry" / "ModItems.java", base / "world" / "content" / "PlanetItems.java",
+             base / "world" / "content" / "Ben10Items.java"]
     return [item for path in paths if path.is_file() for item in ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))]
 
 
