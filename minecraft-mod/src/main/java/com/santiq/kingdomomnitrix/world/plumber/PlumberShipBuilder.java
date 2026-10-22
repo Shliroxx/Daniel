@@ -52,6 +52,9 @@ final class PlumberShipBuilder {
 	/** Heckteil liegt so viel weiter hinten bzw. seitlich als im heilen Schiff */
 	private static final int B_SHIFT = 10;
 	private static final int B_LATERAL = 3;
+	/** Bereich der Schneise entlang des Schiffs (u) */
+	private static final int CLEAR_FROM = -22;
+	private static final int CLEAR_TO = LENGTH + B_SHIFT + 64;
 	private static final double EXP = 2.5;
 	private static final int CHAMBER_RADIUS = 10;
 	private static final int CHAMBER_DEPTH = 12;
@@ -87,26 +90,84 @@ final class PlumberShipBuilder {
 		this.rear = new Section(BREAK_B, LENGTH, B_SHIFT, B_LATERAL, u -> 9.0 + (u - BREAK_B) * 0.015);
 	}
 
-	static Site build(ServerWorld world, BlockPos nose, Direction forward, Random random) {
-		long started = System.currentTimeMillis();
-		PlumberShipBuilder b = new PlumberShipBuilder(world, nose, forward, random);
-		b.loadChunks();
-		b.clearVegetation();
-		b.crater();
-		b.trench();
-		b.hull(b.front);
-		b.hull(b.rear);
-		b.wings();
-		b.engines();
-		b.support(b.front);
-		b.support(b.rear);
-		BlockPos shellPod = b.frontRooms();
-		BlockPos consolePod = b.rearRooms();
-		b.debris();
-		b.fires();
-		KingdomOmnitrix.LOGGER.info("Klempner-Wrack bei {} gebaut ({} ms): Kapsel Huelle {}, Kapsel Konsole {}, {}", nose,
-				System.currentTimeMillis() - started, shellPod.toShortString(), consolePod.toShortString(), String.join(", ", b.landmarks));
-		return new Site(nose, shellPod, consolePod);
+	/**
+	 * Bau in Schritten, ueber mehrere Ticks verteilt: je Tick laufen Schritte, bis {@code budgetMs} verbraucht sind
+	 * (mindestens einer). So stockt der Server beim Einschlag nicht mehr eine bis zwei Sekunden am Stueck.
+	 */
+	static final class Job {
+		private static final int HULL_SLICE = 24;
+		private static final int CLEAR_SLICE = 64;
+		private final PlumberShipBuilder b;
+		private final java.util.List<java.util.Map.Entry<String, Runnable>> steps = new java.util.ArrayList<>();
+		private final StringBuilder timing = new StringBuilder();
+		private int next;
+		private long totalMs;
+		private int ticks;
+		private BlockPos shellPod;
+		private BlockPos consolePod;
+
+		private Job(PlumberShipBuilder b) {
+			this.b = b;
+			add("chunks", b::loadChunks);
+			for (int from = CLEAR_FROM; from <= CLEAR_TO; from += CLEAR_SLICE) {
+				int start = from;
+				add("schneise " + start, () -> b.clearVegetation(start, start + CLEAR_SLICE - 1));
+			}
+			add("krater", b::crater);
+			add("spur", b::trench);
+			addHull("bug", b.front);
+			addHull("heck", b.rear);
+			add("fluegel", b::wings);
+			add("triebwerke", b::engines);
+			add("stuetzen", () -> {
+				b.support(b.front);
+				b.support(b.rear);
+			});
+			add("raeume vorn", () -> shellPod = b.frontRooms());
+			add("raeume hinten", () -> consolePod = b.rearRooms());
+			add("truemmer", b::debris);
+			add("feuer", b::fires);
+		}
+
+		/** Rumpf in Scheiben zu je {@value #HULL_SLICE} Bloecken Laenge (eine Scheibe je Schritt) */
+		private void addHull(String name, Section s) {
+			for (int from = s.u0(); from <= s.u1(); from += HULL_SLICE) {
+				int start = from;
+				add(name + " " + start, () -> b.hull(s, start, start + HULL_SLICE - 1));
+			}
+		}
+
+		private void add(String name, Runnable step) {
+			steps.add(java.util.Map.entry(name, step));
+		}
+
+		/** Naechste Schritte ausfuehren; true, wenn das Wrack fertig ist. */
+		boolean step(long budgetMs) {
+			long tickStart = System.currentTimeMillis();
+			ticks++;
+			do {
+				var entry = steps.get(next++);
+				long started = System.currentTimeMillis();
+				entry.getValue().run();
+				long ms = System.currentTimeMillis() - started;
+				totalMs += ms;
+				timing.append(timing.isEmpty() ? "" : ", ").append(entry.getKey()).append(' ').append(ms);
+			} while (next < steps.size() && System.currentTimeMillis() - tickStart < budgetMs);
+			if (next < steps.size()) {
+				return false;
+			}
+			KingdomOmnitrix.LOGGER.info("Klempner-Wrack bei {} gebaut ({} ms in {} Ticks: {} ms): Kapsel Huelle {}, Kapsel Konsole {}, {}",
+					b.nose, totalMs, ticks, timing, shellPod.toShortString(), consolePod.toShortString(), String.join(", ", b.landmarks));
+			return true;
+		}
+
+		Site site() {
+			return new Site(b.nose, shellPod, consolePod);
+		}
+	}
+
+	static Job start(ServerWorld world, BlockPos nose, Direction forward, Random random) {
+		return new Job(new PlumberShipBuilder(world, nose, forward, random));
 	}
 
 	// --- Form -------------------------------------------------------------------------------------------------------
@@ -192,8 +253,9 @@ final class PlumberShipBuilder {
 
 	// --- Rumpf ------------------------------------------------------------------------------------------------------
 
-	private void hull(Section s) {
-		for (int u = s.u0(); u <= s.u1(); u++) {
+	/** Rumpf eines Wrackteils im Bereich u = from..to (fuer den Bau in Schritten aufgeteilt) */
+	private void hull(Section s, int from, int to) {
+		for (int u = Math.max(from, s.u0()); u <= Math.min(to, s.u1()); u++) {
 			double hw = halfWidth(u);
 			double hh = halfHeight(u);
 			int edge = Math.min(u - s.u0(), s.u1() - u);
@@ -384,8 +446,8 @@ final class PlumberShipBuilder {
 	 * Schneise: der Absturz hat Baeume und Pflanzen entlang Wrack und Schleifspur umgerissen. Je Spalte von oben nach
 	 * unten Stamm, Laub und Pflanzen entfernen, bis fester Boden kommt; auf dem Boden bleibt eine Brandspur.
 	 */
-	private void clearVegetation() {
-		for (int u = -22; u <= LENGTH + B_SHIFT + 64; u++) {
+	private void clearVegetation(int from, int to) {
+		for (int u = Math.max(from, CLEAR_FROM); u <= Math.min(to, CLEAR_TO); u++) {
 			for (int v = -27; v <= 27 + B_LATERAL; v++) {
 				BlockPos column = nose.offset(forward, -u).offset(right, v);
 				BlockPos pos = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING, column);

@@ -86,6 +86,7 @@ EVENTS: dict[str, tuple[str, int]] = {
     "gadget.swingshot": ("gadget_swingshot", 1),
     "gadget.attach": ("gadget_attach", 1),
     "ship.launch": ("ship_launch", 1),
+    "ship.board": ("ship_board", 1),
     "ship.ai": ("ship_ai", 1),
     "world.rift": ("world_rift", 1),
     "arena.round": ("arena_round", 1),
@@ -505,6 +506,14 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         engine = osc(sweep(60, 160, s), s, "saw") * adsr(s, 0.2, 0.5) * 0.4
         return reverb(rumble + engine, 0.25, 1.4)
 
+    def ship_board():
+        # Cockpit-Haube: Druckausgleich (Zischen), Verriegelung (Metall), Bordnetz faehrt hoch (steigender Ton)
+        s = 1.0
+        hiss = at(highpass(noise(0.45), 2500) * adsr(0.45, 0.01, 0.3) * 0.6, 0, s)
+        latch = at(metal(0.22, 700, 16) * 0.9, 0.38, s) + at(thump(0.25, 120, 60, 6) * 0.6, 0.38, s)
+        power = at(osc(sweep(220, 660, 0.45), 0.45, "tri") * adsr(0.45, 0.05, 0.2) * 0.35, 0.52, s)
+        return reverb(hiss + latch + power, 0.2, 0.8)
+
     def ship_ai():
         s = 0.4
         return at(osc(1320, 0.12, "tri") * adsr(0.12, 0.005, 0.05), 0, s) + at(osc(1760, 0.18, "tri") * adsr(0.18, 0.005, 0.08), 0.13, s)
@@ -596,7 +605,7 @@ def synth_all(only: set[str] | None) -> dict[str, "object"]:
         "hero_discovery": hero_discovery, "hero_level_up": hero_level_up, "weapon_empty": weapon_empty,
         "weapon_throw": weapon_throw, "weapon_buy": weapon_buy, "gadget_heli": gadget_heli, "gadget_jet": gadget_jet,
         "gadget_swingshot": gadget_swingshot, "gadget_attach": gadget_attach, "ship_launch": ship_launch,
-        "ship_ai": ship_ai, "world_rift": world_rift, "arena_round": arena_round, "arena_victory": arena_victory,
+        "ship_board": ship_board, "ship_ai": ship_ai, "world_rift": world_rift, "arena_round": arena_round, "arena_victory": arena_victory,
         "heartless_death": heartless_death, "heartless_spawn": heartless_spawn,
         "boss_laser_charge": boss_laser_charge, "boss_laser_fire": boss_laser_fire, "boss_rocket": boss_rocket,
         "boss_stomp": boss_stomp, "boss_overload": boss_overload, "boss_death": boss_death,

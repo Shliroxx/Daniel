@@ -278,6 +278,12 @@
       "kingdomomnitrix:ship_launch"
     ]
   },
+  "ship.board": {
+    "subtitle": "subtitles.kingdomomnitrix.ship.board",
+    "sounds": [
+      "kingdomomnitrix:ship_board"
+    ]
+  },
   "ship.ai": {
     "subtitle": "subtitles.kingdomomnitrix.ship.ai",
     "sounds": [

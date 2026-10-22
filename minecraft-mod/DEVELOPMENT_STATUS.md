@@ -363,7 +363,7 @@ Reihenfolge = Abarbeitungsreihenfolge.
   Geschwindigkeit normalerweise) — beim Herzlosen-Rework im Beobachter-Bild kontrollieren.
 - Grey Matter: Größe 0.3 per Attribut — im Third-Person-Bild wirkt er trotzdem gleich groß (Kamera skaliert mit).
   Prüfen, ob der GeckoLib-Körper die Skalierung bekommt.
-- Raumschiff-Einstieg spielt noch `BLOCK_PISTON_EXTEND` (Vanilla) — PLACEHOLDER.
+- BEHOBEN: Raumschiff-Einstieg hat einen eigenen Sound (`ship.board`: Zischen, Verriegelung, Bordnetz).
 - Gruppen werden bei Server-Neustart nicht gespeichert (bewusst, aber undokumentiert für Spieler).
 
 ## PERFORMANCE ISSUES

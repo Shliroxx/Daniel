@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
@@ -74,6 +75,13 @@ public final class PlumberCrash {
 	private static final ChunkTicketType<ChunkPos> PRELOAD = ChunkTicketType.create("kingdomomnitrix_plumber_crash",
 			java.util.Comparator.comparingLong(ChunkPos::toLong), 1200);
 	private static final int MAX_ATTEMPTS = 40;
+	/** Bauzeit je Tick (ms), danach geht der Bau im naechsten Tick weiter */
+	private static final long BUILD_BUDGET_MS = 25L;
+	/**
+	 * Laufender Wrack-Bau (nicht gespeichert: wird der Server mitten im Bau beendet, steht die Phase noch auf
+	 * INCOMING, und nach dem Neustart schlaegt der Kreuzer erneut ein und baut von vorn).
+	 */
+	private static PlumberShipBuilder.Job building;
 	private static final long SEARCH_BUDGET_MS = 40L;
 	/** Versuche der laufenden, ueber Ticks verteilten Ortssuche */
 	private static int attemptsDone;
@@ -160,6 +168,12 @@ public final class PlumberCrash {
 
 	public static void register() {
 		ServerTickEvents.END_SERVER_TICK.register(PlumberCrash::tick);
+		// Einzelspieler: dieselbe JVM laedt nacheinander mehrere Welten — laufende Suche/Bau gehoeren zur alten Welt
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			building = null;
+			commandSearch = null;
+			resetSearch();
+		});
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			State state = state(server);
 			if (state.phase == Phase.CRASHED) {
@@ -290,6 +304,7 @@ public final class PlumberCrash {
 	}
 
 	private static void begin(ServerWorld world, State state, BlockPos nose, Direction forward) {
+		building = null;
 		state.phase = Phase.INCOMING;
 		state.incoming = 0;
 		state.waitingForChunks = 0;
@@ -389,6 +404,10 @@ public final class PlumberCrash {
 	}
 
 	private static void incoming(ServerWorld world, State state) {
+		if (building != null) {
+			continueBuild(world, state);
+			return;
+		}
 		state.incoming++;
 		if (state.incoming == 1 || state.waitingForChunks == 1) {
 			// auch nach einem Serverneustart mitten im Anflug (Tickets sind nicht gespeichert)
@@ -437,9 +456,13 @@ public final class PlumberCrash {
 		}
 	}
 
+	/**
+	 * Sind alle Chunks unter dem Wrack fertig erzeugt? {@code isChunkLoaded} reicht nicht: es meldet schon Chunks, die
+	 * erst zum Laden vorgesehen sind, und der Bau wartete dann blockierend auf ihre Erzeugung (Server stockte Sekunden).
+	 */
 	private static boolean footprintLoaded(ServerWorld world, State state) {
 		for (ChunkPos chunk : PlumberShipBuilder.footprint(state.nose, state.forward)) {
-			if (!world.isChunkLoaded(chunk.x, chunk.z)) {
+			if (world.getChunkManager().getWorldChunk(chunk.x, chunk.z) == null) {
 				return false;
 			}
 		}
@@ -452,7 +475,7 @@ public final class PlumberCrash {
 	 * geladenen Chunk neu.
 	 */
 	private static BlockPos groundAt(ServerWorld world, BlockPos column) {
-		if (world.isChunkLoaded(ChunkSectionPos.getSectionCoord(column.getX()), ChunkSectionPos.getSectionCoord(column.getZ()))) {
+		if (world.getChunkManager().getWorldChunk(ChunkSectionPos.getSectionCoord(column.getX()), ChunkSectionPos.getSectionCoord(column.getZ())) != null) {
 			return world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, column);
 		}
 		int y = world.getChunkManager().getChunkGenerator().getHeight(column.getX(), column.getZ(), Heightmap.Type.WORLD_SURFACE_WG, world,
@@ -460,15 +483,12 @@ public final class PlumberCrash {
 		return new BlockPos(column.getX(), y, column.getZ());
 	}
 
+	/** Einschlag: Knall, dann Bau des Wracks ueber mehrere Ticks (siehe {@link PlumberShipBuilder.Job}). */
 	private static void impact(ServerWorld world, State state) {
 		// Nasen-Chunk laden (ist nach dem Vorladen meist schon da) und die Bodenhoehe am echten Gelaende bestimmen
 		world.getChunk(ChunkSectionPos.getSectionCoord(state.nose.getX()), ChunkSectionPos.getSectionCoord(state.nose.getZ()));
 		state.nose = groundAt(world, state.nose);
-		PlumberShipBuilder.Site site = PlumberShipBuilder.build(world, state.nose, state.forward, world.getRandom());
-		state.phase = Phase.CRASHED;
-		state.shellPod = site.shellPod();
-		state.consolePod = site.consolePod();
-		state.markDirty();
+		building = PlumberShipBuilder.start(world, state.nose, state.forward, Random.create(world.getRandom().nextLong()));
 		Vec3d at = Vec3d.ofCenter(state.nose).add(0, 3, 0);
 		for (ServerPlayerEntity player : world.getPlayers()) {
 			world.spawnParticles(player, ParticleTypes.EXPLOSION_EMITTER, true, at.x, at.y, at.z, 6, 6.0, 3.0, 6.0, 0.0);
@@ -476,9 +496,24 @@ public final class PlumberCrash {
 			world.spawnParticles(player, ParticleTypes.LAVA, true, at.x, at.y, at.z, 60, 6.0, 2.0, 6.0, 0.5);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.AMBIENT, 2.0f, 0.5f);
 			world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_LIGHTNING_BOLT_THUNDER, SoundCategory.AMBIENT, 1.5f, 0.6f);
-			giveBeacon(state, player);
 		}
 		world.playSound(null, state.nose, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.BLOCKS, 8.0f, 0.6f);
+	}
+
+	/** Bau fortsetzen; ist das Wrack fertig, gilt der Absturz als geschehen und jeder bekommt seinen Peilsender. */
+	private static void continueBuild(ServerWorld world, State state) {
+		if (!building.step(BUILD_BUDGET_MS)) {
+			return;
+		}
+		PlumberShipBuilder.Site site = building.site();
+		building = null;
+		state.phase = Phase.CRASHED;
+		state.shellPod = site.shellPod();
+		state.consolePod = site.consolePod();
+		state.markDirty();
+		for (ServerPlayerEntity player : world.getPlayers()) {
+			giveBeacon(state, player);
+		}
 	}
 
 	/** Peilsender (einmal je Spieler): Kompass auf die Kapsel der Huelle, dazu Nachricht mit den Koordinaten. */
@@ -500,6 +535,7 @@ public final class PlumberCrash {
 
 	/** Zuruecksetzen (Befehl): wartet wieder; das gebaute Wrack bleibt stehen. */
 	public static void reset(MinecraftServer server) {
+		building = null;
 		State state = state(server);
 		state.phase = Phase.WAITING;
 		state.waited = 0;

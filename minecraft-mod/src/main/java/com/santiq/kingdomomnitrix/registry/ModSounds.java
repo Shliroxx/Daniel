@@ -59,6 +59,7 @@ public final class ModSounds {
 	public static final SoundEvent GADGET_SWINGSHOT = register("gadget.swingshot");
 	public static final SoundEvent GADGET_ATTACH = register("gadget.attach");
 	public static final SoundEvent SHIP_LAUNCH = register("ship.launch");
+	public static final SoundEvent SHIP_BOARD = register("ship.board");
 	public static final SoundEvent SHIP_AI = register("ship.ai");
 	public static final SoundEvent WORLD_RIFT = register("world.rift");
 	public static final SoundEvent ARENA_ROUND = register("arena.round");

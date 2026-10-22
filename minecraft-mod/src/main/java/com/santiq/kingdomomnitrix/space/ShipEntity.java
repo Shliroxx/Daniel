@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.space;
 
 import com.santiq.kingdomomnitrix.mixin.LivingEntityAccessor;
 import com.santiq.kingdomomnitrix.registry.ModItems;
+import com.santiq.kingdomomnitrix.registry.ModSounds;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityType;
@@ -90,7 +91,7 @@ public class ShipEntity extends Entity {
 			if (player instanceof ServerPlayerEntity serverPlayer && getControllingPassenger() == player) {
 				ShipAi.say(serverPlayer, "boarding", serverPlayer.getName());
 			}
-			getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.NEUTRAL, 0.6f, 1.4f);
+			getWorld().playSound(null, getX(), getY(), getZ(), ModSounds.SHIP_BOARD, SoundCategory.NEUTRAL, 0.9f, 1.0f);
 		}
 		return ActionResult.success(getWorld().isClient());
 	}
