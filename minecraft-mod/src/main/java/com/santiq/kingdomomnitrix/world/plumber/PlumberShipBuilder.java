@@ -678,19 +678,19 @@ final class PlumberShipBuilder {
 		if (h < 0.08) {
 			return of(Ben10Blocks.CORRODIUM_BLOCK);
 		}
-		return h < 0.22 ? of(Blocks.MAGMA_BLOCK) : h < 0.55 ? of(Blocks.BLACKSTONE) : h < 0.75 ? of(Blocks.COAL_BLOCK) : of(Blocks.COBBLED_DEEPSLATE);
+		return h < 0.14 ? of(Blocks.MAGMA_BLOCK) : h < 0.55 ? of(Blocks.BLACKSTONE) : h < 0.75 ? of(Blocks.COAL_BLOCK) : of(Blocks.COBBLED_DEEPSLATE);
 	}
 
-	/** Kammerwand: verbrannte Platten, Schwarzstein, alle vier Lagen ein Band aus glimmenden Magma-Rissen (mit Luecken) */
+	/** Kammerwand: verbrannte Platten, Schwarzstein, alle vier Lagen vereinzelte glimmende Magma-Risse */
 	private static BlockState chamberWall(int rel, double h) {
-		if (Math.floorMod(rel, 4) == 2 && h < 0.7) {
+		if (Math.floorMod(rel, 4) == 2 && h < 0.22) {
 			return of(Blocks.MAGMA_BLOCK);
 		}
 		return h < 0.5 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : h < 0.85 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Blocks.BLACKSTONE);
 	}
 
 	/**
-	 * Boden der Kammer auf Deckhoehe: Laufring (teils verbrannt) mit gluehender Innenkante aus Magma, vier Stege — der
+	 * Boden der Kammer auf Deckhoehe: Laufring (teils verbrannt) mit verkohlter Innenkante und einzelnen Glutstellen, vier Stege — der
 	 * hintere ist abgestuerzt, der rechte in der Mitte gebrochen —, Mittelplattform.
 	 */
 	private static BlockState deckBlock(int du, int dv, double r, double h) {
@@ -698,7 +698,8 @@ final class PlumberShipBuilder {
 			return h < 0.3 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_FLOOR);
 		}
 		if (r > CHAMBER_RADIUS - 3.5) {
-			return h < 0.75 ? of(Blocks.MAGMA_BLOCK) : of(Blocks.AIR);
+			// Innenkante: nur noch einzelne Glutstellen, sonst verkohlt oder weggebrochen
+			return h < 0.25 ? of(Blocks.MAGMA_BLOCK) : h < 0.75 ? of(Blocks.BLACKSTONE) : of(Blocks.AIR);
 		}
 		if (r <= 3.5) {
 			return r > 2.5 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : h < 0.35 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_FLOOR);

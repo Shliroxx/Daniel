@@ -38,7 +38,7 @@ import org.jetbrains.annotations.Nullable;
  *       liegt es im Inventar.</li>
  *   <li>nach {@value #OPEN_TICKS}: die Segmente schliessen sich wieder.</li>
  * </ol>
- * Waehrend des Ablaufs reagiert die Kapsel nicht auf weitere Klicks.
+ * Waehrend des Ablaufs reagiert die Kapsel nicht auf weitere Klicks. Wer sein Teil schon hat, startet keinen Ablauf.
  */
 public class ContainmentPodBlockEntity extends BlockEntity {
 	public static final int BURST = 12;
@@ -52,8 +52,10 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 	/** wer die Kapsel zuletzt geoeffnet hat (Ziel des Fluges) */
 	@Nullable
 	private UUID opener;
-	/** bekommt der Oeffner sein Teil in diesem Ablauf (erstes Mal)? */
+	/** fliegt das Teil in diesem Ablauf zum Oeffner? (an Clients, bleibt fuer den ganzen Ablauf gesetzt) */
 	private boolean delivering;
+	/** Teil noch nicht uebergeben (nur Server; uebersteht einen Neustart mitten im Ablauf) */
+	private boolean pending;
 
 	public ContainmentPodBlockEntity(BlockPos pos, BlockState state) {
 		super(ModBlockEntities.CONTAINMENT_POD, pos, state);
@@ -64,19 +66,30 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 		return world != null && world.getTime() - openedAt < OPEN_TICKS + 20;
 	}
 
-	/** Ablauf starten; liefert true, wenn der Spieler sein Teil bekommen wird (erstes Oeffnen). */
+	/** Hat dieser Spieler sein Teil schon (oder ist es gerade unterwegs zu ihm)? */
+	public boolean claimedBy(PlayerEntity player) {
+		return claimed.contains(player.getUuid());
+	}
+
+	/** Wer die Kapsel gerade geoeffnet hat (waehrend des Ablaufs). */
+	public boolean openedBy(PlayerEntity player) {
+		return player.getUuid().equals(opener);
+	}
+
+	/** Ablauf fuer einen Spieler starten, der sein Teil noch nicht hat; false, wenn er es schon hat. */
 	public boolean open(PlayerEntity player) {
-		if (world == null) {
+		if (world == null || !claimed.add(player.getUuid())) {
 			return false;
 		}
 		openedAt = world.getTime();
 		opener = player.getUuid();
-		delivering = claimed.add(player.getUuid());
+		delivering = true;
+		pending = true;
 		markDirty();
 		world.updateListeners(pos, getCachedState(), getCachedState(), 3);
 		world.playSound(null, pos, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.BLOCKS, 1.2f, 0.5f);
 		world.playSound(null, pos, ModSounds.OMNITRIX_MALFUNCTION, SoundCategory.BLOCKS, 0.8f, 0.6f);
-		return delivering;
+		return true;
 	}
 
 	public static void tick(World world, BlockPos pos, BlockState state, ContainmentPodBlockEntity pod) {
@@ -98,7 +111,7 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 			world.playSound(null, pos, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.BLOCKS, 1.0f, 1.4f);
 		} else if (t == FLY_START && pod.delivering) {
 			world.playSound(null, pos, ModSounds.OMNITRIX_ACTIVATE, SoundCategory.PLAYERS, 1.0f, 1.0f);
-		} else if (t >= FLY_END && pod.delivering) {
+		} else if (t >= FLY_END && pod.pending) {
 			// ">=": auch nach einem Serverneustart mitten im Ablauf wird noch uebergeben
 			pod.deliver(server);
 		}
@@ -106,7 +119,7 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 
 	/** Teil an den Oeffner uebergeben (Ende des Fluges); ist er weg, liegt es fuer ihn bereit (naechster Klick). */
 	private void deliver(ServerWorld server) {
-		delivering = false;
+		pending = false;
 		markDirty();
 		PlayerEntity player = opener == null ? null : server.getPlayerByUuid(opener);
 		if (player == null || !(getCachedState().getBlock() instanceof ContainmentPodBlock block)) {
@@ -141,6 +154,7 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 			list.add(NbtHelper.fromUuid(id));
 		}
 		nbt.put("Claimed", list);
+		nbt.putBoolean("Pending", pending);
 		writeShared(nbt);
 	}
 
@@ -161,6 +175,7 @@ public class ContainmentPodBlockEntity extends BlockEntity {
 				claimed.add(NbtHelper.toUuid(element));
 			}
 		}
+		pending = nbt.getBoolean("Pending");
 		openedAt = nbt.contains("OpenedAt") ? nbt.getLong("OpenedAt") : Long.MIN_VALUE / 2;
 		delivering = nbt.getBoolean("Delivering");
 		opener = nbt.containsUuid("Opener") ? nbt.getUuid("Opener") : null;

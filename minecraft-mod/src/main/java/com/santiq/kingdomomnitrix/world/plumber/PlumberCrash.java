@@ -42,6 +42,7 @@ import net.minecraft.world.Heightmap;
 import net.minecraft.world.PersistentState;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.noise.NoiseConfig;
@@ -86,6 +87,10 @@ public final class PlumberCrash {
 	private static final int MAX_WET = 6;
 	/** abgeschlossene, erfolglose Suchrunden (jede weitet den Suchring) */
 	private static int failedRounds;
+	/** Spieler, fuer den gerade eine per Befehl angestossene Ortssuche laeuft (ueber Ticks verteilt); sonst null */
+	private static UUID commandSearch;
+	/** so viele Suchrunden (je {@value #MAX_ATTEMPTS} Versuche, jede mit weiterem Ring) hat die Befehlssuche */
+	private static final int COMMAND_ROUNDS = 4;
 	private static final String STATE_KEY = "kingdomomnitrix_plumber_crash";
 	private static final int MIN_DISTANCE = 110;
 	private static final int MAX_DISTANCE = 170;
@@ -188,6 +193,10 @@ public final class PlumberCrash {
 	private static void tick(MinecraftServer server) {
 		ServerWorld world = server.getOverworld();
 		State state = state(server);
+		if (commandSearch != null) {
+			commandSearch(server, world, state);
+			return;
+		}
 		switch (state.phase) {
 			case WAITING -> {
 				if (!world.getGameRules().getBoolean(ENABLED) || world.getPlayers(p -> !p.isSpectator()).isEmpty()) {
@@ -231,20 +240,60 @@ public final class PlumberCrash {
 		begin(overworld, state(overworld.getServer()), nose, forward);
 	}
 
-	/** Anflug in der Naehe eines Spielers starten (zufaelliger, geeigneter Ort); false, wenn kein Ort passt. */
+	/**
+	 * Ortssuche in der Naehe eines Spielers anstossen (Befehl). Die Suche laeuft ueber mehrere Ticks verteilt (bis zu
+	 * {@value #COMMAND_ROUNDS} Runden mit wachsendem Ring), damit der Server nicht stockt; das Ergebnis bekommt der Spieler
+	 * als Nachricht. Liefert false, wenn schon eine Suche laeuft oder ein Anflug im Gange ist.
+	 */
 	public static boolean beginNear(ServerPlayerEntity player) {
+		if (commandSearch != null || state(player.getServer()).phase == Phase.INCOMING) {
+			return false;
+		}
+		resetSearch();
+		commandSearch = player.getUuid();
+		return true;
+	}
+
+	private static void resetSearch() {
 		attemptsDone = 0;
-		Optional<net.minecraft.util.Pair<BlockPos, Direction>> site = findSite(player.getServerWorld(), player, Long.MAX_VALUE);
-		attemptsDone = 0;
-		site.ifPresent(s -> begin(player.getServerWorld(), s.getLeft(), s.getRight()));
-		return site.isPresent();
+		failedRounds = 0;
+		rejectedWater = 0;
+		rejectedSpan = 0;
+		rejectedLow = 0;
+	}
+
+	private static void commandSearch(MinecraftServer server, ServerWorld world, State state) {
+		ServerPlayerEntity player = server.getPlayerManager().getPlayer(commandSearch);
+		if (player == null || player.getServerWorld() != world) {
+			commandSearch = null;
+			resetSearch();
+			return;
+		}
+		Optional<net.minecraft.util.Pair<BlockPos, Direction>> site = findSite(world, player, SEARCH_BUDGET_MS);
+		if (site.isPresent()) {
+			commandSearch = null;
+			resetSearch();
+			begin(world, state, site.get().getLeft(), site.get().getRight());
+			player.sendMessage(Text.translatable("commands.kingdomomnitrix.plumber.incoming").formatted(Formatting.GREEN), false);
+		} else if (attemptsDone >= MAX_ATTEMPTS) {
+			attemptsDone = 0;
+			failedRounds++;
+			if (failedRounds >= COMMAND_ROUNDS) {
+				KingdomOmnitrix.LOGGER.info("Befehl: kein Absturzort nach {} Runden (Wasser {}, zu steil {}, zu tief {})", failedRounds,
+						rejectedWater, rejectedSpan, rejectedLow);
+				player.sendMessage(Text.translatable("commands.kingdomomnitrix.plumber.no_site_reasons", rejectedWater, rejectedSpan, rejectedLow)
+						.formatted(Formatting.RED), false);
+				commandSearch = null;
+				resetSearch();
+			}
+		}
 	}
 
 	private static void begin(ServerWorld world, State state, BlockPos nose, Direction forward) {
 		state.phase = Phase.INCOMING;
 		state.incoming = 0;
 		state.waitingForChunks = 0;
-		state.nose = world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, nose);
+		state.nose = groundAt(world, nose);
 		state.forward = forward;
 		// neuer Absturz: jeder bekommt einen neuen Peilsender auf das neue Wrack
 		state.beacons.clear();
@@ -397,7 +446,24 @@ public final class PlumberCrash {
 		return true;
 	}
 
+	/**
+	 * Bodenhoehe einer Spalte. Der Heightmap eines nicht geladenen Chunks liefert die Weltuntergrenze (das Wrack landete
+	 * so bei y -64); deshalb vorlaeufig die Hoehe aus dem Gelaenderauschen des Generators, der Einschlag bestimmt sie am
+	 * geladenen Chunk neu.
+	 */
+	private static BlockPos groundAt(ServerWorld world, BlockPos column) {
+		if (world.isChunkLoaded(ChunkSectionPos.getSectionCoord(column.getX()), ChunkSectionPos.getSectionCoord(column.getZ()))) {
+			return world.getTopPosition(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, column);
+		}
+		int y = world.getChunkManager().getChunkGenerator().getHeight(column.getX(), column.getZ(), Heightmap.Type.WORLD_SURFACE_WG, world,
+				world.getChunkManager().getNoiseConfig());
+		return new BlockPos(column.getX(), y, column.getZ());
+	}
+
 	private static void impact(ServerWorld world, State state) {
+		// Nasen-Chunk laden (ist nach dem Vorladen meist schon da) und die Bodenhoehe am echten Gelaende bestimmen
+		world.getChunk(ChunkSectionPos.getSectionCoord(state.nose.getX()), ChunkSectionPos.getSectionCoord(state.nose.getZ()));
+		state.nose = groundAt(world, state.nose);
 		PlumberShipBuilder.Site site = PlumberShipBuilder.build(world, state.nose, state.forward, world.getRandom());
 		state.phase = Phase.CRASHED;
 		state.shellPod = site.shellPod();

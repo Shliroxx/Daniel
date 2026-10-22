@@ -269,10 +269,10 @@ public final class HeroCommand {
 								return 0;
 							}
 							if (!com.santiq.kingdomomnitrix.world.plumber.PlumberCrash.beginNear(target)) {
-								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.no_site"));
+								ctx.getSource().sendError(Text.translatable("commands.kingdomomnitrix.plumber.busy"));
 								return 0;
 							}
-							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.incoming"), true);
+							ctx.getSource().sendFeedback(() -> Text.translatable("commands.kingdomomnitrix.plumber.searching"), true);
 							return 1;
 						}))
 						.then(targeted(CommandManager.literal("here"), (ctx, target) -> {

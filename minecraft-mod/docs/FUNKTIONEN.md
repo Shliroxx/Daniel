@@ -73,11 +73,14 @@ Es gibt kein Werkbank-Rezept. Das Omnitrix entsteht in vier Schritten:
    zu steil); die Chunks unter dem Wrack lädt der Server während des Anflugs vor. Jeder Spieler bekommt einen **Klempner-Peilsender** (Kompass auf das Wrack), auch wer
    später beitritt.
 2. **Das Wrack (212 Blöcke).** Bugteil schräg im Boden mit Krater: Cockpit (Logbuch des Kapitäns), Quartiere,
-   Waffenkammer und eine runde **Containment-Kammer** (Grube mit grünem Leuchtschacht, orange leuchtender Ring,
-   vier Stege) mit dem **kaputten Omnitrix (Hülle)**. Heckteil versetzt dahinter: Frachtraum, Maschinenraum (Notizen des
+   Waffenkammer und eine runde, düstere **Containment-Kammer** (Grube aus Schwarzstein und Kohle mit Glutnestern,
+   grüner Leuchtschacht, eingestürzter Steg, umgestürzte Säulen, Ketten) mit dem **kaputten Omnitrix (Hülle)**. Heckteil versetzt dahinter: Frachtraum, Maschinenraum (Notizen des
    Chefingenieurs) mit einer zweiten Kammer und der **Konsole**, Triebwerke und Finne. Schleifspur, Trümmer, Feuer und Rauchsäulen ringsum.
-   Die beiden **Containment-Kapseln** (3D, der Deckel klappt per Rechtsklick auf, das Teil schwebt heraus) sind
-   unzerstörbar und geben jedem Spieler sein Teil genau einmal. Truhen je Bereich
+   Die beiden **Containment-Kapseln** (Galvan-Pod, 3D) öffnen sich per Rechtsklick: Beben, glühende Nähte, Knall,
+   die Kuppel sprengt in vier Segmenten auf, das Teil steigt im grünen Strahl auf und fliegt dem Spieler an den Arm.
+   Sie sind unzerstörbar und geben jedem Spieler sein Teil genau einmal; wer es schon hat, bekommt nur einen Hinweis,
+   wer während einer fremden Öffnung klickt, wartet kurz. Ist der Spieler bei der Übergabe weg (z. B. Serverneustart
+   mitten im Ablauf), bleibt sein Teil in der Kapsel. Truhen je Bereich
    (Quartiere, Waffenkammer, Labor, Fracht, Maschinenraum) mit eigener Beute, darunter Klempner-Ausrüstung.
 3. **Corrodium aus dem End.** Giftgrünes Erz im Endstein (Höhe 10–90). Abbau ohne Behutsamkeit vergiftet kurz (der
    Klempner-Helm filtert den Staub). Roh-Corrodium → Ofen → Corrodium-Kristall.
@@ -454,7 +457,7 @@ Krater und Feuer nur mit `mobGriefing`. Auf „Friedlich“ nur der Meteor.
 | `/hero rift [riss]` | Dunkelheitsriss öffnen |
 | `/hero event start [id]\|stop\|status` | Welt-Ereignisse |
 | `/hero dungeon tp\|status\|reset` | Geheime Wasserstraße |
-| `/hero plumber crash\|here [spieler]` | Klempner-Kreuzer stürzt ab (zufälliger Ort in der Nähe · 40 Blöcke vor dem Spieler), nur Oberwelt |
+| `/hero plumber crash\|here [spieler]` | Klempner-Kreuzer stürzt ab (Ortssuche über mehrere Ticks, nennt bei Misserfolg die Gründe · 40 Blöcke vor dem Spieler), nur Oberwelt |
 | `/hero plumber tp\|status\|reset` | zum Wrack · Zustand · Ereignis zurücksetzen (Wrack bleibt) |
 | `/hero world traverse_town [spieler]` | nach Traverse Town |
 | `/hero world traverse_town rebuild` | Stadt neu bauen (überschreibt Stadtgebiet) |

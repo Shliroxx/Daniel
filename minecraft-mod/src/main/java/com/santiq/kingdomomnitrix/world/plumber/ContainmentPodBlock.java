@@ -80,12 +80,18 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		if (world.isClient() || !(world.getBlockEntity(pos) instanceof ContainmentPodBlockEntity pod)) {
 			return ActionResult.success(world.isClient());
 		}
-		if (pod.busy()) {
+		if (pod.claimedBy(player)) {
+			// eigenes Teil schon geholt (oder gerade unterwegs): kein neuer Ablauf
+			if (!(pod.busy() && pod.openedBy(player))) {
+				player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.empty").formatted(Formatting.GRAY), true);
+			}
 			return ActionResult.CONSUME;
 		}
-		if (!pod.open(player)) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.empty").formatted(Formatting.GRAY), true);
+		if (pod.busy()) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.busy").formatted(Formatting.GRAY), true);
+			return ActionResult.CONSUME;
 		}
+		pod.open(player);
 		return ActionResult.CONSUME;
 	}
 
