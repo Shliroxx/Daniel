@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/galvan_slate"
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_slate",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_slate",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_slate",
+        "y": 270
+      }
+    ]
+  }
+}

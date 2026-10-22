@@ -1,6 +1,11 @@
 {
   "replace": false,
   "values": [
+    "kingdomomnitrix:omnitrix_workbench",
+    "kingdomomnitrix:omnitrix_stabilizer",
+    "kingdomomnitrix:plumber_hull_scorched",
+    "kingdomomnitrix:plumber_floor",
+    "kingdomomnitrix:plumber_console",
     "kingdomomnitrix:hull_plate",
     "kingdomomnitrix:hull_plate_dark",
     "kingdomomnitrix:hull_plate_orange",
@@ -9,11 +14,6 @@
     "kingdomomnitrix:pad_plate",
     "kingdomomnitrix:pad_marking",
     "kingdomomnitrix:solar_copper_ore",
-    "kingdomomnitrix:solar_copper_block",
-    "kingdomomnitrix:omnitrix_workbench",
-    "kingdomomnitrix:omnitrix_stabilizer",
-    "kingdomomnitrix:plumber_hull_scorched",
-    "kingdomomnitrix:plumber_floor",
-    "kingdomomnitrix:plumber_console"
+    "kingdomomnitrix:solar_copper_block"
   ]
 }

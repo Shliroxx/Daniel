@@ -1,16 +1,33 @@
 {
   "replace": false,
   "values": [
+    "kingdomomnitrix:galvan_moss",
+    "kingdomomnitrix:galvan_slate",
     "kingdomomnitrix:kerwan_slate",
     "kingdomomnitrix:kerwan_turf",
+    "kingdomomnitrix:kylmyys_ice",
+    "kingdomomnitrix:kylmyys_snow",
+    "kingdomomnitrix:mechamorph_circuit",
+    "kingdomomnitrix:mechamorph_plate",
     "kingdomomnitrix:novalis_limestone",
     "kingdomomnitrix:novalis_moss",
+    "kingdomomnitrix:petropia_crystal",
+    "kingdomomnitrix:petropia_rock",
+    "kingdomomnitrix:petropia_shards",
+    "kingdomomnitrix:piscciss_reefstone",
+    "kingdomomnitrix:piscciss_sand",
     "kingdomomnitrix:rilgar_coralstone",
     "kingdomomnitrix:rilgar_sand",
+    "kingdomomnitrix:sonorosia_resonite",
+    "kingdomomnitrix:sonorosia_sand",
+    "kingdomomnitrix:sonorosia_stone",
     "kingdomomnitrix:torren_basalt",
     "kingdomomnitrix:torren_crust",
     "kingdomomnitrix:torren_dust",
     "kingdomomnitrix:veldin_sand",
-    "kingdomomnitrix:veldin_sandstone"
+    "kingdomomnitrix:veldin_sandstone",
+    "kingdomomnitrix:vulpin_ash",
+    "kingdomomnitrix:vulpin_rubble",
+    "kingdomomnitrix:vulpin_sludge"
   ]
 }

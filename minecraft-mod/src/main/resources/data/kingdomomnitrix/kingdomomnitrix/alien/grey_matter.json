@@ -214,12 +214,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:frog",
-        "dimension": "minecraft:overworld"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:galvan_prime",
+      "name": "species.kingdomomnitrix.galvan",
+      "behavior": "shy",
+      "health": 6,
+      "damage": 1,
+      "speed": 0.34,
+      "effect": "none",
+      "group": [
+        3,
+        5
+      ],
+      "max": 10
+    }
   },
   "model": "kingdomomnitrix:grey_matter",
   "prototype": true,

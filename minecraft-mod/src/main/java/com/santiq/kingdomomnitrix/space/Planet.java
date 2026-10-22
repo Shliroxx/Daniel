@@ -20,11 +20,13 @@ import net.minecraft.world.World;
  *   <li>{@code map}: Lage auf der Karte (0..1, 0..1), {@code color}: Planetenfarbe, {@code size}: Kreisgroesse</li>
  *   <li>{@code landing}: Landeplatz (x, z) — fehlt er, landet das Schiff am Weltspawn</li>
  *   <li>{@code hero_level}, {@code requires}: Freischaltung (Heldenstufe, vorher besuchter Planet)</li>
+ *   <li>{@code chart}: Reiter der Galaxiekarte ({@code main} = bekannte Galaxie, {@code aliens} = Alien-Heimatwelten)</li>
  * </ul>
  * Name und Beschreibung: {@code planet.<namespace>.<name>} und {@code planet.<namespace>.<name>.desc}.
  */
 public record Planet(Identifier dimension, String system, List<Float> map, int color, float size, int order,
-		Optional<List<Integer>> landing, int heroLevel, int warp, Optional<Identifier> requires) {
+		Optional<List<Integer>> landing, int heroLevel, int warp, Optional<Identifier> requires, String chart) {
+	public static final String MAIN_CHART = "main";
 
 	public static final Codec<Planet> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Identifier.CODEC.fieldOf("dimension").forGetter(Planet::dimension),
@@ -36,7 +38,8 @@ public record Planet(Identifier dimension, String system, List<Float> map, int c
 			Codec.INT.listOf(2, 2).optionalFieldOf("landing").forGetter(Planet::landing),
 			Codec.intRange(1, 50).optionalFieldOf("hero_level", 1).forGetter(Planet::heroLevel),
 			Codec.intRange(0, ShipLog.MAX_LEVEL).optionalFieldOf("warp", 0).forGetter(Planet::warp),
-			Identifier.CODEC.optionalFieldOf("requires").forGetter(Planet::requires)
+			Identifier.CODEC.optionalFieldOf("requires").forGetter(Planet::requires),
+			Codec.STRING.optionalFieldOf("chart", MAIN_CHART).forGetter(Planet::chart)
 	).apply(instance, Planet::new));
 
 	public RegistryKey<World> worldKey() {

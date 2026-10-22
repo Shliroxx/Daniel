@@ -191,19 +191,73 @@ public record AlienDefinition(
 
 	/**
 	 * Wie das Alien ins Omnitrix kommt: {@code starter} = von Anfang an (Heatblast, Vierarm, XLR8); sonst per DNA-Scan
-	 * — {@code samples} verschiedene Lebewesen aus {@code sources} scannen, jeweils in der genannten Welt.
+	 * — {@code samples} verschiedene Exemplare scannen. Mit {@code species} lebt die Art als wilde Kreatur auf ihrer
+	 * Heimatwelt und nur sie zaehlt; {@code sources} (Lebewesen je Welt) gilt nur, solange es noch keine Heimatwelt gibt.
 	 */
-	public record DnaInfo(boolean starter, int samples, List<DnaSource> sources) {
-		public static final DnaInfo NONE = new DnaInfo(false, 3, List.of());
+	public record DnaInfo(boolean starter, int samples, List<DnaSource> sources, java.util.Optional<Species> species) {
+		public static final DnaInfo NONE = new DnaInfo(false, 3, List.of(), java.util.Optional.empty());
 		public static final Codec<DnaInfo> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Codec.BOOL.optionalFieldOf("starter", false).forGetter(DnaInfo::starter),
 				Codec.intRange(1, 20).optionalFieldOf("samples", 3).forGetter(DnaInfo::samples),
-				DnaSource.CODEC.listOf().optionalFieldOf("sources", List.of()).forGetter(DnaInfo::sources)
+				DnaSource.CODEC.listOf().optionalFieldOf("sources", List.of()).forGetter(DnaInfo::sources),
+				Species.CODEC.optionalFieldOf("species").forGetter(DnaInfo::species)
 		).apply(instance, DnaInfo::new));
 
 		public DnaInfo {
 			sources = List.copyOf(sources);
 		}
+	}
+
+	/** Verhalten der wilden Art gegenueber Spielern. */
+	public enum Behavior implements net.minecraft.util.StringIdentifiable {
+		/** flieht vor Spielern */
+		SHY,
+		/** friedlich, wehrt sich mit der ganzen Gruppe */
+		NEUTRAL,
+		/** greift Spieler in Sichtweite an */
+		HOSTILE,
+		/** jagt im Rudel: greift an und ruft die Gruppe dazu */
+		PACK;
+
+		public static final Codec<Behavior> CODEC = net.minecraft.util.StringIdentifiable.createCodec(Behavior::values);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	/** Wirkung eines Treffers der wilden Art. */
+	public enum HitEffect implements net.minecraft.util.StringIdentifiable {
+		NONE, FIRE, FREEZE, POISON, KNOCKBACK, SHOCK, SONIC, CRYSTAL, DRAIN;
+
+		public static final Codec<HitEffect> CODEC = net.minecraft.util.StringIdentifiable.createCodec(HitEffect::values);
+
+		@Override
+		public String asString() {
+			return name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	/**
+	 * Die Art in freier Wildbahn: lebt auf {@code home}, Gruppen von {@code group} Tieren, hoechstens {@code max} in der
+	 * Naehe eines Spielers; {@code name} = Uebersetzungsschluessel des Artnamens (z. B. Sonorosianer).
+	 */
+	public record Species(Identifier home, String name, Behavior behavior, float health, float damage, float speed, HitEffect effect,
+			List<Integer> group, int max, boolean aquatic, boolean flying) {
+		public static final Codec<Species> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				Identifier.CODEC.fieldOf("home").forGetter(Species::home),
+				Codec.STRING.fieldOf("name").forGetter(Species::name),
+				Behavior.CODEC.optionalFieldOf("behavior", Behavior.NEUTRAL).forGetter(Species::behavior),
+				Codec.floatRange(1.0f, 1000.0f).optionalFieldOf("health", 20.0f).forGetter(Species::health),
+				Codec.floatRange(0.0f, 100.0f).optionalFieldOf("damage", 4.0f).forGetter(Species::damage),
+				Codec.floatRange(0.05f, 1.0f).optionalFieldOf("speed", 0.28f).forGetter(Species::speed),
+				HitEffect.CODEC.optionalFieldOf("effect", HitEffect.NONE).forGetter(Species::effect),
+				Codec.intRange(1, 12).listOf(2, 2).optionalFieldOf("group", List.of(1, 3)).forGetter(Species::group),
+				Codec.intRange(1, 40).optionalFieldOf("max", 8).forGetter(Species::max),
+				Codec.BOOL.optionalFieldOf("aquatic", false).forGetter(Species::aquatic),
+				Codec.BOOL.optionalFieldOf("flying", false).forGetter(Species::flying)
+		).apply(instance, Species::new));
 	}
 
 	/** Scanbares Lebewesen; {@code dimension} leer = in jeder Welt. */

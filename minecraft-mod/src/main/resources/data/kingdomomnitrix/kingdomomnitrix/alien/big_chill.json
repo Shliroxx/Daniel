@@ -244,16 +244,21 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:stray",
-        "dimension": "kingdomomnitrix:torren_iv"
-      },
-      {
-        "entity": "minecraft:polar_bear",
-        "dimension": "kingdomomnitrix:torren_iv"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:kylmyys",
+      "name": "species.kingdomomnitrix.necrofriggian",
+      "behavior": "neutral",
+      "health": 24,
+      "damage": 5,
+      "speed": 0.3,
+      "effect": "freeze",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6,
+      "flying": true
+    }
   },
   "model": "kingdomomnitrix:big_chill",
   "failsafe_tags": [

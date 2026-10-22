@@ -237,12 +237,21 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:cod",
-        "dimension": "kingdomomnitrix:rilgar"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:piscciss",
+      "name": "species.kingdomomnitrix.piscciss_volann",
+      "behavior": "hostile",
+      "health": 22,
+      "damage": 6,
+      "speed": 0.3,
+      "effect": "none",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6,
+      "aquatic": true
+    }
   },
   "model": "kingdomomnitrix:ripjaws",
   "failsafe_tags": [

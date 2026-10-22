@@ -49,6 +49,12 @@ public class GalaxyMapScreen extends Screen {
 	@Nullable
 	private Identifier selected;
 	private int refresh;
+	/** gezeigter Reiter: bekannte Galaxie oder Alien-Heimatwelten ({@link Planet#chart()}) */
+	private String chart = Planet.MAIN_CHART;
+	private boolean chartChosen;
+	/** Reiter in Anzeigereihenfolge: (Kennung, Uebersetzung) */
+	private static final String[][] CHARTS = {{Planet.MAIN_CHART, "screen.kingdomomnitrix.galaxy.chart.main"},
+			{"aliens", "screen.kingdomomnitrix.galaxy.chart.aliens"}};
 
 	public GalaxyMapScreen() {
 		super(Text.translatable("screen.kingdomomnitrix.galaxy"));
@@ -60,8 +66,13 @@ public class GalaxyMapScreen extends Screen {
 
 	// --- Aufbau ---------------------------------------------------------------------------------
 
-	private List<Map.Entry<Identifier, Planet>> planets() {
+	private List<Map.Entry<Identifier, Planet>> allPlanets() {
 		return client == null || client.world == null ? List.of() : PlanetRegistry.all(client.world.getRegistryManager());
+	}
+
+	/** Planeten des gerade gezeigten Reiters */
+	private List<Map.Entry<Identifier, Planet>> planets() {
+		return allPlanets().stream().filter(e -> e.getValue().chart().equals(chart)).toList();
 	}
 
 	private boolean worldExists(Planet planet) {
@@ -106,9 +117,27 @@ public class GalaxyMapScreen extends Screen {
 		if (client == null || client.player == null || client.world == null) {
 			return;
 		}
-		if (selected == null) {
-			selected = PlanetRegistry.ofWorld(client.world.getRegistryManager(), client.world.getRegistryKey())
-					.orElse(planets().isEmpty() ? null : planets().get(0).getKey());
+		if (!chartChosen) {
+			// Start im Reiter der Welt, in der man gerade ist
+			chartChosen = true;
+			PlanetRegistry.ofWorld(client.world.getRegistryManager(), client.world.getRegistryKey()).ifPresent(id -> allPlanets().stream()
+					.filter(e -> e.getKey().equals(id)).findFirst().ifPresent(e -> chart = e.getValue().chart()));
+		}
+		if (selected == null || selectedEntry() == null || !selectedEntry().getValue().chart().equals(chart)) {
+			Identifier here = PlanetRegistry.ofWorld(client.world.getRegistryManager(), client.world.getRegistryKey()).orElse(null);
+			selected = planets().stream().anyMatch(e -> e.getKey().equals(here)) ? here : planets().isEmpty() ? null : planets().get(0).getKey();
+		}
+		int tabX = mapLeft() + textRenderer.getWidth(title) + 14;
+		for (String[] tab : CHARTS) {
+			Text label = Text.translatable(tab[1]);
+			int w = textRenderer.getWidth(label) + 14;
+			ButtonWidget button = ButtonWidget.builder(label, b -> {
+				chart = tab[0];
+				clearAndInit();
+			}).dimensions(tabX, 5, w, 16).build();
+			button.active = !chart.equals(tab[0]);
+			addDrawableChild(button);
+			tabX += w + 4;
 		}
 		int left = width - PANEL_WIDTH - 12;
 		Map.Entry<Identifier, Planet> chosen = selectedEntry();
@@ -147,7 +176,7 @@ public class GalaxyMapScreen extends Screen {
 
 	@Nullable
 	private Map.Entry<Identifier, Planet> selectedEntry() {
-		for (Map.Entry<Identifier, Planet> entry : planets()) {
+		for (Map.Entry<Identifier, Planet> entry : allPlanets()) {
 			if (entry.getKey().equals(selected)) {
 				return entry;
 			}

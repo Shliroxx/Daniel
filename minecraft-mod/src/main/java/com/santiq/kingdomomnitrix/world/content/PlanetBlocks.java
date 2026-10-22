@@ -76,6 +76,58 @@ public final class PlanetBlocks {
 	public static final Block TORREN_BASALT = register("torren_basalt", new Block(base(MapColor.BLACK, 1.8f, 6.0f, BlockSoundGroup.BASALT, 2, true)));
 	/** Glutdorn */
 	public static final Block TORREN_THORN = register("torren_thorn", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.RED).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 4).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Klangsand */
+	public static final Block SONOROSIA_SAND = register("sonorosia_sand", new Block(base(MapColor.PURPLE, 0.5f, 0.5f, BlockSoundGroup.SAND, 0, false)));
+	/** Resonanzgestein */
+	public static final Block SONOROSIA_STONE = register("sonorosia_stone", new Block(base(MapColor.PURPLE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Resonit */
+	public static final Block SONOROSIA_RESONITE = register("sonorosia_resonite", new Block(base(MapColor.PURPLE, 1.2f, 4.0f, BlockSoundGroup.AMETHYST_BLOCK, 7, true)));
+	/** Klangrohr */
+	public static final Block SONOROSIA_REED = register("sonorosia_reed", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.PURPLE).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 5).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Splittersand */
+	public static final Block PETROPIA_SHARDS = register("petropia_shards", new Block(base(MapColor.EMERALD_GREEN, 0.6f, 0.6f, BlockSoundGroup.SAND, 0, false)));
+	/** Petropia-Fels */
+	public static final Block PETROPIA_ROCK = register("petropia_rock", new Block(base(MapColor.CYAN, 1.8f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Petrosapien-Kristall */
+	public static final Block PETROPIA_CRYSTAL = register("petropia_crystal", new Block(base(MapColor.EMERALD_GREEN, 1.5f, 6.0f, BlockSoundGroup.AMETHYST_BLOCK, 8, true)));
+	/** Kristallspross */
+	public static final Block PETROPIA_SPROUT = register("petropia_sprout", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).noCollision().breakInstantly().sounds(BlockSoundGroup.AMETHYST_CLUSTER).luminance(state -> 6).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Galvan-Moos */
+	public static final Block GALVAN_MOSS = register("galvan_moss", new Block(base(MapColor.LIME, 0.7f, 0.7f, BlockSoundGroup.MOSS_BLOCK, 0, false)));
+	/** Galvan-Schlick */
+	public static final Block GALVAN_MUD = register("galvan_mud", new Block(base(MapColor.BROWN, 0.6f, 0.6f, BlockSoundGroup.MUD, 0, false)));
+	/** Galvan-Schiefer */
+	public static final Block GALVAN_SLATE = register("galvan_slate", new Block(base(MapColor.GREEN, 1.6f, 6.0f, BlockSoundGroup.DEEPSLATE, 0, true)));
+	/** Galvan-Farn */
+	public static final Block GALVAN_FERN = register("galvan_fern", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIME).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 0).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Mechamorph-Platte */
+	public static final Block MECHAMORPH_PLATE = register("mechamorph_plate", new Block(base(MapColor.BLACK, 2.0f, 6.0f, BlockSoundGroup.NETHERITE, 4, true)));
+	/** Schaltgestein */
+	public static final Block MECHAMORPH_CIRCUIT = register("mechamorph_circuit", new Block(base(MapColor.BLACK, 1.8f, 6.0f, BlockSoundGroup.DEEPSLATE, 0, true)));
+	/** Schaltkreis-Ranke */
+	public static final Block MECHAMORPH_VINE = register("mechamorph_vine", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.GREEN).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 7).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Kylmyys-Schnee */
+	public static final Block KYLMYYS_SNOW = register("kylmyys_snow", new Block(base(MapColor.WHITE, 0.5f, 0.5f, BlockSoundGroup.SNOW, 0, false)));
+	/** Ewiges Eis */
+	public static final Block KYLMYYS_ICE = register("kylmyys_ice", new Block(base(MapColor.PALE_PURPLE, 1.4f, 6.0f, BlockSoundGroup.GLASS, 3, true)));
+	/** Permafrost */
+	public static final Block KYLMYYS_PERMAFROST = register("kylmyys_permafrost", new Block(base(MapColor.LIGHT_BLUE, 1.6f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Frostfarn */
+	public static final Block KYLMYYS_FROSTFERN = register("kylmyys_frostfern", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.WHITE).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 3).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Vulpin-Asche */
+	public static final Block VULPIN_ASH = register("vulpin_ash", new Block(base(MapColor.BROWN, 0.5f, 0.5f, BlockSoundGroup.SAND, 0, false)));
+	/** Giftschutt */
+	public static final Block VULPIN_RUBBLE = register("vulpin_rubble", new Block(base(MapColor.BROWN, 1.6f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Giftschlamm */
+	public static final Block VULPIN_SLUDGE = register("vulpin_sludge", new Block(base(MapColor.LIME, 0.8f, 2.0f, BlockSoundGroup.MUD, 3, false)));
+	/** Giftdorn */
+	public static final Block VULPIN_THORN = register("vulpin_thorn", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.BROWN).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 2).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Piscciss-Sand */
+	public static final Block PISCCISS_SAND = register("piscciss_sand", new Block(base(MapColor.CYAN, 0.5f, 0.5f, BlockSoundGroup.SAND, 0, false)));
+	/** Riffstein */
+	public static final Block PISCCISS_REEFSTONE = register("piscciss_reefstone", new Block(base(MapColor.CYAN, 1.4f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Tiefseegras */
+	public static final Block PISCCISS_GRASS = register("piscciss_grass", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.CYAN).noCollision().breakInstantly().sounds(BlockSoundGroup.GRASS).luminance(state -> 0).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
 	/** Rumpfplatte */
 	public static final Block HULL_PLATE = register("hull_plate", new Block(base(MapColor.IRON_GRAY, 3.0f, 6.0f, BlockSoundGroup.METAL, 0, true)));
 	/** Dunkle Rumpfplatte */
@@ -130,7 +182,7 @@ public final class PlanetBlocks {
 	public static final Block NECROFRIGGIAN_SPIKE = register("necrofriggian_spike", new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(0.4f, 6.0f).sounds(BlockSoundGroup.GLASS).luminance(state -> 3).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY)));
 
 	/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */
-	public static final List<Block> CUTOUT = List.of(VELDIN_SCRUB, KERWAN_REED, NOVALIS_BLOOM, RILGAR_SEAGRASS, TORREN_THORN, GRATE);
+	public static final List<Block> CUTOUT = List.of(VELDIN_SCRUB, KERWAN_REED, NOVALIS_BLOOM, RILGAR_SEAGRASS, TORREN_THORN, SONOROSIA_REED, PETROPIA_SPROUT, GALVAN_FERN, MECHAMORPH_VINE, KYLMYYS_FROSTFERN, VULPIN_THORN, PISCCISS_GRASS, GRATE);
 	public static final List<Block> CUTOUT_MIPPED = List.of(KERWAN_LEAVES, NOVALIS_LEAVES, RILGAR_LEAVES);
 	public static final List<Block> TRANSLUCENT = List.of(TECH_GLASS, PETROSAPIEN_CRYSTAL, PETROSAPIEN_SPIKE, NECROFRIGGIAN_ICE, NECROFRIGGIAN_SPIKE);
 

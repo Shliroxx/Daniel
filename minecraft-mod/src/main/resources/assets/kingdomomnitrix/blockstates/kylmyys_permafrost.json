@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/kylmyys_permafrost"
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_permafrost",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_permafrost",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_permafrost",
+        "y": 270
+      }
+    ]
+  }
+}

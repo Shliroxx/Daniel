@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/piscciss_reefstone"
+      },
+      {
+        "model": "kingdomomnitrix:block/piscciss_reefstone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/piscciss_reefstone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/piscciss_reefstone",
+        "y": 270
+      }
+    ]
+  }
+}

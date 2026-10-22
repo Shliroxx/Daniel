@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:vulpin",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.54,
+    0.74
+  ],
+  "color": 12611642,
+  "size": 1.0,
+  "order": 105,
+  "landing": [
+    0,
+    0
+  ]
+}

@@ -71,6 +71,10 @@ public final class ModEntities {
 	}
 
 	/** Echo-Echo-Klon: halbe Spielergroesse wie AE (Groesse 0,5); wird nie gespeichert */
+	/** Wildes Alien auf seiner Heimatwelt (Art per NBT/Spawner, Groesse ueber das Skalierungs-Attribut) */
+	public static final EntityType<com.santiq.kingdomomnitrix.alien.WildAlienEntity> WILD_ALIEN = register("wild_alien",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.alien.WildAlienEntity>create(com.santiq.kingdomomnitrix.alien.WildAlienEntity::new,
+					SpawnGroup.CREATURE).dimensions(0.6f, 1.8f).maxTrackingRange(10));
 	public static final EntityType<EchoCloneEntity> ECHO_CLONE = register("echo_clone",
 			EntityType.Builder.<EchoCloneEntity>create(EchoCloneEntity::new, SpawnGroup.MISC).dimensions(0.35f, 0.95f).maxTrackingRange(8));
 
@@ -82,6 +86,7 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(SHADOW, ShadowHeartless.createAttributes());
 		FabricDefaultAttributeRegistry.register(NPC, NpcEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(ECHO_CLONE, EchoCloneEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(WILD_ALIEN, com.santiq.kingdomomnitrix.alien.WildAlienEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(NEFARIOUS, NefariousEntity.createAttributes());
 		// Natuerliche Spawns (nur in Mod-Welten wie Traverse Town, die Biome listen sie): im Dunkeln, Bodentypen auf festem Grund.
 		SpawnRestriction.register(SHADOW, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);

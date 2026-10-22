@@ -5,6 +5,7 @@ import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaScan;
 import com.santiq.kingdomomnitrix.alien.OmnitrixItem;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
+import com.santiq.kingdomomnitrix.alien.WildAlienEntity;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.networking.DnaScanPayload;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
@@ -74,6 +75,7 @@ public final class DnaScanClient {
 			ticks = 0;
 			usable = !DONE.contains(target.getUuid()) && AlienRegistry.registry(player.networkHandler.getRegistryManager())
 					.map(registry -> DnaScan.match(registry, HeroDataAccess.get(player), Registries.ENTITY_TYPE.getId(target.getType()),
+							target instanceof WildAlienEntity wild ? wild.alien().orElse(null) : null,
 							player.getWorld().getRegistryKey().getValue()).alien() != null)
 					.orElse(false);
 		}

@@ -121,6 +121,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.ability.PowerTasks.register();
 		com.santiq.kingdomomnitrix.ability.passive.PassiveHooks.register();
 		com.santiq.kingdomomnitrix.alien.DnaScan.register();
+		com.santiq.kingdomomnitrix.alien.WildAlienSpawner.register();
 		CombatManager.register();
 		com.santiq.kingdomomnitrix.combat.CombatFeedback.register();
 		RiftSpawner.register();

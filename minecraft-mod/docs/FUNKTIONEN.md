@@ -124,12 +124,12 @@ Rot, Gelb, Lila, Weiß, Orange, Pink, Türkis). Fertiges Omnitrix + farbiger Ker
 | **Heatblast** | Feuerstoß · Feuerexplosion · Flammenschub | Infernowelle · Flammenschild · Supernova | Start-Alien |
 | **XLR8** | Sturmangriff · Ausweichen · Schlaghagel | Zyklonlauf · Zeitsprung · Lichtgeschwindigkeits-Hagel | Start-Alien |
 | **Vierarm** | Bodenschlag · Werfen · Riesensprung | Donnerklatschen · Eisenhaut · Erdbeben | Start-Alien |
-| **Diamondhead** | Kristallsalve · Kristallklinge · Kristallsprung | Stachelausbruch · Kristallpanzer · Kristallsturm | Hellfee (Torren IV) |
-| **Grey Matter** | Analyse · Schwachstelle · Huschen | Technikfalle · Notreparatur · Superhirn | Frosch (Erde) |
-| **Wildmutt** | Ansprung · Stachelsalve · Wildes Gebrüll | Wildes Zerfleischen · Witterung · Urwut | Wolf (Erde) |
+| **Diamondhead** | Kristallsalve · Kristallklinge · Kristallsprung | Stachelausbruch · Kristallpanzer · Kristallsturm | Petrosapien (Petropia) |
+| **Grey Matter** | Analyse · Schwachstelle · Huschen | Technikfalle · Notreparatur · Superhirn | Galvan (Galvan Prime) |
+| **Wildmutt** | Ansprung · Stachelsalve · Wildes Gebrüll | Wildes Zerfleischen · Witterung · Urwut | Vulpimancer (Vulpin) |
 | **Stinkfly** | Schleimspucke · Stinkwolke · Flügelstoß | Schleimbombe · Aufwind · Giftsturm | Biene (Erde) |
-| **Ripjaws** | Kieferbiss · Flutstoß · Strudel | Schwanzhieb · Hydroheilung · Flutwelle | Kabeljau (Rilgar) |
-| **Upgrade** | Optikstrahl · Flüssige Form · Technik-Upgrade | Keulenfäuste · Systemübernahme · Plasmakanone | Soldier-Herzloser (Kerwan) |
+| **Ripjaws** | Kieferbiss · Flutstoß · Strudel | Schwanzhieb · Hydroheilung · Flutwelle | Piscciss Volann (Piscciss) |
+| **Upgrade** | Optikstrahl · Flüssige Form · Technik-Upgrade | Keulenfäuste · Systemübernahme · Plasmakanone | Mechamorph (Galvan B) |
 | **Ghostfreak** | Tentakelhieb · Phasenverschiebung · Spuk | Besessenheit · Schattenschritt · Albtraum | Ghast (Nether) |
 | **Cannonbolt** | Kanonenkugel · Panzerkugel · Kugelsprung | Abpraller · Rollmodus · Kanonade | Gürteltier (Veldin) |
 | **Jetray** | Neuroschock · Schwanzblitz · Düsenstoß | Tiefflug · Windschatten · Neuroschock-Sturm | Delfin (Rilgar) |
@@ -139,10 +139,25 @@ Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser,
 Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
 
-Weitere DNA-Quellen: Spidermonkey Spinne/Höhlenspinne (Erde) · Echo Echo Fledermaus (Traverse Town) · Atomix
-Magmawürfel/Witherskelett (Nether) · Chromastone Shulker (Ende) · Alien X Enderdrache (Ende, 1 Probe) · Humungousaur Kamel
-(Veldin) · Brainstorm Tropenfisch (Rilgar) · Rath Fuchs, Goop Schleim, Swampfire Sumpfskelett (Novalis) · Big Chill
-Eiswanderer/Eisbär, Way Big Verwüster (Torren IV, 2 Proben). Die Planeten haben dafür eigene Tierwelt (Spawns und
+**Alien-Heimatwelten (Welle 1):** Für diese Aliens zählt nur die echte Art auf ihrer Heimatwelt — sie leben dort als
+wilde Aliens (gleiches Modell wie die Omnitrix-Form, zufällige Uniform je Exemplar, Name der Art, Leuchtpartikel ihrer
+Kraft) und erscheinen in Gruppen außerhalb der Sicht des Spielers (eigener Spawner, unabhängig von Licht und Boden).
+Verhalten je Art: scheu (flieht), neutral (wehrt sich, die Gruppe hilft), feindlich, Rudel. Treffer tragen die Kraft der
+Art (Feuer, Frost, Gift, Schall, Kristall, Schock). Reise über die Galaxiekarte, Reiter **Alien-Heimatwelten**.
+
+| Welt | Art → Alien | Verhalten | Landschaft |
+|---|---|---|---|
+| Sonorosia | Sonorosianer → Echo Echo | scheu, Schall | violette Klangwüste, Resonanzgestein, Resonit-Kristalle, Klangrohr |
+| Petropia | Petrosapien → Diamondhead, Crystalsapien → Chromastone | neutral, Kristall/Schock | Kristallwelt, Splittersand, Petrosapien-Kristalle |
+| Galvan Prime | Galvan → Grey Matter | scheu | Sumpf mit Galvan-Moos, Schlick, Schiefer, Seen |
+| Galvan B | Galvanischer Mechamorph → Upgrade | neutral, Schock | schwarzer Technik-Mond, Mechamorph-Platten mit grünen Leiterbahnen |
+| Kylmyys | Necrofriggian → Big Chill | neutral, Frost, kein Fallschaden | Eiswelt, Ewiges Eis, Permafrost, Schneesturm |
+| Vulpin | Vulpimancer → Wildmutt | Rudel | verseuchte Aschewüste, Giftschlamm, Giftdorn |
+| Piscciss | Piscciss Volann → Ripjaws | feindlich, im Wasser | Ozeanwelt mit Riffinseln |
+
+Weitere DNA-Quellen (bis ihre Heimatwelt folgt): Spidermonkey Spinne/Höhlenspinne (Erde) · Atomix
+Magmawürfel/Witherskelett (Nether) · Alien X Enderdrache (Ende, 1 Probe) · Humungousaur Kamel
+(Veldin) · Brainstorm Tropenfisch (Rilgar) · Rath Fuchs, Goop Schleim, Swampfire Sumpfskelett (Novalis) · Way Big Verwüster (Torren IV, 2 Proben). Die Planeten haben dafür eigene Tierwelt (Spawns und
 Spawnböden in `tools/generate_planet_worlds.py`).
 
 ### Eigene Alien-Systeme (über Alien Evolution hinaus)

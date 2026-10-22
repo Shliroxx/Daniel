@@ -216,12 +216,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:allay",
-        "dimension": "kingdomomnitrix:torren_iv"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:petropia",
+      "name": "species.kingdomomnitrix.petrosapien",
+      "behavior": "neutral",
+      "health": 30,
+      "damage": 6,
+      "speed": 0.25,
+      "effect": "crystal",
+      "group": [
+        1,
+        2
+      ],
+      "max": 5
+    }
   },
   "model": "kingdomomnitrix:diamondhead",
   "prototype": true,

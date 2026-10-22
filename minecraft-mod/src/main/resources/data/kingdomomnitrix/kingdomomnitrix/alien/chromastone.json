@@ -231,12 +231,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:shulker",
-        "dimension": "minecraft:the_end"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:petropia",
+      "name": "species.kingdomomnitrix.crystalsapien",
+      "behavior": "neutral",
+      "health": 26,
+      "damage": 5,
+      "speed": 0.25,
+      "effect": "shock",
+      "group": [
+        1,
+        2
+      ],
+      "max": 4
+    }
   },
   "model": "kingdomomnitrix:chromastone",
   "failsafe_tags": [

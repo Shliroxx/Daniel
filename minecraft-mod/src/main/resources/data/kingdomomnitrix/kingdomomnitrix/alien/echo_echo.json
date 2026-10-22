@@ -225,12 +225,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:bat",
-        "dimension": "kingdomomnitrix:traverse_town"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:sonorosia",
+      "name": "species.kingdomomnitrix.sonorosian",
+      "behavior": "shy",
+      "health": 12,
+      "damage": 3,
+      "speed": 0.3,
+      "effect": "sonic",
+      "group": [
+        2,
+        4
+      ],
+      "max": 8
+    }
   },
   "model": "kingdomomnitrix:echo_echo",
   "failsafe_tags": [

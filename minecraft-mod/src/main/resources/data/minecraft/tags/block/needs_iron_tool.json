@@ -4,15 +4,15 @@
     "kingdomomnitrix:raritanium_ore",
     "kingdomomnitrix:mythril_ore",
     "kingdomomnitrix:deepslate_mythril_ore",
+    "kingdomomnitrix:corrodium_ore",
+    "kingdomomnitrix:corrodium_block",
+    "kingdomomnitrix:plumber_hull",
+    "kingdomomnitrix:plumber_hull_dark",
     "kingdomomnitrix:station_plate",
     "kingdomomnitrix:station_trim",
     "kingdomomnitrix:azurite_ore",
     "kingdomomnitrix:azurite_block",
     "kingdomomnitrix:viridium_ore",
-    "kingdomomnitrix:viridium_block",
-    "kingdomomnitrix:corrodium_ore",
-    "kingdomomnitrix:corrodium_block",
-    "kingdomomnitrix:plumber_hull",
-    "kingdomomnitrix:plumber_hull_dark"
+    "kingdomomnitrix:viridium_block"
   ]
 }

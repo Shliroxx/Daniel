@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/galvan_moss"
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_moss",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_moss",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/galvan_moss",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -225,12 +225,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "kingdomomnitrix:soldier",
-        "dimension": "kingdomomnitrix:kerwan"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:galvan_b",
+      "name": "species.kingdomomnitrix.mechamorph",
+      "behavior": "neutral",
+      "health": 22,
+      "damage": 5,
+      "speed": 0.27,
+      "effect": "shock",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6
+    }
   },
   "model": "kingdomomnitrix:upgrade",
   "failsafe_tags": [

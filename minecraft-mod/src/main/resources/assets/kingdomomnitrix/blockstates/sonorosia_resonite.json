@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/sonorosia_resonite"
+      },
+      {
+        "model": "kingdomomnitrix:block/sonorosia_resonite",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/sonorosia_resonite",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/sonorosia_resonite",
+        "y": 270
+      }
+    ]
+  }
+}

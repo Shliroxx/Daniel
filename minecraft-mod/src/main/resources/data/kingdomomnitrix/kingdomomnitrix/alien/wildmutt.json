@@ -235,12 +235,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:wolf",
-        "dimension": "minecraft:overworld"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:vulpin",
+      "name": "species.kingdomomnitrix.vulpimancer",
+      "behavior": "pack",
+      "health": 20,
+      "damage": 5,
+      "speed": 0.33,
+      "effect": "none",
+      "group": [
+        3,
+        5
+      ],
+      "max": 8
+    }
   },
   "model": "kingdomomnitrix:wildmutt",
   "failsafe_tags": [

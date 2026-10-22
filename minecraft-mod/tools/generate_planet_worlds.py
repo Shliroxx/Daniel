@@ -112,6 +112,101 @@ PLANETS = {
     },
 }
 
+
+# --- Alien-Heimatwelten (Welle 1) -----------------------------------------------------------------------------------
+# Keine Herzlosen: dort leben die wilden Aliens der jeweiligen Art (eigener Spawner, Alien-Definition "dna.species").
+ALIEN_WORLDS = {
+    "sonorosia": {
+        "stone": "sonorosia_stone", "top": "sonorosia_sand", "under": "sonorosia_sand", "steep": "sonorosia_stone", "sea": False,
+        "ore": None, "blobs": [("sonorosia_resonite", 8, 22)],
+        "biomes": {
+            "echo_dunes": {"sky": 0x5A3A8A, "fog": 0x8A7AB0, "water": 0x6A5AC8, "particle": ("minecraft:white_ash", 0.004),
+                           "plants": [("sonorosia_reed", 3, 32)], "trees": []},
+            "resonance_fields": {"sky": 0x3A2A6A, "fog": 0x6A5A98, "water": 0x6A5AC8, "particle": ("minecraft:white_ash", 0.008),
+                                 "plants": [("sonorosia_reed", 1, 12)], "trees": [], "top": "sonorosia_stone", "high_top": "sonorosia_resonite"},
+        },
+        "monsters": [],
+    },
+    "petropia": {
+        "stone": "petropia_rock", "top": "petropia_shards", "under": "petropia_shards", "steep": "petropia_rock", "sea": False,
+        "ore": None, "blobs": [("petropia_crystal", 12, 28)],
+        "biomes": {
+            "crystal_plains": {"sky": 0x7AE8C8, "fog": 0xA8F0E0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.0015),
+                               "plants": [("petropia_sprout", 3, 28)], "trees": [], "high_top": "petropia_crystal"},
+            "shard_wastes": {"sky": 0x4AA890, "fog": 0x78C8B0, "water": 0x3AD0B0, "particle": None,
+                             "plants": [("petropia_sprout", 1, 12)], "trees": [], "top": "petropia_rock"},
+        },
+        "monsters": [],
+    },
+    "galvan_prime": {
+        "stone": "galvan_slate", "top": "galvan_moss", "under": "galvan_mud", "steep": "galvan_slate", "sea": True,
+        "ore": None, "blobs": [],
+        "biomes": {
+            "marsh": {"sky": 0xB8D86A, "fog": 0xD8E8A8, "water": 0x4A8A5A, "particle": ("minecraft:spore_blossom_air", 0.004),
+                      "plants": [("galvan_fern", 6, 48)], "trees": []},
+            "uplands": {"sky": 0x9AC85A, "fog": 0xC8E098, "water": 0x4A8A5A, "particle": None,
+                        "plants": [("galvan_fern", 3, 32)], "trees": []},
+        },
+        "monsters": [],
+    },
+    "galvan_b": {
+        "stone": "mechamorph_circuit", "top": "mechamorph_plate", "under": "mechamorph_circuit", "steep": "mechamorph_circuit",
+        "sea": False, "ore": None, "blobs": [],
+        "biomes": {
+            "grid": {"sky": 0x0A1A10, "fog": 0x1A3A22, "water": 0x3AFF5A, "particle": ("minecraft:electric_spark", 0.003),
+                     "plants": [("mechamorph_vine", 3, 28)], "trees": []},
+            "core_rifts": {"sky": 0x06100A, "fog": 0x10281A, "water": 0x3AFF5A, "particle": ("minecraft:electric_spark", 0.008),
+                           "plants": [("mechamorph_vine", 2, 20)], "trees": [], "top": "mechamorph_circuit"},
+        },
+        "monsters": [],
+    },
+    "kylmyys": {
+        "stone": "kylmyys_permafrost", "top": "kylmyys_snow", "under": "kylmyys_snow", "steep": "kylmyys_ice", "sea": False,
+        "ore": None, "blobs": [("kylmyys_ice", 10, 30)],
+        "biomes": {
+            "frost_plains": {"sky": 0x8AB8E8, "fog": 0xC8E0F8, "water": 0x8AC8F0, "particle": ("minecraft:snowflake", 0.01),
+                             "plants": [("kylmyys_frostfern", 2, 24)], "trees": []},
+            "glacier": {"sky": 0x2A4A7A, "fog": 0x6A88B8, "water": 0x8AC8F0, "particle": ("minecraft:snowflake", 0.02),
+                        "plants": [("kylmyys_frostfern", 1, 12)], "trees": [], "high_top": "kylmyys_ice"},
+        },
+        "monsters": [],
+    },
+    "vulpin": {
+        "stone": "vulpin_rubble", "top": "vulpin_ash", "under": "vulpin_ash", "steep": "vulpin_rubble", "sea": False,
+        "ore": None, "blobs": [("vulpin_sludge", 10, 30)],
+        "biomes": {
+            "ash_wastes": {"sky": 0xA8602A, "fog": 0x8A5A30, "water": 0x8AB83A, "particle": ("minecraft:ash", 0.03),
+                           "plants": [("vulpin_thorn", 2, 24)], "trees": []},
+            "sludge_flats": {"sky": 0x7A5A1A, "fog": 0x6A6A22, "water": 0x8AB83A, "particle": ("minecraft:ash", 0.05),
+                             "plants": [("vulpin_thorn", 1, 12)], "trees": [], "top": "vulpin_sludge"},
+        },
+        "monsters": [],
+    },
+    "piscciss": {
+        "stone": "piscciss_reefstone", "top": "piscciss_sand", "under": "piscciss_sand", "steep": "piscciss_reefstone", "sea": True,
+        "sea_level": 78, "ore": None, "blobs": [],
+        "biomes": {
+            "open_sea": {"sky": 0x5AC8D8, "fog": 0x9AE0E8, "water": 0x1A8A9A, "particle": None,
+                         "plants": [("piscciss_grass", 2, 24)], "trees": []},
+            "reef_isles": {"sky": 0x78D8E0, "fog": 0xB0EEF0, "water": 0x2AB0B8, "particle": None,
+                           "plants": [("piscciss_grass", 4, 32)], "trees": [], "high_top": "piscciss_reefstone"},
+        },
+        "monsters": [],
+    },
+}
+PLANETS.update(ALIEN_WORLDS)
+
+# Galaxiekarte (Reiter "Alien-Heimatwelten"): Lage, Farbe, Groesse, Reihenfolge
+ALIEN_CHART = {
+    "sonorosia": ([0.18, 0.30], 0x8A6AE0, 1.0, 100),
+    "petropia": ([0.40, 0.18], 0x3AE0A8, 1.1, 101),
+    "galvan_prime": ([0.62, 0.40], 0x9AC83A, 1.3, 102),
+    "galvan_b": ([0.74, 0.30], 0x2A4A2A, 0.7, 103),
+    "kylmyys": ([0.30, 0.66], 0x9AD0FF, 1.0, 104),
+    "vulpin": ([0.54, 0.74], 0xC0703A, 1.0, 105),
+    "piscciss": ([0.82, 0.70], 0x2AB0C0, 1.2, 106),
+}
+
 TREES = {
     "kerwan_spiral_tree": {
         "log": "kerwan_log", "leaves": "kerwan_leaves", "soil": "kerwan_soil",
@@ -187,7 +282,7 @@ def noise_settings(planet: str, cfg: dict, template: dict) -> dict:
     data["ore_veins_enabled"] = False
     data["aquifers_enabled"] = False
     if cfg["sea"]:
-        data["sea_level"] = 63
+        data["sea_level"] = cfg.get("sea_level", 63)
         data["default_fluid"] = {"Name": "minecraft:water", "Properties": {"level": "0"}}
     else:
         data["sea_level"] = -64
@@ -294,10 +389,11 @@ def outputs() -> dict[Path, dict]:
     for planet, cfg in PLANETS.items():
         files[wg / "noise_settings" / f"{planet}.json"] = noise_settings(planet, cfg, template)
         ores = []
-        ore = f"ore_{cfg['ore']}"
-        files[wg / "configured_feature" / f"{ore}.json"] = ore_feature(cfg["stone"], f"{cfg['ore']}_ore", cfg["ore_size"])
-        files[wg / "placed_feature" / f"{ore}.json"] = ore_placed(ore, cfg["ore_count"], cfg["ore_max"])
-        ores.append(f"{MOD}:{ore}")
+        if cfg["ore"]:
+            ore = f"ore_{cfg['ore']}"
+            files[wg / "configured_feature" / f"{ore}.json"] = ore_feature(cfg["stone"], f"{cfg['ore']}_ore", cfg["ore_size"])
+            files[wg / "placed_feature" / f"{ore}.json"] = ore_placed(ore, cfg["ore_count"], cfg["ore_max"])
+            ores.append(f"{MOD}:{ore}")
         for blob, count, size in cfg["blobs"]:
             fid = f"{planet}_blob_{blob}"
             files[wg / "configured_feature" / f"{fid}.json"] = ore_feature(cfg["stone"], blob, size)
@@ -312,6 +408,10 @@ def outputs() -> dict[Path, dict]:
                 files[wg / "placed_feature" / f"{fid}.json"] = patch_placed(fid, count)
             files[wg / "biome" / planet / f"{name}.json"] = biome(planet, name, cfg, bc, {"ores": ores})
         files[DATA / "dimension" / f"{planet}.json"] = dimension(planet, cfg)
+    for planet, (pos, color, size, order) in ALIEN_CHART.items():
+        files[DATA / MOD / "planet" / f"{planet}.json"] = {"dimension": f"{MOD}:{planet}", "system": "homeworlds", "chart": "aliens",
+                                                            "map": pos, "color": color, "size": size, "order": order,
+                                                            "landing": [0, 0]}
     files.update(spawn_tags())
     return files
 

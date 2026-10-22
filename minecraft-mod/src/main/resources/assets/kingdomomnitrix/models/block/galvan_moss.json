@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/galvan_moss_top",
+    "side": "kingdomomnitrix:block/galvan_moss_side",
+    "bottom": "kingdomomnitrix:block/galvan_moss_bottom"
+  }
+}

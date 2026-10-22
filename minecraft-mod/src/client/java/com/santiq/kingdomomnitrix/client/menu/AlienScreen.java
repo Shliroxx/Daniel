@@ -144,7 +144,15 @@ public class AlienScreen extends Screen {
 			context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna"), x, y, UiTheme.TEXT_SOFT);
 			y += 11;
 			AlienDefinition.DnaInfo dna = alien.dna();
-			for (AlienDefinition.DnaSource source : dna.sources()) {
+			if (dna.species().isPresent()) {
+				// wilde Art auf ihrer Heimatwelt
+				AlienDefinition.Species species = dna.species().get();
+				MutableText line = Text.translatable("screen.kingdomomnitrix.aliens.dna_species", Text.translatable(species.name()),
+						DnaScan.worldName(species.home()));
+				context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, line, width), x + 4, y, UiTheme.TEXT);
+				y += 10;
+			}
+			for (AlienDefinition.DnaSource source : dna.species().isPresent() ? java.util.List.<AlienDefinition.DnaSource>of() : dna.sources()) {
 				Optional<EntityType<?>> type = Registries.ENTITY_TYPE.getOrEmpty(source.entity());
 				Text entity = type.map(EntityType::getName).orElse(Text.literal(source.entity().toString()));
 				Text where = source.dimension().map(DnaScan::worldName).orElse(Text.translatable("screen.kingdomomnitrix.aliens.dna_anywhere"));
@@ -152,7 +160,7 @@ public class AlienScreen extends Screen {
 				context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, line, width), x + 4, y, UiTheme.TEXT);
 				y += 10;
 			}
-			if (dna.sources().isEmpty()) {
+			if (dna.sources().isEmpty() && dna.species().isEmpty()) {
 				context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna_none"), x + 4, y, UiTheme.TEXT_DISABLED);
 			} else {
 				// Proben-Fortschritt

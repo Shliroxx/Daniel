@@ -67,16 +67,23 @@ public final class DnaScan {
 	private static final int SCANNED_LIMIT = 512;
 	private static final DustParticleEffect BEAM = new DustParticleEffect(new Vector3f(0.3f, 1.0f, 0.2f), 0.5f);
 	/** Anzeigenamen der Welten (feste Schluessel, keine zusammengesetzten) */
-	private static final Map<Identifier, String> WORLD_NAMES = Map.of(
-			Identifier.ofVanilla("overworld"), "planet.kingdomomnitrix.earth",
-			Identifier.ofVanilla("the_nether"), "dimension.minecraft.the_nether",
-			Identifier.ofVanilla("the_end"), "dimension.minecraft.the_end",
-			KingdomOmnitrix.id("veldin"), "planet.kingdomomnitrix.veldin",
-			KingdomOmnitrix.id("kerwan"), "planet.kingdomomnitrix.kerwan",
-			KingdomOmnitrix.id("rilgar"), "planet.kingdomomnitrix.rilgar",
-			KingdomOmnitrix.id("novalis"), "planet.kingdomomnitrix.novalis",
-			KingdomOmnitrix.id("torren_iv"), "planet.kingdomomnitrix.torren_iv",
-			KingdomOmnitrix.id("traverse_town"), "planet.kingdomomnitrix.traverse_town");
+	private static final Map<Identifier, String> WORLD_NAMES = Map.ofEntries(
+			Map.entry(KingdomOmnitrix.id("sonorosia"), "planet.kingdomomnitrix.sonorosia"),
+			Map.entry(KingdomOmnitrix.id("petropia"), "planet.kingdomomnitrix.petropia"),
+			Map.entry(KingdomOmnitrix.id("galvan_prime"), "planet.kingdomomnitrix.galvan_prime"),
+			Map.entry(KingdomOmnitrix.id("galvan_b"), "planet.kingdomomnitrix.galvan_b"),
+			Map.entry(KingdomOmnitrix.id("kylmyys"), "planet.kingdomomnitrix.kylmyys"),
+			Map.entry(KingdomOmnitrix.id("vulpin"), "planet.kingdomomnitrix.vulpin"),
+			Map.entry(KingdomOmnitrix.id("piscciss"), "planet.kingdomomnitrix.piscciss"),
+			Map.entry(Identifier.ofVanilla("overworld"), "planet.kingdomomnitrix.earth"),
+			Map.entry(Identifier.ofVanilla("the_nether"), "dimension.minecraft.the_nether"),
+			Map.entry(Identifier.ofVanilla("the_end"), "dimension.minecraft.the_end"),
+			Map.entry(KingdomOmnitrix.id("veldin"), "planet.kingdomomnitrix.veldin"),
+			Map.entry(KingdomOmnitrix.id("kerwan"), "planet.kingdomomnitrix.kerwan"),
+			Map.entry(KingdomOmnitrix.id("rilgar"), "planet.kingdomomnitrix.rilgar"),
+			Map.entry(KingdomOmnitrix.id("novalis"), "planet.kingdomomnitrix.novalis"),
+			Map.entry(KingdomOmnitrix.id("torren_iv"), "planet.kingdomomnitrix.torren_iv"),
+			Map.entry(KingdomOmnitrix.id("traverse_town"), "planet.kingdomomnitrix.traverse_town"));
 
 	/** laufender Scan je Spieler */
 	private static final Map<UUID, Session> SESSIONS = new HashMap<>();
@@ -205,7 +212,8 @@ public final class DnaScan {
 		}
 		Identifier type = Registries.ENTITY_TYPE.getId(target.getType());
 		Identifier world = player.getWorld().getRegistryKey().getValue();
-		Match match = match(registry.get(), HeroDataAccess.get(player), type, world);
+		Identifier wild = target instanceof WildAlienEntity alien ? alien.alien().orElse(null) : null;
+		Match match = match(registry.get(), HeroDataAccess.get(player), type, wild, world);
 		if (match.alien() != null) {
 			return new Verdict(Optional.of(match.alien()), Text.empty());
 		}
@@ -226,7 +234,15 @@ public final class DnaScan {
 	public record Match(Identifier alien, Identifier elsewhere, Identifier elsewhereAlien, boolean known) {
 	}
 
-	public static Match match(Registry<AlienDefinition> registry, HeroData data, Identifier type, Identifier world) {
+	public static Match match(Registry<AlienDefinition> registry, HeroData data, Identifier type, Identifier wild, Identifier world) {
+		if (wild != null) {
+			// wildes Alien: genau seine Art
+			AlienDefinition alien = registry.get(wild);
+			if (alien == null || alien.dna().species().isEmpty()) {
+				return new Match(null, null, null, false);
+			}
+			return data.hasAlien(wild) ? new Match(null, null, null, true) : new Match(wild, null, null, false);
+		}
 		List<Identifier> ids = new ArrayList<>(registry.getIds());
 		ids.sort(Comparator.comparingInt(id -> registry.get(id).sortOrder()));
 		Identifier elsewhere = null;
@@ -235,6 +251,10 @@ public final class DnaScan {
 		for (Identifier id : ids) {
 			AlienDefinition alien = registry.get(id);
 			if (alien == null) {
+				continue;
+			}
+			if (alien.dna().species().isPresent()) {
+				// Arten mit Heimatwelt: nur das wilde Alien selbst liefert DNA (s. o.)
 				continue;
 			}
 			for (AlienDefinition.DnaSource source : alien.dna().sources()) {
