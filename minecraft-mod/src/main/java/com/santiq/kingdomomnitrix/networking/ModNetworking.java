@@ -47,6 +47,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.playC2S().register(ComboAttackPayload.ID, ComboAttackPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(DodgePayload.ID, DodgePayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(GuardPayload.ID, GuardPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DnaScanPayload.ID, DnaScanPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(LockOnPayload.ID, LockOnPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(CombatAnimationPayload.ID, CombatAnimationPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(SelectSpellPayload.ID, SelectSpellPayload.CODEC);
@@ -188,6 +189,8 @@ public final class ModNetworking {
 				CombatManager.dodge(context.player(), payload.directionX(), payload.directionZ()));
 		ServerPlayNetworking.registerGlobalReceiver(GuardPayload.ID, (payload, context) ->
 				CombatManager.setGuard(context.player(), payload.active()));
+		ServerPlayNetworking.registerGlobalReceiver(DnaScanPayload.ID, (payload, context) ->
+				com.santiq.kingdomomnitrix.alien.DnaScan.onScan(context.player(), payload.entityId()));
 		ServerPlayNetworking.registerGlobalReceiver(LockOnPayload.ID, (payload, context) ->
 				CombatManager.setLockTarget(context.player(), payload.entityId()));
 

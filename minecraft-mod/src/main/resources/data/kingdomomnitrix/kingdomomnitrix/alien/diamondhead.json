@@ -214,12 +214,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:guardian",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:allay",
+        "dimension": "kingdomomnitrix:torren_iv"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:diamondhead",
   "prototype": true,
   "failsafe_tags": [

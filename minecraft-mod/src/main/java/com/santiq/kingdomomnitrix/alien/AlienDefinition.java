@@ -33,7 +33,7 @@ import net.minecraft.util.Identifier;
  * @param abilities      Faehigkeiten: Tasten-Pool ({@link AbilitySlot#isKey()}, hoechstens {@link #MAX_POOL}, davon
  *                       {@link #LOADOUT_SIZE} ausgeruestet) und Kombos (hoechstens {@link #MAX_COMBOS}). Der Index in
  *                       dieser Liste ist die feste Nummer der Faehigkeit (Abklingzeit, Pose, Loadout).
- * @param dnaSources     Gegner, die DNA-Proben dieses Aliens fallen lassen koennen
+ * @param dna            Freischaltung: Start-Alien oder DNA-Scan (Lebewesen je Welt, Anzahl Proben)
  * @param model          Modell-ID fuer den Alien-Koerper
  * @param prototype      true = Inhalt noch nicht final (wird im Rad markiert)
  * @param failsafeTags   Schadensarten, gegen die dieses Alien bei der Notfall-Verwandlung gewaehlt wird
@@ -50,7 +50,7 @@ public record AlienDefinition(
 		List<AttributeBonus> attributes,
 		List<TagKey<DamageType>> immunities,
 		List<AbilitySlot> abilities,
-		List<DnaSource> dnaSources,
+		DnaInfo dna,
 		Identifier model,
 		boolean prototype,
 		List<TagKey<DamageType>> failsafeTags,
@@ -82,7 +82,7 @@ public record AlienDefinition(
 			AttributeBonus.CODEC.listOf().optionalFieldOf("attributes", List.of()).forGetter(AlienDefinition::attributes),
 			TagKey.codec(RegistryKeys.DAMAGE_TYPE).listOf().optionalFieldOf("immunities", List.of()).forGetter(AlienDefinition::immunities),
 			AbilitySlot.CODEC.listOf().fieldOf("abilities").forGetter(AlienDefinition::abilities),
-			DnaSource.CODEC.listOf().optionalFieldOf("dna_sources", List.of()).forGetter(AlienDefinition::dnaSources),
+			DnaInfo.CODEC.optionalFieldOf("dna", DnaInfo.NONE).forGetter(AlienDefinition::dna),
 			Identifier.CODEC.fieldOf("model").forGetter(AlienDefinition::model),
 			Codec.BOOL.optionalFieldOf("prototype", false).forGetter(AlienDefinition::prototype),
 			TagKey.codec(RegistryKeys.DAMAGE_TYPE).listOf().optionalFieldOf("failsafe_tags", List.of()).forGetter(AlienDefinition::failsafeTags),
@@ -94,7 +94,6 @@ public record AlienDefinition(
 		attributes = List.copyOf(attributes);
 		immunities = List.copyOf(immunities);
 		abilities = List.copyOf(abilities);
-		dnaSources = List.copyOf(dnaSources);
 		failsafeTags = List.copyOf(failsafeTags);
 	}
 
@@ -190,11 +189,32 @@ public record AlienDefinition(
 		).apply(instance, AttributeBonus::new));
 	}
 
-	/** Gegner-Typ und Wahrscheinlichkeit fuer einen DNA-Drop (nur bei Toetung durch einen Spieler). */
-	public record DnaSource(Identifier entity, float chance) {
+	/**
+	 * Wie das Alien ins Omnitrix kommt: {@code starter} = von Anfang an (Heatblast, Vierarm, XLR8); sonst per DNA-Scan
+	 * — {@code samples} verschiedene Lebewesen aus {@code sources} scannen, jeweils in der genannten Welt.
+	 */
+	public record DnaInfo(boolean starter, int samples, List<DnaSource> sources) {
+		public static final DnaInfo NONE = new DnaInfo(false, 3, List.of());
+		public static final Codec<DnaInfo> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+				Codec.BOOL.optionalFieldOf("starter", false).forGetter(DnaInfo::starter),
+				Codec.intRange(1, 20).optionalFieldOf("samples", 3).forGetter(DnaInfo::samples),
+				DnaSource.CODEC.listOf().optionalFieldOf("sources", List.of()).forGetter(DnaInfo::sources)
+		).apply(instance, DnaInfo::new));
+
+		public DnaInfo {
+			sources = List.copyOf(sources);
+		}
+	}
+
+	/** Scanbares Lebewesen; {@code dimension} leer = in jeder Welt. */
+	public record DnaSource(Identifier entity, java.util.Optional<Identifier> dimension) {
 		public static final Codec<DnaSource> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 				Identifier.CODEC.fieldOf("entity").forGetter(DnaSource::entity),
-				Codec.floatRange(0.0f, 1.0f).fieldOf("chance").forGetter(DnaSource::chance)
+				Identifier.CODEC.optionalFieldOf("dimension").forGetter(DnaSource::dimension)
 		).apply(instance, DnaSource::new));
+
+		public boolean matches(Identifier entityType, Identifier world) {
+			return entity.equals(entityType) && dimension.map(world::equals).orElse(true);
+		}
 	}
 }

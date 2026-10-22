@@ -233,16 +233,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:wolf",
-      "chance": 0.35
-    },
-    {
-      "entity": "minecraft:fox",
-      "chance": 0.25
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:wolf",
+        "dimension": "minecraft:overworld"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:wildmutt",
   "failsafe_tags": [
     "#minecraft:is_fall"

@@ -6,7 +6,6 @@ import com.santiq.kingdomomnitrix.party.PartyCommand;
 
 import com.santiq.kingdomomnitrix.ability.AbilityRegistry;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
-import com.santiq.kingdomomnitrix.alien.DnaDrops;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.combat.CombatManager;
 import com.santiq.kingdomomnitrix.command.HeroCommand;
@@ -121,7 +120,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.ability.ComboManager.register();
 		com.santiq.kingdomomnitrix.ability.PowerTasks.register();
 		com.santiq.kingdomomnitrix.ability.passive.PassiveHooks.register();
-		DnaDrops.register();
+		com.santiq.kingdomomnitrix.alien.DnaScan.register();
 		CombatManager.register();
 		com.santiq.kingdomomnitrix.combat.CombatFeedback.register();
 		RiftSpawner.register();

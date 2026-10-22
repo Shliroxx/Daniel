@@ -223,16 +223,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:iron_golem",
-      "chance": 0.2
-    },
-    {
-      "entity": "minecraft:creeper",
-      "chance": 0.05
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "dimension": "kingdomomnitrix:kerwan"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:upgrade",
   "failsafe_tags": [
     "#minecraft:is_lightning",

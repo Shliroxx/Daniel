@@ -224,16 +224,19 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:spider",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:cave_spider",
-      "chance": 0.25
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:spider",
+        "dimension": "minecraft:overworld"
+      },
+      {
+        "entity": "minecraft:cave_spider",
+        "dimension": "minecraft:overworld"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:spidermonkey",
   "failsafe_tags": [
     "#minecraft:is_fall"

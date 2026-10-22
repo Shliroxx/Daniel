@@ -53,6 +53,8 @@ PLANETS = {
                         "plants": [("veldin_scrub", 1, 12)], "trees": [], "top": "veldin_sandstone"},
         },
         "monsters": [("shadow", 60, 1, 3), ("soldier", 25, 1, 2)],
+        # DNA-Quellen (Scan): Cannonbolt, Humungousaur
+        "life": {"creature": [("minecraft:armadillo", 12, 2, 3), ("minecraft:camel", 6, 1, 2)]},
     },
     "kerwan": {
         "stone": "kerwan_slate", "top": "kerwan_turf", "under": "kerwan_soil", "steep": "kerwan_slate", "sea": False,
@@ -64,6 +66,7 @@ PLANETS = {
                        "plants": [("kerwan_reed", 2, 24)], "trees": [("kerwan_spiral_tree", 4)]},
         },
         "monsters": [("soldier", 40, 1, 2), ("air_soldier", 25, 1, 2)],
+        # DNA-Quelle (Scan): Upgrade — die gepanzerten Soldier-Herzlosen (oben unter "monsters")
     },
     "novalis": {
         "stone": "novalis_limestone", "top": "novalis_moss", "under": "novalis_loam", "steep": "novalis_limestone", "sea": False,
@@ -75,6 +78,9 @@ PLANETS = {
                       "plants": [("novalis_bloom", 3, 32)], "trees": [("novalis_bell_tree", 4)]},
         },
         "monsters": [("shadow", 50, 1, 3)],
+        # DNA-Quellen (Scan): Rath, Goop, Swampfire
+        "life": {"creature": [("minecraft:fox", 10, 2, 3)], "monster": [("minecraft:slime", 12, 1, 2), ("minecraft:bogged", 12, 1, 2)]},
+        "slime": True,
     },
     "rilgar": {
         "stone": "rilgar_coralstone", "top": "rilgar_sand", "under": "rilgar_sand", "steep": "rilgar_coralstone", "sea": True,
@@ -86,6 +92,9 @@ PLANETS = {
                           "plants": [("rilgar_seagrass", 4, 32)], "trees": [("rilgar_mangrove", 4)]},
         },
         "monsters": [("shadow", 30, 1, 2), ("darkball", 10, 1, 1)],
+        # DNA-Quellen (Scan): Ripjaws, Jetray, Brainstorm
+        "life": {"water_creature": [("minecraft:dolphin", 4, 1, 2)],
+                 "water_ambient": [("minecraft:cod", 15, 3, 5), ("minecraft:tropical_fish", 20, 3, 6)]},
     },
     "torren_iv": {
         "stone": "torren_basalt", "top": "torren_dust", "under": "torren_dust", "steep": "torren_basalt", "sea": False,
@@ -97,6 +106,9 @@ PLANETS = {
                        "plants": [("torren_thorn", 1, 10)], "trees": [], "top": "torren_crust"},
         },
         "monsters": [("large_body", 20, 1, 1), ("darkball", 30, 1, 2), ("shadow", 40, 2, 3)],
+        # DNA-Quellen (Scan): Big Chill, Diamondhead, Way Big
+        "life": {"creature": [("minecraft:polar_bear", 5, 1, 2), ("minecraft:allay", 6, 1, 2)],
+                 "monster": [("minecraft:stray", 15, 1, 2), ("minecraft:ravager", 3, 1, 1)]},
     },
 }
 
@@ -253,9 +265,13 @@ def biome(planet: str, name: str, cfg: dict, bc: dict, feature_ids: dict) -> dic
     features[6] = feature_ids["ores"]
     features[9] = [f"{MOD}:{planet}_{t}" for t, _ in bc["trees"]] + [f"{MOD}:{planet}_{name}_{p}" for p, _, _ in bc["plants"]]
     monsters = [{"type": f"{MOD}:{mob}", "weight": w, "minCount": lo, "maxCount": hi} for mob, w, lo, hi in cfg["monsters"]]
+    spawners = {"monster": monsters, "creature": [], "ambient": [], "water_creature": [], "water_ambient": [],
+                "underground_water_creature": [], "axolotls": [], "misc": []}
+    # Lebewesen, deren DNA man auf diesem Planeten scannen kann (Alien-Definitionen: "dna")
+    for group, mobs in cfg.get("life", {}).items():
+        spawners[group] += [{"type": mob, "weight": w, "minCount": lo, "maxCount": hi} for mob, w, lo, hi in mobs]
     return {"has_precipitation": False, "temperature": 0.8, "downfall": 0.1, "effects": effects,
-            "spawners": {"monster": monsters, "creature": [], "ambient": [], "water_creature": [], "water_ambient": [],
-                         "underground_water_creature": [], "axolotls": [], "misc": []},
+            "spawners": spawners,
             "spawn_costs": {}, "carvers": {"air": []}, "features": features}
 
 
@@ -296,7 +312,26 @@ def outputs() -> dict[Path, dict]:
                 files[wg / "placed_feature" / f"{fid}.json"] = patch_placed(fid, count)
             files[wg / "biome" / planet / f"{name}.json"] = biome(planet, name, cfg, bc, {"ores": ores})
         files[DATA / "dimension" / f"{planet}.json"] = dimension(planet, cfg)
+    files.update(spawn_tags())
     return files
+
+
+def spawn_tags() -> dict[Path, dict]:
+    """Planetenboeden als Spawnboden fuer die DNA-Lebewesen (Vanilla prueft den Block unter dem Tier)."""
+    mc = ROOT / "src" / "main" / "resources" / "data" / "minecraft" / "tags"
+    ground = [f"{MOD}:{cfg[k]}" for cfg in PLANETS.values() for k in ("top", "steep")]
+    ground += [f"{MOD}:{bc[k]}" for cfg in PLANETS.values() for bc in cfg["biomes"].values() for k in ("top", "high_top") if k in bc]
+    ground = sorted(set(ground))
+    sand = [f"{MOD}:{PLANETS['veldin'][k]}" for k in ("top", "steep")]
+    slime_biomes = sorted(f"{MOD}:{planet}/{name}" for planet, cfg in PLANETS.items() if cfg.get("slime") for name in cfg["biomes"])
+    return {
+        mc / "block" / "animals_spawnable_on.json": {"replace": False, "values": ground},
+        mc / "block" / "armadillo_spawnable_on.json": {"replace": False, "values": sand},
+        mc / "block" / "foxes_spawnable_on.json": {"replace": False, "values": [f"{MOD}:{PLANETS['novalis']['top']}"]},
+        mc / "block" / "polar_bears_spawnable_on_alternate.json": {"replace": False, "values": sorted(
+            {f"{MOD}:{PLANETS['torren_iv']['top']}", f"{MOD}:torren_crust"})},
+        mc / "worldgen" / "biome" / "allows_surface_slime_spawns.json": {"replace": False, "values": slime_biomes},
+    }
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -23,9 +23,28 @@
         "weight": 50,
         "minCount": 1,
         "maxCount": 3
+      },
+      {
+        "type": "minecraft:slime",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "minecraft:bogged",
+        "weight": 12,
+        "minCount": 1,
+        "maxCount": 2
       }
     ],
-    "creature": [],
+    "creature": [
+      {
+        "type": "minecraft:fox",
+        "weight": 10,
+        "minCount": 2,
+        "maxCount": 3
+      }
+    ],
     "ambient": [],
     "water_creature": [],
     "water_ambient": [],

@@ -235,20 +235,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:guardian",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:drowned",
-      "chance": 0.08
-    },
-    {
-      "entity": "minecraft:cod",
-      "chance": 0.15
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:cod",
+        "dimension": "kingdomomnitrix:rilgar"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:ripjaws",
   "failsafe_tags": [
     "#minecraft:is_drowning"

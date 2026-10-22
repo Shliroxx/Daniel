@@ -227,16 +227,19 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:creeper",
-      "chance": 0.15
-    },
-    {
-      "entity": "minecraft:wither_skeleton",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:magma_cube",
+        "dimension": "minecraft:the_nether"
+      },
+      {
+        "entity": "minecraft:wither_skeleton",
+        "dimension": "minecraft:the_nether"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:atomix",
   "failsafe_tags": [
     "#minecraft:is_explosion"

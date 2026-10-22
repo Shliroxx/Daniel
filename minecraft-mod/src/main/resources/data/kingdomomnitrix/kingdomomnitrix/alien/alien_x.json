@@ -222,16 +222,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:ender_dragon",
-      "chance": 1.0
-    },
-    {
-      "entity": "minecraft:warden",
-      "chance": 0.2
-    }
-  ],
+  "dna": {
+    "samples": 1,
+    "sources": [
+      {
+        "entity": "minecraft:ender_dragon",
+        "dimension": "minecraft:the_end"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:alien_x",
   "failsafe_tags": [],
   "failsafe_priority": 5,

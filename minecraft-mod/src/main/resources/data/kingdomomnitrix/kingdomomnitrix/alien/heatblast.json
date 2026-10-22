@@ -240,16 +240,9 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:blaze",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:magma_cube",
-      "chance": 0.08
-    }
-  ],
+  "dna": {
+    "starter": true
+  },
   "model": "kingdomomnitrix:heatblast",
   "failsafe_tags": [
     "#minecraft:is_fire"

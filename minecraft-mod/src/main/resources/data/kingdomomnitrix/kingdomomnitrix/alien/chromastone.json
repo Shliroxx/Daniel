@@ -229,20 +229,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:allay",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:shulker",
-      "chance": 0.2
-    },
-    {
-      "entity": "minecraft:guardian",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:shulker",
+        "dimension": "minecraft:the_end"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:chromastone",
   "failsafe_tags": [
     "#minecraft:is_explosion",

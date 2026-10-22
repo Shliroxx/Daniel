@@ -102,7 +102,13 @@ Rot, Gelb, Lila, Weiß, Orange, Pink, Türkis). Fertiges Omnitrix + farbiger Ker
 | Klempner-Rüstung | knapp unter Diamant; Helm: kein Corrodium-Gift; volles Set: giftimmun | Panzerplatten |
 
 ### Grundlagen
-- **DNA-Proben** schalten Aliens frei (Gegner lassen sie fallen; Rechtsklick speichert). Hologramm „DNA ERFASST“.
+- **DNA-Scan:** Mit dem Omnitrix sind **Heatblast, Vierarm und XLR8** sofort gespeichert. Alle anderen Aliens muss man
+  scannen: **C halten** und ein Lebewesen anvisieren (bis 16 Blöcke, freie Sicht, nicht verwandelt) — grüner Scanstrahl,
+  Abtast-Ring am Ziel, Fortschrittsring am Fadenkreuz. Nach 2 s ist eine Probe genommen; jedes Einzelwesen zählt nur
+  einmal, meist braucht ein Alien **3 Proben**. Die meisten Arten liefern stabile DNA **nur auf ihrer Heimatwelt** — wer
+  z. B. auf der Erde ein Kamel scannt, bekommt „Humungousaur-DNA instabil – stabile Proben auf Veldin“. Die Alien-Seite
+  im Heldenmenü (K) zeigt für jedes fehlende Alien Lebewesen, Welt und Proben. **DNA-Proben** aus Ereignissen, Rissen
+  und Quests zählen als je eine Probe; die letzte muss man selbst auf der Herkunftswelt scannen. Hologramm „DNA ERFASST“.
 - **Alien-Rad (G):** 3D-Hologramm-Rad, Mausrad/Ziehen dreht, Klick bestätigt, 1–9 Direktwahl, Mitte = zurück.
 - **Schnellwahl-Kreis (X halten)**, **Favoriten-Sets** (F/Tab im Rad), **Schnellwechsel** zwischen Aliens.
 - **Smart-Scan + Smart Choice (N):** das Gerät liest die Umgebung (Lava, Wasser, gepanzerte Gegner, Enge, Fernkampf,
@@ -113,25 +119,31 @@ Rot, Gelb, Lila, Weiß, Orange, Pink, Türkis). Fertiges Omnitrix + farbiger Ker
 
 ### Die 12 Aliens
 
-| Alien | 1 · 2 · 3 (R/V/B) | 4 SPECIAL ★3 · 5 UTILITY ★5 · 6 ULTIMATE ★8 (Schleichen + R/V/B) | DNA von |
+| Alien | 1 · 2 · 3 (R/V/B) | 4 SPECIAL ★3 · 5 UTILITY ★5 · 6 ULTIMATE ★8 (Schleichen + R/V/B) | DNA |
 |---|---|---|---|
-| **Heatblast** | Feuerstoß · Feuerexplosion · Flammenschub | Infernowelle · Flammenschild · Supernova | Lohe, Magmawürfel |
-| **XLR8** | Sturmangriff · Ausweichen · Schlaghagel | Zyklonlauf · Zeitsprung · Lichtgeschwindigkeits-Hagel | Shadow, Ozelot |
-| **Vierarm** | Bodenschlag · Werfen · Riesensprung | Donnerklatschen · Eisenhaut · Erdbeben | Eisengolem, Verwüster |
-| **Diamondhead** | Kristallsalve · Kristallklinge · Kristallsprung | Stachelausbruch · Kristallpanzer · Kristallsturm | Wächter |
-| **Grey Matter** | Analyse · Schwachstelle · Huschen | Technikfalle · Notreparatur · Superhirn | Silberfischchen |
-| **Wildmutt** | Ansprung · Stachelsalve · Wildes Gebrüll | Wildes Zerfleischen · Witterung · Urwut | Wolf, Fuchs |
-| **Stinkfly** | Schleimspucke · Stinkwolke · Flügelstoß | Schleimbombe · Aufwind · Giftsturm | Biene, Phantom |
-| **Ripjaws** | Kieferbiss · Flutstoß · Strudel | Schwanzhieb · Hydroheilung · Flutwelle | Wächter, Ertrunkener, Kabeljau |
-| **Upgrade** | Optikstrahl · Flüssige Form · Technik-Upgrade | Keulenfäuste · Systemübernahme · Plasmakanone | Eisengolem, Creeper |
-| **Ghostfreak** | Tentakelhieb · Phasenverschiebung · Spuk | Besessenheit · Schattenschritt · Albtraum | Vex, Phantom, Ghast |
-| **Cannonbolt** | Kanonenkugel · Panzerkugel · Kugelsprung | Abpraller · Rollmodus · Kanonade | Gürteltier, Schildkröte |
-| **Jetray** | Neuroschock · Schwanzblitz · Düsenstoß | Tiefflug · Windschatten · Neuroschock-Sturm | Delfin, Papagei |
+| **Heatblast** | Feuerstoß · Feuerexplosion · Flammenschub | Infernowelle · Flammenschild · Supernova | Start-Alien |
+| **XLR8** | Sturmangriff · Ausweichen · Schlaghagel | Zyklonlauf · Zeitsprung · Lichtgeschwindigkeits-Hagel | Start-Alien |
+| **Vierarm** | Bodenschlag · Werfen · Riesensprung | Donnerklatschen · Eisenhaut · Erdbeben | Start-Alien |
+| **Diamondhead** | Kristallsalve · Kristallklinge · Kristallsprung | Stachelausbruch · Kristallpanzer · Kristallsturm | Hellfee (Torren IV) |
+| **Grey Matter** | Analyse · Schwachstelle · Huschen | Technikfalle · Notreparatur · Superhirn | Frosch (Erde) |
+| **Wildmutt** | Ansprung · Stachelsalve · Wildes Gebrüll | Wildes Zerfleischen · Witterung · Urwut | Wolf (Erde) |
+| **Stinkfly** | Schleimspucke · Stinkwolke · Flügelstoß | Schleimbombe · Aufwind · Giftsturm | Biene (Erde) |
+| **Ripjaws** | Kieferbiss · Flutstoß · Strudel | Schwanzhieb · Hydroheilung · Flutwelle | Kabeljau (Rilgar) |
+| **Upgrade** | Optikstrahl · Flüssige Form · Technik-Upgrade | Keulenfäuste · Systemübernahme · Plasmakanone | Soldier-Herzloser (Kerwan) |
+| **Ghostfreak** | Tentakelhieb · Phasenverschiebung · Spuk | Besessenheit · Schattenschritt · Albtraum | Ghast (Nether) |
+| **Cannonbolt** | Kanonenkugel · Panzerkugel · Kugelsprung | Abpraller · Rollmodus · Kanonade | Gürteltier (Veldin) |
+| **Jetray** | Neuroschock · Schwanzblitz · Düsenstoß | Tiefflug · Windschatten · Neuroschock-Sturm | Delfin (Rilgar) |
 
 Eigenschaften (Auswahl): Heatblast immun gegen Feuer/Lava · XLR8 schnell, kein Fallschaden · Vierarm groß und stark ·
 Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser, trocknet an Land aus · Ghostfreak halbe
 Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
+
+Weitere DNA-Quellen: Spidermonkey Spinne/Höhlenspinne (Erde) · Echo Echo Fledermaus (Traverse Town) · Atomix
+Magmawürfel/Witherskelett (Nether) · Chromastone Shulker (Ende) · Alien X Enderdrache (Ende, 1 Probe) · Humungousaur Kamel
+(Veldin) · Brainstorm Tropenfisch (Rilgar) · Rath Fuchs, Goop Schleim, Swampfire Sumpfskelett (Novalis) · Big Chill
+Eiswanderer/Eisbär, Way Big Verwüster (Torren IV, 2 Proben). Die Planeten haben dafür eigene Tierwelt (Spawns und
+Spawnböden in `tools/generate_planet_worlds.py`).
 
 ### Eigene Alien-Systeme (über Alien Evolution hinaus)
 

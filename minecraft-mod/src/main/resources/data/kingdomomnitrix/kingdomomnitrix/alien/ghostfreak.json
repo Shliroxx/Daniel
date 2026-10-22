@@ -228,20 +228,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:vex",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:phantom",
-      "chance": 0.1
-    },
-    {
-      "entity": "minecraft:ghast",
-      "chance": 0.25
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:ghast",
+        "dimension": "minecraft:the_nether"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:ghostfreak",
   "failsafe_tags": [
     "#minecraft:is_projectile"

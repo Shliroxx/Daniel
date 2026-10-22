@@ -220,16 +220,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:tropical_fish",
-      "chance": 0.2
-    },
-    {
-      "entity": "minecraft:guardian",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:tropical_fish",
+        "dimension": "kingdomomnitrix:rilgar"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:brainstorm",
   "failsafe_tags": [
     "#minecraft:is_lightning"

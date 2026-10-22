@@ -41,9 +41,34 @@
         "weight": 40,
         "minCount": 2,
         "maxCount": 3
+      },
+      {
+        "type": "minecraft:stray",
+        "weight": 15,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "minecraft:ravager",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 1
       }
     ],
-    "creature": [],
+    "creature": [
+      {
+        "type": "minecraft:polar_bear",
+        "weight": 5,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "minecraft:allay",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
     "ambient": [],
     "water_creature": [],
     "water_ambient": [],

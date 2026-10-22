@@ -237,20 +237,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:bogged",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:slime",
-      "chance": 0.15
-    },
-    {
-      "entity": "minecraft:blaze",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:bogged",
+        "dimension": "kingdomomnitrix:novalis"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:swampfire",
   "failsafe_tags": [
     "#minecraft:is_fire"

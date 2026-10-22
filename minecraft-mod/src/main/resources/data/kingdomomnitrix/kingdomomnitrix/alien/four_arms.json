@@ -254,16 +254,9 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:iron_golem",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:ravager",
-      "chance": 0.5
-    }
-  ],
+  "dna": {
+    "starter": true
+  },
   "model": "kingdomomnitrix:four_arms",
   "failsafe_tags": [],
   "failsafe_priority": 5,

@@ -249,16 +249,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:dolphin",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:parrot",
-      "chance": 0.2
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:dolphin",
+        "dimension": "kingdomomnitrix:rilgar"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:jetray",
   "failsafe_tags": [
     "#minecraft:is_fall",

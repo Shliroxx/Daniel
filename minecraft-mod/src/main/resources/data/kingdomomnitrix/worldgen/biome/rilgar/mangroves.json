@@ -33,8 +33,28 @@
     ],
     "creature": [],
     "ambient": [],
-    "water_creature": [],
-    "water_ambient": [],
+    "water_creature": [
+      {
+        "type": "minecraft:dolphin",
+        "weight": 4,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ],
+    "water_ambient": [
+      {
+        "type": "minecraft:cod",
+        "weight": 15,
+        "minCount": 3,
+        "maxCount": 5
+      },
+      {
+        "type": "minecraft:tropical_fish",
+        "weight": 20,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ],
     "underground_water_creature": [],
     "axolotls": [],
     "misc": []

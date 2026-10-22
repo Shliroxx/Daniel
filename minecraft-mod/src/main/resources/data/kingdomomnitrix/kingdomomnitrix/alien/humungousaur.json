@@ -234,20 +234,15 @@
       "unlock_level": 6
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:ravager",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:sniffer",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:iron_golem",
-      "chance": 0.05
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:camel",
+        "dimension": "kingdomomnitrix:veldin"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:humungousaur",
   "failsafe_tags": [
     "#minecraft:is_explosion"

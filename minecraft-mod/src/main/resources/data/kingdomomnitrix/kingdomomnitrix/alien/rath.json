@@ -224,16 +224,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:ravager",
-      "chance": 0.15
-    },
-    {
-      "entity": "minecraft:fox",
-      "chance": 0.25
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:fox",
+        "dimension": "kingdomomnitrix:novalis"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:rath",
   "failsafe_tags": [
     "#minecraft:is_projectile"

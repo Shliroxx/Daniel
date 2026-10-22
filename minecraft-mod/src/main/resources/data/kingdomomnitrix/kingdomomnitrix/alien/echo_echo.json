@@ -223,20 +223,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:warden",
-      "chance": 0.5
-    },
-    {
-      "entity": "minecraft:allay",
-      "chance": 0.1
-    },
-    {
-      "entity": "minecraft:bat",
-      "chance": 0.15
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:bat",
+        "dimension": "kingdomomnitrix:traverse_town"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:echo_echo",
   "failsafe_tags": [
     "#minecraft:is_fall"

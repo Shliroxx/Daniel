@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.client.menu;
 
 import com.santiq.kingdomomnitrix.alien.AbilitySlot;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
+import com.santiq.kingdomomnitrix.alien.DnaScan;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.client.ui.Icons;
@@ -142,15 +143,28 @@ public class AlienScreen extends Screen {
 		if (!unlocked) {
 			context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna"), x, y, UiTheme.TEXT_SOFT);
 			y += 11;
-			for (AlienDefinition.DnaSource source : alien.dnaSources()) {
+			AlienDefinition.DnaInfo dna = alien.dna();
+			for (AlienDefinition.DnaSource source : dna.sources()) {
 				Optional<EntityType<?>> type = Registries.ENTITY_TYPE.getOrEmpty(source.entity());
 				Text entity = type.map(EntityType::getName).orElse(Text.literal(source.entity().toString()));
-				MutableText line = Text.literal("• ").append(entity).append(Text.literal(String.format("  %.0f %%", source.chance() * 100)));
+				Text where = source.dimension().map(DnaScan::worldName).orElse(Text.translatable("screen.kingdomomnitrix.aliens.dna_anywhere"));
+				MutableText line = Text.translatable("screen.kingdomomnitrix.aliens.dna_source", entity, where);
 				context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, line, width), x + 4, y, UiTheme.TEXT);
 				y += 10;
 			}
-			if (alien.dnaSources().isEmpty()) {
+			if (dna.sources().isEmpty()) {
 				context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna_none"), x + 4, y, UiTheme.TEXT_DISABLED);
+			} else {
+				// Proben-Fortschritt
+				y += 3;
+				int have = DnaScan.progress(player, id);
+				context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna_progress", have, dna.samples()),
+						x, y, 0xFF7DFF5A);
+				y += 10;
+				UiDraw.bar(context, x, y, width, 3, have / (float) dna.samples(), 0xFF55FF3A);
+				y += 8;
+				context.drawTextWithShadow(textRenderer, UiDraw.trim(textRenderer, Text.translatable("screen.kingdomomnitrix.aliens.dna_how"), width),
+						x, y, UiTheme.TEXT_DISABLED);
 			}
 			return;
 		}

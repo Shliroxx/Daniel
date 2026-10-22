@@ -226,16 +226,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:elder_guardian",
-      "chance": 0.5
-    },
-    {
-      "entity": "minecraft:iron_golem",
-      "chance": 0.05
-    }
-  ],
+  "dna": {
+    "samples": 2,
+    "sources": [
+      {
+        "entity": "minecraft:ravager",
+        "dimension": "kingdomomnitrix:torren_iv"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:way_big",
   "failsafe_tags": [],
   "failsafe_priority": 4,

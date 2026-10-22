@@ -26,6 +26,8 @@ public final class ModKeyBindings {
 	public static final KeyBinding QUICK_SELECT = register("key.kingdomomnitrix.quick_select", GLFW.GLFW_KEY_X);
 	/** Smart-Wahl: verwandelt direkt in das Alien, das der Smart-Scan empfiehlt */
 	public static final KeyBinding SMART_SELECT = register("key.kingdomomnitrix.smart_select", GLFW.GLFW_KEY_N);
+	/** DNA-Scan: halten und ein Lebewesen anvisieren */
+	public static final KeyBinding DNA_SCAN = register("key.kingdomomnitrix.dna_scan", GLFW.GLFW_KEY_C);
 	/**
 	 * Faehigkeiten 1–3; mit gehaltener Schleichen-Taste (Standard Shift) die Faehigkeiten 4–6. Eine eigene Belegung
 	 * auf Shift ginge nicht: Minecraft leitet eine Taste nur an eine Belegung weiter, Schleichen fiele weg.

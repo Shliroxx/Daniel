@@ -223,16 +223,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:slime",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:magma_cube",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:slime",
+        "dimension": "kingdomomnitrix:novalis"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:goop",
   "failsafe_tags": [
     "#minecraft:is_projectile"

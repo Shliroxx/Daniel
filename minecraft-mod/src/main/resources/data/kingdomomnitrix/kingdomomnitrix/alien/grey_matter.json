@@ -212,12 +212,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:silverfish",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:frog",
+        "dimension": "minecraft:overworld"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:grey_matter",
   "prototype": true,
   "failsafe_tags": [

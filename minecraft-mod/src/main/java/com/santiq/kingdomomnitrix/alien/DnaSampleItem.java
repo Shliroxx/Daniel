@@ -8,10 +8,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -20,7 +17,8 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
 /**
- * DNA-Probe eines Aliens. Rechtsklick mit einem Omnitrix im Inventar schaltet das Alien dauerhaft frei.
+ * DNA-Probe eines Aliens (Belohnung aus Ereignissen, Rissen, Dungeon). Rechtsklick mit einem Omnitrix im Inventar zaehlt
+ * als eine Scan-Probe ({@link DnaScan#addSample}); die letzte Probe muss auf der Herkunftswelt gescannt werden.
  * Welches Alien, steht in der Item-Komponente {@link ModComponents#DNA_ALIEN}.
  */
 public class DnaSampleItem extends Item {
@@ -63,15 +61,18 @@ public class DnaSampleItem extends Item {
 					.formatted(Formatting.GRAY), true);
 			return TypedActionResult.fail(stack);
 		}
-		HeroDataAccess.update(player, data -> data.unlockAlien(alienId));
-		TransformationManager.select(player, alienId);
-		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.onUnlock(player);
+		// Eine Probe zaehlt wie ein Scan; die letzte muss aber auf der Herkunftswelt gescannt werden (Reisen lohnt sich)
+		AlienDefinition alien = AlienRegistry.get(world.getRegistryManager(), alienId).orElseThrow();
+		if (!alien.dna().starter() && !alien.dna().sources().isEmpty() && DnaScan.progress(player, alienId) + 1 >= alien.dna().samples()) {
+			AlienDefinition.DnaSource source = alien.dna().sources().get(0);
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.dna_scan.final", TransformationManager.alienName(alienId),
+					source.dimension().map(DnaScan::worldName).orElse(Text.translatable("planet.kingdomomnitrix.earth"))).formatted(Formatting.YELLOW), true);
+			return TypedActionResult.fail(stack);
+		}
+		if (DnaScan.addSample(player, alienId)) {
+			TransformationManager.select(player, alienId);
+		}
 		stack.decrementUnlessCreative(1, player);
-		player.getServerWorld().spawnParticles(ParticleTypes.HAPPY_VILLAGER, player.getX(), player.getBodyY(0.5), player.getZ(),
-				30, 0.5, 0.7, 0.5, 0.1);
-		world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.8f, 1.4f);
-		player.sendMessage(Text.translatable("message.kingdomomnitrix.dna_unlocked", TransformationManager.alienName(alienId))
-				.formatted(Formatting.GREEN), false);
 		return TypedActionResult.success(stack, false);
 	}
 

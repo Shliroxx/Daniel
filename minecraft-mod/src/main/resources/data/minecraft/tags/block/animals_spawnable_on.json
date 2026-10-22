@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:kerwan_slate",
+    "kingdomomnitrix:kerwan_turf",
+    "kingdomomnitrix:novalis_limestone",
+    "kingdomomnitrix:novalis_moss",
+    "kingdomomnitrix:rilgar_coralstone",
+    "kingdomomnitrix:rilgar_sand",
+    "kingdomomnitrix:torren_basalt",
+    "kingdomomnitrix:torren_crust",
+    "kingdomomnitrix:torren_dust",
+    "kingdomomnitrix:veldin_sand",
+    "kingdomomnitrix:veldin_sandstone"
+  ]
+}

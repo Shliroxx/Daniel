@@ -261,16 +261,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:armadillo",
-      "chance": 0.35
-    },
-    {
-      "entity": "minecraft:turtle",
-      "chance": 0.15
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:armadillo",
+        "dimension": "kingdomomnitrix:veldin"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:cannonbolt",
   "failsafe_tags": [
     "#minecraft:is_explosion"

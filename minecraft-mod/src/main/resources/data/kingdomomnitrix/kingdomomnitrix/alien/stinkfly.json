@@ -218,16 +218,15 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:bee",
-      "chance": 0.3
-    },
-    {
-      "entity": "minecraft:phantom",
-      "chance": 0.2
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:bee",
+        "dimension": "minecraft:overworld"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:stinkfly",
   "failsafe_tags": [
     "#minecraft:is_fall"

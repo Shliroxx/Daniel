@@ -242,20 +242,19 @@
       "trigger": "finisher"
     }
   ],
-  "dna_sources": [
-    {
-      "entity": "minecraft:stray",
-      "chance": 0.2
-    },
-    {
-      "entity": "minecraft:polar_bear",
-      "chance": 0.25
-    },
-    {
-      "entity": "minecraft:phantom",
-      "chance": 0.1
-    }
-  ],
+  "dna": {
+    "samples": 3,
+    "sources": [
+      {
+        "entity": "minecraft:stray",
+        "dimension": "kingdomomnitrix:torren_iv"
+      },
+      {
+        "entity": "minecraft:polar_bear",
+        "dimension": "kingdomomnitrix:torren_iv"
+      }
+    ]
+  },
   "model": "kingdomomnitrix:big_chill",
   "failsafe_tags": [
     "#minecraft:is_fire",
