@@ -8,6 +8,8 @@ Das AE-Jar liegt NICHT im Repo; das Werkzeug erzeugt daraus:
   arrows/a_*, os_body …) — unveraendert, GeckoLib backt sie automatisch.
 * textures/omnitrix/prototype_omnitrix.png: Grundtextur wie AEs Render-Layer im Auslieferungszustand
   (prototype.png + Teil-Ebenen mit Wert -1, Kern-Maske 0) — schwarz/grau/weiss wie in der Originalserie.
+* textures/entity/containment_pod/ae_pod_*.png: Texturen des Galvan-Pods (front, back, sides, top, bottom) fuer die
+  Containment-Kapsel im Klempner-Wrack (verbeultes Metall, Rissmuster).
 * textures/omnitrix/prototype_omnitrix_glow.png: Leuchtschicht (prototype_glow_default + Kern-Maske) als Graustufe
   (Helligkeit = Gruenkanal); unser Renderer faerbt sie im Geraete-Zustand und im Farbmodul — wie AEs drei
   Farbfilter (#b3ff40, #a7f72e, #8ed721), nur stufenlos.
@@ -41,6 +43,7 @@ OUTPUTS = (
     ASSETS / "geo/omnitrix/prototype_omnitrix_slim.geo.json",
     ASSETS / "textures/omnitrix/prototype_omnitrix.png",
     ASSETS / "textures/omnitrix/prototype_omnitrix_glow.png",
+    *(ASSETS / f"textures/entity/containment_pod/ae_pod_{face}.png" for face in ("front", "back", "sides", "top", "bottom")),
 )
 LOG = logging.getLogger("import_omnitrix_model")
 
@@ -91,6 +94,8 @@ def build(jar_path: Path) -> dict[Path, bytes]:
         files[ASSETS / "textures/omnitrix/prototype_omnitrix.png"] = png(alpha_mask(base, mask))
         glow = alpha_mask(read_image(jar, PROTO + "prototype_glow_default.png"), mask)
         files[ASSETS / "textures/omnitrix/prototype_omnitrix_glow.png"] = png(grayscale_glow(glow))
+        for face in ("front", "back", "sides", "top", "bottom"):
+            files[ASSETS / f"textures/entity/containment_pod/ae_pod_{face}.png"] = png(read_image(jar, f"{AE}textures/block/pod_{face}.png"))
         return files
 
 

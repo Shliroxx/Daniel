@@ -1,20 +1,18 @@
 package com.santiq.kingdomomnitrix.world.plumber;
 
 import com.mojang.serialization.MapCodec;
+import com.santiq.kingdomomnitrix.registry.ModBlockEntities;
 import com.santiq.kingdomomnitrix.world.content.Ben10Items;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.ShapeContext;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
@@ -26,8 +24,9 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Containment-Kapsel im Klempner-Wrack: gepanzerter Kasten mit dem kaputten Omnitrix (Huelle) bzw. der Konsole.
- * Rechtsklick klappt den Deckel auf — jeder Spieler bekommt sein Teil genau einmal (Mehrspieler: jeder baut sein eigenes
+ * Containment-Kapsel im Klempner-Wrack (Galvan-Pod): verbeulte Metallkugel mit dem kaputten Omnitrix (Huelle) bzw. der
+ * Konsole. Rechtsklick startet die Oeffnung ({@link ContainmentPodBlockEntity}) — beim ersten Mal fliegt das Teil dem
+ * Spieler an den Arm — jeder Spieler bekommt sein Teil genau einmal (Mehrspieler: jeder baut sein eigenes
  * Omnitrix). Unzerstoerbar, damit die Story im Wrack bleibt.
  */
 public class ContainmentPodBlock extends BlockWithEntity {
@@ -42,7 +41,7 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		}
 	}
 
-	private static final VoxelShape SHAPE = Block.createCuboidShape(1.0, 0.0, 1.0, 15.0, 12.0, 15.0);
+	private static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 16.0, 16.0);
 	private final Part part;
 
 	public ContainmentPodBlock(Settings settings, Part part) {
@@ -59,7 +58,7 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		return CODEC;
 	}
 
-	/** Gezeichnet wird die Kapsel vom Block-Entity-Renderer (3D, Deckel klappt auf). */
+	/** Gezeichnet wird die Kapsel vom Block-Entity-Renderer (3D, Kuppel sprengt in vier Segmenten auf). */
 	@Override
 	protected BlockRenderType getRenderType(BlockState state) {
 		return BlockRenderType.ENTITYBLOCK_ANIMATED;
@@ -81,21 +80,18 @@ public class ContainmentPodBlock extends BlockWithEntity {
 		if (world.isClient() || !(world.getBlockEntity(pos) instanceof ContainmentPodBlockEntity pod)) {
 			return ActionResult.success(world.isClient());
 		}
-		pod.open();
-		if (!pod.claim(player.getUuid())) {
-			player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.empty").formatted(Formatting.GRAY), true);
-			world.playSound(null, pos, SoundEvents.BLOCK_IRON_DOOR_CLOSE, SoundCategory.BLOCKS, 0.6f, 1.4f);
+		if (pod.busy()) {
 			return ActionResult.CONSUME;
 		}
-		player.getInventory().offerOrDrop(new ItemStack(part.item()));
-		player.sendMessage(Text.translatable(part == Part.SHELL ? "message.kingdomomnitrix.pod.shell" : "message.kingdomomnitrix.pod.console")
-				.formatted(Formatting.GREEN), false);
-		world.playSound(null, pos, SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.BLOCKS, 1.0f, 1.4f);
-		world.playSound(null, pos, SoundEvents.BLOCK_IRON_DOOR_OPEN, SoundCategory.BLOCKS, 0.8f, 0.8f);
-		if (world instanceof ServerWorld server) {
-			server.spawnParticles(ParticleTypes.HAPPY_VILLAGER, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 25, 0.35, 0.35, 0.35, 0.05);
-			server.spawnParticles(ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, 15, 0.2, 0.3, 0.2, 0.03);
+		if (!pod.open(player)) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.pod.empty").formatted(Formatting.GRAY), true);
 		}
 		return ActionResult.CONSUME;
+	}
+
+	@Nullable
+	@Override
+	public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+		return world.isClient() ? null : validateTicker(type, ModBlockEntities.CONTAINMENT_POD, ContainmentPodBlockEntity::tick);
 	}
 }

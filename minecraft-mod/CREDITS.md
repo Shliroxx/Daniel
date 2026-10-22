@@ -17,7 +17,7 @@ den Nachweis bitte aufbewahren. Das Addon-Jar liegt nicht im Repository — `too
 Heatblast, XLR8, Vierarm, Diamondhead, Grey Matter, Wildmutt, Stinkfly, Ripjaws, Upgrade, Ghostfreak, Cannonbolt, Jetray und Atomix (Geometrie,
 Texturen, Uniform-Varianten, Farbpaletten und das Omnitrix-Abzeichen), Big Chill, Humungousaur, Swampfire, Chromastone und Echo Echo (Geometrie, Textur,
 Ruhe-/Fluganimationen aus der Alien-Force-Erweiterung `afomni` im selben Jar) sowie das Omnitrix am Arm (Prototyp-Modell und
--Texturen, `tools/import_omnitrix_model.py`) stammen aus **Alien Evolution** von Habb and Stephen
+-Texturen, `tools/import_omnitrix_model.py`) und die Texturen der Containment-Kapsel (Galvan-Pod) stammen aus **Alien Evolution** von Habb and Stephen
 (<https://www.curseforge.com/minecraft/mc-mods/alienevo>).
 
 Verwendung laut SANTIQ mit Erlaubnis des Autors (Fanprojekt, nicht kommerziell). Den Nachweis der Erlaubnis

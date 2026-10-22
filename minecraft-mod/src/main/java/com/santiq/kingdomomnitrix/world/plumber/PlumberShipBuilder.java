@@ -234,10 +234,11 @@ final class PlumberShipBuilder {
 			return of(PlanetBlocks.TECH_GLASS);
 		}
 		// Deckenlichter in der Mitte, Wandlichter auf Gangshoehe
-		if (v == 0 && w > 0 && u % 6 == 0) {
-			return of(Ben10Blocks.PLUMBER_LIGHT);
+		// nach dem Absturz brennt nur noch ein Teil der Lichter: duestere Gaenge
+		if (v == 0 && w > 0 && u % 10 == 0) {
+			return hash(u, 11, v) < 0.45 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.PLUMBER_HULL_SCORCHED);
 		}
-		if (w == FLOOR + 3 && u % 8 == 4 && Math.abs(v) > hw - 2.5) {
+		if (w == FLOOR + 3 && u % 12 == 4 && Math.abs(v) > hw - 2.5 && hash(u, 13, v) < 0.4) {
 			return of(Ben10Blocks.PLUMBER_LIGHT);
 		}
 		// Klempner-Farben: dunkles Leuchtband auf Hoehe der Mittellinie, dunkler Kiel
@@ -421,8 +422,9 @@ final class PlumberShipBuilder {
 						set(pos, of(Blocks.AIR));
 					} else if (d <= r + 1.2 && dy < 0 && !world.getBlockState(pos).isAir()) {
 						double h = hash(pos.getX(), pos.getY(), pos.getZ());
-						set(pos, h < 0.2 ? of(Blocks.MAGMA_BLOCK) : h < 0.55 ? of(Blocks.COARSE_DIRT) : h < 0.75 ? of(Blocks.BLACKSTONE)
-								: of(Blocks.GRAVEL));
+						// verbrannter Krater wie beim Galvan-Pod in Alien Evolution: Schwarzstein, Kohle, Obsidian, Glut
+						set(pos, h < 0.14 ? of(Blocks.MAGMA_BLOCK) : h < 0.42 ? of(Blocks.BLACKSTONE) : h < 0.58 ? of(Blocks.COAL_BLOCK)
+								: h < 0.68 ? of(Blocks.OBSIDIAN) : h < 0.8 ? of(Blocks.DEEPSLATE_COAL_ORE) : of(Blocks.COBBLED_DEEPSLATE));
 					}
 				}
 			}
@@ -567,11 +569,12 @@ final class PlumberShipBuilder {
 	}
 
 	/**
-	 * Runde Containment-Kammer (Radius {@value #CHAMBER_RADIUS}) um Schiffsstelle {@code u}: eine Grube bis
-	 * {@value #CHAMBER_DEPTH} Bloecke unter das Deck, Boden mit gruenem Leuchtmuster, gruener Leuchtschacht in der Mitte,
-	 * Wandringe aus orangem Licht. Auf Deckhoehe ein Laufring mit orange leuchtender Kante, vier Stege zur Mittelplattform;
-	 * dort steht die Kapsel zwischen vier Saeulen, darueber faellt ein gruener Lichtstrahl von der Decke. Die Kammer ist
-	 * waagrecht (das Schiff ist leicht geneigt), Tueren zum Gang vorn und hinten.
+	 * Runde Containment-Kammer (Radius {@value #CHAMBER_RADIUS}) um Schiffsstelle {@code u}, beim Absturz verwuestet und
+	 * fast dunkel: Grube bis {@value #CHAMBER_DEPTH} Bloecke unter das Deck mit Schutt und Glut am Grund, ein schwach gruen
+	 * leuchtender Schacht in der Mitte (Corrodium), Waende aus verbrannten Platten mit glimmenden Magma-Rissen statt
+	 * Lichtbaendern. Auf Deckhoehe ein Laufring mit gluehender Innenkante; von den vier Stegen ist einer abgestuerzt und
+	 * einer gebrochen. Mittelplattform mit zwei umgeknickten Saeulen, Truemmer, Ketten von der Decke, Spinnweben und
+	 * Seelenfeuer. Einziges kraeftiges Licht ist die Kapsel selbst. Die Kammer ist waagrecht; Tueren vorn und hinten.
 	 */
 	private BlockPos chamber(Section s, int u, Block pod) {
 		BlockPos center = at(s, u, 0, FLOOR);
@@ -588,65 +591,129 @@ final class PlumberShipBuilder {
 				boolean wall = r > CHAMBER_RADIUS - 0.5;
 				boolean door = Math.abs(dv) <= 1 && Math.abs(du) > CHAMBER_RADIUS - 2;
 				BlockPos column = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral());
+				int ceiling = deck + 12;
 				for (int y = deck - CHAMBER_DEPTH - 1; y <= deck + 12; y++) {
 					int rel = y - deck;
 					// oberhalb des Decks nur innerhalb des Rumpfs bauen, die Huelle ist dort die Wand
 					if (rel > 0 && shape(dv, y - mid, hw - 1.3, hh - 1.3) > 1.0) {
+						ceiling = Math.min(ceiling, y);
 						continue;
 					}
 					BlockPos pos = column.withY(y);
+					double h = hash(pos.getX(), pos.getY(), pos.getZ());
 					if (y == deck - CHAMBER_DEPTH - 1) {
-						set(pos, r < 2.5 || (int) r % 3 == 0 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.CORRODIUM_BLOCK));
+						set(pos, pitFloor(r, h));
 					} else if (wall) {
 						if (door && rel >= 1 && rel <= 3) {
 							set(pos, of(Blocks.AIR));
 						} else {
-							set(pos, Math.floorMod(rel, 4) == 2 ? of(Blocks.SHROOMLIGHT) : of(Ben10Blocks.PLUMBER_HULL_DARK));
+							set(pos, chamberWall(rel, h));
 						}
 					} else if (rel == 0) {
-						set(pos, deckBlock(du, dv, r));
+						set(pos, deckBlock(du, dv, r, h));
 					} else if (rel < 0 && r < 1.6) {
-						// Leuchtschacht unter der Plattform
-						set(pos, r < 0.5 ? of(Ben10Blocks.PLUMBER_LIGHT) : Math.floorMod(rel, 3) == 0 ? of(Ben10Blocks.CORRODIUM_BLOCK)
+						// Schacht unter der Plattform: Corrodium glimmt durch gesprungenes Glas
+						set(pos, r < 0.5 ? of(Ben10Blocks.CORRODIUM_BLOCK) : h < 0.25 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED)
 								: of(PlanetBlocks.TECH_GLASS));
+					} else if (rel == -CHAMBER_DEPTH && h < 0.3) {
+						// Schutt am Grund der Grube
+						set(pos, h < 0.1 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : h < 0.2 ? of(Blocks.BLACKSTONE) : of(Blocks.COBBLED_DEEPSLATE));
 					} else {
 						set(pos, of(Blocks.AIR));
 					}
 				}
-			}
-		}
-		// Saeulen um die Kapsel, Lichtstrahl von der Decke
-		for (int du = -2; du <= 2; du += 4) {
-			for (int dv = -2; dv <= 2; dv += 4) {
-				BlockPos column = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral());
-				for (int y = deck + 1; y <= deck + 3; y++) {
-					set(column.withY(y), y == deck + 3 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.PLUMBER_HULL_DARK));
+				// Ketten haengen von der Decke, Spinnweben unter der Decke am Rand
+				double hc = hash(column.getX(), 7, column.getZ());
+				if (!wall && r > 4.5 && hc < 0.035) {
+					for (int k = 1; k <= 3 + (int) (hc * 100) % 4; k++) {
+						BlockPos chain = column.withY(ceiling - k);
+						if (chain.getY() > deck + 1 && world.getBlockState(chain).isAir()) {
+							set(chain, of(Blocks.CHAIN));
+						}
+					}
+				} else if (!wall && r > CHAMBER_RADIUS - 2.5 && hc > 0.94) {
+					set(column.withY(ceiling - 1), of(Blocks.COBWEB));
 				}
 			}
 		}
-		BlockPos podPos = center.up();
-		BlockPos beam = podPos.up(4);
-		while (beam.getY() < deck + 12 && world.getBlockState(beam).isAir()) {
-			beam = beam.up();
+		// Plattform: zwei Saeulen stehen noch (verbrannt), zwei sind umgeknickt und liegen als Truemmer
+		int pillar = 0;
+		for (int du = -2; du <= 2; du += 4) {
+			for (int dv = -2; dv <= 2; dv += 4) {
+				BlockPos column = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral());
+				boolean standing = pillar++ % 3 == 0;
+				int height = standing ? 4 : 1;
+				for (int y = deck + 1; y <= deck + height; y++) {
+					set(column.withY(y), y == deck + height && standing ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_HULL_DARK));
+				}
+				if (!standing) {
+					set(column.offset(forward, du > 0 ? -1 : 1).withY(deck + 1), of(Ben10Blocks.PLUMBER_HULL_SCORCHED));
+				}
+			}
 		}
-		set(beam, of(Ben10Blocks.PLUMBER_LIGHT));
+		// Truemmer und Seelenfeuer auf dem Laufring
+		for (int i = 0; i < 10; i++) {
+			double a = random.nextDouble() * Math.PI * 2;
+			int du = (int) Math.round(Math.cos(a) * (CHAMBER_RADIUS - 1.5));
+			int dv = (int) Math.round(Math.sin(a) * (CHAMBER_RADIUS - 1.5));
+			if (Math.abs(dv) <= 1 && Math.abs(du) > CHAMBER_RADIUS - 3) {
+				continue;
+			}
+			BlockPos spot = nose.offset(forward, -(u + du + s.shift())).offset(right, dv + s.lateral()).withY(deck + 1);
+			if (world.getBlockState(spot.down()).isAir()) {
+				continue;
+			}
+			set(spot, i < 3 ? of(Blocks.SOUL_CAMPFIRE) : i < 7 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Blocks.BLACKSTONE));
+		}
+		BlockPos podPos = center.up();
 		set(podPos, of(pod));
 		return podPos;
 	}
 
-	/** Boden der Kammer auf Deckhoehe: Laufring mit orange leuchtender Innenkante, vier Stege, Mittelplattform. */
-	private static BlockState deckBlock(int du, int dv, double r) {
+	/** Grund der Grube: Schwarzstein und Kohle mit Glutnestern, wenige Corrodium-Bloecke glimmen gruen */
+	private static BlockState pitFloor(double r, double h) {
+		if (r < 1.6) {
+			return of(Ben10Blocks.CORRODIUM_BLOCK);
+		}
+		if (h < 0.08) {
+			return of(Ben10Blocks.CORRODIUM_BLOCK);
+		}
+		return h < 0.22 ? of(Blocks.MAGMA_BLOCK) : h < 0.55 ? of(Blocks.BLACKSTONE) : h < 0.75 ? of(Blocks.COAL_BLOCK) : of(Blocks.COBBLED_DEEPSLATE);
+	}
+
+	/** Kammerwand: verbrannte Platten, Schwarzstein, alle vier Lagen ein Band aus glimmenden Magma-Rissen (mit Luecken) */
+	private static BlockState chamberWall(int rel, double h) {
+		if (Math.floorMod(rel, 4) == 2 && h < 0.7) {
+			return of(Blocks.MAGMA_BLOCK);
+		}
+		return h < 0.5 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : h < 0.85 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Blocks.BLACKSTONE);
+	}
+
+	/**
+	 * Boden der Kammer auf Deckhoehe: Laufring (teils verbrannt) mit gluehender Innenkante aus Magma, vier Stege — der
+	 * hintere ist abgestuerzt, der rechte in der Mitte gebrochen —, Mittelplattform.
+	 */
+	private static BlockState deckBlock(int du, int dv, double r, double h) {
 		if (r > CHAMBER_RADIUS - 2.5) {
-			return of(Ben10Blocks.PLUMBER_FLOOR);
+			return h < 0.3 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_FLOOR);
 		}
 		if (r > CHAMBER_RADIUS - 3.5) {
-			return of(Blocks.SHROOMLIGHT);
+			return h < 0.75 ? of(Blocks.MAGMA_BLOCK) : of(Blocks.AIR);
 		}
 		if (r <= 3.5) {
-			return r > 2.5 ? of(Ben10Blocks.PLUMBER_LIGHT) : of(Ben10Blocks.PLUMBER_FLOOR);
+			return r > 2.5 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : h < 0.35 ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_FLOOR);
 		}
-		if (Math.abs(du) <= 1 || Math.abs(dv) <= 1) {
-			return Math.abs(du) == 1 || Math.abs(dv) == 1 ? of(Ben10Blocks.PLUMBER_HULL_DARK) : of(Ben10Blocks.PLUMBER_FLOOR);
+		boolean alongU = Math.abs(dv) <= 1;
+		boolean alongV = Math.abs(du) <= 1;
+		if (alongU && du > 0) {
+			return of(Blocks.AIR);
+		}
+		if (alongV && dv > 0 && r > 4.5 && r < 6.5) {
+			return of(Blocks.AIR);
+		}
+		if (alongU || alongV) {
+			boolean edge = alongU ? Math.abs(dv) == 1 : Math.abs(du) == 1;
+			return edge ? of(Ben10Blocks.PLUMBER_HULL_SCORCHED) : of(Ben10Blocks.PLUMBER_FLOOR);
 		}
 		return of(Blocks.AIR);
 	}
