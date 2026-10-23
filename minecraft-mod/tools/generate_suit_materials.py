@@ -360,6 +360,45 @@ def suitmat_textures() -> dict[Path, Image.Image]:
     return images
 
 
+# --- Upgrade-Module ---------------------------------------------------------------------------------------------------
+
+# Modul -> (Deutsch, Englisch, Wirkung Deutsch, Wirkung Englisch, Zutat Ecken, Zutat Kanten)
+MODULES = {
+    "module_shield_capacity": ("Modul: Schildkapazitaet", "Module: Shield Capacity", "+25 % Schildkapazitaet", "+25% shield capacity",
+                               "kingdomomnitrix:biotech_gel", "minecraft:diamond"),
+    "module_shield_recharge": ("Modul: Schildlader", "Module: Shield Recharge", "+30 % Nachladen, -15 % Pause",
+                               "+30% recharge, -15% delay", "minecraft:redstone_block", "kingdomomnitrix:taydenite_crystal"),
+    "module_mobility": ("Modul: Antrieb", "Module: Propulsion", "+20 % Fluggeschwindigkeit, +40 % Treibstoff",
+                        "+20% flight speed, +40% fuel", "minecraft:phantom_membrane", "kingdomomnitrix:raritanium_ingot"),
+    "module_speed": ("Modul: Sprint", "Module: Sprint", "+5 % Lauftempo", "+5% movement speed",
+                     "minecraft:sugar", "kingdomomnitrix:biotech_dust"),
+    "module_strength": ("Modul: Kraft", "Module: Strength", "+1,5 Angriffsschaden", "+1.5 attack damage",
+                        "minecraft:blaze_rod", "kingdomomnitrix:infernite_dust"),
+    "module_vitality": ("Modul: Vitalitaet", "Module: Vitality", "+1 Herz", "+1 heart",
+                        "minecraft:golden_apple", "minecraft:glistering_melon_slice"),
+}
+MODULE_LANG = {
+    "item.kingdomomnitrix.module_blank": ("Leere Modulplatine", "Blank Module Board"),
+    "tooltip.kingdomomnitrix.module.usage": ("In der Werkbank zusammen mit einem Anzugteil einbauen.",
+                                             "Install in a crafting grid together with a suit piece."),
+    "tooltip.kingdomomnitrix.module.limit": ("Wirkt nur im vollstaendigen Anzug, je Art hoechstens %s.",
+                                             "Only works in a complete suit, at most %s of each kind."),
+    "tooltip.kingdomomnitrix.suit.modules": ("Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)",
+                                             "Modules: %s/%s (piece alone in a crafting grid = remove last module)"),
+}
+
+
+def module_files() -> dict[Path, dict]:
+    files: dict[Path, dict] = {DATA / MOD / "recipe" / "suit_module.json": {"type": f"{MOD}:suit_module", "category": "equipment"},
+                               DATA / MOD / "recipe" / "module_blank.json": shaped(["GRG", "CPC", "GRG"], {
+                                   "G": "minecraft:gold_ingot", "R": "minecraft:redstone", "C": f"{MOD}:taydenite_crystal",
+                                   "P": f"{MOD}:raritanium_ingot"}, f"{MOD}:module_blank", 2)}
+    for name, (_, _, _, _, corner, edge) in MODULES.items():
+        files[DATA / MOD / "recipe" / f"{name}.json"] = shaped(["CEC", "EME", "CEC"], {
+            "C": corner, "E": edge, "M": f"{MOD}:module_blank"}, f"{MOD}:{name}")
+    return files
+
+
 # --- Fusionsaltar ----------------------------------------------------------------------------------------------------
 
 # Bloecke des Altars: id -> (Deutsch, Englisch)
@@ -678,11 +717,14 @@ def outputs() -> dict[Path, bytes]:
         files[path] = (json.dumps(data, indent=1) + "\n").encode()
     for path, img in fusion_images.items():
         files[path] = png(img)
-    for item in FUSION_ITEMS:
+    for path, data in module_files().items():
+        files[path] = (json.dumps(data, indent=2) + "\n").encode()
+    for item in list(FUSION_ITEMS) + ["module_blank"] + list(MODULES):
         img, frames = suit_icons.render(item)
         files[ASSETS / "textures" / "item" / f"{item}.png"] = png(img)
-        files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
-            {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
+        if frames > 1:
+            files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
+                {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
         files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
             {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
     machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION]
@@ -700,6 +742,11 @@ def outputs() -> dict[Path, bytes]:
             lang[f"block.{MOD}.{name}"] = (de, en)[index]
         for name, (de, en) in FUSION_ITEMS.items():
             lang[f"item.{MOD}.{name}"] = (de, en)[index]
+        for name, (de, en, effect_de, effect_en, _, _) in MODULES.items():
+            lang[f"item.{MOD}.{name}"] = (de, en)[index]
+            lang[f"item.{MOD}.{name}.effect"] = (effect_de, effect_en)[index]
+        for key, (de, en) in MODULE_LANG.items():
+            lang[key] = (de, en)[index]
         for key, (de, en) in FUSION_MESSAGES.items():
             lang[key] = (de, en)[index]
         files[path] = (json.dumps(lang, indent=2, ensure_ascii=False) + "\n").encode()

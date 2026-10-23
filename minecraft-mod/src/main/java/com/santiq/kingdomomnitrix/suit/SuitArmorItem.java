@@ -1,5 +1,7 @@
 package com.santiq.kingdomomnitrix.suit;
 
+import com.santiq.kingdomomnitrix.suit.module.SuitModule;
+import com.santiq.kingdomomnitrix.suit.module.SuitModules;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -63,6 +65,11 @@ public class SuitArmorItem extends ArmorItem implements GeoItem {
 		tooltip.add(Text.translatable(set.tooltipKey()).formatted(Formatting.GRAY));
 		tooltip.add(Text.translatable(set.line() == SuitSet.Line.BEN10 ? "tooltip.kingdomomnitrix.suit.line.ben10"
 				: "tooltip.kingdomomnitrix.suit.line.ratchet").formatted(Formatting.DARK_AQUA));
+		List<SuitModule> modules = SuitModules.installed(stack);
+		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.suit.modules", modules.size(), set.tier()).formatted(Formatting.LIGHT_PURPLE));
+		for (SuitModule module : modules) {
+			tooltip.add(Text.literal(" • ").append(SuitModules.item(module).getName()).formatted(Formatting.DARK_PURPLE));
+		}
 		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.suit.set_bonus").formatted(Formatting.GOLD));
 		tooltip.add(Text.translatable(set.bonusKey()).formatted(Formatting.YELLOW));
 	}

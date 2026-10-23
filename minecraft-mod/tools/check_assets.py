@@ -70,6 +70,9 @@ def registered_items() -> list[str]:
     kinds = base / "suit" / "forge" / "MachineKind.java"
     if kinds.is_file():
         items += re.findall(r'\("([a-z0-9_]+)", \d+, 0x', kinds.read_text(encoding="utf-8"))
+    modules = base / "suit" / "module" / "SuitModules.java"
+    if modules.is_file():
+        items += sorted(set(re.findall(r'"(module_[a-z_]+)"', modules.read_text(encoding="utf-8"))))
     fusion = base / "suit" / "fusion" / "SuitFusion.java"
     if fusion.is_file():
         items += re.findall(r'\b(?:item|blockItem|part|injector)\("([a-z0-9_]+)"', fusion.read_text(encoding="utf-8"))

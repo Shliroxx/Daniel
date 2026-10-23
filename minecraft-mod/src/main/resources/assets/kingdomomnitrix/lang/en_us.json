@@ -2369,5 +2369,21 @@
   "screen.kingdomomnitrix.suit.boost": "Stat Bonuses",
   "screen.kingdomomnitrix.suit.on": "ON",
   "screen.kingdomomnitrix.suit.off": "OFF",
-  "message.kingdomomnitrix.suit.no_set": "You are not wearing a complete endgame suit."
+  "message.kingdomomnitrix.suit.no_set": "You are not wearing a complete endgame suit.",
+  "item.kingdomomnitrix.module_shield_capacity": "Module: Shield Capacity",
+  "item.kingdomomnitrix.module_shield_capacity.effect": "+25% shield capacity",
+  "item.kingdomomnitrix.module_shield_recharge": "Module: Shield Recharge",
+  "item.kingdomomnitrix.module_shield_recharge.effect": "+30% recharge, -15% delay",
+  "item.kingdomomnitrix.module_mobility": "Module: Propulsion",
+  "item.kingdomomnitrix.module_mobility.effect": "+20% flight speed, +40% fuel",
+  "item.kingdomomnitrix.module_speed": "Module: Sprint",
+  "item.kingdomomnitrix.module_speed.effect": "+5% movement speed",
+  "item.kingdomomnitrix.module_strength": "Module: Strength",
+  "item.kingdomomnitrix.module_strength.effect": "+1.5 attack damage",
+  "item.kingdomomnitrix.module_vitality": "Module: Vitality",
+  "item.kingdomomnitrix.module_vitality.effect": "+1 heart",
+  "item.kingdomomnitrix.module_blank": "Blank Module Board",
+  "tooltip.kingdomomnitrix.module.usage": "Install in a crafting grid together with a suit piece.",
+  "tooltip.kingdomomnitrix.module.limit": "Only works in a complete suit, at most %s of each kind.",
+  "tooltip.kingdomomnitrix.suit.modules": "Modules: %s/%s (piece alone in a crafting grid = remove last module)"
 }

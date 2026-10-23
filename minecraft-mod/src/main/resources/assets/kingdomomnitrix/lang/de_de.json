@@ -2369,5 +2369,21 @@
   "screen.kingdomomnitrix.suit.boost": "Werte-Boni",
   "screen.kingdomomnitrix.suit.on": "AN",
   "screen.kingdomomnitrix.suit.off": "AUS",
-  "message.kingdomomnitrix.suit.no_set": "Du traegst keinen vollstaendigen Endgame-Anzug."
+  "message.kingdomomnitrix.suit.no_set": "Du traegst keinen vollstaendigen Endgame-Anzug.",
+  "item.kingdomomnitrix.module_shield_capacity": "Modul: Schildkapazitaet",
+  "item.kingdomomnitrix.module_shield_capacity.effect": "+25 % Schildkapazitaet",
+  "item.kingdomomnitrix.module_shield_recharge": "Modul: Schildlader",
+  "item.kingdomomnitrix.module_shield_recharge.effect": "+30 % Nachladen, -15 % Pause",
+  "item.kingdomomnitrix.module_mobility": "Modul: Antrieb",
+  "item.kingdomomnitrix.module_mobility.effect": "+20 % Fluggeschwindigkeit, +40 % Treibstoff",
+  "item.kingdomomnitrix.module_speed": "Modul: Sprint",
+  "item.kingdomomnitrix.module_speed.effect": "+5 % Lauftempo",
+  "item.kingdomomnitrix.module_strength": "Modul: Kraft",
+  "item.kingdomomnitrix.module_strength.effect": "+1,5 Angriffsschaden",
+  "item.kingdomomnitrix.module_vitality": "Modul: Vitalitaet",
+  "item.kingdomomnitrix.module_vitality.effect": "+1 Herz",
+  "item.kingdomomnitrix.module_blank": "Leere Modulplatine",
+  "tooltip.kingdomomnitrix.module.usage": "In der Werkbank zusammen mit einem Anzugteil einbauen.",
+  "tooltip.kingdomomnitrix.module.limit": "Wirkt nur im vollstaendigen Anzug, je Art hoechstens %s.",
+  "tooltip.kingdomomnitrix.suit.modules": "Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)"
 }

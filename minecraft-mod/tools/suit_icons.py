@@ -607,6 +607,61 @@ def fusion_codex() -> tuple[Image.Image, int]:
     return ip.frames(icon, FRAMES, halo="3AE8FF", halo_strength=0.35), FRAMES
 
 
+# --- Upgrade-Module ------------------------------------------------------------------------------------------------
+
+def module_card(color: str | None, symbol: str) -> tuple[Image.Image, int]:
+    """Modulplatine: dunkle Karte mit Goldkontakten, Leiterbahnen und leuchtendem Symbol in der Modulfarbe."""
+    icon = Icon()
+    board = mat("metal", "06080C", "1E2632", "7A8AA0", 1.1)
+    card = ip.rounded(34, 26, 222, 230, 22)
+    icon.surface(card, board, height=bevel(card, 16), strength=30)
+    for i in range(6):
+        x = 58 + i * 28
+        pin = ip.rounded(x, 206, x + 14, 236, 3)
+        icon.surface(pin, GOLD, height=bevel(pin, 3), strength=8)
+    frame = ip.rounded(58, 50, 198, 190, 16)
+    icon.surface(frame, GUNMETAL, height=-bevel(frame, 8), strength=18)
+    glow = color or "4A5262"
+    traces = np.zeros((R, R))
+    for path in (((40, 70), (58, 70)), ((198, 70), (216, 70)), ((40, 170), (58, 170)), ((198, 170), (216, 170)),
+                 ((96, 190), (96, 206)), ((160, 190), (160, 206))):
+        traces = np.maximum(traces, line(path, 4))
+    if color:
+        icon.glow(traces, glow, "FFFFFF", 0.8)
+    else:
+        icon.put(traces, rgb("3A4252"), 1.0)
+    cx, cy = 128, 120
+    if symbol == "shield":
+        sym = poly([(cx - 40, cy - 44), (cx + 40, cy - 44), (cx + 40, cy + 4), (cx, cy + 50), (cx - 40, cy + 4)])
+        sym = np.clip(sym - poly([(cx - 26, cy - 30), (cx + 26, cy - 30), (cx + 26, cy), (cx, cy + 32), (cx - 26, cy)]), 0, 1)
+        sym = np.maximum(sym, poly([(cx - 12, cy - 18), (cx + 12, cy - 18), (cx + 12, cy), (cx, cy + 14), (cx - 12, cy)]))
+    elif symbol == "bolt":
+        sym = poly([(cx + 8, cy - 52), (cx - 34, cy + 6), (cx - 4, cy + 6), (cx - 14, cy + 52), (cx + 34, cy - 8), (cx + 4, cy - 8)])
+    elif symbol == "wing":
+        sym = np.zeros((R, R))
+        for k in range(3):
+            sym = np.maximum(sym, line([(cx - 44, cy + 30 - k * 22), (cx, cy - 10 - k * 22), (cx + 44, cy + 30 - k * 22)], 10))
+    elif symbol == "speed":
+        sym = np.zeros((R, R))
+        for k in range(3):
+            sym = np.maximum(sym, line([(cx - 40 + k * 26, cy - 36), (cx - 14 + k * 26, cy), (cx - 40 + k * 26, cy + 36)], 10))
+    elif symbol == "fist":
+        sym = np.clip(poly([(cx - 8, cy - 54), (cx + 8, cy - 54), (cx + 8, cy + 18), (cx - 8, cy + 18)])
+                      + poly([(cx - 30, cy + 10), (cx + 30, cy + 10), (cx + 30, cy + 22), (cx - 30, cy + 22)])
+                      + ip.rounded(cx - 8, cy + 22, cx + 8, cy + 48, 4), 0, 1)
+    elif symbol == "heart":
+        sym = np.clip(ellipse(cx - 20, cy - 12, 24, 22) + ellipse(cx + 20, cy - 12, 24, 22)
+                      + poly([(cx - 43, cy - 4), (cx + 43, cy - 4), (cx, cy + 46)]), 0, 1)
+    else:
+        sym = np.zeros((R, R))
+    if color:
+        icon.glow(sym, glow, "FFFFFF")
+        icon.sparkle(cx + 30, cy - 40, 20, "FFFFFF", 0.2)
+    else:
+        icon.put(ip.rounded(84, 76, 172, 164, 10), rgb("12161E"), 1.0)
+    return ip.frames(icon, FRAMES if color else 1, halo=glow if color else None, halo_strength=0.35), FRAMES if color else 1
+
+
 # --- Verzeichnis ---------------------------------------------------------------------------------------------------
 
 BUILDERS = {
@@ -635,6 +690,13 @@ BUILDERS = {
     "chaos_heart": chaos_heart,
     "cryo_cell": cryo_cell,
     "fusion_codex": fusion_codex,
+    "module_blank": lambda: module_card(None, ""),
+    "module_shield_capacity": lambda: module_card("3AE8FF", "shield"),
+    "module_shield_recharge": lambda: module_card("7AA8FF", "bolt"),
+    "module_mobility": lambda: module_card("FFB02A", "wing"),
+    "module_speed": lambda: module_card("4BFF6A", "speed"),
+    "module_strength": lambda: module_card("FF4A3A", "fist"),
+    "module_vitality": lambda: module_card("FF6AB0", "heart"),
 }
 
 

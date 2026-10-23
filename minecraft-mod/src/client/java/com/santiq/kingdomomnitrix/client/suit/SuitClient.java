@@ -43,6 +43,7 @@ public final class SuitClient {
 	private static float shield;
 	private static float maxShield;
 	private static int toggles;
+	private static float fuelFactor = 1.0f;
 	private static float fuel;
 	private static boolean thrusting;
 	/** Schildblasen: Entity-ID -> (Startzeit, Farbe, zerbrochen) */
@@ -57,6 +58,7 @@ public final class SuitClient {
 			shield = payload.shield();
 			maxShield = payload.maxShield();
 			toggles = payload.toggles();
+			fuelFactor = payload.fuelFactor();
 		});
 		ClientPlayNetworking.registerGlobalReceiver(ShieldHitPayload.ID, (payload, context) -> {
 			if (context.client().world != null) {
@@ -94,7 +96,7 @@ public final class SuitClient {
 				}
 			} else if (suit.mobility() == SuitSet.Mobility.JETPACK) {
 				if (player.isOnGround()) {
-					fuel = Math.min(suit.jetpackFuel(), fuel + 2.0f);
+					fuel = Math.min(suit.jetpackFuel() * fuelFactor, fuel + 2.0f);
 				}
 				if (jump && fuel > 0 && !player.isOnGround()) {
 					double lift = suit == SuitSet.INFERNOX ? 0.13 : 0.1;
@@ -146,8 +148,8 @@ public final class SuitClient {
 		if (SuitToggles.on(toggles, SuitToggles.SHIELD) && maxShield > 0) {
 			bar(context, x, y, shield / maxShield, color);
 		}
-		if (suit.mobility() == SuitSet.Mobility.JETPACK && SuitToggles.on(toggles, SuitToggles.FLIGHT) && fuel < suit.jetpackFuel()) {
-			bar(context, x, y + 5, fuel / suit.jetpackFuel(), 0xFFFFB02A);
+		if (suit.mobility() == SuitSet.Mobility.JETPACK && SuitToggles.on(toggles, SuitToggles.FLIGHT) && fuel < suit.jetpackFuel() * fuelFactor) {
+			bar(context, x, y + 5, fuel / (suit.jetpackFuel() * fuelFactor), 0xFFFFB02A);
 		}
 	}
 

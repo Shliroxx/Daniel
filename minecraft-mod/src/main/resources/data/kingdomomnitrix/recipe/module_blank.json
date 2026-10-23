@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GRG",
+    "CPC",
+    "GRG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "kingdomomnitrix:taydenite_crystal"
+    },
+    "P": {
+      "item": "kingdomomnitrix:raritanium_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:module_blank",
+    "count": 2
+  }
+}

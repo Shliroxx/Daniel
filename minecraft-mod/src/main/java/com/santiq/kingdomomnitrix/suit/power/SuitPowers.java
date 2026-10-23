@@ -3,7 +3,10 @@ package com.santiq.kingdomomnitrix.suit.power;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.suit.SuitArmorItem;
 import com.santiq.kingdomomnitrix.suit.SuitSet;
+import com.santiq.kingdomomnitrix.suit.module.SuitModule;
+import com.santiq.kingdomomnitrix.suit.module.SuitModules;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -43,7 +46,8 @@ import org.joml.Vector3f;
  *   <li><b>Werte-Boni</b>: Ben 10 Tempo, Leben, Stufenhoehe, weiche Landung, Nachtsicht (Celestial);
  *       Ratchet Angriff, Angriffstempo, Rueckstossfestigkeit, weiche Landung, Feuerfestigkeit (Infernox).</li>
  * </ul>
- * Schild, Fortbewegung und Boni lassen sich in der Anzugsteuerung einzeln abschalten ({@link SuitToggles}).
+ * Schild, Fortbewegung und Boni lassen sich in der Anzugsteuerung einzeln abschalten ({@link SuitToggles}). Upgrade-Module
+ * ({@link SuitModules}) verstaerken Schild, Antrieb, Tempo, Kraft und Leben.
  */
 public final class SuitPowers {
 	private static final Identifier SPEED = KingdomOmnitrix.id("suit_speed");
@@ -68,6 +72,34 @@ public final class SuitPowers {
 		int sentSet = -2;
 		int sentShield = -1;
 		int sentToggles = -1;
+		int sentModules = -1;
+		/** wirksame Module des getragenen Anzugs (je Art hoechstens 4) */
+		Map<SuitModule, Integer> modules = Map.of();
+
+		int modules(SuitModule module) {
+			return modules.getOrDefault(module, 0);
+		}
+
+		float capacity() {
+			return set.shieldCapacity() * (1.0f + 0.25f * modules(SuitModule.SHIELD_CAPACITY));
+		}
+
+		float regen() {
+			return set.shieldRegen() * (1.0f + 0.3f * modules(SuitModule.SHIELD_RECHARGE));
+		}
+
+		int delay() {
+			return Math.round(set.shieldDelay() * (1.0f - 0.15f * modules(SuitModule.SHIELD_RECHARGE)));
+		}
+
+		/** Faktor fuer Fluggeschwindigkeit (+20 %) bzw. Treibstoff (+40 %) je Antriebsmodul */
+		float flyFactor() {
+			return 1.0f + 0.2f * modules(SuitModule.MOBILITY);
+		}
+
+		float fuelFactor() {
+			return 1.0f + 0.4f * modules(SuitModule.MOBILITY);
+		}
 	}
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
@@ -131,17 +163,20 @@ public final class SuitPowers {
 				state.shield = 0.0f;
 				state.broken = false;
 				state.set = set;
+				state.modules = modules(player, set);
+			} else if (player.age % 10 == 0) {
+				state.modules = modules(player, set);   // Teile desselben Anzugs koennen gegen andere mit anderen Modulen getauscht werden
 			}
 			boolean boost = set != null && SuitToggles.on(toggles, SuitToggles.BOOST);
-			bonuses(player, boost ? set : null);
+			bonuses(player, set, boost, state);
 			flight(player, state, set != null && set.mobility() == SuitSet.Mobility.FLIGHT && SuitToggles.on(toggles, SuitToggles.FLIGHT)
 					? set : null);
 			long now = player.getServerWorld().getTime();
 			if (set != null && SuitToggles.on(toggles, SuitToggles.SHIELD)) {
-				int delay = set.shieldDelay() * (state.broken ? 2 : 1);
-				if (now - state.lastHit > delay && state.shield < set.shieldCapacity()) {
-					state.shield = Math.min(set.shieldCapacity(), state.shield + set.shieldRegen());
-					if (state.shield >= set.shieldCapacity() && state.broken) {
+				int delay = state.delay() * (state.broken ? 2 : 1);
+				if (now - state.lastHit > delay && state.shield < state.capacity()) {
+					state.shield = Math.min(state.capacity(), state.shield + state.regen());
+					if (state.shield >= state.capacity() && state.broken) {
 						state.broken = false;
 						player.playSoundToPlayer(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 0.5f, 1.6f);
 					}
@@ -159,23 +194,33 @@ public final class SuitPowers {
 		}
 	}
 
-	private static void bonuses(ServerPlayerEntity player, SuitSet set) {
-		double speed = 0;
-		double health = 0;
+	/** Module aller vier Teile (nur im vollstaendigen Anzug). */
+	private static Map<SuitModule, Integer> modules(ServerPlayerEntity player, SuitSet set) {
+		if (set == null) {
+			return Map.of();
+		}
+		return SuitModules.count(List.of(player.getEquippedStack(EquipmentSlot.HEAD), player.getEquippedStack(EquipmentSlot.CHEST),
+				player.getEquippedStack(EquipmentSlot.LEGS), player.getEquippedStack(EquipmentSlot.FEET)));
+	}
+
+	/** Setboni (abschaltbar) plus Module (wirken immer, solange der Anzug vollstaendig ist). */
+	private static void bonuses(ServerPlayerEntity player, SuitSet set, boolean boost, State state) {
+		double speed = 0.05 * state.modules(SuitModule.SPEED);
+		double health = 2.0 * state.modules(SuitModule.VITALITY);
 		double step = 0;
 		double fall = 0;
-		double attack = 0;
+		double attack = 1.5 * state.modules(SuitModule.STRENGTH);
 		double attackSpeed = 0;
 		double knockback = 0;
-		if (set != null) {
+		if (set != null && boost) {
 			int t = set.tier();
 			if (set.line() == SuitSet.Line.BEN10) {
-				speed = 0.1 * t;
-				health = (t - 1) * 4;
+				speed += 0.1 * t;
+				health += (t - 1) * 4;
 				step = t >= 2 ? 0.5 : 0.0;
 				fall = t == 3 ? 200 : 4 * t;
 			} else {
-				attack = new double[] {2, 4, 7}[t - 1];
+				attack += new double[] {2, 4, 7}[t - 1];
 				fall = 4 << (t - 1);
 				attackSpeed = 0.1 * (t - 1);
 				knockback = 0.2 * t;
@@ -227,9 +272,10 @@ public final class SuitPowers {
 	private static void flight(ServerPlayerEntity player, State state, SuitSet set) {
 		boolean own = !player.isCreative() && !player.isSpectator();
 		if (set != null && own) {
-			if (!state.flightGranted || player.getAbilities().getFlySpeed() != set.flySpeed()) {
+			float speed = set.flySpeed() * state.flyFactor();
+			if (!state.flightGranted || player.getAbilities().getFlySpeed() != speed) {
 				player.getAbilities().allowFlying = true;
-				player.getAbilities().setFlySpeed(set.flySpeed());
+				player.getAbilities().setFlySpeed(speed);
 				player.sendAbilitiesUpdate();
 				state.flightGranted = true;
 			}
@@ -333,12 +379,15 @@ public final class SuitPowers {
 	private static void sync(ServerPlayerEntity player, State state, int toggles) {
 		int set = state.set == null ? -1 : state.set.ordinal();
 		int shield = (int) (state.shield * 4);
-		if (set == state.sentSet && shield == state.sentShield && toggles == state.sentToggles) {
+		int modules = state.modules.hashCode();
+		if (set == state.sentSet && shield == state.sentShield && toggles == state.sentToggles && modules == state.sentModules) {
 			return;
 		}
 		state.sentSet = set;
 		state.sentShield = shield;
 		state.sentToggles = toggles;
-		ServerPlayNetworking.send(player, new SuitStatePayload(set, state.shield, state.set == null ? 0.0f : state.set.shieldCapacity(), toggles));
+		state.sentModules = modules;
+		ServerPlayNetworking.send(player, new SuitStatePayload(set, state.shield, state.set == null ? 0.0f : state.capacity(), toggles,
+				state.set == null ? 1.0f : state.fuelFactor()));
 	}
 }

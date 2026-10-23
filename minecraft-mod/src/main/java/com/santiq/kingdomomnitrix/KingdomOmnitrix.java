@@ -96,6 +96,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.world.content.Ben10Blocks.register();
 		com.santiq.kingdomomnitrix.world.content.Ben10Items.register();
 		com.santiq.kingdomomnitrix.suit.forge.SuitForge.register();
+		com.santiq.kingdomomnitrix.suit.module.SuitModules.register();
 		com.santiq.kingdomomnitrix.suit.SuitItems.register();
 		com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.register();
 		com.santiq.kingdomomnitrix.suit.power.SuitPowers.register();

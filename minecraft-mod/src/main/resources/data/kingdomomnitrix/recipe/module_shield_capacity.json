@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CEC",
+    "EME",
+    "CEC"
+  ],
+  "key": {
+    "C": {
+      "item": "kingdomomnitrix:biotech_gel"
+    },
+    "E": {
+      "item": "minecraft:diamond"
+    },
+    "M": {
+      "item": "kingdomomnitrix:module_blank"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:module_shield_capacity",
+    "count": 1
+  }
+}
