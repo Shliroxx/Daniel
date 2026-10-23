@@ -41,7 +41,11 @@ public final class SuitItems {
 			FabricItemGroup.builder()
 					.icon(() -> new ItemStack(get(SuitSet.INFERNOX, ArmorItem.Type.HELMET)))
 					.displayName(Text.translatable("itemGroup.kingdomomnitrix.suits"))
-					.entries((context, entries) -> ALL.forEach(entries::add))
+					.entries((context, entries) -> {
+						com.santiq.kingdomomnitrix.suit.forge.SuitForge.MACHINES.values().forEach(entries::add);
+						com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials.all().forEach(entries::add);
+						ALL.forEach(entries::add);
+					})
 					.build());
 
 	private SuitItems() {

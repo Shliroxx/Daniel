@@ -64,8 +64,13 @@ def java_sources() -> str:
 def registered_items() -> list[str]:
     base = ROOT / "src" / "main" / "java" / "com" / "santiq" / MOD_ID
     paths = [base / "registry" / "ModItems.java", base / "world" / "content" / "PlanetItems.java",
-             base / "world" / "content" / "Ben10Items.java"]
-    return [item for path in paths if path.is_file() for item in ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))]
+             base / "world" / "content" / "Ben10Items.java", base / "suit" / "forge" / "ForgeMaterials.java"]
+    items = [item for path in paths if path.is_file() for item in ITEM_PATTERN.findall(path.read_text(encoding="utf-8"))]
+    # Ruestungs-Maschinen: Block-Items aus der Aufzaehlung MachineKind ("id", Eingaben, Farbe)
+    kinds = base / "suit" / "forge" / "MachineKind.java"
+    if kinds.is_file():
+        items += re.findall(r'\("([a-z0-9_]+)", \d+, 0x', kinds.read_text(encoding="utf-8"))
+    return items
 
 
 def check_json_syntax(report: Report) -> None:

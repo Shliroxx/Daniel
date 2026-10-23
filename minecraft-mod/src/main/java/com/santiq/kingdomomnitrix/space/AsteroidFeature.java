@@ -18,7 +18,7 @@ import net.minecraft.world.gen.feature.util.FeatureContext;
 
 /**
  * Asteroid im All: unregelmaessige, abgeflachte Gesteinskugel (Radius 3–8) in fuenf Arten — Gestein, Eis,
- * Kristall (Amethyst-Drusen nach aussen), glutfluessig (Magma-Adern, gluehender Kern) und Metall (Eisen, Kupfer,
+ * Kristall (Amethyst-Drusen nach aussen, im Kern seltenes Celestium-Erz), glutfluessig (Magma-Adern, gluehender Kern) und Metall (Eisen, Kupfer,
  * mehr Raritanium) — mit Kruste, Kern und Erzadern. Groessere Asteroiden tragen Einschlagkrater.
  * Jeder Asteroid sieht anders aus (Zufall aus dem Weltseed).
  */
@@ -126,7 +126,8 @@ public class AsteroidFeature extends Feature<DefaultFeatureConfig> {
 			case ICE -> roll < 3 ? Blocks.DIAMOND_ORE.getDefaultState()
 					: roll < 8 ? Blocks.PRISMARINE.getDefaultState()
 					: roll < 40 ? Blocks.BLUE_ICE.getDefaultState() : Blocks.PACKED_ICE.getDefaultState();
-			case CRYSTAL -> depth < 0.45 ? (roll < 30 ? Blocks.BUDDING_AMETHYST : Blocks.AMETHYST_BLOCK).getDefaultState()
+			case CRYSTAL -> depth < 0.45 ? (roll < 5 ? com.santiq.kingdomomnitrix.world.content.PlanetBlocks.CELESTIUM_ORE
+					: roll < 30 ? Blocks.BUDDING_AMETHYST : Blocks.AMETHYST_BLOCK).getDefaultState()
 					: roll < 6 ? ModBlocks.RARITANIUM_ORE.getDefaultState() : Blocks.CALCITE.getDefaultState();
 			case MOLTEN -> depth < 0.4 ? (roll < 60 ? Blocks.MAGMA_BLOCK : Blocks.SHROOMLIGHT).getDefaultState()
 					: roll < 8 ? Blocks.GILDED_BLACKSTONE.getDefaultState()

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RER",
+    "MFM",
+    "RCR"
+  ],
+  "key": {
+    "R": {
+      "item": "kingdomomnitrix:raritanium"
+    },
+    "E": {
+      "item": "minecraft:blaze_rod"
+    },
+    "M": {
+      "item": "minecraft:magma_block"
+    },
+    "F": {
+      "item": "minecraft:blast_furnace"
+    },
+    "C": {
+      "item": "kingdomomnitrix:molecular_crusher"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:plasma_smelter",
+    "count": 1
+  }
+}

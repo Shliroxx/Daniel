@@ -108,6 +108,10 @@ public final class PlanetItems {
 	public static final Item AQUARINE_BLOCK = register("aquarine_block", new BlockItem(PlanetBlocks.AQUARINE_BLOCK, new Item.Settings()));
 	public static final Item PYRONITE_ORE = register("pyronite_ore", new BlockItem(PlanetBlocks.PYRONITE_ORE, new Item.Settings()));
 	public static final Item PYRONITE_BLOCK = register("pyronite_block", new BlockItem(PlanetBlocks.PYRONITE_BLOCK, new Item.Settings()));
+	public static final Item TAYDENITE_ORE = register("taydenite_ore", new BlockItem(PlanetBlocks.TAYDENITE_ORE, new Item.Settings()));
+	public static final Item BIOTECH_NODE = register("biotech_node", new BlockItem(PlanetBlocks.BIOTECH_NODE, new Item.Settings()));
+	public static final Item INFERNITE_ORE = register("infernite_ore", new BlockItem(PlanetBlocks.INFERNITE_ORE, new Item.Settings()));
+	public static final Item CELESTIUM_ORE = register("celestium_ore", new BlockItem(PlanetBlocks.CELESTIUM_ORE, new Item.Settings()));
 
 	public static final Item RAW_SOLAR_COPPER = register("raw_solar_copper", new Item(new Item.Settings()));
 	public static final Item SOLAR_COPPER_INGOT = register("solar_copper_ingot", new Item(new Item.Settings().rarity(Rarity.COMMON)));

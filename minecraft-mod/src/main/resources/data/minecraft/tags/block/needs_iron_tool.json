@@ -8,11 +8,16 @@
     "kingdomomnitrix:corrodium_block",
     "kingdomomnitrix:plumber_hull",
     "kingdomomnitrix:plumber_hull_dark",
+    "kingdomomnitrix:molecular_crusher",
+    "kingdomomnitrix:plasma_smelter",
+    "kingdomomnitrix:alloy_forge",
     "kingdomomnitrix:station_plate",
     "kingdomomnitrix:station_trim",
     "kingdomomnitrix:azurite_ore",
     "kingdomomnitrix:azurite_block",
     "kingdomomnitrix:viridium_ore",
-    "kingdomomnitrix:viridium_block"
+    "kingdomomnitrix:viridium_block",
+    "kingdomomnitrix:taydenite_ore",
+    "kingdomomnitrix:biotech_node"
   ]
 }

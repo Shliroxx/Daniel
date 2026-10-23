@@ -1,0 +1,7 @@
+{
+  "parent": "kingdomomnitrix:block/biotech_node_3d",
+  "textures": {
+    "all": "kingdomomnitrix:block/biotech_node",
+    "particle": "kingdomomnitrix:block/biotech_node"
+  }
+}

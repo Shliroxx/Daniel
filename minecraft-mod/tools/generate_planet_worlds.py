@@ -242,6 +242,7 @@ PLANETS = {
         "terrain": "amplified",
         "stone": "torren_basalt", "top": "torren_dust", "under": "torren_dust", "steep": "torren_basalt", "sea": False,
         "ore": "pyronite", "ore_count": 8, "ore_size": 6, "ore_max": 50, "blobs": [("torren_crust", 8, 34)],
+        "extra_ores": [("infernite_ore", 3, 4, 24)],
         "biomes": {
             "plains": {"sky": 0xD07050, "fog": 0xC88068, "water": 0x8A4A3A, "particle": ("minecraft:ash", 0.02),
                        "plants": [("torren_thorn", 2, 20)], "trees": [], "crust": True},
@@ -277,6 +278,7 @@ ALIEN_WORLDS = {
         "ore": None, "blobs": [("petropia_crystal", 12, 28), ("petropia_smooth_rock", 8, 40)],
         # in allen Biomen: tiefe Geoden, Quellen in Felswaenden
         "extras": ["geode_deep", "spring"], "kit": PETROPIA_KIT,
+        "extra_ores": [("taydenite_ore", 6, 6, 70)],
         # Siedlungen der Petrosapiens (Java: world/structure/PetrosapienSettlement): Doerfer auf ebenem Grund, Ruinen ueberall
         "structures": [
             {"id": "petrosapien_village", "type": "petrosapien_settlement", "config": {"ruin": False}, "spacing": 30, "separation": 12,
@@ -339,7 +341,7 @@ ALIEN_WORLDS = {
     "galvan_b": {
         "terrain": "overworld", "noise_tweaks": {"erosion": {"amplitude_scale": 0.6}},
         "stone": "mechamorph_circuit", "top": "mechamorph_plate", "under": "mechamorph_circuit", "steep": "mechamorph_circuit",
-        "sea": False, "ore": None, "blobs": [],
+        "sea": False, "ore": None, "blobs": [], "extra_ores": [("biotech_node", 7, 5, 120)],
         "biomes": {
             "grid": {"sky": 0x0A1A10, "fog": 0x1A3A22, "water": 0x3AFF5A, "particle": ("minecraft:electric_spark", 0.003),
                      "plants": [("mechamorph_vine", 3, 28)], "trees": []},
@@ -713,6 +715,11 @@ def outputs() -> dict[Path, dict]:
             files[wg / "configured_feature" / f"{ore}.json"] = ore_feature(cfg["stone"], f"{cfg['ore']}_ore", cfg["ore_size"])
             files[wg / "placed_feature" / f"{ore}.json"] = ore_placed(ore, cfg["ore_count"], cfg["ore_max"])
             ores.append(f"{MOD}:{ore}")
+        for block, count, size, max_y in cfg.get("extra_ores", ()):
+            fid = f"{planet}_ore_{block}"
+            files[wg / "configured_feature" / f"{fid}.json"] = ore_feature(cfg["stone"], block, size)
+            files[wg / "placed_feature" / f"{fid}.json"] = ore_placed(fid, count, max_y)
+            ores.append(f"{MOD}:{fid}")
         for blob, count, size in cfg["blobs"]:
             fid = f"{planet}_blob_{blob}"
             files[wg / "configured_feature" / f"{fid}.json"] = ore_feature(cfg["stone"], blob, size)

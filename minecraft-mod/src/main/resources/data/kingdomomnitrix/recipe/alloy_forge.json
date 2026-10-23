@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "TAT",
+    "SFS",
+    "ROR"
+  ],
+  "key": {
+    "T": {
+      "item": "kingdomomnitrix:raritanium_ingot"
+    },
+    "A": {
+      "item": "minecraft:anvil"
+    },
+    "S": {
+      "item": "minecraft:smithing_table"
+    },
+    "F": {
+      "item": "kingdomomnitrix:plasma_smelter"
+    },
+    "R": {
+      "item": "kingdomomnitrix:raritanium"
+    },
+    "O": {
+      "item": "minecraft:obsidian"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:alloy_forge",
+    "count": 1
+  }
+}

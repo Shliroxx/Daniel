@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "kingdomomnitrix:block/molecular_crusher_front_on",
+    "side": "kingdomomnitrix:block/molecular_crusher_side",
+    "top": "kingdomomnitrix:block/molecular_crusher_top"
+  }
+}

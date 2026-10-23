@@ -88,6 +88,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.santiq.kingdomomnitrix.client.suit.SuitArmorRenderer.install();
+		com.santiq.kingdomomnitrix.client.suit.MachineScreen.register();
 		registerHeartless(ModEntities.SHADOW, "shadow");
 		registerHeartless(ModEntities.SOLDIER, "soldier");
 		registerHeartless(ModEntities.LARGE_BODY, "large_body");

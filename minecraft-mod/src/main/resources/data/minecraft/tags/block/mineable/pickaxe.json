@@ -19,6 +19,9 @@
     "kingdomomnitrix:plumber_floor",
     "kingdomomnitrix:plumber_light",
     "kingdomomnitrix:plumber_console",
+    "kingdomomnitrix:molecular_crusher",
+    "kingdomomnitrix:plasma_smelter",
+    "kingdomomnitrix:alloy_forge",
     "kingdomomnitrix:veldin_sandstone",
     "kingdomomnitrix:veldin_rock",
     "kingdomomnitrix:kerwan_slate",
@@ -60,6 +63,10 @@
     "kingdomomnitrix:aquarine_ore",
     "kingdomomnitrix:aquarine_block",
     "kingdomomnitrix:pyronite_ore",
-    "kingdomomnitrix:pyronite_block"
+    "kingdomomnitrix:pyronite_block",
+    "kingdomomnitrix:taydenite_ore",
+    "kingdomomnitrix:biotech_node",
+    "kingdomomnitrix:infernite_ore",
+    "kingdomomnitrix:celestium_ore"
   ]
 }

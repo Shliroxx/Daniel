@@ -394,6 +394,25 @@ for m in MATERIALS:
                            (lambda m=m: {f"{m.name}_block": tx.metal_block(f"{m.name}_block", *m.colors)}),
                            "ORANGE", 5.0, 6.0, "METAL", tier=m.ore_tier, planet="tech", tags=["beacon"]))
 
+# Erze der Endgame-Ruestungen (Rohstoffe als Items in suit/forge/ForgeMaterials, weiterverarbeitet in den Maschinen)
+SPACE_ROCK = _cache(lambda: px.rock("asteroid_rock", H("16141C"), H("34303E"), H("6A6478"), cells=10))
+SUIT_ORES = [
+    ("taydenite_ore", "Taydenit-Erz", "Taydenite Ore", lambda: px.rock("petropia_rock", H("0A2A2A"), H("2A5A5A"), H("6AA8A0"), cells=12),
+     (H("0E5A3A"), H("3AE89A"), H("D8FFE8")), "iron", 3, "raw_taydenite", "petropia"),
+    ("biotech_node", "Mechamorph-Knoten", "Mechamorph Node", lambda: px.slate("mechamorph_circuit", H("080C0A"), H("1E2A24"), H("3A6A4A")),
+     (H("0A3A14"), H("3AFF5A"), H("D8FFD8")), "iron", 6, "raw_biotech", "galvan_b"),
+    ("infernite_ore", "Infernit-Erz", "Infernite Ore", TORREN_BASALT, (H("5A0806"), H("FF6A1A"), H("FFE08A")), "diamond", 9,
+     "raw_infernite", "torren_iv"),
+    ("celestium_ore", "Celestium-Erz", "Celestium Ore", SPACE_ROCK, (H("2A1A5A"), H("B8A8FF"), H("FFFFFF")), "diamond", 10,
+     "raw_celestium", "space"),
+]
+ORE_3D = {o[0] for o in SUIT_ORES}
+for ore_name, ore_de, ore_en, ore_stone, ore_colors, ore_tier, ore_light, ore_drop, ore_planet in SUIT_ORES:
+    BLOCKS.append(BlockDef(ore_name, ore_de, ore_en, "ore",
+                           (lambda n=ore_name, st=ore_stone, c=ore_colors: {n: px.ore(n, st(), *c, style="crystal")}),
+                           "STONE_GRAY", 4.0, 6.0, "STONE", tier=ore_tier, light=ore_light, drop=f"ore:{ore_drop}", xp=(3, 8),
+                           planet=ore_planet))
+
 # Bloecke der Alien-Faehigkeiten (temporaer, kein Item, kein Drop): Diamondheads Kristall, Big Chills Eis
 ABILITY_BLOCKS = [
     BlockDef("petrosapien_crystal", "Petrosapien-Kristall", "Petrosapien Crystal", "crystal",
@@ -418,6 +437,9 @@ PLANT_SOIL = "alien_soil"
 
 def block_model_files(b: BlockDef) -> dict[str, dict]:
     tex = lambda t: f"{MOD}:block/{t}"  # noqa: E731
+    if b.name in ORE_3D:
+        # 3D-Erz: Gesteinswuerfel mit herausragenden Kristallen (Modell aus tools/generate_suit_materials.py)
+        return {b.name: {"parent": f"{MOD}:block/{b.name}_3d", "textures": {"all": tex(b.name), "particle": tex(b.name)}}}
     if b.kind == "turf":
         return {b.name: {"parent": "minecraft:block/cube_bottom_top",
                          "textures": {"top": tex(f"{b.name}_top"), "side": tex(f"{b.name}_side"), "bottom": tex(f"{b.name}_bottom")}}}

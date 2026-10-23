@@ -186,6 +186,14 @@ public final class PlanetBlocks {
 	public static final Block PYRONITE_ORE = register("pyronite_ore", new ExperienceDroppingBlock(UniformIntProvider.create(2, 6), base(MapColor.STONE_GRAY, 3.0f, 3.0f, BlockSoundGroup.STONE, 5, true).instrument(NoteBlockInstrument.BASEDRUM)));
 	/** Pyronit-Block */
 	public static final Block PYRONITE_BLOCK = register("pyronite_block", new Block(base(MapColor.ORANGE, 5.0f, 6.0f, BlockSoundGroup.METAL, 0, true)));
+	/** Taydenit-Erz */
+	public static final Block TAYDENITE_ORE = register("taydenite_ore", new ExperienceDroppingBlock(UniformIntProvider.create(3, 8), base(MapColor.STONE_GRAY, 4.0f, 6.0f, BlockSoundGroup.STONE, 3, true).instrument(NoteBlockInstrument.BASEDRUM)));
+	/** Mechamorph-Knoten */
+	public static final Block BIOTECH_NODE = register("biotech_node", new ExperienceDroppingBlock(UniformIntProvider.create(3, 8), base(MapColor.STONE_GRAY, 4.0f, 6.0f, BlockSoundGroup.STONE, 6, true).instrument(NoteBlockInstrument.BASEDRUM)));
+	/** Infernit-Erz */
+	public static final Block INFERNITE_ORE = register("infernite_ore", new ExperienceDroppingBlock(UniformIntProvider.create(3, 8), base(MapColor.STONE_GRAY, 4.0f, 6.0f, BlockSoundGroup.STONE, 9, true).instrument(NoteBlockInstrument.BASEDRUM)));
+	/** Celestium-Erz */
+	public static final Block CELESTIUM_ORE = register("celestium_ore", new ExperienceDroppingBlock(UniformIntProvider.create(3, 8), base(MapColor.STONE_GRAY, 4.0f, 6.0f, BlockSoundGroup.STONE, 10, true).instrument(NoteBlockInstrument.BASEDRUM)));
 	/** Petrosapien-Kristall */
 	public static final Block PETROSAPIEN_CRYSTAL = register("petrosapien_crystal", new TechGlassBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).strength(0.4f, 6.0f).sounds(BlockSoundGroup.AMETHYST_BLOCK).luminance(state -> 9).nonOpaque().dropsNothing().slipperiness(0.98f).allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false).suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false)));
 	/** Petrosapien-Stachel */
