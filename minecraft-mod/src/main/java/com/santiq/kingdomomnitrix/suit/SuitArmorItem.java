@@ -63,5 +63,7 @@ public class SuitArmorItem extends ArmorItem implements GeoItem {
 		tooltip.add(Text.translatable(set.tooltipKey()).formatted(Formatting.GRAY));
 		tooltip.add(Text.translatable(set.line() == SuitSet.Line.BEN10 ? "tooltip.kingdomomnitrix.suit.line.ben10"
 				: "tooltip.kingdomomnitrix.suit.line.ratchet").formatted(Formatting.DARK_AQUA));
+		tooltip.add(Text.translatable("tooltip.kingdomomnitrix.suit.set_bonus").formatted(Formatting.GOLD));
+		tooltip.add(Text.translatable(set.bonusKey()).formatted(Formatting.YELLOW));
 	}
 }

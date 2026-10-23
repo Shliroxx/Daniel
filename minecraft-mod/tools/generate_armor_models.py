@@ -905,6 +905,36 @@ def outputs() -> dict[Path, bytes]:
 
 ITEM_TEX = ASSETS / "textures" / "item"
 ITEM_MODELS = ASSETS / "models" / "item"
+# Anzugfaehigkeiten (suit/power/SuitPowers): Setboni, Anzugsteuerung, Meldungen -> (Deutsch, Englisch)
+POWER_LANG = {
+    "tooltip.kingdomomnitrix.suit.set_bonus": ("Setbonus (alle vier Teile):", "Set bonus (all four pieces):"),
+    "tooltip.kingdomomnitrix.suit.bonus.taydenite": (
+        "Schild 20, laedt schnell. +10 % Tempo, weiche Landung.", "Shield 20, fast recharge. +10% speed, soft landing."),
+    "tooltip.kingdomomnitrix.suit.bonus.galvan": (
+        "Schild 40, laedt schnell. Freier Flug. +20 % Tempo, +2 Herzen, hoehere Schritte.",
+        "Shield 40, fast recharge. Free flight. +20% speed, +2 hearts, higher steps."),
+    "tooltip.kingdomomnitrix.suit.bonus.celestial": (
+        "Schild 80, laedt sehr schnell. Schneller Flug mit Sternenspur. +30 % Tempo, +4 Herzen, Nachtsicht, kein Fallschaden.",
+        "Shield 80, very fast recharge. Fast flight with star trail. +30% speed, +4 hearts, night vision, no fall damage."),
+    "tooltip.kingdomomnitrix.suit.bonus.magnaplate": (
+        "Schild 8. Heli-Rotor: Sprungtaste in der Luft halten zum Gleiten. +2 Angriff, Rueckstossfestigkeit, weiche Landung.",
+        "Shield 8. Heli rotor: hold jump in the air to glide. +2 attack, knockback resistance, soft landing."),
+    "tooltip.kingdomomnitrix.suit.bonus.carbonox": (
+        "Schild 14. Schubduesen: Sprungtaste halten (Treibstoff laedt am Boden). +4 Angriff, +10 % Angriffstempo, weiche Landung.",
+        "Shield 14. Thrusters: hold jump (fuel refills on the ground). +4 attack, +10% attack speed, soft landing."),
+    "tooltip.kingdomomnitrix.suit.bonus.infernox": (
+        "Schild 24. Starke Schubduesen mit viel Treibstoff. +7 Angriff, +20 % Angriffstempo, Feuerfestigkeit, sehr weiche Landung.",
+        "Shield 24. Strong thrusters with plenty of fuel. +7 attack, +20% attack speed, fire resistance, very soft landing."),
+    "key.kingdomomnitrix.suit_control": ("Anzugsteuerung", "Suit Control"),
+    "screen.kingdomomnitrix.suit.title": ("Anzugsteuerung", "Suit Control"),
+    "screen.kingdomomnitrix.suit.shield": ("Energieschild", "Energy Shield"),
+    "screen.kingdomomnitrix.suit.mobility": ("Flug / Gleiten / Schub", "Flight / Glide / Thrust"),
+    "screen.kingdomomnitrix.suit.boost": ("Werte-Boni", "Stat Bonuses"),
+    "screen.kingdomomnitrix.suit.on": ("AN", "ON"),
+    "screen.kingdomomnitrix.suit.off": ("AUS", "OFF"),
+    "message.kingdomomnitrix.suit.no_set": ("Du traegst keinen vollstaendigen Endgame-Anzug.", "You are not wearing a complete endgame suit."),
+}
+
 LANG = ASSETS / "lang"
 PIECES = {"helmet": ("armorHead",), "chestplate": ("armorBody", "armorRightArm", "armorLeftArm"),
           "leggings": ("armorRightLeg", "armorLeftLeg"), "boots": ("armorRightBoot", "armorLeftBoot")}
@@ -973,10 +1003,13 @@ def item_outputs() -> dict[Path, bytes]:
                 lang["en_us"][f"item.kingdomomnitrix.{item}"] = f"{NAMES[name][1]} {PIECE_NAMES[piece][1]}"
             lang["de_de"][f"tooltip.kingdomomnitrix.suit.{name}"] = TOOLTIPS[name][0]
             lang["en_us"][f"tooltip.kingdomomnitrix.suit.{name}"] = TOOLTIPS[name][1]
-    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben-10-Linie: grosser Energieschild, wenig Grundpanzerung"
-    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben 10 line: large energy shield, light base armor"
-    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet-Linie: schwere Panzerung, kleiner Schild"
-    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet line: heavy armor, small shield"
+    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben-10-Linie: grosser Energieschild, Tempo, Flug - wenig Grundpanzerung"
+    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben 10 line: large energy shield, speed, flight - light base armor"
+    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet-Linie: schwere Panzerung, Angriffskraft, Schubduesen - kleiner Schild"
+    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet line: heavy armor, attack power, thrusters - small shield"
+    for key, (de, en) in POWER_LANG.items():
+        lang["de_de"][key] = de
+        lang["en_us"][key] = en
     lang["de_de"]["itemGroup.kingdomomnitrix.suits"] = "Kingdom Omnitrix: Endgame-Ruestungen"
     lang["en_us"]["itemGroup.kingdomomnitrix.suits"] = "Kingdom Omnitrix: Endgame Armor"
     for code, data in lang.items():

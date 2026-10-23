@@ -6,9 +6,12 @@ import net.minecraft.util.Rarity;
 /**
  * Die sechs Endgame-Ruestungen in zwei Linien mit eigenen Staerken (Werte hier, Faehigkeiten folgen):
  * <ul>
- *   <li><b>Ben 10</b> (Taydenit, Galvan-Biotech, Celestialsapien): weniger Grundpanzerung, dafuer grosser Energieschild</li>
- *   <li><b>Ratchet &amp; Clank</b> (Magnaplate, Carbonox, Infernox): hohe Panzerung und Haerte, kleiner Schild</li>
+ *   <li><b>Ben 10</b> (Taydenit, Galvan-Biotech, Celestialsapien): weniger Grundpanzerung, dafuer grosser, schnell
+ *       nachladender Energieschild, Tempo, Leben und ab Stufe 2 freier Flug</li>
+ *   <li><b>Ratchet &amp; Clank</b> (Magnaplate, Carbonox, Infernox): hohe Panzerung und Haerte, kleiner, langsamer
+ *       Schild, dafuer Angriffskraft, Rueckstossfestigkeit und Heli-Gleiten bzw. Schubduesen</li>
  * </ul>
+ * Die Faehigkeiten wirken nur mit allen vier Teilen desselben Anzugs ({@code suit.power.SuitPowers}).
  * Modell, Textur, Leuchtmaske und Animation entstehen mit {@code tools/generate_armor_models.py}; der Name ist der
  * Dateiname dort.
  */
@@ -20,8 +23,19 @@ public enum SuitSet {
 	CARBONOX("carbonox", Line.RATCHET, 2, new int[] {5, 9, 7, 4}, 4.5f, 0.15f, 14, Rarity.RARE, "tooltip.kingdomomnitrix.suit.carbonox"),
 	INFERNOX("infernox", Line.RATCHET, 3, new int[] {6, 12, 9, 6}, 7.0f, 0.3f, 18, Rarity.EPIC, "tooltip.kingdomomnitrix.suit.infernox");
 
-	/** Herkunft der Ruestung; bestimmt spaeter Schild und Boni. */
+	/** Herkunft der Ruestung; bestimmt Schild, Fortbewegung und Boni. */
 	public enum Line { BEN10, RATCHET }
+
+	/** Fortbewegung des vollstaendigen Anzugs. */
+	public enum Mobility {
+		NONE,
+		/** Heli-Rotor: Sprungtaste in der Luft halten = langsam gleiten */
+		GLIDE,
+		/** Schubduesen: Sprungtaste halten = Schub, Treibstoff laedt am Boden nach */
+		JETPACK,
+		/** freier Flug wie im Kreativmodus (doppelt springen) */
+		FLIGHT
+	}
 
 	private final String id;
 	private final Line line;
@@ -93,6 +107,64 @@ public enum SuitSet {
 			case 1 -> 40;
 			case 2 -> 55;
 			default -> 80;
+		};
+	}
+
+	/** Schildkapazitaet in Lebenspunkten */
+	public float shieldCapacity() {
+		return line == Line.BEN10 ? new float[] {20, 40, 80}[tier - 1] : new float[] {8, 14, 24}[tier - 1];
+	}
+
+	/** Nachladen je Tick, nachdem die Pause abgelaufen ist */
+	public float shieldRegen() {
+		return line == Line.BEN10 ? new float[] {0.1f, 0.2f, 0.4f}[tier - 1] : new float[] {0.05f, 0.08f, 0.12f}[tier - 1];
+	}
+
+	/** Pause nach einem Treffer, bevor der Schild nachlaedt (Ticks) */
+	public int shieldDelay() {
+		return line == Line.BEN10 ? 60 : 100;
+	}
+
+	/** Leuchtfarbe von Schild und Effekten (RGB) */
+	public int color() {
+		return switch (this) {
+			case TAYDENITE -> 0x3AE89A;
+			case GALVAN -> 0x4BFF6A;
+			case CELESTIAL -> 0xD8CCFF;
+			case MAGNAPLATE -> 0xA86AFF;
+			case CARBONOX -> 0xFF2A2A;
+			case INFERNOX -> 0xFF8A1A;
+		};
+	}
+
+	public Mobility mobility() {
+		return switch (this) {
+			case TAYDENITE -> Mobility.NONE;
+			case GALVAN, CELESTIAL -> Mobility.FLIGHT;
+			case MAGNAPLATE -> Mobility.GLIDE;
+			case CARBONOX, INFERNOX -> Mobility.JETPACK;
+		};
+	}
+
+	/** Fluggeschwindigkeit (Vanilla-Kreativ 0.05) */
+	public float flySpeed() {
+		return this == CELESTIAL ? 0.075f : 0.035f;
+	}
+
+	/** Treibstoff der Schubduesen in Ticks */
+	public int jetpackFuel() {
+		return this == INFERNOX ? 160 : 60;
+	}
+
+	/** Uebersetzungsschluessel der Setboni (Tooltip, Anzugsteuerung) */
+	public String bonusKey() {
+		return switch (this) {
+			case TAYDENITE -> "tooltip.kingdomomnitrix.suit.bonus.taydenite";
+			case GALVAN -> "tooltip.kingdomomnitrix.suit.bonus.galvan";
+			case CELESTIAL -> "tooltip.kingdomomnitrix.suit.bonus.celestial";
+			case MAGNAPLATE -> "tooltip.kingdomomnitrix.suit.bonus.magnaplate";
+			case CARBONOX -> "tooltip.kingdomomnitrix.suit.bonus.carbonox";
+			case INFERNOX -> "tooltip.kingdomomnitrix.suit.bonus.infernox";
 		};
 	}
 
