@@ -13,7 +13,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 /**
- * Anzugsteuerung (Taste P): Schild, Fortbewegung und Werte-Boni einzeln an- und abschalten, dazu die Setboni des
+ * Anzugsteuerung (Taste Punkt): Schild, Fortbewegung und Werte-Boni einzeln an- und abschalten, dazu die Setboni des
  * getragenen Anzugs. Der Zustand liegt in der Brustplatte; der Server bestaetigt ueber das naechste Statuspaket.
  */
 public class SuitControlScreen extends Screen {

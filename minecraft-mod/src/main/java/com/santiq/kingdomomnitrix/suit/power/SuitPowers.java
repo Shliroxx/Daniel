@@ -60,6 +60,8 @@ public final class SuitPowers {
 		SuitSet set;
 		float shield;
 		long lastHit = Long.MIN_VALUE / 2;
+		/** Schaden des letzten abgefangenen Treffers (fuer die Unverwundbarkeit) */
+		float lastAmount;
 		boolean broken;
 		boolean flightGranted;
 		boolean thrusting;
@@ -254,12 +256,21 @@ public final class SuitPowers {
 			return true;
 		}
 		State state = STATES.get(player.getUuid());
-		if (state == null || state.set == null || state.shield <= 0.0f || player.timeUntilRegen > 10) {
+		if (state == null || state.set == null || state.shield <= 0.0f) {
 			return true;
 		}
 		long now = player.getServerWorld().getTime();
+		// eigene Unverwundbarkeit wie Vanilla: innerhalb von 10 Ticks zaehlt nur, was ueber den letzten Treffer hinausgeht
+		float incoming = amount;
+		if (now - state.lastHit < 10) {
+			if (amount <= state.lastAmount) {
+				return false;
+			}
+			incoming = amount - state.lastAmount;
+		}
 		state.lastHit = now;
-		float absorbed = Math.min(state.shield, amount);
+		state.lastAmount = amount;
+		float absorbed = Math.min(state.shield, incoming);
 		state.shield -= absorbed;
 		boolean broke = state.shield <= 0.01f;
 		if (broke) {
@@ -274,7 +285,7 @@ public final class SuitPowers {
 			ServerPlayNetworking.send(viewer, hit);
 		}
 		ServerPlayNetworking.send(player, hit);
-		float rest = amount - absorbed;
+		float rest = incoming - absorbed;
 		if (rest > 0.01f) {
 			forwarding = true;
 			try {
@@ -282,9 +293,6 @@ public final class SuitPowers {
 			} finally {
 				forwarding = false;
 			}
-		} else {
-			// voll abgefangen: kurze Unverwundbarkeit wie bei einem echten Treffer, damit Mehrfachtreffer nicht durchrattern
-			player.timeUntilRegen = 20;
 		}
 		return false;
 	}
