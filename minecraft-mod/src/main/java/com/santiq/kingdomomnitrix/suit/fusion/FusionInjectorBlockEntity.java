@@ -37,6 +37,8 @@ public class FusionInjectorBlockEntity extends BlockEntity {
 	@Override
 	protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
 		super.writeNbt(nbt, registries);
+		// immer etwas schreiben: leere Update-Daten verwirft der Client, dann bliebe die Platte sichtbar
+		nbt.putBoolean("Filled", !stack.isEmpty());
 		if (!stack.isEmpty()) {
 			nbt.put("Item", stack.encode(registries));
 		}

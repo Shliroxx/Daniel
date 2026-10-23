@@ -157,6 +157,10 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		HandledScreens.register(ModScreenHandlers.OMNITRIX_WORKBENCH, OmnitrixWorkbenchScreen::new);
 		BlockEntityRendererFactories.register(ModBlockEntities.OMNITRIX_WORKBENCH, OmnitrixWorkbenchRenderer::new);
 		BlockEntityRendererFactories.register(ModBlockEntities.CONTAINMENT_POD, com.santiq.kingdomomnitrix.client.render.ContainmentPodRenderer::new);
+		BlockEntityRendererFactories.register(com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.CORE_ENTITY,
+				com.santiq.kingdomomnitrix.client.suit.FusionAltarRenderer.Core::new);
+		BlockEntityRendererFactories.register(com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.INJECTOR_ENTITY,
+				com.santiq.kingdomomnitrix.client.suit.FusionAltarRenderer.Injector::new);
 		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
 				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
 		CombatAnimations.register();

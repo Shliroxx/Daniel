@@ -8,7 +8,9 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -16,18 +18,18 @@ import net.minecraft.nbt.NbtLong;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
-import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.joml.Vector3f;
 
 /**
  * Fusionskern: haelt das Mittelstueck und die Energiekerne. Startet eine Fusion, wenn ein passendes Rezept vorliegt,
@@ -43,6 +45,10 @@ public class FusionCoreBlockEntity extends BlockEntity {
 	private ItemStack cores = ItemStack.EMPTY;
 	private int progress;
 	private int total;
+	/** Platte des laufenden Rezepts (Netherit-Teile passen auf beide Linien, die Platte entscheidet) */
+	private Item plate = Items.AIR;
+	/** Weltzeit des letzten Abschlusses (fuer Blitz und Schockwelle auf dem Client) */
+	private long finishedAt = Long.MIN_VALUE;
 	/** am Vorgang beteiligte Injektoren (fuer Strahlen auf dem Client) */
 	private final List<BlockPos> active = new ArrayList<>();
 
@@ -68,6 +74,14 @@ public class FusionCoreBlockEntity extends BlockEntity {
 
 	public List<BlockPos> active() {
 		return active;
+	}
+
+	public Item plate() {
+		return plate;
+	}
+
+	public long finishedAt() {
+		return finishedAt;
 	}
 
 	// --- Bedienung ----------------------------------------------------------------------------------------------------
@@ -141,6 +155,7 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		}
 		active.clear();
 		usable.stream().limit(recipe.plates()).forEach(i -> active.add(i.getPos()));
+		plate = recipe.plate();
 		total = recipe.ticks();
 		progress = 0;
 		world.playSound(null, pos, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.BLOCKS, 1.5f, 0.6f);
@@ -166,7 +181,8 @@ public class FusionCoreBlockEntity extends BlockEntity {
 			return;
 		}
 		ServerWorld server = (ServerWorld) world;
-		Optional<FusionRecipes.Recipe> recipe = FusionRecipes.forCenter(core.center, List.of());
+		Optional<FusionRecipes.Recipe> recipe = FusionRecipes.forCenter(core.center, List.of(new ItemStack(core.plate)))
+				.filter(r -> r.plate() == core.plate);
 		List<FusionInjectorBlockEntity> injectors = new ArrayList<>();
 		for (BlockPos at : core.active) {
 			if (world.getBlockEntity(at) instanceof FusionInjectorBlockEntity injector && recipe.isPresent()
@@ -180,15 +196,13 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		}
 		core.progress++;
 		float t = core.progress / (float) core.total;
-		Vec3d target = Vec3d.ofCenter(pos).add(0, 1.2, 0);
-		if (core.progress % 2 == 0) {
+		Vec3d target = Vec3d.ofCenter(pos).add(0, 0.75, 0);
+		if (core.progress % 4 == 0) {
+			// Funken entlang der Strahlen (die Strahlen selbst zeichnet der Client)
 			for (FusionInjectorBlockEntity injector : injectors) {
-				Vec3d from = Vec3d.ofCenter(injector.getPos()).add(0, 1.0, 0);
-				Vec3d step = target.subtract(from);
-				double along = (core.progress * 0.07) % 1.0;
-				Vec3d point = from.add(step.multiply(along));
-				server.spawnParticles(new DustParticleEffect(new Vector3f(0.4f, 1.0f, 0.8f), 1.2f), point.x, point.y, point.z, 2, 0.03, 0.03,
-						0.03, 0);
+				Vec3d from = Vec3d.ofCenter(injector.getPos()).add(0, 0.65, 0);
+				Vec3d point = from.add(target.subtract(from).multiply(world.random.nextDouble()));
+				server.spawnParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y, point.z, 1, 0.05, 0.05, 0.05, 0.02);
 			}
 		}
 		if (core.progress % 20 == 0) {
@@ -216,10 +230,13 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		progress = 0;
 		total = 0;
 		active.clear();
-		Vec3d c = Vec3d.ofCenter(pos).add(0, 1.2, 0);
+		plate = Items.AIR;
+		finishedAt = world.getTime();
+		Vec3d c = Vec3d.ofCenter(pos).add(0, 0.75, 0);
 		world.spawnParticles(ParticleTypes.FLASH, c.x, c.y, c.z, 2, 0, 0, 0, 0);
 		world.spawnParticles(ParticleTypes.END_ROD, c.x, c.y, c.z, 120, 0.2, 0.2, 0.2, 0.4);
-		world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y, c.z, 1, 0, 0, 0, 0);
+		world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, c.x, c.y, c.z, 60, 0.4, 0.4, 0.4, 0.6);
+		world.spawnParticles(ParticleTypes.SONIC_BOOM, c.x, c.y, c.z, 1, 0, 0, 0, 0);
 		world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.BLOCKS, 0.8f, 1.4f);
 		world.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.BLOCKS, 1.0f, 1.0f);
 		sync();
@@ -229,6 +246,7 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		progress = 0;
 		total = 0;
 		active.clear();
+		plate = Items.AIR;
 		world.playSound(null, pos, SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.BLOCKS, 1.2f, 0.8f);
 		sync();
 	}
@@ -256,6 +274,8 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		NbtList list = new NbtList();
 		active.forEach(p -> list.add(NbtLong.of(p.asLong())));
 		nbt.put("Active", list);
+		nbt.putString("Plate", Registries.ITEM.getId(plate).toString());
+		nbt.putLong("Finished", finishedAt);
 	}
 
 	@Override
@@ -265,6 +285,8 @@ public class FusionCoreBlockEntity extends BlockEntity {
 		cores = nbt.contains("Cores") ? ItemStack.fromNbt(registries, nbt.getCompound("Cores")).orElse(ItemStack.EMPTY) : ItemStack.EMPTY;
 		progress = nbt.getInt("Progress");
 		total = nbt.getInt("Total");
+		plate = nbt.contains("Plate") ? Registries.ITEM.get(Identifier.of(nbt.getString("Plate"))) : Items.AIR;
+		finishedAt = nbt.contains("Finished") ? nbt.getLong("Finished") : Long.MIN_VALUE;
 		active.clear();
 		for (NbtElement e : nbt.getList("Active", NbtElement.LONG_TYPE)) {
 			active.add(BlockPos.fromLong(((NbtLong) e).longValue()));
