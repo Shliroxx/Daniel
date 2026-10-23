@@ -287,7 +287,7 @@ BLOCKS: list[BlockDef] = [
              "PURPLE", 0.7, 0.7, "AMETHYST_CLUSTER", "shovel", planet="petropia", tags=["alien_soil"]),
     BlockDef("petropia_gravel", "Splitterkies", "Shard Gravel", "natural",
              single("petropia_gravel", lambda: px.soil("petropia_gravel", H("4A5A5E"), H("98AAAE"), H("D8E6E8"), H("FFFFFF"))),
-             "LIGHT_GRAY", 0.6, 0.6, "GRAVEL", "shovel", planet="petropia", tags=["alien_soil"]),
+             "LIGHT_GRAY", 0.6, 0.6, "GRAVEL", "shovel", planet="petropia"),
     # Galvan Prime (Galvans / Grey Matter): feuchte Sumpf- und Technikwelt
     BlockDef("galvan_moss", "Galvan-Moos", "Galvan Moss", "turf",
              lambda: turf_textures("galvan_moss", GALVAN_MOSS, GALVAN_MUD),
