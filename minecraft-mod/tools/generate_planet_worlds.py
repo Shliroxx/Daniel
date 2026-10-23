@@ -28,6 +28,7 @@ MOD = "kingdomomnitrix"
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "src" / "main" / "resources" / "data" / MOD
 TEMPLATE = DATA / "worldgen" / "noise_settings" / "dry_planet.json"
+VANILLA = ROOT / "tools" / "reference" / "vanilla_worldgen"
 
 
 def b(name: str) -> str:
@@ -43,6 +44,7 @@ def state(name: str, **props) -> dict:
 
 PLANETS = {
     "veldin": {
+        "terrain": "large_biomes",
         "stone": "veldin_rock", "top": "veldin_sand", "under": "veldin_sand", "steep": "veldin_sandstone", "sea": False,
         "ore": "solar_copper", "ore_count": 14, "ore_size": 9, "ore_max": 110,
         "blobs": [("veldin_sandstone", 10, 40)],
@@ -57,6 +59,7 @@ PLANETS = {
         "life": {"creature": [("minecraft:armadillo", 12, 2, 3), ("minecraft:camel", 6, 1, 2)]},
     },
     "kerwan": {
+        "terrain": "amplified",
         "stone": "kerwan_slate", "top": "kerwan_turf", "under": "kerwan_soil", "steep": "kerwan_slate", "sea": False,
         "ore": "azurite", "ore_count": 12, "ore_size": 8, "ore_max": 90, "blobs": [],
         "biomes": {
@@ -69,6 +72,7 @@ PLANETS = {
         # DNA-Quelle (Scan): Upgrade — die gepanzerten Soldier-Herzlosen (oben unter "monsters")
     },
     "novalis": {
+        "terrain": "overworld",
         "stone": "novalis_limestone", "top": "novalis_moss", "under": "novalis_loam", "steep": "novalis_limestone", "sea": False,
         "ore": "viridium", "ore_count": 10, "ore_size": 7, "ore_max": 70, "blobs": [],
         "biomes": {
@@ -83,6 +87,7 @@ PLANETS = {
         "slime": True,
     },
     "rilgar": {
+        "terrain": "overworld", "noise_tweaks": {"continentalness": {"first_octave": 1}},
         "stone": "rilgar_coralstone", "top": "rilgar_sand", "under": "rilgar_sand", "steep": "rilgar_coralstone", "sea": True,
         "ore": "aquarine", "ore_count": 9, "ore_size": 7, "ore_max": 60, "blobs": [],
         "biomes": {
@@ -97,6 +102,7 @@ PLANETS = {
                  "water_ambient": [("minecraft:cod", 15, 3, 5), ("minecraft:tropical_fish", 20, 3, 6)]},
     },
     "torren_iv": {
+        "terrain": "amplified",
         "stone": "torren_basalt", "top": "torren_dust", "under": "torren_dust", "steep": "torren_basalt", "sea": False,
         "ore": "pyronite", "ore_count": 8, "ore_size": 6, "ore_max": 50, "blobs": [("torren_crust", 8, 34)],
         "biomes": {
@@ -117,6 +123,7 @@ PLANETS = {
 # Keine Herzlosen: dort leben die wilden Aliens der jeweiligen Art (eigener Spawner, Alien-Definition "dna.species").
 ALIEN_WORLDS = {
     "sonorosia": {
+        "terrain": "large_biomes",
         "stone": "sonorosia_stone", "top": "sonorosia_sand", "under": "sonorosia_sand", "steep": "sonorosia_stone", "sea": False,
         "ore": None, "blobs": [("sonorosia_resonite", 8, 22)],
         "biomes": {
@@ -128,6 +135,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "petropia": {
+        "terrain": "amplified",
         "stone": "petropia_rock", "top": "petropia_shards", "under": "petropia_shards", "steep": "petropia_rock", "sea": False,
         "ore": None, "blobs": [("petropia_crystal", 12, 28)],
         "biomes": {
@@ -139,6 +147,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "galvan_prime": {
+        "terrain": "overworld",
         "stone": "galvan_slate", "top": "galvan_moss", "under": "galvan_mud", "steep": "galvan_slate", "sea": True,
         "ore": None, "blobs": [],
         "biomes": {
@@ -150,6 +159,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "galvan_b": {
+        "terrain": "overworld", "noise_tweaks": {"erosion": {"amplitude_scale": 0.6}},
         "stone": "mechamorph_circuit", "top": "mechamorph_plate", "under": "mechamorph_circuit", "steep": "mechamorph_circuit",
         "sea": False, "ore": None, "blobs": [],
         "biomes": {
@@ -161,6 +171,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "kylmyys": {
+        "terrain": "amplified",
         "stone": "kylmyys_permafrost", "top": "kylmyys_snow", "under": "kylmyys_snow", "steep": "kylmyys_ice", "sea": False,
         "ore": None, "blobs": [("kylmyys_ice", 10, 30)],
         "biomes": {
@@ -172,6 +183,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "vulpin": {
+        "terrain": "large_biomes",
         "stone": "vulpin_rubble", "top": "vulpin_ash", "under": "vulpin_ash", "steep": "vulpin_rubble", "sea": False,
         "ore": None, "blobs": [("vulpin_sludge", 10, 30)],
         "biomes": {
@@ -183,6 +195,7 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "piscciss": {
+        "terrain": "overworld", "noise_tweaks": {"continentalness": {"first_octave": 1}},
         "stone": "piscciss_reefstone", "top": "piscciss_sand", "under": "piscciss_sand", "steep": "piscciss_reefstone", "sea": True,
         "sea_level": 78, "ore": None, "blobs": [],
         "biomes": {
@@ -274,6 +287,69 @@ def surface_rule(planet: str, cfg: dict) -> dict:
     core = cond({"type": "minecraft:vertical_gradient", "random_name": f"{MOD}:{planet}_core",
                  "true_at_and_below": {"above_bottom": 0}, "false_at_and_above": {"above_bottom": 5}}, block_rule("planet_core"))
     return {"type": "minecraft:sequence", "sequence": [core, cond({"type": "minecraft:above_preliminary_surface"}, surface)]}
+
+
+# --- Eigenes Gelaende je Welt -----------------------------------------------------------------------------------
+# Minecraft leitet jedes Rauschfeld aus seinem Namen ab. Jede Welt bekommt eigene, umbenannte Kopien der Vanilla-
+# Dichtefunktionen und Rauschfelder (tools/reference/vanilla_worldgen) -> voellig anderes Gelaende je Welt. Das Profil
+# waehlt die Vanilla-Grundform (overworld, amplified = schroffe Gebirge, large_biomes = weite Landschaften);
+# "noise_tweaks" verschiebt einzelne Rauschfelder (z. B. firstOctave der Kontinentalitaet: Inselwelt vs. Kontinente).
+
+def _vanilla_ids(kind: str) -> set[str]:
+    root = VANILLA / kind
+    return {"minecraft:" + p.relative_to(root).with_suffix("").as_posix() for p in root.rglob("*.json")}
+
+
+def _vanilla(kind: str, ident: str) -> dict:
+    return json.loads((VANILLA / kind / (ident.split(":", 1)[1] + ".json")).read_text(encoding="utf-8"))
+
+
+def terrain(planet: str, cfg: dict) -> tuple[dict, dict[Path, dict]]:
+    """Noise-Settings-Vorlage der Welt (Router mit eigenen IDs) und die zugehoerigen Dichtefunktionen/Rauschfelder."""
+    df_ids = _vanilla_ids("density_function")
+    noise_ids = _vanilla_ids("noise")
+    prefix = f"{MOD}:{planet}/"
+
+    def rename(obj):
+        if isinstance(obj, dict):
+            return {k: rename(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [rename(v) for v in obj]
+        if isinstance(obj, str) and (obj in df_ids or obj in noise_ids):
+            return prefix + obj.split(":", 1)[1]
+        return obj
+
+    settings = rename(_vanilla("noise_settings", "minecraft:" + cfg.get("terrain", "overworld")))
+    files: dict[Path, dict] = {}
+    pending = [settings]
+    seen: set[str] = set()
+    while pending:
+        node = pending.pop()
+        stack = [node]
+        while stack:
+            o = stack.pop()
+            if isinstance(o, dict):
+                stack.extend(o.values())
+            elif isinstance(o, list):
+                stack.extend(o)
+            elif isinstance(o, str) and o.startswith(prefix) and o not in seen:
+                seen.add(o)
+                vanilla_id = "minecraft:" + o[len(prefix):]
+                rel = o[len(prefix):]
+                if vanilla_id in df_ids:
+                    data = rename(_vanilla("density_function", vanilla_id))
+                    files[DATA / "worldgen" / "density_function" / planet / f"{rel}.json"] = data
+                    pending.append(data)
+                if vanilla_id in noise_ids:
+                    data = _vanilla("noise", vanilla_id)
+                    tweak = cfg.get("noise_tweaks", {}).get(rel)
+                    if tweak:
+                        data = dict(data)
+                        data["firstOctave"] = data["firstOctave"] + tweak.get("first_octave", 0)
+                        if "amplitude_scale" in tweak:
+                            data["amplitudes"] = [round(a * tweak["amplitude_scale"], 4) for a in data["amplitudes"]]
+                    files[DATA / "worldgen" / "noise" / planet / f"{rel}.json"] = data
+    return settings, files
 
 
 def noise_settings(planet: str, cfg: dict, template: dict) -> dict:
@@ -387,7 +463,9 @@ def outputs() -> dict[Path, dict]:
     for tree, t in TREES.items():
         files[wg / "configured_feature" / f"{tree}.json"] = tree_feature(t)
     for planet, cfg in PLANETS.items():
-        files[wg / "noise_settings" / f"{planet}.json"] = noise_settings(planet, cfg, template)
+        world_template, terrain_files = terrain(planet, cfg)
+        files.update(terrain_files)
+        files[wg / "noise_settings" / f"{planet}.json"] = noise_settings(planet, cfg, world_template)
         ores = []
         if cfg["ore"]:
             ore = f"ore_{cfg['ore']}"
