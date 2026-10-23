@@ -19,11 +19,12 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_machine_textures as mt  # noqa: E402
 import planet_textures as tx  # noqa: E402
+import suit_icons  # noqa: E402
 
 LOG = logging.getLogger("generate_suit_materials")
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,8 +32,6 @@ ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "kingdomomnitrix"
 DATA = ROOT / "src" / "main" / "resources" / "data"
 MOD = "kingdomomnitrix"
 H = tx.hexc
-S = 4          # Ueberabtastung der Item-Bilder
-N = 64         # Item-Bildgroesse (wie die anderen Planeten-Items)
 
 # Material -> (Deutsch, Englisch, dunkel, mittel, hell)
 MATERIALS = {
@@ -82,110 +81,6 @@ def rgb(hexcode: str, alpha: int = 255) -> tuple[int, int, int, int]:
 def mix(a: str, b: str, t: float) -> tuple[int, int, int, int]:
     ca, cb = rgb(a), rgb(b)
     return tuple(int(ca[i] * (1 - t) + cb[i] * t) for i in range(3)) + (255,)
-
-
-# --- Item-Bilder -------------------------------------------------------------------------------------------------------
-
-def canvas() -> tuple[Image.Image, ImageDraw.ImageDraw]:
-    img = Image.new("RGBA", (N * S, N * S), (0, 0, 0, 0))
-    return img, ImageDraw.Draw(img)
-
-
-def finish(img: Image.Image) -> Image.Image:
-    """Verkleinern, harte Alphakante, dunkle Umrandung wie bei Vanilla-Items."""
-    small = img.resize((N, N), Image.LANCZOS)
-    arr = np.asarray(small).copy()
-    arr[..., 3] = np.where(arr[..., 3] > 110, 255, 0)
-    solid = arr[..., 3] > 0
-    outline = np.zeros_like(solid)
-    for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
-        outline |= np.roll(np.roll(solid, dy, 0), dx, 1)
-    outline &= ~solid
-    arr[outline] = (20, 16, 24, 255)
-    return Image.fromarray(arr, "RGBA")
-
-
-def facet_poly(draw, points, dark, mid, light):
-    draw.polygon(points, fill=rgb(mid))
-    cx = sum(p[0] for p in points) / len(points)
-    cy = sum(p[1] for p in points) / len(points)
-    for i in range(len(points)):
-        a, b = points[i], points[(i + 1) % len(points)]
-        shade = light if (a[1] + b[1]) / 2 < cy else dark
-        draw.polygon([a, b, (cx, cy)], fill=mix(mid, shade, 0.45))
-
-
-def item_image(form: str, mat: str, name: str) -> Image.Image:
-    _, _, dark, mid, light = MATERIALS[mat]
-    rng = np.random.default_rng(sum(ord(c) for c in name))
-    img, d = canvas()
-    s = S
-    if form == "raw":
-        return tx.item_raw(name, H(dark), H(mid), H(light))
-    if form == "ingot":
-        return tx.item_ingot(H(dark), H(mid), H(light))
-    if form == "dust":
-        # Haeufchen aus Koernern mit hellen Glanzkoernern
-        d.ellipse((10 * s, 30 * s, 54 * s, 56 * s), fill=rgb(dark))
-        d.ellipse((14 * s, 26 * s, 50 * s, 50 * s), fill=rgb(mid))
-        d.ellipse((22 * s, 20 * s, 42 * s, 40 * s), fill=mix(mid, light, 0.35))
-        for _ in range(60):
-            x, y = rng.uniform(14, 50), rng.uniform(22, 52)
-            r = rng.uniform(0.8, 1.8)
-            col = rgb(light) if rng.random() < 0.3 else (rgb(dark) if rng.random() < 0.5 else rgb(mid))
-            d.ellipse(((x - r) * s, (y - r) * s, (x + r) * s, (y + r) * s), fill=col)
-        return finish(img)
-    if form == "crystal":
-        facet_poly(d, [(32 * s, 6 * s), (48 * s, 22 * s), (42 * s, 56 * s), (22 * s, 56 * s), (16 * s, 22 * s)], dark, mid, light)
-        d.line((32 * s, 6 * s, 32 * s, 56 * s), fill=rgb(light), width=s)
-        return finish(img)
-    if form == "gel":
-        d.ellipse((12 * s, 18 * s, 52 * s, 56 * s), fill=rgb(dark))
-        d.ellipse((15 * s, 20 * s, 49 * s, 52 * s), fill=rgb(mid, 255))
-        for i in range(4):
-            x0 = 18 + i * 8
-            d.line((x0 * s, 30 * s, (x0 + 4) * s, 46 * s), fill=rgb(light), width=s)
-        d.ellipse((20 * s, 24 * s, 28 * s, 30 * s), fill=(255, 255, 255, 255))
-        return finish(img)
-    if form == "weave":
-        d.rounded_rectangle((10 * s, 10 * s, 54 * s, 54 * s), radius=6 * s, fill=rgb("16181C"))
-        for i in range(6):
-            c = 13 + i * 7
-            d.line((c * s, 12 * s, c * s, 52 * s), fill=rgb(mid), width=2 * s)
-            d.line((12 * s, c * s, 52 * s, c * s), fill=mix(dark, mid, 0.6), width=s)
-        d.ellipse((26 * s, 26 * s, 38 * s, 38 * s), fill=rgb(light))
-        return finish(img)
-    if form == "core":
-        for r, col in ((24, dark), (20, mid), (12, light)):
-            d.ellipse(((32 - r) * s, (32 - r) * s, (32 + r) * s, (32 + r) * s), fill=rgb(col))
-        for k in range(8):
-            a = k * math.pi / 4
-            d.line(((32 + math.cos(a) * 14) * s, (32 + math.sin(a) * 14) * s, (32 + math.cos(a) * 24) * s,
-                    (32 + math.sin(a) * 24) * s), fill=rgb("FFF0A0"), width=s)
-        return finish(img)
-    if form == "matrix":
-        d.polygon([(32 * s, 4 * s), (58 * s, 32 * s), (32 * s, 60 * s), (6 * s, 32 * s)], fill=rgb("0A0618"))
-        for _ in range(40):
-            x, y = rng.uniform(14, 50), rng.uniform(14, 50)
-            if abs(x - 32) + abs(y - 32) < 24:
-                d.point((x * s, y * s), fill=(255, 255, 255, 255))
-                d.ellipse(((x - 0.6) * s, (y - 0.6) * s, (x + 0.6) * s, (y + 0.6) * s), fill=(255, 255, 255, 255))
-        d.polygon([(32 * s, 4 * s), (58 * s, 32 * s), (32 * s, 60 * s), (6 * s, 32 * s)], outline=rgb(mid), width=2 * s)
-        d.ellipse((26 * s, 26 * s, 38 * s, 38 * s), fill=rgb(light))
-        return finish(img)
-    # Panzerplatten: geschwungene Platte mit Fase, Nieten und Emblem
-    base = {"plate": mid, "plate_dark": "3A3E44", "plate_hot": "8A4A16"}[form]
-    edge = {"plate": light, "plate_dark": "B8C0C8", "plate_hot": "FFD488"}[form]
-    glow = {"plate": light, "plate_dark": "FF2A2A", "plate_hot": "FF8A1A"}[form]
-    pts = [(10 * s, 12 * s), (54 * s, 12 * s), (56 * s, 40 * s), (32 * s, 58 * s), (8 * s, 40 * s)]
-    d.polygon(pts, fill=rgb(base))
-    inner = [(16 * s, 17 * s), (48 * s, 17 * s), (50 * s, 38 * s), (32 * s, 51 * s), (14 * s, 38 * s)]
-    d.polygon(inner, fill=mix(base, "000000", 0.25))
-    d.line(pts + [pts[0]], fill=rgb(edge), width=2 * s)
-    for x, y in ((14, 16), (50, 16), (12, 38), (52, 38)):
-        d.ellipse(((x - 1.5) * s, (y - 1.5) * s, (x + 1.5) * s, (y + 1.5) * s), fill=rgb(edge))
-    d.polygon([(32 * s, 24 * s), (40 * s, 32 * s), (32 * s, 42 * s), (24 * s, 32 * s)], fill=rgb(glow))
-    return finish(img)
 
 
 # --- Maschinen --------------------------------------------------------------------------------------------------------
@@ -385,7 +280,6 @@ ORE_SHAPES = {
                       + crystal("south", 6, 3, 1.5, 3.5, 0)),
 }
 ORE_GEMS = {"taydenite_ore": "taydenite", "biotech_node": "biotech", "infernite_ore": "infernite", "celestium_ore": "celestium"}
-RAW_OF = {"raw_taydenite": "taydenite_ore", "raw_biotech": "biotech_node", "raw_infernite": "infernite_ore", "raw_celestium": "celestium_ore"}
 
 
 def gem_texture(mat: str) -> Image.Image:
@@ -409,29 +303,12 @@ def ore_models() -> dict[Path, dict]:
         files[ASSETS / "models" / "block" / f"{ore}_3d.json"] = {
             "parent": "minecraft:block/block", "textures": {"gem": f"{MOD}:block/{ore}_gem"},
             "elements": [base_cube()] + shape}
-    for raw, ore in RAW_OF.items():
-        # Rohstoff als kleiner 3D-Brocken: Gesteinssplitter mit drei Kristallen
-        chunk = [element((4, 0, 4), (12, 5, 12), "#all"), element((5, 5, 5), (11, 7, 10), "#all")]
-        if ore == "biotech_node":
-            chunk += [element((5, 7, 5), (8, 8.5, 8), "#gem"), element((9, 5, 6), (11, 9, 8), "#gem"),
-                      element((5.5, 5, 8.5), (7.5, 8, 10.5), "#gem")]
-        else:
-            chunk += [element((7, 5, 7), (9.5, 14, 9.5), "#gem", ("x", 22.5, (8, 5, 8))),
-                      element((4.5, 4, 5), (6.5, 10, 7), "#gem", ("z", 22.5, (5.5, 4, 6))),
-                      element((9.5, 4, 8.5), (11.5, 9, 10.5), "#gem", ("z", -22.5, (10.5, 4, 9.5)))]
-        files[ASSETS / "models" / "item" / f"{raw}.json"] = {
-            "parent": "minecraft:block/block",
-            "textures": {"all": f"{MOD}:block/{ore}", "gem": f"{MOD}:block/{ore}_gem", "particle": f"{MOD}:item/{raw}"},
-            "elements": chunk, "display": ITEM_DISPLAY}
     return files
 
 
-# --- 3D-Item-Modelle aller Zwischenstufen ----------------------------------------------------------------------------
+# --- Texturen der 3D-Aufbauten (Maschinen, Fusionsaltar) ----------------------------------------------------------------------------
 
 SUITMAT = "item/suitmat"
-# Sonderpaletten fuer Platten, die nicht die Grundfarbe des Materials tragen
-PALETTE_OVERRIDE = {"carbonox_plate": ("1A1C20", "5A6068", "B8C0C8"), "hellfire_plate": ("3A1A08", "9A5A1E", "FFD488")}
-GLOW_OVERRIDE = {"carbonox_plate": ("6A0A0A", "FF2A2A", "FFC0B0"), "hellfire_plate": ("6A1A06", "FF8A1A", "FFF0A0")}
 
 
 def tex_metal(dark: str, mid: str, light: str, seed: int) -> Image.Image:
@@ -451,36 +328,12 @@ def tex_metal(dark: str, mid: str, light: str, seed: int) -> Image.Image:
     return img
 
 
-def tex_dust(dark: str, mid: str, light: str, seed: int) -> Image.Image:
-    rng = np.random.default_rng(seed)
-    img = Image.new("RGBA", (16, 16))
-    px = img.load()
-    for y in range(16):
-        for x in range(16):
-            r = rng.random()
-            px[x, y] = rgb(light) if r < 0.12 else rgb(dark) if r < 0.4 else rgb(mid)
-    return img
-
-
 def tex_glow(mid: str, light: str) -> Image.Image:
     img = Image.new("RGBA", (16, 16), rgb(mid))
     d = ImageDraw.Draw(img)
     for r, t in ((7, 0.0), (5, 0.4), (3, 0.8)):
         d.rectangle((8 - r, 8 - r, 7 + r, 7 + r), fill=mix(mid, light, t))
     d.rectangle((6, 6, 9, 9), fill=(255, 255, 255, 255))
-    return img
-
-
-def tex_cosmic(seed: int) -> Image.Image:
-    rng = np.random.default_rng(seed)
-    img = Image.new("RGBA", (16, 16), rgb("0A0618"))
-    px = img.load()
-    for y in range(16):
-        for x in range(16):
-            if rng.random() < 0.18:
-                px[x, y] = rgb("2A1050")
-            if rng.random() < 0.06:
-                px[x, y] = (255, 255, 255, 255)
     return img
 
 
@@ -495,108 +348,16 @@ def el(frm, to, tex: str, rot: tuple | None = None, glow: bool = False) -> dict:
     return out
 
 
-def ring(cy: float, r: float, t: float, tex: str, vertical: bool = False) -> list[dict]:
-    """Viereckiger Ring um die Mitte (8, cy, 8): waagerecht oder senkrecht (in der x-y-Ebene)."""
-    lo, hi = 8 - r, 8 + r
-    if vertical:
-        return [el((lo, cy - r, 8 - t / 2), (hi, cy - r + t, 8 + t / 2), tex, glow=True),
-                el((lo, cy + r - t, 8 - t / 2), (hi, cy + r, 8 + t / 2), tex, glow=True),
-                el((lo, cy - r, 8 - t / 2), (lo + t, cy + r, 8 + t / 2), tex, glow=True),
-                el((hi - t, cy - r, 8 - t / 2), (hi, cy + r, 8 + t / 2), tex, glow=True)]
-    return [el((lo, cy, lo), (hi, cy + t, lo + t), tex, glow=True), el((lo, cy, hi - t), (hi, cy + t, hi), tex, glow=True),
-            el((lo, cy, lo), (lo + t, cy + t, hi), tex, glow=True), el((hi - t, cy, lo), (hi, cy + t, hi), tex, glow=True)]
-
-
-def shape(form: str) -> list[dict]:
-    if form == "dust":
-        out = [el((3, 0, 3), (13, 2, 13), "#dust"), el((4, 2, 4), (12, 4, 12), "#dust"), el((5.5, 4, 5.5), (10.5, 5.5, 10.5), "#dust"),
-               el((7, 5.5, 7), (9, 6.5, 9), "#dust")]
-        for x, z in ((2, 7), (13.5, 9), (8, 2), (6, 13.5), (12, 3.5)):
-            out.append(el((x, 0, z), (x + 1, 1, z + 1), "#gem", glow=True))
-        return out
-    if form == "crystal":
-        return [el((5, 0, 5), (11, 1.5, 11), "#metal"),
-                el((6.5, 1, 6.5), (9.5, 11, 9.5), "#gem", glow=True), el((7.2, 11, 7.2), (8.8, 14, 8.8), "#gem", glow=True),
-                el((4.5, 1, 6.5), (6.5, 7, 8.5), "#gem", ("z", 22.5, (5.5, 1, 7.5)), True),
-                el((9.5, 1, 7.5), (11.5, 6, 9.5), "#gem", ("z", -22.5, (10.5, 1, 8.5)), True),
-                el((7, 1, 9.5), (9, 5, 11.5), "#gem", ("x", 22.5, (8, 1, 10.5)), True)]
-    if form == "ingot":
-        return [el((2, 0, 5), (14, 2.5, 11), "#metal"), el((3, 2.5, 6), (13, 4, 10), "#metal"),
-                el((6, 4, 7.4), (10, 4.3, 8.6), "#glow", glow=True), el((7.4, 4, 6.4), (8.6, 4.3, 9.6), "#glow", glow=True)]
-    if form == "gel":
-        return [el((5.5, 0, 5.5), (10.5, 1.5, 10.5), "#metal"), el((5.5, 11, 5.5), (10.5, 12.5, 10.5), "#metal"),
-                el((7, 12.5, 7), (9, 13.5, 9), "#metal"), el((6.2, 1.5, 6.2), (9.8, 11, 9.8), "#gem", glow=True),
-                el((7, 4, 7), (8, 5, 8), "#glow", glow=True), el((8.2, 7, 8.2), (9, 7.8, 9), "#glow", glow=True)]
-    if form == "weave":
-        out = [el((2, 0, 2), (14, 1, 14), "#metal")]
-        for i in range(5):
-            c = 2.6 + i * 2.3
-            out.append(el((2, 1, c), (14, 1.8, c + 1), "#gem", glow=True))
-            out.append(el((c, 1.6, 2), (c + 1, 2.4, 14), "#metal"))
-        out.append(el((6.5, 2.4, 6.5), (9.5, 3.4, 9.5), "#glow", glow=True))
-        return out
-    if form == "core":
-        return ([el((5, 3, 5), (11, 9, 11), "#metal"), el((4, 4, 6), (12, 8, 10), "#metal"), el((6, 4, 4), (10, 8, 12), "#metal"),
-                 el((6, 2, 6), (10, 10, 10), "#glow", glow=True), el((3.8, 5, 7), (12.2, 7, 9), "#glow", glow=True)]
-                + ring(5.7, 6.5, 0.6, "#gem") + ring(6.0, 5.5, 0.6, "#gem", vertical=True))
-    if form == "matrix":
-        return ([el((5, 3, 5), (11, 9, 11), "#cosmic", ("y", 45, (8, 6, 8))), el((5.5, 3.5, 5.5), (10.5, 8.5, 10.5), "#cosmic", ("x", 45, (8, 6, 8))),
-                 el((7, 5, 7), (9, 7, 9), "#glow", glow=True)] + ring(5.7, 6.5, 0.5, "#gem") + ring(6.0, 6.0, 0.5, "#gem", vertical=True))
-    # Platten: gewoelbte Panzerplatte aus drei Segmenten (Mitte flach, Vorder- und Hinterteil abgeknickt),
-    # erhabenes Mittelpaneel, leuchtende Naht, Nieten und Kern-Edelstein
-    out = [el((1.5, 3, 5.5), (14.5, 5, 10.5), "#metal"), el((3.5, 5, 6.2), (12.5, 6, 9.8), "#metal"),
-           el((6.5, 6, 6.8), (9.5, 7, 9.2), "#gem", glow=True), el((7.2, 7, 7.4), (8.8, 7.5, 8.6), "#glow", glow=True),
-           el((1.5, 5, 7.6), (3.5, 5.4, 8.4), "#glow", glow=True), el((12.5, 5, 7.6), (14.5, 5.4, 8.4), "#glow", glow=True)]
-    for x in (2.2, 13):
-        out.append(el((x, 5, 5.9), (x + 0.8, 5.6, 6.7), "#gem", glow=True))
-        out.append(el((x, 5, 9.3), (x + 0.8, 5.6, 10.1), "#gem", glow=True))
-    for z0, z1, pivot, angle in ((1, 5.5, 5.5, -22.5), (10.5, 15, 10.5, 22.5)):
-        rot = ("x", angle, (8, 3, pivot))
-        out.append(el((1.5, 3, z0), (14.5, 5, z1), "#metal", rot))
-        out.append(el((3, 5, z0 + 0.8), (13, 5.6, z1 - 0.8), "#metal", rot))
-        edge = z0 if z0 < pivot else z1 - 0.6
-        out.append(el((1.5, 4.4, edge), (14.5, 5.2, edge + 0.6), "#glow", rot, True))
-    return out
-
-
-ITEM_DISPLAY = {"gui": {"rotation": [25, -35, 0], "translation": [0, 0.5, 0], "scale": [1.08, 1.08, 1.08]},
-                "ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4]},
-                "fixed": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [0.8, 0.8, 0.8]},
-                "thirdperson_righthand": {"rotation": [75, 45, 0], "translation": [0, 2.5, 0], "scale": [0.45, 0.45, 0.45]},
-                "firstperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
-                "firstperson_lefthand": {"rotation": [0, 225, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]}}
-
-
-def item_model_files() -> tuple[dict[Path, dict], dict[Path, Image.Image]]:
-    models: dict[Path, dict] = {}
-    images: dict[Path, Image.Image] = {}
-    for mat, (_, _, dark, mid, light) in MATERIALS.items():
-        seed = sum(ord(c) for c in mat)
-        images[ASSETS / "textures" / SUITMAT / f"{mat}_metal.png"] = tex_metal(dark, mid, light, seed)
-        images[ASSETS / "textures" / SUITMAT / f"{mat}_dust.png"] = tex_dust(dark, mid, light, seed)
-        images[ASSETS / "textures" / SUITMAT / f"{mat}_gem.png"] = gem_texture(mat)
-        images[ASSETS / "textures" / SUITMAT / f"{mat}_glow.png"] = tex_glow(mid, light)
-    images[ASSETS / "textures" / SUITMAT / "cosmic.png"] = tex_cosmic(7)
-    images[ASSETS / "textures" / SUITMAT / "fusion_glow.png"] = tex_glow("3AE8FF", "FFFFFF")
-    images[ASSETS / "textures" / SUITMAT / "machine_metal.png"] = tex_metal("2C3138", "6B7480", "A9B2BE", 11)
-    images[ASSETS / "textures" / SUITMAT / "machine_dark.png"] = tex_metal("101216", "2A2E36", "4A505A", 12)
+def suitmat_textures() -> dict[Path, Image.Image]:
+    """Texturen der Maschinen-Aufbauten und des Fusionsaltars."""
+    images = {ASSETS / "textures" / SUITMAT / "celestium_gem.png": gem_texture("celestium"),
+              ASSETS / "textures" / SUITMAT / "fusion_glow.png": tex_glow("3AE8FF", "FFFFFF"),
+              ASSETS / "textures" / SUITMAT / "machine_metal.png": tex_metal("2C3138", "6B7480", "A9B2BE", 11),
+              ASSETS / "textures" / SUITMAT / "machine_dark.png": tex_metal("101216", "2A2E36", "4A505A", 12)}
     for name, (_, _, glow, accent) in MACHINES.items():
         images[ASSETS / "textures" / SUITMAT / f"{name}_glow_on.png"] = tex_glow(glow, "FFFFFF")
         images[ASSETS / "textures" / SUITMAT / f"{name}_glow.png"] = tex_glow(accent, glow)
-    for item, pal in PALETTE_OVERRIDE.items():
-        images[ASSETS / "textures" / SUITMAT / f"{item}_metal.png"] = tex_metal(*pal, sum(ord(c) for c in item))
-        g = GLOW_OVERRIDE[item]
-        images[ASSETS / "textures" / SUITMAT / f"{item}_glow.png"] = tex_glow(g[1], g[2])
-    for item, (form, mat, _, _) in ITEMS.items():
-        if form == "raw":
-            continue
-        own = item in PALETTE_OVERRIDE
-        textures = {"metal": f"{MOD}:{SUITMAT}/{item if own else mat}_metal", "gem": f"{MOD}:{SUITMAT}/{mat}_gem",
-                    "dust": f"{MOD}:{SUITMAT}/{mat}_dust", "glow": f"{MOD}:{SUITMAT}/{item if own else mat}_glow",
-                    "cosmic": f"{MOD}:{SUITMAT}/cosmic", "particle": f"{MOD}:item/{item}"}
-        models[ASSETS / "models" / "item" / f"{item}.json"] = {"parent": "minecraft:block/block", "textures": textures,
-                                                               "elements": shape(form.split("_")[0]), "display": ITEM_DISPLAY}
-    return models, images
+    return images
 
 
 # --- Fusionsaltar ----------------------------------------------------------------------------------------------------
@@ -659,15 +420,16 @@ def png(img: Image.Image) -> bytes:
 
 def outputs() -> dict[Path, bytes]:
     files: dict[Path, bytes] = {}
-    for item, (form, mat, _, _) in ITEMS.items():
-        files[ASSETS / "textures" / "item" / f"{item}.png"] = png(item_image(form, mat, item))
+    for item in ITEMS:
+        img, frames = suit_icons.render(item)
+        files[ASSETS / "textures" / "item" / f"{item}.png"] = png(img)
+        if frames > 1:
+            files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
+                {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
         files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
             {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
-    item_models, item_images = item_model_files()
-    for path, img in item_images.items():
+    for path, img in suitmat_textures().items():
         files[path] = png(img)
-    for path, data in item_models.items():
-        files[path] = (json.dumps(data, indent=1) + "\n").encode()
     for ore, mat in ORE_GEMS.items():
         files[ASSETS / "textures" / "block" / f"{ore}_gem.png"] = png(gem_texture(mat))
     for path, data in ore_models().items():
