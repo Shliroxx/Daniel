@@ -42,7 +42,6 @@
     [],
     [
       "kingdomomnitrix:petropia_boulders",
-      "kingdomomnitrix:petropia_boulders_crystal",
       "kingdomomnitrix:petropia_geode_deep"
     ],
     [],
@@ -59,7 +58,8 @@
       "kingdomomnitrix:petropia_spring"
     ],
     [
-      "kingdomomnitrix:petropia_spires_sparse",
+      "kingdomomnitrix:petropia_bundles_small",
+      "kingdomomnitrix:petropia_bundles_giant",
       "kingdomomnitrix:petropia_shard_wastes_petropia_sprout"
     ],
     []

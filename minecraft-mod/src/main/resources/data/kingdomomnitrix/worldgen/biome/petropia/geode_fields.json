@@ -63,7 +63,8 @@
     ],
     [
       "kingdomomnitrix:petropia_petropia_shard_tree",
-      "kingdomomnitrix:petropia_spires_sparse",
+      "kingdomomnitrix:petropia_bundles_small",
+      "kingdomomnitrix:petropia_bundles_giant",
       "kingdomomnitrix:petropia_clusters_dense",
       "kingdomomnitrix:petropia_geode_fields_petropia_sprout"
     ],

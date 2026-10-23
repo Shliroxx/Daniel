@@ -62,7 +62,8 @@
       "kingdomomnitrix:petropia_spring"
     ],
     [
-      "kingdomomnitrix:petropia_spires_sparse",
+      "kingdomomnitrix:petropia_bundles_small",
+      "kingdomomnitrix:petropia_bundles_giant",
       "kingdomomnitrix:petropia_clusters",
       "kingdomomnitrix:petropia_crystal_plains_petropia_sprout"
     ],

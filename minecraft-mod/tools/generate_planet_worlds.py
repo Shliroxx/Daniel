@@ -69,13 +69,16 @@ def _air_on_solid() -> dict:
         {"type": "minecraft:solid", "offset": [0, -1, 0]}]}}
 
 
-def kit_spires(fid: str, block: str, count: int, lo: int, hi: int) -> str:
-    """Kristall-/Eissaeulen: senkrechte Bloecksaeulen 'lo'–'hi' hoch."""
-    return _kit(fid, 9, {"type": "minecraft:block_column", "config": {
-        "direction": "up", "allowed_placement": {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
-        "prioritize_tip": True, "layers": [{"height": {"type": "minecraft:uniform", "min_inclusive": lo, "max_inclusive": hi},
-                                            "provider": simple(block)}]}},
-        _surface(count) + [_air_on_solid(), {"type": "minecraft:biome"}])
+def kit_bundle(fid: str, crystal: str, tip: str, placement: dict, height: tuple[int, int], count: tuple[int, int],
+               width: float, lean: float) -> str:
+    """Kristallbuendel in Diamondhead-Optik (eigenes Feature kingdomomnitrix:crystal_bundle): schraege, spitze Kristalle."""
+    return _kit(fid, 9, {"type": f"{MOD}:crystal_bundle", "config": {
+        "crystal": simple(crystal), "tip": simple(tip),
+        "count": {"type": "minecraft:uniform", "min_inclusive": count[0], "max_inclusive": count[1]},
+        "height": {"type": "minecraft:uniform", "min_inclusive": height[0], "max_inclusive": height[1]},
+        "width": width, "lean": lean}},
+        [placement, {"type": "minecraft:in_square"}, {"type": "minecraft:heightmap", "heightmap": "MOTION_BLOCKING"},
+         {"type": "minecraft:biome"}])
 
 
 def kit_cluster_patch(fid: str, block: str, count: int, tries: int) -> str:
@@ -156,18 +159,22 @@ def carvers(planet: str) -> dict[str, dict]:
 
 # Petropia (Pilotwelt): Kristallwelt mit sechs Biomen
 PETROPIA_KIT = {
-    "spires_sparse": kit_spires("petropia_spires_sparse", "petropia_crystal", 1, 2, 5),
-    "spires_dense": kit_spires("petropia_spires_dense", "petropia_crystal", 7, 3, 10),
+    # Kristalle wie Diamondheads: kleine Buendel verstreut, grosse Buendel selten, auf den Gipfeln dicht
+    "spires_sparse": kit_bundle("petropia_bundles_small", "petropia_giant_crystal", "petropia_cluster",
+                                {"type": "minecraft:count", "count": 1}, (3, 6), (2, 4), 0.8, 0.35),
+    "bundles_giant": kit_bundle("petropia_bundles_giant", "petropia_giant_crystal", "petropia_cluster",
+                                {"type": "minecraft:rarity_filter", "chance": 3}, (9, 14), (4, 6), 1.8, 0.4),
+    "spires_dense": kit_bundle("petropia_bundles_dense", "petropia_giant_crystal", "petropia_cluster",
+                               {"type": "minecraft:count", "count": 3}, (6, 12), (3, 5), 1.3, 0.3),
     "clusters": kit_cluster_patch("petropia_clusters", "petropia_cluster", 3, 20),
     "clusters_dense": kit_cluster_patch("petropia_clusters_dense", "petropia_cluster", 8, 32),
     "boulders": kit_boulder("petropia_boulders", "petropia_rock", 2),
-    "boulders_crystal": kit_boulder("petropia_boulders_crystal", "petropia_crystal", 1),
     "disk_smooth": kit_disk("petropia_disk_smooth", "petropia_smooth_rock", ["petropia_shards", "petropia_rock"], 3, 2, 5),
     "disk_shards": kit_disk("petropia_disk_shards", "petropia_shards", ["petropia_rock"], 2, 2, 4),
-    "geode_surface": kit_geode("petropia_geode_surface", "petropia_rock", "petropia_smooth_rock", "petropia_crystal",
-                               "petropia_cluster", 3, 60, 110),
-    "geode_deep": kit_geode("petropia_geode_deep", "petropia_rock", "petropia_smooth_rock", "petropia_crystal",
-                            "petropia_cluster", 10, 6, 50),
+    "geode_surface": kit_geode("petropia_geode_surface", "petropia_rock", "petropia_smooth_rock", "petropia_giant_crystal",
+                               "petropia_giant_crystal", 3, 60, 110),
+    "geode_deep": kit_geode("petropia_geode_deep", "petropia_rock", "petropia_smooth_rock", "petropia_giant_crystal",
+                            "petropia_giant_crystal", 10, 6, 50),
     "spring": kit_spring("petropia_spring", "minecraft:water", ["petropia_rock", "petropia_smooth_rock"], 18),
 }
 
@@ -276,7 +283,7 @@ ALIEN_WORLDS = {
                                "patches": [("petropia_lichen", "minecraft:surface", 0.05, 10.0),
                                            ("petropia_gravel", "minecraft:gravel", -0.12, 0.12)],
                                "climate": {"temperature": [-1.0, -0.2], "humidity": [-1.0, 0.1]},
-                               "extras": ["spires_sparse", "clusters", "boulders"], "chime": 0.004},
+                               "extras": ["spires_sparse", "bundles_giant", "clusters", "boulders"], "chime": 0.004},
             "crystal_forest": {"sky": 0xA890E8, "fog": 0xC8D0F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.003),
                                "plants": [("petropia_sprout", 4, 32)], "top": "petropia_lichen",
                                "patches": [("petropia_shards", "minecraft:patch", 0.35, 10.0),
@@ -289,13 +296,13 @@ ALIEN_WORLDS = {
                              "patches": [("petropia_gravel", "minecraft:surface", -0.25, 0.25),
                                          ("petropia_shards", "minecraft:patch", 0.3, 10.0)],
                              "climate": {"temperature": [-0.2, 0.5], "humidity": [-1.0, -0.1]},
-                             "extras": ["spires_sparse", "boulders", "boulders_crystal", "disk_smooth", "disk_shards"], "chime": 0.002},
+                             "extras": ["spires_sparse", "bundles_giant", "boulders", "disk_smooth", "disk_shards"], "chime": 0.002},
             "geode_fields": {"sky": 0xC090E8, "fog": 0xD8C8F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.002),
                              "plants": [("petropia_sprout", 2, 20)], "trees": [("petropia_shard_tree", 1)],
                              "patches": [("petropia_smooth_rock", "minecraft:surface", 0.3, 10.0),
                                          ("petropia_lichen", "minecraft:patch", 0.4, 10.0)],
                              "climate": {"temperature": [-0.2, 0.5], "humidity": [-0.1, 1.0]},
-                             "extras": ["geode_surface", "spires_sparse", "clusters_dense"], "chime": 0.01},
+                             "extras": ["geode_surface", "spires_sparse", "bundles_giant", "clusters_dense"], "chime": 0.01},
             "shattered_basin": {"sky": 0xC8B8FF, "fog": 0xE0F0F0, "water": 0x2AC0C8, "particle": None,
                                 "plants": [("petropia_sprout", 3, 24)], "trees": [("petropia_crystal_tree", 2)], "top": "petropia_gravel",
                                 "patches": [("petropia_lichen", "minecraft:surface", 0.1, 10.0),
@@ -306,7 +313,7 @@ ALIEN_WORLDS = {
                             "plants": [("petropia_sprout", 1, 8)], "trees": [], "top": "petropia_rock", "high_top": "petropia_crystal",
                             "patches": [("petropia_smooth_rock", "minecraft:surface", 0.2, 10.0)],
                             "climate": {"erosion": [-1.0, -0.6]},
-                            "extras": ["spires_dense", "clusters", "boulders_crystal"], "chime": 0.012},
+                            "extras": ["spires_dense", "bundles_giant", "clusters"], "chime": 0.012},
         },
         "monsters": [],
     },

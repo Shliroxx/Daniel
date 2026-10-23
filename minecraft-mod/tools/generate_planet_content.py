@@ -265,9 +265,13 @@ BLOCKS: list[BlockDef] = [
     BlockDef("petropia_sprout", "Kristallspross", "Crystal Sprout", "plant",
              single("petropia_sprout", lambda: px.plant("petropia_sprout", H("1A6A5A"), H("4AE0B0"), H("E8FFF8"), "thorn")),
              "EMERALD_GREEN", 0.0, 0.0, "AMETHYST_CLUSTER", None, light=6, drop="shears", planet="petropia"),
-    BlockDef("petropia_cluster", "Kristallbueschel", "Crystal Cluster", "spike",
-             single("petropia_cluster", lambda: px.crystal("petropia_cluster", H("1A7A5A"), H("4AF0B8"), H("F0FFF8"))),
-             "EMERALD_GREEN", 0.6, 1.0, "AMETHYST_CLUSTER", None, light=6, drop="silk", planet="petropia"),
+    # Kristalle in Diamondhead-Optik (Farben wie petrosapien_crystal): schraege, durchscheinende Splitter
+    BlockDef("petropia_cluster", "Kristallbueschel", "Crystal Cluster", "shard",
+             single("petropia_cluster", lambda: px.crystal("petropia_cluster", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             "EMERALD_GREEN", 0.6, 1.0, "AMETHYST_CLUSTER", None, light=7, drop="silk", planet="petropia"),
+    BlockDef("petropia_giant_crystal", "Riesenkristall", "Giant Crystal", "crystal",
+             single("petropia_giant_crystal", lambda: px.crystal("petropia_giant_crystal", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             "EMERALD_GREEN", 1.2, 6.0, "AMETHYST_BLOCK", light=9, drop="self", planet="petropia"),
     BlockDef("petropia_smooth_rock", "Glatter Petropia-Stein", "Smooth Petropia Stone", "natural",
              single("petropia_smooth_rock", lambda: px.stone("petropia_smooth_rock", H("1A3A3A"), H("3E6E6A"), H("7AB0A8"))),
              "CYAN", 1.6, 6.0, "STONE", planet="petropia", tags=["planet_stone"]),
@@ -434,10 +438,40 @@ def block_model_files(b: BlockDef) -> dict[str, dict]:
             elements.append({"from": [lo, y0, lo], "to": [hi, y1, hi], "faces": faces})
         return {b.name: {"parent": "minecraft:block/block", "textures": {"all": tex(b.name), "particle": tex(b.name)},
                          "elements": elements}}
+    if b.kind == "shard":
+        return {b.name: {"parent": "minecraft:block/block", "textures": {"all": tex(b.name), "particle": tex(b.name)},
+                         "elements": shard_elements()}}
     if b.kind == "plant":
         return {b.name: {"parent": "minecraft:block/cross", "textures": {"cross": tex(b.name)}},
                 f"{b.name}_inventory": {"parent": "minecraft:item/generated", "textures": {"layer0": tex(b.name)}}}
     return {b.name: {"parent": "minecraft:block/cube_all", "textures": {"all": tex(b.name)}}}
+
+
+# Splitterbuendel wie Diamondheads Kristalle (vfx/CrystalGrowth): ein hoher Mittelsplitter, vier schraege Nebensplitter,
+# jeder mit schmaler Spitze. (x0, z0, breite, hoehe, achse, winkel)
+SHARDS = [(6.5, 6.5, 3.0, 13.0, "z", 0.0), (3.5, 6.0, 2.5, 9.0, "z", 22.5), (10.0, 7.5, 2.5, 8.0, "z", -22.5),
+          (7.0, 10.0, 2.5, 7.0, "x", 22.5), (7.5, 3.5, 2.0, 6.0, "x", -22.5)]
+
+
+def _box(x0: float, y0: float, z0: float, x1: float, y1: float, z1: float, rot: dict | None) -> dict:
+    faces = {d: {"texture": "#all", "uv": [x0 if d in ("north", "south") else z0, 16 - y1, x1 if d in ("north", "south") else z1, 16 - y0]}
+             for d in ("north", "south", "east", "west")}
+    faces["up"] = {"texture": "#all", "uv": [x0, z0, x1, z1]}
+    faces["down"] = {"texture": "#all", "uv": [x0, z0, x1, z1]}
+    element = {"from": [x0, y0, z0], "to": [x1, y1, z1], "faces": faces}
+    if rot:
+        element["rotation"] = rot
+    return element
+
+
+def shard_elements() -> list[dict]:
+    elements = []
+    for x0, z0, w, h, axis, angle in SHARDS:
+        rot = {"origin": [x0 + w / 2, 0, z0 + w / 2], "axis": axis, "angle": angle} if angle else None
+        tip = w * 0.25
+        elements.append(_box(x0, 0, z0, x0 + w, h, z0 + w, rot))
+        elements.append(_box(x0 + tip, h, z0 + tip, x0 + w - tip, min(16.0, h + w), z0 + w - tip, rot))
+    return elements
 
 
 def blockstate(b: BlockDef) -> dict:
@@ -688,7 +722,7 @@ def java_blocks() -> str:
         lines.append(f"\tpublic static final Block {const(b.name)} = register(\"{b.name}\", {java_block_ctor(b)});")
     cutout = [const(b.name) for b in BLOCKS if b.kind in ("plant", "grate")]
     mipped = [const(b.name) for b in BLOCKS if b.kind == "leaves"]
-    translucent = [const(b.name) for b in BLOCKS if b.kind in ("glass", "crystal", "spike")]
+    translucent = [const(b.name) for b in BLOCKS if b.kind in ("glass", "crystal", "spike", "shard")]
     lines += ["",
               "\t/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */",
               f"\tpublic static final List<Block> CUTOUT = List.of({', '.join(cutout)});",
@@ -733,6 +767,15 @@ def java_block_ctor(b: BlockDef) -> str:
         return f"new ExperienceDroppingBlock(UniformIntProvider.create({b.xp[0]}, {b.xp[1]}), {settings}.instrument(NoteBlockInstrument.BASEDRUM))"
     if b.kind == "glass":
         return f"new TechGlassBlock(AbstractBlock.Settings.copy(Blocks.GLASS).mapColor({color}).strength({b.hardness}f, {b.resistance}f))"
+    if b.kind == "crystal" and b.drop != "none":
+        # Weltkristall: durchscheinend und leuchtend wie Diamondheads Kristall, aber abbaubar und nicht rutschig
+        return (f"new TechGlassBlock(AbstractBlock.Settings.create().mapColor({color}).strength({b.hardness}f, {b.resistance}f)"
+                f".requiresTool().sounds({sound}).luminance(state -> {b.light}).nonOpaque()"
+                f".allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false)"
+                f".suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false))")
+    if b.kind == "shard":
+        return (f"new CrystalShardBlock(AbstractBlock.Settings.create().mapColor({color}).strength({b.hardness}f, {b.resistance}f)"
+                f".sounds({sound}).luminance(state -> {b.light}).nonOpaque().pistonBehavior(PistonBehavior.DESTROY))")
     if b.kind == "crystal":
         return (f"new TechGlassBlock(AbstractBlock.Settings.create().mapColor({color}).strength({b.hardness}f, {b.resistance}f)"
                 f".sounds({sound}).luminance(state -> {b.light}).nonOpaque().dropsNothing().slipperiness(0.98f)"

@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.space.AsteroidFeature;
+import com.santiq.kingdomomnitrix.world.CrystalBundleFeature;
 import com.santiq.kingdomomnitrix.world.CrystalSpireFeature;
 import com.santiq.kingdomomnitrix.world.LanternPostFeature;
 import net.minecraft.registry.Registries;
@@ -18,6 +19,9 @@ public final class ModFeatures {
 			KingdomOmnitrix.id("lantern_post"), new LanternPostFeature(DefaultFeatureConfig.CODEC));
 	public static final Feature<DefaultFeatureConfig> CRYSTAL_SPIRE = Registry.register(Registries.FEATURE,
 			KingdomOmnitrix.id("crystal_spire"), new CrystalSpireFeature(DefaultFeatureConfig.CODEC));
+
+	public static final Feature<CrystalBundleFeature.Config> CRYSTAL_BUNDLE = Registry.register(Registries.FEATURE,
+			KingdomOmnitrix.id("crystal_bundle"), new CrystalBundleFeature(CrystalBundleFeature.Config.CODEC));
 
 	private ModFeatures() {
 	}
