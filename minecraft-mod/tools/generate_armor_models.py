@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 ASSETS = ROOT / "src" / "main" / "resources" / "assets" / "kingdomomnitrix"
 GEO_DIR = ASSETS / "geo" / "armor"
 TEX_DIR = ASSETS / "textures" / "armor"
-DENSITY = 2  # Texturpixel je Modelleinheit
+DENSITY = 4  # Texturpixel je Modelleinheit (doppelt so fein wie Vanilla-Ruestung)
 
 # GeckoLib-Armor-Bones mit den Drehpunkten des Spielermodells
 BONES = {
@@ -78,6 +78,7 @@ class Cube:
     pivot: list[float] | None = None
     seams: bool = True
     tint: str | None = None                   # eigene Grundfarbe statt der Palette (z. B. weisse Uniformhaelfte)
+    cracks: bool = False                      # gluehende Risse ueber dem Material (Glut, Energie)
 
 
 # --- Textur-Malerei -------------------------------------------------------------------------------------------------
@@ -219,6 +220,25 @@ def paint_face(pal: Palette, cube: Cube, face: str, w: int, h: int, seed: int) -
             rgb[max(0, h // 3), 1:-1] = hexc(pal.glow_core)
         glow[:] = True
 
+    if mat == "trim" and w >= 12 and h >= 10:
+        # Gravur: geschwungene Ranke ueber Zierleisten (wie Prunkruestungen)
+        xx = np.arange(w)
+        for row, phase in ((h // 3, 0.0), (2 * h // 3, math.pi)):
+            ys = (row + np.sin(xx / max(2.0, w / 6) + phase) * max(1.0, h / 8)).astype(int)
+            for x, y in zip(xx, ys):
+                if 1 <= y < h - 1:
+                    rgb[y, x] = rgb[y, x] * 0.55
+                    rgb[y - 1, x] = np.minimum(rgb[y - 1, x] * 1.25, 255)
+    if cube.cracks and w >= 4 and h >= 4:
+        # gluehende Risse: verzweigte Zufallspfade von den Raendern nach innen
+        for _ in range(max(1, (w * h) // 90)):
+            y, x = int(rng.integers(0, h)), int(rng.integers(0, w))
+            for _ in range(int(rng.integers(w // 3 + 2, w + h))):
+                rgb[y, x] = hexc(pal.glow_core) if rng.random() < 0.35 else hexc(pal.glow)
+                glow[y, x] = True
+                y = int(np.clip(y + rng.integers(-1, 2), 0, h - 1))
+                x = int(np.clip(x + rng.integers(-1, 2), 0, w - 1))
+
     # Leuchtlinien und leuchtende Raender
     if face in cube.edge and w >= 3 and h >= 3:
         rgb[0, :] = rgb[-1, :] = hexc(pal.glow)
@@ -257,8 +277,9 @@ def face_dims(size: list[float], face: str) -> tuple[float, float]:
     return {"north": (w, h), "south": (w, h), "east": (d, h), "west": (d, h), "up": (w, d), "down": (w, d)}[face]
 
 
-def build(name: str, pal: Palette, bones: dict[str, list[Cube]]) -> tuple[dict, Image.Image, Image.Image]:
-    atlas = Atlas(256)
+def build(name: str, pal: Palette, bones: dict[str, list[Cube]], subbones: dict[str, tuple[str, list[float]]]
+          ) -> tuple[dict, Image.Image, Image.Image]:
+    atlas = Atlas(512)
     placed = []
     for bone, cubes in bones.items():
         for index, cube in enumerate(cubes):
@@ -282,7 +303,9 @@ def build(name: str, pal: Palette, bones: dict[str, list[Cube]]) -> tuple[dict, 
         mask[y:y + ph, x:x + pw] = m
 
     geo_bones = []
-    for bone, pivot in BONES.items():
+    all_bones = [(bone, None, pivot) for bone, pivot in BONES.items()]
+    all_bones += [(bone, parent, pivot) for bone, (parent, pivot) in subbones.items()]
+    for bone, parent, pivot in all_bones:
         cubes = []
         for cube in bones.get(bone, []):
             entry = {"origin": cube.origin, "size": cube.size,
@@ -292,7 +315,10 @@ def build(name: str, pal: Palette, bones: dict[str, list[Cube]]) -> tuple[dict, 
                 entry["rotation"] = cube.rotation
                 entry["pivot"] = cube.pivot or [cube.origin[0] + cube.size[0] / 2, cube.origin[1], cube.origin[2] + cube.size[2] / 2]
             cubes.append(entry)
-        geo_bones.append({"name": bone, "pivot": pivot, "cubes": cubes})
+        entry_bone = {"name": bone, "pivot": pivot, "cubes": cubes}
+        if parent:
+            entry_bone["parent"] = parent
+        geo_bones.append(entry_bone)
     geo = {"format_version": "1.12.0", "minecraft:geometry": [{
         "description": {"identifier": f"geometry.kingdomomnitrix.armor.{name}", "texture_width": tw, "texture_height": th,
                         "visible_bounds_width": 3, "visible_bounds_height": 3.5, "visible_bounds_offset": [0, 1.5, 0]},
@@ -317,14 +343,15 @@ def mirror(cube: Cube, pivot_x_from: float, pivot_x_to: float) -> Cube:
         lines.append((direction, 1 - frac if direction == "v" and any(f in ("north", "south", "up", "down") for f in faces) else frac,
                       swapped))
     edge = tuple({"east": "west", "west": "east"}.get(f, f) for f in cube.edge)
-    return Cube([x0, cube.origin[1], cube.origin[2]], list(cube.size), cube.mat, lines, edge, rot, piv, cube.seams, cube.tint)
+    return Cube([x0, cube.origin[1], cube.origin[2]], list(cube.size), cube.mat, lines, edge, rot, piv, cube.seams, cube.tint,
+                cube.cracks)
 
 
-def C(o, s, mat="plate", lines=(), edge=(), rot=None, pivot=None, seams=True, tint=None) -> Cube:
+def C(o, s, mat="plate", lines=(), edge=(), rot=None, pivot=None, seams=True, tint=None, cracks=False) -> Cube:
     """Quader. 'rot' wird so angegeben: x negativ = Oberkante kippt nach hinten, z positiv = Oberkante kippt nach -x
     (auf der rechten Koerperseite also nach aussen); Bedrock speichert z mit umgekehrtem Vorzeichen."""
     rotation = [rot[0], rot[1], -rot[2]] if rot else None
-    return Cube(list(o), list(s), mat, list(lines), tuple(edge), rotation, list(pivot) if pivot else None, seams, tint)
+    return Cube(list(o), list(s), mat, list(lines), tuple(edge), rotation, list(pivot) if pivot else None, seams, tint, cracks)
 
 
 def pair(cube: Cube) -> list[Cube]:
@@ -418,90 +445,202 @@ def rc_frame(suit: str, plate: str, dark: str, sole: str) -> dict[str, list[Cube
     return {"armorHead": [], "armorBody": body, "armorRightArm": arm, "armorRightLeg": leg, "armorRightBoot": boot}
 
 
-def magnaplate() -> tuple[Palette, dict]:
-    """Magnaplate (R&C, Stufe 1): schwarzer Glanz-Kuppelhelm mit weissem Visier, Marineblau, Silberrahmen,
-    blauer Kern und blaue Leuchtstreifen auf den riesigen Handschuhen."""
+LOOP = 8.0  # Laenge der Leerlauf-Animation in Sekunden (alle Bewegungen wiederholen sich darin nahtlos)
+
+
+@dataclass
+class ArmorSet:
+    pal: Palette
+    bones: dict[str, list[Cube]]
+    subbones: dict[str, tuple[str, list[float]]] = field(default_factory=dict)   # Name -> (Eltern-Bone, Drehpunkt)
+    anim: dict[str, dict] = field(default_factory=dict)                           # Bone -> Kanaele (Bedrock-Animation)
+
+    def sub(self, name: str, parent: str, pivot: list[float], cubes: list[Cube]) -> None:
+        self.subbones[name] = (parent, pivot)
+        self.bones.setdefault(name, []).extend(cubes)
+
+
+def spin(axis: int, turns: int = 1) -> dict:
+    """Gleichmaessige Drehung um eine Achse, 'turns' volle Umdrehungen je Schleife."""
+    keys = {}
+    for i in range(9):
+        t = LOOP * i / 8
+        rot = [0.0, 0.0, 0.0]
+        rot[axis] = 360.0 * turns * i / 8
+        keys[f"{t:.2f}"] = rot
+    return {"rotation": keys}
+
+
+def wave(channel: str, axis: int, amplitude: float, periods: int = 2, base: float = 0.0) -> dict:
+    """Sinus-Bewegung (Wehen, Schweben, Pulsieren) als Stuetzpunkte; 'scale' pulsiert um 1."""
+    keys = {}
+    for i in range(17):
+        t = LOOP * i / 16
+        value = base + amplitude * math.sin(2 * math.pi * periods * i / 16)
+        if channel == "scale":
+            keys[f"{t:.2f}"] = [1 + value] * 3
+        else:
+            vec = [0.0, 0.0, 0.0]
+            vec[axis] = round(value, 3)
+            keys[f"{t:.2f}"] = vec
+    return {channel: keys}
+
+
+def merge(*channels: dict) -> dict:
+    out: dict = {}
+    for c in channels:
+        out.update(c)
+    return out
+
+
+def ring_xz(cx: float, cy: float, cz: float, r: float, t: float = 0.6, mat: str = "glow") -> list[Cube]:
+    """Waagerechter Ring aus vier Balken (um Arme, Koerper)."""
+    return [C((cx - r, cy, cz - r), (2 * r, t, t), mat), C((cx - r, cy, cz + r - t), (2 * r, t, t), mat),
+            C((cx - r, cy, cz - r), (t, t, 2 * r), mat), C((cx + r - t, cy, cz - r), (t, t, 2 * r), mat)]
+
+
+def cape(top: float, length: float, z: float, tint: str, edge_mat: str = "glow", cracks: bool = False, width: float = 8.6) -> list[Cube]:
+    """Umhang am Ruecken mit leuchtendem Saum und gezackten Enden."""
+    out = [C((-width / 2, top - length, z), (width, length, 0.5), "suit", tint=tint, cracks=cracks, seams=False),
+           C((-width / 2 - 0.2, top - length - 0.4, z - 0.1), (width + 0.4, 0.8, 0.7), edge_mat),
+           C((-width / 2 - 0.3, top - length, z - 0.1), (0.5, length, 0.7), edge_mat),
+           C((width / 2 - 0.2, top - length, z - 0.1), (0.5, length, 0.7), edge_mat)]
+    for i in range(4):
+        x = -width / 2 + 0.6 + i * (width - 1.6) / 3
+        out.append(C((x, top - length - 2.2, z), (0.9, 2.2, 0.5), edge_mat, rot=(0, 0, 10 if i % 2 else -10)))
+    return out
+
+
+def magnaplate() -> ArmorSet:
+    """Magnaplate (R&C, Stufe 1): schwarzer Glanz-Kuppelhelm mit weissem Visier und Antenne, Marineblau mit Silberrahmen,
+    blauer Kern, Riesenhandschuhe mit blauen Ringen — und Ratchets Heli-Pack mit drehendem Rotor auf dem Ruecken."""
     pal = Palette("1E2A4A", "0A1020", "6A7A9A", "1A2238", "B8C0C8", "3A9AFF", "E0F2FF", "3A9AFF", "D0D8E4")
     b = rc_frame("1A2238", "1E2A4A", "101216", "5A5E66")
     b["armorHead"] = dome(5.3, 23.0, 9.4, "1A1A20") + [
-        C((-3.8, 25.2, -5.6), (7.6, 3.8, 0.5), "gloss", tint="D0D8E4"),                              # weisses Visier
-        C((-2.8, 29.8, -5.4), (5.6, 0.5, 0.4), "glow"),                                              # Lichtleiste
-        C((-0.6, 33.2, -2.0), (1.2, 0.4, 4.0), "glow"),                                              # Scheitel-Logo
-        C((-5.4, 24.0, -1.6), (0.6, 3.2, 3.2), "trim"), C((4.8, 24.0, -1.6), (0.6, 3.2, 3.2), "trim"),   # Ohrkapseln
+        C((-3.8, 25.2, -5.6), (7.6, 3.8, 0.5), "gloss", tint="D0D8E4"),
+        C((-2.8, 29.8, -5.4), (5.6, 0.5, 0.4), "glow"),
+        C((-5.6, 24.0, -1.8), (0.8, 3.6, 3.6), "trim"), C((4.8, 24.0, -1.8), (0.8, 3.6, 3.6), "trim"),
+        C((4.9, 26.0, -0.4), (0.4, 7.0, 0.4), "trim"),                                               # Antenne
     ]
     b["armorBody"] += [
-        C((-4.0, 16.8, -3.5), (8.0, 6.4, 0.6), "trim", seams=False),                                 # Silberrahmen
-        C((-1.8, 18.6, -4.1), (3.6, 3.6, 0.6), "gem"),                                               # blauer Kern
+        C((-4.0, 16.8, -3.5), (8.0, 6.4, 0.6), "trim", seams=False),
+        C((-1.8, 18.6, -4.1), (3.6, 3.6, 0.6), "gem"),
         C((-2.4, 18.0, -3.9), (4.8, 4.8, 0.3), "trim", tint="101216"),
+        C((-3.4, 13.6, 3.0), (6.8, 8.8, 3.2), "gloss", tint="22262E"),                               # Heli-Pack
+        C((-1.0, 22.0, 4.0), (2.0, 3.0, 1.6), "trim"),                                               # Rotormast
+        C((-3.0, 14.4, 6.2), (2.0, 2.0, 0.4), "glow"), C((1.0, 14.4, 6.2), (2.0, 2.0, 0.4), "glow"),
     ]
     b["armorRightArm"][2].lines += [("h", 0.25, ALL4), ("h", 0.5, ALL4), ("h", 0.75, ALL4)]
     b["armorRightArm"][2].tint = "141418"
+    b["armorRightArm"] += [C((-9.0, 23.4, -2.4), (4.4, 1.2, 4.8), "trim", lines=[("h", 0.5, ALL4)])]
     b["armorRightLeg"][2].mat, b["armorRightLeg"][2].tint = "gloss", "1A1A20"
     b["armorRightBoot"][0].tint = "141418"
     b["armorRightBoot"][2].tint = "141418"
-    return pal, symmetric(b)
+    b["armorRightBoot"] += [C((-4.0, 1.2, -5.0), (3.8, 0.6, 0.3), "glow")]
+    armor = ArmorSet(pal, symmetric(b))
+    armor.sub("antennaTip", "armorHead", [5.1, 33.0, -0.2], [C((4.6, 33.0, -0.7), (1.0, 1.0, 1.0), "glow")])
+    armor.sub("rotor", "armorBody", [0.0, 25.2, 4.8], [
+        C((-0.6, 25.0, 4.2), (1.2, 0.8, 1.2), "trim"),
+        C((-9.0, 25.6, 4.4), (18.0, 0.3, 0.8), "trim", tint="2A2E36"),                               # Rotorblaetter
+        C((-0.4, 25.6, -4.2), (0.8, 0.3, 18.0), "trim", tint="2A2E36"),
+        C((-9.0, 25.6, 4.4), (1.2, 0.35, 0.8), "glow"), C((7.8, 25.6, 4.4), (1.2, 0.35, 0.8), "glow"),
+    ])
+    armor.anim = {"rotor": spin(1, 4), "antennaTip": wave("scale", 0, 0.25, 4)}
+    return armor
 
 
-def carbonox() -> tuple[Palette, dict]:
+def carbonox() -> ArmorSet:
     """Carbonox (R&C, Stufe 2): grauer Vollpanzer mit riesigen Lombax-Ohren, Gitter-Gesicht mit roten Augen,
-    roter Kern, rote Kniescheinwerfer und gepanzerter Schwanz."""
+    rote Kern- und Kniescheinwerfer, gepanzerter Schwanz, Doppel-Schubduesen und Armklingen."""
     pal = Palette("6A7078", "2A2E34", "B8C0C8", "1C1E22", "3A3E44", "FF2A2A", "FFC0B0", "FF2A2A", "FF2A2A")
     b = rc_frame("1C1E22", "6A7078", "2A2E34", "1A1A1C")
     b["armorHead"] = [
-        C((-5.0, 23.2, -5.0), (10.0, 8.4, 10.0)),                                                    # Helmschale
-        C((-4.2, 31.6, -4.2), (8.4, 1.4, 8.4)),                                                      # Haube
-        C((-4.2, 23.8, -5.7), (8.4, 6.4, 0.8), "trim", tint="1A1C20"),                               # Gesichtsgitter
+        C((-5.0, 23.2, -5.0), (10.0, 8.4, 10.0)),
+        C((-4.2, 31.6, -4.2), (8.4, 1.4, 8.4)),
+        C((-4.2, 23.8, -5.7), (8.4, 6.4, 0.8), "trim", tint="1A1C20"),
         C((-3.2, 24.4, -6.0), (6.4, 0.5, 0.3), "trim", tint="5A5E66"),
         C((-3.2, 25.4, -6.0), (6.4, 0.5, 0.3), "trim", tint="5A5E66"),
-        C((-0.6, 31.0, -5.4), (1.2, 2.6, 1.4), "glow"),                                              # Stirnlicht
+        C((-0.6, 31.0, -5.4), (1.2, 2.6, 1.4), "glow"),
+        C((-0.7, 32.8, -3.8), (1.4, 1.2, 7.0), lines=[("h", 0.5, SIDES)]),
     ]
-    b["armorHead"] += pair(C((-3.4, 27.6, -6.0), (2.4, 1.2, 0.4), "glow"))                           # rote Augen
-    b["armorHead"] += pair(C((3.6, 29.6, -1.6), (1.8, 8.6, 3.2), rot=(18, 0, -28), pivot=(4.5, 29.6, 0.0)))   # Lombax-Ohren
-    b["armorHead"] += pair(C((3.9, 34.6, -1.0), (1.2, 4.2, 2.0), "trim", rot=(18, 0, -28), pivot=(4.5, 29.6, 0.0), tint="2A2E34"))
+    b["armorHead"] += pair(C((-3.4, 27.6, -6.0), (2.4, 1.2, 0.4), "glow"))
     b["armorBody"] += [
-        C((-1.4, 18.8, -4.0), (2.8, 2.8, 0.6), "gem"),                                               # roter Kern
+        C((-1.4, 18.8, -4.0), (2.8, 2.8, 0.6), "gem"),
         C((-3.6, 13.0, -3.0), (7.2, 0.8, 0.4), "trim", lines=[("h", 0.5, FRONT)]),
         C((-3.6, 14.4, -3.0), (7.2, 0.8, 0.4), "trim", lines=[("h", 0.5, FRONT)]),
+        C((-4.2, 14.0, 3.0), (3.0, 9.4, 3.0), lines=[("h", 0.8, ALL4)]),                             # Schubduesen
+        C((1.2, 14.0, 3.0), (3.0, 9.4, 3.0), lines=[("h", 0.8, ALL4)]),
+        C((-3.8, 12.8, 3.4), (2.2, 1.2, 2.2), "glow"), C((1.6, 12.8, 3.4), (2.2, 1.2, 2.2), "glow"),
     ]
     b["armorBody"] += pair(C((-4.6, 17.0, -3.6), (4.4, 6.2, 1.0), rot=(0, 12, 0), pivot=(-0.2, 17.0, -3.6)))
-    b["armorBody"] += chain((0.0, 12.6, 2.6), [(4.2, 1.8, 35), (3.6, 1.6, 55), (3.0, 1.4, 75), (2.0, 1.2, 85)], tip="glow")
     b["armorRightArm"][1].lines.append(("h", 0.5, ALL4))
-    b["armorRightArm"] += [C((-9.9, 12.6, -1.0), (0.4, 2.4, 2.0), "glow")]
-    b["armorRightLeg"] += [C((-2.8, 5.4, -3.7), (1.6, 1.6, 0.4), "glow")]                            # Kniescheinwerfer
+    b["armorRightArm"] += [C((-9.9, 12.6, -1.0), (0.4, 2.4, 2.0), "glow"),
+                           C((-10.2, 9.0, -0.3), (0.6, 7.0, 0.6), "trim", rot=(0, 0, 6), pivot=(-9.9, 16.0, 0.0)),   # Armklinge
+                           C((-10.6, 20.6, -3.4), (1.4, 3.0, 6.8), lines=[("h", 0.5, ("west",))])]
+    b["armorRightLeg"] += [C((-2.8, 5.4, -3.7), (1.6, 1.6, 0.4), "glow")]
     b["armorRightBoot"] += [C((-3.4, 2.8, -5.0), (2.4, 0.8, 0.3), "glow")]
-    return pal, symmetric(b)
+    armor = ArmorSet(pal, symmetric(b))
+    ear = C((3.6, 29.6, -1.6), (1.8, 8.6, 3.2), rot=(18, 0, -28), pivot=(4.5, 29.6, 0.0))
+    tip = C((3.9, 34.6, -1.0), (1.2, 4.2, 2.0), "trim", rot=(18, 0, -28), pivot=(4.5, 29.6, 0.0), tint="2A2E34")
+    armor.sub("earL", "armorHead", [4.5, 29.6, 0.0], [ear, tip])
+    armor.sub("earR", "armorHead", [-4.5, 29.6, 0.0], [mirror(ear, 0, 0), mirror(tip, 0, 0)])
+    armor.sub("tail", "armorBody", [0.0, 12.6, 2.6],
+              chain((0.0, 12.6, 2.6), [(4.2, 1.8, 35), (3.6, 1.6, 55), (3.0, 1.4, 75), (2.0, 1.2, 85)], tip="glow"))
+    armor.anim = {"earL": wave("rotation", 2, 4, 1), "earR": wave("rotation", 2, -4, 1), "tail": wave("rotation", 1, 14, 2)}
+    return armor
 
 
-def infernox() -> tuple[Palette, dict]:
-    """Infernox (R&C, Endstufe): Bronze und Gold mit spitzen Lombax-Ohren, gluehenden Augenschlitzen, Flammen-Emblem,
-    gluehenden Schienbein-Flammen, Hoellenfeuer-Generator auf dem Ruecken und gluehender Schwanzspitze."""
-    pal = Palette("9A5A1E", "3A1A08", "E8A04A", "4A1A10", "D8A03A", "FF8A1A", "FFF0A0", "FFB02A", "FFC02A")
-    b = rc_frame("3A140C", "9A5A1E", "4A2A10", "2A1408")
+def infernox() -> ArmorSet:
+    """Infernox (R&C, Endstufe): Bronze und Gold mit gluehenden Rissen, Flammenkrone, Lombax-Ohren, Flammen-Emblem,
+    gluehende Schienbein-Flammen, Hoellenfeuer-Generator mit drehendem Glutring, wehender Glut-Umhang und Schwanz."""
+    pal = Palette("8A4A16", "2A1006", "E8A04A", "3A140C", "D8A03A", "FF6A0A", "FFF0A0", "FFB02A", "FFC02A")
+    b = rc_frame("3A140C", "8A4A16", "4A2A10", "2A1408")
     b["armorHead"] = [
-        C((-5.0, 23.2, -5.0), (10.0, 8.4, 10.0)),
-        C((-0.6, 31.4, -5.0), (1.2, 1.8, 9.0), "trim"),                                              # Goldkamm
-        C((-1.8, 24.0, -6.3), (3.6, 2.2, 0.6), "suit", tint="1A0A06", lines=[("v", 0.33, FRONT), ("v", 0.66, FRONT)]),  # Maul
+        C((-5.0, 23.2, -5.0), (10.0, 8.4, 10.0), cracks=True),
+        C((-0.6, 31.4, -5.0), (1.2, 1.8, 9.0), "trim"),
+        C((-1.8, 24.0, -6.3), (3.6, 2.2, 0.6), "suit", tint="1A0A06", lines=[("v", 0.33, FRONT), ("v", 0.66, FRONT)]),
     ]
-    b["armorHead"] += pair(C((-4.8, 24.0, -5.9), (4.8, 6.6, 1.0), rot=(0, -14, 0), pivot=(0.0, 24.0, -5.9)))   # V-Gesicht
-    b["armorHead"] += pair(C((-3.8, 27.4, -6.6), (2.8, 1.0, 0.4), "glow", rot=(0, 0, 14), pivot=(-2.4, 27.9, -6.4)))  # Augen
-    b["armorHead"] += pair(C((3.4, 29.4, -1.8), (2.0, 10.0, 3.4), "trim", rot=(14, 0, -20), pivot=(4.4, 29.4, 0.0)))  # Ohren
+    b["armorHead"] += pair(C((-4.8, 24.0, -5.9), (4.8, 6.6, 1.0), rot=(0, -14, 0), pivot=(0.0, 24.0, -5.9), cracks=True))
+    b["armorHead"] += pair(C((-3.8, 27.4, -6.6), (2.8, 1.0, 0.4), "glow", rot=(0, 0, 14), pivot=(-2.4, 27.9, -6.4)))
+    b["armorHead"] += pair(C((3.4, 29.4, -1.8), (2.0, 10.0, 3.4), "trim", rot=(14, 0, -20), pivot=(4.4, 29.4, 0.0)))
     b["armorHead"] += pair(C((3.8, 30.4, -2.3), (1.2, 7.6, 0.6), "suit", rot=(14, 0, -20), pivot=(4.4, 29.4, 0.0), tint="2A0A04"))
     b["armorBody"] += [
-        C((-1.9, 18.0, -4.1), (3.8, 3.8, 0.7), "gem", rot=(0, 0, 45), pivot=(0.0, 19.9, -4.1)),     # Flammen-Emblem
+        C((-1.9, 18.0, -4.1), (3.8, 3.8, 0.7), "gem", rot=(0, 0, 45), pivot=(0.0, 19.9, -4.1)),
         C((-2.8, 17.1, -3.7), (5.6, 5.6, 0.4), "trim", rot=(0, 0, 45), pivot=(0.0, 19.9, -3.7)),
         C((-3.4, 13.0, -2.9), (6.8, 0.6, 0.4), "glow"), C((-3.0, 14.2, -2.9), (6.0, 0.6, 0.4), "glow"),
-        C((-2.6, 14.6, 3.0), (5.2, 7.0, 2.6), "trim", tint="5A3410"),                                # Hoellenfeuer-Generator
-        C((-1.4, 16.2, 5.5), (2.8, 3.6, 0.4), "glow"),
+        C((-2.8, 14.4, 3.0), (5.6, 7.4, 2.8), "trim", tint="5A3410"),
+        C((-1.4, 16.4, 5.7), (2.8, 3.4, 0.4), "glow"),
     ]
-    b["armorBody"] += pair(C((-4.6, 17.0, -3.6), (4.4, 6.2, 1.0), rot=(0, 12, 0), pivot=(-0.2, 17.0, -3.6), lines=[("h", 0.85, FRONT)]))
-    b["armorBody"] += chain((0.0, 12.6, 2.8), [(4.4, 2.0, 30), (3.8, 1.8, 50), (3.2, 1.6, 70), (2.4, 1.4, 85)], tip="glow")
-    b["armorRightArm"] += [C((-9.8, 20.6, -2.6), (5.8, 2.6, 5.2), "trim", rot=(0, 0, 12), pivot=(-6.7, 21.9, 0.0)),   # Goldschulter
+    b["armorBody"][1].cracks = True
+    b["armorBody"] += pair(C((-4.6, 17.0, -3.6), (4.4, 6.2, 1.0), rot=(0, 12, 0), pivot=(-0.2, 17.0, -3.6),
+                             lines=[("h", 0.85, FRONT)], cracks=True))
+    b["armorRightArm"] += [C((-9.8, 20.6, -2.6), (5.8, 2.6, 5.2), "trim", rot=(0, 0, 12), pivot=(-6.7, 21.9, 0.0)),
+                           C((-10.6, 21.6, -2.0), (4.8, 2.0, 4.0), "trim", rot=(0, 0, 26), pivot=(-6.7, 22.6, 0.0)),
                            C((-9.9, 11.4, -1.4), (0.4, 4.6, 2.8), "glow")]
+    b["armorRightArm"] += shards(-8.6, 24.0, 0, [(0, -1.4, 0.9, 3.6, -20, 30), (0, 0.2, 1.0, 4.4, 0, 32), (0, 1.8, 0.9, 3.4, 20, 30)],
+                                 "glow")
+    b["armorRightArm"][1].cracks = True
+    b["armorRightArm"][2].cracks = True
     b["armorRightArm"][2].lines += [("h", 0.3, ALL4), ("h", 0.7, ALL4)]
     b["armorRightLeg"][2].mat = "trim"
-    b["armorRightBoot"] += [C((-3.6, 2.6, -5.1), (1.0, 4.6, 0.4), "glow"), C((-1.8, 2.6, -5.1), (1.0, 3.6, 0.4), "glow"),  # Flammen
+    b["armorRightBoot"][0].cracks = True
+    b["armorRightBoot"] += [C((-3.6, 2.6, -5.1), (1.0, 4.6, 0.4), "glow"), C((-1.8, 2.6, -5.1), (1.0, 3.6, 0.4), "glow"),
                             C((-4.4, -0.4, -5.0), (4.8, 1.4, 1.4), "trim")]
-    return pal, symmetric(b)
+    armor = ArmorSet(pal, symmetric(b))
+    crown = []
+    for i in range(7):
+        angle = math.radians(-90 + i * 30)
+        x, z = math.cos(angle) * 3.8, math.sin(angle) * 3.8
+        crown += shards(x, 31.6, z, [(0, 0, 0.9, 2.4 + (1.6 if i == 3 else 0.6 * (i % 2)), -math.sin(angle) * 20, math.cos(angle) * 20)],
+                        "glow")
+    armor.sub("crown", "armorHead", [0.0, 31.6, 0.0], crown)
+    armor.sub("hellRing", "armorBody", [0.0, 18.1, 6.2], halo(18.1, 6.0, 2.6))
+    armor.sub("cape", "armorBody", [0.0, 23.6, 3.4], cape(23.6, 14.0, 3.4, "3A0A06", cracks=True))
+    armor.sub("tail", "armorBody", [0.0, 12.6, 2.8],
+              chain((0.0, 12.6, 2.8), [(4.4, 2.0, 30), (3.8, 1.8, 50), (3.2, 1.6, 70), (2.4, 1.4, 85)], tip="glow"))
+    armor.anim = {"crown": wave("scale", 0, 0.08, 4), "hellRing": spin(2, 2), "cape": wave("rotation", 0, 6, 2, base=-8),
+                  "tail": wave("rotation", 1, 16, 2)}
+    return armor
 
 
 # --- Ben 10: Ruestung in der Form der Aliens (mit Omnitrix-Symbol auf der Brust) -------------------------------------
@@ -512,34 +651,38 @@ def ben_uniform(white: str, black: str) -> list[Cube]:
             C((-2.0, 19.0, -3.2), (4.0, 4.0, 0.6), "omni"), C((-2.4, 18.6, -3.0), (4.8, 4.8, 0.4), "trim", tint="1A1A1A")]
 
 
-def taydenite() -> tuple[Palette, dict]:
+def taydenite() -> ArmorSet:
     """Taydenit (Ben 10, Stufe 1) in Diamondhead-Form: Kristallkopf mit grosser Diamantklinge, Kristallbuendel auf
-    Schultern und Ruecken, Kristallklingen an den Unterarmen, schwarz-weisser Anzug mit Omnitrix-Symbol."""
+    Schultern und Ruecken, Armklingen, schwarz-weisser Anzug mit Omnitrix-Symbol — und Kristallsplitter, die um den
+    Traeger kreisen."""
     pal = Palette("2ACA8A", "0E4A34", "B8FFE0", "1A1A1A", "E8F0EC", "3AFFB0", "F0FFF8", "5AF0C0", "3AFFB0")
-    b: dict[str, list[Cube]] = {"armorHead": [], "armorBody": [], "armorRightArm": [], "armorRightLeg": [], "armorRightBoot": []}
+    b: dict[str, list[Cube]] = {}
     b["armorHead"] = [
-        C((-4.8, 23.4, -4.8), (9.6, 7.2, 9.6)),                                                      # Kristallschaedel
-        C((-3.4, 26.4, -5.3), (6.8, 2.2, 0.5), "suit", tint="06140E"),                               # Gesichtsschlitz
-        C((-2.4, 30.4, -2.8), (4.8, 3.2, 5.6), rot=(-10, 0, 0), pivot=(0, 30.4, 0)),                 # Diamantklinge (Basis)
-        C((-1.4, 33.2, -2.0), (2.8, 5.4, 3.6), "gem", rot=(-16, 0, 0), pivot=(0, 30.4, 0)),          # Diamantklinge (Spitze)
+        C((-4.8, 23.4, -4.8), (9.6, 7.2, 9.6)),
+        C((-3.4, 26.4, -5.3), (6.8, 2.2, 0.5), "suit", tint="06140E"),
+        C((-2.4, 30.4, -2.8), (4.8, 3.2, 5.6), rot=(-10, 0, 0), pivot=(0, 30.4, 0)),
+        C((-1.4, 33.2, -2.0), (2.8, 5.4, 3.6), "gem", rot=(-16, 0, 0), pivot=(0, 30.4, 0)),
         C((-0.7, 38.2, -1.0), (1.4, 2.4, 1.8), "gem", rot=(-22, 0, 0), pivot=(0, 30.4, 0)),
     ]
-    b["armorHead"] += pair(C((-2.8, 27.0, -5.5), (1.8, 0.8, 0.3), "glow"))                           # gruene Augen
-    b["armorHead"] += pair(C((3.6, 24.0, -4.4), (1.8, 6.0, 5.0), rot=(0, -18, 8), pivot=(4.5, 24.0, -2.0)))   # Wangenfacetten
+    b["armorHead"] += pair(C((-2.8, 27.0, -5.5), (1.8, 0.8, 0.3), "glow"))
+    b["armorHead"] += pair(C((3.6, 24.0, -4.4), (1.8, 6.0, 5.0), rot=(0, -18, 8), pivot=(4.5, 24.0, -2.0)))
+    b["armorHead"] += shards(3.4, 29.6, 1.0, [(0, 0, 1.2, 3.6, 20, 40)]) + shards(-3.4, 29.6, 1.0, [(0, 0, 1.2, 3.6, 20, -40)])
     b["armorBody"] = ben_uniform("E8ECEA", "141414") + [
         C((-4.6, 22.4, -3.0), (9.2, 1.6, 6.0), "trim", tint="141414"),
         C((-4.6, 11.4, -2.9), (9.2, 1.6, 5.8), "trim", tint="141414", lines=[("h", 0.5, ALL4)]),
+        C((-4.2, 16.0, -3.0), (2.0, 6.4, 0.8), rot=(0, 0, 8)), C((2.2, 16.0, -3.0), (2.0, 6.4, 0.8), rot=(0, 0, -8)),
     ]
-    b["armorBody"] += shards(0, 21.0, 2.6, [(-2.6, 0, 1.8, 7.0, -30, 22), (2.6, 0, 1.8, 7.0, -30, -22), (0, 0.4, 2.2, 8.6, -24, 0),
-                                            (-1.4, 0.2, 1.4, 5.0, -40, 10), (1.4, 0.2, 1.4, 5.0, -40, -10)])
+    b["armorBody"] += shards(0, 21.0, 2.6, [(-2.6, 0, 1.8, 8.0, -30, 22), (2.6, 0, 1.8, 8.0, -30, -22), (0, 0.4, 2.4, 10.0, -24, 0),
+                                            (-1.4, 0.2, 1.4, 5.6, -40, 10), (1.4, 0.2, 1.4, 5.6, -40, -10),
+                                            (-3.4, 0.2, 1.2, 4.0, -20, 40), (3.4, 0.2, 1.2, 4.0, -20, -40)])
     b["armorRightArm"] = [
         C((-8.2, 16.4, -2.2), (4.0, 7.6, 4.4), "suit", tint="E8ECEA"),
-        C((-9.6, 19.8, -3.2), (5.6, 4.2, 6.4)),                                                      # Kristallschulter
-        C((-9.4, 11.0, -3.0), (5.4, 6.2, 6.0)),                                                      # Kristallhandschuh
-        C((-9.4, 8.2, -0.5), (0.8, 8.0, 1.2), "gem", rot=(0, 0, 8), pivot=(-9.0, 16.0, 0.0)),        # Armklinge
+        C((-9.8, 19.6, -3.4), (6.0, 4.4, 6.8)),
+        C((-9.4, 11.0, -3.0), (5.4, 6.2, 6.0)),
+        C((-9.4, 7.0, -0.6), (0.9, 9.0, 1.4), "gem", rot=(0, 0, 8), pivot=(-9.0, 16.0, 0.0)),
     ]
-    b["armorRightArm"] += shards(-7.4, 23.8, 0, [(0, 0, 2.2, 7.6, 0, 20), (-1.6, -1.8, 1.6, 5.4, -20, 34), (-1.6, 1.8, 1.6, 5.0, 22, 32),
-                                                 (1.2, 0.6, 1.4, 3.6, 8, -10), (0.4, -2.0, 1.2, 3.0, -30, 8)])
+    b["armorRightArm"] += shards(-7.4, 24.0, 0, [(0, 0, 2.4, 8.4, 0, 20), (-1.6, -1.8, 1.8, 6.0, -20, 34), (-1.6, 1.8, 1.8, 5.6, 22, 32),
+                                                 (1.2, 0.6, 1.4, 4.0, 8, -10), (0.4, -2.2, 1.2, 3.4, -30, 8), (-2.6, 0, 1.2, 3.6, 0, 55)])
     b["armorRightLeg"] = [C((-4.1, 4.4, -2.3), (4.2, 7.8, 4.6), "suit", tint="E8ECEA"),
                           C((-4.3, 8.6, -2.7), (4.6, 3.4, 5.4)),
                           C((-3.6, 4.6, -3.4), (3.2, 3.0, 1.2), "gem")]
@@ -549,30 +692,39 @@ def taydenite() -> tuple[Palette, dict]:
     for cube in b["armorLeftArm"] + b["armorLeftLeg"]:
         if cube.mat == "suit":
             cube.tint = "141414"
-    return pal, b
+    armor = ArmorSet(pal, b)
+    orbit = []
+    for i in range(6):
+        angle = math.radians(i * 60)
+        x, z = math.cos(angle) * 10.0, math.sin(angle) * 10.0
+        y = 14.0 + (i % 3) * 4.0
+        orbit += shards(x, y, z, [(0, 0, 1.4, 3.6 + (i % 2) * 1.4, 15 * math.sin(angle), 15 * math.cos(angle))])
+    armor.sub("orbit", "armorBody", [0.0, 18.0, 0.0], orbit)
+    armor.anim = {"orbit": merge(spin(1, 1), wave("position", 1, 0.8, 2))}
+    return armor
 
 
-def galvan() -> tuple[Palette, dict]:
-    """Galvan-Biotech (Ben 10, Stufe 2) in Upgrade-Form: glatter schwarzer Kuppelkopf mit einem grossen gruenen
-    Kreisauge, gruene Schaltkreise ueber dem ganzen Koerper, silberweisser Grundanzug, Omnitrix-Symbol."""
+def galvan() -> ArmorSet:
+    """Galvan-Biotech (Ben 10, Stufe 2) in Upgrade-Form: glatter schwarzer Kuppelkopf mit grossem pulsierendem Kreisauge,
+    gruene Schaltkreis-Baender, silberweisser Anzug, Omnitrix-Symbol, schwebende Datenringe um die Unterarme und
+    vier Kabel-Tentakel auf dem Ruecken."""
     pal = Palette("121416", "050607", "4A5058", "D8DCE0", "1A1C20", "3AFF5A", "E8FFE0", "3AFF5A", "3AFF5A")
     circuit = [("v", 0.3, ("north", "south")), ("v", 0.7, ("north", "south"))]
     b: dict[str, list[Cube]] = {}
     b["armorHead"] = dome(5.0, 23.2, 9.2, "121416", layers=5) + [
-        C((-2.9, 25.0, -5.5), (5.8, 5.8, 0.5), "trim", tint="050607"),                               # Augenring
-        C((-2.3, 25.6, -5.9), (4.6, 4.6, 0.5), "gem"),                                               # Kreisauge
-        C((-0.7, 27.2, -6.1), (1.4, 1.4, 0.3), "trim", tint="050607"),                               # Pupille
+        C((-2.9, 25.0, -5.5), (5.8, 5.8, 0.5), "trim", tint="050607"),
         C((-5.1, 26.0, -3.0), (0.4, 0.6, 6.0), "glow"), C((4.7, 26.0, -3.0), (0.4, 0.6, 6.0), "glow"),
-        C((-0.3, 30.6, -4.8), (0.6, 2.2, 9.6), "glow"),                                              # Scheitelbahn
+        C((-0.3, 30.6, -4.8), (0.6, 2.2, 9.6), "glow"),
     ]
     b["armorHead"] += pair(C((2.6, 32.2, -0.8), (1.0, 2.4, 1.0), "trim", tint="121416", rot=(0, 0, -20), pivot=(3.1, 32.2, -0.3)))
     b["armorBody"] = [C((-4.4, 12.4, -2.4), (8.8, 12.0, 4.8), "suit"),
-                      C((-4.6, 20.0, -3.0), (9.2, 4.2, 6.0), lines=circuit),                         # Brustband
-                      C((-4.6, 12.0, -3.0), (9.2, 2.4, 6.0), lines=circuit),                         # Hueftband
+                      C((-4.6, 20.0, -3.0), (9.2, 4.2, 6.0), lines=circuit),
+                      C((-4.6, 12.0, -3.0), (9.2, 2.4, 6.0), lines=circuit),
                       C((-1.6, 14.4, -3.0), (3.2, 5.6, 0.6), lines=[("v", 0.5, FRONT)]),
-                      C((-2.0, 16.0, -3.6), (4.0, 4.0, 0.6), "omni")]
+                      C((-2.0, 16.0, -3.6), (4.0, 4.0, 0.6), "omni"),
+                      C((-2.6, 15.0, 2.4), (5.2, 7.0, 1.6), lines=circuit)]
     b["armorRightArm"] = [C((-8.2, 12.4, -2.2), (4.0, 11.6, 4.4), "suit"),
-                          C((-9.2, 20.2, -2.8), (5.2, 3.8, 5.6), lines=circuit),
+                          C((-9.4, 20.0, -3.0), (5.6, 4.0, 6.0), lines=circuit),
                           C((-9.0, 15.4, -2.6), (4.8, 2.0, 5.2), lines=circuit),
                           C((-9.4, 10.8, -3.0), (5.4, 3.6, 6.0), lines=circuit),
                           C((-9.6, 12.2, -1.0), (0.4, 1.0, 2.0), "glow")]
@@ -580,52 +732,196 @@ def galvan() -> tuple[Palette, dict]:
                           C((-4.3, 8.8, -2.7), (4.6, 2.6, 5.4), lines=circuit),
                           C((-4.3, 4.8, -2.7), (4.6, 2.0, 5.4), lines=circuit)]
     b["armorRightBoot"] = [C((-4.5, -0.2, -3.0), (5.0, 4.4, 6.0), lines=circuit), C((-4.3, -0.4, -4.2), (4.6, 2.0, 1.4))]
-    return pal, symmetric(b)
+    armor = ArmorSet(pal, symmetric(b))
+    armor.sub("eye", "armorHead", [0.0, 27.9, -5.9], [C((-2.3, 25.6, -5.9), (4.6, 4.6, 0.5), "gem"),
+                                                     C((-0.7, 27.2, -6.1), (1.4, 1.4, 0.3), "trim", tint="050607")])
+    armor.sub("ringR", "armorRightArm", [-6.6, 14.0, 0.0], ring_xz(-6.6, 14.0, 0.0, 4.4) + ring_xz(-6.6, 11.6, 0.0, 3.8))
+    armor.sub("ringL", "armorLeftArm", [6.6, 14.0, 0.0], ring_xz(6.6, 14.0, 0.0, 4.4) + ring_xz(6.6, 11.6, 0.0, 3.8))
+    tendrils = []
+    for side, tilt in ((-1, 30), (1, 30), (-1, 60), (1, 60)):
+        x0 = side * (1.6 if tilt == 30 else 2.8)
+        tendrils += [C((x0 - 0.5, 22.0, 3.0), (1.0, 9.0, 1.0), "trim", tint="121416", rot=(-25, 0, side * -tilt), pivot=(x0, 22.0, 3.5)),
+                     C((x0 - 0.6, 30.6, 2.9), (1.2, 1.4, 1.2), "glow", rot=(-25, 0, side * -tilt), pivot=(x0, 22.0, 3.5))]
+    armor.sub("tendrils", "armorBody", [0.0, 22.0, 3.5], tendrils)
+    armor.anim = {"eye": wave("scale", 0, 0.12, 4), "ringR": spin(1, 2), "ringL": spin(1, -2),
+                  "tendrils": wave("rotation", 0, 8, 2)}
+    return armor
 
 
-def celestial() -> tuple[Palette, dict]:
-    """Celestialsapien (Ben 10, Endstufe) in Alien-X-Form: Sternenhimmel-Koerper, zwei grosse weisse Hoerner,
-    gruene Augen, Omnitrix-Symbol, Heiligenschein und Lichtschwingen."""
+def celestial() -> ArmorSet:
+    """Celestialsapien (Ben 10, Endstufe) in Alien-X-Form: Sternenhimmel-Koerper, grosse weisse Hoerner, gruene Augen,
+    Omnitrix-Symbol, drehender Heiligenschein, schlagende Lichtschwingen, Sternen-Umhang mit leuchtendem Saum und
+    kreisende Sternfunken."""
     pal = Palette("0A0618", "000000", "E8E8FF", "06040E", "F4F4FF", "C8E8FF", "FFFFFF", "FFFFFF", "FFFFFF", cosmic=True)
     b: dict[str, list[Cube]] = {}
     b["armorHead"] = [C((-4.7, 23.4, -4.7), (9.4, 8.6, 9.4))]
-    b["armorHead"] += pair(C((-3.2, 27.0, -5.0), (2.2, 1.4, 0.4), "glow"))                           # Augen
-    b["armorHead"] += shards(2.6, 31.4, -1.4, [(0, 0, 2.0, 6.4, -14, -12)], "trim")                  # Hoerner
+    b["armorHead"] += pair(C((-3.2, 27.0, -5.0), (2.2, 1.4, 0.4), "glow"))
+    b["armorHead"] += shards(2.6, 31.4, -1.4, [(0, 0, 2.0, 6.4, -14, -12)], "trim")
     b["armorHead"] += shards(-2.6, 31.4, -1.4, [(0, 0, 2.0, 6.4, -14, 12)], "trim")
     b["armorHead"] += shards(3.2, 37.4, -2.8, [(0, 0, 1.4, 3.6, -28, 4)], "trim")
     b["armorHead"] += shards(-3.2, 37.4, -2.8, [(0, 0, 1.4, 3.6, -28, -4)], "trim")
-    b["armorHead"] += halo(30.0, 6.2, 6.4)
     b["armorBody"] = [C((-4.6, 12.2, -2.6), (9.2, 12.4, 5.2)),
                       C((-2.0, 18.4, -3.2), (4.0, 4.0, 0.6), "omni"),
                       C((-4.8, 22.6, -3.0), (9.6, 1.4, 6.0), "trim"),
                       C((-4.8, 11.6, -3.0), (9.6, 1.0, 6.0), "trim")]
-    for side in (-1, 1):
-        for length, angle in ((15.0, 28), (13.0, 50), (10.0, 72), (7.0, 94)):
-            b["armorBody"].append(C((side * 1.5 - 0.5, 20.0, 3.0), (1.0, length, 0.6), "glow", rot=(-12, 0, -side * angle),
-                                    pivot=(side * 1.5, 20.0, 3.0)))
     b["armorRightArm"] = [C((-8.4, 11.2, -2.4), (4.4, 12.6, 4.8)),
-                          C((-9.4, 20.4, -3.0), (5.4, 3.6, 6.0), "trim"),
+                          C((-9.8, 20.2, -3.2), (5.8, 4.0, 6.4), "trim"),
+                          C((-10.6, 21.4, -2.4), (2.4, 4.6, 4.8), "trim", rot=(0, 0, 25), pivot=(-8.0, 22.0, 0.0)),
                           C((-9.0, 11.0, -2.8), (5.0, 1.0, 5.6), "trim")]
     b["armorRightLeg"] = [C((-4.2, 3.6, -2.4), (4.4, 8.6, 4.8)), C((-4.0, 5.0, -3.0), (3.6, 2.4, 0.8), "trim")]
     b["armorRightBoot"] = [C((-4.4, -0.2, -2.8), (4.8, 4.0, 5.6)), C((-4.5, -0.4, -3.2), (5.0, 0.8, 6.4), "trim")]
-    return pal, symmetric(b)
+    armor = ArmorSet(pal, symmetric(b))
+    armor.sub("halo", "armorHead", [0.0, 30.0, 6.2], halo(30.0, 6.2, 6.4))
+    for name, side in (("wingL", 1), ("wingR", -1)):
+        wing = []
+        for length, angle in ((15.0, 28), (13.0, 50), (10.0, 72), (7.0, 94)):
+            wing.append(C((side * 1.5 - 0.5, 20.0, 3.0), (1.0, length, 0.6), "glow", rot=(-12, 0, -side * angle), pivot=(side * 1.5, 20.0, 3.0)))
+        armor.sub(name, "armorBody", [side * 1.5, 20.0, 3.0], wing)
+    armor.sub("cape", "armorBody", [0.0, 23.6, 3.0], cape(23.6, 15.0, 3.0, "0A0618", edge_mat="glow"))
+    for c in armor.bones["cape"][:1]:
+        c.mat = "plate"                                                                              # Sternenhimmel statt Stoff
+    motes = []
+    for i in range(8):
+        angle = math.radians(i * 45)
+        motes.append(C((math.cos(angle) * 9 - 0.4, 10.0 + (i % 4) * 4.0, math.sin(angle) * 9 - 0.4), (0.8, 0.8, 0.8), "glow"))
+    armor.sub("motes", "armorBody", [0.0, 18.0, 0.0], motes)
+    armor.anim = {"halo": spin(2, 1), "wingL": wave("rotation", 2, -10, 2), "wingR": wave("rotation", 2, 10, 2),
+                  "cape": wave("rotation", 0, 5, 2, base=-6), "motes": merge(spin(1, -1), wave("position", 1, 1.0, 4))}
+    return armor
 
 
 SETS = {"taydenite": taydenite, "galvan": galvan, "celestial": celestial,
         "magnaplate": magnaplate, "carbonox": carbonox, "infernox": infernox}
+ANIM_DIR = ASSETS / "animations" / "armor"
+
+
+def animation(name: str, armor: ArmorSet) -> dict:
+    bones = {bone: channels for bone, channels in armor.anim.items()}
+    return {"format_version": "1.8.0", "animations": {f"animation.kingdomomnitrix.armor.{name}.idle": {
+        "loop": True, "animation_length": LOOP, "bones": bones}}}
 
 
 def outputs() -> dict[Path, bytes]:
     files: dict[Path, bytes] = {}
     for name, make in SETS.items():
-        pal, bones = make()
-        geo, color, mask = build(name, pal, bones)
+        armor = make()
+        geo, color, mask = build(name, armor.pal, armor.bones, armor.subbones)
         files[GEO_DIR / f"{name}.geo.json"] = (json.dumps(geo, indent=1) + "\n").encode()
+        files[ANIM_DIR / f"{name}.animation.json"] = (json.dumps(animation(name, armor), indent=1) + "\n").encode()
         for path, image in ((TEX_DIR / f"{name}.png", color), (TEX_DIR / f"{name}_glowmask.png", mask)):
             buffer = io.BytesIO()
             image.save(buffer, "PNG", optimize=True)
             files[path] = buffer.getvalue()
     return files
+
+
+ITEM_TEX = ASSETS / "textures" / "item"
+ITEM_MODELS = ASSETS / "models" / "item"
+LANG = ASSETS / "lang"
+PIECES = {"helmet": ("armorHead",), "chestplate": ("armorBody", "armorRightArm", "armorLeftArm"),
+          "leggings": ("armorRightLeg", "armorLeftLeg"), "boots": ("armorRightBoot", "armorLeftBoot")}
+NAMES = {"taydenite": ("Taydenit", "Taydenite"), "galvan": ("Galvan-Biotech", "Galvan Biotech"),
+         "celestial": ("Celestialsapien", "Celestialsapien"), "magnaplate": ("Magnaplate", "Magnaplate"),
+         "carbonox": ("Carbonox", "Carbonox"), "infernox": ("Infernox", "Infernox")}
+PIECE_NAMES = {"helmet": ("Helm", "Helmet"), "chestplate": ("Brustpanzer", "Chestplate"), "leggings": ("Beinschutz", "Leggings"),
+               "boots": ("Stiefel", "Boots")}
+TOOLTIPS = {
+    "taydenite": ("Diamondhead-Form: Kristallklingen, kreisende Taydenit-Splitter.", "Diamondhead form: crystal blades, orbiting taydenite shards."),
+    "galvan": ("Upgrade-Form: Mechamorph-Biotech mit Schaltkreisen und Datenringen.", "Upgrade form: Mechamorph biotech with circuits and data rings."),
+    "celestial": ("Alien-X-Form: Sternenhimmel, Heiligenschein und Lichtschwingen.", "Alien X form: starfield, halo and wings of light."),
+    "magnaplate": ("Kuppelhelm, Riesenhandschuhe und Heli-Pack mit Rotor.", "Dome helmet, giant gauntlets and a heli-pack with rotor."),
+    "carbonox": ("Megacorp-Vollpanzer mit Lombax-Ohren, Schubduesen und Armklingen.", "Megacorp full armor with Lombax ears, thrusters and arm blades."),
+    "infernox": ("Hoellenfeuer-Generator, Glutrisse, Flammenkrone und Glut-Umhang.", "Hellfire generator, ember cracks, flame crown and ember cape."),
+}
+
+
+def icon(name: str, armor: ArmorSet, piece: str, geo: dict, tex_path: Path, work: Path) -> Image.Image:
+    """Inventarbild aus dem 3D-Modell: nur die Bones des Teils, schraeg von vorn, auf 32x32 verkleinert."""
+    keep = set(PIECES[piece])
+    keep |= {bone for bone, (parent, _) in armor.subbones.items() if parent in keep}
+    data = json.loads(json.dumps(geo))
+    data["minecraft:geometry"][0]["bones"] = [b for b in data["minecraft:geometry"][0]["bones"] if b["name"] in keep]
+    geo_path = work / f"{name}_{piece}.geo.json"
+    geo_path.write_text(json.dumps(data))
+    out = work / f"{name}_{piece}.png"
+    subprocess.run([sys.executable, str(ROOT / "tools" / "render_geo.py"), str(out), f"{geo_path}:{tex_path}", "--views",
+                    "three_quarter", "--scale", "6", "--background", "#FF00FF"], check=True, capture_output=True)
+    img = np.asarray(Image.open(out).convert("RGBA")).copy()
+    bg = (img[..., 0] > 240) & (img[..., 1] < 20) & (img[..., 2] > 240)
+    img[bg] = 0
+    img[:24, :] = 0
+    img[:, :16] = 0
+    ys, xs = np.nonzero(img[..., 3])
+    crop = Image.fromarray(img[ys.min():ys.max() + 1, xs.min():xs.max() + 1], "RGBA")
+    side = max(crop.size)
+    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    square.paste(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
+    small = square.resize((32, 32), Image.LANCZOS)
+    arr = np.asarray(small).copy()
+    arr[..., 3] = np.where(arr[..., 3] > 100, 255, 0)
+    return Image.fromarray(arr, "RGBA")
+
+
+def item_outputs() -> dict[Path, bytes]:
+    """Inventarbilder, Item-Modelle und Uebersetzungen der 24 Ruestungsteile (ergaenzt die Sprachdateien)."""
+    import tempfile
+    files: dict[Path, bytes] = {}
+    lang = {code: json.loads((LANG / f"{code}.json").read_text(encoding="utf-8")) for code in ("de_de", "en_us")}
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        for name, make in SETS.items():
+            armor = make()
+            geo, color, _ = build(name, armor.pal, armor.bones, armor.subbones)
+            tex_path = work / f"{name}.png"
+            color.save(tex_path)
+            for piece in PIECES:
+                item = f"{name}_{piece}"
+                buffer = io.BytesIO()
+                icon(name, armor, piece, geo, tex_path, work).save(buffer, "PNG", optimize=True)
+                files[ITEM_TEX / f"{item}.png"] = buffer.getvalue()
+                files[ITEM_MODELS / f"{item}.json"] = (json.dumps({"parent": "minecraft:item/generated", "textures": {
+                    "layer0": f"kingdomomnitrix:item/{item}"}}, indent=2) + "\n").encode()
+                lang["de_de"][f"item.kingdomomnitrix.{item}"] = f"{NAMES[name][0]}-{PIECE_NAMES[piece][0]}"
+                lang["en_us"][f"item.kingdomomnitrix.{item}"] = f"{NAMES[name][1]} {PIECE_NAMES[piece][1]}"
+            lang["de_de"][f"tooltip.kingdomomnitrix.suit.{name}"] = TOOLTIPS[name][0]
+            lang["en_us"][f"tooltip.kingdomomnitrix.suit.{name}"] = TOOLTIPS[name][1]
+    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben-10-Linie: grosser Energieschild, wenig Grundpanzerung"
+    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ben10"] = "Ben 10 line: large energy shield, light base armor"
+    lang["de_de"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet-Linie: schwere Panzerung, kleiner Schild"
+    lang["en_us"]["tooltip.kingdomomnitrix.suit.line.ratchet"] = "Ratchet line: heavy armor, small shield"
+    lang["de_de"]["itemGroup.kingdomomnitrix.suits"] = "Kingdom Omnitrix: Endgame-Ruestungen"
+    lang["en_us"]["itemGroup.kingdomomnitrix.suits"] = "Kingdom Omnitrix: Endgame Armor"
+    for code, data in lang.items():
+        files[LANG / f"{code}.json"] = (json.dumps(data, indent=2, ensure_ascii=False) + "\n").encode()
+    return files
+
+
+def preview(out: Path, names: list[str], labels: list[str]) -> None:
+    """Vorschau wie im Spiel bei Daemmerung: Grundbild abgedunkelt, Leuchtmaske voll hell plus Schein (Bloom)."""
+    from PIL import ImageFilter
+    tmp = out.parent / f".{out.stem}_glowtex"
+    tmp.mkdir(exist_ok=True)
+    specs, glow_specs = [], []
+    for name in names:
+        tex = Image.open(TEX_DIR / f"{name}.png").convert("RGBA")
+        mask = np.asarray(Image.open(TEX_DIR / f"{name}_glowmask.png").convert("RGBA"))
+        only = np.zeros_like(mask)
+        only[..., 3] = np.asarray(tex)[..., 3]
+        only[mask[..., 3] > 0] = mask[mask[..., 3] > 0]
+        Image.fromarray(only, "RGBA").save(tmp / f"{name}.png")
+        specs.append(f"{GEO_DIR / (name + '.geo.json')}:{TEX_DIR / (name + '.png')}")
+        glow_specs.append(f"{GEO_DIR / (name + '.geo.json')}:{tmp / (name + '.png')}")
+    common = ["--views", "front,three_quarter,back", "--scale", "9", *sum((["--label", label] for label in labels), [])]
+    render = [sys.executable, str(ROOT / "tools" / "render_geo.py")]
+    subprocess.run(render + [str(tmp / "base.png"), *specs, "--background", "#2A3038", *common], check=True, capture_output=True)
+    subprocess.run(render + [str(tmp / "glow.png"), *glow_specs, "--background", "#000000", *common], check=True, capture_output=True)
+    base = np.asarray(Image.open(tmp / "base.png").convert("RGB")).astype(np.float64)
+    glow_img = Image.open(tmp / "glow.png").convert("RGB")
+    glow = np.asarray(glow_img).astype(np.float64)
+    bloom = np.asarray(glow_img.filter(ImageFilter.GaussianBlur(6))).astype(np.float64)
+    lit = glow.max(axis=2, keepdims=True) > 8
+    result = np.where(lit, glow, base * 0.8) + bloom * 1.4
+    Image.fromarray(np.clip(result, 0, 255).astype(np.uint8)).save(out)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -636,6 +932,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(message)s")
     files = outputs()
+    files.update(item_outputs())
     if args.check:
         stale = [p for p, data in files.items() if not p.exists() or p.read_bytes() != data]
         for path in stale:
@@ -647,12 +944,7 @@ def main(argv: list[str] | None = None) -> int:
         path.write_bytes(data)
     LOG.info("Ruestungsmodelle geschrieben: %d Sets, %d Dateien", len(SETS), len(files))
     if args.preview:
-        specs = []
-        for name in SETS:
-            specs.append(f"{GEO_DIR / (name + '.geo.json')}:{TEX_DIR / (name + '.png')}")
-        cmd = [sys.executable, str(ROOT / "tools" / "render_geo.py"), str(args.preview), *specs, "--views", "front,three_quarter,back",
-               "--scale", "6", *sum((["--label", n] for n in SETS), [])]
-        subprocess.run(cmd, check=True)
+        preview(args.preview, list(SETS), list(SETS))
     return 0
 
 
