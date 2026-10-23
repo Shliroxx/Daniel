@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/petropia_gravel"
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_gravel",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_gravel",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_gravel",
+        "y": 270
+      }
+    ]
+  }
+}

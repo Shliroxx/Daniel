@@ -3,8 +3,8 @@
   "temperature": 0.8,
   "downfall": 0.1,
   "effects": {
-    "sky_color": 9105624,
-    "fog_color": 12122344,
+    "sky_color": 13154559,
+    "fog_color": 14741744,
     "water_color": 2801864,
     "water_fog_color": 666170,
     "grass_color": 5877296,
@@ -39,10 +39,9 @@
   },
   "features": [
     [],
+    [],
     [
-      "kingdomomnitrix:petropia_lake"
-    ],
-    [
+      "kingdomomnitrix:petropia_boulders",
       "kingdomomnitrix:petropia_geode_deep"
     ],
     [],

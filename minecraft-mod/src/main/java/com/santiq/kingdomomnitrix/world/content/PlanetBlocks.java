@@ -100,6 +100,10 @@ public final class PlanetBlocks {
 	public static final Block PETROPIA_CRYSTAL_LOG = register("petropia_crystal_log", new PillarBlock(base(MapColor.CYAN, 2.0f, 2.0f, BlockSoundGroup.AMETHYST_BLOCK, 0, true).instrument(NoteBlockInstrument.BASS).burnable()));
 	/** Kristalllaub */
 	public static final Block PETROPIA_CRYSTAL_LEAVES = register("petropia_crystal_leaves", new LeavesBlock(AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).mapColor(MapColor.EMERALD_GREEN).sounds(BlockSoundGroup.AMETHYST_CLUSTER)));
+	/** Kristallflechte */
+	public static final Block PETROPIA_LICHEN = register("petropia_lichen", new Block(base(MapColor.PURPLE, 0.7f, 0.7f, BlockSoundGroup.AMETHYST_CLUSTER, 0, false)));
+	/** Splitterkies */
+	public static final Block PETROPIA_GRAVEL = register("petropia_gravel", new Block(base(MapColor.LIGHT_GRAY, 0.6f, 0.6f, BlockSoundGroup.GRAVEL, 0, false)));
 	/** Galvan-Moos */
 	public static final Block GALVAN_MOSS = register("galvan_moss", new Block(base(MapColor.LIME, 0.7f, 0.7f, BlockSoundGroup.MOSS_BLOCK, 0, false)));
 	/** Galvan-Schlick */

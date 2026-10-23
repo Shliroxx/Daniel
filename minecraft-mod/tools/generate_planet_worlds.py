@@ -133,13 +133,6 @@ def kit_spring(fid: str, fluid: str, valid: list[str], count: int) -> str:
          {"type": "minecraft:biome"}])
 
 
-def kit_lake(fid: str, fluid: str, barrier: str, rarity: int) -> str:
-    """Oberflaechensee."""
-    return _kit(fid, 1, {"type": "minecraft:lake", "config": {"fluid": simple(fluid, level="0"), "barrier": simple(barrier)}},
-                [{"type": "minecraft:rarity_filter", "chance": rarity}, {"type": "minecraft:in_square"},
-                 {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}])
-
-
 def carvers(planet: str) -> dict[str, dict]:
     """Hoehlen und Schluchten in den eigenen Gesteinen (Vanilla-Werte, eigene ersetzbare Bloecke)."""
     debug = {"air_state": {"Name": "minecraft:crimson_button", "Properties": {"face": "wall", "facing": "north", "powered": "false"}}}
@@ -176,7 +169,6 @@ PETROPIA_KIT = {
     "geode_deep": kit_geode("petropia_geode_deep", "petropia_rock", "petropia_smooth_rock", "petropia_crystal",
                             "petropia_cluster", 10, 6, 50),
     "spring": kit_spring("petropia_spring", "minecraft:water", ["petropia_rock", "petropia_smooth_rock"], 18),
-    "lake": kit_lake("petropia_lake", "minecraft:water", "petropia_smooth_rock", 6),
 }
 
 
@@ -279,29 +271,40 @@ ALIEN_WORLDS = {
         # in allen Biomen: tiefe Geoden, Quellen in Felswaenden
         "extras": ["geode_deep", "spring"], "kit": PETROPIA_KIT,
         "biomes": {
-            "crystal_plains": {"sky": 0x7AE8C8, "fog": 0xA8F0E0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.0015),
+            "crystal_plains": {"sky": 0xB8A8F0, "fog": 0xD8E8F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.0015),
                                "plants": [("petropia_sprout", 3, 28)], "trees": [], "high_top": "petropia_crystal",
+                               "patches": [("petropia_lichen", "minecraft:surface", 0.05, 10.0),
+                                           ("petropia_gravel", "minecraft:gravel", -0.12, 0.12)],
                                "climate": {"temperature": [-1.0, -0.2], "humidity": [-1.0, 0.1]},
                                "extras": ["spires_sparse", "clusters", "boulders"], "chime": 0.004},
-            "crystal_forest": {"sky": 0x6ADCB8, "fog": 0x98E8D0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.003),
-                               "plants": [("petropia_sprout", 4, 32)],
+            "crystal_forest": {"sky": 0xA890E8, "fog": 0xC8D0F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.003),
+                               "plants": [("petropia_sprout", 4, 32)], "top": "petropia_lichen",
+                               "patches": [("petropia_shards", "minecraft:patch", 0.35, 10.0),
+                                           ("petropia_gravel", "minecraft:gravel", -0.08, 0.08)],
                                "trees": [("petropia_crystal_tree", 7), ("petropia_shard_tree", 2)],
                                "climate": {"temperature": [-1.0, -0.2], "humidity": [0.1, 1.0]},
                                "extras": ["clusters"], "chime": 0.008},
-            "shard_wastes": {"sky": 0x4AA890, "fog": 0x78C8B0, "water": 0x3AD0B0, "particle": None,
+            "shard_wastes": {"sky": 0x8A78C8, "fog": 0xA8B8C8, "water": 0x3AD0B0, "particle": None,
                              "plants": [("petropia_sprout", 1, 12)], "trees": [], "top": "petropia_rock",
+                             "patches": [("petropia_gravel", "minecraft:surface", -0.25, 0.25),
+                                         ("petropia_shards", "minecraft:patch", 0.3, 10.0)],
                              "climate": {"temperature": [-0.2, 0.5], "humidity": [-1.0, -0.1]},
                              "extras": ["spires_sparse", "boulders", "boulders_crystal", "disk_smooth", "disk_shards"], "chime": 0.002},
-            "geode_fields": {"sky": 0x58C8A8, "fog": 0x88D8C0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.002),
+            "geode_fields": {"sky": 0xC090E8, "fog": 0xD8C8F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.002),
                              "plants": [("petropia_sprout", 2, 20)], "trees": [("petropia_shard_tree", 1)],
+                             "patches": [("petropia_smooth_rock", "minecraft:surface", 0.3, 10.0),
+                                         ("petropia_lichen", "minecraft:patch", 0.4, 10.0)],
                              "climate": {"temperature": [-0.2, 0.5], "humidity": [-0.1, 1.0]},
                              "extras": ["geode_surface", "spires_sparse", "clusters_dense"], "chime": 0.01},
-            "shattered_basin": {"sky": 0x8AF0D8, "fog": 0xB8F8E8, "water": 0x2AC0C8, "particle": None,
-                                "plants": [("petropia_sprout", 3, 24)], "trees": [("petropia_crystal_tree", 2)],
+            "shattered_basin": {"sky": 0xC8B8FF, "fog": 0xE0F0F0, "water": 0x2AC0C8, "particle": None,
+                                "plants": [("petropia_sprout", 3, 24)], "trees": [("petropia_crystal_tree", 2)], "top": "petropia_gravel",
+                                "patches": [("petropia_lichen", "minecraft:surface", 0.1, 10.0),
+                                            ("petropia_smooth_rock", "minecraft:patch", 0.4, 10.0)],
                                 "climate": {"temperature": [0.5, 1.0], "humidity": [-1.0, 1.0]},
-                                "extras": ["lake", "disk_smooth", "clusters"], "chime": 0.004},
-            "prism_peaks": {"sky": 0x9AF8E0, "fog": 0xC8FFF0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.004),
-                            "plants": [("petropia_sprout", 1, 8)], "trees": [], "high_top": "petropia_crystal",
+                                "extras": ["disk_smooth", "clusters", "boulders"], "chime": 0.004},
+            "prism_peaks": {"sky": 0xD8C8FF, "fog": 0xF0F0FF, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.004),
+                            "plants": [("petropia_sprout", 1, 8)], "trees": [], "top": "petropia_rock", "high_top": "petropia_crystal",
+                            "patches": [("petropia_smooth_rock", "minecraft:surface", 0.2, 10.0)],
                             "climate": {"erosion": [-1.0, -0.6]},
                             "extras": ["spires_dense", "clusters", "boulders_crystal"], "chime": 0.012},
         },
@@ -443,8 +446,6 @@ def biome_is(planet: str, *biomes: str) -> dict:
 def surface_rule(planet: str, cfg: dict) -> dict:
     top_rules = [cond({"type": "minecraft:steep"}, block_rule(cfg["steep"]))]
     for biome, bc in cfg["biomes"].items():
-        if "top" in bc:
-            top_rules.append(cond(biome_is(planet, biome), block_rule(bc["top"])))
         if bc.get("crust"):
             top_rules.append(cond(biome_is(planet, biome), cond(
                 {"type": "minecraft:noise_threshold", "noise": "minecraft:surface", "min_threshold": 0.15, "max_threshold": 10.0},
@@ -453,6 +454,13 @@ def surface_rule(planet: str, cfg: dict) -> dict:
             top_rules.append(cond(biome_is(planet, biome), cond(
                 {"type": "minecraft:y_above", "anchor": {"absolute": 100}, "surface_depth_multiplier": 0, "add_stone_depth": False},
                 block_rule(bc["high_top"]))))
+        # Bodenflecken (Terralith-Prinzip): Rauschfeld-Baender mischen mehrere Boeden innerhalb eines Bioms
+        for block, noise, lo, hi in bc.get("patches", ()):
+            top_rules.append(cond(biome_is(planet, biome), cond(
+                {"type": "minecraft:noise_threshold", "noise": noise, "min_threshold": lo, "max_threshold": hi},
+                block_rule(block))))
+        if "top" in bc:
+            top_rules.append(cond(biome_is(planet, biome), block_rule(bc["top"])))
     top_rules.append(block_rule(cfg["top"]))
     surface = {"type": "minecraft:sequence", "sequence": [
         cond(floor(False), {"type": "minecraft:sequence", "sequence": top_rules}),
@@ -704,6 +712,7 @@ def spawn_tags() -> dict[Path, dict]:
     mc = ROOT / "src" / "main" / "resources" / "data" / "minecraft" / "tags"
     ground = [f"{MOD}:{cfg[k]}" for cfg in PLANETS.values() for k in ("top", "steep")]
     ground += [f"{MOD}:{bc[k]}" for cfg in PLANETS.values() for bc in cfg["biomes"].values() for k in ("top", "high_top") if k in bc]
+    ground += [f"{MOD}:{patch[0]}" for cfg in PLANETS.values() for bc in cfg["biomes"].values() for patch in bc.get("patches", ())]
     ground = sorted(set(ground))
     sand = [f"{MOD}:{PLANETS['veldin'][k]}" for k in ("top", "steep")]
     slime_biomes = sorted(f"{MOD}:{planet}/{name}" for planet, cfg in PLANETS.items() if cfg.get("slime") for name in cfg["biomes"])

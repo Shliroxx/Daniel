@@ -144,6 +144,9 @@ TORREN_DUST = _cache(lambda: px.sand("torren_dust", H("4A140C"), H("9A3A20"), H(
 TORREN_CRUST = _cache(lambda: px.rock("torren_crust", H("3A120A"), H("8A3020"), H("C85A32"), cells=9, crack=1.4))
 GALVAN_MUD = _cache(lambda: px.soil("galvan_mud", H("2A2416"), H("5A4A2A"), H("8A7A4A"), H("B8A878")))
 GALVAN_MOSS = _cache(lambda: px.grass_top("galvan_moss_top", H("2A4A10"), H("7A9A2A"), H("D8E86A"), flowers=[H("5AF0FF"), H("FFFFFF")]))
+PETROPIA_SHARDS = _cache(lambda: px.sand("petropia_shards", H("0E3A34"), H("2A8A78"), H("9AF0D8"), ripples=0.4))
+PETROPIA_LICHEN = _cache(lambda: px.grass_top("petropia_lichen_top", H("3A1E5A"), H("8A5AC8"), H("E0C8FF"),
+                                             flowers=[H("7AFFD8"), H("FFFFFF")]))
 TORREN_BASALT = _cache(lambda: px.basalt("torren_basalt", H("120E10"), H("3E2E2E"), H("FF5A1A")))
 
 
@@ -251,7 +254,7 @@ BLOCKS: list[BlockDef] = [
              "PURPLE", 0.0, 0.0, "GRASS", None, light=5, drop="shears", planet="sonorosia"),
     # Petropia (Petrosapiens / Diamondhead, Crystalsapiens / Chromastone): Kristallwelt
     BlockDef("petropia_shards", "Splittersand", "Shard Sand", "natural",
-             single("petropia_shards", lambda: px.sand("petropia_shards", H("0E3A34"), H("2A8A78"), H("9AF0D8"), ripples=0.4)),
+             single("petropia_shards", PETROPIA_SHARDS),
              "EMERALD_GREEN", 0.6, 0.6, "SAND", "shovel", planet="petropia", tags=["alien_soil"]),
     BlockDef("petropia_rock", "Petropia-Fels", "Petropia Rock", "natural",
              single("petropia_rock", lambda: px.rock("petropia_rock", H("0A2A2A"), H("2A5A5A"), H("6AA8A0"), cells=12)),
@@ -275,6 +278,12 @@ BLOCKS: list[BlockDef] = [
              single("petropia_crystal_leaves", lambda: px.leaves("petropia_crystal_leaves", H("0E5A48"), H("3AD0A0"), H("C8FFEC"),
                                                                     accent=H("FFFFFF"))),
              "EMERALD_GREEN", 0.2, 0.2, "AMETHYST_CLUSTER", "hoe", drop="silk", planet="petropia", tags=["leaves"]),
+    BlockDef("petropia_lichen", "Kristallflechte", "Crystal Lichen", "turf",
+             lambda: turf_textures("petropia_lichen", PETROPIA_LICHEN, PETROPIA_SHARDS),
+             "PURPLE", 0.7, 0.7, "AMETHYST_CLUSTER", "shovel", planet="petropia", tags=["alien_soil"]),
+    BlockDef("petropia_gravel", "Splitterkies", "Shard Gravel", "natural",
+             single("petropia_gravel", lambda: px.soil("petropia_gravel", H("4A5A5E"), H("98AAAE"), H("D8E6E8"), H("FFFFFF"))),
+             "LIGHT_GRAY", 0.6, 0.6, "GRAVEL", "shovel", planet="petropia", tags=["alien_soil"]),
     # Galvan Prime (Galvans / Grey Matter): feuchte Sumpf- und Technikwelt
     BlockDef("galvan_moss", "Galvan-Moos", "Galvan Moss", "turf",
              lambda: turf_textures("galvan_moss", GALVAN_MOSS, GALVAN_MUD),

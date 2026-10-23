@@ -2237,5 +2237,7 @@
   "block.kingdomomnitrix.petropia_cluster": "Crystal Cluster",
   "block.kingdomomnitrix.petropia_smooth_rock": "Smooth Petropia Stone",
   "block.kingdomomnitrix.petropia_crystal_log": "Crystal Trunk",
-  "block.kingdomomnitrix.petropia_crystal_leaves": "Crystal Foliage"
+  "block.kingdomomnitrix.petropia_crystal_leaves": "Crystal Foliage",
+  "block.kingdomomnitrix.petropia_lichen": "Crystal Lichen",
+  "block.kingdomomnitrix.petropia_gravel": "Shard Gravel"
 }

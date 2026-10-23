@@ -65,6 +65,8 @@ public final class PlanetItems {
 	public static final Item PETROPIA_SMOOTH_ROCK = register("petropia_smooth_rock", new BlockItem(PlanetBlocks.PETROPIA_SMOOTH_ROCK, new Item.Settings()));
 	public static final Item PETROPIA_CRYSTAL_LOG = register("petropia_crystal_log", new BlockItem(PlanetBlocks.PETROPIA_CRYSTAL_LOG, new Item.Settings()));
 	public static final Item PETROPIA_CRYSTAL_LEAVES = register("petropia_crystal_leaves", new BlockItem(PlanetBlocks.PETROPIA_CRYSTAL_LEAVES, new Item.Settings()));
+	public static final Item PETROPIA_LICHEN = register("petropia_lichen", new BlockItem(PlanetBlocks.PETROPIA_LICHEN, new Item.Settings()));
+	public static final Item PETROPIA_GRAVEL = register("petropia_gravel", new BlockItem(PlanetBlocks.PETROPIA_GRAVEL, new Item.Settings()));
 	public static final Item GALVAN_MOSS = register("galvan_moss", new BlockItem(PlanetBlocks.GALVAN_MOSS, new Item.Settings()));
 	public static final Item GALVAN_MUD = register("galvan_mud", new BlockItem(PlanetBlocks.GALVAN_MUD, new Item.Settings()));
 	public static final Item GALVAN_SLATE = register("galvan_slate", new BlockItem(PlanetBlocks.GALVAN_SLATE, new Item.Settings()));

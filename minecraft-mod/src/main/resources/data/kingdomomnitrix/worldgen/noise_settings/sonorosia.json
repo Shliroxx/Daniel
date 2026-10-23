@@ -446,21 +446,6 @@
                       ]
                     },
                     "then_run": {
-                      "type": "minecraft:block",
-                      "result_state": {
-                        "Name": "kingdomomnitrix:sonorosia_stone"
-                      }
-                    }
-                  },
-                  {
-                    "type": "minecraft:condition",
-                    "if_true": {
-                      "type": "minecraft:biome",
-                      "biome_is": [
-                        "kingdomomnitrix:sonorosia/resonance_fields"
-                      ]
-                    },
-                    "then_run": {
                       "type": "minecraft:condition",
                       "if_true": {
                         "type": "minecraft:y_above",
@@ -475,6 +460,21 @@
                         "result_state": {
                           "Name": "kingdomomnitrix:sonorosia_resonite"
                         }
+                      }
+                    }
+                  },
+                  {
+                    "type": "minecraft:condition",
+                    "if_true": {
+                      "type": "minecraft:biome",
+                      "biome_is": [
+                        "kingdomomnitrix:sonorosia/resonance_fields"
+                      ]
+                    },
+                    "then_run": {
+                      "type": "minecraft:block",
+                      "result_state": {
+                        "Name": "kingdomomnitrix:sonorosia_stone"
                       }
                     }
                   },
