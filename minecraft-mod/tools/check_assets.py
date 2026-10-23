@@ -70,6 +70,9 @@ def registered_items() -> list[str]:
     kinds = base / "suit" / "forge" / "MachineKind.java"
     if kinds.is_file():
         items += re.findall(r'\("([a-z0-9_]+)", \d+, 0x', kinds.read_text(encoding="utf-8"))
+    fusion = base / "suit" / "fusion" / "SuitFusion.java"
+    if fusion.is_file():
+        items += re.findall(r'Registries\.ITEM, KingdomOmnitrix\.id\("([a-z0-9_]+)"\)', fusion.read_text(encoding="utf-8"))
     return items
 
 

@@ -18,6 +18,8 @@
     "kingdomomnitrix:viridium_ore",
     "kingdomomnitrix:viridium_block",
     "kingdomomnitrix:taydenite_ore",
-    "kingdomomnitrix:biotech_node"
+    "kingdomomnitrix:biotech_node",
+    "kingdomomnitrix:fusion_core",
+    "kingdomomnitrix:fusion_injector"
   ]
 }

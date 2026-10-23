@@ -67,6 +67,8 @@
     "kingdomomnitrix:taydenite_ore",
     "kingdomomnitrix:biotech_node",
     "kingdomomnitrix:infernite_ore",
-    "kingdomomnitrix:celestium_ore"
+    "kingdomomnitrix:celestium_ore",
+    "kingdomomnitrix:fusion_core",
+    "kingdomomnitrix:fusion_injector"
   ]
 }

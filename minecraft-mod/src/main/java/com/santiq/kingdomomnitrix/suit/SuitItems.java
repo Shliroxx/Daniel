@@ -42,6 +42,8 @@ public final class SuitItems {
 					.icon(() -> new ItemStack(get(SuitSet.INFERNOX, ArmorItem.Type.HELMET)))
 					.displayName(Text.translatable("itemGroup.kingdomomnitrix.suits"))
 					.entries((context, entries) -> {
+						entries.add(com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.CORE_ITEM);
+						entries.add(com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.INJECTOR_ITEM);
 						com.santiq.kingdomomnitrix.suit.forge.SuitForge.MACHINES.values().forEach(entries::add);
 						com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials.all().forEach(entries::add);
 						ALL.forEach(entries::add);

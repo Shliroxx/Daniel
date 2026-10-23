@@ -2300,5 +2300,11 @@
   "item.kingdomomnitrix.hellfire_plate": "Hoellenfeuer-Platte",
   "block.kingdomomnitrix.molecular_crusher": "Molekular-Zerkleinerer",
   "block.kingdomomnitrix.plasma_smelter": "Plasmaschmelze",
-  "block.kingdomomnitrix.alloy_forge": "Legierungsschmiede"
+  "block.kingdomomnitrix.alloy_forge": "Legierungsschmiede",
+  "block.kingdomomnitrix.fusion_core": "Fusionskern",
+  "block.kingdomomnitrix.fusion_injector": "Fusions-Injektor",
+  "message.kingdomomnitrix.fusion.no_recipe": "Kein Fusionsrezept fuer dieses Mittelstueck.",
+  "message.kingdomomnitrix.fusion.plates": "Injektoren: %s/%s mit %s",
+  "message.kingdomomnitrix.fusion.cores": "Energiekerne im Kern: %s/%s",
+  "message.kingdomomnitrix.fusion.start": "Fusion gestartet: %s"
 }

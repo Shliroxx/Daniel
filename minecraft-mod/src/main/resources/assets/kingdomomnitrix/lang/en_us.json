@@ -2300,5 +2300,11 @@
   "item.kingdomomnitrix.hellfire_plate": "Hellfire Plate",
   "block.kingdomomnitrix.molecular_crusher": "Molecular Crusher",
   "block.kingdomomnitrix.plasma_smelter": "Plasma Smelter",
-  "block.kingdomomnitrix.alloy_forge": "Alloy Forge"
+  "block.kingdomomnitrix.alloy_forge": "Alloy Forge",
+  "block.kingdomomnitrix.fusion_core": "Fusion Core",
+  "block.kingdomomnitrix.fusion_injector": "Fusion Injector",
+  "message.kingdomomnitrix.fusion.no_recipe": "No fusion recipe for this centerpiece.",
+  "message.kingdomomnitrix.fusion.plates": "Injectors: %s/%s holding %s",
+  "message.kingdomomnitrix.fusion.cores": "Energy cores in the core: %s/%s",
+  "message.kingdomomnitrix.fusion.start": "Fusion started: %s"
 }
