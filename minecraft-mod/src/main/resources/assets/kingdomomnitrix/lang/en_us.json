@@ -2383,9 +2383,9 @@
   "item.kingdomomnitrix.module_vitality": "Module: Vitality",
   "item.kingdomomnitrix.module_vitality.effect": "+1 heart",
   "item.kingdomomnitrix.module_blank": "Blank Module Board",
-  "tooltip.kingdomomnitrix.module.usage": "Install in a crafting grid together with a suit piece.",
+  "tooltip.kingdomomnitrix.module.usage": "Plug into a socket of the Suit Configurator. Made in the Alloy Forge.",
   "tooltip.kingdomomnitrix.module.limit": "Only works in a complete suit, at most %s of each kind.",
-  "tooltip.kingdomomnitrix.suit.modules": "Modules: %s/%s (piece alone in a crafting grid = remove last module)",
+  "tooltip.kingdomomnitrix.suit.modules": "Modules: %s/%s (install and remove in the Suit Configurator)",
   "item.kingdomomnitrix.taydenite_blade": "Taydenite Blade",
   "tooltip.kingdomomnitrix.weapon.taydenite_blade": "Right-click: Crystal Trail - Diamondhead crystals burst from the ground in a line",
   "item.kingdomomnitrix.galvan_rifle": "Galvan Biotech Rifle",
@@ -2398,5 +2398,9 @@
   "tooltip.kingdomomnitrix.weapon.carbonox_launcher": "Right-click: explosive plasma bolts",
   "item.kingdomomnitrix.infernox_ryno": "Infernox R.Y.N.O.",
   "tooltip.kingdomomnitrix.weapon.infernox_ryno": "Right-click: volley of six rockets",
-  "tooltip.kingdomomnitrix.weapon.cooldown": "Cooldown: %s s"
+  "tooltip.kingdomomnitrix.weapon.cooldown": "Cooldown: %s s",
+  "block.kingdomomnitrix.suit_configurator": "Suit Configurator",
+  "screen.kingdomomnitrix.configurator.piece": "Suit piece",
+  "screen.kingdomomnitrix.configurator.empty": "Insert a suit piece",
+  "screen.kingdomomnitrix.configurator.slots": "Sockets used: %s/%s"
 }

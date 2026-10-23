@@ -2383,9 +2383,9 @@
   "item.kingdomomnitrix.module_vitality": "Modul: Vitalitaet",
   "item.kingdomomnitrix.module_vitality.effect": "+1 Herz",
   "item.kingdomomnitrix.module_blank": "Leere Modulplatine",
-  "tooltip.kingdomomnitrix.module.usage": "In der Werkbank zusammen mit einem Anzugteil einbauen.",
+  "tooltip.kingdomomnitrix.module.usage": "Im Anzug-Konfigurator in einen Sockel stecken. Hergestellt in der Legierungsschmiede.",
   "tooltip.kingdomomnitrix.module.limit": "Wirkt nur im vollstaendigen Anzug, je Art hoechstens %s.",
-  "tooltip.kingdomomnitrix.suit.modules": "Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)",
+  "tooltip.kingdomomnitrix.suit.modules": "Module: %s/%s (Ein- und Ausbau im Anzug-Konfigurator)",
   "item.kingdomomnitrix.taydenite_blade": "Taydenit-Klinge",
   "tooltip.kingdomomnitrix.weapon.taydenite_blade": "Rechtsklick: Kristallspur - Diamondhead-Kristalle brechen in einer Linie aus dem Boden",
   "item.kingdomomnitrix.galvan_rifle": "Galvan-Biotech-Gewehr",
@@ -2398,5 +2398,9 @@
   "tooltip.kingdomomnitrix.weapon.carbonox_launcher": "Rechtsklick: explosive Plasmabolzen",
   "item.kingdomomnitrix.infernox_ryno": "Infernox-R.Y.N.O.",
   "tooltip.kingdomomnitrix.weapon.infernox_ryno": "Rechtsklick: Salve aus sechs Raketen",
-  "tooltip.kingdomomnitrix.weapon.cooldown": "Abklingzeit: %s s"
+  "tooltip.kingdomomnitrix.weapon.cooldown": "Abklingzeit: %s s",
+  "block.kingdomomnitrix.suit_configurator": "Anzug-Konfigurator",
+  "screen.kingdomomnitrix.configurator.piece": "Anzugteil",
+  "screen.kingdomomnitrix.configurator.empty": "Anzugteil einlegen",
+  "screen.kingdomomnitrix.configurator.slots": "Sockel belegt: %s/%s"
 }

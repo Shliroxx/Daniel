@@ -362,41 +362,59 @@ def suitmat_textures() -> dict[Path, Image.Image]:
 
 # --- Upgrade-Module ---------------------------------------------------------------------------------------------------
 
-# Modul -> (Deutsch, Englisch, Wirkung Deutsch, Wirkung Englisch, Zutat Ecken, Zutat Kanten)
+# Modul -> (Deutsch, Englisch, Wirkung Deutsch, Wirkung Englisch); hergestellt in der Legierungsschmiede (MachineRecipes)
 MODULES = {
-    "module_shield_capacity": ("Modul: Schildkapazitaet", "Module: Shield Capacity", "+25 % Schildkapazitaet", "+25% shield capacity",
-                               "kingdomomnitrix:biotech_gel", "minecraft:diamond"),
+    "module_shield_capacity": ("Modul: Schildkapazitaet", "Module: Shield Capacity", "+25 % Schildkapazitaet", "+25% shield capacity"),
     "module_shield_recharge": ("Modul: Schildlader", "Module: Shield Recharge", "+30 % Nachladen, -15 % Pause",
-                               "+30% recharge, -15% delay", "minecraft:redstone_block", "kingdomomnitrix:taydenite_crystal"),
+                               "+30% recharge, -15% delay"),
     "module_mobility": ("Modul: Antrieb", "Module: Propulsion", "+20 % Fluggeschwindigkeit, +40 % Treibstoff",
-                        "+20% flight speed, +40% fuel", "minecraft:phantom_membrane", "kingdomomnitrix:raritanium_ingot"),
-    "module_speed": ("Modul: Sprint", "Module: Sprint", "+5 % Lauftempo", "+5% movement speed",
-                     "minecraft:sugar", "kingdomomnitrix:biotech_dust"),
-    "module_strength": ("Modul: Kraft", "Module: Strength", "+1,5 Angriffsschaden", "+1.5 attack damage",
-                        "minecraft:blaze_rod", "kingdomomnitrix:infernite_dust"),
-    "module_vitality": ("Modul: Vitalitaet", "Module: Vitality", "+1 Herz", "+1 heart",
-                        "minecraft:golden_apple", "minecraft:glistering_melon_slice"),
+                        "+20% flight speed, +40% fuel"),
+    "module_speed": ("Modul: Sprint", "Module: Sprint", "+5 % Lauftempo", "+5% movement speed"),
+    "module_strength": ("Modul: Kraft", "Module: Strength", "+1,5 Angriffsschaden", "+1.5 attack damage"),
+    "module_vitality": ("Modul: Vitalitaet", "Module: Vitality", "+1 Herz", "+1 heart"),
 }
 MODULE_LANG = {
     "item.kingdomomnitrix.module_blank": ("Leere Modulplatine", "Blank Module Board"),
-    "tooltip.kingdomomnitrix.module.usage": ("In der Werkbank zusammen mit einem Anzugteil einbauen.",
-                                             "Install in a crafting grid together with a suit piece."),
+    "tooltip.kingdomomnitrix.module.usage": ("Im Anzug-Konfigurator in einen Sockel stecken. Hergestellt in der Legierungsschmiede.",
+                                             "Plug into a socket of the Suit Configurator. Made in the Alloy Forge."),
     "tooltip.kingdomomnitrix.module.limit": ("Wirkt nur im vollstaendigen Anzug, je Art hoechstens %s.",
                                              "Only works in a complete suit, at most %s of each kind."),
-    "tooltip.kingdomomnitrix.suit.modules": ("Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)",
-                                             "Modules: %s/%s (piece alone in a crafting grid = remove last module)"),
+    "tooltip.kingdomomnitrix.suit.modules": ("Module: %s/%s (Ein- und Ausbau im Anzug-Konfigurator)",
+                                             "Modules: %s/%s (install and remove in the Suit Configurator)"),
+    "block.kingdomomnitrix.suit_configurator": ("Anzug-Konfigurator", "Suit Configurator"),
+    "screen.kingdomomnitrix.configurator.piece": ("Anzugteil", "Suit piece"),
+    "screen.kingdomomnitrix.configurator.empty": ("Anzugteil einlegen", "Insert a suit piece"),
+    "screen.kingdomomnitrix.configurator.slots": ("Sockel belegt: %s/%s", "Sockets used: %s/%s"),
 }
 
 
-def module_files() -> dict[Path, dict]:
-    files: dict[Path, dict] = {DATA / MOD / "recipe" / "suit_module.json": {"type": f"{MOD}:suit_module", "category": "equipment"},
-                               DATA / MOD / "recipe" / "module_blank.json": shaped(["GRG", "CPC", "GRG"], {
-                                   "G": "minecraft:gold_ingot", "R": "minecraft:redstone", "C": f"{MOD}:taydenite_crystal",
-                                   "P": f"{MOD}:raritanium_ingot"}, f"{MOD}:module_blank", 2)}
-    for name, (_, _, _, _, corner, edge) in MODULES.items():
-        files[DATA / MOD / "recipe" / f"{name}.json"] = shaped(["CEC", "EME", "CEC"], {
-            "C": corner, "E": edge, "M": f"{MOD}:module_blank"}, f"{MOD}:{name}")
-    return files
+def configurator_files() -> tuple[dict[Path, dict], dict[Path, Image.Image]]:
+    """Anzug-Konfigurator: Holo-Tisch (Sockel, Saeule, Tischplatte mit Leuchtring, Projektorlinse)."""
+    textures = {"metal": f"{MOD}:{SUITMAT}/machine_metal", "dark": f"{MOD}:{SUITMAT}/machine_dark",
+                "glow": f"{MOD}:{SUITMAT}/fusion_glow", "gem": f"{MOD}:{SUITMAT}/celestium_gem", "particle": f"{MOD}:{SUITMAT}/machine_dark"}
+    elements = [el((1, 0, 1), (15, 3, 15), "#dark"), el((2, 3, 2), (14, 4, 14), "#metal"), el((4, 4, 4), (12, 10, 12), "#metal"),
+                el((3.6, 6, 3.6), (12.4, 7, 12.4), "#glow", glow=True), el((2, 10, 2), (14, 12, 14), "#dark"),
+                el((1.5, 12, 1.5), (14.5, 13, 14.5), "#metal"), el((6, 13, 6), (10, 14, 10), "#gem", glow=True)]
+    for x0, z0, x1, z1 in ((2, 2, 14, 3), (2, 13, 14, 14), (2, 3, 3, 13), (13, 3, 14, 13)):
+        elements.append(el((x0, 13, z0), (x1, 13.4, z1), "#glow", glow=True))
+    for x, z in ((1, 1), (13, 1), (1, 13), (13, 13)):
+        elements.append(el((x, 3, z), (x + 2, 11, z + 2), "#metal"))
+        elements.append(el((x + 0.5, 11, z + 0.5), (x + 1.5, 12.5, z + 1.5), "#glow", glow=True))
+    name = "suit_configurator"
+    files: dict[Path, dict] = {
+        ASSETS / "models" / "block" / f"{name}.json": {"parent": "minecraft:block/block", "textures": textures, "elements": elements,
+                                                       "display": {"gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0],
+                                                                           "scale": [0.6, 0.6, 0.6]}}},
+        ASSETS / "models" / "item" / f"{name}.json": {"parent": f"{MOD}:block/{name}"},
+        ASSETS / "blockstates" / f"{name}.json": {"variants": {f"facing={d}": {"model": f"{MOD}:block/{name}", "y": y}
+                                                                for d, y in (("north", 0), ("east", 90), ("south", 180), ("west", 270))}},
+        DATA / MOD / "loot_table" / "blocks" / f"{name}.json": {
+            "type": "minecraft:block", "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:item", "name": f"{MOD}:{name}"}]}]},
+        DATA / MOD / "recipe" / f"{name}.json": shaped(["GEG", "RCR", "DAD"], {
+            "G": "minecraft:glass", "E": "minecraft:ender_eye", "R": f"{MOD}:raritanium_ingot", "C": f"{MOD}:taydenite_crystal",
+            "D": "minecraft:polished_deepslate", "A": f"{MOD}:alloy_forge"}, f"{MOD}:{name}"),
+    }
+    return files, {}
 
 
 # --- Endgame-Waffen (Java: suit/weapon) -------------------------------------------------------------------------------
@@ -734,8 +752,9 @@ def outputs() -> dict[Path, bytes]:
         files[path] = (json.dumps(data, indent=1) + "\n").encode()
     for path, img in fusion_images.items():
         files[path] = png(img)
-    for path, data in module_files().items():
-        files[path] = (json.dumps(data, indent=2) + "\n").encode()
+    config_files, _ = configurator_files()
+    for path, data in config_files.items():
+        files[path] = (json.dumps(data, indent=1) + "\n").encode()
     for item in list(FUSION_ITEMS) + ["module_blank"] + list(MODULES) + list(WEAPONS):
         img, frames = suit_icons.render(item)
         files[ASSETS / "textures" / "item" / f"{item}.png"] = png(img)
@@ -745,7 +764,7 @@ def outputs() -> dict[Path, bytes]:
         parent = "minecraft:item/handheld" if item in WEAPONS else "minecraft:item/generated"
         files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
             {"parent": parent, "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
-    machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION]
+    machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION] + [f"{MOD}:suit_configurator"]
     for tag in ("mineable/pickaxe", "needs_iron_tool"):
         path = DATA / "minecraft" / "tags" / "block" / f"{tag}.json"
         files[path] = (json.dumps(merged_tag(path, machines), indent=2) + "\n").encode()
@@ -760,7 +779,7 @@ def outputs() -> dict[Path, bytes]:
             lang[f"block.{MOD}.{name}"] = (de, en)[index]
         for name, (de, en) in FUSION_ITEMS.items():
             lang[f"item.{MOD}.{name}"] = (de, en)[index]
-        for name, (de, en, effect_de, effect_en, _, _) in MODULES.items():
+        for name, (de, en, effect_de, effect_en) in MODULES.items():
             lang[f"item.{MOD}.{name}"] = (de, en)[index]
             lang[f"item.{MOD}.{name}.effect"] = (effect_de, effect_en)[index]
         for key, (de, en) in MODULE_LANG.items():

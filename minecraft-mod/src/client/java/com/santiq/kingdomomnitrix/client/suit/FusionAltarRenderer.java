@@ -377,7 +377,7 @@ public final class FusionAltarRenderer {
 	}
 
 	/** Flacher Leuchtring (gekippt um tilt Grad), dreht um die Hochachse. */
-	private static void ring(MatrixStack matrices, VertexConsumerProvider consumers, float radius, float thickness, float[] color, float alpha,
+	static void ring(MatrixStack matrices, VertexConsumerProvider consumers, float radius, float thickness, float[] color, float alpha,
 			float spin, float tilt) {
 		matrices.push();
 		matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(spin));

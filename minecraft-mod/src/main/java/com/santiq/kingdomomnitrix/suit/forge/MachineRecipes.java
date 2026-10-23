@@ -1,6 +1,8 @@
 package com.santiq.kingdomomnitrix.suit.forge;
 
 import com.santiq.kingdomomnitrix.registry.ModItems;
+import com.santiq.kingdomomnitrix.suit.module.SuitModule;
+import com.santiq.kingdomomnitrix.suit.module.SuitModules;
 import com.santiq.kingdomomnitrix.world.content.Ben10Items;
 import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
 import com.santiq.kingdomomnitrix.world.content.PlanetItems;
@@ -60,6 +62,20 @@ public final class MachineRecipes {
 				new Part(ForgeMaterials.MAGNAPLATE_PLATING, 1));
 		forge(ForgeMaterials.HELLFIRE_PLATE, 1200, new Part(ForgeMaterials.INFERNITE_CORE, 4), new Part(ForgeMaterials.CARBONOX_PLATE, 1),
 				new Part(Ben10Items.ENERGY_CORE_RED, 1));
+
+		// Upgrade-Module: leere Platine, dann je Modul Platine + zwei Zutaten (Einbau im Anzug-Konfigurator)
+		forge(SuitModules.BLANK, 400, new Part(ForgeMaterials.RARITANIUM_INGOT, 2), new Part(ForgeMaterials.TAYDENITE_CRYSTAL, 2),
+				new Part(Items.GOLD_INGOT, 4));
+		module(SuitModule.SHIELD_CAPACITY, new Part(ForgeMaterials.BIOTECH_GEL, 4), new Part(Items.DIAMOND, 4));
+		module(SuitModule.SHIELD_RECHARGE, new Part(Items.REDSTONE_BLOCK, 4), new Part(ForgeMaterials.TAYDENITE_CRYSTAL, 4));
+		module(SuitModule.MOBILITY, new Part(Items.PHANTOM_MEMBRANE, 4), new Part(ForgeMaterials.RARITANIUM_INGOT, 4));
+		module(SuitModule.SPEED, new Part(Items.SUGAR, 8), new Part(ForgeMaterials.BIOTECH_DUST, 4));
+		module(SuitModule.STRENGTH, new Part(Items.BLAZE_ROD, 4), new Part(ForgeMaterials.INFERNITE_DUST, 4));
+		module(SuitModule.VITALITY, new Part(Items.GOLDEN_APPLE, 4), new Part(Items.GLISTERING_MELON_SLICE, 4));
+	}
+
+	private static void module(SuitModule module, Part first, Part second) {
+		forge(SuitModules.item(module), 600, new Part(SuitModules.BLANK, 1), first, second);
 	}
 
 	private MachineRecipes() {

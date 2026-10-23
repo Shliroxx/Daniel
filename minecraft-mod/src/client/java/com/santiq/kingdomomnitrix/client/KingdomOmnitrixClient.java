@@ -89,6 +89,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		com.santiq.kingdomomnitrix.client.suit.SuitArmorRenderer.install();
 		com.santiq.kingdomomnitrix.client.suit.SuitClient.register();
+		com.santiq.kingdomomnitrix.client.suit.ConfiguratorScreen.register();
 		com.santiq.kingdomomnitrix.client.suit.MachineScreen.register();
 		registerHeartless(ModEntities.SHADOW, "shadow");
 		registerHeartless(ModEntities.SOLDIER, "soldier");
@@ -162,6 +163,8 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 				com.santiq.kingdomomnitrix.client.suit.FusionAltarRenderer.Core::new);
 		BlockEntityRendererFactories.register(com.santiq.kingdomomnitrix.suit.fusion.SuitFusion.INJECTOR_ENTITY,
 				com.santiq.kingdomomnitrix.client.suit.FusionAltarRenderer.Injector::new);
+		BlockEntityRendererFactories.register(com.santiq.kingdomomnitrix.suit.module.SuitConfigurator.ENTITY,
+				com.santiq.kingdomomnitrix.client.suit.ConfiguratorRenderer::new);
 		com.santiq.kingdomomnitrix.suit.fusion.FusionCodexItem.open = com.santiq.kingdomomnitrix.client.suit.FusionCodexScreen::open;
 		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
 				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);

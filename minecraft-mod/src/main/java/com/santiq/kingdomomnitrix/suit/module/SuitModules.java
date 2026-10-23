@@ -15,15 +15,14 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.recipe.SpecialRecipeSerializer;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Rarity;
 
 /**
- * Registrierung und Daten der Upgrade-Module: Modul-Items, leere Platine, das Werkbank-Rezept zum Ein- und Ausbauen
- * und die Modulliste im Ruestungsteil (Custom Data "SuitModules"). Plaetze je Teil = Stufe des Anzugs.
+ * Registrierung und Daten der Upgrade-Module: Modul-Items, leere Platine und die Sockelbelegung im Ruestungsteil
+ * (Custom Data "SuitModules", ein Eintrag je Sockel, leer = ""). Plaetze je Teil = Stufe des Anzugs. Ein- und
+ * ausgebaut wird im Anzug-Konfigurator ({@link SuitConfigurator}), hergestellt in der Legierungsschmiede.
  */
 public final class SuitModules {
 	private static final String KEY = "SuitModules";
@@ -31,8 +30,6 @@ public final class SuitModules {
 	private static final List<Item> ALL = new ArrayList<>();
 
 	public static final Item BLANK = register("module_blank", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
-	public static final RecipeSerializer<ModuleRecipe> RECIPE = Registry.register(Registries.RECIPE_SERIALIZER,
-			KingdomOmnitrix.id("suit_module"), new SpecialRecipeSerializer<>(ModuleRecipe::new));
 
 	static {
 		for (SuitModule module : SuitModule.values()) {
@@ -75,12 +72,10 @@ public final class SuitModules {
 		return stack.getItem() instanceof SuitArmorItem armor ? armor.set().tier() : 0;
 	}
 
-	/** Eingebaute Module eines Ruestungsteils in Einbaureihenfolge. */
+	/** Eingebaute Module eines Ruestungsteils (ohne leere Sockel). */
 	public static List<SuitModule> installed(ItemStack stack) {
-		NbtCompound nbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
 		List<SuitModule> out = new ArrayList<>();
-		for (NbtElement element : nbt.getList(KEY, NbtElement.STRING_TYPE)) {
-			SuitModule module = SuitModule.byId(element.asString());
+		for (SuitModule module : sockets(stack)) {
 			if (module != null) {
 				out.add(module);
 			}
@@ -88,13 +83,26 @@ public final class SuitModules {
 		return out;
 	}
 
-	public static void setInstalled(ItemStack stack, List<SuitModule> modules) {
+	/** Sockelbelegung eines Ruestungsteils (Laenge = Plaetze, null = leer). */
+	public static List<SuitModule> sockets(ItemStack stack) {
+		int slots = slots(stack);
+		List<SuitModule> out = new ArrayList<>(Collections.nCopies(slots, null));
 		NbtCompound nbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
-		if (modules.isEmpty()) {
+		NbtList list = nbt.getList(KEY, NbtElement.STRING_TYPE);
+		for (int i = 0; i < Math.min(slots, list.size()); i++) {
+			out.set(i, SuitModule.byId(list.getString(i)));
+		}
+		return out;
+	}
+
+	/** Setzt die Sockelbelegung (null = leer); leere Belegung entfernt den Eintrag ganz. */
+	public static void setSockets(ItemStack stack, List<SuitModule> sockets) {
+		NbtCompound nbt = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt();
+		if (sockets.stream().allMatch(m -> m == null)) {
 			nbt.remove(KEY);
 		} else {
 			NbtList list = new NbtList();
-			modules.forEach(m -> list.add(NbtString.of(m.id())));
+			sockets.forEach(m -> list.add(NbtString.of(m == null ? "" : m.id())));
 			nbt.put(KEY, list);
 		}
 		if (nbt.isEmpty()) {
@@ -117,6 +125,7 @@ public final class SuitModules {
 	}
 
 	public static void register() {
+		SuitConfigurator.register();
 		KingdomOmnitrix.LOGGER.debug("Upgrade-Module registriert: {}", ALL.size());
 	}
 }
