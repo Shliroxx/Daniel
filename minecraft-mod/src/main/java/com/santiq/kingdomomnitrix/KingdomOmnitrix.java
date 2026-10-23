@@ -34,6 +34,7 @@ import com.santiq.kingdomomnitrix.quest.QuestManager;
 import com.santiq.kingdomomnitrix.quest.QuestRegistry;
 import com.santiq.kingdomomnitrix.npc.NpcRegistry;
 import com.santiq.kingdomomnitrix.registry.ModFeatures;
+import com.santiq.kingdomomnitrix.registry.ModStructures;
 import com.santiq.kingdomomnitrix.registry.ModBlockEntities;
 import com.santiq.kingdomomnitrix.arena.ArenaManager;
 import com.santiq.kingdomomnitrix.arena.ArenaRegistry;
@@ -111,6 +112,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		AlienMasteryManager.register();
 		ExperienceSources.register();
 		ModFeatures.register();
+		ModStructures.register();
 		SpaceTravel.register();
 		ArenaManager.register();
 		TraverseTown.register();

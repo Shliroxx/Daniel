@@ -277,6 +277,13 @@ ALIEN_WORLDS = {
         "ore": None, "blobs": [("petropia_crystal", 12, 28), ("petropia_smooth_rock", 8, 40)],
         # in allen Biomen: tiefe Geoden, Quellen in Felswaenden
         "extras": ["geode_deep", "spring"], "kit": PETROPIA_KIT,
+        # Siedlungen der Petrosapiens (Java: world/structure/PetrosapienSettlement): Doerfer auf ebenem Grund, Ruinen ueberall
+        "structures": [
+            {"id": "petrosapien_village", "type": "petrosapien_settlement", "config": {"ruin": False}, "spacing": 30, "separation": 12,
+             "salt": 61803398, "biomes": ["crystal_plains", "crystal_forest", "geode_fields", "shattered_basin"]},
+            {"id": "petrosapien_ruin", "type": "petrosapien_settlement", "config": {"ruin": True}, "spacing": 22, "separation": 8,
+             "salt": 31415926, "biomes": ["shard_wastes", "geode_fields", "prism_peaks", "shattered_basin"]},
+        ],
         "biomes": {
             "crystal_plains": {"sky": 0xB8A8F0, "fog": 0xD8E8F0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.0015),
                                "plants": [("petropia_sprout", 3, 28)], "trees": [], "high_top": "petropia_crystal",
@@ -668,6 +675,23 @@ def dimension(planet: str, cfg: dict) -> dict:
                                                            "biome_source": {"type": "minecraft:multi_noise", "biomes": entries}}}
 
 
+def structure(planet: str, st: dict) -> dict[Path, dict]:
+    """Struktur, Strukturset (Abstand im Raster) und Biom-Tag (wo sie stehen darf)."""
+    sid = st["id"]
+    tag = f"has_structure/{sid}"
+    return {
+        DATA / "worldgen" / "structure" / f"{sid}.json": {
+            "type": f"{MOD}:{st['type']}", "biomes": f"#{MOD}:{tag}", "step": "surface_structures",
+            "spawn_overrides": {}, "terrain_adaptation": "beard_thin", **st["config"]},
+        DATA / "worldgen" / "structure_set" / f"{sid}.json": {
+            "structures": [{"structure": f"{MOD}:{sid}", "weight": 1}],
+            "placement": {"type": "minecraft:random_spread", "spacing": st["spacing"], "separation": st["separation"],
+                          "salt": st["salt"]}},
+        DATA / "tags" / "worldgen" / "biome" / f"{tag}.json": {
+            "replace": False, "values": [f"{MOD}:{planet}/{name}" for name in st["biomes"]]},
+    }
+
+
 def outputs() -> dict[Path, dict]:
     template = json.loads(TEMPLATE.read_text(encoding="utf-8"))
     files: dict[Path, dict] = {}
@@ -703,6 +727,8 @@ def outputs() -> dict[Path, dict]:
                 files[wg / "placed_feature" / f"{fid}.json"] = patch_placed(fid, count)
             files[wg / "biome" / planet / f"{name}.json"] = biome(planet, name, cfg, bc, {"ores": ores})
         files[DATA / "dimension" / f"{planet}.json"] = dimension(planet, cfg)
+        for st in cfg.get("structures", ()):
+            files.update(structure(planet, st))
         if cfg.get("caves"):
             for cid, carver in carvers(planet).items():
                 files[wg / "configured_carver" / f"{cid}.json"] = carver
