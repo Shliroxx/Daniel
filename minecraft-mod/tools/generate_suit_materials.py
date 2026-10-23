@@ -762,7 +762,10 @@ def outputs() -> dict[Path, bytes]:
             files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
                 {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
         parent = "minecraft:item/handheld" if item in WEAPONS else "minecraft:item/generated"
-        files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
+        # Waffen: das gemalte Symbol ist nur das Inventarbild (item/<waffe>_icon), das Item-Modell selbst ist 3D
+        # (tools/generate_weapon_models.py)
+        model_name = f"{item}_icon" if item in WEAPONS else item
+        files[ASSETS / "models" / "item" / f"{model_name}.json"] = (json.dumps(
             {"parent": parent, "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
     machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION] + [f"{MOD}:suit_configurator"]
     for tag in ("mineable/pickaxe", "needs_iron_tool"):

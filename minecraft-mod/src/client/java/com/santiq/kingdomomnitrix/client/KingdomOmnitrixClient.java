@@ -88,6 +88,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		com.santiq.kingdomomnitrix.client.suit.SuitArmorRenderer.install();
+		com.santiq.kingdomomnitrix.client.suit.SuitWeaponRenderer.install();
 		com.santiq.kingdomomnitrix.client.suit.SuitClient.register();
 		com.santiq.kingdomomnitrix.client.suit.ConfiguratorScreen.register();
 		com.santiq.kingdomomnitrix.client.suit.MachineScreen.register();

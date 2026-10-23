@@ -1,6 +1,16 @@
 package com.santiq.kingdomomnitrix.suit.weapon;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import org.jetbrains.annotations.Nullable;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.entity.EquipmentSlot;
@@ -20,10 +30,17 @@ import net.minecraft.world.World;
 
 /**
  * Endgame-Waffe: Nahkampfwerte ueber Attribut-Modifikatoren, Rechtsklick loest den Spezialangriff bzw. Schuss aus
- * ({@link SuitWeapons#fire}); die Abklingzeit zeigt Minecraft als Schleier ueber dem Symbol.
+ * ({@link SuitWeapons#fire}); die Abklingzeit zeigt Minecraft als Schleier ueber dem Symbol. In Hand, Welt und
+ * Rahmen zeigt GeckoLib das animierte 3D-Modell (geo/item/weapon), im Inventar das gemalte Symbol.
  */
-public class SuitWeaponItem extends Item {
+public class SuitWeaponItem extends Item implements GeoItem {
+	/** Vom Client gesetzt: baut den 3D-Renderer fuer eine Waffe. Auf dem Server bleibt es leer. */
+	@Nullable
+	public static Function<SuitWeaponItem, GeoRenderProvider> RENDERER;
+
 	private final SuitWeapon weapon;
+	private final RawAnimation idle;
+	private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
 	public SuitWeaponItem(SuitWeapon weapon, Settings settings) {
 		super(settings.attributeModifiers(AttributeModifiersComponent.builder()
@@ -33,6 +50,24 @@ public class SuitWeaponItem extends Item {
 						EntityAttributeModifier.Operation.ADD_VALUE), AttributeModifierSlot.MAINHAND)
 				.build()));
 		this.weapon = weapon;
+		this.idle = RawAnimation.begin().thenLoop("animation.kingdomomnitrix.weapon." + weapon.id() + ".idle");
+	}
+
+	@Override
+	public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+		if (RENDERER != null) {
+			consumer.accept(RENDERER.apply(this));
+		}
+	}
+
+	@Override
+	public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+		controllers.add(new AnimationController<>(this, "idle", 0, state -> state.setAndContinue(idle)));
+	}
+
+	@Override
+	public AnimatableInstanceCache getAnimatableInstanceCache() {
+		return cache;
 	}
 
 	public SuitWeapon weapon() {
