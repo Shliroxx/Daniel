@@ -635,7 +635,7 @@ def infernox() -> ArmorSet:
                         "glow")
     armor.sub("crown", "armorHead", [0.0, 31.6, 0.0], crown)
     armor.sub("hellRing", "armorBody", [0.0, 18.1, 6.2], halo(18.1, 6.0, 2.6))
-    armor.sub("cape", "armorBody", [0.0, 23.6, 3.4], cape(23.6, 14.0, 3.4, "3A0A06", cracks=True))
+    armor.sub("cape", "armorBody", [0.0, 23.6, 6.0], cape(23.6, 15.0, 6.0, "3A0A06", cracks=True, width=9.4))
     armor.sub("tail", "armorBody", [0.0, 12.6, 2.8],
               chain((0.0, 12.6, 2.8), [(4.4, 2.0, 30), (3.8, 1.8, 50), (3.2, 1.6, 70), (2.4, 1.4, 85)], tip="glow"))
     armor.anim = {"crown": wave("scale", 0, 0.08, 4), "hellRing": spin(2, 2), "cape": wave("rotation", 0, 6, 2, base=-8),
