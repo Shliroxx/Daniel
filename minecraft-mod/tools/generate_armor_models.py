@@ -159,11 +159,28 @@ def paint_face(pal: Palette, cube: Cube, face: str, w: int, h: int, seed: int) -
         if mat == "plate":
             light = base * 1.35 if cube.tint else hexc(pal.plate_light)
             dark = base * 0.45 if cube.tint else hexc(pal.plate_dark)
-            if w >= 4 and h >= 4:
-                rgb[0, :] = light
+            # Licht von oben: Verlauf ueber die Flaeche, doppelte Fase (2 px), Glanzkante oben
+            rgb *= np.linspace(1.12, 0.82, h)[:, None, None]
+            if w >= 6 and h >= 6:
+                rgb[0, :] = np.minimum(light * 1.15, 255)
+                rgb[1, 1:-1] = (rgb[1, 1:-1] + light) / 2
                 rgb[:, 0] = light * 0.96
+                rgb[1:-1, 1] = (rgb[1:-1, 1] + light * 0.9) / 2
                 rgb[-1, :] = dark
+                rgb[-2, 1:-1] = (rgb[-2, 1:-1] + dark) / 2
                 rgb[:, -1] = dark * 1.05
+                rgb[1:-1, -2] = (rgb[1:-1, -2] + dark) / 2
+            elif w >= 3 and h >= 3:
+                rgb[0, :] = light
+                rgb[-1, :] = dark
+            if w >= 14 and h >= 12:
+                # eingelassenes Innenpaneel: dunkle Fuge 3 px innen, helle Kante darunter (Platte in der Platte)
+                y0, y1, x0, x1 = 3, h - 4, 3, w - 4
+                rgb[y0, x0:x1 + 1] = dark
+                rgb[y0:y1 + 1, x0] = dark
+                rgb[y1, x0:x1 + 1] = light
+                rgb[y0:y1 + 1, x1] = light * 0.95
+                rgb[y0 + 1:y1, x0 + 1:x1] *= 0.92
             if cube.seams and w >= 10 and h >= 10:
                 # Plattenfugen: eine waagerechte und eine senkrechte Fuge, versetzt je Flaeche
                 sy = int(h * (0.35 + 0.3 * rng.random()))
@@ -277,8 +294,40 @@ def face_dims(size: list[float], face: str) -> tuple[float, float]:
     return {"north": (w, h), "south": (w, h), "east": (d, h), "west": (d, h), "up": (w, d), "down": (w, d)}[face]
 
 
+LAYERED = ("plate", "gloss")
+OUTER_X = {"armorRightArm": -1, "armorLeftArm": 1}   # Aussenseite der Arme (fuer das Seitenpaneel)
+
+
+def layer_pass(bones: dict[str, list[Cube]]) -> None:
+    """Gibt jeder groesseren Platte Tiefe wie echter Plattenpanzer: abgesetzte Randleiste oben und unten, ein
+    erhabenes Paneel auf der Vorderseite und bei Armen ein Paneel auf der Aussenseite. Gedrehte Teile, Leuchtteile,
+    Stoff und Edelsteine bleiben, wie sie sind."""
+    for bone, cubes in bones.items():
+        extra: list[Cube] = []
+        for cube in cubes:
+            if cube.mat not in LAYERED or cube.rotation or not getattr(cube, "layer", True):
+                continue
+            (x, y, z), (w, h, d) = cube.origin, cube.size
+            if min(w, h) < 2.5 or d < 1.5:
+                if d < 1.5 and w >= 3 and h >= 3:
+                    extra.append(Cube([x + 0.5, y + 0.5, z - 0.25], [w - 1.0, h - 1.0, 0.3], cube.mat, [], (), None, None, False, cube.tint))
+                continue
+            rim = Cube([x - 0.2, y + h - 0.55, z - 0.2], [w + 0.4, 0.55, d + 0.4], "trim", [], (), None, None, False, None)
+            base_rim = Cube([x - 0.15, y, z - 0.15], [w + 0.3, 0.45, d + 0.3], "trim", [], (), None, None, False, None)
+            panel = Cube([x + 0.6, y + h * 0.18, z - 0.3], [w - 1.2, h * 0.5, 0.35], cube.mat, [], (), None, None, False, cube.tint)
+            for c in (rim, base_rim):
+                c.layer = False  # type: ignore[attr-defined]
+            extra += [rim, base_rim, panel]
+            side = OUTER_X.get(bone)
+            if side and h >= 3:
+                px = x - 0.3 if side < 0 else x + w - 0.05
+                extra.append(Cube([px, y + h * 0.2, z + 0.6], [0.35, h * 0.55, d - 1.2], cube.mat, [], (), None, None, False, cube.tint))
+        cubes.extend(extra)
+
+
 def build(name: str, pal: Palette, bones: dict[str, list[Cube]], subbones: dict[str, tuple[str, list[float]]]
           ) -> tuple[dict, Image.Image, Image.Image]:
+    layer_pass(bones)
     atlas = Atlas(512)
     placed = []
     for bone, cubes in bones.items():
@@ -413,6 +462,34 @@ def dome(radius: float, y0: float, height: float, tint: str, mat: str = "gloss",
     return out
 
 
+def lames(o: tuple[float, float, float], s: tuple[float, float, float], count: int = 3, mat: str = "plate",
+          tint: str | None = None, flare: float = 0.25) -> list[Cube]:
+    """Ueberlappende Schienen (Lamellen) wie bei Plattenruestung: von oben nach unten, jede etwas breiter als die
+    darueber und leicht ueberlappend."""
+    out = []
+    step = s[1] / count
+    for i in range(count):
+        grow = flare * i
+        c = C((o[0] - grow / 2, o[1] + s[1] - (i + 1) * step - 0.15, o[2] - grow / 2), (s[0] + grow, step + 0.3, s[2] + grow),
+              mat, tint=tint, seams=False)
+        c.layer = False  # type: ignore[attr-defined]
+        out.append(c)
+    return out
+
+
+def pauldron(top_y: float, mat: str = "plate", tint: str | None = None, spread: float = 1.0) -> list[Cube]:
+    """Geschuppter Schulterpanzer der rechten Schulter aus drei Lagen, nach aussen und unten gefaechert."""
+    out = [C((-9.6, top_y - 3.2, -3.4), (5.8, 3.4, 6.8), mat, tint=tint, edge=("up",), seams=False),
+           C((-10.2, top_y - 4.6, -3.2), (5.0, 2.2, 6.4), mat, tint=tint, rot=(0, 0, 14 * spread), pivot=(-5.4, top_y - 2.4, 0.0),
+             seams=False),
+           C((-10.6, top_y - 5.8, -3.0), (4.4, 1.8, 6.0), mat, tint=tint, rot=(0, 0, 26 * spread), pivot=(-5.4, top_y - 3.2, 0.0),
+             seams=False),
+           C((-9.8, top_y - 0.6, -3.6), (6.2, 0.7, 7.2), "trim")]
+    for c in out[:1]:
+        c.layer = False  # type: ignore[attr-defined]
+    return out
+
+
 # --- Ratchet & Clank: Grundgeruest (klobig wie im Spiel: grosse Handschuhe, grosse Stiefel) -----------------------------
 
 def rc_frame(suit: str, plate: str, dark: str, sole: str) -> dict[str, list[Cube]]:
@@ -426,14 +503,15 @@ def rc_frame(suit: str, plate: str, dark: str, sole: str) -> dict[str, list[Cube
     ]
     arm = [
         C((-8.2, 16.4, -2.2), (4.0, 7.6, 4.4), "suit", tint=suit),
-        C((-9.4, 20.2, -3.0), (5.4, 3.8, 6.0), tint=plate),                                          # Schulter
+        C((-9.4, 20.2, -3.0), (5.4, 3.8, 6.0), tint=plate),                                          # Schulter (Basis)
         C((-9.6, 10.6, -3.2), (5.8, 6.4, 6.4), tint=plate),                                          # Riesenhandschuh
         C((-9.8, 16.4, -3.4), (6.2, 1.2, 6.8), "trim", tint=dark),                                   # Stulpe
         C((-9.2, 10.2, -2.6), (5.0, 1.0, 5.2), "trim", tint=dark),                                   # Fingerkante
-    ]
+    ] + pauldron(24.4, tint=plate)
     leg = [
         C((-4.1, 4.4, -2.3), (4.2, 7.8, 4.6), "suit", tint=suit),
         C((-4.3, 8.2, -2.7), (4.6, 3.8, 5.4), tint=plate),                                           # Oberschenkel
+        *lames((-4.4, 7.6, -2.9), (4.8, 4.4, 5.8), 3, tint=plate),
         C((-3.9, 4.6, -3.4), (3.8, 3.2, 1.2), tint=plate),                                           # Knie
     ]
     boot = [
@@ -680,11 +758,13 @@ def taydenite() -> ArmorSet:
         C((-9.8, 19.6, -3.4), (6.0, 4.4, 6.8)),
         C((-9.4, 11.0, -3.0), (5.4, 6.2, 6.0)),
         C((-9.4, 7.0, -0.6), (0.9, 9.0, 1.4), "gem", rot=(0, 0, 8), pivot=(-9.0, 16.0, 0.0)),
+        *pauldron(24.6),
+        *lames((-9.6, 11.6, -3.2), (5.8, 5.4, 6.4), 3),
     ]
     b["armorRightArm"] += shards(-7.4, 24.0, 0, [(0, 0, 2.4, 8.4, 0, 20), (-1.6, -1.8, 1.8, 6.0, -20, 34), (-1.6, 1.8, 1.8, 5.6, 22, 32),
                                                  (1.2, 0.6, 1.4, 4.0, 8, -10), (0.4, -2.2, 1.2, 3.4, -30, 8), (-2.6, 0, 1.2, 3.6, 0, 55)])
     b["armorRightLeg"] = [C((-4.1, 4.4, -2.3), (4.2, 7.8, 4.6), "suit", tint="E8ECEA"),
-                          C((-4.3, 8.6, -2.7), (4.6, 3.4, 5.4)),
+                          *lames((-4.4, 7.4, -2.9), (4.8, 4.8, 5.8), 3),
                           C((-3.6, 4.6, -3.4), (3.2, 3.0, 1.2), "gem")]
     b["armorRightLeg"] += shards(-2.0, 6.8, -3.6, [(0, 0, 1.2, 3.0, -55, 0)])
     b["armorRightBoot"] = [C((-4.6, -0.2, -3.2), (5.2, 4.8, 6.2)), C((-4.4, -0.4, -4.6), (4.8, 2.2, 1.6), "gem")]
@@ -724,12 +804,12 @@ def galvan() -> ArmorSet:
                       C((-2.0, 16.0, -3.6), (4.0, 4.0, 0.6), "omni"),
                       C((-2.6, 15.0, 2.4), (5.2, 7.0, 1.6), lines=circuit)]
     b["armorRightArm"] = [C((-8.2, 12.4, -2.2), (4.0, 11.6, 4.4), "suit"),
-                          C((-9.4, 20.0, -3.0), (5.6, 4.0, 6.0), lines=circuit),
+                          *pauldron(24.4),
                           C((-9.0, 15.4, -2.6), (4.8, 2.0, 5.2), lines=circuit),
                           C((-9.4, 10.8, -3.0), (5.4, 3.6, 6.0), lines=circuit),
                           C((-9.6, 12.2, -1.0), (0.4, 1.0, 2.0), "glow")]
     b["armorRightLeg"] = [C((-4.1, 4.4, -2.3), (4.2, 7.8, 4.6), "suit"),
-                          C((-4.3, 8.8, -2.7), (4.6, 2.6, 5.4), lines=circuit),
+                          *lames((-4.4, 7.6, -2.9), (4.8, 4.2, 5.8), 3),
                           C((-4.3, 4.8, -2.7), (4.6, 2.0, 5.4), lines=circuit)]
     b["armorRightBoot"] = [C((-4.5, -0.2, -3.0), (5.0, 4.4, 6.0), lines=circuit), C((-4.3, -0.4, -4.2), (4.6, 2.0, 1.4))]
     armor = ArmorSet(pal, symmetric(b))
@@ -765,10 +845,11 @@ def celestial() -> ArmorSet:
                       C((-4.8, 22.6, -3.0), (9.6, 1.4, 6.0), "trim"),
                       C((-4.8, 11.6, -3.0), (9.6, 1.0, 6.0), "trim")]
     b["armorRightArm"] = [C((-8.4, 11.2, -2.4), (4.4, 12.6, 4.8)),
-                          C((-9.8, 20.2, -3.2), (5.8, 4.0, 6.4), "trim"),
+                          *pauldron(24.6),
                           C((-10.6, 21.4, -2.4), (2.4, 4.6, 4.8), "trim", rot=(0, 0, 25), pivot=(-8.0, 22.0, 0.0)),
                           C((-9.0, 11.0, -2.8), (5.0, 1.0, 5.6), "trim")]
-    b["armorRightLeg"] = [C((-4.2, 3.6, -2.4), (4.4, 8.6, 4.8)), C((-4.0, 5.0, -3.0), (3.6, 2.4, 0.8), "trim")]
+    b["armorRightLeg"] = [C((-4.2, 3.6, -2.4), (4.4, 8.6, 4.8)), C((-4.0, 5.0, -3.0), (3.6, 2.4, 0.8), "trim"),
+                          *lames((-4.5, 7.4, -2.8), (5.0, 4.6, 5.6), 3)]
     b["armorRightBoot"] = [C((-4.4, -0.2, -2.8), (4.8, 4.0, 5.6)), C((-4.5, -0.4, -3.2), (5.0, 0.8, 6.4), "trim")]
     armor = ArmorSet(pal, symmetric(b))
     armor.sub("halo", "armorHead", [0.0, 30.0, 6.2], halo(30.0, 6.2, 6.4))
