@@ -8,6 +8,7 @@ import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
 import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
+import com.santiq.kingdomomnitrix.suit.fusion.SuitFusion;
 import com.santiq.kingdomomnitrix.world.TraverseTown;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -373,6 +374,8 @@ public final class WaterwayDungeon {
 			if (world.getServer().getPlayerManager().getPlayer(uuid) instanceof ServerPlayerEntity player) {
 				HeroDataAccess.update(player, data -> data.addBolts(1000));
 				HeroDataAccess.grantExperience(player, 2000);
+				// Schluessel fuer den Chaos-Altar (Fusionsaltar Stufe 4)
+				player.getInventory().offerOrDrop(new ItemStack(SuitFusion.CHAOS_HEART));
 				player.sendMessage(Text.translatable("message.kingdomomnitrix.dungeon.cleared", 1000, 2000).formatted(Formatting.GOLD), false);
 			}
 		}

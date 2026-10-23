@@ -487,6 +487,126 @@ def hellfire() -> tuple[Image.Image, int]:
     return ip.frames(icon, FRAMES, halo="FF5A0A", halo_strength=0.7, shine_color="FFE0B0"), FRAMES
 
 
+# --- Schluesselgegenstaende des Fusionsaltars ----------------------------------------------------------------------
+
+def resonance_shard() -> tuple[Image.Image, int]:
+    """Resonanz-Splitter: schwebende Kristallsplitter mit Resonanzwellen."""
+    icon = Icon()
+    m = mat("gem", "06402E", "38E8B0", "D8FFF0", 1.6)
+    y, x = np.mgrid[0:R, 0:R]
+    # Resonanzwellen: hintere Ringhaelfte vor, vordere nach den Kristallen
+    for r in (96, 74):
+        icon.glow(ip.ring(128, 150, r, r * 0.36, 4) * (y < 150), "38E8B0", "E8FFF8", 0.7)
+    ip.prism(icon, (128, 212), 0, 180, 54, m, glow_edge="D8FFF0")
+    ip.prism(icon, (82, 190), -24, 104, 34, m, glow_edge="D8FFF0")
+    ip.prism(icon, (176, 196), 26, 92, 30, m, glow_edge="D8FFF0")
+    for r in (96, 74):
+        icon.glow(ip.ring(128, 150, r, r * 0.36, 4) * (y >= 150), "38E8B0", "E8FFF8", 0.9)
+    icon.sparkle(128, 40, 34, "FFFFFF", 0.0)
+    icon.sparkle(70, 96, 18, "D8FFF0", 0.5)
+    return ip.frames(icon, FRAMES, halo="38E8B0", halo_strength=0.7), FRAMES
+
+
+def nefarious_chip() -> tuple[Image.Image, int]:
+    """Nefarious-Chip: Prozessor mit Pins, roten Leiterbahnen und Totenkopf-Kern."""
+    icon = Icon()
+    board = mat("metal", "07060A", "2A2232", "8A7A9A", 1.0)
+    pins = mat("metal", "4A3A10", "C8A040", "FFF0B0", 1.2)
+    for i in range(6):
+        c = 52 + i * 30.4
+        for (x0, y0, x1, y1) in ((c - 6, 18, c + 6, 48), (c - 6, 208, c + 6, 238), (18, c - 6, 48, c + 6), (208, c - 6, 238, c + 6)):
+            pm = ip.rounded(x0, y0, x1, y1, 3)
+            icon.surface(pm, pins, height=bevel(pm, 4), strength=8)
+    body = ip.rounded(40, 40, 216, 216, 18)
+    icon.surface(body, board, height=bevel(body, 16), strength=30)
+    traces = np.zeros((R, R))
+    for path in (((60, 70), (100, 70), (112, 96)), ((196, 70), (156, 70), (144, 96)), ((60, 186), (100, 186), (112, 160)),
+                 ((196, 186), (156, 186), (144, 160)), ((60, 128), (92, 128)), ((196, 128), (164, 128))):
+        traces = np.maximum(traces, line(path, 4))
+    for x, y in ((60, 70), (196, 70), (60, 186), (196, 186), (60, 128), (196, 128)):
+        traces = np.maximum(traces, ellipse(x, y, 6, 6))
+    icon.glow(traces, "FF2A4A", "FFD0D8")
+    die = ip.rounded(92, 92, 164, 164, 10)
+    icon.surface(die, GUNMETAL, height=bevel(die, 8), strength=20)
+    skull = np.clip(ellipse(128, 122, 22, 20) + ip.rounded(114, 128, 142, 148, 4), 0, 1)
+    icon.glow(skull, "B04AFF", "F0D8FF")
+    icon.put(ellipse(119, 121, 6, 6) + ellipse(137, 121, 6, 6), rgb("12081A"), 1.0)
+    icon.sparkle(70, 52, 22, "FFFFFF", 0.2)
+    return ip.frames(icon, FRAMES, halo="B04AFF", halo_strength=0.4), FRAMES
+
+
+def chaos_heart() -> tuple[Image.Image, int]:
+    """Chaos-Herz: schwarzer Herzkristall mit pulsierenden Rissen."""
+    icon = Icon()
+    m = mat("gem", "050208", "3A0A2A", "FF7AB0", 1.6)
+    heart = np.clip(ellipse(94, 98, 54, 52) + ellipse(162, 98, 54, 52)
+                    + poly([(44, 116), (212, 116), (128, 226)]), 0, 1)
+    icon.surface(heart, m, height=bevel(heart, 40, "dome"), strength=70, extra=0.3)
+    cracks = np.zeros((R, R))
+    rng = np.random.default_rng(13)
+    for _ in range(8):
+        x0, y0 = 128 + rng.uniform(-20, 20), 130 + rng.uniform(-20, 20)
+        path = [(x0, y0)]
+        for _ in range(4):
+            x0 += rng.uniform(-28, 28)
+            y0 += rng.uniform(-24, 24)
+            path.append((x0, y0))
+        cracks = np.maximum(cracks, line(path, rng.uniform(3, 5)))
+    icon.glow(cracks * (bevel(heart, 20) > 0.4), "FF2A6A", "FFE0F0")
+    icon.glow(ellipse(128, 132, 16, 16), "FF4A8A", "FFFFFF")
+    icon.sparkle(96, 76, 26, "FFD0E0", 0.0)
+    icon.outline = rgb("1A0410")
+    return ip.frames(icon, FRAMES, halo="FF1A5A", halo_strength=0.9, shine_color="FFC0D8"), FRAMES
+
+
+def cryo_cell() -> tuple[Image.Image, int]:
+    """Kryo-Zelle: Druckkapsel mit eisblauem Kuehlmittel und Frost."""
+    icon = Icon()
+    glass = mat("glass", "0A2030", "8AD8FF", "F0FCFF", 1.5)
+    liquid = mat("emit", "0A3A5A", "3AC8FF", "E8FCFF")
+    body = ip.rounded(78, 58, 178, 206, 26)
+    icon.put(body, rgb("06121A"), 0.9)
+    y, x = np.mgrid[0:R, 0:R]
+    swirl = ip.noise(91, 4, 3)
+    flat = np.dstack([np.zeros((R, R)), np.zeros((R, R)), np.ones((R, R))])
+    icon.put(body * (y > 84), ip.shade(liquid, flat, np.clip(0.9 - (y - 84) / 160 + (swirl - 0.5) * 0.6, 0, 1)), 1.0, None, 1.0)
+    rng = np.random.default_rng(5)
+    for _ in range(14):
+        fx, fy, fr = rng.uniform(86, 170), rng.uniform(96, 196), rng.uniform(3, 7)
+        icon.put(ip.poly(regular(fx, fy, fr, 6, rng.uniform(0, 1))), rgb("F0FCFF"), 0.7, None, 1.0)
+    icon.surface(body, glass, height=bevel(body, 26, "dome"), strength=40, opacity=0.35)
+    icon.put(ip.rounded(90, 74, 100, 190, 5), rgb("FFFFFF"), 0.55)
+    for y0, y1 in ((30, 62), (202, 232)):
+        cap = ip.rounded(70, y0, 186, y1, 8)
+        icon.surface(cap, STEEL, height=bevel(cap, 8), strength=20)
+        icon.glow(ip.rounded(70, (y0 + y1) / 2 - 3, 186, (y0 + y1) / 2 + 3, 2), "3AC8FF", "E8FCFF")
+    icon.sparkle(100, 82, 22, "FFFFFF", 0.3)
+    return ip.frames(icon, FRAMES, halo="3AC8FF", halo_strength=0.55), FRAMES
+
+
+def fusion_codex() -> tuple[Image.Image, int]:
+    """Fusions-Kodex: dunkles Buch mit Metallecken und leuchtendem Sanduhr-Emblem."""
+    icon = Icon()
+    cover = mat("rough", "0A0E14", "1E2A3A", "6A8AAA", 1.1)
+    pages = mat("rough", "8A8470", "E8E0C8", "FFFFFF", 0.4)
+    icon.surface(poly([(60, 40), (214, 52), (214, 226), (60, 214)]), pages, normal=ip.flat_normal(0.4, 0.1, 0.9))
+    for i in range(5):
+        icon.put(line([(206, 60 + i * 34), (206, 70 + i * 34)], 1.5), rgb("8A8470"), 0.6)
+    book = poly([(38, 30), (196, 40), (196, 220), (38, 228)])
+    icon.surface(book, cover, height=bevel(book, 14) + (ip.noise(3, 20, 2) - 0.5) * 0.05, strength=30)
+    spine = poly([(38, 30), (58, 31), (58, 227), (38, 228)])
+    icon.surface(spine, cover, normal=ip.flat_normal(-0.5, 0, 0.85))
+    for cx, cy, a in ((48, 40, 0), (186, 50, 1), (186, 210, 2), (48, 218, 3)):
+        corner = ip.poly(regular(cx, cy, 16, 4, math.pi / 4))
+        icon.surface(corner, GOLD, height=bevel(corner, 5), strength=14)
+    ring_m = ip.ring(120, 130, 46, 46, 9)
+    icon.surface(ring_m, STEEL, height=bevel(ring_m, 4), strength=14)
+    glass_hour = np.clip(poly([(96, 98), (144, 98), (120, 130)]) + poly([(96, 162), (144, 162), (120, 130)]), 0, 1)
+    icon.glow(glass_hour, "3AE8FF", "FFFFFF")
+    icon.sparkle(150, 96, 22, "E8FFFF", 0.4)
+    return ip.frames(icon, FRAMES, halo="3AE8FF", halo_strength=0.35), FRAMES
+
+
 # --- Verzeichnis ---------------------------------------------------------------------------------------------------
 
 BUILDERS = {
@@ -510,6 +630,11 @@ BUILDERS = {
     "infernite_dust": lambda: dust("infernite", 10),
     "infernite_core": infernite_core,
     "hellfire_plate": hellfire,
+    "resonance_shard": resonance_shard,
+    "nefarious_chip": nefarious_chip,
+    "chaos_heart": chaos_heart,
+    "cryo_cell": cryo_cell,
+    "fusion_codex": fusion_codex,
 }
 
 

@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModItems;
+import com.santiq.kingdomomnitrix.suit.fusion.SuitFusion;
 import com.santiq.kingdomomnitrix.world.TraverseTown;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -655,6 +656,8 @@ public class NefariousEntity extends HostileEntity implements GeoEntity {
 			player.getInventory().offerOrDrop(new ItemStack(ModItems.ORICHALCUM, 2));
 		}
 		player.getInventory().offerOrDrop(new ItemStack(ModItems.RARITANIUM, first ? 5 : 3));
+		// Schluessel fuer den Sternen-Altar (Fusionsaltar Stufe 3)
+		player.getInventory().offerOrDrop(new ItemStack(SuitFusion.NEFARIOUS_CHIP, 2));
 		player.sendMessage(Text.translatable(first ? "message.kingdomomnitrix.boss_first_win" : "message.kingdomomnitrix.boss_win",
 				Text.translatable("entity.kingdomomnitrix.nefarious"), bolts, experience).formatted(Formatting.GOLD), false);
 	}

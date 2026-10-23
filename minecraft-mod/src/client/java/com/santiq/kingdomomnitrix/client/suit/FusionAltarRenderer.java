@@ -1,16 +1,20 @@
 package com.santiq.kingdomomnitrix.client.suit;
 
 import com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials;
+import com.santiq.kingdomomnitrix.suit.fusion.FusionCodexItem;
 import com.santiq.kingdomomnitrix.suit.fusion.FusionCoreBlockEntity;
 import com.santiq.kingdomomnitrix.suit.fusion.FusionInjectorBlockEntity;
 import com.santiq.kingdomomnitrix.suit.fusion.FusionRecipes;
 import java.util.Map;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
@@ -19,6 +23,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
@@ -36,6 +41,9 @@ public final class FusionAltarRenderer {
 	private static final float CORE_Y = 1.25f;
 	private static final float PLATE_Y = 1.15f;
 	private static final float FINALE_TICKS = 30.0f;
+	private static final int BAR_W = 90;
+	/** Farbe der Altarstufen im Hologramm (Index = Stufe) */
+	private static final int[] TIER_COLORS = {0, 0xFF3AE8FF, 0xFF4BFF6A, 0xFFD8CCFF, 0xFFFF3A6A};
 	private static final float[] DEFAULT_COLOR = {0.23f, 0.91f, 1.0f};
 	/** Leuchtfarbe je Platte (Linie und Stufe) */
 	private static final Map<Item, float[]> COLORS = Map.of(
@@ -58,9 +66,13 @@ public final class FusionAltarRenderer {
 
 	public static final class Core implements BlockEntityRenderer<FusionCoreBlockEntity> {
 		private final ItemRenderer items;
+		private final TextRenderer text;
+		private final BlockEntityRenderDispatcher dispatcher;
 
 		public Core(BlockEntityRendererFactory.Context context) {
 			this.items = context.getItemRenderer();
+			this.text = context.getTextRenderer();
+			this.dispatcher = context.getRenderDispatcher();
 		}
 
 		@Override
@@ -123,6 +135,8 @@ public final class FusionAltarRenderer {
 			}
 			matrices.pop();
 
+			hud(core, matrices, consumers, time);
+
 			// Strahlen: Injektor -> Kern
 			if (working) {
 				Vec3d target = new Vec3d(0.5, CORE_Y, 0.5);
@@ -137,6 +151,66 @@ public final class FusionAltarRenderer {
 					index++;
 				}
 			}
+		}
+
+		/**
+		 * Hologramm ueber dem Kern (nur in der Naehe): Altarstufe; waehrend der Fusion Fortschritt, Hitze und
+		 * Instabilitaet als Balken, bei Stocken eine blinkende Warnung mit Restzeit.
+		 */
+		private void hud(FusionCoreBlockEntity core, MatrixStack matrices, VertexConsumerProvider consumers, float time) {
+			Camera camera = dispatcher.camera;
+			if (camera == null || camera.getPos().squaredDistanceTo(Vec3d.ofCenter(core.getPos())) > 12 * 12) {
+				return;
+			}
+			matrices.push();
+			matrices.translate(0.5f, 2.45f, 0.5f);
+			matrices.multiply(camera.getRotation());
+			float scale = 0.02f;
+			matrices.scale(scale, -scale, scale);
+			Matrix4f pose = matrices.peek().getPositionMatrix();
+			Text title = Text.translatable(FusionCodexItem.TITLES[Math.max(1, Math.min(4, core.clientTier()))]);
+			drawCentered(title, pose, consumers, 0, TIER_COLORS[Math.max(1, Math.min(4, core.clientTier()))]);
+			if (core.working()) {
+				VertexConsumer bars = consumers.getBuffer(RenderLayer.getTextBackground());
+				bar(bars, pose, 12, core.progress(), 0xFF3AE8FF);
+				bar(bars, pose, 24, core.heat() / 100.0f, heatColor(core.heat()));
+				bar(bars, pose, 36, Math.min(1.0f, core.instability() / 25.0f), 0xFFB070FF);
+				label(Text.translatable("hud.kingdomomnitrix.fusion.progress", (int) (core.progress() * 100)), pose, consumers, 12);
+				label(Text.translatable("hud.kingdomomnitrix.fusion.heat", (int) core.heat()), pose, consumers, 24);
+				label(Text.translatable("hud.kingdomomnitrix.fusion.instability", core.instability()), pose, consumers, 36);
+				if (core.stalled() && ((int) (time / 6)) % 2 == 0) {
+					int left = (FusionCoreBlockEntity.STALL_LIMIT - core.stallTicks()) / 20;
+					drawCentered(Text.translatable("hud.kingdomomnitrix.fusion.stalled", Math.max(0, left)), pose, consumers, 50, 0xFFFF4A3A);
+				}
+			}
+			matrices.pop();
+		}
+
+		private void drawCentered(Text line, Matrix4f pose, VertexConsumerProvider consumers, int y, int color) {
+			float x = -text.getWidth(line) / 2.0f;
+			text.draw(line, x, y, color, false, pose, consumers, TextRenderer.TextLayerType.SEE_THROUGH, 0x90000000, FULL);
+		}
+
+		private void label(Text line, Matrix4f pose, VertexConsumerProvider consumers, int y) {
+			text.draw(line, -BAR_W / 2.0f + 2, y + 1, 0xFFFFFFFF, true, pose, consumers, TextRenderer.TextLayerType.SEE_THROUGH, 0, FULL);
+		}
+
+		private static void bar(VertexConsumer buffer, Matrix4f pose, int y, float fraction, int color) {
+			float x0 = -BAR_W / 2.0f;
+			float x1 = x0 + BAR_W * Math.max(0.0f, Math.min(1.0f, fraction));
+			rect(buffer, pose, x0 - 1, y - 1, BAR_W / 2.0f + 1, y + 10, 0xC0000000);
+			rect(buffer, pose, x0, y, x1, y + 9, color);
+		}
+
+		private static void rect(VertexConsumer buffer, Matrix4f pose, float x0, float y0, float x1, float y1, int color) {
+			buffer.vertex(pose, x0, y0, 0.01f).color(color).light(FULL);
+			buffer.vertex(pose, x0, y1, 0.01f).color(color).light(FULL);
+			buffer.vertex(pose, x1, y1, 0.01f).color(color).light(FULL);
+			buffer.vertex(pose, x1, y0, 0.01f).color(color).light(FULL);
+		}
+
+		private static int heatColor(float heat) {
+			return heat < 50.0f ? 0xFFFFB02A : heat < 75.0f ? 0xFFFF6A1A : 0xFFFF2A2A;
 		}
 
 		private static Item lastPlate(FusionCoreBlockEntity core) {
@@ -173,13 +247,24 @@ public final class FusionAltarRenderer {
 		public void render(FusionInjectorBlockEntity injector, float tickDelta, MatrixStack matrices, VertexConsumerProvider consumers,
 				int light, int overlay) {
 			ItemStack stack = injector.stack();
-			if (injector.getWorld() == null || stack.isEmpty()) {
+			if (injector.getWorld() == null) {
 				return;
 			}
 			float time = (injector.getWorld().getTime() % 72000L) + tickDelta;
+			if (injector.damaged()) {
+				// durchgebrannt: flackernder roter Ring ueber dem Sockel
+				matrices.push();
+				matrices.translate(0.5f, 0.95f, 0.5f);
+				float flicker = 0.4f + 0.6f * Math.abs(MathHelper.sin(time * 0.9f));
+				ring(matrices, consumers, 0.36f, 0.03f, new float[] {1.0f, 0.12f, 0.08f}, flicker, time * 3.0f, 90.0f);
+				matrices.pop();
+			}
+			if (stack.isEmpty()) {
+				return;
+			}
 			FusionCoreBlockEntity core = feeding(injector);
 			float p = core != null ? core.progress() : 0.0f;
-			float[] color = colorOf(stack.getItem());
+			float[] color = injector.damaged() ? new float[] {1.0f, 0.15f, 0.1f} : colorOf(stack.getItem());
 			matrices.push();
 			matrices.translate(0.5f, PLATE_Y + 0.05f * MathHelper.sin(time * 0.1f + injector.getPos().hashCode()), 0.5f);
 			// Sockel-Leuchten

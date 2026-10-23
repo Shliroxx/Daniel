@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " S ",
+  "STS",
+  "GPG"
+ ],
+ "key": {
+  "S": {
+   "item": "kingdomomnitrix:resonance_shard"
+  },
+  "T": {
+   "item": "kingdomomnitrix:taydenite_plate"
+  },
+  "G": {
+   "item": "minecraft:gold_ingot"
+  },
+  "P": {
+   "item": "kingdomomnitrix:fusion_pylon"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:resonance_capstone",
+  "count": 1
+ }
+}

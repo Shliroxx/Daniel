@@ -1,6 +1,8 @@
 package com.santiq.kingdomomnitrix.suit.fusion;
 
 import com.mojang.serialization.MapCodec;
+import com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
@@ -10,7 +12,13 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.ItemScatterer;
@@ -27,7 +35,7 @@ public final class FusionBlocks {
 	private FusionBlocks() {
 	}
 
-	/** Fusionskern. Rechtsklick legt ein/nimmt heraus, Shift-Rechtsklick startet die Fusion. */
+	/** Fusionskern. Rechtsklick legt ein/nimmt heraus (waehrend der Fusion: Kryo-Zelle kuehlt), Shift-Rechtsklick startet. */
 	public static class Core extends BlockWithEntity {
 		private static final VoxelShape SHAPE = VoxelShapes.union(createCuboidShape(0, 0, 0, 16, 6, 16), createCuboidShape(3, 6, 3, 13, 12, 13));
 
@@ -72,7 +80,7 @@ public final class FusionBlocks {
 			if (world.isClient()) {
 				return ItemActionResult.SUCCESS;
 			}
-			return core.insert(stack) ? ItemActionResult.SUCCESS : ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+			return core.insert(stack, player) ? ItemActionResult.SUCCESS : ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 
 		@Override
@@ -101,18 +109,35 @@ public final class FusionBlocks {
 		}
 	}
 
-	/** Injektor: Rechtsklick legt einen Gegenstand auf, leere Hand nimmt ihn wieder. */
+	/**
+	 * Injektor in drei Stufen (Grund, Galvan, Sternen): Rechtsklick legt einen Gegenstand auf, leere Hand nimmt ihn
+	 * wieder. Ein Rezept braucht Injektoren mindestens seiner Stufe. Instabilitaet kann einen Injektor beschaedigen;
+	 * dann leuchtet er rot und muss mit einem Raritanium-Barren repariert werden.
+	 */
 	public static class Injector extends BlockWithEntity {
+		public static final BooleanProperty DAMAGED = BooleanProperty.of("damaged");
 		private static final VoxelShape SHAPE = VoxelShapes.union(createCuboidShape(2, 0, 2, 14, 3, 14), createCuboidShape(5, 3, 5, 11, 12, 11),
 				createCuboidShape(3, 12, 3, 13, 14, 13));
+		private final int tier;
 
-		public Injector(Settings settings) {
+		public Injector(Settings settings, int tier) {
 			super(settings);
+			this.tier = tier;
+			setDefaultState(getStateManager().getDefaultState().with(DAMAGED, false));
+		}
+
+		public int tier() {
+			return tier;
 		}
 
 		@Override
 		protected MapCodec<? extends BlockWithEntity> getCodec() {
-			return createCodec(Injector::new);
+			return createCodec(s -> new Injector(s, tier));
+		}
+
+		@Override
+		protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+			builder.add(DAMAGED);
 		}
 
 		@Override
@@ -134,6 +159,15 @@ public final class FusionBlocks {
 		@Override
 		protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand,
 				BlockHitResult hit) {
+			if (state.get(DAMAGED) && stack.isOf(ForgeMaterials.RARITANIUM_INGOT)) {
+				if (!world.isClient()) {
+					world.setBlockState(pos, state.with(DAMAGED, false));
+					stack.decrementUnlessCreative(1, player);
+					world.playSound(null, pos, SoundEvents.BLOCK_ANVIL_USE, SoundCategory.BLOCKS, 0.8f, 1.4f);
+					player.sendMessage(Text.translatable("message.kingdomomnitrix.fusion.repaired").formatted(Formatting.GREEN), true);
+				}
+				return ItemActionResult.SUCCESS;
+			}
 			if (!(world.getBlockEntity(pos) instanceof FusionInjectorBlockEntity injector) || !injector.stack().isEmpty()) {
 				return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 			}
@@ -163,4 +197,24 @@ public final class FusionBlocks {
 			super.onStateReplaced(state, world, pos, newState, moved);
 		}
 	}
+
+	/** Bauteil des Altars mit eigener Form (Rune, Saeule, Kronen, Fokus, Kuehler). */
+	public static class Part extends Block {
+		private final VoxelShape shape;
+
+		public Part(Settings settings, VoxelShape shape) {
+			super(settings);
+			this.shape = shape;
+		}
+
+		@Override
+		protected VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
+			return shape;
+		}
+	}
+
+	public static final VoxelShape PYLON_SHAPE = Block.createCuboidShape(3, 0, 3, 13, 16, 13);
+	public static final VoxelShape CAPSTONE_SHAPE = VoxelShapes.union(Block.createCuboidShape(2, 0, 2, 14, 4, 14),
+			Block.createCuboidShape(5, 4, 5, 11, 15, 11));
+	public static final VoxelShape FOCUS_SHAPE = Block.createCuboidShape(3, 3, 3, 13, 13, 13);
 }

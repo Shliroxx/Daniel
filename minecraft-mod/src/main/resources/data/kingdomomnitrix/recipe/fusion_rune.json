@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "DTD",
+  "RCR",
+  "DTD"
+ ],
+ "key": {
+  "D": {
+   "item": "minecraft:polished_deepslate"
+  },
+  "T": {
+   "item": "kingdomomnitrix:taydenite_crystal"
+  },
+  "R": {
+   "item": "kingdomomnitrix:raritanium_dust"
+  },
+  "C": {
+   "item": "minecraft:chiseled_deepslate"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_rune",
+  "count": 4
+ }
+}

@@ -10,7 +10,7 @@ import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.BlockPos;
 
-/** Injektor: haelt genau einen Gegenstand (eine Panzerplatte), der ueber ihm schwebt. */
+/** Injektor: haelt genau einen Gegenstand (eine Panzerplatte), der ueber ihm schwebt; Stufe und Schaden stehen im Block. */
 public class FusionInjectorBlockEntity extends BlockEntity {
 	private ItemStack stack = ItemStack.EMPTY;
 
@@ -20,6 +20,22 @@ public class FusionInjectorBlockEntity extends BlockEntity {
 
 	public ItemStack stack() {
 		return stack;
+	}
+
+	/** Stufe des Injektor-Blocks (1 Grund, 2 Galvan, 3 Sternen). */
+	public int tier() {
+		return SuitFusion.injectorTier(getCachedState().getBlock());
+	}
+
+	public boolean damaged() {
+		BlockState state = getCachedState();
+		return state.contains(FusionBlocks.Injector.DAMAGED) && state.get(FusionBlocks.Injector.DAMAGED);
+	}
+
+	public void setDamaged(boolean damaged) {
+		if (world != null && getCachedState().contains(FusionBlocks.Injector.DAMAGED)) {
+			world.setBlockState(pos, getCachedState().with(FusionBlocks.Injector.DAMAGED, damaged));
+		}
 	}
 
 	public void setStack(ItemStack stack) {

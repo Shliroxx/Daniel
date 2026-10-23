@@ -69,6 +69,14 @@
     "kingdomomnitrix:infernite_ore",
     "kingdomomnitrix:celestium_ore",
     "kingdomomnitrix:fusion_core",
-    "kingdomomnitrix:fusion_injector"
+    "kingdomomnitrix:fusion_injector",
+    "kingdomomnitrix:fusion_injector_galvan",
+    "kingdomomnitrix:fusion_injector_stellar",
+    "kingdomomnitrix:fusion_rune",
+    "kingdomomnitrix:fusion_pylon",
+    "kingdomomnitrix:resonance_capstone",
+    "kingdomomnitrix:celestial_capstone",
+    "kingdomomnitrix:chaos_focus",
+    "kingdomomnitrix:cryo_cooler"
   ]
 }

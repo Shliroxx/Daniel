@@ -179,9 +179,9 @@ def machine_json(name: str) -> dict[Path, dict]:
     return files
 
 
-def shaped(pattern: list[str], keys: dict[str, str], result: str) -> dict:
+def shaped(pattern: list[str], keys: dict[str, str], result: str, count: int = 1) -> dict:
     return {"type": "minecraft:crafting_shaped", "category": "misc", "pattern": pattern,
-            "key": {k: {"item": v} for k, v in keys.items()}, "result": {"id": result, "count": 1}}
+            "key": {k: {"item": v} for k, v in keys.items()}, "result": {"id": result, "count": count}}
 
 
 RECIPES = {
@@ -362,44 +362,277 @@ def suitmat_textures() -> dict[Path, Image.Image]:
 
 # --- Fusionsaltar ----------------------------------------------------------------------------------------------------
 
-FUSION = {"fusion_core": ("Fusionskern", "Fusion Core"), "fusion_injector": ("Fusions-Injektor", "Fusion Injector")}
+# Bloecke des Altars: id -> (Deutsch, Englisch)
+FUSION = {
+    "fusion_core": ("Fusionskern", "Fusion Core"),
+    "fusion_injector": ("Fusions-Injektor", "Fusion Injector"),
+    "fusion_injector_galvan": ("Galvan-Injektor", "Galvan Injector"),
+    "fusion_injector_stellar": ("Sternen-Injektor", "Stellar Injector"),
+    "fusion_rune": ("Fusionsrune", "Fusion Rune"),
+    "fusion_pylon": ("Altarsaeule", "Altar Pylon"),
+    "resonance_capstone": ("Resonanzkristall", "Resonance Capstone"),
+    "celestial_capstone": ("Sternenkrone", "Celestial Capstone"),
+    "chaos_focus": ("Chaos-Fokus", "Chaos Focus"),
+    "cryo_cooler": ("Kryo-Kuehler", "Cryo Cooler"),
+}
+# Gegenstaende des Altars (Icons aus suit_icons): id -> (Deutsch, Englisch)
+FUSION_ITEMS = {
+    "resonance_shard": ("Resonanz-Splitter", "Resonance Shard"),
+    "nefarious_chip": ("Nefarious-Chip", "Nefarious Chip"),
+    "chaos_heart": ("Chaos-Herz", "Chaos Heart"),
+    "cryo_cell": ("Kryo-Zelle", "Cryo Cell"),
+    "fusion_codex": ("Fusions-Kodex", "Fusion Codex"),
+}
+# Injektor-Stufen: Block -> Leuchtfarbe (mittel, hell), Aufbau-Stufe
+INJECTORS = {"fusion_injector": ("2A9AB8", "3AE8FF", 1), "fusion_injector_galvan": ("1A8A2A", "4BFF6A", 2),
+             "fusion_injector_stellar": ("5A4A9A", "D8CCFF", 3)}
 FUSION_MESSAGES = {
     "message.kingdomomnitrix.fusion.no_recipe": ("Kein Fusionsrezept fuer dieses Mittelstueck.", "No fusion recipe for this centerpiece."),
     "message.kingdomomnitrix.fusion.plates": ("Injektoren: %s/%s mit %s", "Injectors: %s/%s holding %s"),
     "message.kingdomomnitrix.fusion.cores": ("Energiekerne im Kern: %s/%s", "Energy cores in the core: %s/%s"),
     "message.kingdomomnitrix.fusion.start": ("Fusion gestartet: %s", "Fusion started: %s"),
+    "message.kingdomomnitrix.fusion.status": ("Altar: %s | Stabilitaet %s gegen Instabilitaet %s | Kuehlung %s",
+                                              "Altar: %s | stability %s against instability %s | cooling %s"),
+    "message.kingdomomnitrix.fusion.altar_tier": ("Dafuer braucht es den %s (dein Altar: %s). Sieh im Fusions-Kodex nach.",
+                                                  "This needs the %s (your altar: %s). Check the Fusion Codex."),
+    "message.kingdomomnitrix.fusion.injector_tier": ("Die Injektoren sind zu schwach: Stufe %s noetig.",
+                                                     "The injectors are too weak: tier %s required."),
+    "message.kingdomomnitrix.fusion.damaged": ("%s Injektor(en) durchgebrannt - mit einem Raritanium-Barren reparieren.",
+                                               "%s injector(s) burned out - repair them with a Raritanium Ingot."),
+    "message.kingdomomnitrix.fusion.repaired": ("Injektor repariert.", "Injector repaired."),
+    "message.kingdomomnitrix.fusion.coolant": ("Kryo-Zelle eingesetzt: Hitze -%s", "Cryo Cell used: heat -%s"),
+    "message.kingdomomnitrix.fusion.researched": ("Erforscht: %s", "Researched: %s"),
+    "message.kingdomomnitrix.fusion.warn_heat": ("Der Kern glueht: %s %% Hitze - Kryo-Zelle einsetzen!",
+                                                 "The core is glowing: %s %% heat - use a Cryo Cell!"),
+    "message.kingdomomnitrix.fusion.event_spark": ("Funkenschlag! Die Fusion ist instabil.", "Sparks! The fusion is unstable."),
+    "message.kingdomomnitrix.fusion.event_eject": ("Eine Platte wurde herausgeschleudert - leg sie schnell zurueck!",
+                                                   "A plate was flung out - put it back quickly!"),
+    "message.kingdomomnitrix.fusion.event_lightning": ("Energieentladung! Der Kern heizt sich auf.",
+                                                       "Energy discharge! The core heats up."),
+    "message.kingdomomnitrix.fusion.event_damage": ("Ein Injektor ist durchgebrannt! Mit einem Raritanium-Barren reparieren.",
+                                                    "An injector burned out! Repair it with a Raritanium Ingot."),
+    "message.kingdomomnitrix.fusion.fail_instability": ("Die Fusion ist kollabiert! Platten und Energiekerne sind verloren.",
+                                                        "The fusion collapsed! Plates and energy cores are lost."),
+    "message.kingdomomnitrix.fusion.fail_heat": ("Der Kern ist ueberhitzt! Platten und Energiekerne sind verloren.",
+                                                 "The core overheated! Plates and energy cores are lost."),
+    "message.kingdomomnitrix.fusion.fail_stalled": ("Die Fusion stand zu lange still und ist zusammengebrochen.",
+                                                    "The fusion stalled for too long and broke down."),
+    "hud.kingdomomnitrix.fusion.progress": ("Fusion %s %%", "Fusion %s %%"),
+    "hud.kingdomomnitrix.fusion.heat": ("Hitze %s %%", "Heat %s %%"),
+    "hud.kingdomomnitrix.fusion.instability": ("Instabilitaet %s", "Instability %s"),
+    "hud.kingdomomnitrix.fusion.stalled": ("STOCKT - %s s", "STALLED - %s s"),
+    "tooltip.kingdomomnitrix.fusion_codex.progress": ("Erforscht: %s/%s Altarstufen", "Researched: %s/%s altar tiers"),
+    "tooltip.kingdomomnitrix.fusion_codex.usage": ("Benutzen: lesen. Schluesselgegenstand in der Zweithand: erforschen.",
+                                                   "Use: read. Key item in the other hand: research."),
+    "codex.kingdomomnitrix.locked": ("Nicht erforscht", "Not researched"),
+    "codex.kingdomomnitrix.locked.hint": ("Nimm diesen Gegenstand in die Zweithand und benutze den Kodex.",
+                                          "Hold this item in your other hand and use the codex."),
+    "codex.kingdomomnitrix.intro.title": ("Der Fusionsaltar", "The Fusion Altar"),
+    "codex.kingdomomnitrix.intro.text": (
+        "Der Fusionsaltar verschmilzt Panzerplatten mit einem Ruestungsteil. Leg das Teil und die Energiekerne in den "
+        "Kern, je eine Platte auf die Injektoren und starte mit Shift + Rechtsklick auf den Kern.\n\n"
+        "Jede Ruestungsstufe braucht einen Altar und Injektoren derselben Stufe. Hoehere Altare entstehen, wenn du "
+        "um den Kern herum baust - die Bauplaene stehen in diesem Kodex, sobald du ihren Schluessel erforscht hast.\n\n"
+        "Blaettere weiter fuer die vier Stufen und die Gefahren.",
+        "The Fusion Altar fuses armor plates into a piece of armor. Put the piece and the energy cores into the core, "
+        "one plate on each injector, and start with Shift + right-click on the core.\n\n"
+        "Every armor tier needs an altar and injectors of the same tier. Higher altars are built around the core - "
+        "their blueprints appear in this codex once you research their key.\n\n"
+        "Turn the page for the four tiers and the dangers."),
+    "codex.kingdomomnitrix.tier1.title": ("Grund-Altar", "Basic Altar"),
+    "codex.kingdomomnitrix.tier1.text": (
+        "Fusionskern und bis zu acht Fusions-Injektoren im Umkreis von 8 Bloecken. Stell die Injektoren "
+        "symmetrisch auf: jedes gegenueberliegende Paar mit gleicher Platte beruhigt die Fusion, ein Injektor ohne "
+        "Partner macht sie unruhiger.\n\nReicht fuer: Taydenit und Magnaplate.",
+        "Fusion core and up to eight fusion injectors within 8 blocks. Place injectors symmetrically: every opposite "
+        "pair with the same plate calms the fusion, an injector without a partner makes it wilder.\n\n"
+        "Enough for: Taydenite and Magnaplate."),
+    "codex.kingdomomnitrix.tier2.title": ("Galvan-Altar", "Galvan Altar"),
+    "codex.kingdomomnitrix.tier2.text": (
+        "Acht Fusionsrunen im Boden rund um den Kern (Abstand 2, eine Ebene tiefer) und an den vier Ecken "
+        "(Abstand 3) je eine Saeule aus zwei Altarsaeulen mit Resonanzkristall obenauf.\n\nSchluessel: "
+        "Resonanz-Splitter aus den Petrosapien-Ruinen auf Petropia.\nInjektoren: Galvan-Injektoren.\n"
+        "Reicht fuer: Galvan und Carbonox.",
+        "Eight fusion runes in the floor around the core (distance 2, one level lower) and at the four corners "
+        "(distance 3) a column of two altar pylons topped with a resonance capstone.\n\nKey: Resonance Shard from the "
+        "Petrosapien ruins on Petropia.\nInjectors: Galvan Injectors.\nEnough for: Galvan and Carbonox."),
+    "codex.kingdomomnitrix.tier3.title": ("Sternen-Altar", "Stellar Altar"),
+    "codex.kingdomomnitrix.tier3.text": (
+        "Ein zweiter Runenring (Abstand 4, eine Ebene tiefer - die Injektoren stehen darauf) und auf den Achsen "
+        "(Abstand 6) vier Saeulen aus drei Altarsaeulen mit Sternenkrone.\n\nSchluessel: Nefarious-Chip - "
+        "besiege Dr. Nefarious.\nInjektoren: Sternen-Injektoren.\nReicht fuer: Celestial und Infernox. Diese "
+        "Fusionen werden heiss - ohne Kuehlung schmilzt der Kern.",
+        "A second rune ring (distance 4, one level lower - the injectors stand on it) and on the axes (distance 6) "
+        "four columns of three altar pylons with a celestial capstone.\n\nKey: Nefarious Chip - defeat Dr. Nefarious."
+        "\nInjectors: Stellar Injectors.\nEnough for: Celestial and Infernox. These fusions run hot - without cooling "
+        "the core melts."),
+    "codex.kingdomomnitrix.tier4.title": ("Chaos-Altar", "Chaos Altar"),
+    "codex.kingdomomnitrix.tier4.text": (
+        "Der Chaos-Fokus schwebt fuenf Bloecke ueber dem Kern und zwingt die Energie in die Mitte. Der Chaos-Altar "
+        "ist so stabil, dass selbst Stufe-3-Fusionen kaum noch ausbrechen.\n\nSchluessel: Chaos-Herz - bezwinge den "
+        "Koloss am Ende der Geheimen Wasserstrasse.",
+        "The Chaos Focus floats five blocks above the core and forces the energy into the center. The Chaos Altar is "
+        "so stable that even tier 3 fusions rarely break out.\n\nKey: Chaos Heart - defeat the Colossus at the end of "
+        "the Secret Waterway."),
+    "codex.kingdomomnitrix.dangers.title": ("Gefahren", "Dangers"),
+    "codex.kingdomomnitrix.dangers.text": (
+        "Instabilitaet: Rezept gegen Stabilitaet (Altarstufe, Symmetrie). Ist sie hoch, schlaegt es Funken, Platten "
+        "fliegen heraus (zuruecklegen!), Blitze fahren in die Injektoren, Injektoren brennen durch (Raritanium-Barren "
+        "repariert sie) - oder die Fusion kollabiert.\n\nHitze: steigt mit der Stufe. Eis, Packeis, Blaues Eis und "
+        "Kryo-Kuehler in 3 Bloecken um den Kern kuehlen, eine Kryo-Zelle (Rechtsklick auf den Kern) kuehlt sofort.\n\n"
+        "Stockt die Fusion 15 Sekunden, bricht sie zusammen. Fehlschlag: Platten und Kerne sind weg, das Teil bleibt.",
+        "Instability: recipe against stability (altar tier, symmetry). When it is high, sparks fly, plates get thrown "
+        "out (put them back!), lightning hits the injectors, injectors burn out (a Raritanium Ingot repairs them) - or "
+        "the fusion collapses.\n\nHeat: rises with the tier. Ice, packed ice, blue ice and cryo coolers within 3 "
+        "blocks cool the core, a Cryo Cell (right-click the core) cools it at once.\n\nIf the fusion stalls for 15 "
+        "seconds it breaks down. Failure: plates and cores are lost, the piece stays."),
 }
 
 
-def fusion_models() -> dict[Path, dict]:
-    textures = {"metal": f"{MOD}:{SUITMAT}/machine_metal", "dark": f"{MOD}:{SUITMAT}/machine_dark",
-                "glow": f"{MOD}:{SUITMAT}/fusion_glow", "gem": f"{MOD}:{SUITMAT}/celestium_gem",
-                "particle": f"{MOD}:{SUITMAT}/machine_dark"}
+def rune_texture() -> Image.Image:
+    """Oberseite der Fusionsrune: dunkle Platte mit leuchtendem Runenkreis (32x32, wird ohne Schatten gezeichnet)."""
+    img = Image.new("RGBA", (32, 32), rgb("101318"))
+    d = ImageDraw.Draw(img)
+    d.rectangle((0, 0, 31, 31), outline=rgb("2A2E36"))
+    d.rectangle((2, 2, 29, 29), outline=rgb("1A1E24"))
+    d.ellipse((5, 5, 26, 26), outline=rgb("7A6AFF"))
+    d.ellipse((7, 7, 24, 24), outline=rgb("3A2E8A"))
+    glyph = [(16, 8), (22, 16), (16, 24), (10, 16), (16, 8)]
+    d.line(glyph, fill=rgb("C8BCFF"))
+    d.line([(16, 11), (16, 21)], fill=rgb("FFFFFF"))
+    d.line([(12, 16), (20, 16)], fill=rgb("C8BCFF"))
+    for x, y in ((16, 4), (28, 16), (16, 28), (4, 16)):
+        d.point((x, y), fill=rgb("C8BCFF"))
+    return img
+
+
+def faces(frm, to, textures: dict[str, str], glow: bool = False) -> dict:
+    """Element mit eigener Textur je Seite (fehlende Seiten: "side")."""
+    out = {"from": list(frm), "to": list(to),
+           "faces": {f: {"uv": [0, 0, 16, 16], "texture": textures.get(f, textures["side"])} for f in ALL_FACES}}
+    if glow:
+        out["shade"] = False
+    return out
+
+
+def injector_elements(tier: int) -> list[dict]:
+    out = [el((2, 0, 2), (14, 3, 14), "#dark"), el((3, 3, 3), (13, 4, 13), "#metal"), el((5, 4, 5), (11, 12, 11), "#metal"),
+           el((4.5, 6, 4.5), (11.5, 7, 11.5), "#glow", glow=True), el((4.5, 9, 4.5), (11.5, 10, 11.5), "#glow", glow=True),
+           el((3, 12, 3), (13, 14, 13), "#dark"), el((4, 14, 4), (12, 14.5, 12), "#glow", glow=True)]
+    if tier >= 2:
+        # Galvan: vier Greifarme um die Plattform
+        for x, z in ((2, 2), (12.5, 2), (2, 12.5), (12.5, 12.5)):
+            out += [el((x, 10, z), (x + 1.5, 16, z + 1.5), "#metal"), el((x + 0.3, 15, z + 0.3), (x + 1.2, 16.5, z + 1.2), "#glow", glow=True)]
+    if tier >= 3:
+        # Sternen: Kristallspitzen an den Seiten
+        for x0, z0, x1, z1 in ((0.5, 7, 2, 9), (14, 7, 15.5, 9), (7, 0.5, 9, 2), (7, 14, 9, 15.5)):
+            out.append(el((x0, 2, z0), (x1, 9, z1), "#gem", glow=True))
+    return out
+
+
+def capstone_elements(spikes: int) -> list[dict]:
+    out = [el((2, 0, 2), (14, 2, 14), "#dark"), el((3, 2, 3), (13, 4, 13), "#metal"),
+           el((6, 4, 6), (10, 14, 10), "#gem", glow=True), el((6.8, 14, 6.8), (9.2, 16, 9.2), "#gem", glow=True)]
+    side = (("z", 22.5, (5, 4, 8), (3.5, 4, 7), (5.5, 11, 9)), ("z", -22.5, (11, 4, 8), (10.5, 4, 7), (12.5, 11, 9)),
+            ("x", 22.5, (8, 4, 11), (7, 4, 10.5), (9, 11, 12.5)), ("x", -22.5, (8, 4, 5), (7, 4, 3.5), (9, 11, 5.5)))
+    for axis, angle, origin, frm, to in side[:spikes]:
+        out.append(el(frm, to, "#gem", (axis, angle, origin), True))
+    return out
+
+
+def fusion_models() -> tuple[dict[Path, dict], dict[Path, Image.Image]]:
+    base = {"metal": f"{MOD}:{SUITMAT}/machine_metal", "dark": f"{MOD}:{SUITMAT}/machine_dark",
+            "glow": f"{MOD}:{SUITMAT}/fusion_glow", "gem": f"{MOD}:{SUITMAT}/celestium_gem", "particle": f"{MOD}:{SUITMAT}/machine_dark"}
+    images = {ASSETS / "textures" / SUITMAT / "fusion_rune_top.png": rune_texture(),
+              ASSETS / "textures" / SUITMAT / "fusion_glow_damaged.png": tex_glow("8A0A06", "FF5A2A"),
+              ASSETS / "textures" / SUITMAT / "chaos_glow.png": tex_glow("6A0A2A", "FF3A6A"),
+              ASSETS / "textures" / SUITMAT / "cryo_glow.png": tex_glow("1A6A9A", "C8F4FF"),
+              ASSETS / "textures" / SUITMAT / "taydenite_gem.png": gem_texture("taydenite")}
+    for name, (mid, light, _) in INJECTORS.items():
+        if name != "fusion_injector":
+            images[ASSETS / "textures" / SUITMAT / f"{name}_glow.png"] = tex_glow(mid, light)
     core = [el((0, 0, 0), (16, 3, 16), "#dark"), el((1, 3, 1), (15, 5, 15), "#metal"), el((2, 5, 2), (14, 6, 14), "#dark"),
             el((3, 6, 3), (13, 12, 13), "#metal"), el((4, 12, 4), (12, 13, 12), "#dark"),
             el((5, 6.5, 2.6), (11, 11.5, 3.1), "#glow", glow=True), el((5, 6.5, 12.9), (11, 11.5, 13.4), "#glow", glow=True),
             el((2.6, 6.5, 5), (3.1, 11.5, 11), "#glow", glow=True), el((12.9, 6.5, 5), (13.4, 11.5, 11), "#glow", glow=True)]
     for x, z in ((0, 0), (13, 0), (0, 13), (13, 13)):
         core += [el((x, 3, z), (x + 3, 9, z + 3), "#metal"), el((x + 1, 9, z + 1), (x + 2, 11, z + 2), "#gem", glow=True)]
-    injector = [el((2, 0, 2), (14, 3, 14), "#dark"), el((3, 3, 3), (13, 4, 13), "#metal"), el((5, 4, 5), (11, 12, 11), "#metal"),
-                el((4.5, 6, 4.5), (11.5, 7, 11.5), "#glow", glow=True), el((4.5, 9, 4.5), (11.5, 10, 11.5), "#glow", glow=True),
-                el((3, 12, 3), (13, 14, 13), "#dark"), el((4, 14, 4), (12, 14.5, 12), "#glow", glow=True)]
-    files = {}
-    for name, elements in (("fusion_core", core), ("fusion_injector", injector)):
-        files[ASSETS / "models" / "block" / f"{name}.json"] = {"parent": "minecraft:block/block", "textures": textures, "elements": elements,
-                                                               "display": {"gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0],
-                                                                                   "scale": [0.6, 0.6, 0.6]}}}
-        files[ASSETS / "models" / "item" / f"{name}.json"] = {"parent": f"{MOD}:block/{name}"}
+    rune_tex = {"side": "#dark", "up": "#rune"}
+    pylon = [el((3, 0, 3), (13, 2, 13), "#dark"), el((4, 2, 4), (12, 14, 12), "#metal"), el((3, 14, 3), (13, 16, 13), "#dark"),
+             el((3.6, 5, 3.6), (12.4, 6, 12.4), "#glow", glow=True), el((3.6, 10, 3.6), (12.4, 11, 12.4), "#glow", glow=True)]
+    focus = [el((4, 4, 4), (12, 12, 12), "#glow", ("y", 45, (8, 8, 8)), True), el((4.5, 4.5, 4.5), (11.5, 11.5, 11.5), "#dark", ("x", 45, (8, 8, 8))),
+             el((5, 5, 5), (11, 11, 11), "#glow", ("z", 45, (8, 8, 8)), True), el((7, 1, 7), (9, 15, 9), "#gem", glow=True),
+             el((1, 7, 7), (15, 9, 9), "#gem", glow=True)]
+    cooler = [faces((0, 0, 0), (16, 16, 16), {"side": "#metal", "up": "#dark", "down": "#dark"})]
+    for x0, z0, x1, z1 in ((3, -0.3, 13, 0.2), (3, 15.8, 13, 16.3), (-0.3, 3, 0.2, 13), (15.8, 3, 16.3, 13)):
+        for y in (3, 7, 11):
+            cooler.append(el((x0, y, z0), (x1, y + 2, z1), "#glow", glow=True))
+    models = {
+        "fusion_core": (core, base),
+        "fusion_rune": ([faces((0, 0, 0), (16, 16, 16), rune_tex)], dict(base, rune=f"{MOD}:{SUITMAT}/fusion_rune_top")),
+        "fusion_pylon": (pylon, base),
+        "resonance_capstone": (capstone_elements(2), dict(base, gem=f"{MOD}:{SUITMAT}/taydenite_gem",
+                                                          glow=f"{MOD}:{SUITMAT}/fusion_injector_galvan_glow")),
+        "celestial_capstone": (capstone_elements(4), base),
+        "chaos_focus": (focus, dict(base, glow=f"{MOD}:{SUITMAT}/chaos_glow", gem=f"{MOD}:{SUITMAT}/chaos_glow")),
+        "cryo_cooler": (cooler, dict(base, glow=f"{MOD}:{SUITMAT}/cryo_glow")),
+    }
+    files: dict[Path, dict] = {}
+    display = {"gui": {"rotation": [30, 225, 0], "translation": [0, 0, 0], "scale": [0.6, 0.6, 0.6]}}
+    for name, (elements, textures) in models.items():
+        files[ASSETS / "models" / "block" / f"{name}.json"] = {"parent": "minecraft:block/block", "textures": textures,
+                                                               "elements": elements, "display": display}
         files[ASSETS / "blockstates" / f"{name}.json"] = {"variants": {"": {"model": f"{MOD}:block/{name}"}}}
+    for name, (_, _, tier) in INJECTORS.items():
+        glow = f"{MOD}:{SUITMAT}/fusion_glow" if tier == 1 else f"{MOD}:{SUITMAT}/{name}_glow"
+        gem = f"{MOD}:{SUITMAT}/celestium_gem"
+        for damaged in (False, True):
+            model = f"{name}_damaged" if damaged else name
+            textures = dict(base, glow=f"{MOD}:{SUITMAT}/fusion_glow_damaged" if damaged else glow, gem=gem)
+            files[ASSETS / "models" / "block" / f"{model}.json"] = {"parent": "minecraft:block/block", "textures": textures,
+                                                                    "elements": injector_elements(tier), "display": display}
+        files[ASSETS / "blockstates" / f"{name}.json"] = {"variants": {
+            "damaged=false": {"model": f"{MOD}:block/{name}"}, "damaged=true": {"model": f"{MOD}:block/{name}_damaged"}}}
+    for name in FUSION:
+        files[ASSETS / "models" / "item" / f"{name}.json"] = {"parent": f"{MOD}:block/{name}"}
         files[DATA / MOD / "loot_table" / "blocks" / f"{name}.json"] = {
             "type": "minecraft:block", "pools": [{"rolls": 1, "bonus_rolls": 0, "entries": [{"type": "minecraft:item", "name": f"{MOD}:{name}"}]}]}
-    files[DATA / MOD / "recipe" / "fusion_core.json"] = shaped(["DND", "AFA", "DOD"], {
-        "D": "minecraft:diamond_block", "N": "minecraft:nether_star", "A": f"{MOD}:alloy_forge", "F": "minecraft:beacon",
-        "O": "minecraft:crying_obsidian"}, f"{MOD}:fusion_core")
-    files[DATA / MOD / "recipe" / "fusion_injector.json"] = shaped([" E ", "RBR", "OOO"], {
-        "E": "minecraft:end_rod", "R": f"{MOD}:raritanium_ingot", "B": "minecraft:diamond_block", "O": "minecraft:obsidian"},
-        f"{MOD}:fusion_injector")
-    return files
+    for path, data in fusion_recipes().items():
+        files[path] = data
+    return files, images
+
+
+def fusion_recipes() -> dict[Path, dict]:
+    m = MOD
+    recipes = {
+        "fusion_core": shaped(["DND", "AFA", "DOD"], {"D": "minecraft:diamond_block", "N": "minecraft:nether_star", "A": f"{m}:alloy_forge",
+                                                     "F": "minecraft:beacon", "O": "minecraft:crying_obsidian"}, f"{m}:fusion_core"),
+        "fusion_injector": shaped([" E ", "RBR", "OOO"], {"E": "minecraft:end_rod", "R": f"{m}:raritanium_ingot",
+                                                         "B": "minecraft:diamond_block", "O": "minecraft:obsidian"}, f"{m}:fusion_injector"),
+        "fusion_injector_galvan": shaped([" S ", "WIW", "GBG"], {"S": f"{m}:resonance_shard", "W": f"{m}:biotech_weave",
+                                                                "I": f"{m}:fusion_injector", "G": f"{m}:biotech_gel",
+                                                                "B": "minecraft:gold_block"}, f"{m}:fusion_injector_galvan"),
+        "fusion_injector_stellar": shaped([" N ", "CIC", "CSC"], {"N": "minecraft:nether_star", "C": f"{m}:celestium_ingot",
+                                                                 "I": f"{m}:fusion_injector_galvan", "S": f"{m}:resonance_shard"},
+                                          f"{m}:fusion_injector_stellar"),
+        "fusion_rune": shaped(["DTD", "RCR", "DTD"], {"D": "minecraft:polished_deepslate", "T": f"{m}:taydenite_crystal",
+                                                     "R": f"{m}:raritanium_dust", "C": "minecraft:chiseled_deepslate"}, f"{m}:fusion_rune", 4),
+        "fusion_pylon": shaped(["PIP", "PRP", "PIP"], {"P": "minecraft:deepslate_tiles", "I": "minecraft:iron_ingot",
+                                                      "R": "minecraft:redstone_block"}, f"{m}:fusion_pylon", 3),
+        "resonance_capstone": shaped([" S ", "STS", "GPG"], {"S": f"{m}:resonance_shard", "T": f"{m}:taydenite_plate",
+                                                            "G": "minecraft:gold_ingot", "P": f"{m}:fusion_pylon"}, f"{m}:resonance_capstone"),
+        "celestial_capstone": shaped([" N ", "CMC", "CPC"], {"N": f"{m}:nefarious_chip", "C": f"{m}:celestium_ingot",
+                                                            "M": f"{m}:star_matrix", "P": f"{m}:fusion_pylon"}, f"{m}:celestial_capstone"),
+        "chaos_focus": shaped(["IEI", "EHE", "IEI"], {"I": f"{m}:celestium_ingot", "E": "minecraft:end_crystal", "H": f"{m}:chaos_heart"},
+                              f"{m}:chaos_focus"),
+        "cryo_cooler": shaped(["IGI", "GBG", "IGI"], {"I": f"{m}:raritanium_ingot", "G": f"{m}:biotech_gel", "B": "minecraft:blue_ice"},
+                              f"{m}:cryo_cooler"),
+        "cryo_cell": shaped([" P ", "GBG", " P "], {"P": "minecraft:packed_ice", "G": "minecraft:glass", "B": f"{m}:biotech_gel"},
+                            f"{m}:cryo_cell", 4),
+        "fusion_codex": {"type": "minecraft:crafting_shapeless", "category": "misc",
+                         "ingredients": [{"item": "minecraft:book"}, {"item": f"{m}:taydenite_crystal"}], "result": {"id": f"{m}:fusion_codex", "count": 1}},
+    }
+    return {DATA / MOD / "recipe" / f"{name}.json": data for name, data in recipes.items()}
 
 
 def merged_tag(path: Path, values: list[str]) -> dict:
@@ -440,8 +673,18 @@ def outputs() -> dict[Path, bytes]:
         for path, data in machine_json(name).items():
             files[path] = (json.dumps(data, indent=2) + "\n").encode()
         files[DATA / MOD / "recipe" / f"{name}.json"] = (json.dumps(RECIPES[name], indent=2) + "\n").encode()
-    for path, data in fusion_models().items():
+    fusion_files, fusion_images = fusion_models()
+    for path, data in fusion_files.items():
         files[path] = (json.dumps(data, indent=1) + "\n").encode()
+    for path, img in fusion_images.items():
+        files[path] = png(img)
+    for item in FUSION_ITEMS:
+        img, frames = suit_icons.render(item)
+        files[ASSETS / "textures" / "item" / f"{item}.png"] = png(img)
+        files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
+            {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
+        files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
+            {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
     machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION]
     for tag in ("mineable/pickaxe", "needs_iron_tool"):
         path = DATA / "minecraft" / "tags" / "block" / f"{tag}.json"
@@ -455,6 +698,8 @@ def outputs() -> dict[Path, bytes]:
             lang[f"block.{MOD}.{name}"] = (de, en)[index]
         for name, (de, en) in FUSION.items():
             lang[f"block.{MOD}.{name}"] = (de, en)[index]
+        for name, (de, en) in FUSION_ITEMS.items():
+            lang[f"item.{MOD}.{name}"] = (de, en)[index]
         for key, (de, en) in FUSION_MESSAGES.items():
             lang[key] = (de, en)[index]
         files[path] = (json.dumps(lang, indent=2, ensure_ascii=False) + "\n").encode()

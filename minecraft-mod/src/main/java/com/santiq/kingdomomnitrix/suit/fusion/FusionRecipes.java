@@ -14,10 +14,32 @@ import net.minecraft.item.Items;
 /**
  * Fusionsrezepte: Mittelstueck (Ruestungsteil der Vorstufe, bei Stufe 1 Netherit) im Kern, je eine Panzerplatte auf
  * den Injektoren, Energiekerne im Kern. Helm 5 Platten, Brust 8, Beine 7, Stiefel 4; Stufe 1/2/3 braucht 2/4/8
- * Energiekerne und laeuft 10/20/30 Sekunden. Das Ergebnis behaelt Verzauberungen und Namen des Mittelstuecks.
+ * Energiekerne und laeuft 10/20/30 Sekunden; sie braucht einen Altar und Injektoren mindestens derselben Stufe. Das
+ * Ergebnis behaelt Verzauberungen und Namen des Mittelstuecks.
  */
 public final class FusionRecipes {
-	public record Recipe(Item center, Item plate, int plates, int cores, int ticks, Item result) {
+	/**
+	 * Ein Rezept. tier: Ruestungsstufe 1..3 = noetige Altar- und Injektorstufe. Instabilitaet wie bei der
+	 * Thaumcraft-Infusion: hoehere Stufen und mehr Platten sind schwerer zu halten.
+	 */
+	public record Recipe(Item center, Item plate, int plates, int cores, int ticks, Item result, int tier) {
+		public int instability() {
+			int base = switch (tier) {
+				case 1 -> 10;
+				case 2 -> 24;
+				default -> 36;
+			};
+			return base + plates / 2;
+		}
+
+		/** Hitze je Tick (ohne Kuehlung). */
+		public float heatRate() {
+			return switch (tier) {
+				case 1 -> 0.05f;
+				case 2 -> 0.2f;
+				default -> 0.3f;
+			};
+		}
 	}
 
 	private static final List<Recipe> RECIPES = new ArrayList<>();
@@ -42,7 +64,7 @@ public final class FusionRecipes {
 			Item center = NETHERITE[p];
 			for (int t = 0; t < tiers.length; t++) {
 				Item result = SuitItems.get(tiers[t], PIECES[p]);
-				RECIPES.add(new Recipe(center, plates[t], PLATES[p], 2 << t, 200 * (t + 1), result));
+				RECIPES.add(new Recipe(center, plates[t], PLATES[p], 2 << t, 200 * (t + 1), result, t + 1));
 				center = result;
 			}
 		}

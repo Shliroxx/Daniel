@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " N ",
+  "CIC",
+  "CSC"
+ ],
+ "key": {
+  "N": {
+   "item": "minecraft:nether_star"
+  },
+  "C": {
+   "item": "kingdomomnitrix:celestium_ingot"
+  },
+  "I": {
+   "item": "kingdomomnitrix:fusion_injector_galvan"
+  },
+  "S": {
+   "item": "kingdomomnitrix:resonance_shard"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_injector_stellar",
+  "count": 1
+ }
+}
