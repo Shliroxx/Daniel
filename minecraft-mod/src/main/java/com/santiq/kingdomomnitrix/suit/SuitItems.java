@@ -47,6 +47,7 @@ public final class SuitItems {
 						com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials.all().forEach(entries::add);
 						com.santiq.kingdomomnitrix.suit.module.SuitModules.all().forEach(entries::add);
 						ALL.forEach(entries::add);
+						com.santiq.kingdomomnitrix.suit.weapon.SuitWeapons.all().forEach(entries::add);
 					})
 					.build());
 

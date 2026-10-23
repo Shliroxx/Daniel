@@ -276,6 +276,14 @@ def _star(size_px: float, x: float, y: float, color: np.ndarray, strength: float
     return col * (1 - v[..., None]) + color[None, None] * v[..., None], alpha + v * (1 - alpha)
 
 
+def _roll0(a: np.ndarray, dy: int, dx: int) -> np.ndarray:
+    """Verschieben ohne Umlauf: was ueber den Rand faellt, verschwindet (sonst tauchen Raender gegenueber auf)."""
+    out = np.zeros_like(a)
+    h, w = a.shape[0], a.shape[1]
+    out[max(dy, 0):h + min(dy, 0), max(dx, 0):w + min(dx, 0)] = a[max(-dy, 0):h + min(-dy, 0), max(-dx, 0):w + min(-dx, 0)]
+    return out
+
+
 def frames(icon: Icon, count: int = 1, halo: str | None = None, halo_strength: float = 0.75,
            shine_color: str = "FFFFFF") -> Image.Image:
     """Rendert count Frames (untereinander) zu einem 64 x 64*count-Bild."""
@@ -310,20 +318,20 @@ def frames(icon: Icon, count: int = 1, halo: str | None = None, halo_strength: f
         # farbige Umrandung: dunkle Variante der Nachbarfarbe
         outline = np.zeros_like(solid)
         for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
-            outline |= np.roll(np.roll(solid, dy, 0), dx, 1)
+            outline |= _roll0(solid, dy, dx)
         outline &= ~solid
         nb = np.zeros_like(c)
         cnt = np.zeros(a.shape)
         for dy, dx in ((0, 1), (1, 0), (0, -1), (-1, 0)):
-            s = np.roll(np.roll(solid, dy, 0), dx, 1)
-            nb += np.roll(np.roll(c, dy, 0), dx, 1) * s[..., None]
+            s = _roll0(solid, dy, dx)
+            nb += _roll0(c, dy, dx) * s[..., None]
             cnt += s
         nb = nb / np.maximum(cnt, 1)[..., None]
         edge = icon.outline[None, None] * 0.55 + nb * 0.25
         c = np.where(outline[..., None], edge, c)
         a = np.where(solid | outline, 1.0, 0.0)
         # Kanten-Schaerfung: obere/linke Innenkante leicht aufhellen
-        inner_top = solid & ~np.roll(solid, 1, 0)
+        inner_top = solid & ~_roll0(solid, 1, 0)
         c = np.where(inner_top[..., None], np.clip(c * 1.12 + 0.04, 0, 1), c)
         if halo_src is not None:
             h = np.asarray(Image.fromarray((np.clip(halo_src, 0, 1) * 255).astype(np.uint8), "L")

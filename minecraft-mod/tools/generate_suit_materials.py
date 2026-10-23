@@ -399,6 +399,23 @@ def module_files() -> dict[Path, dict]:
     return files
 
 
+# --- Endgame-Waffen (Java: suit/weapon) -------------------------------------------------------------------------------
+
+# Waffe -> (Deutsch, Englisch, Spezialangriff Deutsch, Spezialangriff Englisch)
+WEAPONS = {
+    "taydenite_blade": ("Taydenit-Klinge", "Taydenite Blade", "Rechtsklick: Kristallspur - Diamondhead-Kristalle brechen in einer Linie aus dem Boden",
+                        "Right-click: Crystal Trail - Diamondhead crystals burst from the ground in a line"),
+    "galvan_rifle": ("Galvan-Biotech-Gewehr", "Galvan Biotech Rifle", "Rechtsklick: durchdringender Biotech-Strahl (32 Bloecke)",
+                     "Right-click: piercing biotech beam (32 blocks)"),
+    "star_sword": ("Sternenschwert", "Star Sword", "Rechtsklick: Sternenschlag - fuenf Meteore stuerzen auf den Zielpunkt",
+                   "Right-click: Starfall - five meteors crash onto the target point"),
+    "magnaplate_hammer": ("Magnaplate-Hammer", "Magnaplate Hammer", "Rechtsklick am Boden: Schockwellen-Schlag",
+                          "Right-click on the ground: shockwave slam"),
+    "carbonox_launcher": ("Carbonox-Werfer", "Carbonox Launcher", "Rechtsklick: explosive Plasmabolzen", "Right-click: explosive plasma bolts"),
+    "infernox_ryno": ("Infernox-R.Y.N.O.", "Infernox R.Y.N.O.", "Rechtsklick: Salve aus sechs Raketen", "Right-click: volley of six rockets"),
+}
+
+
 # --- Fusionsaltar ----------------------------------------------------------------------------------------------------
 
 # Bloecke des Altars: id -> (Deutsch, Englisch)
@@ -719,14 +736,15 @@ def outputs() -> dict[Path, bytes]:
         files[path] = png(img)
     for path, data in module_files().items():
         files[path] = (json.dumps(data, indent=2) + "\n").encode()
-    for item in list(FUSION_ITEMS) + ["module_blank"] + list(MODULES):
+    for item in list(FUSION_ITEMS) + ["module_blank"] + list(MODULES) + list(WEAPONS):
         img, frames = suit_icons.render(item)
         files[ASSETS / "textures" / "item" / f"{item}.png"] = png(img)
         if frames > 1:
             files[ASSETS / "textures" / "item" / f"{item}.png.mcmeta"] = (json.dumps(
                 {"animation": {"frametime": 2, "interpolate": False}}, indent=2) + "\n").encode()
+        parent = "minecraft:item/handheld" if item in WEAPONS else "minecraft:item/generated"
         files[ASSETS / "models" / "item" / f"{item}.json"] = (json.dumps(
-            {"parent": "minecraft:item/generated", "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
+            {"parent": parent, "textures": {"layer0": f"{MOD}:item/{item}"}}, indent=2) + "\n").encode()
     machines = [f"{MOD}:{n}" for n in MACHINES] + [f"{MOD}:{n}" for n in FUSION]
     for tag in ("mineable/pickaxe", "needs_iron_tool"):
         path = DATA / "minecraft" / "tags" / "block" / f"{tag}.json"
@@ -747,6 +765,10 @@ def outputs() -> dict[Path, bytes]:
             lang[f"item.{MOD}.{name}.effect"] = (effect_de, effect_en)[index]
         for key, (de, en) in MODULE_LANG.items():
             lang[key] = (de, en)[index]
+        for name, (de, en, special_de, special_en) in WEAPONS.items():
+            lang[f"item.{MOD}.{name}"] = (de, en)[index]
+            lang[f"tooltip.{MOD}.weapon.{name}"] = (special_de, special_en)[index]
+        lang[f"tooltip.{MOD}.weapon.cooldown"] = ("Abklingzeit: %s s", "Cooldown: %s s")[index]
         for key, (de, en) in FUSION_MESSAGES.items():
             lang[key] = (de, en)[index]
         files[path] = (json.dumps(lang, indent=2, ensure_ascii=False) + "\n").encode()

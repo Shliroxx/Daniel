@@ -70,6 +70,9 @@ def registered_items() -> list[str]:
     kinds = base / "suit" / "forge" / "MachineKind.java"
     if kinds.is_file():
         items += re.findall(r'\("([a-z0-9_]+)", \d+, 0x', kinds.read_text(encoding="utf-8"))
+    weapons = base / "suit" / "weapon" / "SuitWeapon.java"
+    if weapons.is_file():
+        items += re.findall(r'^\s*[A-Z_]+\("([a-z_]+)", SuitSet', weapons.read_text(encoding="utf-8"), re.M)
     modules = base / "suit" / "module" / "SuitModules.java"
     if modules.is_file():
         items += sorted(set(re.findall(r'"(module_[a-z_]+)"', modules.read_text(encoding="utf-8"))))

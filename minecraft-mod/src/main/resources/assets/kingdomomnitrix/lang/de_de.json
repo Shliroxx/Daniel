@@ -2385,5 +2385,18 @@
   "item.kingdomomnitrix.module_blank": "Leere Modulplatine",
   "tooltip.kingdomomnitrix.module.usage": "In der Werkbank zusammen mit einem Anzugteil einbauen.",
   "tooltip.kingdomomnitrix.module.limit": "Wirkt nur im vollstaendigen Anzug, je Art hoechstens %s.",
-  "tooltip.kingdomomnitrix.suit.modules": "Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)"
+  "tooltip.kingdomomnitrix.suit.modules": "Module: %s/%s (Teil allein in die Werkbank = letztes Modul ausbauen)",
+  "item.kingdomomnitrix.taydenite_blade": "Taydenit-Klinge",
+  "tooltip.kingdomomnitrix.weapon.taydenite_blade": "Rechtsklick: Kristallspur - Diamondhead-Kristalle brechen in einer Linie aus dem Boden",
+  "item.kingdomomnitrix.galvan_rifle": "Galvan-Biotech-Gewehr",
+  "tooltip.kingdomomnitrix.weapon.galvan_rifle": "Rechtsklick: durchdringender Biotech-Strahl (32 Bloecke)",
+  "item.kingdomomnitrix.star_sword": "Sternenschwert",
+  "tooltip.kingdomomnitrix.weapon.star_sword": "Rechtsklick: Sternenschlag - fuenf Meteore stuerzen auf den Zielpunkt",
+  "item.kingdomomnitrix.magnaplate_hammer": "Magnaplate-Hammer",
+  "tooltip.kingdomomnitrix.weapon.magnaplate_hammer": "Rechtsklick am Boden: Schockwellen-Schlag",
+  "item.kingdomomnitrix.carbonox_launcher": "Carbonox-Werfer",
+  "tooltip.kingdomomnitrix.weapon.carbonox_launcher": "Rechtsklick: explosive Plasmabolzen",
+  "item.kingdomomnitrix.infernox_ryno": "Infernox-R.Y.N.O.",
+  "tooltip.kingdomomnitrix.weapon.infernox_ryno": "Rechtsklick: Salve aus sechs Raketen",
+  "tooltip.kingdomomnitrix.weapon.cooldown": "Abklingzeit: %s s"
 }

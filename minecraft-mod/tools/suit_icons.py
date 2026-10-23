@@ -662,6 +662,183 @@ def module_card(color: str | None, symbol: str) -> tuple[Image.Image, int]:
     return ip.frames(icon, FRAMES if color else 1, halo=glow if color else None, halo_strength=0.35), FRAMES if color else 1
 
 
+# --- Waffen (diagonal wie Vanilla-Schwerter: Griff unten links, Spitze oben rechts) ---------------------------------
+
+def seg(p0, p1, w0, w1=None):
+    """Viereck entlang einer Strecke mit Breite w0 am Anfang und w1 am Ende."""
+    w1 = w0 if w1 is None else w1
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    ln = math.hypot(dx, dy)
+    nx, ny = -dy / ln, dx / ln
+    return [(p0[0] + nx * w0 / 2, p0[1] + ny * w0 / 2), (p1[0] + nx * w1 / 2, p1[1] + ny * w1 / 2),
+            (p1[0] - nx * w1 / 2, p1[1] - ny * w1 / 2), (p0[0] - nx * w0 / 2, p0[1] - ny * w0 / 2)]
+
+
+def along(p0, p1, t):
+    return (p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t)
+
+
+def metal_part(icon, pts, m, depth=8, strength=20):
+    mask = poly(pts)
+    icon.surface(mask, m, height=bevel(mask, depth), strength=strength)
+    return mask
+
+
+def blade_halves(icon, base, tip, width, m, extra_left=0.75, extra_right=0.35):
+    """Klinge mit Mittelgrat: linke Haelfte hell, rechte dunkler (zwei Facetten), dazu Spitze."""
+    dx, dy = tip[0] - base[0], tip[1] - base[1]
+    ln = math.hypot(dx, dy)
+    nx, ny = -dy / ln, dx / ln
+    shoulder = along(base, tip, 0.86)
+    left = [(base[0] + nx * width / 2, base[1] + ny * width / 2), (shoulder[0] + nx * width / 2, shoulder[1] + ny * width / 2), tip, shoulder, base]
+    right = [(base[0] - nx * width / 2, base[1] - ny * width / 2), (shoulder[0] - nx * width / 2, shoulder[1] - ny * width / 2), tip, shoulder, base]
+    icon.surface(poly(left), m, normal=ip.flat_normal(nx * 0.6, ny * 0.6, 0.8), extra=extra_left)
+    icon.surface(poly(right), m, normal=ip.flat_normal(-nx * 0.6, -ny * 0.6, 0.8), extra=extra_right)
+    return np.maximum(poly(left), poly(right))
+
+
+def taydenite_blade() -> tuple[Image.Image, int]:
+    icon = Icon()
+    m = gem("taydenite", spec=1.6)
+    base, tip = (92, 164), (236, 20)
+    grip_end = (30, 226)
+    metal_part(icon, seg(grip_end, base, 15), mat("rough", "0A1A12", "1E4A32", "6AC89A"), 5, 14)
+    for t in (0.2, 0.45, 0.7):
+        icon.glow(poly(seg(along(grip_end, base, t), along(grip_end, base, t + 0.06), 17)), "3AE89A", "E8FFF4", 0.8)
+    blade = blade_halves(icon, base, tip, 40, m)
+    icon.glow(line([along(base, tip, 0.05), along(base, tip, 0.86)], 2.5), "D8FFF0", "FFFFFF", 0.7)
+    icon.put(blade * 0, rgb("000000"), 0)
+    guard = seg((66, 138), (118, 190), 18)
+    metal_part(icon, guard, STEEL, 6, 18)
+    for c in ((60, 132), (124, 196)):
+        ip.prism(icon, (c[0], c[1] + 6), -45 if c[0] < 90 else 135, 26, 12, m)
+    icon.surface(ellipse(92, 164, 11, 11), m, height=dome(92, 164, 11, 11), strength=20)
+    icon.surface(ellipse(24, 232, 12, 12), m, height=dome(24, 232, 12, 12), strength=20)
+    icon.sparkle(214, 44, 30, "FFFFFF", 0.0)
+    return ip.frames(icon, FRAMES, halo="3AE89A", halo_strength=0.35), FRAMES
+
+
+def star_sword() -> tuple[Image.Image, int]:
+    icon = Icon()
+    cosmic = mat("cosmic", "06030F", "2A1468", "D8CCFF")
+    base, tip = (96, 160), (240, 16)
+    grip_end = (26, 230)
+    metal_part(icon, seg(grip_end, base, 17), GOLD, 5, 14)
+    for t in (0.25, 0.5, 0.75):
+        icon.put(poly(seg(along(grip_end, base, t), along(grip_end, base, t + 0.05), 19)), rgb("2A1468"), 1.0)
+    neb = ip.noise(17, 3, 4)
+    blade = np.maximum(poly(seg(base, along(base, tip, 0.84), 54)), poly([along(base, tip, 0.84)] + seg(along(base, tip, 0.84), tip, 54, 0)[1:3]))
+    blade = np.maximum(blade, poly(seg(along(base, tip, 0.8), tip, 54, 2)))
+    icon.surface(blade, cosmic, height=bevel(blade, 10) * 0.6, strength=24, extra=np.clip(neb * 1.3 - 0.2, 0, 1))
+    rng = np.random.default_rng(23)
+    stars = np.zeros((R, R))
+    for _ in range(40):
+        t = rng.uniform(0.05, 0.95)
+        c = along(base, tip, t)
+        stars = np.maximum(stars, ellipse(c[0] + rng.uniform(-16, 16), c[1] + rng.uniform(-16, 16), 2, 2))
+    icon.glow(stars * blade, "D8CCFF", "FFFFFF")
+    edge = np.clip(blade - (bevel(blade, 5) > 0.95), 0, 1)
+    icon.glow(edge, "B8A8FF", "FFFFFF", 0.9)
+    guard = seg((60, 128), (128, 196), 22)
+    metal_part(icon, guard, GOLD, 7, 18)
+    icon.glow(ip.ring(96, 162, 34, 34, 5), "D8CCFF", "FFFFFF")
+    icon.surface(ellipse(96, 162, 12, 12), gem("celestium", spec=1.6), height=dome(96, 162, 12, 12), strength=18)
+    icon.sparkle(226, 30, 34, "FFFFFF", 0.0)
+    icon.sparkle(150, 110, 18, "D8CCFF", 0.5)
+    return ip.frames(icon, FRAMES, halo="8A6AFF", halo_strength=0.6), FRAMES
+
+
+def galvan_rifle() -> tuple[Image.Image, int]:
+    icon = Icon()
+    shell = mat("metal", "020604", "16302A", "8AE8B0", 1.2)
+    stock = [(14, 200), (70, 150), (98, 176), (44, 230)]
+    metal_part(icon, stock, shell, 10, 22)
+    body = seg((60, 186), (176, 70), 52, 40)
+    metal_part(icon, body, shell, 14, 28)
+    barrel = seg((160, 86), (240, 8), 20, 14)
+    metal_part(icon, barrel, GUNMETAL, 6, 16)
+    icon.glow(poly(seg((236, 12), (244, 4), 18)), "4BFF6A", "FFFFFF")
+    for t in (0.2, 0.5, 0.8):
+        a = along((60, 186), (176, 70), t)
+        icon.glow(ellipse(a[0], a[1], 9, 9), "4BFF6A", "E8FFE8")
+    tube = line([(72, 196), (118, 150), (150, 118), (188, 80)], 7)
+    icon.glow(tube, "4BFF6A", "E8FFE8")
+    scope = seg((110, 104), (160, 54), 18)
+    metal_part(icon, scope, GUNMETAL, 6, 16)
+    icon.surface(ellipse(160, 54, 9, 9), gem("biotech"), normal=ip.flat_normal(0.3, -0.3, 0.9), extra=0.8)
+    grip = seg((92, 170), (104, 214), 16)
+    metal_part(icon, grip, GUNMETAL, 5, 14)
+    icon.sparkle(240, 8, 24, "E8FFE8", 0.2)
+    return ip.frames(icon, FRAMES, halo="3CFF5A", halo_strength=0.45), FRAMES
+
+
+def magnaplate_hammer() -> tuple[Image.Image, int]:
+    icon = Icon()
+    metal = mat("metal", "1E1238", "8A6AC0", "F2E8FF", 1.3)
+    metal_part(icon, seg((22, 234), (170, 86), 16), GUNMETAL, 5, 14)
+    for t in (0.1, 0.2, 0.3):
+        icon.put(poly(seg(along((22, 234), (170, 86), t), along((22, 234), (170, 86), t + 0.05), 18)), rgb("3A2A5A"), 1.0)
+    # Schraubenschluessel-Kopf: Ring mit Maul oben rechts
+    head = np.clip(ellipse(186, 70, 54, 54) - poly(seg((186, 70), (250, 6), 40)) - ellipse(196, 60, 22, 22), 0, 1)
+    icon.surface(head, metal, height=bevel(head, 14), strength=30)
+    neck = seg((140, 116), (176, 80), 34)
+    metal_part(icon, neck, metal, 10, 26)
+    icon.glow(ip.ring(186, 70, 40, 40, 4) * head, "C08AFF", "FFFFFF", 0.9)
+    for a in (2.4, 3.6, 4.8):
+        ip.bolt(icon, 186 + math.cos(a) * 40, 70 + math.sin(a) * 40, 8, STEEL)
+    icon.surface(ellipse(22, 234, 12, 12), metal, height=dome(22, 234, 12, 12), strength=16)
+    icon.sparkle(150, 40, 26, "FFFFFF", 0.1)
+    return ip.frames(icon, FRAMES, halo="A86AFF", halo_strength=0.3), FRAMES
+
+
+def carbonox_launcher() -> tuple[Image.Image, int]:
+    icon = Icon()
+    carbon = mat("metal", "050507", "2A2D36", "9AA2B6", 1.1)
+    metal_part(icon, [(18, 196), (64, 152), (94, 182), (48, 226)], carbon, 10, 22)
+    body = seg((56, 190), (166, 80), 62, 54)
+    metal_part(icon, body, carbon, 16, 30)
+    drum = ellipse(116, 134, 30, 30)
+    icon.surface(drum, GUNMETAL, height=dome(116, 134, 30, 30), strength=30)
+    for a in range(6):
+        ang = a * math.pi / 3
+        icon.glow(ellipse(116 + math.cos(ang) * 18, 134 + math.sin(ang) * 18, 5, 5), "FF2A2A", "FFD0C0")
+    barrel = seg((150, 96), (232, 16), 30, 26)
+    metal_part(icon, barrel, carbon, 10, 22)
+    icon.surface(ellipse(232, 16, 15, 15), GUNMETAL, height=-dome(232, 16, 15, 15), strength=16)
+    icon.glow(ellipse(232, 16, 8, 8), "FF2A2A", "FFFFFF")
+    for t in (0.25, 0.55, 0.85):
+        a = along((150, 96), (232, 16), t)
+        icon.glow(poly(seg((a[0] - 4, a[1] + 4), (a[0] + 4, a[1] - 4), 34)), "FF2A2A", "FFB0A0", 0.85)
+    metal_part(icon, seg((96, 178), (112, 218), 18), GUNMETAL, 5, 14)
+    icon.outline = rgb("1A0406")
+    return ip.frames(icon, FRAMES, halo="FF2020", halo_strength=0.4, shine_color="FFD8D8"), FRAMES
+
+
+def infernox_ryno() -> tuple[Image.Image, int]:
+    icon = Icon()
+    shell = mat("metal", "0A0302", "4A2010", "E8A060", 1.1)
+    metal_part(icon, [(16, 204), (60, 160), (92, 190), (46, 234)], shell, 10, 22)
+    body = seg((50, 196), (150, 96), 78, 70)
+    metal_part(icon, body, shell, 18, 32)
+    # sechs Raketenrohre im Buendel
+    for i, (ox, oy) in enumerate(((0, 0), (-16, -16), (16, 16), (-28, 6), (28, -6), (0, 0))):
+        if i == 5:
+            continue
+        p0, p1 = (130 + ox, 116 + oy), (214 + ox, 32 + oy)
+        metal_part(icon, seg(p0, p1, 22), GUNMETAL, 7, 18)
+        icon.surface(ellipse(p1[0], p1[1], 11, 11), GUNMETAL, height=-dome(p1[0], p1[1], 11, 11), strength=14)
+        icon.glow(ellipse(p1[0], p1[1], 6, 6), "FF8A1A", "FFF2A0")
+    icon.glow(poly(seg((70, 176), (130, 116), 10)), "FF6A10", "FFF2A0")
+    m = gem("infernite", spec=1.6)
+    icon.surface(ellipse(98, 148, 16, 16), m, height=dome(98, 148, 16, 16), strength=20, extra=0.8)
+    for x, y in ((60, 164), (128, 100)):
+        ip.bolt(icon, x, y, 8, GOLD)
+    icon.sparkle(214, 32, 28, "FFF2A0", 0.1)
+    icon.sparkle(186, 4, 18, "FFB060", 0.6)
+    icon.outline = rgb("200402")
+    return ip.frames(icon, FRAMES, halo="FF5A0A", halo_strength=0.6, shine_color="FFE0B0"), FRAMES
+
+
 # --- Verzeichnis ---------------------------------------------------------------------------------------------------
 
 BUILDERS = {
@@ -697,6 +874,12 @@ BUILDERS = {
     "module_speed": lambda: module_card("4BFF6A", "speed"),
     "module_strength": lambda: module_card("FF4A3A", "fist"),
     "module_vitality": lambda: module_card("FF6AB0", "heart"),
+    "taydenite_blade": taydenite_blade,
+    "galvan_rifle": galvan_rifle,
+    "star_sword": star_sword,
+    "magnaplate_hammer": magnaplate_hammer,
+    "carbonox_launcher": carbonox_launcher,
+    "infernox_ryno": infernox_ryno,
 }
 
 

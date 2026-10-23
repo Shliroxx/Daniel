@@ -3,6 +3,8 @@ package com.santiq.kingdomomnitrix.suit.fusion;
 import com.santiq.kingdomomnitrix.suit.SuitItems;
 import com.santiq.kingdomomnitrix.suit.SuitSet;
 import com.santiq.kingdomomnitrix.suit.forge.ForgeMaterials;
+import com.santiq.kingdomomnitrix.suit.weapon.SuitWeapon;
+import com.santiq.kingdomomnitrix.suit.weapon.SuitWeapons;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -54,9 +56,21 @@ public final class FusionRecipes {
 				new Item[] {ForgeMaterials.TAYDENITE_PLATE, ForgeMaterials.BIOTECH_WEAVE, ForgeMaterials.STAR_MATRIX});
 		line(new SuitSet[] {SuitSet.MAGNAPLATE, SuitSet.CARBONOX, SuitSet.INFERNOX},
 				new Item[] {ForgeMaterials.MAGNAPLATE_PLATING, ForgeMaterials.CARBONOX_PLATE, ForgeMaterials.HELLFIRE_PLATE});
+		// Waffen: vier Platten, Energiekerne und Dauer wie die Ruestung derselben Stufe
+		weapon(Items.NETHERITE_SWORD, ForgeMaterials.TAYDENITE_PLATE, SuitWeapon.TAYDENITE_BLADE);
+		weapon(Items.CROSSBOW, ForgeMaterials.BIOTECH_WEAVE, SuitWeapon.GALVAN_RIFLE);
+		weapon(SuitWeapons.item(SuitWeapon.TAYDENITE_BLADE), ForgeMaterials.STAR_MATRIX, SuitWeapon.STAR_SWORD);
+		weapon(Items.NETHERITE_AXE, ForgeMaterials.MAGNAPLATE_PLATING, SuitWeapon.MAGNAPLATE_HAMMER);
+		weapon(Items.CROSSBOW, ForgeMaterials.CARBONOX_PLATE, SuitWeapon.CARBONOX_LAUNCHER);
+		weapon(SuitWeapons.item(SuitWeapon.CARBONOX_LAUNCHER), ForgeMaterials.HELLFIRE_PLATE, SuitWeapon.INFERNOX_RYNO);
 	}
 
 	private FusionRecipes() {
+	}
+
+	private static void weapon(Item center, Item plate, SuitWeapon weapon) {
+		int t = weapon.set().tier();
+		RECIPES.add(new Recipe(center, plate, 4, 2 << (t - 1), 200 * t, SuitWeapons.item(weapon), t));
 	}
 
 	private static void line(SuitSet[] tiers, Item[] plates) {
