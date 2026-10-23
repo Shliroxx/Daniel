@@ -2233,5 +2233,9 @@
   "screen.kingdomomnitrix.galaxy.chart.main": "Known Galaxy",
   "screen.kingdomomnitrix.galaxy.chart.aliens": "Alien Homeworlds",
   "screen.kingdomomnitrix.aliens.dna_species": "• %s — %s",
-  "entity.kingdomomnitrix.wild_alien": "Wild Alien"
+  "entity.kingdomomnitrix.wild_alien": "Wild Alien",
+  "block.kingdomomnitrix.petropia_cluster": "Crystal Cluster",
+  "block.kingdomomnitrix.petropia_smooth_rock": "Smooth Petropia Stone",
+  "block.kingdomomnitrix.petropia_crystal_log": "Crystal Trunk",
+  "block.kingdomomnitrix.petropia_crystal_leaves": "Crystal Foliage"
 }

@@ -2233,5 +2233,9 @@
   "screen.kingdomomnitrix.galaxy.chart.main": "Bekannte Galaxie",
   "screen.kingdomomnitrix.galaxy.chart.aliens": "Alien-Heimatwelten",
   "screen.kingdomomnitrix.aliens.dna_species": "• %s — %s",
-  "entity.kingdomomnitrix.wild_alien": "Wildes Alien"
+  "entity.kingdomomnitrix.wild_alien": "Wildes Alien",
+  "block.kingdomomnitrix.petropia_cluster": "Kristallbueschel",
+  "block.kingdomomnitrix.petropia_smooth_rock": "Glatter Petropia-Stein",
+  "block.kingdomomnitrix.petropia_crystal_log": "Kristallstamm",
+  "block.kingdomomnitrix.petropia_crystal_leaves": "Kristalllaub"
 }

@@ -92,6 +92,14 @@ public final class PlanetBlocks {
 	public static final Block PETROPIA_CRYSTAL = register("petropia_crystal", new Block(base(MapColor.EMERALD_GREEN, 1.5f, 6.0f, BlockSoundGroup.AMETHYST_BLOCK, 8, true)));
 	/** Kristallspross */
 	public static final Block PETROPIA_SPROUT = register("petropia_sprout", new AlienPlantBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).noCollision().breakInstantly().sounds(BlockSoundGroup.AMETHYST_CLUSTER).luminance(state -> 6).offset(AbstractBlock.OffsetType.XZ).replaceable().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Kristallbueschel */
+	public static final Block PETROPIA_CLUSTER = register("petropia_cluster", new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor(MapColor.EMERALD_GREEN).strength(0.6f, 1.0f).sounds(BlockSoundGroup.AMETHYST_CLUSTER).luminance(state -> 6).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Glatter Petropia-Stein */
+	public static final Block PETROPIA_SMOOTH_ROCK = register("petropia_smooth_rock", new Block(base(MapColor.CYAN, 1.6f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Kristallstamm */
+	public static final Block PETROPIA_CRYSTAL_LOG = register("petropia_crystal_log", new PillarBlock(base(MapColor.CYAN, 2.0f, 2.0f, BlockSoundGroup.AMETHYST_BLOCK, 0, true).instrument(NoteBlockInstrument.BASS).burnable()));
+	/** Kristalllaub */
+	public static final Block PETROPIA_CRYSTAL_LEAVES = register("petropia_crystal_leaves", new LeavesBlock(AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).mapColor(MapColor.EMERALD_GREEN).sounds(BlockSoundGroup.AMETHYST_CLUSTER)));
 	/** Galvan-Moos */
 	public static final Block GALVAN_MOSS = register("galvan_moss", new Block(base(MapColor.LIME, 0.7f, 0.7f, BlockSoundGroup.MOSS_BLOCK, 0, false)));
 	/** Galvan-Schlick */
@@ -183,8 +191,8 @@ public final class PlanetBlocks {
 
 	/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */
 	public static final List<Block> CUTOUT = List.of(VELDIN_SCRUB, KERWAN_REED, NOVALIS_BLOOM, RILGAR_SEAGRASS, TORREN_THORN, SONOROSIA_REED, PETROPIA_SPROUT, GALVAN_FERN, MECHAMORPH_VINE, KYLMYYS_FROSTFERN, VULPIN_THORN, PISCCISS_GRASS, GRATE);
-	public static final List<Block> CUTOUT_MIPPED = List.of(KERWAN_LEAVES, NOVALIS_LEAVES, RILGAR_LEAVES);
-	public static final List<Block> TRANSLUCENT = List.of(TECH_GLASS, PETROSAPIEN_CRYSTAL, PETROSAPIEN_SPIKE, NECROFRIGGIAN_ICE, NECROFRIGGIAN_SPIKE);
+	public static final List<Block> CUTOUT_MIPPED = List.of(KERWAN_LEAVES, NOVALIS_LEAVES, RILGAR_LEAVES, PETROPIA_CRYSTAL_LEAVES);
+	public static final List<Block> TRANSLUCENT = List.of(PETROPIA_CLUSTER, TECH_GLASS, PETROSAPIEN_CRYSTAL, PETROSAPIEN_SPIKE, NECROFRIGGIAN_ICE, NECROFRIGGIAN_SPIKE);
 
 	private PlanetBlocks() {
 	}

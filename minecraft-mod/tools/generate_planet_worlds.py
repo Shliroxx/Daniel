@@ -32,7 +32,7 @@ VANILLA = ROOT / "tools" / "reference" / "vanilla_worldgen"
 
 
 def b(name: str) -> str:
-    return f"{MOD}:{name}"
+    return name if ":" in name else f"{MOD}:{name}"
 
 
 def state(name: str, **props) -> dict:
@@ -40,6 +40,144 @@ def state(name: str, **props) -> dict:
     if props:
         s["Properties"] = {k: str(v).lower() for k, v in props.items()}
     return s
+
+
+# --- Feature-Baukasten (wie die grossen Weltgenerierungs-Mods: Vanilla-Feature-Typen, geschickt kombiniert) --------
+# Jedes Feature: (Generierungsschritt, configured_feature, placed_feature). Schritte wie Vanilla: 1 Seen,
+# 2 lokale Veraenderungen (Geoden, Felsbrocken), 6 Erze/Bodenflecken, 8 Quellen, 9 Vegetation.
+# Die Reihenfolge der Definition ist die feste Reihenfolge in allen Biomen (Minecraft verlangt eine einheitliche).
+KIT: dict[str, tuple[int, dict, dict]] = {}
+
+
+def simple(name: str, **props) -> dict:
+    return {"type": "minecraft:simple_state_provider", "state": state(name, **props)}
+
+
+def _kit(fid: str, step: int, configured: dict, placement: list[dict]) -> str:
+    KIT[fid] = (step, configured, {"feature": b(fid), "placement": placement})
+    return fid
+
+
+def _surface(count: int, heightmap: str = "MOTION_BLOCKING") -> list[dict]:
+    return [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+            {"type": "minecraft:heightmap", "heightmap": heightmap}]
+
+
+def _air_on_solid() -> dict:
+    return {"type": "minecraft:block_predicate_filter", "predicate": {"type": "minecraft:all_of", "predicates": [
+        {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+        {"type": "minecraft:solid", "offset": [0, -1, 0]}]}}
+
+
+def kit_spires(fid: str, block: str, count: int, lo: int, hi: int) -> str:
+    """Kristall-/Eissaeulen: senkrechte Bloecksaeulen 'lo'–'hi' hoch."""
+    return _kit(fid, 9, {"type": "minecraft:block_column", "config": {
+        "direction": "up", "allowed_placement": {"type": "minecraft:matching_blocks", "blocks": "minecraft:air"},
+        "prioritize_tip": True, "layers": [{"height": {"type": "minecraft:uniform", "min_inclusive": lo, "max_inclusive": hi},
+                                            "provider": simple(block)}]}},
+        _surface(count) + [_air_on_solid(), {"type": "minecraft:biome"}])
+
+
+def kit_cluster_patch(fid: str, block: str, count: int, tries: int) -> str:
+    """Bueschel (Kristallspitzen, Steinchen) verstreut auf festem Boden."""
+    return _kit(fid, 9, {"type": "minecraft:random_patch", "config": {"tries": tries, "xz_spread": 6, "y_spread": 2, "feature": {
+        "feature": {"type": "minecraft:simple_block", "config": {"to_place": simple(block)}},
+        "placement": [_air_on_solid()]}}},
+        _surface(count) + [{"type": "minecraft:biome"}])
+
+
+def kit_boulder(fid: str, block: str, count: int) -> str:
+    """Felsbrocken (Vanilla forest_rock)."""
+    return _kit(fid, 2, {"type": "minecraft:forest_rock", "config": {"state": state(block)}},
+                _surface(count) + [{"type": "minecraft:biome"}])
+
+
+def kit_geode(fid: str, outer: str, middle: str, inner: str, cluster: str, rarity: int, ymin: int, ymax: int) -> str:
+    """Geode wie Amethyst: aussen Gestein, Mittelschicht, Kristallschale mit Buescheln innen."""
+    return _kit(fid, 2, {"type": "minecraft:geode", "config": {
+        "blocks": {"filling_provider": simple("minecraft:air"), "inner_layer_provider": simple(inner),
+                   "alternate_inner_layer_provider": simple(inner), "middle_layer_provider": simple(middle),
+                   "outer_layer_provider": simple(outer), "inner_placements": [state(cluster)],
+                   "cannot_replace": "#minecraft:features_cannot_replace", "invalid_blocks": "#minecraft:geode_invalid_blocks"},
+        "layers": {"filling": 1.7, "inner_layer": 2.2, "middle_layer": 3.2, "outer_layer": 4.2},
+        "crack": {"generate_crack_chance": 0.95, "base_crack_size": 2.0, "crack_point_offset": 2},
+        "use_potential_placements_chance": 0.35, "use_alternate_layer0_chance": 0.083, "placements_require_layer0_alternate": False,
+        "outer_wall_distance": {"type": "minecraft:uniform", "min_inclusive": 4, "max_inclusive": 6},
+        "distribution_points": {"type": "minecraft:uniform", "min_inclusive": 3, "max_inclusive": 4},
+        "point_offset": {"type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2},
+        "min_gen_offset": -16, "max_gen_offset": 16, "noise_multiplier": 0.05, "invalid_blocks_threshold": 1}},
+        [{"type": "minecraft:rarity_filter", "chance": rarity}, {"type": "minecraft:in_square"},
+         {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform", "min_inclusive": {"absolute": ymin},
+                                                       "max_inclusive": {"absolute": ymax}}},
+         {"type": "minecraft:biome"}])
+
+
+def kit_disk(fid: str, block: str, targets: list[str], count: int, rmin: int, rmax: int) -> str:
+    """Bodenfleck: ersetzt die Oberflaeche rund um einen Punkt (wie Kies-/Sandflecken)."""
+    return _kit(fid, 6, {"type": "minecraft:disk", "config": {
+        "state_provider": {"fallback": simple(block), "rules": []},
+        "target": {"type": "minecraft:matching_blocks", "blocks": [b(t) for t in targets]},
+        "radius": {"type": "minecraft:uniform", "min_inclusive": rmin, "max_inclusive": rmax}, "half_height": 2}},
+        _surface(count, "WORLD_SURFACE_WG") + [{"type": "minecraft:random_offset", "xz_spread": 0, "y_spread": -1},
+                                               {"type": "minecraft:biome"}])
+
+
+def kit_spring(fid: str, fluid: str, valid: list[str], count: int) -> str:
+    """Quelle in Felswaenden (Wasserfaelle)."""
+    return _kit(fid, 8, {"type": "minecraft:spring_feature", "config": {
+        "state": {"Name": fluid, "Properties": {"falling": "true"}}, "requires_block_below": True, "rock_count": 4,
+        "hole_count": 1, "valid_blocks": [b(v) for v in valid]}},
+        [{"type": "minecraft:count", "count": count}, {"type": "minecraft:in_square"},
+         {"type": "minecraft:height_range", "height": {"type": "minecraft:uniform", "min_inclusive": {"absolute": 50},
+                                                       "max_inclusive": {"absolute": 200}}},
+         {"type": "minecraft:biome"}])
+
+
+def kit_lake(fid: str, fluid: str, barrier: str, rarity: int) -> str:
+    """Oberflaechensee."""
+    return _kit(fid, 1, {"type": "minecraft:lake", "config": {"fluid": simple(fluid, level="0"), "barrier": simple(barrier)}},
+                [{"type": "minecraft:rarity_filter", "chance": rarity}, {"type": "minecraft:in_square"},
+                 {"type": "minecraft:heightmap", "heightmap": "WORLD_SURFACE_WG"}, {"type": "minecraft:biome"}])
+
+
+def carvers(planet: str) -> dict[str, dict]:
+    """Hoehlen und Schluchten in den eigenen Gesteinen (Vanilla-Werte, eigene ersetzbare Bloecke)."""
+    debug = {"air_state": {"Name": "minecraft:crimson_button", "Properties": {"face": "wall", "facing": "north", "powered": "false"}}}
+    cave = {"type": "minecraft:cave", "config": {
+        "debug_settings": debug, "floor_level": {"type": "minecraft:uniform", "min_inclusive": -1.0, "max_exclusive": -0.4},
+        "horizontal_radius_multiplier": {"type": "minecraft:uniform", "min_inclusive": 0.7, "max_exclusive": 1.4},
+        "lava_level": {"above_bottom": 8}, "probability": 0.15, "replaceable": f"#{MOD}:carver_replaceables",
+        "vertical_radius_multiplier": {"type": "minecraft:uniform", "min_inclusive": 0.8, "max_exclusive": 1.3},
+        "y": {"type": "minecraft:uniform", "min_inclusive": {"above_bottom": 8}, "max_inclusive": {"absolute": 180}},
+        "yScale": {"type": "minecraft:uniform", "min_inclusive": 0.1, "max_exclusive": 0.9}}}
+    canyon = {"type": "minecraft:canyon", "config": {
+        "debug_settings": debug, "lava_level": {"above_bottom": 8}, "probability": 0.02, "replaceable": f"#{MOD}:carver_replaceables",
+        "shape": {"distance_factor": {"type": "minecraft:uniform", "min_inclusive": 0.75, "max_exclusive": 1.0},
+                  "horizontal_radius_factor": {"type": "minecraft:uniform", "min_inclusive": 0.75, "max_exclusive": 1.0},
+                  "thickness": {"type": "minecraft:trapezoid", "min": 0.0, "max": 6.0, "plateau": 2.0},
+                  "vertical_radius_center_factor": 0.0, "vertical_radius_default_factor": 1.0, "width_smoothness": 3},
+        "vertical_rotation": {"type": "minecraft:uniform", "min_inclusive": -0.125, "max_exclusive": 0.125},
+        "y": {"type": "minecraft:uniform", "min_inclusive": {"absolute": 10}, "max_inclusive": {"absolute": 120}}, "yScale": 3.0}}
+    return {f"{planet}_cave": cave, f"{planet}_canyon": canyon}
+
+
+# Petropia (Pilotwelt): Kristallwelt mit sechs Biomen
+PETROPIA_KIT = {
+    "spires_sparse": kit_spires("petropia_spires_sparse", "petropia_crystal", 1, 2, 5),
+    "spires_dense": kit_spires("petropia_spires_dense", "petropia_crystal", 7, 3, 10),
+    "clusters": kit_cluster_patch("petropia_clusters", "petropia_cluster", 3, 20),
+    "clusters_dense": kit_cluster_patch("petropia_clusters_dense", "petropia_cluster", 8, 32),
+    "boulders": kit_boulder("petropia_boulders", "petropia_rock", 2),
+    "boulders_crystal": kit_boulder("petropia_boulders_crystal", "petropia_crystal", 1),
+    "disk_smooth": kit_disk("petropia_disk_smooth", "petropia_smooth_rock", ["petropia_shards", "petropia_rock"], 3, 2, 5),
+    "disk_shards": kit_disk("petropia_disk_shards", "petropia_shards", ["petropia_rock"], 2, 2, 4),
+    "geode_surface": kit_geode("petropia_geode_surface", "petropia_rock", "petropia_smooth_rock", "petropia_crystal",
+                               "petropia_cluster", 3, 60, 110),
+    "geode_deep": kit_geode("petropia_geode_deep", "petropia_rock", "petropia_smooth_rock", "petropia_crystal",
+                            "petropia_cluster", 10, 6, 50),
+    "spring": kit_spring("petropia_spring", "minecraft:water", ["petropia_rock", "petropia_smooth_rock"], 18),
+    "lake": kit_lake("petropia_lake", "minecraft:water", "petropia_smooth_rock", 6),
+}
 
 
 PLANETS = {
@@ -135,14 +273,37 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
     "petropia": {
-        "terrain": "amplified",
+        "terrain": "amplified", "caves": True,
         "stone": "petropia_rock", "top": "petropia_shards", "under": "petropia_shards", "steep": "petropia_rock", "sea": False,
-        "ore": None, "blobs": [("petropia_crystal", 12, 28)],
+        "ore": None, "blobs": [("petropia_crystal", 12, 28), ("petropia_smooth_rock", 8, 40)],
+        # in allen Biomen: tiefe Geoden, Quellen in Felswaenden
+        "extras": ["geode_deep", "spring"], "kit": PETROPIA_KIT,
         "biomes": {
             "crystal_plains": {"sky": 0x7AE8C8, "fog": 0xA8F0E0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.0015),
-                               "plants": [("petropia_sprout", 3, 28)], "trees": [], "high_top": "petropia_crystal"},
+                               "plants": [("petropia_sprout", 3, 28)], "trees": [], "high_top": "petropia_crystal",
+                               "climate": {"temperature": [-1.0, -0.2], "humidity": [-1.0, 0.1]},
+                               "extras": ["spires_sparse", "clusters", "boulders"], "chime": 0.004},
+            "crystal_forest": {"sky": 0x6ADCB8, "fog": 0x98E8D0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.003),
+                               "plants": [("petropia_sprout", 4, 32)],
+                               "trees": [("petropia_crystal_tree", 7), ("petropia_shard_tree", 2)],
+                               "climate": {"temperature": [-1.0, -0.2], "humidity": [0.1, 1.0]},
+                               "extras": ["clusters"], "chime": 0.008},
             "shard_wastes": {"sky": 0x4AA890, "fog": 0x78C8B0, "water": 0x3AD0B0, "particle": None,
-                             "plants": [("petropia_sprout", 1, 12)], "trees": [], "top": "petropia_rock"},
+                             "plants": [("petropia_sprout", 1, 12)], "trees": [], "top": "petropia_rock",
+                             "climate": {"temperature": [-0.2, 0.5], "humidity": [-1.0, -0.1]},
+                             "extras": ["spires_sparse", "boulders", "boulders_crystal", "disk_smooth", "disk_shards"], "chime": 0.002},
+            "geode_fields": {"sky": 0x58C8A8, "fog": 0x88D8C0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.002),
+                             "plants": [("petropia_sprout", 2, 20)], "trees": [("petropia_shard_tree", 1)],
+                             "climate": {"temperature": [-0.2, 0.5], "humidity": [-0.1, 1.0]},
+                             "extras": ["geode_surface", "spires_sparse", "clusters_dense"], "chime": 0.01},
+            "shattered_basin": {"sky": 0x8AF0D8, "fog": 0xB8F8E8, "water": 0x2AC0C8, "particle": None,
+                                "plants": [("petropia_sprout", 3, 24)], "trees": [("petropia_crystal_tree", 2)],
+                                "climate": {"temperature": [0.5, 1.0], "humidity": [-1.0, 1.0]},
+                                "extras": ["lake", "disk_smooth", "clusters"], "chime": 0.004},
+            "prism_peaks": {"sky": 0x9AF8E0, "fog": 0xC8FFF0, "water": 0x3AD0B0, "particle": ("minecraft:end_rod", 0.004),
+                            "plants": [("petropia_sprout", 1, 8)], "trees": [], "high_top": "petropia_crystal",
+                            "climate": {"erosion": [-1.0, -0.6]},
+                            "extras": ["spires_dense", "clusters", "boulders_crystal"], "chime": 0.012},
         },
         "monsters": [],
     },
@@ -234,6 +395,19 @@ TREES = {
         "trunk": {"type": "minecraft:fancy_trunk_placer", "base_height": 5, "height_rand_a": 5, "height_rand_b": 0},
         "foliage": {"type": "minecraft:fancy_foliage_placer", "radius": 2, "offset": 4, "height": 4},
         "size": {"type": "minecraft:two_layers_feature_size", "limit": 0, "lower_size": 0, "upper_size": 0, "min_clipped_height": 4},
+    },
+    "petropia_crystal_tree": {
+        "log": "petropia_crystal_log", "leaves": "petropia_crystal_leaves", "soil": "petropia_shards",
+        "trunk": {"type": "minecraft:straight_trunk_placer", "base_height": 5, "height_rand_a": 3, "height_rand_b": 1},
+        "foliage": {"type": "minecraft:blob_foliage_placer", "radius": {"type": "minecraft:uniform", "min_inclusive": 2, "max_inclusive": 3},
+                    "offset": 0, "height": 3},
+        "size": {"type": "minecraft:two_layers_feature_size", "limit": 1, "lower_size": 0, "upper_size": 1},
+    },
+    "petropia_shard_tree": {
+        "log": "petropia_crystal_log", "leaves": "petropia_crystal_leaves", "soil": "petropia_shards",
+        "trunk": {"type": "minecraft:forking_trunk_placer", "base_height": 4, "height_rand_a": 2, "height_rand_b": 2},
+        "foliage": {"type": "minecraft:acacia_foliage_placer", "radius": 2, "offset": 0},
+        "size": {"type": "minecraft:two_layers_feature_size", "limit": 1, "lower_size": 0, "upper_size": 2},
     },
     "rilgar_mangrove": {
         "log": "rilgar_log", "leaves": "rilgar_leaves", "soil": "rilgar_sand",
@@ -432,9 +606,20 @@ def biome(planet: str, name: str, cfg: dict, bc: dict, feature_ids: dict) -> dic
                "mood_sound": {"sound": "minecraft:ambient.cave", "tick_delay": 6000, "block_search_extent": 8, "offset": 2.0}}
     if bc["particle"]:
         effects["particle"] = {"options": {"type": bc["particle"][0]}, "probability": bc["particle"][1]}
+    if "chime" in bc:
+        # leise Zusatzklaenge (Kristallklingen u. a.), wie Nether-/End-Biome ihre Atmosphaere bekommen
+        effects["additions_sound"] = {"sound": bc.get("ambient_sound", "minecraft:block.amethyst_block.chime"), "tick_chance": bc["chime"]}
     features: list[list[str]] = [[] for _ in range(11)]
-    features[6] = feature_ids["ores"]
-    features[9] = [f"{MOD}:{planet}_{t}" for t, _ in bc["trees"]] + [f"{MOD}:{planet}_{name}_{p}" for p, _, _ in bc["plants"]]
+    features[6] = list(feature_ids["ores"])
+    trees = sorted((t for t, _ in bc["trees"]), key=list(TREES).index)
+    features[9] = [f"{MOD}:{planet}_{t}" for t in trees]
+    # Baukasten-Features: fuer die ganze Welt + fuer dieses Biom, in fester globaler Reihenfolge
+    kit_map = cfg.get("kit", {})
+    chosen = {kit_map[k] for k in cfg.get("extras", []) + bc.get("extras", [])}
+    for fid in KIT:
+        if fid in chosen:
+            features[KIT[fid][0]].append(b(fid))
+    features[9] += [f"{MOD}:{planet}_{name}_{p}" for p, _, _ in bc["plants"]]
     monsters = [{"type": f"{MOD}:{mob}", "weight": w, "minCount": lo, "maxCount": hi} for mob, w, lo, hi in cfg["monsters"]]
     spawners = {"monster": monsters, "creature": [], "ambient": [], "water_creature": [], "water_ambient": [],
                 "underground_water_creature": [], "axolotls": [], "misc": []}
@@ -443,15 +628,27 @@ def biome(planet: str, name: str, cfg: dict, bc: dict, feature_ids: dict) -> dic
         spawners[group] += [{"type": mob, "weight": w, "minCount": lo, "maxCount": hi} for mob, w, lo, hi in mobs]
     return {"has_precipitation": False, "temperature": 0.8, "downfall": 0.1, "effects": effects,
             "spawners": spawners,
-            "spawn_costs": {}, "carvers": {"air": []}, "features": features}
+            "spawn_costs": {}, "carvers": {"air": [b(f"{planet}_cave"), b(f"{planet}_canyon")] if cfg.get("caves") else []},
+            "features": features}
 
 
 def dimension(planet: str, cfg: dict) -> dict:
+    """Biomverteilung nach Klima (eigene Rauschfelder der Welt). Ohne "climate": zwei Biome nach Temperatur."""
+    full = {"temperature": [-1.0, 1.0], "humidity": [-1.0, 1.0], "continentalness": [-1.2, 1.0], "erosion": [-1.0, 1.0],
+            "weirdness": [-1.0, 1.0]}
+    claimed_erosion = [bc["climate"]["erosion"] for bc in cfg["biomes"].values() if "erosion" in bc.get("climate", {})]
+    if claimed_erosion:
+        # Biome mit eigener Erosion (Gipfel) bekommen diese Zone; alle anderen den Rest
+        full["erosion"] = [max(e[1] for e in claimed_erosion), 1.0]
     entries = []
-    for (lo, hi), name in zip(SPLIT, cfg["biomes"]):
-        entries.append({"biome": b(f"{planet}/{name}"), "parameters": {
-            "temperature": [lo, hi], "humidity": [-1.0, 1.0], "continentalness": [-1.2, 1.0], "erosion": [-1.0, 1.0],
-            "weirdness": [-1.0, 1.0], "depth": 0.0, "offset": 0.0}})
+    for i, (name, bc) in enumerate(cfg["biomes"].items()):
+        params = dict(full)
+        if "climate" in bc:
+            params.update(bc["climate"])
+        elif i < len(SPLIT):
+            params["temperature"] = list(SPLIT[i])
+        params.update({"depth": 0.0, "offset": 0.0})
+        entries.append({"biome": b(f"{planet}/{name}"), "parameters": params})
     return {"type": "minecraft:overworld", "generator": {"type": "minecraft:noise", "settings": b(planet),
                                                            "biome_source": {"type": "minecraft:multi_noise", "biomes": entries}}}
 
@@ -462,6 +659,11 @@ def outputs() -> dict[Path, dict]:
     wg = DATA / "worldgen"
     for tree, t in TREES.items():
         files[wg / "configured_feature" / f"{tree}.json"] = tree_feature(t)
+    for fid, (_, configured, placed) in KIT.items():
+        files[wg / "configured_feature" / f"{fid}.json"] = configured
+        files[wg / "placed_feature" / f"{fid}.json"] = placed
+    files[DATA / "tags" / "block" / "carver_replaceables.json"] = {
+        "replace": False, "values": [f"#{MOD}:planet_stone", f"#{MOD}:alien_soil"]}
     for planet, cfg in PLANETS.items():
         world_template, terrain_files = terrain(planet, cfg)
         files.update(terrain_files)
@@ -486,6 +688,9 @@ def outputs() -> dict[Path, dict]:
                 files[wg / "placed_feature" / f"{fid}.json"] = patch_placed(fid, count)
             files[wg / "biome" / planet / f"{name}.json"] = biome(planet, name, cfg, bc, {"ores": ores})
         files[DATA / "dimension" / f"{planet}.json"] = dimension(planet, cfg)
+        if cfg.get("caves"):
+            for cid, carver in carvers(planet).items():
+                files[wg / "configured_carver" / f"{cid}.json"] = carver
     for planet, (pos, color, size, order) in ALIEN_CHART.items():
         files[DATA / MOD / "planet" / f"{planet}.json"] = {"dimension": f"{MOD}:{planet}", "system": "homeworlds", "chart": "aliens",
                                                             "map": pos, "color": color, "size": size, "order": order,

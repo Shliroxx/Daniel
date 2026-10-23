@@ -14,6 +14,10 @@
       "tick_delay": 6000,
       "block_search_extent": 8,
       "offset": 2.0
+    },
+    "additions_sound": {
+      "sound": "minecraft:block.amethyst_block.chime",
+      "tick_chance": 0.002
     }
   },
   "spawners": {
@@ -28,21 +32,34 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:petropia_cave",
+      "kingdomomnitrix:petropia_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
-    [],
-    [],
-    [],
     [
-      "kingdomomnitrix:petropia_blob_petropia_crystal"
+      "kingdomomnitrix:petropia_boulders",
+      "kingdomomnitrix:petropia_boulders_crystal",
+      "kingdomomnitrix:petropia_geode_deep"
     ],
     [],
     [],
+    [],
     [
+      "kingdomomnitrix:petropia_blob_petropia_crystal",
+      "kingdomomnitrix:petropia_blob_petropia_smooth_rock",
+      "kingdomomnitrix:petropia_disk_smooth",
+      "kingdomomnitrix:petropia_disk_shards"
+    ],
+    [],
+    [
+      "kingdomomnitrix:petropia_spring"
+    ],
+    [
+      "kingdomomnitrix:petropia_spires_sparse",
       "kingdomomnitrix:petropia_shard_wastes_petropia_sprout"
     ],
     []

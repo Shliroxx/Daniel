@@ -1,0 +1,71 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 7003320,
+    "fog_color": 10021072,
+    "water_color": 3854512,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:end_rod"
+      },
+      "probability": 0.003
+    },
+    "additions_sound": {
+      "sound": "minecraft:block.amethyst_block.chime",
+      "tick_chance": 0.008
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "kingdomomnitrix:petropia_cave",
+      "kingdomomnitrix:petropia_canyon"
+    ]
+  },
+  "features": [
+    [],
+    [],
+    [
+      "kingdomomnitrix:petropia_geode_deep"
+    ],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:petropia_blob_petropia_crystal",
+      "kingdomomnitrix:petropia_blob_petropia_smooth_rock"
+    ],
+    [],
+    [
+      "kingdomomnitrix:petropia_spring"
+    ],
+    [
+      "kingdomomnitrix:petropia_petropia_crystal_tree",
+      "kingdomomnitrix:petropia_petropia_shard_tree",
+      "kingdomomnitrix:petropia_clusters",
+      "kingdomomnitrix:petropia_crystal_forest_petropia_sprout"
+    ],
+    []
+  ]
+}

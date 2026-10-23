@@ -20,6 +20,10 @@
         "type": "minecraft:end_rod"
       },
       "probability": 0.0015
+    },
+    "additions_sound": {
+      "sound": "minecraft:block.amethyst_block.chime",
+      "tick_chance": 0.004
     }
   },
   "spawners": {
@@ -34,21 +38,32 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:petropia_cave",
+      "kingdomomnitrix:petropia_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
-    [],
-    [],
-    [],
     [
-      "kingdomomnitrix:petropia_blob_petropia_crystal"
+      "kingdomomnitrix:petropia_boulders",
+      "kingdomomnitrix:petropia_geode_deep"
     ],
     [],
     [],
+    [],
     [
+      "kingdomomnitrix:petropia_blob_petropia_crystal",
+      "kingdomomnitrix:petropia_blob_petropia_smooth_rock"
+    ],
+    [],
+    [
+      "kingdomomnitrix:petropia_spring"
+    ],
+    [
+      "kingdomomnitrix:petropia_spires_sparse",
+      "kingdomomnitrix:petropia_clusters",
       "kingdomomnitrix:petropia_crystal_plains_petropia_sprout"
     ],
     []
