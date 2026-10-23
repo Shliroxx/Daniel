@@ -2,7 +2,8 @@
 """Eigene Bloecke, Erze, Materialien, Werkzeuge, Waffen und Ruestungen der Ratchet-&-Clank-Welten.
 
 Einzige Quelle fuer alles, was die Planeten an Inhalten brauchen. Erzeugt:
-  * Texturen: Bloecke 128x128 (nahtlos), Items 64x64, Ruestungsschichten 128x64 (tools/planet_textures.py)
+  * Texturen: Welt-Bloecke 16x16 im Vanilla-Pixelstil (tools/pixel_textures.py, wie Ad Astra/Aether: 4–6 Toene),
+    Technik-Bloecke 128x128 (nahtlos), Items 64x64, Ruestungsschichten 128x64 (tools/planet_textures.py)
   * Blockzustaende, Block- und Item-Modelle, Loot-Tabellen, Rezepte, Tags
   * Uebersetzungen (de_de, en_us; bestehende Schluessel bleiben erhalten)
   * Java: world/content/PlanetBlocks.java und PlanetItems.java (Registrierung; nicht von Hand aendern)
@@ -36,6 +37,7 @@ from typing import Callable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import planet_textures as tx  # noqa: E402
+import pixel_textures as px  # noqa: E402
 
 try:
     from PIL import Image
@@ -125,32 +127,32 @@ def _cache(fn):
 
 
 # Texturen (zwischengespeichert, weil Erze und Grasseiten auf Stein- und Erdtexturen aufbauen)
-VELDIN_SAND = _cache(lambda: tx.sand("veldin_sand", H("8A4A20"), H("D08A4A"), H("F6C784")))
-VELDIN_SANDSTONE = _cache(lambda: tx.strata("veldin_sandstone", [H("B8642E"), H("D98A4A"), H("8F4A26"), H("E8B070"),
+VELDIN_SAND = _cache(lambda: px.sand("veldin_sand", H("8A4A20"), H("D08A4A"), H("F6C784")))
+VELDIN_SANDSTONE = _cache(lambda: px.strata("veldin_sandstone", [H("B8642E"), H("D98A4A"), H("8F4A26"), H("E8B070"),
                                                                     H("C4703A"), H("7A3C22"), H("D4A060")]))
-VELDIN_ROCK = _cache(lambda: tx.rock("veldin_rock", H("2E1812"), H("6E3A26"), H("A8683E"), cells=16))
-KERWAN_SOIL = _cache(lambda: tx.soil("kerwan_soil", H("1E1824"), H("44384A"), H("6E5E70"), H("8A8098")))
-KERWAN_TURF = _cache(lambda: tx.grass_top("kerwan_turf_top", H("124A4C"), H("2A8A7E"), H("86D8B8")))
-KERWAN_SLATE = _cache(lambda: tx.slate("kerwan_slate", H("1E2432"), H("44506A"), H("8090AC")))
-NOVALIS_LOAM = _cache(lambda: tx.soil("novalis_loam", H("2E1E10"), H("6A4A28"), H("9C7A48"), H("C8B488")))
-NOVALIS_MOSS = _cache(lambda: tx.grass_top("novalis_moss_top", H("1E4A12"), H("58A02A"), H("C0EA60"),
+VELDIN_ROCK = _cache(lambda: px.rock("veldin_rock", H("2E1812"), H("6E3A26"), H("A8683E"), cells=16))
+KERWAN_SOIL = _cache(lambda: px.soil("kerwan_soil", H("1E1824"), H("44384A"), H("6E5E70"), H("8A8098")))
+KERWAN_TURF = _cache(lambda: px.grass_top("kerwan_turf_top", H("124A4C"), H("2A8A7E"), H("86D8B8")))
+KERWAN_SLATE = _cache(lambda: px.slate("kerwan_slate", H("1E2432"), H("44506A"), H("8090AC")))
+NOVALIS_LOAM = _cache(lambda: px.soil("novalis_loam", H("2E1E10"), H("6A4A28"), H("9C7A48"), H("C8B488")))
+NOVALIS_MOSS = _cache(lambda: px.grass_top("novalis_moss_top", H("1E4A12"), H("58A02A"), H("C0EA60"),
                                            flowers=[H("FF78C0"), H("FFE36A"), H("FFFFFF")]))
-NOVALIS_LIMESTONE = _cache(lambda: tx.porous("novalis_limestone", H("8A8468"), H("CFC6A4"), H("F4EED6"), holes=24, hole_size=4.0))
-RILGAR_SAND = _cache(lambda: tx.sand("rilgar_sand", H("8AB0A8"), H("D2EAE0"), H("FFFFFF"), ripples=0.7))
-RILGAR_CORAL = _cache(lambda: tx.porous("rilgar_coralstone", H("103E4A"), H("2A8A9A"), H("8AE0DA"), holes=34, hole_size=5.5))
-TORREN_DUST = _cache(lambda: tx.sand("torren_dust", H("4A140C"), H("9A3A20"), H("D87040"), ripples=0.5))
-TORREN_CRUST = _cache(lambda: tx.rock("torren_crust", H("3A120A"), H("8A3020"), H("C85A32"), cells=9, crack=1.4))
-GALVAN_MUD = _cache(lambda: tx.soil("galvan_mud", H("2A2416"), H("5A4A2A"), H("8A7A4A"), H("B8A878")))
-GALVAN_MOSS = _cache(lambda: tx.grass_top("galvan_moss_top", H("2A4A10"), H("7A9A2A"), H("D8E86A"), flowers=[H("5AF0FF"), H("FFFFFF")]))
-TORREN_BASALT = _cache(lambda: tx.basalt("torren_basalt", H("120E10"), H("3E2E2E"), H("FF5A1A")))
+NOVALIS_LIMESTONE = _cache(lambda: px.porous("novalis_limestone", H("8A8468"), H("CFC6A4"), H("F4EED6"), holes=24, hole_size=4.0))
+RILGAR_SAND = _cache(lambda: px.sand("rilgar_sand", H("8AB0A8"), H("D2EAE0"), H("FFFFFF"), ripples=0.7))
+RILGAR_CORAL = _cache(lambda: px.porous("rilgar_coralstone", H("103E4A"), H("2A8A9A"), H("8AE0DA"), holes=34, hole_size=5.5))
+TORREN_DUST = _cache(lambda: px.sand("torren_dust", H("4A140C"), H("9A3A20"), H("D87040"), ripples=0.5))
+TORREN_CRUST = _cache(lambda: px.rock("torren_crust", H("3A120A"), H("8A3020"), H("C85A32"), cells=9, crack=1.4))
+GALVAN_MUD = _cache(lambda: px.soil("galvan_mud", H("2A2416"), H("5A4A2A"), H("8A7A4A"), H("B8A878")))
+GALVAN_MOSS = _cache(lambda: px.grass_top("galvan_moss_top", H("2A4A10"), H("7A9A2A"), H("D8E86A"), flowers=[H("5AF0FF"), H("FFFFFF")]))
+TORREN_BASALT = _cache(lambda: px.basalt("torren_basalt", H("120E10"), H("3E2E2E"), H("FF5A1A")))
 
 
 def turf_textures(name: str, top, soil) -> dict[str, Image.Image]:
-    return {f"{name}_top": top(), f"{name}_side": tx.grass_side(f"{name}_side", top(), soil()), f"{name}_bottom": soil()}
+    return {f"{name}_top": top(), f"{name}_side": px.grass_side(f"{name}_side", top(), soil()), f"{name}_bottom": soil()}
 
 
 def log_textures(name: str, bark, wood_dark, wood_light):
-    return lambda: {name: tx.bark(name, *bark), f"{name}_top": tx.log_top(f"{name}_top", bark[1], wood_dark, wood_light)}
+    return lambda: {name: px.bark(name, *bark), f"{name}_top": px.log_top(f"{name}_top", bark[1], wood_dark, wood_light)}
 
 
 def single(name: str, fn: Callable[[], Image.Image]):
@@ -166,7 +168,7 @@ BLOCKS: list[BlockDef] = [
     BlockDef("veldin_rock", "Veldin-Fels", "Veldin Rock", "natural", single("veldin_rock", VELDIN_ROCK),
              "TERRACOTTA_RED", 1.6, 6.0, "STONE", planet="veldin", tags=["planet_stone"]),
     BlockDef("veldin_scrub", "Duerrstrauch", "Dry Scrub", "plant",
-             single("veldin_scrub", lambda: tx.plant("veldin_scrub", H("8A6234"), H("A88A4A"), None, "thorn")),
+             single("veldin_scrub", lambda: px.plant("veldin_scrub", H("8A6234"), H("A88A4A"), None, "thorn")),
              "ORANGE", 0.0, 0.0, "GRASS", None, drop="shears", planet="veldin"),
     # Kerwan
     BlockDef("kerwan_turf", "Kerwan-Rasen", "Kerwan Turf", "turf", lambda: turf_textures("kerwan_turf", KERWAN_TURF, KERWAN_SOIL),
@@ -179,13 +181,13 @@ BLOCKS: list[BlockDef] = [
              log_textures("kerwan_log", (H("1E1E2E"), H("46466A"), H("7E7EA8")), H("5A4A72"), H("B0A0D0")),
              "PURPLE", 2.0, 2.0, "WOOD", "axe", planet="kerwan", tags=["logs"]),
     BlockDef("kerwan_planks", "Spiralbaum-Bretter", "Spiral Tree Planks", "block",
-             single("kerwan_planks", lambda: tx.planks("kerwan_planks", H("4A3E62"), H("7C6CA0"), H("B4A6D6"))),
+             single("kerwan_planks", lambda: px.planks("kerwan_planks", H("4A3E62"), H("7C6CA0"), H("B4A6D6"))),
              "PURPLE", 2.0, 3.0, "WOOD", "axe", planet="kerwan", tags=["planks"]),
     BlockDef("kerwan_leaves", "Spiralbaum-Laub", "Spiral Tree Leaves", "leaves",
-             single("kerwan_leaves", lambda: tx.leaves("kerwan_leaves", H("0E4A66"), H("2A9AC0"), H("9AE8FF"), accent=H("E0FFFF"))),
+             single("kerwan_leaves", lambda: px.leaves("kerwan_leaves", H("0E4A66"), H("2A9AC0"), H("9AE8FF"), accent=H("E0FFFF"))),
              "CYAN", 0.2, 0.2, "GRASS", "hoe", drop="silk", planet="kerwan", tags=["leaves"]),
     BlockDef("kerwan_reed", "Lichtschilf", "Glow Reed", "plant",
-             single("kerwan_reed", lambda: tx.plant("kerwan_reed", H("C8A8F0"), H("2A9A9A"), None, "reed")),
+             single("kerwan_reed", lambda: px.plant("kerwan_reed", H("C8A8F0"), H("2A9A9A"), None, "reed")),
              "CYAN", 0.0, 0.0, "GRASS", None, light=6, drop="shears", planet="kerwan"),
     # Novalis
     BlockDef("novalis_moss", "Novalis-Moos", "Novalis Moss", "turf", lambda: turf_textures("novalis_moss", NOVALIS_MOSS, NOVALIS_LOAM),
@@ -198,13 +200,13 @@ BLOCKS: list[BlockDef] = [
              log_textures("novalis_log", (H("3A2416"), H("7A5034"), H("B0825A")), H("B88A52"), H("F2D49A")),
              "BROWN", 2.0, 2.0, "WOOD", "axe", planet="novalis", tags=["logs"]),
     BlockDef("novalis_planks", "Glockenbaum-Bretter", "Bell Tree Planks", "block",
-             single("novalis_planks", lambda: tx.planks("novalis_planks", H("8A5E30"), H("C8945A"), H("F0CC8E"))),
+             single("novalis_planks", lambda: px.planks("novalis_planks", H("8A5E30"), H("C8945A"), H("F0CC8E"))),
              "BROWN", 2.0, 3.0, "WOOD", "axe", planet="novalis", tags=["planks"]),
     BlockDef("novalis_leaves", "Glockenbaum-Laub", "Bell Tree Leaves", "leaves",
-             single("novalis_leaves", lambda: tx.leaves("novalis_leaves", H("7A1E50"), H("D0589A"), H("FFB8DC"), accent=H("FFE36A"))),
+             single("novalis_leaves", lambda: px.leaves("novalis_leaves", H("7A1E50"), H("D0589A"), H("FFB8DC"), accent=H("FFE36A"))),
              "PINK", 0.2, 0.2, "CHERRY_LEAVES", "hoe", drop="silk", planet="novalis", tags=["leaves"]),
     BlockDef("novalis_bloom", "Sternbluete", "Star Bloom", "plant",
-             single("novalis_bloom", lambda: tx.plant("novalis_bloom", H("2E6A22"), H("58A02A"), H("FF70B8"), "bloom")),
+             single("novalis_bloom", lambda: px.plant("novalis_bloom", H("2E6A22"), H("58A02A"), H("FF70B8"), "bloom")),
              "PINK", 0.0, 0.0, "GRASS", None, drop="shears", planet="novalis"),
     # Rilgar
     BlockDef("rilgar_sand", "Riffsand", "Reef Sand", "natural", single("rilgar_sand", RILGAR_SAND),
@@ -215,13 +217,13 @@ BLOCKS: list[BlockDef] = [
              log_textures("rilgar_log", (H("2A2016"), H("5A4A30"), H("8A7A54")), H("A88A5A"), H("E2CA94")),
              "BROWN", 2.0, 2.0, "WOOD", "axe", planet="rilgar", tags=["logs"]),
     BlockDef("rilgar_planks", "Pfahlholz", "Stilt Planks", "block",
-             single("rilgar_planks", lambda: tx.planks("rilgar_planks", H("3E2E1E"), H("6E5436"), H("A28660"))),
+             single("rilgar_planks", lambda: px.planks("rilgar_planks", H("3E2E1E"), H("6E5436"), H("A28660"))),
              "BROWN", 2.0, 3.0, "WOOD", "axe", planet="rilgar", tags=["planks"]),
     BlockDef("rilgar_leaves", "Mangroven-Laub", "Mangrove Leaves", "leaves",
-             single("rilgar_leaves", lambda: tx.leaves("rilgar_leaves", H("0E4A2A"), H("2A9A5A"), H("9AE89A"))),
+             single("rilgar_leaves", lambda: px.leaves("rilgar_leaves", H("0E4A2A"), H("2A9A5A"), H("9AE89A"))),
              "GREEN", 0.2, 0.2, "GRASS", "hoe", drop="silk", planet="rilgar", tags=["leaves"]),
     BlockDef("rilgar_seagrass", "Riffgras", "Reef Grass", "plant",
-             single("rilgar_seagrass", lambda: tx.plant("rilgar_seagrass", H("2A8A6A"), H("3AB08A"), None, "tuft")),
+             single("rilgar_seagrass", lambda: px.plant("rilgar_seagrass", H("2A8A6A"), H("3AB08A"), None, "tuft")),
              "CYAN", 0.0, 0.0, "GRASS", None, drop="shears", planet="rilgar"),
     # Torren IV
     BlockDef("torren_dust", "Rotstaub", "Red Dust", "natural", single("torren_dust", TORREN_DUST),
@@ -231,34 +233,34 @@ BLOCKS: list[BlockDef] = [
     BlockDef("torren_basalt", "Saeulenbasalt", "Column Basalt", "natural", single("torren_basalt", TORREN_BASALT),
              "BLACK", 1.8, 6.0, "BASALT", light=2, planet="torren_iv", tags=["planet_stone"]),
     BlockDef("torren_thorn", "Glutdorn", "Ember Thorn", "plant",
-             single("torren_thorn", lambda: tx.plant("torren_thorn", H("5A1A10"), H("7A2A18"), H("FFB030"), "thorn")),
+             single("torren_thorn", lambda: px.plant("torren_thorn", H("5A1A10"), H("7A2A18"), H("FFB030"), "thorn")),
              "RED", 0.0, 0.0, "GRASS", None, light=4, drop="shears", planet="torren_iv"),
     # --- Alien-Heimatwelten (Welle 1): jede Art lebt auf ihrer Serien-Heimatwelt ---------------------------------
     # Sonorosia (Sonorosianer / Echo Echo): violett-graue Klangwueste
     BlockDef("sonorosia_sand", "Klangsand", "Sonic Sand", "natural",
-             single("sonorosia_sand", lambda: tx.sand("sonorosia_sand", H("2A2236"), H("6A5A86"), H("B8A8D8"))),
+             single("sonorosia_sand", lambda: px.sand("sonorosia_sand", H("2A2236"), H("6A5A86"), H("B8A8D8"))),
              "PURPLE", 0.5, 0.5, "SAND", "shovel", planet="sonorosia", tags=["alien_soil"]),
     BlockDef("sonorosia_stone", "Resonanzgestein", "Resonance Stone", "natural",
-             single("sonorosia_stone", lambda: tx.porous("sonorosia_stone", H("1E1A2A"), H("4A4266"), H("9A8EC0"), holes=30, hole_size=4.5)),
+             single("sonorosia_stone", lambda: px.porous("sonorosia_stone", H("1E1A2A"), H("4A4266"), H("9A8EC0"), holes=30, hole_size=4.5)),
              "PURPLE", 1.5, 6.0, "STONE", planet="sonorosia", tags=["planet_stone"]),
     BlockDef("sonorosia_resonite", "Resonit", "Resonite", "natural",
-             single("sonorosia_resonite", lambda: tx.crystal("sonorosia_resonite", H("3A2A6A"), H("9A7AF0"), H("F0E8FF"))),
+             single("sonorosia_resonite", lambda: px.crystal("sonorosia_resonite", H("3A2A6A"), H("9A7AF0"), H("F0E8FF"))),
              "PURPLE", 1.2, 4.0, "AMETHYST_BLOCK", light=7, planet="sonorosia", tags=["planet_stone"]),
     BlockDef("sonorosia_reed", "Klangrohr", "Echo Reed", "plant",
-             single("sonorosia_reed", lambda: tx.plant("sonorosia_reed", H("5A4A7A"), H("9A8AD0"), H("C8F0FF"), "reed")),
+             single("sonorosia_reed", lambda: px.plant("sonorosia_reed", H("5A4A7A"), H("9A8AD0"), H("C8F0FF"), "reed")),
              "PURPLE", 0.0, 0.0, "GRASS", None, light=5, drop="shears", planet="sonorosia"),
     # Petropia (Petrosapiens / Diamondhead, Crystalsapiens / Chromastone): Kristallwelt
     BlockDef("petropia_shards", "Splittersand", "Shard Sand", "natural",
-             single("petropia_shards", lambda: tx.sand("petropia_shards", H("0E3A34"), H("2A8A78"), H("9AF0D8"), ripples=0.4)),
+             single("petropia_shards", lambda: px.sand("petropia_shards", H("0E3A34"), H("2A8A78"), H("9AF0D8"), ripples=0.4)),
              "EMERALD_GREEN", 0.6, 0.6, "SAND", "shovel", planet="petropia", tags=["alien_soil"]),
     BlockDef("petropia_rock", "Petropia-Fels", "Petropia Rock", "natural",
-             single("petropia_rock", lambda: tx.rock("petropia_rock", H("0A2A2A"), H("2A5A5A"), H("6AA8A0"), cells=12)),
+             single("petropia_rock", lambda: px.rock("petropia_rock", H("0A2A2A"), H("2A5A5A"), H("6AA8A0"), cells=12)),
              "CYAN", 1.8, 6.0, "STONE", planet="petropia", tags=["planet_stone"]),
     BlockDef("petropia_crystal", "Petrosapien-Kristall", "Petrosapien Crystal", "natural",
-             single("petropia_crystal", lambda: tx.crystal("petropia_crystal", H("0A4A3A"), H("2AC08A"), H("C8FFE8"))),
+             single("petropia_crystal", lambda: px.crystal("petropia_crystal", H("0A4A3A"), H("2AC08A"), H("C8FFE8"))),
              "EMERALD_GREEN", 1.5, 6.0, "AMETHYST_BLOCK", light=8, planet="petropia", tags=["planet_stone"]),
     BlockDef("petropia_sprout", "Kristallspross", "Crystal Sprout", "plant",
-             single("petropia_sprout", lambda: tx.plant("petropia_sprout", H("1A6A5A"), H("4AE0B0"), H("E8FFF8"), "thorn")),
+             single("petropia_sprout", lambda: px.plant("petropia_sprout", H("1A6A5A"), H("4AE0B0"), H("E8FFF8"), "thorn")),
              "EMERALD_GREEN", 0.0, 0.0, "AMETHYST_CLUSTER", None, light=6, drop="shears", planet="petropia"),
     # Galvan Prime (Galvans / Grey Matter): feuchte Sumpf- und Technikwelt
     BlockDef("galvan_moss", "Galvan-Moos", "Galvan Moss", "turf",
@@ -267,56 +269,56 @@ BLOCKS: list[BlockDef] = [
     BlockDef("galvan_mud", "Galvan-Schlick", "Galvan Silt", "natural", single("galvan_mud", GALVAN_MUD),
              "BROWN", 0.6, 0.6, "MUD", "shovel", planet="galvan_prime", tags=["alien_soil"]),
     BlockDef("galvan_slate", "Galvan-Schiefer", "Galvan Slate", "natural",
-             single("galvan_slate", lambda: tx.slate("galvan_slate", H("1A2A22"), H("3E5A4A"), H("7EA08A"))),
+             single("galvan_slate", lambda: px.slate("galvan_slate", H("1A2A22"), H("3E5A4A"), H("7EA08A"))),
              "GREEN", 1.6, 6.0, "DEEPSLATE", planet="galvan_prime", tags=["planet_stone"]),
     BlockDef("galvan_fern", "Galvan-Farn", "Galvan Fern", "plant",
-             single("galvan_fern", lambda: tx.plant("galvan_fern", H("2A4A10"), H("8AB83A"), None, "tuft")),
+             single("galvan_fern", lambda: px.plant("galvan_fern", H("2A4A10"), H("8AB83A"), None, "tuft")),
              "LIME", 0.0, 0.0, "GRASS", None, drop="shears", planet="galvan_prime"),
     # Galvan B (Galvanische Mechamorphe / Upgrade): schwarzer Technik-Mond mit gruenen Leiterbahnen
     BlockDef("mechamorph_plate", "Mechamorph-Platte", "Mechamorph Plate", "natural",
-             single("mechamorph_plate", lambda: tx.hex_tiles("mechamorph_plate", H("06080A"), H("1A2420"), H("3AFF5A"), glow=0.7)),
+             single("mechamorph_plate", lambda: px.hex_tiles("mechamorph_plate", H("06080A"), H("1A2420"), H("3AFF5A"), glow=0.7)),
              "BLACK", 2.0, 6.0, "NETHERITE", light=4, planet="galvan_b", tags=["planet_stone"]),
     BlockDef("mechamorph_circuit", "Schaltgestein", "Circuit Rock", "natural",
-             single("mechamorph_circuit", lambda: tx.slate("mechamorph_circuit", H("080C0A"), H("1E2A24"), H("3A6A4A"))),
+             single("mechamorph_circuit", lambda: px.slate("mechamorph_circuit", H("080C0A"), H("1E2A24"), H("3A6A4A"))),
              "BLACK", 1.8, 6.0, "DEEPSLATE", planet="galvan_b", tags=["planet_stone"]),
     BlockDef("mechamorph_vine", "Schaltkreis-Ranke", "Circuit Vine", "plant",
-             single("mechamorph_vine", lambda: tx.plant("mechamorph_vine", H("0A1A10"), H("1A3A22"), H("5AFF7A"), "reed")),
+             single("mechamorph_vine", lambda: px.plant("mechamorph_vine", H("0A1A10"), H("1A3A22"), H("5AFF7A"), "reed")),
              "GREEN", 0.0, 0.0, "GRASS", None, light=7, drop="shears", planet="galvan_b"),
     # Kylmyys (Necrofriggians / Big Chill): dunkle Eiswelt
     BlockDef("kylmyys_snow", "Kylmyys-Schnee", "Kylmyys Snow", "natural",
-             single("kylmyys_snow", lambda: tx.sand("kylmyys_snow", H("6A88A8"), H("C8DCF0"), H("FFFFFF"), ripples=0.4)),
+             single("kylmyys_snow", lambda: px.sand("kylmyys_snow", H("6A88A8"), H("C8DCF0"), H("FFFFFF"), ripples=0.4)),
              "WHITE", 0.5, 0.5, "SNOW", "shovel", planet="kylmyys", tags=["alien_soil"]),
     BlockDef("kylmyys_ice", "Ewiges Eis", "Eternal Ice", "natural",
-             single("kylmyys_ice", lambda: tx.crystal("kylmyys_ice", H("2A5A8A"), H("8AC8F0"), H("E8FAFF"), frost=0.6)),
+             single("kylmyys_ice", lambda: px.crystal("kylmyys_ice", H("2A5A8A"), H("8AC8F0"), H("E8FAFF"), frost=0.6)),
              "PALE_PURPLE", 1.4, 6.0, "GLASS", light=3, planet="kylmyys", tags=["planet_stone"]),
     BlockDef("kylmyys_permafrost", "Permafrost", "Permafrost", "natural",
-             single("kylmyys_permafrost", lambda: tx.rock("kylmyys_permafrost", H("1A2A3A"), H("3E5A7A"), H("8AA8C8"), cells=11)),
+             single("kylmyys_permafrost", lambda: px.rock("kylmyys_permafrost", H("1A2A3A"), H("3E5A7A"), H("8AA8C8"), cells=11)),
              "LIGHT_BLUE", 1.6, 6.0, "STONE", planet="kylmyys", tags=["planet_stone"]),
     BlockDef("kylmyys_frostfern", "Frostfarn", "Frost Fern", "plant",
-             single("kylmyys_frostfern", lambda: tx.plant("kylmyys_frostfern", H("4A7AA8"), H("A8D8FF"), H("FFFFFF"), "thorn")),
+             single("kylmyys_frostfern", lambda: px.plant("kylmyys_frostfern", H("4A7AA8"), H("A8D8FF"), H("FFFFFF"), "thorn")),
              "WHITE", 0.0, 0.0, "GRASS", None, light=3, drop="shears", planet="kylmyys"),
     # Vulpin (Vulpimancer / Wildmutt): verseuchte Aschewueste
     BlockDef("vulpin_ash", "Vulpin-Asche", "Vulpin Ash", "natural",
-             single("vulpin_ash", lambda: tx.sand("vulpin_ash", H("3A1E0E"), H("7A4A22"), H("C08040"), ripples=0.6)),
+             single("vulpin_ash", lambda: px.sand("vulpin_ash", H("3A1E0E"), H("7A4A22"), H("C08040"), ripples=0.6)),
              "BROWN", 0.5, 0.5, "SAND", "shovel", planet="vulpin", tags=["alien_soil"]),
     BlockDef("vulpin_rubble", "Giftschutt", "Toxic Rubble", "natural",
-             single("vulpin_rubble", lambda: tx.rock("vulpin_rubble", H("2A1A10"), H("5A3A22"), H("9A6A3A"), cells=10, crack=1.6)),
+             single("vulpin_rubble", lambda: px.rock("vulpin_rubble", H("2A1A10"), H("5A3A22"), H("9A6A3A"), cells=10, crack=1.6)),
              "BROWN", 1.6, 6.0, "STONE", planet="vulpin", tags=["planet_stone"]),
     BlockDef("vulpin_sludge", "Giftschlamm", "Toxic Sludge", "natural",
-             single("vulpin_sludge", lambda: tx.porous("vulpin_sludge", H("1A2A0A"), H("4A6A1A"), H("9AC03A"), holes=22, hole_size=6.0)),
+             single("vulpin_sludge", lambda: px.porous("vulpin_sludge", H("1A2A0A"), H("4A6A1A"), H("9AC03A"), holes=22, hole_size=6.0)),
              "LIME", 0.8, 2.0, "MUD", "shovel", light=3, planet="vulpin", tags=["alien_soil"]),
     BlockDef("vulpin_thorn", "Giftdorn", "Toxic Thorn", "plant",
-             single("vulpin_thorn", lambda: tx.plant("vulpin_thorn", H("3A2210"), H("5A3A1A"), H("B8E83A"), "thorn")),
+             single("vulpin_thorn", lambda: px.plant("vulpin_thorn", H("3A2210"), H("5A3A1A"), H("B8E83A"), "thorn")),
              "BROWN", 0.0, 0.0, "GRASS", None, light=2, drop="shears", planet="vulpin"),
     # Piscciss (Piscciss Volann / Ripjaws): Ozeanwelt mit Riffinseln
     BlockDef("piscciss_sand", "Piscciss-Sand", "Piscciss Sand", "natural",
-             single("piscciss_sand", lambda: tx.sand("piscciss_sand", H("2A5A5A"), H("6AB0A0"), H("C8F0E0"))),
+             single("piscciss_sand", lambda: px.sand("piscciss_sand", H("2A5A5A"), H("6AB0A0"), H("C8F0E0"))),
              "CYAN", 0.5, 0.5, "SAND", "shovel", planet="piscciss", tags=["alien_soil"]),
     BlockDef("piscciss_reefstone", "Riffstein", "Reefstone", "natural",
-             single("piscciss_reefstone", lambda: tx.porous("piscciss_reefstone", H("0A2A3A"), H("1A6A7A"), H("6AD0D0"), holes=32, hole_size=5.0)),
+             single("piscciss_reefstone", lambda: px.porous("piscciss_reefstone", H("0A2A3A"), H("1A6A7A"), H("6AD0D0"), holes=32, hole_size=5.0)),
              "CYAN", 1.4, 6.0, "STONE", planet="piscciss", tags=["planet_stone"]),
     BlockDef("piscciss_grass", "Tiefseegras", "Deepsea Grass", "plant",
-             single("piscciss_grass", lambda: tx.plant("piscciss_grass", H("1A5A5A"), H("3AA8A0"), None, "tuft")),
+             single("piscciss_grass", lambda: px.plant("piscciss_grass", H("1A5A5A"), H("3AA8A0"), None, "tuft")),
              "CYAN", 0.0, 0.0, "GRASS", None, drop="shears", planet="piscciss"),
     # Technik
     BlockDef("hull_plate", "Rumpfplatte", "Hull Plate", "block", single("hull_plate", lambda: tx.hull("hull_plate", H("8E949C"))),
@@ -358,7 +360,7 @@ STONE_ID = {"veldin": "veldin_rock", "kerwan": "kerwan_slate", "novalis": "noval
 for m in MATERIALS:
     stone = STONE_OF[m.ore_planet]
     BLOCKS.append(BlockDef(f"{m.name}_ore", f"{m.de}-Erz", f"{m.en} Ore", "ore",
-                           (lambda m=m, stone=stone: {f"{m.name}_ore": tx.ore(f"{m.name}_ore", stone(), *m.colors,
+                           (lambda m=m, stone=stone: {f"{m.name}_ore": px.ore(f"{m.name}_ore", stone(), *m.colors,
                                                                                style="metal" if m.name == "solar_copper" else "crystal")}),
                            "STONE_GRAY", 3.0, 3.0, "STONE", tier=m.ore_tier, light=5 if m.name == "pyronite" else 0,
                            drop=f"ore:raw_{m.name}", xp=(2, 6), planet=m.ore_planet))
@@ -369,16 +371,16 @@ for m in MATERIALS:
 # Bloecke der Alien-Faehigkeiten (temporaer, kein Item, kein Drop): Diamondheads Kristall, Big Chills Eis
 ABILITY_BLOCKS = [
     BlockDef("petrosapien_crystal", "Petrosapien-Kristall", "Petrosapien Crystal", "crystal",
-             single("petrosapien_crystal", lambda: tx.crystal("petrosapien_crystal", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             single("petrosapien_crystal", lambda: px.crystal("petrosapien_crystal", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
              "EMERALD_GREEN", 0.4, 6.0, "AMETHYST_BLOCK", None, light=9, drop="none", item=False),
     BlockDef("petrosapien_spike", "Petrosapien-Stachel", "Petrosapien Spike", "spike",
-             single("petrosapien_spike", lambda: tx.crystal("petrosapien_spike", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
+             single("petrosapien_spike", lambda: px.crystal("petrosapien_spike", H("0E5A3A"), H("3AE89A"), H("D8FFE8"))),
              "EMERALD_GREEN", 0.4, 6.0, "AMETHYST_CLUSTER", None, light=7, drop="none", item=False),
     BlockDef("necrofriggian_ice", "Necrofriggian-Eis", "Necrofriggian Ice", "crystal",
-             single("necrofriggian_ice", lambda: tx.crystal("necrofriggian_ice", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
+             single("necrofriggian_ice", lambda: px.crystal("necrofriggian_ice", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
              "LIGHT_BLUE", 0.4, 6.0, "GLASS", None, light=4, drop="none", item=False),
     BlockDef("necrofriggian_spike", "Necrofriggian-Eisstachel", "Necrofriggian Ice Spike", "spike",
-             single("necrofriggian_spike", lambda: tx.crystal("necrofriggian_spike", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
+             single("necrofriggian_spike", lambda: px.crystal("necrofriggian_spike", H("1A4A8A"), H("8AD0FF"), H("F4FCFF"), frost=0.5)),
              "LIGHT_BLUE", 0.4, 6.0, "GLASS", None, light=3, drop="none", item=False),
 ]
 BLOCKS += ABILITY_BLOCKS
@@ -910,8 +912,9 @@ def main(argv: list[str] | None = None) -> int:
                 errors += 1
             elif "block" in rel:
                 with Image.open(p) as img:
-                    if img.size[0] < 128 or img.size[1] < 128:
-                        LOG.error("Blocktextur kleiner als 128x128: %s %s", rel, img.size)
+                    # Welt-Bloecke 16x16 (Pixelstil), Technik-Bloecke 128x128 — immer quadratisch, Vielfaches von 16
+                    if img.size[0] < 16 or img.size[0] % 16 or img.size[0] != img.size[1]:
+                        LOG.error("Blocktextur muss quadratisch und ein Vielfaches von 16 sein: %s %s", rel, img.size)
                         errors += 1
         LOG.info("Planeten-Inhalte: %d Bloecke, %d Items, %d Fehler", len(BLOCKS), len(BLOCKS) + len(material_items()), errors)
         return 1 if errors else 0
