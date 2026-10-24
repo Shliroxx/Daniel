@@ -151,6 +151,16 @@ def mirrored(cubes: list[Cube]) -> list[Cube]:
     return cubes + [mirror(c, 0, 0) for c in cubes]
 
 
+def octo(cx: float, cy: float, cz: float, size: float, length: float, axis: str, mat: str, **kw) -> list[Cube]:
+    """Achteckiges Prisma (Lauf, Trommel, Hammerkopf): Quader plus um 45 Grad gedrehter Quader um die Laengsachse."""
+    side = size * 0.83
+    if axis == "z":
+        return [box(cx, cy, cz, size, size, length, mat, **kw),
+                C((cx - side / 2, cy - side / 2, cz - length / 2), (side, side, length), mat, rot=(0, 0, 45), pivot=(cx, cy, cz), **kw)]
+    return [box(cx, cy, cz, length, size, size, mat, **kw),
+            C((cx - length / 2, cy - side / 2, cz - side / 2), (length, side, side), mat, rot=(45, 0, 0), pivot=(cx, cy, cz), **kw)]
+
+
 def taydenite_blade() -> Weapon:
     """Diamondhead-Kristall-Grossschwert (Vorbild Soulslike Weaponry / Simply Swords: starke Silhouette, Kontrast):
     breite Kristallklinge mit dunkler Hohlkehle und gruener Leuchtader, helle Schneiden mit Saegezaehnen, Rautenspitze,
@@ -191,24 +201,40 @@ def taydenite_blade() -> Weapon:
 
 
 def galvan_rifle() -> Weapon:
-    """Galvan-Biotech-Gewehr: schwarzer Kantenkoerper mit gruenen Kanaelen, Zielfernrohr, langer Lauf mit drei
-    kreisenden Spulenringen, Energiezelle als Magazin, schraeger Griff, Skelettschaft."""
+    """Galvan-Biotech-Gewehr (Vorbild Sci-Fi-Gewehre aus TaCZ/Ratchet): schwarzer Kantenkoerper mit gekippten
+    Seitenpanzern und gruenen Energieadern, zwei gepfeilte Rueckenfinnen, langes Zielfernrohr mit leuchtenden Linsen,
+    Lauf mit drei kreisenden Spulenringen, Gabelmuendung mit Lichtbogen, Energiezelle als Magazin, Skelettschaft."""
     pal = Palette("16191C", "050607", "4A5058", "C8CCD0", "2A2E34", "3AFF5A", "E8FFE0", "3AFF5A", "3AFF5A")
     w = Weapon(pal, "gun")
-    green = (("north", "south", "east", "west"))
-    w.cubes += [box(0, 6.0, 0, 3.0, 3.6, 11.0, "plate", lines=[("h", 0.55, ("east", "west"))]),
-                box(0, 8.2, -1.0, 2.2, 0.8, 8.0, "trim"),
+    green = ("north", "south", "east", "west")
+    # Koerper mit gekippten Seitenpanzern und Adern
+    w.cubes += [box(0, 6.0, 0, 3.0, 3.6, 11.0, "plate"), box(0, 8.2, -1.0, 2.2, 0.8, 8.0, "trim"),
                 box(0, 4.0, -2.5, 2.4, 0.8, 5.0, "plate")]
-    w.cubes += [box(0, 9.6, 0.5, 1.4, 1.6, 6.0, "trim"), box(0, 9.6, -2.7, 1.8, 2.0, 0.6, "trim"),
-                box(0, 9.6, -3.05, 1.2, 1.2, 0.2, "visor"), box(0, 9.6, 3.7, 1.6, 1.8, 0.6, "trim")]
-    w.cubes += [box(0, 6.4, -11.0, 1.5, 1.5, 11.0, "trim"), box(0, 6.4, -6.6, 2.2, 2.2, 2.2, "plate"),
-                box(0, 6.4, -16.7, 2.2, 2.2, 1.0, "plate", edge=("north",)), box(0, 6.4, -17.25, 1.0, 1.0, 0.2, "glow")]
-    w.cubes += [box(0, 2.6, -1.6, 1.8, 3.0, 2.0, "glow", edge=green), box(0, 1.0, -1.6, 2.0, 0.5, 2.2, "trim")]
-    w.cubes += [C((-0.8, 0.2, 2.2), (1.6, 4.2, 1.8), "suit", rot=(-18, 0, 0), pivot=(0, 4.2, 3.1))]
-    w.cubes += [box(0, 6.6, 7.6, 1.2, 1.0, 4.4, "trim"), box(0, 4.4, 8.2, 1.2, 1.0, 3.4, "trim", rot=(20, 0, 0)),
-                box(0, 5.5, 10.4, 1.8, 4.0, 1.2, "plate", lines=[("v", 0.5, ("north", "south"))])]
     for side in (-1, 1):
-        w.cubes.append(box(side * 1.55, 6.0, -0.5, 0.2, 0.6, 9.0, "glow"))
+        w.cubes += [C((side * 1.5 - (0.5 if side > 0 else 0.0), 4.6, -4.5), (0.5, 3.0, 8.0), "plate", rot=(0, side * 6, side * 8),
+                      pivot=(side * 1.6, 6.0, 0.0)),
+                    box(side * 1.95, 6.2, -0.5, 0.2, 0.5, 7.0, "glow"), box(side * 1.95, 5.2, 1.5, 0.2, 0.4, 4.0, "glow")]
+    # Rueckenfinnen
+    for z0, h in ((0.6, 2.8), (3.2, 2.2)):
+        w.cubes += [C((-0.25, 8.4, z0), (0.5, h, 1.1), "plate", rot=(-55, 0, 0), pivot=(0, 8.4, z0 + 1.1), seams=False),
+                    C((-0.3, 8.4, z0 + 0.9), (0.6, h, 0.2), "glow", rot=(-55, 0, 0), pivot=(0, 8.4, z0 + 1.1))]
+    # Zielfernrohr
+    w.cubes += octo(0, 10.0, 0.0, 1.5, 7.0, "z", "trim") + [box(0, 8.9, -1.5, 0.6, 0.8, 0.8, "trim"), box(0, 8.9, 1.5, 0.6, 0.8, 0.8, "trim"),
+                                                          box(0, 10.0, -3.55, 1.0, 1.0, 0.1, "visor"), box(0, 10.0, 3.55, 0.8, 0.8, 0.1, "glow")]
+    # Lauf, Gabelmuendung mit Lichtbogen
+    w.cubes += octo(0, 6.4, -11.0, 1.5, 11.0, "z", "trim") + [box(0, 6.4, -6.6, 2.2, 2.2, 2.2, "plate")]
+    for sy in (1, -1):
+        w.cubes += [box(0, 6.4 + sy * 1.5, -17.0, 0.9, 0.7, 4.0, "plate", seams=False),
+                    box(0, 6.4 + sy * 1.5, -19.1, 0.7, 0.5, 0.4, "glow")]
+    w.cubes += [box(0, 6.4, -18.6, 0.25, 2.4, 0.25, "glow"), box(0, 6.4, -16.6, 1.2, 1.2, 0.3, "glow")]
+    # Energiezelle, Griff, Skelettschaft
+    w.cubes += [box(0, 2.6, -1.6, 1.8, 3.0, 2.0, "glow", edge=green), box(0, 1.0, -1.6, 2.0, 0.5, 2.2, "trim"),
+                box(0, 4.0, -1.6, 2.0, 0.4, 2.2, "trim")]
+    w.cubes += [C((-0.8, 0.2, 2.2), (1.6, 4.2, 1.8), "suit", rot=(-18, 0, 0), pivot=(0, 4.2, 3.1)),
+                box(0, 2.8, 1.0, 0.4, 0.4, 2.0, "trim")]
+    w.cubes += [box(0, 6.6, 7.6, 1.2, 1.0, 4.4, "trim"), box(0, 4.4, 8.2, 1.2, 1.0, 3.4, "trim", rot=(20, 0, 0)),
+                box(0, 5.5, 10.4, 1.8, 4.0, 1.2, "plate", lines=[("v", 0.5, ("north", "south"))]),
+                box(0, 5.5, 11.1, 2.0, 4.4, 0.3, "suit")]
     coils = ring_xy(0, 6.4, -9.0, 1.9) + ring_xy(0, 6.4, -11.8, 1.6) + ring_xy(0, 6.4, -14.4, 1.3)
     w.sub("coils", [0, 6.4, -11.0], coils)
     w.anim = {"coils": merge(spin(2, 3), wave("scale", 0, 0.06, 4))}
@@ -253,75 +279,111 @@ def star_sword() -> Weapon:
 
 
 def magnaplate_hammer() -> Weapon:
-    """Magnaplate-Hammer (Ratchet): Stahlschaft mit Gummigriff und Knaufkappe, wuchtiger Kopf mit Schlagflaechen,
-    blauem Energiefenster, Kuehlrippen, Klauenruecken wie ein OmniWrench und zwei arbeitenden Kolben."""
+    """Magnaplate-Kriegshammer (Ratchet, OmniWrench-Art): achteckiger Kopf mit Zierbaendern und blauen Energiefenstern,
+    wuchtige Schlagflaeche mit leuchtendem Kern, Schraubenschluessel-Klaue als Ruecken, Dorn obenauf, zwei arbeitende
+    Kolben, Schaft mit Leuchtspule und Kragen, gewickelter Griff, Dornknauf."""
     pal = Palette("1E2A4A", "0A1020", "6A7A9A", "141A2A", "B8C0C8", "3A9AFF", "E0F2FF", "3A9AFF", "3A9AFF")
     w = Weapon(pal, "hammer")
-    w.cubes += [box(0, 0.8, 0, 2.4, 1.6, 2.4, "plate"), box(0, 1.9, 0, 1.6, 0.6, 1.6, "trim")]
+    # Knauf mit Dorn, Griff, Schaft, Kragen, Leuchtspule
+    w.cubes += [box(0, 1.0, 0, 2.4, 1.6, 2.4, "plate"), diamond(0, 0.2, 0, 1.4, 1.4, "trim"), box(0, 2.1, 0, 1.6, 0.6, 1.6, "trim")]
     w.cubes += [box(0, 11.0, 0, 1.5, 18.0, 1.5, "trim")]
     w.cubes += [box(0, 5.0, 0, 2.0, 6.0, 2.0, "suit")] + wrap(0, 0, 2.2, 8.0, 2.2, "plate")
-    w.cubes += [box(0, 17.0, 0, 2.2, 1.2, 2.2, "plate", lines=[("h", 0.5, ("north", "south", "east", "west"))])]
-    w.cubes += [box(0, 22.5, 0, 9.0, 7.0, 6.0, "plate"),
-                box(-5.2, 22.5, 0, 1.4, 7.8, 6.8, "trim"), box(-6.3, 22.5, 0, 0.8, 6.4, 5.4, "plate"),
-                box(0, 22.5, -3.05, 3.6, 3.6, 0.2, "gem"), box(0, 22.5, 3.05, 3.6, 3.6, 0.2, "gem")]
-    for y in (19.6, 25.4):
-        w.cubes.append(box(0, y, 0, 9.4, 0.5, 6.4, "trim", seams=False))
-    w.cubes += [C((4.5, 20.6, -2.0), (3.8, 1.2, 1.4), "plate", rot=(0, 0, -15), pivot=(4.5, 21.2, -1.3)),
-                C((4.5, 20.6, 0.6), (3.8, 1.2, 1.4), "plate", rot=(0, 0, -15), pivot=(4.5, 21.2, 1.3)),
-                C((4.5, 23.4, -2.0), (3.8, 1.2, 1.4), "plate", rot=(0, 0, 15), pivot=(4.5, 24.0, -1.3)),
-                C((4.5, 23.4, 0.6), (3.8, 1.2, 1.4), "plate", rot=(0, 0, 15), pivot=(4.5, 24.0, 1.3))]
-    pistons = [box(-2.2, 27.0, 0, 1.2, 2.0, 1.2, "trim"), box(2.2, 27.0, 0, 1.2, 2.0, 1.2, "trim"),
-               box(-2.2, 28.2, 0, 1.6, 0.5, 1.6, "glow"), box(2.2, 28.2, 0, 1.6, 0.5, 1.6, "glow")]
-    w.sub("pistons", [0, 26.0, 0], pistons)
+    w.cubes += [box(0, 8.6, 0, 2.4, 0.8, 2.4, "plate"), box(0, 12.6, 0, 1.9, 2.4, 1.9, "glow"),
+                box(0, 11.2, 0, 2.3, 0.5, 2.3, "trim"), box(0, 14.0, 0, 2.3, 0.5, 2.3, "trim"),
+                box(0, 16.8, 0, 2.6, 1.6, 2.6, "plate", lines=[("h", 0.5, ("north", "south", "east", "west"))])]
+    # Kopf: achteckiger Koerper, Baender, Energiefenster
+    w.cubes += octo(-0.5, 22.5, 0, 6.4, 9.0, "x", "plate")
+    for x in (-3.4, 2.0):
+        w.cubes += octo(x, 22.5, 0, 7.0, 0.7, "x", "trim", seams=False)
+    w.cubes += [diamond(-0.7, 22.5, -3.3, 2.8, 0.3, "gem"), diamond(-0.7, 22.5, 3.3, 2.8, 0.3, "gem"),
+                diamond(-0.7, 22.5, -3.45, 1.2, 0.2, "glow"), diamond(-0.7, 22.5, 3.45, 1.2, 0.2, "glow")]
+    # Schlagflaeche
+    w.cubes += octo(-5.6, 22.5, 0, 8.4, 1.4, "x", "trim") + octo(-6.5, 22.5, 0, 7.0, 0.6, "x", "plate", seams=False)
+    w.cubes += [box(-6.85, 22.5, 0, 0.2, 2.6, 2.6, "glow"), C((-6.95, 21.2, -1.3), (0.2, 2.6, 2.6), "glow", rot=(45, 0, 0),
+                                                                   pivot=(-6.85, 22.5, 0))]
+    # Klaue (Schraubenschluessel-Maul) am Ruecken
+    w.cubes += horn(3.6, 24.6, 0, [(2.6, 70), (2.4, 95), (1.6, 125)], 2.0, "plate", taper_to=0.5)
+    w.cubes += horn(3.6, 20.4, 0, [(2.6, 110), (2.4, 85), (1.6, 55)], 2.0, "plate", taper_to=0.5)
+    w.cubes += [box(4.2, 22.5, 0, 1.2, 1.6, 2.4, "glow")]
+    # Dorn obenauf
+    w.cubes += point(-0.5, 26.4, 2.6, 2.0, "trim", steps=3)
+    pistons = [box(-3.0, 26.6, -1.6, 1.0, 1.8, 1.0, "trim"), box(-3.0, 26.6, 1.6, 1.0, 1.8, 1.0, "trim"),
+               box(-3.0, 27.6, -1.6, 1.4, 0.4, 1.4, "glow"), box(-3.0, 27.6, 1.6, 1.4, 0.4, 1.4, "glow")]
+    w.sub("pistons", [-3.0, 26.0, 0], pistons)
     w.anim = {"pistons": wave("position", 1, 0.6, 4, base=-0.4)}
     return w
 
 
 def carbonox_launcher() -> Weapon:
-    """Carbonox-Plasmawerfer (Ratchet, Combuster-Art): Panzerkoerper mit Seitenschlitzen, dicker Lauf mit
-    Kuehlrippen und Gluehmuendung, roter Plasmatank mit Rissen obenauf, Tragebuegel, Griff und Vordergriff."""
+    """Carbonox-Plasmawerfer (Ratchet, Combuster-Art): gepanzerter Koerper mit gekippter Haube und Kuehlschlitzen,
+    dicker achteckiger Lauf mit Kuehlrippen und Trichtermuendung um einen gluehenden Kern, Plasmatank im Gitterkaefig
+    obenauf, Abgasduesen hinten, Tragebuegel, Griff und Vordergriff."""
     pal = Palette("6A7078", "2A2E34", "B8C0C8", "1C1E22", "3A3E44", "FF2A2A", "FFC0B0", "FF2A2A", "FF2A2A")
     w = Weapon(pal, "gun")
-    w.cubes += [box(0, 6.0, 0.5, 4.2, 4.6, 10.0, "plate", lines=[("h", 0.3, ("east", "west"))]),
-                box(0, 3.4, -1.0, 3.0, 1.0, 6.0, "trim"), box(0, 6.0, 6.2, 3.4, 4.0, 1.6, "plate")]
-    w.cubes += [box(0, 6.4, -8.0, 3.2, 3.2, 7.0, "trim")]
+    w.cubes += [box(0, 6.0, 0.5, 4.2, 4.6, 10.0, "plate"), box(0, 3.4, -1.0, 3.0, 1.0, 6.0, "trim"),
+                box(0, 6.0, 6.2, 3.4, 4.0, 1.6, "plate"),
+                C((-2.3, 7.6, -4.6), (4.6, 1.0, 5.0), "plate", rot=(-12, 0, 0), pivot=(0, 8.1, -2.1))]
+    for side in (-1, 1):
+        for z in (-2.4, -0.6, 1.2, 3.0):
+            w.cubes.append(box(side * 2.15, 5.6, z, 0.2, 2.4, 0.9, "glow"))
+        w.cubes.append(box(side * 2.25, 7.6, 0.5, 0.3, 0.6, 9.6, "trim", seams=False))
+    # Lauf mit Rippen und Trichtermuendung
+    w.cubes += octo(0, 6.4, -8.0, 3.4, 7.0, "z", "trim")
     for z in (-5.6, -7.2, -8.8, -10.4):
-        w.cubes.append(box(0, 6.4, z, 4.4, 4.4, 0.4, "plate", seams=False))
-    w.cubes += [box(0, 6.4, -12.0, 3.8, 3.8, 1.2, "plate", edge=("north",)), box(0, 6.4, -12.65, 2.0, 2.0, 0.2, "glow")]
-    w.cubes += [box(0, 9.6, 0.0, 2.2, 1.8, 6.0, "glow", cracks=True, edge=("east", "west")),
-                box(0, 9.6, -3.2, 2.6, 2.2, 0.6, "trim"), box(0, 9.6, 3.2, 2.6, 2.2, 0.6, "trim")]
-    w.cubes += [box(0, 11.4, -0.6, 1.0, 0.6, 5.0, "trim"), box(0, 10.8, -3.0, 1.0, 1.0, 0.6, "trim"),
-                box(0, 10.8, 1.8, 1.0, 1.0, 0.6, "trim")]
+        w.cubes += octo(0, 6.4, z, 4.6, 0.4, "z", "plate", seams=False)
+    w.cubes += octo(0, 6.4, -12.0, 4.4, 1.6, "z", "plate") + octo(0, 6.4, -13.1, 5.2, 0.8, "z", "trim", seams=False)
+    w.cubes += octo(0, 6.4, -13.6, 2.6, 0.3, "z", "glow") + [box(0, 6.4, -13.2, 1.2, 1.2, 1.4, "glow")]
+    # Plasmatank im Kaefig
+    w.cubes += [box(0, 10.1, -3.4, 2.8, 2.6, 0.6, "trim"), box(0, 10.1, 3.4, 2.8, 2.6, 0.6, "trim")]
+    for x in (-1.2, 1.2):
+        for y in (9.0, 11.2):
+            w.cubes.append(box(x, y, 0.0, 0.3, 0.3, 6.4, "trim", seams=False))
+    # Tragebuegel, Abgasduesen, Griffe
+    w.cubes += [box(0, 12.2, -0.6, 1.0, 0.6, 5.0, "trim"), box(0, 11.8, -3.0, 1.0, 0.8, 0.6, "trim"),
+                box(0, 11.8, 1.8, 1.0, 0.8, 0.6, "trim")]
+    for side in (-1, 1):
+        w.cubes += octo(side * 1.2, 8.0, 7.4, 1.2, 1.4, "z", "trim") + [box(side * 1.2, 8.0, 8.15, 0.6, 0.6, 0.1, "glow")]
     w.cubes += [C((-0.8, 0.0, 2.6), (1.6, 3.8, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 3.8, 3.5)),
                 box(0, 2.4, -4.0, 1.4, 3.2, 1.4, "suit")]
-    for side in (-1, 1):
-        for z in (-2.0, 0.0, 2.0):
-            w.cubes.append(box(side * 2.15, 6.6, z, 0.2, 2.0, 1.0, "glow"))
-    tank = [box(0, 9.6, 0.0, 2.3, 1.9, 6.1, "glow")]
-    w.sub("tank", [0, 9.6, 0.0], tank)
+    tank = octo(0, 10.1, 0.0, 2.0, 6.2, "z", "glow", cracks=True)
+    w.sub("tank", [0, 10.1, 0.0], tank)
     w.anim = {"tank": wave("scale", 0, 0.05, 4)}
     return w
 
 
 def infernox_ryno() -> Weapon:
-    """Infernox-R.Y.N.O. (Ratchet): Werfer mit drehender Sechsfach-Raketentrommel (gluehende Sprengkoepfe),
-    Gehaeuse mit Hitzerissen, Trommelmagazin an der Seite, Zielsensor, Griff, Vordergriff und Schulterstuetze."""
+    """Infernox-R.Y.N.O. (Ratchet): achteckiges Trommelgehaeuse mit roten Warnbaendern um die drehende
+    Sechsfach-Raketentrommel (gluehende Sprengkoepfe), Gehaeuse mit Glutrissen und gekippten Seitenfluegeln,
+    Zielsensor mit Linse, Trommelmagazin, Kuehlduesen, Schulterstuetze, Griff und Vordergriff."""
     pal = Palette("8A4A16", "2A1006", "E8A04A", "3A140C", "D8A03A", "FF6A0A", "FFF0A0", "FFB02A", "FFC02A")
     w = Weapon(pal, "gun")
-    dark, steel = "34383E", "C8CCD0"
-    w.cubes += [box(0, 6.0, 2.0, 5.0, 5.0, 9.0, "plate", cracks=True, tint=dark), box(0, 6.0, -3.2, 6.0, 6.0, 1.4, "trim", tint=steel),
-                box(0, 6.0, -12.6, 6.4, 6.4, 1.0, "trim", edge=("north",), tint=steel),
+    dark, steel, red = "34383E", "C8CCD0", "B01818"
+    w.cubes += [box(0, 6.0, 2.0, 5.0, 5.0, 9.0, "plate", cracks=True, tint=dark),
                 box(-1.6, 8.55, 2.0, 0.5, 0.2, 9.1, "glow", seams=False), box(1.6, 8.55, 2.0, 0.5, 0.2, 9.1, "glow", seams=False)]
-    w.cubes += [box(0, 9.2, 3.0, 1.6, 1.4, 4.0, "trim"), box(0, 9.2, 0.8, 1.2, 1.2, 0.2, "visor")]
-    w.cubes += [box(3.3, 5.6, 2.2, 1.6, 3.6, 3.6, "trim"), box(4.15, 5.6, 2.2, 0.1, 2.4, 2.4, "gem")]
+    # Trommelgehaeuse (achteckig) mit Warnbaendern und Muendungsring
+    w.cubes += octo(0, 6.0, -7.6, 6.6, 8.0, "z", "trim", tint=steel)
+    for z in (-4.6, -10.2):
+        w.cubes += octo(0, 6.0, z, 7.0, 0.8, "z", "plate", tint=red, seams=False)
+    w.cubes += octo(0, 6.0, -12.0, 7.2, 0.8, "z", "trim", tint=dark, edge=("north",))
+    # Seitenfluegel
+    for side in (-1, 1):
+        w.cubes += [C((side * 2.6 - (1.6 if side < 0 else 0.0), 5.0, -1.0), (1.6, 0.5, 6.0), "plate", tint=red,
+                      rot=(0, 0, -side * 25), pivot=(side * 2.6, 5.2, 2.0)),
+                    box(side * 2.55, 7.0, 4.0, 0.2, 1.6, 3.0, "glow")]
+    # Zielsensor, Magazin, Kuehlduesen
+    w.cubes += [box(0, 9.2, 3.0, 1.6, 1.4, 4.0, "trim"), box(0, 9.2, 0.8, 1.2, 1.2, 0.2, "visor"),
+                diamond(0, 10.4, 3.0, 1.4, 1.0, "trim")]
+    w.cubes += octo(3.3, 5.6, 2.2, 3.6, 1.6, "x", "trim") + [box(4.15, 5.6, 2.2, 0.1, 2.0, 2.0, "gem")]
+    for x in (-1.4, 1.4):
+        w.cubes += octo(x, 4.2, 6.9, 1.0, 1.0, "z", "trim") + [box(x, 4.2, 7.45, 0.5, 0.5, 0.1, "glow")]
     w.cubes += [C((-0.8, 0.0, 4.2), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.0, 5.1)),
                 box(0, 2.0, -1.2, 1.4, 3.0, 1.4, "suit"), box(0, 5.4, 8.6, 4.0, 4.4, 1.2, "plate", tint=dark),
-                box(0, 3.0, 9.0, 3.2, 1.0, 2.0, "trim")]
+                box(0, 3.0, 9.0, 3.2, 1.0, 2.0, "trim"), box(0, 5.4, 9.3, 4.4, 4.8, 0.3, "suit")]
     drum = [box(0, 6.0, -8.0, 1.6, 1.6, 8.0, "trim")]
     for i in range(6):
         a = math.radians(i * 60 + 30)
         x, y = math.cos(a) * 2.0, 6.0 + math.sin(a) * 2.0
-        drum += [box(x, y, -7.9, 1.5, 1.5, 9.0, "trim", seams=False, tint="9AA0A8"), box(x, y, -12.5, 1.1, 1.1, 0.4, "glow")]
+        drum += octo(x, y, -7.9, 1.5, 9.0, "z", "trim", seams=False, tint="9AA0A8") + [diamond(x, y, -12.5, 0.9, 0.6, "glow")]
     w.sub("drum", [0, 6.0, -8.0], drum)
     w.anim = {"drum": spin(2, 2)}
     return w
