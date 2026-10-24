@@ -54,18 +54,25 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:veldin_cave",
+      "kingdomomnitrix:veldin_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
+    [
+      "kingdomomnitrix:veldin_boulders",
+      "kingdomomnitrix:veldin_geode"
+    ],
     [],
     [],
     [],
     [
       "kingdomomnitrix:ore_solar_copper",
-      "kingdomomnitrix:veldin_blob_veldin_sandstone"
+      "kingdomomnitrix:veldin_blob_veldin_sandstone",
+      "kingdomomnitrix:veldin_disk_sandstone"
     ],
     [],
     [],

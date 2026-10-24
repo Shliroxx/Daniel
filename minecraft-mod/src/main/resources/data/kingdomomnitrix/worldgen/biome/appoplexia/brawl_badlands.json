@@ -34,7 +34,10 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:appoplexia_cave",
+      "kingdomomnitrix:appoplexia_canyon"
+    ]
   },
   "features": [
     [],

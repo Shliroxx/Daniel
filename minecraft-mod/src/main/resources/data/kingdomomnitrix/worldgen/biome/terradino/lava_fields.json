@@ -34,7 +34,10 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:terradino_cave",
+      "kingdomomnitrix:terradino_canyon"
+    ]
   },
   "features": [
     [],

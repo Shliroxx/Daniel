@@ -41,20 +41,28 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:kerwan_cave",
+      "kingdomomnitrix:kerwan_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
+    [
+      "kingdomomnitrix:kerwan_boulders"
+    ],
     [],
     [],
     [],
     [
-      "kingdomomnitrix:ore_azurite"
+      "kingdomomnitrix:ore_azurite",
+      "kingdomomnitrix:kerwan_disk_soil"
     ],
     [],
-    [],
+    [
+      "kingdomomnitrix:kerwan_spring"
+    ],
     [
       "kingdomomnitrix:kerwan_kerwan_spiral_tree",
       "kingdomomnitrix:kerwan_meadows_kerwan_reed"

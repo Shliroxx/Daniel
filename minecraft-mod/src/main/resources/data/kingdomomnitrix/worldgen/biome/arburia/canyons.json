@@ -34,7 +34,10 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:arburia_cave",
+      "kingdomomnitrix:arburia_canyon"
+    ]
   },
   "features": [
     [],

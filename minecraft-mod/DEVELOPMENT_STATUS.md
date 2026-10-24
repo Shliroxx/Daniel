@@ -15,15 +15,14 @@ interne Prioritäts-Scores (0–100), ehrlich nach Screenshots vergeben.
 Kein Jar-Release, bis alles überarbeitet ist (Entscheidung SANTIQ).
 
 ## CURRENT PHASE
-**Überarbeitung aller offenen Punkte (Auftrag SANTIQ 2026-10-24, ohne Sounds).** Erledigt: alte Ausrüstung als
-GeckoLib-3D, NPCs neu, zweihändige Gewehrhaltung, Alien-/Omnitrix-Prüfung, Texturen, Traverse Town aus eigenen
-Blöcken, Leistung gemessen, dieses Dokument. Offen: Inhalte (siehe NEXT TASK).
+**Inhalte fertigstellen (Auftrag SANTIQ 2026-10-24: „alles fertig außer Omnitrix-Upgrades“).** Erledigt:
+Clank-Rucksack mit vier Modi, Gadgetron-Katalog mit vier neuen Waffen und Rüstungs-/Gadget-Reitern, Ben-10-Schurken
+(Vilgax, Kevin 11, Forever Knights, Drohnen), Heimatwelten Welle 2 (zehn Welten), Welten-Ausbau der Ratchet-Planeten.
+Zurückgestellt: Omnitrix-Upgrades, Sounds.
 
 ## CURRENT PRIORITY
-1. Omnitrix-Upgrades (Boost-Module + Stufen, freigegeben)
-2. Ratchet-Teil: Gadgetron-Shop (R3), Clank-Rucksack mit Heli/Thruster/Gleiter (R4)
-3. Alien-Heimatwelten mit wilden Arten fertigstellen, Welten-Ausbau, Ben-10-Schurken
-4. Sounds mit echtem Gehör abstimmen (SANTIQ, ausdrücklich zurückgestellt)
+1. Omnitrix-Upgrades (Boost-Module + Stufen) — von SANTIQ zurückgestellt, wartet auf Freigabe
+2. Sounds mit echtem Gehör abstimmen (SANTIQ, ausdrücklich zurückgestellt)
 
 ## AKTUELLER STAND JE BEREICH (2026-10-24, ehrlich nach Screenshots)
 | Bereich | Stand | Offen |
@@ -38,6 +37,11 @@ Blöcken, Leistung gemessen, dieses Dokument. Offen: Inhalte (siehe NEXT TASK).
 | Herzlose, Boss | nach KH gebaut, Boss mit Leuchtmaske | — |
 | Welt-Blöcke | 16x16-Pixelstil (bewusst), Technik-Blöcke 128x128 | — |
 | Traverse Town | eigene Blöcke (Putz, Dachziegel, Pflaster, Fliesen, Fachwerk), Uhrturm, Arena | alte Welten behalten ihre Stadt |
+| Clank-Rucksack | Heli, Thruster, Gleiter (Aufwind über Hitze), Jetpack (Treibstoff, gebremster Fall bei leerem Tank) | — |
+| Gadgetron-Terminal | 7 Waffen (neu: Blitz Gun, Pyrocitor, Devastator mit Zielsuche, Morph-O-Ray), Reiter Rüstung/Gadgets | — |
+| Ben-10-Schurken | Vilgax (Boss, 3 Phasen, Drohnen), Kevin 11 (Mini-Boss, absorbiert), Forever Knights (natürlich), Drohnen | Kevin-Absorbieren nur im Code geprüft |
+| Alien-Heimatwelten | 17 Welten mit wilden Arten (Welle 1: 7, Welle 2: 10) | Atomix, Way Big, Alien X bleiben Sonderfälle |
+| Ratchet-Planeten | Höhlen, Schluchten, Felsbrocken, Bodenflecken, Quellen (Torren IV: Lava), Kupfer-Geoden (Veldin) | bestehende Welten behalten altes Gelände |
 | Sounds | synthetisch erzeugt | nie mit Gehör geprüft |
 
 ---
@@ -304,6 +308,10 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
 - BEHOBEN: Andere Spieler sahen Aliens nur in `idle` → Gliedmaßen-Animator + Positionsänderung.
 - Bekannt: Schusswaffen auf Rüstungsständern stehen senkrecht (Ständer kennen die Anschlag-Haltung nicht).
 - Bekannt: Gruppen werden bei Server-Neustart nicht gespeichert (bewusst).
+- Bekannt: Schon erzeugte Chunks behalten ihr Gelände; neue Höhlen/Features und die Welle-2-Welten nur in neuen Chunks.
+- BEHOBEN (2026-10-24): Blitz Gun traf nur mit einer Kugel (Unverwundbarkeit nach dem ersten Treffer) → Kugeln zählen einzeln.
+- BEHOBEN: Terminal schnitt bei 854 x 480 die Fußleiste ab → kompaktere Zeilen, Auffüllen und Fertig in einer Zeile.
+- BEHOBEN: /kill auf einen Boss zahlte die Siegbelohnung aus → nur noch bei echtem Sieg.
 - Testumgebung: Der Cloud-Container startet zwischen Sitzungen neu; Xvfb, Server und Client müssen dann neu gestartet
   werden (`tools/client_smoke.sh server`, `join`).
 
@@ -325,17 +333,16 @@ Ergebnis: rund 10 % des Tick-Budgets, keine Engpässe. Client-FPS lassen sich im
 ---
 
 ## NEXT TASK
-**Omnitrix-Upgrades:** Boost-Module und Stufen für das Omnitrix (freigegeben), danach Ratchet R3/R4.
+**Omnitrix-Upgrades** (Boost-Module + Stufen), sobald SANTIQ sie freigibt.
 
 ## NEXT 5 TASKS
-1. Omnitrix-Upgrades (Boost-Module + Stufen)
-2. Gadgetron-Shop (R3)
-3. Clank-Rucksack mit Heli/Thruster/Gleiter + Jetpack (R4)
-4. Alien-Heimatwelten mit wilden Arten fertigstellen
-5. Ben-10-Schurken und Bosse ergänzen
+1. Omnitrix-Upgrades (Boost-Module + Stufen) — zurückgestellt
+2. Strukturen auf den Welle-2-Heimatwelten (Siedlungen wie auf Petropia)
+3. Waffen auf Rüstungsständern in Anschlag-Haltung
+4. Kevin-Absorbieren mit verwandeltem Spieler im Spiel testen
+5. Sounds mit echtem Gehör abstimmen (SANTIQ)
 
 ## LONG TERM
-- Welten-Ausbau auf Nullscape/Terralith-Niveau
 - Sounds mit echtem Gehör abstimmen (SANTIQ)
 
 ## BUILD STATUS

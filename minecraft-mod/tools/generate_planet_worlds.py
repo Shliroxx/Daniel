@@ -179,29 +179,58 @@ PETROPIA_KIT = {
 }
 
 
+# Ratchet-Planeten (Welten-Ausbau): Hoehlen und Schluchten, Felsbrocken, Bodenflecken, Quellen und Geoden je Welt,
+# damit jede Welt mehr Landschaft hat als Oberflaeche plus Pflanzen (wie Petropia und die grossen Weltgenerierungs-Mods)
+VELDIN_KIT = {
+    "boulders": kit_boulder("veldin_boulders", "veldin_rock", 1),
+    "disk_sandstone": kit_disk("veldin_disk_sandstone", "veldin_sandstone", ["veldin_sand"], 2, 2, 5),
+    "geode": kit_geode("veldin_geode", "veldin_rock", "veldin_sandstone", "solar_copper_ore", "solar_copper_ore", 14, 10, 60),
+}
+KERWAN_KIT = {
+    "boulders": kit_boulder("kerwan_boulders", "kerwan_slate", 2),
+    "disk_soil": kit_disk("kerwan_disk_soil", "kerwan_soil", ["kerwan_turf"], 1, 2, 4),
+    "spring": kit_spring("kerwan_spring", "minecraft:water", ["kerwan_slate"], 14),
+}
+NOVALIS_KIT = {
+    "boulders": kit_boulder("novalis_boulders", "novalis_limestone", 1),
+    "disk_loam": kit_disk("novalis_disk_loam", "novalis_loam", ["novalis_moss"], 1, 2, 3),
+    "spring": kit_spring("novalis_spring", "minecraft:water", ["novalis_limestone"], 10),
+}
+RILGAR_KIT = {
+    "boulders": kit_boulder("rilgar_boulders", "rilgar_coralstone", 1),
+    "disk_coral": kit_disk("rilgar_disk_coral", "rilgar_coralstone", ["rilgar_sand"], 2, 2, 4),
+}
+TORREN_KIT = {
+    "boulders": kit_boulder("torren_boulders", "torren_basalt", 2),
+    "disk_crust": kit_disk("torren_disk_crust", "torren_crust", ["torren_dust"], 2, 2, 5),
+    "lava_spring": kit_spring("torren_lava_spring", "minecraft:lava", ["torren_basalt"], 8),
+}
+
 PLANETS = {
     "veldin": {
         "terrain": "large_biomes",
         "stone": "veldin_rock", "top": "veldin_sand", "under": "veldin_sand", "steep": "veldin_sandstone", "sea": False,
         "ore": "solar_copper", "ore_count": 14, "ore_size": 9, "ore_max": 110,
         "blobs": [("veldin_sandstone", 10, 40)],
+        "caves": True, "kit": VELDIN_KIT, "extras": ["boulders", "geode"],
         "biomes": {
             "dunes": {"sky": 0xF0B070, "fog": 0xF2C8A0, "water": 0x3F76E4, "particle": None,
-                      "plants": [("veldin_scrub", 2, 24)], "trees": [], "high_top": "veldin_sandstone"},
+                      "plants": [("veldin_scrub", 2, 24)], "trees": [], "high_top": "veldin_sandstone", "extras": ["disk_sandstone"]},
             "canyons": {"sky": 0xE89860, "fog": 0xE0A880, "water": 0x3F76E4, "particle": ("minecraft:white_ash", 0.004),
                         "plants": [("veldin_scrub", 1, 12)], "trees": [], "top": "veldin_sandstone"},
         },
         "monsters": [("shadow", 60, 1, 3), ("soldier", 25, 1, 2)],
-        # DNA-Quellen (Scan): Cannonbolt, Humungousaur
+        # Tierwelt (frueher DNA-Quellen; Cannonbolt und Humungousaur kommen jetzt von ihren Heimatwelten)
         "life": {"creature": [("minecraft:armadillo", 12, 2, 3), ("minecraft:camel", 6, 1, 2)]},
     },
     "kerwan": {
         "terrain": "amplified",
         "stone": "kerwan_slate", "top": "kerwan_turf", "under": "kerwan_soil", "steep": "kerwan_slate", "sea": False,
         "ore": "azurite", "ore_count": 12, "ore_size": 8, "ore_max": 90, "blobs": [],
+        "caves": True, "kit": KERWAN_KIT, "extras": ["boulders", "spring"],
         "biomes": {
             "meadows": {"sky": 0x7FB8FF, "fog": 0xA8D0F0, "water": 0x3FA0D0, "particle": None,
-                        "plants": [("kerwan_reed", 3, 32)], "trees": [("kerwan_spiral_tree", 1)]},
+                        "plants": [("kerwan_reed", 3, 32)], "trees": [("kerwan_spiral_tree", 1)], "extras": ["disk_soil"]},
             "spires": {"sky": 0x6AA0F0, "fog": 0x90C0E8, "water": 0x3FA0D0, "particle": None,
                        "plants": [("kerwan_reed", 2, 24)], "trees": [("kerwan_spiral_tree", 4)]},
         },
@@ -212,14 +241,15 @@ PLANETS = {
         "terrain": "overworld",
         "stone": "novalis_limestone", "top": "novalis_moss", "under": "novalis_loam", "steep": "novalis_limestone", "sea": False,
         "ore": "viridium", "ore_count": 10, "ore_size": 7, "ore_max": 70, "blobs": [],
+        "caves": True, "kit": NOVALIS_KIT, "extras": ["boulders", "spring"],
         "biomes": {
             "fields": {"sky": 0x9AC8FF, "fog": 0xD8E8F8, "water": 0x4AB0E0, "particle": None,
-                       "plants": [("novalis_bloom", 6, 48)], "trees": [("novalis_bell_tree", 1)]},
+                       "plants": [("novalis_bloom", 6, 48)], "trees": [("novalis_bell_tree", 1)], "extras": ["disk_loam"]},
             "grove": {"sky": 0xB0B8FF, "fog": 0xF0D8F0, "water": 0x4AB0E0, "particle": ("minecraft:spore_blossom_air", 0.006),
                       "plants": [("novalis_bloom", 3, 32)], "trees": [("novalis_bell_tree", 4)]},
         },
         "monsters": [("shadow", 50, 1, 3)],
-        # DNA-Quellen (Scan): Rath, Goop, Swampfire
+        # Tierwelt (Rath, Goop und Swampfire kommen jetzt von ihren Heimatwelten)
         "life": {"creature": [("minecraft:fox", 10, 2, 3)], "monster": [("minecraft:slime", 12, 1, 2), ("minecraft:bogged", 12, 1, 2)]},
         "slime": True,
     },
@@ -227,6 +257,7 @@ PLANETS = {
         "terrain": "overworld", "noise_tweaks": {"continentalness": {"first_octave": 1}},
         "stone": "rilgar_coralstone", "top": "rilgar_sand", "under": "rilgar_sand", "steep": "rilgar_coralstone", "sea": True,
         "ore": "aquarine", "ore_count": 9, "ore_size": 7, "ore_max": 60, "blobs": [],
+        "caves": True, "kit": RILGAR_KIT, "extras": ["boulders", "disk_coral"],
         "biomes": {
             "reef": {"sky": 0x78D8F0, "fog": 0xB8F0F8, "water": 0x2AD0C8, "particle": None,
                      "plants": [("rilgar_seagrass", 2, 24)], "trees": []},
@@ -234,7 +265,7 @@ PLANETS = {
                           "plants": [("rilgar_seagrass", 4, 32)], "trees": [("rilgar_mangrove", 4)]},
         },
         "monsters": [("shadow", 30, 1, 2), ("darkball", 10, 1, 1)],
-        # DNA-Quellen (Scan): Ripjaws, Jetray, Brainstorm
+        # Tierwelt (Ripjaws, Jetray und Brainstorm kommen jetzt von ihren Heimatwelten)
         "life": {"water_creature": [("minecraft:dolphin", 4, 1, 2)],
                  "water_ambient": [("minecraft:cod", 15, 3, 5), ("minecraft:tropical_fish", 20, 3, 6)]},
     },
@@ -243,14 +274,15 @@ PLANETS = {
         "stone": "torren_basalt", "top": "torren_dust", "under": "torren_dust", "steep": "torren_basalt", "sea": False,
         "ore": "pyronite", "ore_count": 8, "ore_size": 6, "ore_max": 50, "blobs": [("torren_crust", 8, 34)],
         "extra_ores": [("infernite_ore", 3, 4, 24)],
+        "caves": True, "kit": TORREN_KIT, "extras": ["boulders", "lava_spring"],
         "biomes": {
             "plains": {"sky": 0xD07050, "fog": 0xC88068, "water": 0x8A4A3A, "particle": ("minecraft:ash", 0.02),
-                       "plants": [("torren_thorn", 2, 20)], "trees": [], "crust": True},
+                       "plants": [("torren_thorn", 2, 20)], "trees": [], "crust": True, "extras": ["disk_crust"]},
             "wastes": {"sky": 0xB05040, "fog": 0xA86050, "water": 0x8A4A3A, "particle": ("minecraft:ash", 0.04),
                        "plants": [("torren_thorn", 1, 10)], "trees": [], "top": "torren_crust"},
         },
         "monsters": [("large_body", 20, 1, 1), ("darkball", 30, 1, 2), ("shadow", 40, 2, 3)],
-        # DNA-Quellen (Scan): Big Chill, Diamondhead, Way Big
+        # Tierwelt; Verwuester liefern Way-Big-DNA (Big Chill und Diamondhead kommen von ihren Heimatwelten)
         "life": {"creature": [("minecraft:polar_bear", 5, 1, 2), ("minecraft:allay", 6, 1, 2)],
                  "monster": [("minecraft:stray", 15, 1, 2), ("minecraft:ravager", 3, 1, 1)]},
     },
@@ -407,23 +439,26 @@ def _simple_world(terrain: str, stone: str, top: str, under: str, blob: tuple[st
 ALIEN_WORLDS_2 = {
     "arburia": _simple_world("amplified", "arburia_rock", "arburia_sandstone", "arburia_sandstone", ("arburia_amber", 8, 22), "arburia_scrub",
                              False, {"canyons": (0xE0A860, 0xE8C890, 0x5A9AA8, ("minecraft:white_ash", 0.002), 2, None),
-                                     "amber_mesas": (0xD08A40, 0xD8B070, 0x5A9AA8, None, 1, "arburia_rock")}),
+                                     "amber_mesas": (0xD08A40, 0xD8B070, 0x5A9AA8, None, 1, "arburia_rock")}, caves=True),
     "lepidopterra": _simple_world("overworld", "lepidopterra_stone", "lepidopterra_moss", "lepidopterra_peat", ("lepidopterra_slime", 8, 26),
                                   "lepidopterra_stalk", False,
                                   {"stink_marsh": (0xA8B83A, 0xC8D06A, 0x6A8A1A, ("minecraft:spore_blossom_air", 0.006), 5, None),
                                    "hive_hills": (0x98A830, 0xB8C060, 0x6A8A1A, None, 2, "lepidopterra_stone")}),
     "anur_phaetos": _simple_world("large_biomes", "phaetos_stone", "phaetos_dust", "phaetos_dust", ("phaetos_soulstone", 9, 24), "phaetos_wisp",
                                   False, {"grave_plains": (0x14101C, 0x2A2434, 0x3A5A6A, ("minecraft:soul", 0.004), 2, None),
-                                          "soul_spires": (0x0A0812, 0x1E1A28, 0x3A5A6A, ("minecraft:soul_fire_flame", 0.003), 1, "phaetos_stone")}),
+                                          "soul_spires": (0x0A0812, 0x1E1A28, 0x3A5A6A, ("minecraft:soul_fire_flame", 0.003), 1, "phaetos_stone")},
+                                  caves=True),
     "appoplexia": _simple_world("overworld", "appoplexia_rock", "appoplexia_turf", "appoplexia_soil", None, "appoplexia_claw", False,
                                 {"rage_steppe": (0xF0A060, 0xF0C090, 0x4A8AA8, None, 5, None),
-                                 "brawl_badlands": (0xD07A40, 0xE0A070, 0x4A8AA8, ("minecraft:white_ash", 0.003), 2, "appoplexia_soil")}),
+                                 "brawl_badlands": (0xD07A40, 0xE0A070, 0x4A8AA8, ("minecraft:white_ash", 0.003), 2, "appoplexia_soil")},
+                                caves=True),
     "aranhaschimmia": _simple_world("overworld", "aranha_stone", "aranha_turf", "aranha_loam", ("aranha_silk", 6, 30), "aranha_fern", False,
                                     {"web_jungle": (0x6AA87A, 0x9AC8A0, 0x2A6A5A, ("minecraft:white_ash", 0.004), 6, None),
                                      "silk_hollows": (0x5A8A6A, 0x8AB090, 0x2A6A5A, ("minecraft:white_ash", 0.008), 3, None)}),
     "terradino": _simple_world("overworld", "terradino_basalt", "terradino_turf", "terradino_clay", ("terradino_amber", 7, 24), "terradino_cycad",
                                False, {"fern_plains": (0x9AC8E0, 0xC8E0E8, 0x3A7A8A, None, 4, None),
-                                      "lava_fields": (0xC87A4A, 0xA86A4A, 0x3A7A8A, ("minecraft:ash", 0.02), 1, "terradino_basalt")}),
+                                      "lava_fields": (0xC87A4A, 0xA86A4A, 0x3A7A8A, ("minecraft:ash", 0.02), 1, "terradino_basalt")},
+                               caves=True),
     "aeropela": _simple_world("overworld", "aeropela_coralstone", "aeropela_sand", "aeropela_sand", ("aeropela_glowcoral", 8, 26), "aeropela_kelp",
                               True, {"sky_sea": (0x7AC8F8, 0xB8E0FF, 0x1A6AC8, None, 2, None),
                                      "coral_isles": (0x9AD8FF, 0xC8EEFF, 0x2A8AD8, None, 4, "aeropela_coralstone")},

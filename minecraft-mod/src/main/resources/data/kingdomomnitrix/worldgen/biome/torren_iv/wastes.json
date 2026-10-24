@@ -78,12 +78,17 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:torren_iv_cave",
+      "kingdomomnitrix:torren_iv_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
+    [
+      "kingdomomnitrix:torren_boulders"
+    ],
     [],
     [],
     [],
@@ -93,7 +98,9 @@
       "kingdomomnitrix:torren_iv_blob_torren_crust"
     ],
     [],
-    [],
+    [
+      "kingdomomnitrix:torren_lava_spring"
+    ],
     [
       "kingdomomnitrix:torren_iv_wastes_torren_thorn"
     ],

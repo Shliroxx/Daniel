@@ -34,7 +34,10 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:anur_phaetos_cave",
+      "kingdomomnitrix:anur_phaetos_canyon"
+    ]
   },
   "features": [
     [],

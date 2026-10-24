@@ -60,12 +60,17 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:novalis_cave",
+      "kingdomomnitrix:novalis_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
+    [
+      "kingdomomnitrix:novalis_boulders"
+    ],
     [],
     [],
     [],
@@ -73,7 +78,9 @@
       "kingdomomnitrix:ore_viridium"
     ],
     [],
-    [],
+    [
+      "kingdomomnitrix:novalis_spring"
+    ],
     [
       "kingdomomnitrix:novalis_novalis_bell_tree",
       "kingdomomnitrix:novalis_grove_novalis_bloom"

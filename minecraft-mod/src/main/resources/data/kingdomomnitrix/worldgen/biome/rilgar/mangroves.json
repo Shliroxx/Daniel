@@ -61,17 +61,23 @@
   },
   "spawn_costs": {},
   "carvers": {
-    "air": []
+    "air": [
+      "kingdomomnitrix:rilgar_cave",
+      "kingdomomnitrix:rilgar_canyon"
+    ]
   },
   "features": [
     [],
     [],
-    [],
+    [
+      "kingdomomnitrix:rilgar_boulders"
+    ],
     [],
     [],
     [],
     [
-      "kingdomomnitrix:ore_aquarine"
+      "kingdomomnitrix:ore_aquarine",
+      "kingdomomnitrix:rilgar_disk_coral"
     ],
     [],
     [],
