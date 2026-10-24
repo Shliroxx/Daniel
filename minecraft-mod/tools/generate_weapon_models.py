@@ -605,8 +605,8 @@ DISPLAY = {
         "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     },
     "gun": {
-        "thirdperson_righthand": {"rotation": [90, 0, 0], "translation": [0, 3.0, -1.5], "scale": [0.6, 0.6, 0.6]},
-        "thirdperson_lefthand": {"rotation": [90, 0, 0], "translation": [0, 3.0, -1.5], "scale": [0.6, 0.6, 0.6]},
+        "thirdperson_righthand": {"rotation": [0, 0, 0], "translation": [0, 0, -1.8], "scale": [0.6, 0.6, 0.6]},
+        "thirdperson_lefthand": {"rotation": [0, 0, 0], "translation": [0, 0, -1.8], "scale": [0.6, 0.6, 0.6]},
         "firstperson_righthand": {"rotation": [0, -10, 0], "translation": [2.5, -0.5, -1.5], "scale": [0.46, 0.46, 0.46]},
         "firstperson_lefthand": {"rotation": [0, 10, 0], "translation": [2.5, -0.5, -1.5], "scale": [0.46, 0.46, 0.46]},
         "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
