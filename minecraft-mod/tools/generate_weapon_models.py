@@ -336,8 +336,8 @@ WEAPONS = {"taydenite_blade": taydenite_blade, "galvan_rifle": galvan_rifle, "st
 # Schusswaffen: Muendung nach vorn, Kolben zur Schulter.
 DISPLAY = {
     "blade": {
-        "thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, -3.0, 1.0], "scale": [0.62, 0.62, 0.62]},
-        "thirdperson_lefthand": {"rotation": [0, -90, 0], "translation": [0, -3.0, 1.0], "scale": [0.62, 0.62, 0.62]},
+        "thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, -6.0, -0.4], "scale": [0.62, 0.62, 0.62]},
+        "thirdperson_lefthand": {"rotation": [0, -90, 0], "translation": [0, -6.0, -0.4], "scale": [0.62, 0.62, 0.62]},
         "firstperson_righthand": {"rotation": [-30, 0, 0], "translation": [1.0, -1.0, 0.0], "scale": [0.36, 0.36, 0.36]},
         "firstperson_lefthand": {"rotation": [-30, 0, 0], "translation": [1.0, -1.0, 0.0], "scale": [0.36, 0.36, 0.36]},
         "ground": {"rotation": [0, 0, 90], "translation": [0, 2, 0], "scale": [0.4, 0.4, 0.4]},
@@ -346,8 +346,8 @@ DISPLAY = {
         "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     },
     "hammer": {
-        "thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, -2.5, 1.0], "scale": [0.6, 0.6, 0.6]},
-        "thirdperson_lefthand": {"rotation": [0, -90, 0], "translation": [0, -2.5, 1.0], "scale": [0.6, 0.6, 0.6]},
+        "thirdperson_righthand": {"rotation": [0, 90, 0], "translation": [0, -4.5, -0.4], "scale": [0.6, 0.6, 0.6]},
+        "thirdperson_lefthand": {"rotation": [0, -90, 0], "translation": [0, -4.5, -0.4], "scale": [0.6, 0.6, 0.6]},
         "firstperson_righthand": {"rotation": [-30, 0, 0], "translation": [1.0, -1.5, 0.0], "scale": [0.38, 0.38, 0.38]},
         "firstperson_lefthand": {"rotation": [-30, 0, 0], "translation": [1.0, -1.5, 0.0], "scale": [0.38, 0.38, 0.38]},
         "ground": {"rotation": [0, 0, 90], "translation": [0, 2, 0], "scale": [0.4, 0.4, 0.4]},
