@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:aeropela",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.68,
+    0.56
+  ],
+  "color": 2788056,
+  "size": 1.2,
+  "order": 113,
+  "landing": [
+    0,
+    0
+  ]
+}

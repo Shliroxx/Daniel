@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:arburia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.1,
+    0.5
+  ],
+  "color": 14194234,
+  "size": 1.1,
+  "order": 107,
+  "landing": [
+    0,
+    0
+  ]
+}

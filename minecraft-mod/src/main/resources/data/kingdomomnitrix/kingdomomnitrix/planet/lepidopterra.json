@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:lepidopterra",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.26,
+    0.1
+  ],
+  "color": 11061306,
+  "size": 1.0,
+  "order": 108,
+  "landing": [
+    0,
+    0
+  ]
+}

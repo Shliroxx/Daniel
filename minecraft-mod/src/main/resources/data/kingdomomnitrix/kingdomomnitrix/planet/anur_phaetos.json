@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:anur_phaetos",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.5,
+    0.3
+  ],
+  "color": 3814472,
+  "size": 0.9,
+  "order": 109,
+  "landing": [
+    0,
+    0
+  ]
+}

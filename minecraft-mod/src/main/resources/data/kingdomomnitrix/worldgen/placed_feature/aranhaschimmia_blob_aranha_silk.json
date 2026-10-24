@@ -1,0 +1,27 @@
+{
+  "feature": "kingdomomnitrix:aranhaschimmia_blob_aranha_silk",
+  "placement": [
+    {
+      "type": "minecraft:count",
+      "count": 6
+    },
+    {
+      "type": "minecraft:in_square"
+    },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:trapezoid",
+        "min_inclusive": {
+          "above_bottom": 4
+        },
+        "max_inclusive": {
+          "absolute": 200
+        }
+      }
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

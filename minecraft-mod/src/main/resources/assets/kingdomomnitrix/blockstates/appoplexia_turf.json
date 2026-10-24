@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/appoplexia_turf"
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_turf",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_turf",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_turf",
+        "y": 270
+      }
+    ]
+  }
+}

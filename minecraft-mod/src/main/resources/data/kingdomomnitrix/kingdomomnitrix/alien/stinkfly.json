@@ -220,12 +220,21 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:bee",
-        "dimension": "minecraft:overworld"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:lepidopterra",
+      "name": "species.kingdomomnitrix.lepidopterran",
+      "behavior": "hostile",
+      "health": 16,
+      "damage": 4,
+      "speed": 0.32,
+      "effect": "poison",
+      "group": [
+        2,
+        4
+      ],
+      "max": 8,
+      "flying": true
+    }
   },
   "model": "kingdomomnitrix:stinkfly",
   "failsafe_tags": [

@@ -226,12 +226,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:fox",
-        "dimension": "kingdomomnitrix:novalis"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:appoplexia",
+      "name": "species.kingdomomnitrix.appoplexian",
+      "behavior": "hostile",
+      "health": 32,
+      "damage": 7,
+      "speed": 0.32,
+      "effect": "knockback",
+      "group": [
+        1,
+        2
+      ],
+      "max": 6
+    }
   },
   "model": "kingdomomnitrix:rath",
   "failsafe_tags": [

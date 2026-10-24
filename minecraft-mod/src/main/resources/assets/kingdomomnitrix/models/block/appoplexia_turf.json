@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/appoplexia_turf_top",
+    "side": "kingdomomnitrix:block/appoplexia_turf_side",
+    "bottom": "kingdomomnitrix:block/appoplexia_turf_bottom"
+  }
+}

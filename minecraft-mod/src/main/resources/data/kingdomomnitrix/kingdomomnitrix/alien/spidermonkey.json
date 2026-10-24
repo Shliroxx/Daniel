@@ -226,16 +226,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:spider",
-        "dimension": "minecraft:overworld"
-      },
-      {
-        "entity": "minecraft:cave_spider",
-        "dimension": "minecraft:overworld"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:aranhaschimmia",
+      "name": "species.kingdomomnitrix.arachnichimp",
+      "behavior": "shy",
+      "health": 14,
+      "damage": 3,
+      "speed": 0.36,
+      "effect": "none",
+      "group": [
+        3,
+        5
+      ],
+      "max": 10
+    }
   },
   "model": "kingdomomnitrix:spidermonkey",
   "failsafe_tags": [

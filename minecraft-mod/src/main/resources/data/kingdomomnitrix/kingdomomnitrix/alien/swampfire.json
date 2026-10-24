@@ -239,12 +239,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:bogged",
-        "dimension": "kingdomomnitrix:novalis"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:methanos",
+      "name": "species.kingdomomnitrix.methanosian",
+      "behavior": "neutral",
+      "health": 28,
+      "damage": 6,
+      "speed": 0.26,
+      "effect": "fire",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6
+    }
   },
   "model": "kingdomomnitrix:swampfire",
   "failsafe_tags": [

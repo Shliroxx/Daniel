@@ -139,7 +139,7 @@ Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser,
 Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
 
-**Alien-Heimatwelten (Welle 1):** Für diese Aliens zählt nur die echte Art auf ihrer Heimatwelt — sie leben dort als
+**Alien-Heimatwelten:** Für diese Aliens zählt nur die echte Art auf ihrer Heimatwelt — sie leben dort als
 wilde Aliens (gleiches Modell wie die Omnitrix-Form, zufällige Uniform je Exemplar, Name der Art, Leuchtpartikel ihrer
 Kraft) und erscheinen in Gruppen außerhalb der Sicht des Spielers (eigener Spawner, unabhängig von Licht und Boden).
 Verhalten je Art: scheu (flieht), neutral (wehrt sich, die Gruppe hilft), feindlich, Rudel. Treffer tragen die Kraft der
@@ -155,10 +155,23 @@ Art (Feuer, Frost, Gift, Schall, Kristall, Schock). Reise über die Galaxiekarte
 | Vulpin | Vulpimancer → Wildmutt | Rudel | verseuchte Aschewüste, Giftschlamm, Giftdorn |
 | Piscciss | Piscciss Volann → Ripjaws | feindlich, im Wasser | Ozeanwelt mit Riffinseln |
 
-Weitere DNA-Quellen (bis ihre Heimatwelt folgt): Spidermonkey Spinne/Höhlenspinne (Erde) · Atomix
-Magmawürfel/Witherskelett (Nether) · Alien X Enderdrache (Ende, 1 Probe) · Humungousaur Kamel
-(Veldin) · Brainstorm Tropenfisch (Rilgar) · Rath Fuchs, Goop Schleim, Swampfire Sumpfskelett (Novalis) · Way Big Verwüster (Torren IV, 2 Proben). Die Planeten haben dafür eigene Tierwelt (Spawns und
-Spawnböden in `tools/generate_planet_worlds.py`).
+**Welle 2:**
+
+| Welt | Art → Alien | Verhalten | Landschaft |
+|---|---|---|---|
+| Arburia | Arburian Pelarota → Cannonbolt | neutral, Rückstoß | ockerfarbene Canyons, Sandstein, Pelarota-Bernstein |
+| Lepidopterra | Lepidopterraner → Stinkfly | feindlich, fliegt, Gift | schwüler Sumpf, Wabenstein, Stinkschleim |
+| Anur Phaetos | Ectonurit → Ghostfreak | feindlich, fliegt, Entzug | finstere Totenwelt, Grabstaub, Seelensteine |
+| Appoplexia | Appoplexianer → Rath | feindlich, Rückstoß | orange Steppe, Rotlehm, Kampffels |
+| Aranhaschimmia | Arachnichimp → Spidermonkey | scheu | Dschungel mit Seidenballen, Moosschiefer |
+| Terradino | Vaxasaurier → Humungousaur | neutral, Rückstoß | Urzeitebene, Lavafelder, Urbasalt, Bernstein |
+| Aeropela | Aerophibianer → Jetray | neutral, fliegt, Schock | Ozeanwelt mit Korallenfels und Leuchtkorallen |
+| Methanos | Methanosianer → Swampfire | neutral, Feuer | Methansumpf mit glühenden Gasschloten |
+| Viscosia | Polymorph → Goop | neutral, Gift | giftgrüne Gelwelt, Polymorph-Schleim |
+| Encephalonus IV | Cerebrocrustacean → Brainstorm | scheu, Schock | Küste mit Panzergestein und Synapsenkristallen |
+
+Ohne Heimatwelt (Sonderfälle): Atomix Magmawürfel/Witherskelett (Nether) · Alien X Enderdrache (Ende, 1 Probe) ·
+Way Big Verwüster (Torren IV, 2 Proben) — To'kustars leben im All, Celestialsapiens außerhalb der Wirklichkeit.
 
 ### Eigene Alien-Systeme (über Alien Evolution hinaus)
 

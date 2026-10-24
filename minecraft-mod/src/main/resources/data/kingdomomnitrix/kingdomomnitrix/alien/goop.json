@@ -225,12 +225,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:slime",
-        "dimension": "kingdomomnitrix:novalis"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:viscosia",
+      "name": "species.kingdomomnitrix.polymorph",
+      "behavior": "neutral",
+      "health": 20,
+      "damage": 4,
+      "speed": 0.24,
+      "effect": "poison",
+      "group": [
+        2,
+        4
+      ],
+      "max": 8
+    }
   },
   "model": "kingdomomnitrix:goop",
   "failsafe_tags": [

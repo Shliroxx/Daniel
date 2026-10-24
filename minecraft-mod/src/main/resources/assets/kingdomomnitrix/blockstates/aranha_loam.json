@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/aranha_loam"
+      },
+      {
+        "model": "kingdomomnitrix:block/aranha_loam",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/aranha_loam",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/aranha_loam",
+        "y": 270
+      }
+    ]
+  }
+}

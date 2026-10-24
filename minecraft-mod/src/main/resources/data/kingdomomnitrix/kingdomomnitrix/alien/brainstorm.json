@@ -222,12 +222,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:tropical_fish",
-        "dimension": "kingdomomnitrix:rilgar"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:encephalonus",
+      "name": "species.kingdomomnitrix.cerebrocrustacean",
+      "behavior": "shy",
+      "health": 18,
+      "damage": 3,
+      "speed": 0.25,
+      "effect": "shock",
+      "group": [
+        2,
+        4
+      ],
+      "max": 6
+    }
   },
   "model": "kingdomomnitrix:brainstorm",
   "failsafe_tags": [

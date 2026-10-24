@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/terradino_turf"
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_turf",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_turf",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_turf",
+        "y": 270
+      }
+    ]
+  }
+}

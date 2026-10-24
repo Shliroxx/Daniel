@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/viscosia_ooze"
+      },
+      {
+        "model": "kingdomomnitrix:block/viscosia_ooze",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/viscosia_ooze",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/viscosia_ooze",
+        "y": 270
+      }
+    ]
+  }
+}

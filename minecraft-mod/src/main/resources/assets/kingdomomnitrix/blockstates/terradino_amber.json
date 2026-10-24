@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/terradino_amber"
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_amber",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_amber",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_amber",
+        "y": 270
+      }
+    ]
+  }
+}

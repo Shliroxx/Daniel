@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/terradino_basalt"
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_basalt",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_basalt",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/terradino_basalt",
+        "y": 270
+      }
+    ]
+  }
+}

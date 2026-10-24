@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/arburia_amber"
+      },
+      {
+        "model": "kingdomomnitrix:block/arburia_amber",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/arburia_amber",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/arburia_amber",
+        "y": 270
+      }
+    ]
+  }
+}

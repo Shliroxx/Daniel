@@ -230,12 +230,21 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:ghast",
-        "dimension": "minecraft:the_nether"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:anur_phaetos",
+      "name": "species.kingdomomnitrix.ectonurite",
+      "behavior": "hostile",
+      "health": 22,
+      "damage": 5,
+      "speed": 0.3,
+      "effect": "drain",
+      "group": [
+        1,
+        2
+      ],
+      "max": 5,
+      "flying": true
+    }
   },
   "model": "kingdomomnitrix:ghostfreak",
   "failsafe_tags": [

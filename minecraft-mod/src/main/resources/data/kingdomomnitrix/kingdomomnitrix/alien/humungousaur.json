@@ -236,12 +236,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:camel",
-        "dimension": "kingdomomnitrix:veldin"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:terradino",
+      "name": "species.kingdomomnitrix.vaxasaurian",
+      "behavior": "neutral",
+      "health": 60,
+      "damage": 9,
+      "speed": 0.22,
+      "effect": "knockback",
+      "group": [
+        1,
+        2
+      ],
+      "max": 4
+    }
   },
   "model": "kingdomomnitrix:humungousaur",
   "failsafe_tags": [

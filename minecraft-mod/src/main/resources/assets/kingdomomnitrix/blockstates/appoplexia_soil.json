@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/appoplexia_soil"
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_soil",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_soil",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_soil",
+        "y": 270
+      }
+    ]
+  }
+}

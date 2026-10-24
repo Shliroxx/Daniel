@@ -263,12 +263,20 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:armadillo",
-        "dimension": "kingdomomnitrix:veldin"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:arburia",
+      "name": "species.kingdomomnitrix.arburian_pelarota",
+      "behavior": "neutral",
+      "health": 40,
+      "damage": 6,
+      "speed": 0.24,
+      "effect": "knockback",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6
+    }
   },
   "model": "kingdomomnitrix:cannonbolt",
   "failsafe_tags": [

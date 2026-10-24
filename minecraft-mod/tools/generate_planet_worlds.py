@@ -387,6 +387,60 @@ ALIEN_WORLDS = {
         "monsters": [],
     },
 }
+
+
+def _simple_world(terrain: str, stone: str, top: str, under: str, blob: tuple[str, int, int] | None, plant: str, sea: bool,
+                  biomes: dict[str, tuple[int, int, int, tuple[str, float] | None, int, str | None]], **extra) -> dict:
+    """Heimatwelt der Welle 2: zwei Biome je Welt (Himmel, Nebel, Wasser, Partikel, Pflanzendichte, eigener Oberboden)."""
+    world = {"terrain": terrain, "stone": stone, "top": top, "under": under, "steep": stone, "sea": sea, "ore": None,
+             "blobs": [blob] if blob else [], "biomes": {}, "monsters": []}
+    for name, (sky, fog, water, particle, plants, biome_top) in biomes.items():
+        biome = {"sky": sky, "fog": fog, "water": water, "particle": particle, "plants": [(plant, plants, 16 + plants * 6)], "trees": []}
+        if biome_top:
+            biome["top"] = biome_top
+        world["biomes"][name] = biome
+    world.update(extra)
+    return world
+
+
+# --- Alien-Heimatwelten (Welle 2) -----------------------------------------------------------------------------------
+ALIEN_WORLDS_2 = {
+    "arburia": _simple_world("amplified", "arburia_rock", "arburia_sandstone", "arburia_sandstone", ("arburia_amber", 8, 22), "arburia_scrub",
+                             False, {"canyons": (0xE0A860, 0xE8C890, 0x5A9AA8, ("minecraft:white_ash", 0.002), 2, None),
+                                     "amber_mesas": (0xD08A40, 0xD8B070, 0x5A9AA8, None, 1, "arburia_rock")}),
+    "lepidopterra": _simple_world("overworld", "lepidopterra_stone", "lepidopterra_moss", "lepidopterra_peat", ("lepidopterra_slime", 8, 26),
+                                  "lepidopterra_stalk", False,
+                                  {"stink_marsh": (0xA8B83A, 0xC8D06A, 0x6A8A1A, ("minecraft:spore_blossom_air", 0.006), 5, None),
+                                   "hive_hills": (0x98A830, 0xB8C060, 0x6A8A1A, None, 2, "lepidopterra_stone")}),
+    "anur_phaetos": _simple_world("large_biomes", "phaetos_stone", "phaetos_dust", "phaetos_dust", ("phaetos_soulstone", 9, 24), "phaetos_wisp",
+                                  False, {"grave_plains": (0x14101C, 0x2A2434, 0x3A5A6A, ("minecraft:soul", 0.004), 2, None),
+                                          "soul_spires": (0x0A0812, 0x1E1A28, 0x3A5A6A, ("minecraft:soul_fire_flame", 0.003), 1, "phaetos_stone")}),
+    "appoplexia": _simple_world("overworld", "appoplexia_rock", "appoplexia_turf", "appoplexia_soil", None, "appoplexia_claw", False,
+                                {"rage_steppe": (0xF0A060, 0xF0C090, 0x4A8AA8, None, 5, None),
+                                 "brawl_badlands": (0xD07A40, 0xE0A070, 0x4A8AA8, ("minecraft:white_ash", 0.003), 2, "appoplexia_soil")}),
+    "aranhaschimmia": _simple_world("overworld", "aranha_stone", "aranha_turf", "aranha_loam", ("aranha_silk", 6, 30), "aranha_fern", False,
+                                    {"web_jungle": (0x6AA87A, 0x9AC8A0, 0x2A6A5A, ("minecraft:white_ash", 0.004), 6, None),
+                                     "silk_hollows": (0x5A8A6A, 0x8AB090, 0x2A6A5A, ("minecraft:white_ash", 0.008), 3, None)}),
+    "terradino": _simple_world("overworld", "terradino_basalt", "terradino_turf", "terradino_clay", ("terradino_amber", 7, 24), "terradino_cycad",
+                               False, {"fern_plains": (0x9AC8E0, 0xC8E0E8, 0x3A7A8A, None, 4, None),
+                                      "lava_fields": (0xC87A4A, 0xA86A4A, 0x3A7A8A, ("minecraft:ash", 0.02), 1, "terradino_basalt")}),
+    "aeropela": _simple_world("overworld", "aeropela_coralstone", "aeropela_sand", "aeropela_sand", ("aeropela_glowcoral", 8, 26), "aeropela_kelp",
+                              True, {"sky_sea": (0x7AC8F8, 0xB8E0FF, 0x1A6AC8, None, 2, None),
+                                     "coral_isles": (0x9AD8FF, 0xC8EEFF, 0x2A8AD8, None, 4, "aeropela_coralstone")},
+                              noise_tweaks={"continentalness": {"first_octave": 1}}, sea_level=74),
+    "methanos": _simple_world("overworld", "methanos_stone", "methanos_peat", "methanos_peat", ("methanos_vent", 8, 24), "methanos_bloom", False,
+                              {"methane_bog": (0x6A7A3A, 0x8A9A5A, 0x3A4A1A, ("minecraft:flame", 0.002), 4, None),
+                               "vent_fields": (0x5A5A2A, 0x7A7A4A, 0x3A4A1A, ("minecraft:smoke", 0.01), 2, "methanos_stone")}),
+    "viscosia": _simple_world("large_biomes", "viscosia_crust", "viscosia_gel", "viscosia_gel", ("viscosia_ooze", 10, 28), "viscosia_bubble",
+                              False, {"gel_flats": (0x8AE04A, 0xB8F08A, 0x5AD02A, ("minecraft:item_slime", 0.004), 3, None),
+                                      "ooze_basin": (0x6AC83A, 0x9AE06A, 0x5AD02A, ("minecraft:item_slime", 0.01), 2, "viscosia_crust")}),
+    "encephalonus": _simple_world("overworld", "encephalonus_shellstone", "encephalonus_sand", "encephalonus_sand",
+                                  ("encephalonus_synapse", 8, 24), "encephalonus_sprig", True,
+                                  {"thinking_shores": (0xC8A8E8, 0xE0D0F0, 0x4A6AC8, ("minecraft:electric_spark", 0.002), 3, None),
+                                   "synapse_reefs": (0xA888D8, 0xC8B8E8, 0x4A6AC8, ("minecraft:electric_spark", 0.005), 2, "encephalonus_shellstone")},
+                                  sea_level=66),
+}
+ALIEN_WORLDS.update(ALIEN_WORLDS_2)
 PLANETS.update(ALIEN_WORLDS)
 
 # Galaxiekarte (Reiter "Alien-Heimatwelten"): Lage, Farbe, Groesse, Reihenfolge
@@ -398,6 +452,17 @@ ALIEN_CHART = {
     "kylmyys": ([0.30, 0.66], 0x9AD0FF, 1.0, 104),
     "vulpin": ([0.54, 0.74], 0xC0703A, 1.0, 105),
     "piscciss": ([0.82, 0.70], 0x2AB0C0, 1.2, 106),
+    # Welle 2
+    "arburia": ([0.10, 0.50], 0xD8963A, 1.1, 107),
+    "lepidopterra": ([0.26, 0.10], 0xA8C83A, 1.0, 108),
+    "anur_phaetos": ([0.50, 0.30], 0x3A3448, 0.9, 109),
+    "appoplexia": ([0.88, 0.16], 0xE0702A, 1.0, 110),
+    "aranhaschimmia": ([0.12, 0.84], 0x3A8A4A, 1.0, 111),
+    "terradino": ([0.42, 0.52], 0x7A9A3A, 1.3, 112),
+    "aeropela": ([0.68, 0.56], 0x2A8AD8, 1.2, 113),
+    "methanos": ([0.92, 0.44], 0x5A6A2A, 0.9, 114),
+    "viscosia": ([0.40, 0.88], 0x7AE03A, 0.9, 115),
+    "encephalonus": ([0.70, 0.88], 0xA888D8, 1.0, 116),
 }
 
 TREES = {

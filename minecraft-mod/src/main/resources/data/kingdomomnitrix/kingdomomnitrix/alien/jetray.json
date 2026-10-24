@@ -251,12 +251,21 @@
   ],
   "dna": {
     "samples": 3,
-    "sources": [
-      {
-        "entity": "minecraft:dolphin",
-        "dimension": "kingdomomnitrix:rilgar"
-      }
-    ]
+    "species": {
+      "home": "kingdomomnitrix:aeropela",
+      "name": "species.kingdomomnitrix.aerophibian",
+      "behavior": "neutral",
+      "health": 18,
+      "damage": 4,
+      "speed": 0.4,
+      "effect": "shock",
+      "group": [
+        2,
+        4
+      ],
+      "max": 6,
+      "flying": true
+    }
   },
   "model": "kingdomomnitrix:jetray",
   "failsafe_tags": [
