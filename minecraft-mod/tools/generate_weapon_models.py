@@ -541,33 +541,6 @@ def fusion_grenade() -> Weapon:
     return w
 
 
-def heli_pack(jet: bool = False) -> Weapon:
-    """Heli-Pack (Clank-Rucksack): silberner Rueckenkasten mit Gurten und Kontrollleuchten; als Heli mit
-    Rotormast und drei drehenden Blaettern, als Jet mit zwei Schubduesen und pulsierenden Flammen."""
-    pal = Palette("B8C0C8", "4A5058", "E8F0F4", "1A1E24", "2A8A8A", "3AE8FF", "E0FAFF", "3AE8FF", "FF8A2A")
-    w = Weapon(pal, "small")
-    w.cubes += [box(0, 4.0, 0, 5.0, 6.0, 3.0, "plate"), box(0, 4.0, -1.7, 4.2, 5.0, 0.4, "trim"),
-                box(-1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(0, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow")]
-    for side in (-1, 1):
-        w.cubes.append(box(side * 1.6, 4.0, -2.1, 0.8, 7.0, 0.4, "suit"))
-    if jet:
-        flames = []
-        for side in (-1, 1):
-            w.cubes += octo(side * 1.6, 1.0, 0.6, 1.6, 1.6, "y", "trim")
-            flames += octo(side * 1.6, -0.6, 0.6, 1.0, 1.8, "y", "glow") + octo(side * 1.6, -1.8, 0.6, 0.5, 1.0, "y", "glow")
-        w.sub("flame", [0, 0.2, 0.6], flames)
-        w.anim = {"flame": wave("scale", 0, 0.15, 8)}
-    else:
-        w.cubes += [box(0, 7.6, 0, 0.8, 1.6, 0.8, "trim"), box(0, 8.4, 0, 1.4, 0.4, 1.4, "plate")]
-        rotor = [box(0, 8.8, 0, 0.8, 0.4, 0.8, "trim")]
-        for i in range(3):
-            a = i * 120
-            rotor.append(C((0.0, 8.7, -0.4), (5.5, 0.2, 0.8), "plate", tint="2A8A8A", rot=(0, a, 0), pivot=(0, 8.8, 0), seams=False))
-        w.sub("rotor", [0, 8.8, 0], rotor)
-        w.anim = {"rotor": spin(1, 6)}
-    return w
-
-
 def blitz_gun() -> Weapon:
     """Blitz Gun (Gadgetron-Schrotflinte): gedrungener blau-silberner Koerper, drei Laeufe in einer ausgestellten
     Muendung, Spulenring hinter der Muendung, Pumpgriff unter den Laeufen."""
@@ -642,59 +615,119 @@ def morph_o_ray() -> Weapon:
     return w
 
 
-def glider_pack() -> Weapon:
-    """Gleiter-Modus (Clank-Rucksack): derselbe Rueckenkasten, dazu zwei nach hinten gepfeilte Schwingen aus drei
-    Segmenten mit leuchtender Vorderkante und Randbogen; die Schwingen wiegen sich leicht."""
-    pal = Palette("C8CED6", "4A5058", "F0F4F8", "1A1E24", "C08A28", "FFC23A", "FFF2C8", "FFC23A", "FF8A2A")
-    w = Weapon(pal, "small")
-    w.cubes += [box(0, 4.0, 0, 5.0, 6.0, 3.0, "plate"), box(0, 4.0, -1.7, 4.2, 5.0, 0.4, "trim"),
-                box(-1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(0, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"),
-                box(0, 7.4, 0.2, 3.4, 0.8, 2.0, "trim")]
-    for side in (-1, 1):
-        w.cubes.append(box(side * 1.6, 4.0, -2.1, 0.8, 7.0, 0.4, "suit"))
-    wings = []
-    for side in (-1, 1):
-        # Schwinge: Wurzel am Kasten, drei Segmente nach aussen, jedes etwas nach hinten (+z) und unten gekippt
-        x = side * 2.5
-        for i, (length, chord) in enumerate(((3.2, 2.6), (3.0, 2.0), (2.6, 1.4))):
-            cx = x + side * length / 2
-            back = 0.35 * i
-            wings.append(C((cx - length / 2, 6.6 - 0.25 * i, 0.4 + back - chord / 2), (length, 0.5, chord), "plate",
-                           rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
-            wings.append(C((cx - length / 2, 6.62 - 0.25 * i, 0.4 + back - chord / 2 - 0.3), (length, 0.3, 0.35), "glow",
-                           rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
-            x += side * length * 0.97
-        wings.append(C((x - 0.35, 5.6, 0.9), (0.7, 1.6, 0.9), "trim", rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
-    w.sub("wings", [0, 6.8, 0.4], wings)
-    w.anim = {"wings": wave("rotation", 0, 3.0, 2)}
-    return w
+# --- Clank als Rucksack (Ratchet & Clank) ---------------------------------------------------------------------------
+# Wie in den Spielen haengt Clank selbst auf dem Ruecken: Gesicht nach hinten (+z), Rueckseite am Spieler (z = 0), Fuesse
+# bei y = 0. Rotor, Duesen, Schwingen und Raketen kommen aus Clank heraus. Die Knochen rotor, flame und wings steuert
+# auf dem Ruecken der ClankPackRenderer (Rotor dreht nur in der Luft, Schwingen klappen im Fall auf, Flammen beim Schub).
+CLANK_PAL = Palette("B4BCC6", "4A525C", "EEF4F8", "2A3038", "6A727C", "3AFF6A", "E8FFE8", "FF3A2A", "141A20")
+HEAD_Y, HEAD_Z = 13.4, 7.7
 
 
-def jet_pack() -> Weapon:
-    """Jetpack-Modus (Clank-Rucksack): zwei rote Treibstofftanks mit Ringen und Ventilkappen ueber Schubduesen,
-    dazwischen der Kasten mit Kontrollleuchten; Flammen pulsieren unter den Duesen."""
-    pal = Palette("C8282A", "4A1010", "FF6A5A", "1A1E24", "8A929E", "3AE8FF", "E0FAFF", "3AE8FF", "FF8A2A")
-    w = Weapon(pal, "small")
-    w.cubes += [box(0, 4.6, -0.2, 2.6, 5.4, 2.4, "trim"), box(0, 4.6, -1.7, 4.8, 5.2, 0.4, "trim"),
-                box(0, 6.0, 1.05, 0.5, 0.5, 0.2, "glow"), box(0, 5.0, 1.05, 0.5, 0.5, 0.2, "glow")]
-    flames = []
+def clank(antenna: bool = True) -> list[Cube]:
+    """Clank: grosser, abgerundeter Kopf mit dunkler Gesichtsscheibe und runden gruenen Augen, Ohrscheiben, Mundgitter,
+    Antenne mit roter Kugel; runder Rumpf mit gruenem Brustlicht, duenne dunkle Glieder, flache Fuesse; Gurte zum Spieler."""
+    c: list[Cube] = []
+    # Kopf: Quader plus achteckiges Prisma (abgerundete Kanten), Kinnwulst und Scheitel
+    c += octo(0, HEAD_Y, HEAD_Z, 7.0, 9.8, "x", "plate") + [box(0, HEAD_Y, HEAD_Z, 10.4, 5.6, 6.2, "plate")]
+    c += [box(0, HEAD_Y + 3.7, HEAD_Z, 7.0, 0.5, 4.6, "plate", seams=False), box(0, HEAD_Y - 3.6, HEAD_Z + 0.4, 6.0, 0.5, 4.0, "plate", seams=False)]
+    # Gesicht (+z): dunkle Scheibe, zwei grosse runde Augen mit hellem Kern, Mundgitter
+    fz = HEAD_Z + 3.55
+    c += [box(0, HEAD_Y + 0.5, fz, 8.4, 4.0, 0.3, "visor"), box(0, HEAD_Y - 2.2, fz, 3.4, 1.0, 0.3, "trim")]
+    for x in (-1.0, 0.0, 1.0):
+        c.append(box(x, HEAD_Y - 2.2, fz + 0.12, 0.25, 0.7, 0.1, "visor", seams=False))
     for side in (-1, 1):
-        x = side * 2.0
-        w.cubes += octo(x, 4.6, 0.3, 2.0, 6.0, "y", "plate")
-        w.cubes += [box(x, 7.9, 0.3, 1.2, 0.8, 1.2, "trim"), box(x, 8.5, 0.3, 0.6, 0.5, 0.6, "glow")]
-        for y in (2.6, 6.4):
-            w.cubes.append(box(x, y, 0.3, 2.2, 0.35, 2.2, "trim", seams=False))
-        w.cubes += octo(x, 1.1, 0.3, 1.4, 1.0, "y", "trim")
-        w.cubes.append(box(x, 0.5, 0.3, 1.0, 0.2, 1.0, "glow", seams=False))
-        flames += octo(x, -0.6, 0.3, 0.9, 1.8, "y", "glow") + octo(x, -1.9, 0.3, 0.45, 1.0, "y", "glow")
-    w.sub("flame", [0, 0.4, 0.3], flames)
-    w.anim = {"flame": wave("scale", 0, 0.18, 8)}
+        c += octo(side * 2.1, HEAD_Y + 0.5, fz + 0.12, 2.6, 0.2, "z", "glow")
+        c += octo(side * 2.1, HEAD_Y + 0.5, fz + 0.2, 1.1, 0.12, "z", "glow", tint="E8FFE8")
+    # Ohrscheiben mit Leuchtring
+    for side in (-1, 1):
+        c += octo(side * 5.3, HEAD_Y, HEAD_Z, 3.0, 0.7, "x", "trim") + octo(side * 5.7, HEAD_Y, HEAD_Z, 1.4, 0.15, "x", "glow")
+    if antenna:
+        c += [box(0, HEAD_Y + 5.1, HEAD_Z - 0.6, 0.45, 2.6, 0.45, "suit"), box(0, HEAD_Y + 6.6, HEAD_Z - 0.6, 1.3, 1.3, 1.3, "gem"),
+              diamond(0, HEAD_Y + 6.6, HEAD_Z - 0.6, 1.1, 1.4, "gem")]
+    # Hals, Rumpf mit Brustlicht und Guertel
+    c.append(box(0, 9.7, 5.0, 2.0, 1.4, 2.0, "suit"))
+    c += octo(0, 6.6, 4.2, 5.4, 5.8, "y", "plate") + [box(0, 4.0, 4.2, 4.6, 0.8, 4.0, "trim")]
+    c += octo(0, 7.0, 6.95, 2.4, 0.3, "z", "trim") + octo(0, 7.0, 7.1, 1.4, 0.2, "z", "glow")
+    # Arme (umfassen die Gurte), Beine und flache Fuesse nach aussen
+    for side in (-1, 1):
+        c += [box(side * 3.25, 7.8, 4.0, 0.9, 2.6, 0.9, "suit"), box(side * 3.35, 6.0, 3.4, 0.8, 2.0, 0.8, "suit"),
+              box(side * 3.4, 4.8, 3.0, 1.4, 1.2, 1.4, "plate")]
+        c += [box(side * 1.3, 2.4, 4.2, 0.9, 3.2, 0.9, "suit"), box(side * 1.35, 0.5, 5.0, 1.9, 1.0, 2.8, "plate")]
+        # Gurte: von Clanks Schultern ueber die Schultern des Spielers
+        c += [box(side * 2.0, 9.6, 1.4, 1.1, 1.2, 1.6, "suit"), box(side * 2.0, 6.0, 1.1, 1.0, 6.0, 0.5, "suit")]
+    return c
+
+
+def clank_pack(mode: str) -> Weapon:
+    """Clanks Rucksack-Modi wie in den Spielen: Heli (Rotor aus dem Kopf), Thruster (Duesen aus dem Ruecken),
+    Gleiter (breite Schwingen von den Schultern), Jetpack (zwei Raketen unter den Armen)."""
+    w = Weapon(CLANK_PAL, "small")
+    w.cubes += clank(antenna=mode != "heli")
+    if mode == "heli":
+        # Kopf oeffnet sich, der Rotor faehrt auf einem Mast heraus: zwei lange Blaetter mit gelben Spitzen
+        top = HEAD_Y + 4.0
+        w.cubes += [box(0, top + 0.9, HEAD_Z, 1.8, 0.6, 1.8, "trim"), box(0, top + 1.8, HEAD_Z, 0.7, 1.6, 0.7, "suit")]
+        hub = top + 2.8
+        rotor = [box(0, hub, HEAD_Z, 1.6, 0.8, 1.6, "trim"), box(0, hub + 0.5, HEAD_Z, 0.8, 0.4, 0.8, "glow")]
+        for sign in (-1, 1):
+            rotor += [C((sign * 0.7 if sign > 0 else -9.5, hub - 0.15, HEAD_Z - 0.8), (8.8, 0.3, 1.6), "plate", seams=False,
+                        rot=(sign * 6, 0, 0), pivot=(0, hub, HEAD_Z)),
+                      C((sign * 8.2 if sign > 0 else -9.5, hub - 0.17, HEAD_Z - 0.82), (1.3, 0.34, 1.64), "trim", tint="F0C030",
+                        seams=False, rot=(sign * 6, 0, 0), pivot=(0, hub, HEAD_Z))]
+        w.sub("rotor", [0, hub, HEAD_Z], rotor)
+        w.anim = {"rotor": spin(1, 8)}
+    elif mode == "thruster":
+        # zwei kurze Duesen klappen seitlich aus Clanks Ruecken, schraeg nach unten
+        flames = []
+        for side in (-1, 1):
+            x = side * 4.6
+            w.cubes += [box(side * 3.6, 7.6, 3.0, 1.8, 1.0, 1.4, "trim")]
+            w.cubes += octo(x, 6.0, 3.0, 2.2, 3.6, "y", "plate") + octo(x, 7.9, 3.0, 2.6, 0.6, "y", "trim")
+            w.cubes += octo(x, 3.8, 3.0, 2.6, 1.0, "y", "suit") + [box(x, 3.25, 3.0, 1.6, 0.15, 1.6, "glow", seams=False)]
+            flames += octo(x, 1.4, 3.0, 1.7, 3.6, "y", "glow", tint="FF8A2A") + octo(x, -1.6, 3.0, 1.0, 3.0, "y", "glow", tint="FFE07A")
+        w.sub("flame", [0, 3.2, 3.0], flames)
+        w.anim = {"flame": wave("scale", 0, 0.15, 8)}
+    elif mode == "glider":
+        # Schwingen aus den Schultern: lange, gepfeilte Tragflaechen mit orangem Bespann und Winglets
+        wings = []
+        for side in (-1, 1):
+            x = side * 3.4
+            for i, (length, chord) in enumerate(((5.0, 5.0), (5.0, 4.0), (4.0, 3.0))):
+                cx = x + side * length / 2
+                z0 = 2.6 + 0.6 * i
+                wings += [C((cx - length / 2, 9.0 + 0.35 * i, z0), (length, 0.45, chord), "plate", seams=False,
+                            rot=(-32, side * -8, side * -5), pivot=(side * 3.4, 9.2, 3.0)),
+                          C((cx - length / 2 + 0.2, 9.42 + 0.35 * i, z0 + 0.6), (length - 0.4, 0.15, chord - 1.2), "trim", tint="E87A1A",
+                            seams=False, rot=(-32, side * -8, side * -5), pivot=(side * 3.4, 9.2, 3.0)),
+                          C((cx - length / 2, 9.05 + 0.35 * i, z0 - 0.35), (length, 0.4, 0.4), "glow", seams=False,
+                            rot=(-32, side * -8, side * -5), pivot=(side * 3.4, 9.2, 3.0))]
+                x += side * length * 0.98
+            wings.append(C((x - 0.3, 9.6, 3.6), (0.6, 2.4, 2.4), "trim", tint="E87A1A", rot=(0, side * -8, side * -5),
+                           pivot=(side * 3.4, 9.2, 3.0), seams=False))
+            wings.append(box(side * 3.6, 9.2, 3.0, 1.6, 1.6, 2.0, "trim"))
+        w.sub("wings", [0, 9.2, 3.0], wings)
+        w.anim = {"wings": wave("rotation", 0, 2.5, 2)}
+    else:
+        # Jetpack: zwei Raketen unter Clanks Armen, rote Spitzen, Leitwerke, grosse Flammen
+        flames = []
+        for side in (-1, 1):
+            x = side * 4.8
+            w.cubes += octo(x, 6.4, 3.4, 2.6, 6.4, "y", "plate") + octo(x, 10.0, 3.4, 1.8, 1.0, "y", "trim", tint="D02A2A")
+            w.cubes += octo(x, 10.8, 3.4, 0.9, 0.8, "y", "trim", tint="D02A2A")
+            for y in (4.6, 8.2):
+                w.cubes += octo(x, y, 3.4, 2.9, 0.4, "y", "trim", tint="D02A2A")
+            w.cubes += [C((x + side * 1.1 - 0.2, 2.6, 3.0), (0.4, 2.4, 1.4), "trim", tint="D02A2A", seams=False),
+                        box(side * 3.6, 7.6, 3.4, 1.6, 1.2, 1.2, "trim")]
+            w.cubes += octo(x, 2.6, 3.4, 2.2, 1.0, "y", "suit") + [box(x, 2.05, 3.4, 1.4, 0.15, 1.4, "glow", seams=False)]
+            flames += octo(x, -0.2, 3.4, 2.1, 4.4, "y", "glow", tint="FF7A1A") + octo(x, -4.0, 3.4, 1.2, 3.6, "y", "glow", tint="FFE07A")
+        w.sub("flame", [0, 2.0, 3.4], flames)
+        w.anim = {"flame": wave("scale", 0, 0.18, 8)}
     return w
 
 
 GEAR = {"kingdom_key": kingdom_key, "oathkeeper": oathkeeper, "omega_key": omega_key, "omniwrench": omniwrench,
-        "combuster": combuster, "swingshot": swingshot, "fusion_grenade": fusion_grenade, "heli_pack": heli_pack,
-        "heli_jet": lambda: heli_pack(True), "glider_pack": glider_pack, "jet_pack": jet_pack,
+        "combuster": combuster, "swingshot": swingshot, "fusion_grenade": fusion_grenade, "heli_pack": lambda: clank_pack("heli"),
+        "heli_jet": lambda: clank_pack("thruster"), "glider_pack": lambda: clank_pack("glider"), "jet_pack": lambda: clank_pack("jetpack"),
         "blitz_gun": blitz_gun, "pyrocitor": pyrocitor, "devastator": devastator, "morph_o_ray": morph_o_ray}
 GEAR_GEO_DIR = ASSETS / "geo" / "item" / "gear"
 GEAR_TEX_DIR = ASSETS / "textures" / "item" / "gear"
@@ -882,7 +915,7 @@ def outputs() -> dict[Path, bytes]:
         geo["minecraft:geometry"][0]["description"]["identifier"] = f"geometry.kingdomomnitrix.gear.{name}"
         if name == "heli_pack":
             # Ein Controller fuer alle Modi: Rotor (Heli), Flammen (Thruster, Jetpack), Schwingen (Gleiter) in einer Animation
-            weapon.anim = {**weapon.anim, **heli_pack(True).anim, **glider_pack().anim}
+            weapon.anim = {**weapon.anim, **clank_pack("thruster").anim, **clank_pack("glider").anim}
         anim = animation(name, weapon)
         anim["animations"] = {f"animation.kingdomomnitrix.gear.{name}.idle": next(iter(anim["animations"].values()))}
         files[GEAR_GEO_DIR / f"{name}.geo.json"] = (json.dumps(geo, indent=1) + "\n").encode()

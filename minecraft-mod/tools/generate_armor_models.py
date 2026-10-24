@@ -218,7 +218,9 @@ def paint_face(pal: Palette, cube: Cube, face: str, w: int, h: int, seed: int) -
         yy, xx = np.mgrid[0:h, 0:w]
         dist = np.minimum(np.minimum(xx, w - 1 - xx), np.minimum(yy, h - 1 - yy))
         t = np.clip(dist / max(1.0, min(w, h) / 2 - 0.5), 0, 1)[..., None]
-        rgb[:] = hexc(pal.glow) * (1 - t) + hexc(pal.glow_core) * t
+        edge_color = hexc(cube.tint) if cube.tint else hexc(pal.glow)
+        core_color = np.minimum(edge_color * 0.4 + 255 * 0.6, 255) if cube.tint else hexc(pal.glow_core)
+        rgb[:] = edge_color * (1 - t) + core_color * t
         glow[:] = True
     elif mat == "gem":
         yy, xx = np.mgrid[0:h, 0:w]
