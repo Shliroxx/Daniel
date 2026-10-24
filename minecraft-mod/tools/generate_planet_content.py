@@ -76,6 +76,7 @@ class BlockDef:
     planet: str = "tech"
     tags: list[str] = field(default_factory=list)
     item: bool = True
+    base: str | None = None      # nur fuer kind "stairs": Vollblock, dessen Textur und Zustand die Treppe nutzt
 
 
 @dataclass
@@ -430,6 +431,34 @@ ABILITY_BLOCKS = [
 ]
 BLOCKS += ABILITY_BLOCKS
 
+# --- Traverse Town (Kingdom Hearts): Putz, Dachziegel, Pflaster, Platzfliesen, Fachwerk -------------------------------
+TOWN_STUCCO = {"orange": ("Orange", "Orange", "B85A20", "E08A40", "F4B070"), "yellow": ("Gelb", "Yellow", "B8902A", "E8C25A", "FAE6A0"),
+               "blue": ("Blau", "Blue", "3A5A8A", "5A82B8", "8AB0DA"), "cream": ("Creme", "Cream", "B8A88A", "E2D6BC", "F6F0E2"),
+               "red": ("Rot", "Red", "7A2A22", "A84A3A", "D07A62")}
+TOWN_ROOF = {"blue": ("Blaue", "Blue", "1A2A4A", "2E4A7A", "5A80B0"), "red": ("Rote", "Red", "4A1414", "8A2A22", "C0503A"),
+             "purple": ("Violette", "Purple", "2A1A40", "5A3A80", "8A6AB8"), "teal": ("Tuerkise", "Teal", "103A3A", "1E6A62", "4AA090")}
+TOWN_BLOCKS: list[BlockDef] = [
+    BlockDef("town_cobble", "Stadtpflaster", "Town Cobblestone", "block",
+             single("town_cobble", lambda: px.cobble("town_cobble", H("3A3632"), H("6E665C"), H("B0A492"))), "STONE_GRAY", 2.0, 6.0),
+    BlockDef("town_plaza_tiles", "Platzfliesen", "Plaza Tiles", "block",
+             single("town_plaza_tiles", lambda: px.plaza_tiles("town_plaza_tiles", H("D8C8A8"), H("A86A48"), H("4A3E34"))), "TERRACOTTA_WHITE", 2.0, 6.0),
+    BlockDef("town_timber", "Fachwerkbalken", "Timber Beam", "pillar",
+             lambda: {"town_timber": px.beam("town_timber", H("2A1A10"), H("4A3020"), H("7A5436")),
+                      "town_timber_top": px.log_top("town_timber_top", H("2A1A10"), H("5A3A24"), H("8A6440"))},
+             "DARK_GREEN", 2.0, 3.0, "WOOD", "axe"),
+]
+for _key, (_de, _en, _d, _m, _l) in TOWN_STUCCO.items():
+    TOWN_BLOCKS.append(BlockDef(f"town_stucco_{_key}", f"Putz ({_de})", f"{_en} Stucco", "block",
+                                single(f"town_stucco_{_key}", (lambda k=_key, d=_d, m=_m, l=_l: px.stucco(f"town_stucco_{k}", H(d), H(m), H(l)))),
+                                "TERRACOTTA_ORANGE", 1.5, 6.0))
+for _key, (_de, _en, _d, _m, _l) in TOWN_ROOF.items():
+    TOWN_BLOCKS.append(BlockDef(f"town_roof_{_key}", f"{_de} Dachziegel", f"{_en} Roof Tiles", "block",
+                                single(f"town_roof_{_key}", (lambda k=_key, d=_d, m=_m, l=_l: px.roof_tiles(f"town_roof_{k}", H(d), H(m), H(l)))),
+                                "TERRACOTTA_BLUE", 1.5, 6.0))
+    TOWN_BLOCKS.append(BlockDef(f"town_roof_{_key}_stairs", f"{_de} Dachziegel-Treppe", f"{_en} Roof Tile Stairs", "stairs",
+                                lambda: {}, "TERRACOTTA_BLUE", 1.5, 6.0, base=f"town_roof_{_key}"))
+BLOCKS += TOWN_BLOCKS
+
 PLANT_SOIL = "alien_soil"
 
 
@@ -449,6 +478,11 @@ def block_model_files(b: BlockDef) -> dict[str, dict]:
                                          "textures": {"end": tex(f"{b.name}_top"), "side": tex(b.name)}}}
     if b.kind == "leaves":
         return {b.name: {"parent": "minecraft:block/leaves", "textures": {"all": tex(b.name)}}}
+    if b.kind == "stairs":
+        t = {"bottom": tex(b.base), "top": tex(b.base), "side": tex(b.base)}
+        return {b.name: {"parent": "minecraft:block/stairs", "textures": t},
+                f"{b.name}_inner": {"parent": "minecraft:block/inner_stairs", "textures": t},
+                f"{b.name}_outer": {"parent": "minecraft:block/outer_stairs", "textures": t}}
     if b.kind == "spike":
         # gestufte Spitze aus vier Quadern (Sockel breit, Spitze schmal)
         steps = [(2, 0, 14, 5), (4, 5, 12, 9), (5.5, 9, 10.5, 13), (7, 13, 9, 16)]
@@ -496,8 +530,35 @@ def shard_elements() -> list[dict]:
     return elements
 
 
+def stairs_blockstate(model: str) -> dict:
+    """Vanilla-Treppenzustaende: Richtung x Haelfte x Form, Drehung wie bei den Vanilla-Treppen."""
+    yaw = {"east": 0, "south": 90, "west": 180, "north": 270}
+    variants = {}
+    for facing, base_y in yaw.items():
+        for half in ("bottom", "top"):
+            for shape in ("straight", "inner_left", "inner_right", "outer_left", "outer_right"):
+                m = model + ("_inner" if shape.startswith("inner") else "_outer" if shape.startswith("outer") else "")
+                y = base_y
+                if half == "bottom" and shape in ("inner_left", "outer_left"):
+                    y -= 90
+                if half == "top" and shape in ("inner_right", "outer_right"):
+                    y += 90
+                entry = {"model": m}
+                if half == "top":
+                    entry["x"] = 180
+                y %= 360
+                if y:
+                    entry["y"] = y
+                if half == "top" or y:
+                    entry["uvlock"] = True
+                variants[f"facing={facing},half={half},shape={shape}"] = entry
+    return {"variants": variants}
+
+
 def blockstate(b: BlockDef) -> dict:
     model = f"{MOD}:block/{b.name}"
+    if b.kind == "stairs":
+        return stairs_blockstate(model)
     if b.kind == "pillar":
         return {"variants": {"axis=y": {"model": model}, "axis=z": {"model": f"{model}_horizontal", "x": 90},
                              "axis=x": {"model": f"{model}_horizontal", "x": 90, "y": 90}}}
@@ -637,6 +698,9 @@ def recipes() -> dict[str, dict]:
     r["station_trim"] = shaped(["PP", "PA"], {"P": m_("station_plate"), "A": m_("azurite_ingot")}, m_("station_trim"), 4, "building")
     r["pad_plate"] = shaped(["HH", "HH"], {"H": m_("hull_plate")}, m_("pad_plate"), 4, "building")
     r["pad_marking"] = shaped(["PPP", "PRP", "PPP"], {"P": m_("pad_plate"), "R": m_("raw_solar_copper")}, m_("pad_marking"), 8, "building")
+    for b in BLOCKS:
+        if b.kind == "stairs":
+            r[b.name] = shaped(["X  ", "XX ", "XXX"], {"X": m_(b.base)}, m_(b.name), 4, category="building")
     return r
 
 
@@ -676,6 +740,9 @@ def our_tags() -> dict[str, dict[str, list[str]]]:
             add(block, f"{MOD}:planet_stone", bid)
         if "alien_soil" in b.tags:
             add(block, f"{MOD}:{PLANT_SOIL}", bid)
+        if b.kind == "stairs":
+            add(block, "minecraft:stairs", bid)
+            add(item, "minecraft:stairs", bid)
         if "beacon" in b.tags:
             add(block, "minecraft:beacon_base_blocks", bid)
         if b.kind == "plant":
@@ -731,6 +798,7 @@ def java_blocks() -> str:
              "import net.minecraft.block.LeavesBlock;",
              "import net.minecraft.block.MapColor;",
              "import net.minecraft.block.PillarBlock;",
+             "import net.minecraft.block.StairsBlock;",
              "import net.minecraft.block.enums.NoteBlockInstrument;",
              "import net.minecraft.block.piston.PistonBehavior;",
              "import net.minecraft.registry.Registries;",
@@ -779,6 +847,8 @@ def java_block_ctor(b: BlockDef) -> str:
     settings = f"base({color}, {b.hardness}f, {b.resistance}f, {sound}, {b.light}, {str(needs_tool).lower()})"
     if b.kind == "pillar":
         return f"new PillarBlock({settings}.instrument(NoteBlockInstrument.BASS).burnable())"
+    if b.kind == "stairs":
+        return f"new StairsBlock({const(b.base)}.getDefaultState(), {settings})"
     if b.kind == "leaves":
         return f"new LeavesBlock(AbstractBlock.Settings.copy(Blocks.OAK_LEAVES).mapColor({color}).sounds({sound}))"
     if b.kind == "plant":
@@ -1025,6 +1095,8 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _texture_names(b: BlockDef) -> list[str]:
+    if b.kind == "stairs":
+        return []  # nutzt die Textur des Vollblocks
     if b.kind == "turf":
         return [f"{b.name}_top", f"{b.name}_side", f"{b.name}_bottom"]
     if b.kind == "pillar":

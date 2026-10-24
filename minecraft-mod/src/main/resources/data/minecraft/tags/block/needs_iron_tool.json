@@ -11,14 +11,6 @@
     "kingdomomnitrix:molecular_crusher",
     "kingdomomnitrix:plasma_smelter",
     "kingdomomnitrix:alloy_forge",
-    "kingdomomnitrix:station_plate",
-    "kingdomomnitrix:station_trim",
-    "kingdomomnitrix:azurite_ore",
-    "kingdomomnitrix:azurite_block",
-    "kingdomomnitrix:viridium_ore",
-    "kingdomomnitrix:viridium_block",
-    "kingdomomnitrix:taydenite_ore",
-    "kingdomomnitrix:biotech_node",
     "kingdomomnitrix:fusion_core",
     "kingdomomnitrix:fusion_injector",
     "kingdomomnitrix:fusion_injector_galvan",
@@ -29,6 +21,14 @@
     "kingdomomnitrix:celestial_capstone",
     "kingdomomnitrix:chaos_focus",
     "kingdomomnitrix:cryo_cooler",
-    "kingdomomnitrix:suit_configurator"
+    "kingdomomnitrix:suit_configurator",
+    "kingdomomnitrix:station_plate",
+    "kingdomomnitrix:station_trim",
+    "kingdomomnitrix:azurite_ore",
+    "kingdomomnitrix:azurite_block",
+    "kingdomomnitrix:viridium_ore",
+    "kingdomomnitrix:viridium_block",
+    "kingdomomnitrix:taydenite_ore",
+    "kingdomomnitrix:biotech_node"
   ]
 }

@@ -112,6 +112,22 @@ public final class PlanetItems {
 	public static final Item BIOTECH_NODE = register("biotech_node", new BlockItem(PlanetBlocks.BIOTECH_NODE, new Item.Settings()));
 	public static final Item INFERNITE_ORE = register("infernite_ore", new BlockItem(PlanetBlocks.INFERNITE_ORE, new Item.Settings()));
 	public static final Item CELESTIUM_ORE = register("celestium_ore", new BlockItem(PlanetBlocks.CELESTIUM_ORE, new Item.Settings()));
+	public static final Item TOWN_COBBLE = register("town_cobble", new BlockItem(PlanetBlocks.TOWN_COBBLE, new Item.Settings()));
+	public static final Item TOWN_PLAZA_TILES = register("town_plaza_tiles", new BlockItem(PlanetBlocks.TOWN_PLAZA_TILES, new Item.Settings()));
+	public static final Item TOWN_TIMBER = register("town_timber", new BlockItem(PlanetBlocks.TOWN_TIMBER, new Item.Settings()));
+	public static final Item TOWN_STUCCO_ORANGE = register("town_stucco_orange", new BlockItem(PlanetBlocks.TOWN_STUCCO_ORANGE, new Item.Settings()));
+	public static final Item TOWN_STUCCO_YELLOW = register("town_stucco_yellow", new BlockItem(PlanetBlocks.TOWN_STUCCO_YELLOW, new Item.Settings()));
+	public static final Item TOWN_STUCCO_BLUE = register("town_stucco_blue", new BlockItem(PlanetBlocks.TOWN_STUCCO_BLUE, new Item.Settings()));
+	public static final Item TOWN_STUCCO_CREAM = register("town_stucco_cream", new BlockItem(PlanetBlocks.TOWN_STUCCO_CREAM, new Item.Settings()));
+	public static final Item TOWN_STUCCO_RED = register("town_stucco_red", new BlockItem(PlanetBlocks.TOWN_STUCCO_RED, new Item.Settings()));
+	public static final Item TOWN_ROOF_BLUE = register("town_roof_blue", new BlockItem(PlanetBlocks.TOWN_ROOF_BLUE, new Item.Settings()));
+	public static final Item TOWN_ROOF_BLUE_STAIRS = register("town_roof_blue_stairs", new BlockItem(PlanetBlocks.TOWN_ROOF_BLUE_STAIRS, new Item.Settings()));
+	public static final Item TOWN_ROOF_RED = register("town_roof_red", new BlockItem(PlanetBlocks.TOWN_ROOF_RED, new Item.Settings()));
+	public static final Item TOWN_ROOF_RED_STAIRS = register("town_roof_red_stairs", new BlockItem(PlanetBlocks.TOWN_ROOF_RED_STAIRS, new Item.Settings()));
+	public static final Item TOWN_ROOF_PURPLE = register("town_roof_purple", new BlockItem(PlanetBlocks.TOWN_ROOF_PURPLE, new Item.Settings()));
+	public static final Item TOWN_ROOF_PURPLE_STAIRS = register("town_roof_purple_stairs", new BlockItem(PlanetBlocks.TOWN_ROOF_PURPLE_STAIRS, new Item.Settings()));
+	public static final Item TOWN_ROOF_TEAL = register("town_roof_teal", new BlockItem(PlanetBlocks.TOWN_ROOF_TEAL, new Item.Settings()));
+	public static final Item TOWN_ROOF_TEAL_STAIRS = register("town_roof_teal_stairs", new BlockItem(PlanetBlocks.TOWN_ROOF_TEAL_STAIRS, new Item.Settings()));
 
 	public static final Item RAW_SOLAR_COPPER = register("raw_solar_copper", new Item(new Item.Settings()));
 	public static final Item SOLAR_COPPER_INGOT = register("solar_copper_ingot", new Item(new Item.Settings().rarity(Rarity.COMMON)));

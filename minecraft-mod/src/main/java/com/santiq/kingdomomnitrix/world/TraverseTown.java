@@ -6,6 +6,7 @@ import com.santiq.kingdomomnitrix.arena.ArenaTerminalBlockEntity;
 import com.santiq.kingdomomnitrix.npc.NpcSpawnItem;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
 import com.santiq.kingdomomnitrix.space.SpaceTravel;
+import com.santiq.kingdomomnitrix.world.content.PlanetBlocks;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.entity.mob.Monster;
 import net.minecraft.block.Block;
@@ -44,20 +45,20 @@ public final class TraverseTown {
 	private static final int ARENA_RADIUS = 10;
 	private static final int FLAGS = Block.NOTIFY_LISTENERS | Block.FORCE_STATE;
 
+	/** Eigene Stadtbloecke (tools/generate_planet_content.py): warmer Putz in den Farben der KH-Stadt. */
 	private static final BlockState[] WALLS = {
-			Blocks.ORANGE_TERRACOTTA.getDefaultState(), Blocks.YELLOW_TERRACOTTA.getDefaultState(),
-			Blocks.LIGHT_BLUE_TERRACOTTA.getDefaultState(), Blocks.WHITE_TERRACOTTA.getDefaultState(),
-			Blocks.RED_TERRACOTTA.getDefaultState(), Blocks.BRICKS.getDefaultState()};
+			PlanetBlocks.TOWN_STUCCO_ORANGE.getDefaultState(), PlanetBlocks.TOWN_STUCCO_YELLOW.getDefaultState(),
+			PlanetBlocks.TOWN_STUCCO_BLUE.getDefaultState(), PlanetBlocks.TOWN_STUCCO_CREAM.getDefaultState(),
+			PlanetBlocks.TOWN_STUCCO_RED.getDefaultState()};
 	/** Dachsets (Treppe fuer die Schraegen, Vollblock fuer First und Giebel), Farben wie in KH: blau, rot, violett, schiefer. */
 	private record Roof(Block stairs, Block block) {
 	}
 
 	private static final Roof[] ROOFS = {
-			new Roof(Blocks.DARK_PRISMARINE_STAIRS, Blocks.DARK_PRISMARINE),
-			new Roof(Blocks.RED_NETHER_BRICK_STAIRS, Blocks.RED_NETHER_BRICKS),
-			new Roof(Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DEEPSLATE_TILES),
-			new Roof(Blocks.PURPUR_STAIRS, Blocks.PURPUR_BLOCK),
-			new Roof(Blocks.WARPED_STAIRS, Blocks.WARPED_PLANKS)};
+			new Roof(PlanetBlocks.TOWN_ROOF_BLUE_STAIRS, PlanetBlocks.TOWN_ROOF_BLUE),
+			new Roof(PlanetBlocks.TOWN_ROOF_RED_STAIRS, PlanetBlocks.TOWN_ROOF_RED),
+			new Roof(PlanetBlocks.TOWN_ROOF_PURPLE_STAIRS, PlanetBlocks.TOWN_ROOF_PURPLE),
+			new Roof(PlanetBlocks.TOWN_ROOF_TEAL_STAIRS, PlanetBlocks.TOWN_ROOF_TEAL)};
 	private static final Block[] FLOWERS = {Blocks.POTTED_RED_TULIP, Blocks.POTTED_POPPY, Blocks.POTTED_BLUE_ORCHID,
 			Blocks.POTTED_ORANGE_TULIP, Blocks.POTTED_ALLIUM, Blocks.POTTED_CORNFLOWER};
 
@@ -259,8 +260,7 @@ public final class TraverseTown {
 		for (int dx = -PLAZA; dx <= PLAZA; dx++) {
 			for (int dz = -PLAZA; dz <= PLAZA; dz++) {
 				int ring = Math.max(Math.abs(dx), Math.abs(dz));
-				BlockState floor = ring == PLAZA ? Blocks.STONE_BRICKS.getDefaultState()
-						: (dx + dz) % 2 == 0 ? Blocks.POLISHED_ANDESITE.getDefaultState() : Blocks.POLISHED_DIORITE.getDefaultState();
+				BlockState floor = ring == PLAZA ? PlanetBlocks.TOWN_COBBLE.getDefaultState() : PlanetBlocks.TOWN_PLAZA_TILES.getDefaultState();
 				set(world, cx + dx, y0 - 1, cz + dz, floor);
 			}
 		}
@@ -389,8 +389,7 @@ public final class TraverseTown {
 		int end = direction == Direction.SOUTH ? RADIUS - 2 * ARENA_RADIUS - 4 : RADIUS - 2;
 		for (int along = PLAZA + 1; along <= end; along++) {
 			for (int w = -2; w <= 2; w++) {
-				BlockState floor = Math.abs(w) == 2 ? Blocks.STONE_BRICKS.getDefaultState()
-						: (along + w) % 3 == 0 ? Blocks.COBBLESTONE.getDefaultState() : Blocks.POLISHED_ANDESITE.getDefaultState();
+				BlockState floor = Math.abs(w) == 2 ? PlanetBlocks.TOWN_PLAZA_TILES.getDefaultState() : PlanetBlocks.TOWN_COBBLE.getDefaultState();
 				set(world, cx + ax * along + px * w, y0 - 1, cz + az * along + pz * w, floor);
 			}
 			if (along % 8 == 0) {
@@ -435,9 +434,9 @@ public final class TraverseTown {
 					}
 				} else if (distance <= wall + 0.6) {
 					// Bruestung: zwei Steinlagen, Quarz-Kante
-					set(world, x, y0 - 1, z, Blocks.STONE_BRICKS.getDefaultState());
+					set(world, x, y0 - 1, z, PlanetBlocks.TOWN_COBBLE.getDefaultState());
 					if (!entrance) {
-						set(world, x, y0, z, Blocks.STONE_BRICKS.getDefaultState());
+						set(world, x, y0, z, PlanetBlocks.TOWN_COBBLE.getDefaultState());
 						set(world, x, y0 + 1, z, Blocks.QUARTZ_BRICKS.getDefaultState());
 					} else {
 						set(world, x, y0, z, Blocks.AIR.getDefaultState());
@@ -448,7 +447,7 @@ public final class TraverseTown {
 					int tier = distance <= wall + 2.1 ? 0 : 1;
 					int seat = y0 + 2 + tier;
 					for (int y = y0 - 1; y < seat; y++) {
-						set(world, x, y, z, Blocks.STONE_BRICKS.getDefaultState());
+						set(world, x, y, z, PlanetBlocks.TOWN_COBBLE.getDefaultState());
 					}
 					Direction inward = Math.abs(dx) >= Math.abs(dz) ? (dx > 0 ? Direction.EAST : Direction.WEST)
 							: (dz > 0 ? Direction.SOUTH : Direction.NORTH);
@@ -545,8 +544,8 @@ public final class TraverseTown {
 		void build(Random random) {
 			BlockState wall = WALLS[random.nextInt(WALLS.length)];
 			Roof roof = ROOFS[random.nextInt(ROOFS.length)];
-			BlockState frame = Blocks.DARK_OAK_LOG.getDefaultState();
-			BlockState beam = Blocks.STRIPPED_DARK_OAK_LOG.getDefaultState().with(net.minecraft.block.PillarBlock.AXIS,
+			BlockState frame = PlanetBlocks.TOWN_TIMBER.getDefaultState();
+			BlockState beam = PlanetBlocks.TOWN_TIMBER.getDefaultState().with(net.minecraft.block.PillarBlock.AXIS,
 					street.getAxis());
 			int beamLevel = 3;
 			for (int u = 0; u < width; u++) {
@@ -561,7 +560,7 @@ public final class TraverseTown {
 						}
 						int level = y - y0;
 						BlockState state = edgeU && edgeV ? frame
-								: level == 0 ? Blocks.STONE_BRICKS.getDefaultState()              // Sockel
+								: level == 0 ? PlanetBlocks.TOWN_COBBLE.getDefaultState()          // Sockel
 								: level == beamLevel && edgeV ? beam                             // Fachwerk-Balken zwischen den Stockwerken
 								: wall;
 						boolean window = !(edgeU && edgeV) && (level == 2 || level == height - 2 && height > 5)
@@ -602,7 +601,7 @@ public final class TraverseTown {
 			Direction facing = towardStreet();
 			put(doorU, 0, y0, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing).with(DoorBlock.HALF, DoubleBlockHalf.LOWER));
 			put(doorU, 0, y0 + 1, Blocks.DARK_OAK_DOOR.getDefaultState().with(DoorBlock.FACING, facing).with(DoorBlock.HALF, DoubleBlockHalf.UPPER));
-			put(doorU, -1, y0 - 1, Blocks.POLISHED_ANDESITE.getDefaultState());
+			put(doorU, -1, y0 - 1, PlanetBlocks.TOWN_PLAZA_TILES.getDefaultState());
 			if (role == Role.HOME) {
 				// Laterne neben der Tuer an einem kurzen Ausleger
 				put(doorU + 1, -1, y0 + 2, Blocks.SPRUCE_FENCE.getDefaultState());

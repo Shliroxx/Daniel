@@ -488,3 +488,89 @@ def ore(name: str, stone_img: Image.Image, gem_dark: Color, gem: Color, gem_ligh
                 base[sy, sx, :3] = (base[sy, sx, :3] * (0.85 if glow > 0 else 0.6)).astype(np.uint8)
             break
     return Image.fromarray(base, "RGBA")
+
+
+# --- Traverse Town (Kingdom Hearts): Putz, Dachziegel, Kopfsteinpflaster, Platzfliesen, Balken -----------------------
+
+def stucco(name: str, dark: Color, mid: Color, light: Color) -> Image.Image:
+    """Warmer Kalkputz: ruhige Flaeche mit weichen Flecken, ein paar feine Risse und abgeplatzte Stellen."""
+    rng = rng_for(name)
+    pal = ramp(dark, mid, light, 5)
+    f = field(rng, grain=0.3, blotch=0.12, base=0.62)
+    out = quantize(f, 5)
+    out = np.clip(out, 2, 4)
+    for _ in range(2):
+        y, x = int(rng.integers(2, N - 2)), int(rng.integers(2, N - 2))
+        for _ in range(int(rng.integers(3, 6))):
+            out[y % N, x % N] = 0
+            y += int(rng.integers(0, 2))
+            x += int(rng.integers(-1, 2))
+    return render(out, pal)
+
+
+def roof_tiles(name: str, dark: Color, mid: Color, light: Color) -> Image.Image:
+    """Dachziegel: vier versetzte Reihen gerundeter Ziegel, Schatten unter jeder Reihe, Lichtkante oben."""
+    rng = rng_for(name)
+    pal = ramp(np.asarray(dark) * 0.8, mid, light, 5)
+    out = np.zeros((N, N), dtype=int)
+    for y in range(N):
+        row, ry = divmod(y, 4)
+        for x in range(N):
+            tx = (x + (2 if row % 2 else 0)) % 4
+            if ry == 3:
+                out[y, x] = 0
+            elif ry == 0:
+                out[y, x] = 4 if tx in (1, 2) else 3
+            else:
+                out[y, x] = 2 if tx in (0, 3) else 3
+            if tx == 0 and ry < 3:
+                out[y, x] = 1
+    noise = rng.random((N, N)) < 0.08
+    out = np.where(noise & (out >= 2), out - 1, out)
+    return render(out, pal)
+
+
+def cobble(name: str, dark: Color, mid: Color, light: Color) -> Image.Image:
+    """Kopfsteinpflaster: gerundete Steine unterschiedlicher Groesse in dunklen Fugen, Lichtkante oben links."""
+    rng = rng_for(name)
+    pal = ramp(dark, mid, light, 5)
+    owner, edge = voronoi_cells(rng, 11)
+    shade = (owner * 7919) % 3
+    out = 1 + shade.astype(int)
+    up = wrap(owner, 1, 0) != owner
+    left = wrap(owner, 0, 1) != owner
+    out = np.where((up | left) & ~edge, 4, out)
+    out = np.where(edge, 0, out)
+    return render(out, pal)
+
+
+def plaza_tiles(name: str, a: Color, b: Color, grout: Color) -> Image.Image:
+    """Platzfliesen: 2 x 2 grosse Fliesen im Schachbrett (hell/warm), Fugen, leichte Abnutzung."""
+    rng = rng_for(name)
+    pal = [np.asarray(grout, dtype=np.float64)] + ramp(np.asarray(a) * 0.85, a, np.minimum(np.asarray(a) * 1.12, 1), 3) \
+        + ramp(np.asarray(b) * 0.85, b, np.minimum(np.asarray(b) * 1.12, 1), 3)
+    ys, xs = np.mgrid[0:N, 0:N]
+    tile = ((xs // 8) + (ys // 8)) % 2
+    lx, ly = xs % 8, ys % 8
+    level = np.where((lx == 0) | (ly == 0), 2, 1)
+    level = np.where((lx == 7) | (ly == 7), 0, level)
+    level = np.where(rng.random((N, N)) < 0.07, np.maximum(level - 1, 0), level)
+    out = 1 + tile * 3 + level
+    out = np.where((xs % 8 == 0) & (ys % 8 == 0), 0, out)
+    out = np.where((xs % 8 == 7) | (ys % 8 == 7), 0, out)
+    return render(out, pal)
+
+
+def beam(name: str, dark: Color, mid: Color, light: Color) -> Image.Image:
+    """Fachwerkbalken (Seite): laengs laufende Maserung, Astloch, dunkle Kanten links und rechts."""
+    rng = rng_for(name)
+    pal = ramp(dark, mid, light, 5)
+    ys, xs = np.mgrid[0:N, 0:N]
+    grain = (np.sin(xs * 1.3 + np.sin(ys * 0.4 + rng.uniform(0, 6)) * 1.5) + 1) / 2
+    out = 1 + np.round(grain * 2).astype(int)
+    out = np.where((xs == 0) | (xs == N - 1), 0, out)
+    ky, kx = int(rng.integers(3, 12)), int(rng.integers(4, 11))
+    out[ky, kx] = 0
+    out[ky, kx + 1] = 1
+    out = np.where((xs == 1) & (rng.random((N, N)) < 0.5), 4, out)
+    return render(out, pal)

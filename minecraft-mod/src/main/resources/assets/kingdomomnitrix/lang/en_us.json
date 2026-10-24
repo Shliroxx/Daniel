@@ -2402,5 +2402,21 @@
   "block.kingdomomnitrix.suit_configurator": "Suit Configurator",
   "screen.kingdomomnitrix.configurator.piece": "Suit piece",
   "screen.kingdomomnitrix.configurator.empty": "Insert a suit piece",
-  "screen.kingdomomnitrix.configurator.slots": "Sockets used: %s/%s"
+  "screen.kingdomomnitrix.configurator.slots": "Sockets used: %s/%s",
+  "block.kingdomomnitrix.town_cobble": "Town Cobblestone",
+  "block.kingdomomnitrix.town_plaza_tiles": "Plaza Tiles",
+  "block.kingdomomnitrix.town_timber": "Timber Beam",
+  "block.kingdomomnitrix.town_stucco_orange": "Orange Stucco",
+  "block.kingdomomnitrix.town_stucco_yellow": "Yellow Stucco",
+  "block.kingdomomnitrix.town_stucco_blue": "Blue Stucco",
+  "block.kingdomomnitrix.town_stucco_cream": "Cream Stucco",
+  "block.kingdomomnitrix.town_stucco_red": "Red Stucco",
+  "block.kingdomomnitrix.town_roof_blue": "Blue Roof Tiles",
+  "block.kingdomomnitrix.town_roof_blue_stairs": "Blue Roof Tile Stairs",
+  "block.kingdomomnitrix.town_roof_red": "Red Roof Tiles",
+  "block.kingdomomnitrix.town_roof_red_stairs": "Red Roof Tile Stairs",
+  "block.kingdomomnitrix.town_roof_purple": "Purple Roof Tiles",
+  "block.kingdomomnitrix.town_roof_purple_stairs": "Purple Roof Tile Stairs",
+  "block.kingdomomnitrix.town_roof_teal": "Teal Roof Tiles",
+  "block.kingdomomnitrix.town_roof_teal_stairs": "Teal Roof Tile Stairs"
 }

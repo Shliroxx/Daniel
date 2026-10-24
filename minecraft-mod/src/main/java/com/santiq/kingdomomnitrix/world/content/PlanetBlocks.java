@@ -11,6 +11,7 @@ import net.minecraft.block.ExperienceDroppingBlock;
 import net.minecraft.block.LeavesBlock;
 import net.minecraft.block.MapColor;
 import net.minecraft.block.PillarBlock;
+import net.minecraft.block.StairsBlock;
 import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.registry.Registries;
@@ -202,6 +203,38 @@ public final class PlanetBlocks {
 	public static final Block NECROFRIGGIAN_ICE = register("necrofriggian_ice", new TechGlassBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(0.4f, 6.0f).sounds(BlockSoundGroup.GLASS).luminance(state -> 4).nonOpaque().dropsNothing().slipperiness(0.98f).allowsSpawning((state, world, pos, type) -> false).solidBlock((state, world, pos) -> false).suffocates((state, world, pos) -> false).blockVision((state, world, pos) -> false)));
 	/** Necrofriggian-Eisstachel */
 	public static final Block NECROFRIGGIAN_SPIKE = register("necrofriggian_spike", new CrystalSpikeBlock(AbstractBlock.Settings.create().mapColor(MapColor.LIGHT_BLUE).strength(0.4f, 6.0f).sounds(BlockSoundGroup.GLASS).luminance(state -> 3).nonOpaque().dropsNothing().pistonBehavior(PistonBehavior.DESTROY)));
+	/** Stadtpflaster */
+	public static final Block TOWN_COBBLE = register("town_cobble", new Block(base(MapColor.STONE_GRAY, 2.0f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Platzfliesen */
+	public static final Block TOWN_PLAZA_TILES = register("town_plaza_tiles", new Block(base(MapColor.TERRACOTTA_WHITE, 2.0f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Fachwerkbalken */
+	public static final Block TOWN_TIMBER = register("town_timber", new PillarBlock(base(MapColor.DARK_GREEN, 2.0f, 3.0f, BlockSoundGroup.WOOD, 0, false).instrument(NoteBlockInstrument.BASS).burnable()));
+	/** Putz (Orange) */
+	public static final Block TOWN_STUCCO_ORANGE = register("town_stucco_orange", new Block(base(MapColor.TERRACOTTA_ORANGE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Putz (Gelb) */
+	public static final Block TOWN_STUCCO_YELLOW = register("town_stucco_yellow", new Block(base(MapColor.TERRACOTTA_ORANGE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Putz (Blau) */
+	public static final Block TOWN_STUCCO_BLUE = register("town_stucco_blue", new Block(base(MapColor.TERRACOTTA_ORANGE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Putz (Creme) */
+	public static final Block TOWN_STUCCO_CREAM = register("town_stucco_cream", new Block(base(MapColor.TERRACOTTA_ORANGE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Putz (Rot) */
+	public static final Block TOWN_STUCCO_RED = register("town_stucco_red", new Block(base(MapColor.TERRACOTTA_ORANGE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Blaue Dachziegel */
+	public static final Block TOWN_ROOF_BLUE = register("town_roof_blue", new Block(base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Blaue Dachziegel-Treppe */
+	public static final Block TOWN_ROOF_BLUE_STAIRS = register("town_roof_blue_stairs", new StairsBlock(TOWN_ROOF_BLUE.getDefaultState(), base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Rote Dachziegel */
+	public static final Block TOWN_ROOF_RED = register("town_roof_red", new Block(base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Rote Dachziegel-Treppe */
+	public static final Block TOWN_ROOF_RED_STAIRS = register("town_roof_red_stairs", new StairsBlock(TOWN_ROOF_RED.getDefaultState(), base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Violette Dachziegel */
+	public static final Block TOWN_ROOF_PURPLE = register("town_roof_purple", new Block(base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Violette Dachziegel-Treppe */
+	public static final Block TOWN_ROOF_PURPLE_STAIRS = register("town_roof_purple_stairs", new StairsBlock(TOWN_ROOF_PURPLE.getDefaultState(), base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Tuerkise Dachziegel */
+	public static final Block TOWN_ROOF_TEAL = register("town_roof_teal", new Block(base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
+	/** Tuerkise Dachziegel-Treppe */
+	public static final Block TOWN_ROOF_TEAL_STAIRS = register("town_roof_teal_stairs", new StairsBlock(TOWN_ROOF_TEAL.getDefaultState(), base(MapColor.TERRACOTTA_BLUE, 1.5f, 6.0f, BlockSoundGroup.STONE, 0, true)));
 
 	/** Render-Ebenen fuer den Client (Pflanzen und Gitter mit Loechern, Laub, Glas). */
 	public static final List<Block> CUTOUT = List.of(VELDIN_SCRUB, KERWAN_REED, NOVALIS_BLOOM, RILGAR_SEAGRASS, TORREN_THORN, SONOROSIA_REED, PETROPIA_SPROUT, GALVAN_FERN, MECHAMORPH_VINE, KYLMYYS_FROSTFERN, VULPIN_THORN, PISCCISS_GRASS, GRATE);

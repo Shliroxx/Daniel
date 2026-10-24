@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "X  ",
+    "XX ",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:town_roof_blue"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:town_roof_blue_stairs",
+    "count": 4
+  }
+}

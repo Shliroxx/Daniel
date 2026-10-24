@@ -2402,5 +2402,21 @@
   "block.kingdomomnitrix.suit_configurator": "Anzug-Konfigurator",
   "screen.kingdomomnitrix.configurator.piece": "Anzugteil",
   "screen.kingdomomnitrix.configurator.empty": "Anzugteil einlegen",
-  "screen.kingdomomnitrix.configurator.slots": "Sockel belegt: %s/%s"
+  "screen.kingdomomnitrix.configurator.slots": "Sockel belegt: %s/%s",
+  "block.kingdomomnitrix.town_cobble": "Stadtpflaster",
+  "block.kingdomomnitrix.town_plaza_tiles": "Platzfliesen",
+  "block.kingdomomnitrix.town_timber": "Fachwerkbalken",
+  "block.kingdomomnitrix.town_stucco_orange": "Putz (Orange)",
+  "block.kingdomomnitrix.town_stucco_yellow": "Putz (Gelb)",
+  "block.kingdomomnitrix.town_stucco_blue": "Putz (Blau)",
+  "block.kingdomomnitrix.town_stucco_cream": "Putz (Creme)",
+  "block.kingdomomnitrix.town_stucco_red": "Putz (Rot)",
+  "block.kingdomomnitrix.town_roof_blue": "Blaue Dachziegel",
+  "block.kingdomomnitrix.town_roof_blue_stairs": "Blaue Dachziegel-Treppe",
+  "block.kingdomomnitrix.town_roof_red": "Rote Dachziegel",
+  "block.kingdomomnitrix.town_roof_red_stairs": "Rote Dachziegel-Treppe",
+  "block.kingdomomnitrix.town_roof_purple": "Violette Dachziegel",
+  "block.kingdomomnitrix.town_roof_purple_stairs": "Violette Dachziegel-Treppe",
+  "block.kingdomomnitrix.town_roof_teal": "Tuerkise Dachziegel",
+  "block.kingdomomnitrix.town_roof_teal_stairs": "Tuerkise Dachziegel-Treppe"
 }
