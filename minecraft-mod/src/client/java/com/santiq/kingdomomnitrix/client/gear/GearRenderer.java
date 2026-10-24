@@ -19,7 +19,7 @@ import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.renderer.GeoRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import com.santiq.kingdomomnitrix.client.render.SafeGlowLayer;
 
 /**
  * 3D-Renderer der aelteren Ausruestung ({@link GeoGear}): Modell, Textur und Animation aus geo|textures|animations/
@@ -33,7 +33,7 @@ public class GearRenderer<T extends Item & GeoGear> extends GeoItemRenderer<T> {
 
 	public GearRenderer() {
 		super(new Model<>());
-		addRenderLayer(new AutoGlowingGeoLayer<>(this));
+		addRenderLayer(new SafeGlowLayer<>(this));
 	}
 
 	private static Identifier icon(String id) {

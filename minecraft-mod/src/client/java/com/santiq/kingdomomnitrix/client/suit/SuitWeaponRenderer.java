@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.model.DefaultedGeoModel;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import com.santiq.kingdomomnitrix.client.render.SafeGlowLayer;
 
 /**
  * 3D-Renderer der Endgame-Waffen: Modell, Textur und Leerlauf-Animation aus geo/item/weapon, textures/item/weapon und
@@ -27,7 +27,7 @@ public class SuitWeaponRenderer extends GeoItemRenderer<SuitWeaponItem> {
 
 	public SuitWeaponRenderer(SuitWeapon weapon) {
 		super(new Model(weapon));
-		addRenderLayer(new AutoGlowingGeoLayer<>(this));
+		addRenderLayer(new SafeGlowLayer<>(this));
 		this.icon = iconModel(weapon);
 	}
 

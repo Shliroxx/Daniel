@@ -155,6 +155,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			@Override
 			public void reload(ResourceManager manager) {
 				UiDraw.clearCache();
+				com.santiq.kingdomomnitrix.client.render.SafeGlowLayer.clearCache();
 			}
 		});
 		HandledScreens.register(ModScreenHandlers.GADGET_BELT, GadgetScreen::new);

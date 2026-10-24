@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.client.GeoRenderProvider;
 import software.bernie.geckolib.model.DefaultedGeoModel;
 import software.bernie.geckolib.renderer.GeoArmorRenderer;
-import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
+import com.santiq.kingdomomnitrix.client.render.SafeGlowLayer;
 
 /**
  * 3D-Renderer der Endgame-Ruestungen: Modell, Textur und Animation aus geo/armor, textures/armor und animations/armor;
@@ -20,7 +20,7 @@ import software.bernie.geckolib.renderer.layer.AutoGlowingGeoLayer;
 public class SuitArmorRenderer extends GeoArmorRenderer<SuitArmorItem> {
 	public SuitArmorRenderer(SuitSet set) {
 		super(new Model(set));
-		addRenderLayer(new AutoGlowingGeoLayer<>(this));
+		addRenderLayer(new SafeGlowLayer<>(this));
 	}
 
 	/** Haengt den Renderer an die Ruestungsteile (einmal beim Client-Start). */

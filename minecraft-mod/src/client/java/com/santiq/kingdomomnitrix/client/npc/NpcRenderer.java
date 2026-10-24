@@ -15,7 +15,9 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
+import com.santiq.kingdomomnitrix.client.render.SafeGlowLayer;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
+
 
 /** NPC-Renderer mit Quest-Markierung ueber dem Kopf: gelbes „!“ = neuer Auftrag, goldenes „?“ = Quest abgeben. */
 public class NpcRenderer extends GeoEntityRenderer<NpcEntity> {
@@ -24,6 +26,7 @@ public class NpcRenderer extends GeoEntityRenderer<NpcEntity> {
 
 	public NpcRenderer(EntityRendererFactory.Context context) {
 		super(context, new NpcModel());
+		addRenderLayer(new SafeGlowLayer<>(this));
 		this.shadowRadius = 0.4f;
 	}
 
