@@ -1,0 +1,63 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.heli_pack.title"
+  },
+  "category": "side",
+  "sort_order": 1,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.clank"
+    },
+    "icon": "kingdomomnitrix:heli_pack",
+    "npc": "kingdomomnitrix:clank"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.heli_pack.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.heli_pack.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.heli_pack.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.heli_pack.complete.1"
+      }
+    ]
+  },
+  "requires": [
+    "kingdomomnitrix:terminal"
+  ],
+  "objectives": [
+    {
+      "type": "craft",
+      "target": "kingdomomnitrix:heli_pack",
+      "count": 1
+    },
+    {
+      "type": "collect",
+      "target": "minecraft:feather",
+      "count": 8
+    }
+  ],
+  "rewards": {
+    "bolts": 200,
+    "experience": 80,
+    "items": [
+      {
+        "id": "minecraft:chain",
+        "count": 2
+      },
+      {
+        "id": "minecraft:tripwire_hook",
+        "count": 1
+      }
+    ]
+  }
+}

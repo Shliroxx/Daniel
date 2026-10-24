@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:methanos",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.92,
+    0.44
+  ],
+  "color": 5925418,
+  "size": 0.9,
+  "order": 114,
+  "landing": [
+    0,
+    0
+  ]
+}

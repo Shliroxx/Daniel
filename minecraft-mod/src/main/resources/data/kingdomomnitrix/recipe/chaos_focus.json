@@ -1,0 +1,24 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "IEI",
+  "EHE",
+  "IEI"
+ ],
+ "key": {
+  "I": {
+   "item": "kingdomomnitrix:celestium_ingot"
+  },
+  "E": {
+   "item": "minecraft:end_crystal"
+  },
+  "H": {
+   "item": "kingdomomnitrix:chaos_heart"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:chaos_focus",
+  "count": 1
+ }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "kingdomomnitrix:block/celestium_ore_3d",
+  "textures": {
+    "all": "kingdomomnitrix:block/celestium_ore",
+    "particle": "kingdomomnitrix:block/celestium_ore"
+  }
+}

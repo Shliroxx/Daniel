@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/omnitrix_workbench_top",
+    "side": "kingdomomnitrix:block/omnitrix_workbench",
+    "bottom": "kingdomomnitrix:block/omnitrix_workbench_bottom"
+  }
+}

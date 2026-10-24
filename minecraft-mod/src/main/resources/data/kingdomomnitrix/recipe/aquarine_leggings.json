@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "XXX",
+    "X X",
+    "X X"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:aquarine_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:aquarine_leggings",
+    "count": 1
+  }
+}

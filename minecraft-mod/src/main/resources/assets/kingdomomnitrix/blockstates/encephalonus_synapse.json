@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/encephalonus_synapse"
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_synapse",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_synapse",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_synapse",
+        "y": 270
+      }
+    ]
+  }
+}

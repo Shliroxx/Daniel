@@ -1,0 +1,14 @@
+{
+  "destination": "kingdomomnitrix:traverse_town",
+  "position": [
+    0,
+    140,
+    -360
+  ],
+  "color": 16757575,
+  "radius": 12,
+  "arrival": [
+    0,
+    0
+  ]
+}

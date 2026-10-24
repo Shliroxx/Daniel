@@ -1,0 +1,70 @@
+{
+  "item": "kingdomomnitrix:blitz_gun",
+  "price": 600,
+  "ammo_price": 4,
+  "sort_order": 3,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 20,
+      "stats": {
+        "pellets": 6,
+        "damage": 2.5,
+        "spread": 9,
+        "cooldown": 16
+      }
+    },
+    {
+      "price": 600,
+      "max_ammo": 25,
+      "stats": {
+        "pellets": 7,
+        "damage": 2.8,
+        "spread": 8.5,
+        "cooldown": 15
+      }
+    },
+    {
+      "price": 1300,
+      "max_ammo": 30,
+      "stats": {
+        "pellets": 8,
+        "damage": 3.1,
+        "spread": 8,
+        "cooldown": 14
+      }
+    },
+    {
+      "price": 2600,
+      "max_ammo": 35,
+      "stats": {
+        "pellets": 9,
+        "damage": 3.5,
+        "spread": 7.5,
+        "cooldown": 12
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "price": 5000,
+      "max_ammo": 40,
+      "stats": {
+        "pellets": 11,
+        "damage": 4.0,
+        "spread": 7,
+        "cooldown": 10
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

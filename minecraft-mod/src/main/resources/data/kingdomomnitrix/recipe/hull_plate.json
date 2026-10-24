@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SSS",
+    "SXS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "tag": "kingdomomnitrix:planet_stone"
+    },
+    "X": {
+      "item": "kingdomomnitrix:solar_copper_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:hull_plate",
+    "count": 8
+  }
+}

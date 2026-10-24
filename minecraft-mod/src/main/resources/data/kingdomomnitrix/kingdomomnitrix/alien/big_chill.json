@@ -1,0 +1,303 @@
+{
+  "color": "#4A7BD0",
+  "sort_order": 12,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 7,
+  "scale": 1.1,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.05,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 2.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 20.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#minecraft:is_freezing",
+    "#minecraft:is_fall",
+    "#minecraft:is_drowning"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:ice_breath",
+      "energy": 15,
+      "cooldown": 30,
+      "params": {
+        "range": 8.0,
+        "chill": 35.0,
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ice_shards",
+      "energy": 20,
+      "cooldown": 40,
+      "params": {
+        "count": 5,
+        "damage": 4.0,
+        "speed": 2.2,
+        "spread": 5.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:phase_flight",
+      "energy": 20,
+      "cooldown": 60,
+      "params": {
+        "ticks": 12,
+        "power": 1.6
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:ice_prison",
+      "energy": 35,
+      "cooldown": 200,
+      "params": {
+        "range": 16.0,
+        "seconds": 5.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:cryo_cloak",
+      "energy": 30,
+      "cooldown": 400,
+      "params": {
+        "seconds": 8.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:absolute_zero",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {
+        "radius": 12.0,
+        "shatter_seconds": 2.0
+      },
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:frost_lance",
+      "energy": 15,
+      "cooldown": 50,
+      "params": {
+        "range": 20.0,
+        "damage": 5.0,
+        "chill": 40.0
+      },
+      "role": "basic",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:frost_ground",
+      "energy": 25,
+      "cooldown": 140,
+      "params": {
+        "range": 16.0,
+        "radius": 5.0,
+        "seconds": 6.0,
+        "chill": 15.0
+      },
+      "role": "basic_2",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:wing_wrap",
+      "energy": 20,
+      "cooldown": 200,
+      "params": {
+        "seconds": 4.0,
+        "resistance": 2,
+        "burst_chill": 40.0,
+        "radius": 4.5
+      },
+      "role": "utility",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:ice_spikes",
+      "energy": 25,
+      "cooldown": 120,
+      "params": {
+        "length": 12,
+        "damage": 6.0,
+        "chill": 30.0
+      },
+      "role": "special",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:blizzard",
+      "energy": 35,
+      "cooldown": 260,
+      "params": {
+        "range": 18.0,
+        "radius": 6.0,
+        "seconds": 6.0,
+        "chill": 12.0,
+        "damage": 1.5
+      },
+      "role": "special",
+      "unlock_level": 6
+    },
+    {
+      "type": "kingdomomnitrix:ice_comet",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "range": 30.0,
+        "radius": 7.0,
+        "damage": 14.0,
+        "fall_ticks": 30
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:cold_rush",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0,
+        "chill": 30.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:icicle_drop",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 6.0,
+        "chill": 25.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:frost_grip",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0,
+        "chill": 50.0,
+        "hold_ticks": 40
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:glacier_fall",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.2,
+        "damage": 6.0,
+        "chill": 35.0,
+        "radius": 4.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:shatter_strike",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 8.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna": {
+    "samples": 3,
+    "species": {
+      "home": "kingdomomnitrix:kylmyys",
+      "name": "species.kingdomomnitrix.necrofriggian",
+      "behavior": "neutral",
+      "health": 24,
+      "damage": 5,
+      "speed": 0.3,
+      "effect": "freeze",
+      "group": [
+        1,
+        3
+      ],
+      "max": 6,
+      "flying": true
+    }
+  },
+  "model": "kingdomomnitrix:big_chill",
+  "failsafe_tags": [
+    "#minecraft:is_fire",
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 2,
+  "traits": {
+    "flight": true,
+    "effects": [
+      {
+        "effect": "minecraft:night_vision"
+      },
+      {
+        "effect": "minecraft:fire_resistance"
+      }
+    ],
+    "transform_style": "frost",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:hypothermia",
+        "params": {
+          "chill": 15.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:frost_body",
+        "params": {
+          "chill": 12.0,
+          "fire": 0.8
+        }
+      },
+      {
+        "type": "kingdomomnitrix:phantom_wings",
+        "unlock_level": 4,
+        "params": {
+          "chance": 0.2
+        }
+      }
+    ]
+  }
+}

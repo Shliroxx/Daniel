@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/petropia_lichen"
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_lichen",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_lichen",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_lichen",
+        "y": 270
+      }
+    ]
+  }
+}

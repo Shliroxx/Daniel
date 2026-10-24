@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:kylmyys",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.3,
+    0.66
+  ],
+  "color": 10146047,
+  "size": 1.0,
+  "order": 104,
+  "landing": [
+    0,
+    0
+  ]
+}

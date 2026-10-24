@@ -1,0 +1,29 @@
+{
+  "heat_per_transform": 0.22,
+  "heat_per_second_active": 0.004,
+  "heat_decay_per_second": 0.02,
+  "heat_warning": 0.75,
+  "overheat_lock_seconds": 12,
+  "cooldown_multiplier": 1.0,
+  "duration_multiplier": 1.0,
+  "manual_revert_cooldown": 0.5,
+  "confirm_seconds": 0.42,
+  "master_control": {
+    "heat_multiplier": 0.0,
+    "cooldown_multiplier": 0.25,
+    "duration_multiplier": 3.0,
+    "confirm_seconds": 0.08,
+    "quick_change": true
+  },
+  "quick_change_heat": 0.12,
+  "quick_change_keep": 0.5,
+  "failsafe_cooldown_seconds": 600,
+  "failsafe_heat": 0.9,
+  "malfunctions": {
+    "start_heat": 0.75,
+    "wrong_alien_chance": 0.35,
+    "drift_chance": 0.25,
+    "drift_seconds": 8,
+    "drift_interval_seconds": 10
+  }
+}

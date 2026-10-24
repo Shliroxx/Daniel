@@ -1,0 +1,15 @@
+{
+  "type": "boss_spawn",
+  "boss": "kingdomomnitrix:kevin",
+  "weight": 3,
+  "min_level": 12,
+  "duration_seconds": 600,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 400,
+    "experience": 700,
+    "raritanium": 2
+  }
+}

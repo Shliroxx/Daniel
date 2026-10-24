@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:aranhaschimmia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.12,
+    0.84
+  ],
+  "color": 3836490,
+  "size": 1.0,
+  "order": 111,
+  "landing": [
+    0,
+    0
+  ]
+}

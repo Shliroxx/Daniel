@@ -1,0 +1,50 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 10004528,
+    "fog_color": 12107872,
+    "water_color": 6982170,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:lepidopterra_blob_lepidopterra_slime"
+    ],
+    [],
+    [],
+    [
+      "kingdomomnitrix:lepidopterra_hive_hills_lepidopterra_stalk"
+    ],
+    []
+  ]
+}

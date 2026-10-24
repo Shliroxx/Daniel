@@ -1,0 +1,1 @@
+{"condition": {"type": "lava_near", "radius": 6}, "weights": {"kingdomomnitrix:heatblast": 6, "kingdomomnitrix:diamondhead": 1}, "reason": "scan.kingdomomnitrix.lava"}

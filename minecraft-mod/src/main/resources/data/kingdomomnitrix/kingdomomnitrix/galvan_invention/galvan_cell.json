@@ -1,0 +1,21 @@
+{
+  "result": "kingdomomnitrix:galvan_cell",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:redstone",
+      "count": 4
+    },
+    {
+      "item": "minecraft:glowstone_dust",
+      "count": 2
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 1
+    }
+  ],
+  "bolts": 100,
+  "knowledge": 0,
+  "sort_order": 10
+}

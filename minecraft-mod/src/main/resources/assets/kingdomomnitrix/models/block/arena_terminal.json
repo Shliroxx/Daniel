@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "kingdomomnitrix:block/arena_terminal_top",
+    "side": "kingdomomnitrix:block/arena_terminal"
+  }
+}

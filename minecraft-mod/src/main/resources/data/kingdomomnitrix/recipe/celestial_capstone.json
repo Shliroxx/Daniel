@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " N ",
+  "CMC",
+  "CPC"
+ ],
+ "key": {
+  "N": {
+   "item": "kingdomomnitrix:nefarious_chip"
+  },
+  "C": {
+   "item": "kingdomomnitrix:celestium_ingot"
+  },
+  "M": {
+   "item": "kingdomomnitrix:star_matrix"
+  },
+  "P": {
+   "item": "kingdomomnitrix:fusion_pylon"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:celestial_capstone",
+  "count": 1
+ }
+}

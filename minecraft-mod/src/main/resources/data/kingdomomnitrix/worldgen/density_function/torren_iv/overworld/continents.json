@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:flat_cache",
+  "argument": {
+    "type": "minecraft:shifted_noise",
+    "noise": "kingdomomnitrix:torren_iv/continentalness",
+    "shift_x": "kingdomomnitrix:torren_iv/shift_x",
+    "shift_y": 0.0,
+    "shift_z": "kingdomomnitrix:torren_iv/shift_z",
+    "xz_scale": 0.25,
+    "y_scale": 0.0
+  }
+}

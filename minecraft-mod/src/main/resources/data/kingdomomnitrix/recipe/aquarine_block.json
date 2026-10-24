@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "XXX",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:aquarine_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:aquarine_block",
+    "count": 1
+  }
+}

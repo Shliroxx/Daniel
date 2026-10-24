@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/lepidopterra_moss_top",
+    "side": "kingdomomnitrix:block/lepidopterra_moss_side",
+    "bottom": "kingdomomnitrix:block/lepidopterra_moss_bottom"
+  }
+}

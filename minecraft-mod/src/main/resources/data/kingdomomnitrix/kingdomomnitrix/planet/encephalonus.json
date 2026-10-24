@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:encephalonus",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.7,
+    0.88
+  ],
+  "color": 11045080,
+  "size": 1.0,
+  "order": 116,
+  "landing": [
+    0,
+    0
+  ]
+}

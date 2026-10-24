@@ -1,0 +1,51 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.terminal.title"
+  },
+  "category": "side",
+  "sort_order": 0,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.clank"
+    },
+    "icon": "kingdomomnitrix:bolt",
+    "npc": "kingdomomnitrix:clank"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.terminal.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.terminal.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.terminal.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.terminal.complete.1"
+      }
+    ]
+  },
+  "objectives": [
+    {
+      "type": "craft",
+      "target": "kingdomomnitrix:weapon_terminal",
+      "count": 1
+    }
+  ],
+  "rewards": {
+    "bolts": 400,
+    "experience": 60,
+    "items": [
+      {
+        "id": "minecraft:iron_ingot",
+        "count": 8
+      }
+    ]
+  }
+}

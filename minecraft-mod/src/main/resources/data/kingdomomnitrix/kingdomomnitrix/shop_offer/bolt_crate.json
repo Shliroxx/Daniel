@@ -1,0 +1,11 @@
+{
+  "category": "gadget",
+  "items": [
+    {
+      "id": "kingdomomnitrix:bolt_crate",
+      "count": 4
+    }
+  ],
+  "price": 300,
+  "sort_order": 3
+}

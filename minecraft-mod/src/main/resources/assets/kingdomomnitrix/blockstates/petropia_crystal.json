@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/petropia_crystal"
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_crystal",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_crystal",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/petropia_crystal",
+        "y": 270
+      }
+    ]
+  }
+}

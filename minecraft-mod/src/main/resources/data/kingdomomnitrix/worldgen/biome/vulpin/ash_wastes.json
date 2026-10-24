@@ -1,0 +1,56 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.1,
+  "effects": {
+    "sky_color": 11034666,
+    "fog_color": 9067056,
+    "water_color": 9091130,
+    "water_fog_color": 666170,
+    "grass_color": 5877296,
+    "foliage_color": 5877296,
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    },
+    "particle": {
+      "options": {
+        "type": "minecraft:ash"
+      },
+      "probability": 0.03
+    }
+  },
+  "spawners": {
+    "monster": [],
+    "creature": [],
+    "ambient": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "underground_water_creature": [],
+    "axolotls": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": []
+  },
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "kingdomomnitrix:vulpin_blob_vulpin_sludge"
+    ],
+    [],
+    [],
+    [
+      "kingdomomnitrix:vulpin_ash_wastes_vulpin_thorn"
+    ],
+    []
+  ]
+}

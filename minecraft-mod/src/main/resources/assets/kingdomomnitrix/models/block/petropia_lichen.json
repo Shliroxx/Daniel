@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/petropia_lichen_top",
+    "side": "kingdomomnitrix:block/petropia_lichen_side",
+    "bottom": "kingdomomnitrix:block/petropia_lichen_bottom"
+  }
+}

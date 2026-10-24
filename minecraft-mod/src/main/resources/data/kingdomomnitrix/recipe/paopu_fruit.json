@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "minecraft:apple"
+    },
+    {
+      "item": "minecraft:glowstone_dust"
+    },
+    {
+      "item": "kingdomomnitrix:heart"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:paopu_fruit",
+    "count": 1
+  }
+}

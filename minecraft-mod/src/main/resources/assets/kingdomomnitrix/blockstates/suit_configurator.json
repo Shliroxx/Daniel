@@ -1,0 +1,20 @@
+{
+ "variants": {
+  "facing=north": {
+   "model": "kingdomomnitrix:block/suit_configurator",
+   "y": 0
+  },
+  "facing=east": {
+   "model": "kingdomomnitrix:block/suit_configurator",
+   "y": 90
+  },
+  "facing=south": {
+   "model": "kingdomomnitrix:block/suit_configurator",
+   "y": 180
+  },
+  "facing=west": {
+   "model": "kingdomomnitrix:block/suit_configurator",
+   "y": 270
+  }
+ }
+}

@@ -1,0 +1,254 @@
+package com.santiq.kingdomomnitrix.ability;
+
+import com.santiq.kingdomomnitrix.party.PartyRules;
+import com.santiq.kingdomomnitrix.util.Targeting;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleEffect;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
+import net.minecraft.world.World;
+import org.joml.Vector3f;
+
+/**
+ * Gemeinsame Bausteine der spaeter dazugekommenen Aliens (Rath, Spidermonkey, Way Big, Alien X, Brainstorm, Goop):
+ * Schaden ohne Rueckkopplung, Strahlen, Kegel, Partikellinien und Festhalten (Wurzeln/Netze/Kokons) mit sauberem
+ * Aufraeumen. Jedes Alien behaelt sein eigenes System in seiner eigenen Klasse.
+ */
+final class AlienKit {
+	/** gerade laufender Zusatzschaden — Ereignis-Handler sollen darauf nicht erneut reagieren */
+	static boolean bonusHit;
+
+	/** festgehaltene Ziele: bis wann, in welcher Welt, Partikel */
+	private static final Map<UUID, Hold> HOLDS = new HashMap<>();
+
+	private record Hold(RegistryKey<World> world, long until, ParticleEffect particle, boolean lift) {
+	}
+
+	private AlienKit() {
+	}
+
+	static void register() {
+		ServerTickEvents.END_SERVER_TICK.register(AlienKit::tickHolds);
+	}
+
+	static DustParticleEffect dust(String hex, float size) {
+		int c = Integer.parseInt(hex.substring(1), 16);
+		return new DustParticleEffect(new Vector3f(((c >> 16) & 0xFF) / 255.0f, ((c >> 8) & 0xFF) / 255.0f, (c & 0xFF) / 255.0f), size);
+	}
+
+	/** Schaden als Zusatztreffer (loest keine weiteren Alien-Boni aus). */
+	static void hit(LivingEntity target, DamageSource source, float damage) {
+		boolean before = bonusHit;
+		bonusHit = true;
+		try {
+			target.timeUntilRegen = 0;
+			target.damage(source, damage);
+		} finally {
+			bonusHit = before;
+		}
+	}
+
+	static void magic(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage) {
+		hit(target, world.getDamageSources().indirectMagic(owner, owner), damage);
+	}
+
+	static void melee(ServerWorld world, ServerPlayerEntity owner, LivingEntity target, float damage) {
+		hit(target, world.getDamageSources().playerAttack(owner), damage);
+	}
+
+	static boolean foe(ServerPlayerEntity owner, Entity entity) {
+		return entity instanceof LivingEntity living && living != owner && living.isAlive() && PartyRules.canHarm(owner, living);
+	}
+
+	static List<LivingEntity> around(ServerWorld world, ServerPlayerEntity owner, Vec3d center, double radius) {
+		return world.getEntitiesByClass(LivingEntity.class, new Box(center, center).expand(radius),
+				e -> foe(owner, e) && e.getPos().add(0, e.getHeight() * 0.5, 0).distanceTo(center) <= radius + e.getWidth() * 0.5);
+	}
+
+	/** Kegel vor dem Spieler (Augen, Blickrichtung). */
+	static List<LivingEntity> cone(ServerWorld world, ServerPlayerEntity owner, double range, double minDot) {
+		Vec3d eye = owner.getEyePos();
+		Vec3d look = owner.getRotationVec(1.0f);
+		List<LivingEntity> out = new ArrayList<>();
+		for (LivingEntity e : around(world, owner, eye, range)) {
+			Vec3d to = e.getPos().add(0, e.getHeight() * 0.5, 0).subtract(eye);
+			if (to.lengthSquared() < 1.0E-4 || to.normalize().dotProduct(look) >= minDot) {
+				out.add(e);
+			}
+		}
+		return out;
+	}
+
+	/** Blickstrahl bis zur Wand: erstes Wesen (oder leer) und Endpunkt. */
+	record Beam(Optional<LivingEntity> target, Vec3d end) {
+	}
+
+	static Beam beam(ServerWorld world, ServerPlayerEntity owner, double range) {
+		Vec3d eye = owner.getEyePos();
+		Vec3d end = eye.add(owner.getRotationVec(1.0f).multiply(range));
+		HitResult block = world.raycast(new RaycastContext(eye, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, owner));
+		Vec3d stop = block.getType() == HitResult.Type.MISS ? end : block.getPos();
+		Optional<LivingEntity> found = Targeting.findLivingTarget(owner, eye.distanceTo(stop)).filter(e -> foe(owner, e));
+		return new Beam(found, found.map(e -> e.getPos().add(0, e.getHeight() * 0.5, 0)).orElse(stop));
+	}
+
+	/** Alle schaedigbaren Wesen entlang einer Linie (Breite + halbe Koerperbreite). */
+	static List<LivingEntity> along(ServerWorld world, ServerPlayerEntity owner, Vec3d from, Vec3d to, double width) {
+		Vec3d line = to.subtract(from);
+		double length = line.length();
+		List<LivingEntity> out = new ArrayList<>();
+		if (length < 1.0E-3) {
+			return out;
+		}
+		Vec3d dir = line.multiply(1.0 / length);
+		for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, new Box(from, to).expand(width + 1.0), e -> foe(owner, e))) {
+			Vec3d c = e.getPos().add(0, e.getHeight() * 0.5, 0);
+			double t = c.subtract(from).dotProduct(dir);
+			if (t >= 0 && t <= length && c.distanceTo(from.add(dir.multiply(t))) <= width + e.getWidth() * 0.5) {
+				out.add(e);
+			}
+		}
+		out.sort(Comparator.comparingDouble(e -> e.squaredDistanceTo(from)));
+		return out;
+	}
+
+	/** Zielpunkt im Blick: erstes Wesen oder Block, sonst das Ende der Reichweite. */
+	static Vec3d aim(ServerWorld world, ServerPlayerEntity owner, double range) {
+		return beam(world, owner, range).end();
+	}
+
+	/** Boden unter einem Punkt (bis {@code depth} Bloecke tief), sonst der Punkt selbst. */
+	static Vec3d ground(ServerWorld world, Vec3d at, double depth) {
+		HitResult hit = world.raycast(new RaycastContext(at.add(0.0, 1.0, 0.0), at.subtract(0.0, depth, 0.0),
+				RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, net.minecraft.block.ShapeContext.absent()));
+		return hit.getType() == HitResult.Type.MISS ? at : hit.getPos();
+	}
+
+	/**
+	 * Flaechentreffer: Schaden faellt zum Rand auf die Haelfte ab, Stoss weg von der Mitte, Anheben.
+	 *
+	 * @return getroffene Wesen
+	 */
+	static List<LivingEntity> blast(ServerWorld world, ServerPlayerEntity owner, Vec3d center, double radius, float damage, double knockback,
+			double lift) {
+		List<LivingEntity> hits = around(world, owner, center, radius);
+		for (LivingEntity target : hits) {
+			double d = target.getPos().add(0, target.getHeight() * 0.5, 0).distanceTo(center);
+			melee(world, owner, target, (float) (damage * (1.0 - 0.5 * Math.min(1.0, d / radius))));
+			push(target, center, knockback, lift);
+		}
+		return hits;
+	}
+
+	/** Mitte des Koerpers. */
+	static Vec3d body(LivingEntity entity) {
+		return entity.getPos().add(0, entity.getHeight() * 0.5, 0);
+	}
+
+	static Vec3d muzzle(ServerPlayerEntity player) {
+		return player.getEyePos().add(player.getRotationVec(1.0f)).add(0.0, -0.25, 0.0);
+	}
+
+	/** Strahl (FX-Engine): leuchtender Strahl mit hellem Kern und Aufschlagblitz; Breite folgt der Dichte. */
+	static void line(ServerWorld world, Vec3d from, Vec3d to, ParticleEffect particle, double density) {
+		int color = color(particle);
+		float width = (float) Math.min(1.2, 0.08 + density * 0.06) * scale(particle);
+		com.santiq.kingdomomnitrix.vfx.Fx.beam(world, from, to, color, width, 8);
+		com.santiq.kingdomomnitrix.vfx.Fx.beam(world, from, to, 0xFFFFFF, width * 0.3f, 8);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, to, color, 0.8f + width * 1.5f);
+	}
+
+	/** Ring (FX-Engine): sich ausbreitende Druckwelle in der Farbe des Effekts. */
+	static void ring(ServerWorld world, Vec3d center, double radius, ParticleEffect particle) {
+		com.santiq.kingdomomnitrix.vfx.Fx.shockwave(world, center, color(particle), (float) radius, 10);
+	}
+
+	/** Leuchtfarbe eines Partikel-Effekts: Staubfarbe, sonst eine passende Grundfarbe je Art. */
+	static int color(ParticleEffect particle) {
+		if (particle instanceof DustParticleEffect dust) {
+			org.joml.Vector3f c = dust.getColor();
+			return ((int) (c.x() * 255) & 0xFF) << 16 | ((int) (c.y() * 255) & 0xFF) << 8 | ((int) (c.z() * 255) & 0xFF);
+		}
+		var type = particle.getType();
+		if (type == net.minecraft.particle.ParticleTypes.FLAME || type == net.minecraft.particle.ParticleTypes.LAVA) {
+			return 0xFF7A20;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.SOUL_FIRE_FLAME || type == net.minecraft.particle.ParticleTypes.SOUL) {
+			return 0x50E8FF;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.ELECTRIC_SPARK || type == net.minecraft.particle.ParticleTypes.END_ROD) {
+			return 0xC8F0FF;
+		}
+		if (type == net.minecraft.particle.ParticleTypes.SQUID_INK || type == net.minecraft.particle.ParticleTypes.SMOKE) {
+			return 0x303038;
+		}
+		return 0xF0F0FF;
+	}
+
+	private static float scale(ParticleEffect particle) {
+		return particle instanceof DustParticleEffect dust ? Math.max(0.6f, dust.getScale() / 1.4f) : 1.0f;
+	}
+
+	static void push(LivingEntity target, Vec3d from, double strength, double lift) {
+		Vec3d away = target.getPos().subtract(from).multiply(1, 0, 1);
+		away = away.lengthSquared() < 1.0E-4 ? Vec3d.ZERO : away.normalize().multiply(strength);
+		target.addVelocity(away.x, lift, away.z);
+		target.velocityModified = true;
+	}
+
+	/**
+	 * Ziel festhalten (keine Bewegung, Fallen erlaubt; {@code lift}: schwebt stattdessen leicht). Laeuft ueber den
+	 * gemeinsamen Takt; beim Tod oder Entladen verfaellt der Eintrag von selbst.
+	 */
+	static void hold(ServerWorld world, LivingEntity target, int ticks, ParticleEffect particle, boolean lift) {
+		Hold old = HOLDS.get(target.getUuid());
+		long until = world.getTime() + ticks;
+		HOLDS.put(target.getUuid(), new Hold(world.getRegistryKey(), old == null ? until : Math.max(old.until(), until), particle, lift));
+	}
+
+	static boolean held(LivingEntity target) {
+		return HOLDS.containsKey(target.getUuid());
+	}
+
+	private static void tickHolds(MinecraftServer server) {
+		if (HOLDS.isEmpty()) {
+			return;
+		}
+		for (Iterator<Map.Entry<UUID, Hold>> it = HOLDS.entrySet().iterator(); it.hasNext(); ) {
+			Map.Entry<UUID, Hold> entry = it.next();
+			Hold hold = entry.getValue();
+			ServerWorld world = server.getWorld(hold.world());
+			Entity entity = world == null ? null : world.getEntity(entry.getKey());
+			if (!(entity instanceof LivingEntity target) || !target.isAlive() || world.getTime() >= hold.until()) {
+				it.remove();
+				continue;
+			}
+			target.setVelocity(0.0, hold.lift() ? 0.03 : Math.min(0.0, target.getVelocity().y), 0.0);
+			target.velocityModified = true;
+			target.fallDistance = 0.0f;
+			if (world.getTime() % 10 == 0) {
+				com.santiq.kingdomomnitrix.vfx.Fx.send(world, com.santiq.kingdomomnitrix.vfx.Fx.Kind.AURA, target.getPos(), Vec3d.ZERO,
+						color(hold.particle()), target.getWidth() * 0.6f + 0.3f, 12, 0, target);
+			}
+		}
+	}
+}

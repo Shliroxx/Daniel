@@ -1,0 +1,53 @@
+{
+  "item": "kingdomomnitrix:omega_key",
+  "rarity": "epic",
+  "damage": 7.0,
+  "damage_per_level": 1.0,
+  "magic": 3.0,
+  "magic_per_level": 1.0,
+  "attack_speed": 1.35,
+  "reach": 0.75,
+  "combo_length": 4,
+  "passives": {
+    "critical": 0.15,
+    "mp_haste": 0.25,
+    "finisher_plus": 0.4
+  },
+  "upgrades": [
+    {
+      "bolts": 200,
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "bolts": 400,
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 8
+        },
+        {
+          "id": "kingdomomnitrix:mythril_shard",
+          "count": 6
+        }
+      ]
+    },
+    {
+      "bolts": 800,
+      "items": [
+        {
+          "id": "kingdomomnitrix:orichalcum",
+          "count": 2
+        },
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 12
+        }
+      ]
+    }
+  ]
+}

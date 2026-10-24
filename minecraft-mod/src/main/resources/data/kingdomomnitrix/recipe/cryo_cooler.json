@@ -1,0 +1,24 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "IGI",
+  "GBG",
+  "IGI"
+ ],
+ "key": {
+  "I": {
+   "item": "kingdomomnitrix:raritanium_ingot"
+  },
+  "G": {
+   "item": "kingdomomnitrix:biotech_gel"
+  },
+  "B": {
+   "item": "minecraft:blue_ice"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:cryo_cooler",
+  "count": 1
+ }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "XXX",
+    " | ",
+    " | "
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:aquarine_ingot"
+    },
+    "|": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:aquarine_pickaxe",
+    "count": 1
+  }
+}

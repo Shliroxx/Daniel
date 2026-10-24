@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "XXX",
+    "X X"
+  ],
+  "key": {
+    "X": {
+      "item": "kingdomomnitrix:pyronite_ingot"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:pyronite_helmet",
+    "count": 1
+  }
+}

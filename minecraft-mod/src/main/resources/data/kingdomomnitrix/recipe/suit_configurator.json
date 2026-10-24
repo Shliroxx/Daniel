@@ -1,0 +1,33 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "GEG",
+  "RCR",
+  "DAD"
+ ],
+ "key": {
+  "G": {
+   "item": "minecraft:glass"
+  },
+  "E": {
+   "item": "minecraft:ender_eye"
+  },
+  "R": {
+   "item": "kingdomomnitrix:raritanium_ingot"
+  },
+  "C": {
+   "item": "kingdomomnitrix:taydenite_crystal"
+  },
+  "D": {
+   "item": "minecraft:polished_deepslate"
+  },
+  "A": {
+   "item": "kingdomomnitrix:alloy_forge"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:suit_configurator",
+  "count": 1
+ }
+}

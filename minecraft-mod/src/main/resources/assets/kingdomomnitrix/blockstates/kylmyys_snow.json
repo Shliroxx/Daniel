@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/kylmyys_snow"
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_snow",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_snow",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/kylmyys_snow",
+        "y": 270
+      }
+    ]
+  }
+}

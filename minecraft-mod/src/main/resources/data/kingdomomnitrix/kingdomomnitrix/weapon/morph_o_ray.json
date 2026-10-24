@@ -1,0 +1,65 @@
+{
+  "item": "kingdomomnitrix:morph_o_ray",
+  "price": 3500,
+  "ammo_price": 15,
+  "sort_order": 6,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 10,
+      "stats": {
+        "damage": 1,
+        "max_health": 24,
+        "cooldown": 14
+      }
+    },
+    {
+      "price": 2000,
+      "max_ammo": 12,
+      "stats": {
+        "damage": 1,
+        "max_health": 30,
+        "cooldown": 12
+      }
+    },
+    {
+      "price": 4000,
+      "max_ammo": 14,
+      "stats": {
+        "damage": 2,
+        "max_health": 40,
+        "cooldown": 11
+      }
+    },
+    {
+      "price": 7000,
+      "max_ammo": 16,
+      "stats": {
+        "damage": 2,
+        "max_health": 60,
+        "cooldown": 10
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "price": 12000,
+      "max_ammo": 20,
+      "stats": {
+        "damage": 3,
+        "max_health": 100,
+        "cooldown": 8
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 6
+        }
+      ]
+    }
+  ]
+}

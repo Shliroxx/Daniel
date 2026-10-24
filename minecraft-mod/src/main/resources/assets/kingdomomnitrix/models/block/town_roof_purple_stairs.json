@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "kingdomomnitrix:block/town_roof_purple",
+    "top": "kingdomomnitrix:block/town_roof_purple",
+    "side": "kingdomomnitrix:block/town_roof_purple"
+  }
+}

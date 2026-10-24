@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " G ",
+    "GCG",
+    " G "
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "C": {
+      "item": "kingdomomnitrix:corrodium_crystal"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:plumber_badge",
+    "count": 1
+  }
+}

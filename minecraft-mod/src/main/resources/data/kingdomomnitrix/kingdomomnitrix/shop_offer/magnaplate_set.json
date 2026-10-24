@@ -1,0 +1,34 @@
+{
+  "category": "armor",
+  "name": "shop.kingdomomnitrix.offer.magnaplate_set",
+  "items": [
+    {
+      "id": "kingdomomnitrix:magnaplate_helmet",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:magnaplate_chestplate",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:magnaplate_leggings",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:magnaplate_boots",
+      "count": 1
+    }
+  ],
+  "price": 16000,
+  "materials": [
+    {
+      "id": "kingdomomnitrix:magnaplate_plating",
+      "count": 6
+    },
+    {
+      "id": "kingdomomnitrix:raritanium",
+      "count": 4
+    }
+  ],
+  "sort_order": 4
+}

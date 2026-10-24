@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  C",
+    "PRP",
+    "P  "
+  ],
+  "key": {
+    "C": {
+      "item": "kingdomomnitrix:corrodium_crystal"
+    },
+    "P": {
+      "item": "kingdomomnitrix:plumber_plating"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:plumber_blaster",
+    "count": 1
+  }
+}

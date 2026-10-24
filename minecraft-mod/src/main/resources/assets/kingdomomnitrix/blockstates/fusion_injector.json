@@ -1,0 +1,10 @@
+{
+ "variants": {
+  "damaged=false": {
+   "model": "kingdomomnitrix:block/fusion_injector"
+  },
+  "damaged=true": {
+   "model": "kingdomomnitrix:block/fusion_injector_damaged"
+  }
+ }
+}
