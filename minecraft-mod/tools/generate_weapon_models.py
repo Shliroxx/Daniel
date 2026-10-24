@@ -111,26 +111,81 @@ def shard(x: float, y: float, z: float, w: float, h: float, tilt_x: float, tilt_
 
 # --- Die sechs Waffen ------------------------------------------------------------------------------------------------
 
+def diamond(cx: float, cy: float, cz: float, side: float, depth: float, mat: str, **kw) -> Cube:
+    """Um 45 Grad gekippter Quader (Raute in der Klingenebene): Spitzen, Saegezaehne, Edelsteinaugen."""
+    return C((cx - side / 2, cy - side / 2, cz - depth / 2), (side, side, depth), mat, rot=(0, 0, 45), pivot=(cx, cy, cz), seams=False, **kw)
+
+
+def point(cx: float, y: float, width: float, depth: float, mat: str, steps: int = 4, **kw) -> list[Cube]:
+    """Spitze aus gestapelten Rauten, die nach oben schmaler werden (scharfe, schraege Kanten statt Treppe)."""
+    out = []
+    side = width / math.sqrt(2)
+    for i in range(steps):
+        out.append(diamond(cx, y, 0, side, depth * (1 - 0.15 * i), mat, **kw))
+        y += side * 0.55
+        side *= 0.68
+    return out
+
+
+def teeth(x: float, y0: float, y1: float, count: int, size: float, depth: float, mat: str, **kw) -> list[Cube]:
+    """Saegezaehne an einer Klingenkante: Rauten, deren halbe Flaeche aus der Kante ragt."""
+    step = (y1 - y0) / max(1, count - 1)
+    return [diamond(x, y0 + i * step, 0, size * (1 - 0.25 * i / max(1, count - 1)), depth, mat, **kw) for i in range(count)]
+
+
+def horn(x: float, y: float, z: float, segments: list[tuple[float, float]], width: float, mat: str, taper_to: float = 0.5,
+         **kw) -> list[Cube]:
+    """Geschwungenes Horn/Fluegel aus einer Kette von Gliedern: (Laenge, Winkel zur Senkrechten, + = nach +x)."""
+    out = []
+    n = len(segments)
+    for i, (length, angle) in enumerate(segments):
+        w = width * (1 - (1 - taper_to) * i / max(1, n - 1))
+        out.append(C((x - w / 2, y, z - w / 2), (w, length + w * 0.4, w), mat, rot=(0, 0, -angle), pivot=(x, y, z), seams=False, **kw))
+        a = math.radians(angle)
+        x += length * math.sin(a)
+        y += length * math.cos(a)
+    return out
+
+
+def mirrored(cubes: list[Cube]) -> list[Cube]:
+    return cubes + [mirror(c, 0, 0) for c in cubes]
+
+
 def taydenite_blade() -> Weapon:
-    """Diamondhead-Kristallschwert: facettierte Kristallklinge mit Leuchtader, Parierstange mit Kristallzacken,
-    schwarz-weiss gewickelter Griff, Omnitrix-Knauf, drei kreisende Splitter um die Parierstange."""
+    """Diamondhead-Kristall-Grossschwert (Vorbild Soulslike Weaponry / Simply Swords: starke Silhouette, Kontrast):
+    breite Kristallklinge mit dunkler Hohlkehle und gruener Leuchtader, helle Schneiden mit Saegezaehnen, Rautenspitze,
+    zwei grosse Kristallfluegel aus der Klingenwurzel, Kristallkrone als Parierstange mit Edelsteinauge,
+    diagonal gewickelter schwarz-weisser Griff, achteckiger Omnitrix-Knauf, drei kreisende Splitter."""
     pal = Palette("2ACA8A", "0E4A34", "B8FFE0", "141414", "E8F0EC", "3AFFB0", "F0FFF8", "5AF0C0", "3AFFB0")
     w = Weapon(pal, "blade")
-    w.cubes += [box(0, 1.2, 0, 2.6, 2.4, 2.6, "omni"), box(0, 2.7, 0, 1.8, 0.6, 1.8, "trim")]
-    w.cubes += [box(0, 5.7, 0, 1.6, 5.4, 1.6, "suit")] + wrap(0, 0, 3.0, 8.4, 1.9, tint="E8F0EC")
-    w.cubes += [box(0, 9.0, 0, 7.0, 1.4, 2.2, "plate", lines=[("h", 0.5, ("north", "south"))]),
-                box(0, 9.9, 0, 3.4, 0.6, 1.6, "trim")]
-    w.cubes += shard(-3.2, 9.0, 0, 1.1, 3.6, 0, 50) + shard(3.2, 9.0, 0, 1.1, 3.6, 0, -50)
-    w.cubes += blade(10.2, 24.0, 2.6, 1.0, "gem", "glow", "gem")
-    w.cubes += [box(0, 21.0, -0.5, 0.45, 20.0, 0.2, "glow"), box(0, 21.0, 0.5, 0.45, 20.0, 0.2, "glow")]
-    for i, y in enumerate((14.0, 19.0, 24.0)):
-        side = 1 if i % 2 == 0 else -1
-        w.cubes += shard(side * 1.3, y, 0, 0.6, 2.6, 0, -side * 55)
+    # Knauf: Omnitrix-Achteck mit Zierring
+    w.cubes += [box(0, 1.5, 0, 3.0, 3.0, 2.6, "omni"), diamond(0, 1.5, 0, 3.0, 2.2, "trim"), box(0, 3.3, 0, 2.0, 0.6, 2.0, "trim")]
+    # Griff mit diagonaler Wicklung
+    w.cubes += [box(0, 7.0, 0, 1.8, 7.0, 1.8, "suit")]
+    for i in range(5):
+        w.cubes.append(C((-1.05, 4.0 + i * 1.35, -1.05), (2.1, 0.5, 2.1), "trim", rot=(0, 0, 22), pivot=(0, 4.25 + i * 1.35, 0),
+                         seams=False, tint="E8F0EC"))
+    # Parierstange: Sockel, Kristallkrone, Edelsteinauge vorn und hinten
+    w.cubes += [box(0, 11.0, 0, 5.0, 1.6, 2.6, "trim", tint="1A1A1A"), box(0, 12.1, 0, 6.2, 0.8, 2.2, "plate", seams=False),
+                diamond(0, 11.6, 0, 2.2, 3.0, "gem")]
+    w.cubes += mirrored(horn(1.8, 11.4, 0, [(2.6, 55), (2.4, 30), (1.6, 10)], 1.3, "gem")
+                        + horn(2.6, 10.6, 0, [(2.0, 100), (1.6, 125)], 0.9, "gem"))
+    # Klinge: Kern, dunkle Hohlkehlen, Leuchtader, helle Schneiden, Saegezaehne, Spitze
+    w.cubes += [box(0, 23.5, 0, 4.6, 22.0, 1.2, "gem")]
+    for side in (-1, 1):
+        w.cubes += [box(side * 1.0, 23.0, -0.62, 0.7, 19.0, 0.1, "plate", tint="0E4A34", seams=False),
+                    box(side * 1.0, 23.0, 0.62, 0.7, 19.0, 0.1, "plate", tint="0E4A34", seams=False),
+                    box(side * 2.55, 23.0, 0, 0.6, 21.0, 0.6, "gem", tint="B8FFE0", seams=False)]
+        w.cubes += teeth(side * 2.75, 15.0, 31.0, 6, 1.5, 0.5, "gem")
+    w.cubes += [box(0, 24.0, -0.66, 0.6, 22.0, 0.14, "glow"), box(0, 24.0, 0.66, 0.6, 22.0, 0.14, "glow")]
+    w.cubes += point(0, 34.6, 4.6, 1.2, "gem") + point(0, 34.9, 1.2, 1.4, "glow", steps=3)
+    # Kristallfluegel aus der Klingenwurzel
+    w.cubes += mirrored(horn(2.2, 13.0, 0, [(4.0, 28), (3.4, 18), (2.2, 6)], 1.5, "gem", taper_to=0.35))
     orbit = []
     for i in range(3):
         a = math.radians(i * 120)
-        orbit += shard(math.cos(a) * 4.2, 8.6 + i * 0.8, math.sin(a) * 4.2, 0.7, 2.2, 15 * math.sin(a), 15 * math.cos(a))
-    w.sub("orbit", [0, 9.0, 0], orbit)
+        orbit += shard(math.cos(a) * 5.0, 9.6 + i * 0.8, math.sin(a) * 5.0, 0.8, 2.6, 15 * math.sin(a), 15 * math.cos(a))
+    w.sub("orbit", [0, 11.0, 0], orbit)
     w.anim = {"orbit": merge(spin(1, 2), wave("position", 1, 0.5, 4))}
     return w
 
@@ -161,23 +216,38 @@ def galvan_rifle() -> Weapon:
 
 
 def star_sword() -> Weapon:
-    """Sternenschwert (Celestialsapien): Klinge aus Sternenhimmel mit weisser Leuchtkante, weisse Hoernerparierstange,
-    Sternknauf, kreisender Heiligenschein und schwebende Sternfunken."""
+    """Celestial-Sternenklinge (Alien X): Klinge aus Sternenhimmel mit weisser Leuchtkante und Sternbild auf beiden
+    Seiten, Rautenspitze, zwei geschwungene weisse Hoerner als Parierstange (wie Alien X), Sternauge in der Mitte,
+    weisser Griff mit Leuchtwicklung, Hornknauf, kreisender Heiligenschein und schwebende Sternfunken."""
     pal = Palette("0A0618", "000000", "E8E8FF", "06040E", "F4F4FF", "C8E8FF", "FFFFFF", "FFFFFF", "FFFFFF", cosmic=True)
     w = Weapon(pal, "blade")
-    w.cubes += [box(0, 1.0, 0, 2.2, 2.0, 2.2, "gem"), box(0, 2.3, 0, 1.4, 0.6, 1.4, "trim")]
-    w.cubes += [box(0, 5.6, 0, 1.5, 6.0, 1.5, "suit")] + wrap(0, 0, 2.6, 8.6, 1.8)
-    w.cubes += [box(0, 9.2, 0, 4.0, 1.6, 2.2, "trim"), box(0, 9.2, 0, 1.6, 1.6, 2.4, "gem")]
+    # Knauf mit zwei kleinen Hoernern nach unten
+    w.cubes += [box(0, 1.6, 0, 2.4, 2.4, 2.4, "trim"), diamond(0, 1.6, 0, 2.0, 2.6, "gem"), box(0, 3.1, 0, 1.6, 0.6, 1.6, "trim")]
+    w.cubes += mirrored(horn(1.0, 1.4, 0, [(1.6, 120), (1.4, 160)], 0.8, "trim"))
+    # Griff: schwarz mit weisser Leuchtwicklung
+    w.cubes += [box(0, 6.8, 0, 1.7, 7.0, 1.7, "suit")] + [
+        C((-1.0, 3.8 + i * 1.4, -1.0), (2.0, 0.4, 2.0), "glow", rot=(0, 0, -20), pivot=(0, 4.0 + i * 1.4, 0), seams=False) for i in range(5)]
+    # Parierstange: Sockel, Sternauge, geschwungene Hoerner nach oben aussen
+    w.cubes += [box(0, 10.9, 0, 4.4, 1.8, 2.4, "trim"), diamond(0, 11.2, 0, 2.6, 2.8, "plate"), diamond(0, 11.2, 0, 1.4, 3.0, "glow")]
+    w.cubes += mirrored(horn(2.0, 10.8, 0, [(2.4, 75), (2.4, 50), (2.4, 25), (2.0, 5), (1.4, -10)], 1.4, "trim", taper_to=0.3))
+    # Klinge: Sternenhimmel, weisse Leuchtkanten, schmale Hohlkehle, Sternbild
+    w.cubes += [box(0, 25.0, 0, 4.8, 26.0, 1.1, "plate", seams=False)]
     for side in (-1, 1):
-        w.cubes += [C((side * 2.0 - (0.0 if side > 0 else 3.6), 8.8, -0.7), (3.6, 1.2, 1.4), "trim", rot=(0, 0, side * 20),
-                      pivot=(side * 2.0, 9.4, 0)),
-                    C((side * 5.2 - 0.5, 9.6, -0.5), (1.0, 3.4, 1.0), "trim", rot=(0, 0, -side * 35), pivot=(side * 5.2, 9.6, 0))]
-    w.cubes += blade(10.0, 27.0, 3.0, 1.0, "plate", "glow", "glow", seams=False)
-    halo = ring_xz(0, 0, 0, 3.6, 0.45)
-    w.sub("halo", [0, 12.0, 0], [C((c.origin[0], c.origin[1] + 12.0, c.origin[2]), c.size, "glow", seams=False) for c in halo])
-    motes = [box(math.cos(math.radians(a)) * 3.0, 16.0 + i * 4.5, math.sin(math.radians(a)) * 3.0, 0.6, 0.6, 0.6, "glow")
+        w.cubes += [box(side * 2.6, 25.0, 0, 0.5, 26.0, 0.7, "glow"), box(side * 2.95, 24.0, 0, 0.3, 20.0, 0.4, "trim", seams=False)]
+    for y, x in ((15.0, -1.2), (18.5, 0.9), (21.0, -0.4), (24.5, 1.3), (27.0, -1.0), (30.5, 0.6), (33.0, -0.5)):
+        for z in (-0.6, 0.6):
+            w.cubes.append(diamond(x, y, z, 0.55, 0.12, "glow"))
+    w.cubes += [box(0, 25.0, -0.58, 0.25, 22.0, 0.06, "trim", seams=False), box(0, 25.0, 0.58, 0.25, 22.0, 0.06, "trim", seams=False)]
+    w.cubes += point(0, 38.0, 4.8, 1.1, "plate") + point(0, 38.2, 5.6, 0.7, "glow", steps=3)
+    # Speerspitzen-Ausbuchtung unter der Spitze und Dornen an der Klingenwurzel
+    for side in (-1, 1):
+        w.cubes += [diamond(side * 2.4, 33.0, 0, 3.0, 0.9, "plate"), diamond(side * 2.4, 33.0, 0, 3.4, 0.5, "glow"),
+                    diamond(side * 2.6, 14.0, 0, 1.6, 0.6, "trim")]
+    halo = ring_xz(0, 0, 0, 4.0, 0.45)
+    w.sub("halo", [0, 13.0, 0], [C((c.origin[0], c.origin[1] + 13.0, c.origin[2]), c.size, "glow", seams=False) for c in halo])
+    motes = [diamond(math.cos(math.radians(a)) * 3.6, 17.0 + i * 5.0, math.sin(math.radians(a)) * 3.6, 0.7, 0.7, "glow")
              for i, a in enumerate((0, 90, 180, 270))]
-    w.sub("motes", [0, 20.0, 0], motes)
+    w.sub("motes", [0, 22.0, 0], motes)
     w.anim = {"halo": merge(spin(1, 1), wave("position", 1, 0.6, 2)), "motes": merge(spin(1, -2), wave("position", 1, 1.0, 4))}
     return w
 
