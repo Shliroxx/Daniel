@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import net.minecraft.world.World;
  * Fusionsgranate: Wurfwaffe mit Munition. Explodiert beim Aufprall mit Flaechenschaden und Rueckstoss,
  * zerstoert aber nie Bloecke. Stufen erhoehen Sprengkraft ({@code power}).
  */
-public class FusionGrenadeItem extends WeaponItem {
+public class FusionGrenadeItem extends WeaponItem implements GeoGear {
 	public FusionGrenadeItem(Settings settings) {
 		super(settings);
 	}

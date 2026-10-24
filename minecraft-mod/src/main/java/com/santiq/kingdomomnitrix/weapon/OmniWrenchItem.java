@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.combat.ComboProfile;
@@ -22,7 +23,7 @@ import net.minecraft.world.World;
  * Der geworfene Schluessel trifft Gegner auf Hin- und Rueckweg, betaetigt Knoepfe und Hebel und
  * zerschlaegt Bolt-Kisten.
  */
-public class OmniWrenchItem extends WeaponItem implements ComboWeapon {
+public class OmniWrenchItem extends WeaponItem implements ComboWeapon, GeoGear {
 	public OmniWrenchItem(Settings settings) {
 		super(settings);
 	}

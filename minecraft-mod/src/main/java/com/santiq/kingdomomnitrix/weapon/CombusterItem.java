@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.weapon;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 
 import com.santiq.kingdomomnitrix.vfx.Vfx;
@@ -22,7 +23,7 @@ import net.minecraft.world.World;
  * Combuster: automatischer Plasma-Blaster. Rechtsklick halten feuert im Takt der Stufe ({@code fire_delay});
  * jeder Schuss kostet Munition. Auf Hoechststufe explodieren die Schuesse ({@code explosion} &gt; 0, ohne Blockschaden).
  */
-public class CombusterItem extends WeaponItem {
+public class CombusterItem extends WeaponItem implements GeoGear {
 	private static final int MAX_USE_TICKS = 72_000;
 
 	public CombusterItem(Settings settings) {

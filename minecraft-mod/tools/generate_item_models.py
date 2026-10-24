@@ -9,7 +9,7 @@ Material von Hand schattiert: Kontur, Glanzkante, Rundungsverlauf, Griffwicklung
 Das Modell gilt fuer alle Ansichten (Hand, Inventar, Boden, Rahmen); die Lage pro Ansicht steht in ``display``.
 Aufruf aus dem Ordner minecraft-mod/:
 
-    python tools/generate_item_models.py            # schreibt models/item/<waffe>.json + textures/item/3d/<waffe>.png
+    python tools/generate_item_models.py            # schreibt die Omnitrix- und Ruecken-Teile (Waffen: generate_weapon_models.py)
     python tools/generate_item_models.py --check    # prueft, ob die Dateien aktuell sind (fuer die CI)
     python tools/generate_item_models.py --preview build/item_preview   # Vorschau-Bilder der Texturen (8-fach)
 
@@ -691,10 +691,8 @@ def png_bytes(img: Image.Image) -> bytes:
 
 def outputs(root: Path) -> dict[Path, bytes]:
     files: dict[Path, bytes] = {}
-    for name in WEAPONS:
-        model, img = build(name)
-        files[root / "models" / "item" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
-        files[root / "textures" / "item" / "3d" / f"{name}.png"] = png_bytes(img)
+    # Die Waffen selbst sind jetzt GeckoLib-Modelle (tools/generate_weapon_models.py, GEAR); hier bleiben Omnitrix-
+    # und Ruecken-Teile.
     for name in PARTS:
         model, img = build(name)
         files[root / "models" / "omnitrix" / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()

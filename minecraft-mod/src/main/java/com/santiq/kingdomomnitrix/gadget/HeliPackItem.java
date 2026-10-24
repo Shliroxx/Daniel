@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import com.santiq.kingdomomnitrix.registry.ModComponents;
 import java.util.List;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,7 +20,7 @@ import net.minecraft.world.World;
  * Wirkt nur im Ruecken-Platz des Gadget-Guertels. Die Bewegung rechnet der Client (Spielerbewegung ist clientseitig),
  * der Server prueft Ausruestung und Modus, setzt die Fallhoehe zurueck und spielt Effekte ab.
  */
-public class HeliPackItem extends Item implements Gadget {
+public class HeliPackItem extends Item implements Gadget, GeoGear {
 	public HeliPackItem(Settings settings) {
 		super(settings);
 	}

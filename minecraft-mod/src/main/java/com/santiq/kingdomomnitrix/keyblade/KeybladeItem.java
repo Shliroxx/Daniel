@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.keyblade;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import com.santiq.kingdomomnitrix.combat.ComboProfile;
 import com.santiq.kingdomomnitrix.combat.ComboWeapon;
 import com.santiq.kingdomomnitrix.keyblade.KeybladeDefinition.Passive;
@@ -28,7 +29,7 @@ import net.minecraft.world.World;
  * </ul>
  * Keyblades sind unzerstoerbar und werden an der Keyblade-Schmiede aufgewertet.
  */
-public class KeybladeItem extends Item implements ComboWeapon {
+public class KeybladeItem extends Item implements ComboWeapon, GeoGear {
 	private static final int ENCHANTABILITY = 15;
 
 	public KeybladeItem(Settings settings) {

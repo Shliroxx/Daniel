@@ -157,6 +157,9 @@ def octo(cx: float, cy: float, cz: float, size: float, length: float, axis: str,
     if axis == "z":
         return [box(cx, cy, cz, size, size, length, mat, **kw),
                 C((cx - side / 2, cy - side / 2, cz - length / 2), (side, side, length), mat, rot=(0, 0, 45), pivot=(cx, cy, cz), **kw)]
+    if axis == "y":
+        return [box(cx, cy, cz, size, length, size, mat, **kw),
+                C((cx - side / 2, cy - length / 2, cz - side / 2), (side, length, side), mat, rot=(0, 45, 0), pivot=(cx, cy, cz), **kw)]
     return [box(cx, cy, cz, length, size, size, mat, **kw),
             C((cx - length / 2, cy - side / 2, cz - side / 2), (length, side, side), mat, rot=(45, 0, 0), pivot=(cx, cy, cz), **kw)]
 
@@ -389,6 +392,190 @@ def infernox_ryno() -> Weapon:
     return w
 
 
+# --- Aeltere Ausruestung (Keyblades, Ratchet-Gadgets) im selben Stil ---------------------------------------------------
+
+def keychain(token: list[Cube]) -> list[Cube]:
+    """Schluesselanhaenger am Knauf: Kettenglieder nach unten, Anhaenger am Ende (eigener Bone, schwingt)."""
+    links = [box(0, -0.6 - i * 1.1, 0, 0.5, 0.8, 0.5 if i % 2 else 0.2, "trim", seams=False) for i in range(4)]
+    return links + token
+
+
+def kingdom_key() -> Weapon:
+    """Kingdom Key (Kingdom Hearts): silberner achteckiger Schaft, Kronenbart aus drei Zinken, goldener eckiger
+    Handschutz mit abgerundeten Ecken um den schwarzen Griff, Mickey-Anhaenger an der Kette (schwingt)."""
+    pal = Palette("C0C8D0", "4A5058", "F4F8FC", "121418", "E8B830", "6AC8FF", "E0F4FF", "3A9AFF", "6AC8FF")
+    w = Weapon(pal, "key")
+    w.cubes += octo(0, 5.0, 0, 1.6, 8.0, "y", "suit") + [box(0, 0.6, 0, 2.0, 1.2, 2.0, "trim")]
+    for side in (-1, 1):
+        w.cubes += [box(side * 2.9, 5.0, 0, 0.9, 7.2, 1.2, "trim"), diamond(side * 2.9, 1.1, 0, 1.3, 1.2, "trim"),
+                    diamond(side * 2.9, 8.9, 0, 1.3, 1.2, "trim")]
+    w.cubes += [box(0, 0.6, 0, 6.0, 0.9, 1.2, "trim"), box(0, 9.4, 0, 6.6, 1.1, 1.4, "trim"), diamond(0, 9.6, 0, 1.6, 1.6, "gem")]
+    w.cubes += octo(0, 18.5, 0, 1.4, 17.0, "y", "plate", seams=False) + octo(0, 10.6, 0, 1.9, 1.2, "y", "trim", seams=False)
+    w.cubes += [box(0, 27.6, 0, 2.0, 1.0, 1.6, "plate"), diamond(0, 28.2, 0, 1.4, 1.4, "plate")]
+    # Kronenbart: drei breite Zinken mit Kerben und Verbindungssteg
+    for y, length in ((22.8, 4.6), (25.0, 3.6), (27.2, 4.6)):
+        w.cubes += [box(0.6 + length / 2, y, 0, length, 1.3, 1.3, "plate"), diamond(0.6 + length, y, 0, 1.2, 1.2, "plate")]
+    w.cubes += [box(4.6, 25.0, 0, 1.2, 5.6, 1.3, "plate"), box(2.6, 25.0, 0, 0.5, 0.5, 1.4, "trim")]
+    token = [diamond(0, -6.6, 0, 2.2, 0.6, "trim"), box(0, -6.6, 0, 2.1, 2.1, 0.55, "trim"),
+             diamond(-1.6, -4.8, 0, 1.4, 0.6, "trim"), diamond(1.6, -4.8, 0, 1.4, 0.6, "trim")]
+    w.sub("chain", [0, 0, 0], keychain(token))
+    w.anim = {"chain": wave("rotation", 2, 12, 2)}
+    return w
+
+
+def oathkeeper() -> Weapon:
+    """Oathkeeper: weiss-silberner Schaft, Engelsfluegel als Handschutz, Herz-/Fluegelbart, Stern-Anhaenger."""
+    pal = Palette("F2F2F8", "8A90A0", "FFFFFF", "1A2A40", "C8D0E0", "8ACCFF", "F0FAFF", "6AC0FF", "8ACCFF")
+    w = Weapon(pal, "key")
+    w.cubes += octo(0, 5.0, 0, 1.5, 8.0, "y", "suit") + [box(0, 0.6, 0, 2.0, 1.2, 2.0, "trim")]
+    w.cubes += [box(0, 9.4, 0, 3.4, 1.2, 1.6, "trim"), diamond(0, 9.6, 0, 1.6, 1.8, "gem")]
+    for length, angle, y in ((5.0, 70, 9.0), (4.2, 95, 8.4), (3.2, 120, 7.8), (2.4, 145, 7.2)):
+        w.cubes += mirrored(horn(1.2, y, 0, [(length * 0.6, angle), (length * 0.4, angle + 25)], 1.0, "plate", taper_to=0.4))
+    w.cubes += octo(0, 18.5, 0, 1.3, 17.0, "y", "plate", seams=False) + [box(0, 18.5, -0.66, 0.3, 15.0, 0.1, "glow"),
+                                                                       box(0, 18.5, 0.66, 0.3, 15.0, 0.1, "glow")]
+    # Bart: Herz aus zwei Rauten, Fluegel darueber, Edelstein in der Mitte
+    w.cubes += [diamond(2.2, 24.8, 0, 3.4, 1.2, "plate"), diamond(3.8, 24.8, 0, 2.6, 1.1, "plate"), diamond(2.4, 24.8, 0, 1.4, 1.4, "gem")]
+    w.cubes += horn(1.0, 26.2, 0, [(2.2, 35), (2.0, 65), (1.4, 95)], 1.0, "plate", taper_to=0.4)
+    w.cubes += horn(1.0, 23.0, 0, [(1.8, 140), (1.4, 115)], 0.8, "trim", taper_to=0.4) + [box(0, 27.6, 0, 1.8, 1.0, 1.4, "plate"),
+                                                                                       diamond(0, 28.2, 0, 1.3, 1.3, "plate")]
+    token = [box(0, -6.0, 0, 1.6, 1.6, 0.4, "glow"), diamond(0, -6.0, 0, 1.6, 0.4, "glow"),
+             diamond(0, -6.0, 0, 0.9, 0.5, "trim")]
+    w.sub("chain", [0, 0, 0], keychain(token))
+    w.anim = {"chain": wave("rotation", 2, 12, 2)}
+    return w
+
+
+def omega_key() -> Weapon:
+    """Omega-Keyblade: obsidianschwarzer Schaft mit violetter Leuchtader, gezackter Saegebart, Sichelhoerner als
+    Handschutz, smaragdgruenes Auge, Kristall-Anhaenger."""
+    pal = Palette("1A1424", "06040A", "4A3A60", "0E0A14", "6A3AA0", "B04AFF", "F0D0FF", "3AFF9A", "B04AFF")
+    w = Weapon(pal, "key")
+    w.cubes += octo(0, 5.0, 0, 1.6, 8.0, "y", "suit") + [diamond(0, 0.6, 0, 1.8, 1.6, "trim")]
+    w.cubes += [box(0, 9.4, 0, 4.0, 1.4, 1.8, "plate"), diamond(0, 9.6, 0, 2.0, 2.0, "gem")]
+    w.cubes += mirrored(horn(1.8, 9.2, 0, [(2.2, 80), (2.2, 50), (2.0, 20), (1.6, -5)], 1.2, "trim", taper_to=0.3))
+    w.cubes += octo(0, 18.5, 0, 1.6, 17.0, "y", "plate", seams=False) + [box(0, 18.5, -0.75, 0.35, 16.0, 0.12, "glow"),
+                                                                       box(0, 18.5, 0.75, 0.35, 16.0, 0.12, "glow")]
+    w.cubes += [box(2.4, 25.4, 0, 4.2, 4.8, 1.2, "plate")] + teeth(4.6, 23.2, 27.6, 4, 2.0, 1.0, "trim")
+    w.cubes += teeth(2.4, 22.8, 22.8, 1, 1.8, 1.0, "trim")
+    w.cubes += [box(2.4, 25.4, -0.65, 3.2, 0.35, 0.1, "glow"), box(2.4, 25.4, 0.65, 3.2, 0.35, 0.1, "glow"),
+                box(2.4, 26.6, -0.65, 0.35, 2.0, 0.1, "glow"), box(2.4, 26.6, 0.65, 0.35, 2.0, 0.1, "glow")]
+    w.cubes += point(0, 27.6, 1.8, 1.4, "plate", steps=3)
+    token = [diamond(0, -6.0, 0, 1.8, 0.8, "gem"), diamond(0, -6.0, 0, 0.8, 1.0, "glow")]
+    w.sub("chain", [0, 0, 0], keychain(token))
+    w.anim = {"chain": wave("rotation", 2, 12, 2)}
+    return w
+
+
+def omniwrench() -> Weapon:
+    """OmniWrench 8000 (Ratchet & Clank): blaugrauer Schaft mit Gummigriff und gelben Ringen, offenes
+    Schraubenschluessel-Maul aus zwei geschwungenen Backen mit blauer Leuchtkante, Sechskantmutter als Gelenk."""
+    pal = Palette("8A96A8", "3A4250", "D0D8E4", "1A1E26", "E8B830", "3A9AFF", "E0F2FF", "3A9AFF", "3A9AFF")
+    w = Weapon(pal, "hammer")
+    w.cubes += [box(0, 0.8, 0, 2.2, 1.6, 2.2, "trim"), diamond(0, 0.1, 0, 1.2, 1.2, "plate")]
+    w.cubes += octo(0, 5.0, 0, 2.0, 6.0, "y", "suit") + [box(0, 2.0, 0, 2.3, 0.5, 2.3, "trim"), box(0, 8.0, 0, 2.3, 0.5, 2.3, "trim")]
+    w.cubes += octo(0, 13.0, 0, 1.5, 10.0, "y", "plate", seams=False) + [box(0, 13.0, -0.7, 0.3, 8.0, 0.1, "glow"),
+                                                                       box(0, 13.0, 0.7, 0.3, 8.0, 0.1, "glow")]
+    w.cubes += [box(0, 18.6, 0, 3.4, 1.6, 2.4, "plate"), diamond(0, 18.8, 1.3, 1.6, 0.3, "trim"), diamond(0, 18.8, -1.3, 1.6, 0.3, "trim")]
+    for side in (-1, 1):
+        jaw = horn(side * 1.0, 19.2, 0, [(2.4, side * 40), (2.6, side * 8), (2.0, -side * 30)], 2.0, "plate", taper_to=0.6)
+        w.cubes += jaw
+    w.cubes += [box(0, 20.0, 0, 1.4, 0.4, 2.2, "glow")]
+    w.anim = {}
+    return w
+
+
+def combuster() -> Weapon:
+    """Combuster (Ratchet & Clank): orange lackierter Blaster mit achteckigem Lauf, Kuehlrippen und roter
+    Gluehmuendung, gelbe Finne obenauf, Energiezelle an der Seite, schwarzer Griff."""
+    pal = Palette("E86A1A", "6A2A08", "FFB070", "1A1A1E", "3A3E44", "FF3A2A", "FFE0B0", "FF3A2A", "FF6A2A")
+    w = Weapon(pal, "gun")
+    w.cubes += octo(0, 6.0, 0.5, 3.6, 8.0, "z", "plate") + [box(0, 3.8, -0.5, 2.4, 0.8, 5.0, "trim")]
+    w.cubes += octo(0, 6.2, -6.5, 2.4, 5.0, "z", "trim")
+    for z in (-5.0, -6.6, -8.2):
+        w.cubes += octo(0, 6.2, z, 3.2, 0.4, "z", "plate", seams=False)
+    w.cubes += octo(0, 6.2, -9.4, 3.4, 1.0, "z", "plate", edge=("north",)) + octo(0, 6.2, -9.95, 1.8, 0.2, "z", "glow")
+    w.cubes += [C((-0.3, 7.6, 0.0), (0.6, 2.4, 3.0), "trim", tint="F0C030", rot=(-30, 0, 0), pivot=(0, 7.6, 3.0)),
+                box(2.0, 6.0, 0.8, 0.6, 1.6, 3.0, "glow", cracks=True), box(-2.0, 6.0, 0.8, 0.6, 1.6, 3.0, "glow", cracks=True)]
+    w.cubes += [C((-0.8, 0.2, 2.2), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 3.1)), box(0, 6.0, 4.9, 3.0, 3.0, 0.8, "trim")]
+    w.anim = {}
+    return w
+
+
+def swingshot() -> Weapon:
+    """Swingshot (Ratchet & Clank): wuchtiger Greifhaken-Werfer mit gruen leuchtender Seiltrommel an beiden Seiten,
+    Fuehrungsschiene, dickem Kanonenrohr und grosser Dreifachkralle vorn, die sich oeffnet und schliesst."""
+    pal = Palette("6A7480", "2A3038", "B8C4D0", "1A1E24", "3A3E44", "3AFFB0", "E0FFF4", "3AFFB0", "3AFFB0")
+    w = Weapon(pal, "gun")
+    w.cubes += octo(0, 6.0, 0.8, 4.0, 9.0, "z", "plate") + [box(0, 8.6, 0.4, 1.8, 1.0, 6.0, "trim"), box(0, 3.6, -0.5, 2.6, 0.8, 5.0, "trim")]
+    for side in (-1, 1):
+        w.cubes += octo(side * 2.4, 6.0, 1.4, 3.6, 1.2, "x", "trim") + octo(side * 2.6, 6.0, 1.4, 2.4, 1.2, "x", "glow")
+    w.cubes += octo(0, 6.2, -5.6, 2.6, 4.6, "z", "trim") + octo(0, 6.2, -8.0, 3.4, 1.0, "z", "plate", edge=("north",))
+    w.cubes += [C((-0.8, 0.2, 2.6), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 3.5)), box(0, 6.0, 5.6, 3.2, 3.2, 0.8, "trim")]
+    claw = []
+    for i in range(3):
+        a = math.radians(90 + i * 120)
+        x, y = math.cos(a) * 1.3, 6.2 + math.sin(a) * 1.3
+        tilt_x, tilt_y = math.sin(a) * 22, -math.cos(a) * 22
+        claw.append(C((x - 0.45, y - 0.45, -12.0), (0.9, 0.9, 3.6), "plate", rot=(tilt_x, tilt_y, 0), pivot=(x, y, -8.4), seams=False))
+        claw.append(C((x - 0.4, y - 0.4, -12.6), (0.8, 0.8, 1.2), "trim", rot=(-tilt_x * 2.5, -tilt_y * 2.5, 0), pivot=(x, y, -11.8),
+                      seams=False))
+    claw.append(octo(0, 6.2, -9.0, 1.2, 1.4, "z", "glow")[0])
+    w.sub("claw", [0, 6.2, -8.4], claw)
+    w.anim = {"claw": wave("scale", 0, 0.08, 2)}
+    return w
+
+
+def fusion_grenade() -> Weapon:
+    """Fusionsgranate (Ratchet & Clank): gerundeter Koerper aus achteckigen Lagen, rote Warnbaender, leuchtendes
+    Kernfenster, Zuender obenauf, kreisender Energiering."""
+    pal = Palette("C8CCD0", "4A5058", "F0F4F8", "1A1E24", "B01818", "FF5A2A", "FFE0B0", "FF5A2A", "FF5A2A")
+    w = Weapon(pal, "small")
+    w.cubes += octo(0, 4.0, 0, 5.0, 4.2, "z", "plate") + octo(0, 4.0, 0, 5.0, 4.2, "x", "plate", seams=False)
+    w.cubes += octo(0, 4.0, 0, 5.4, 0.8, "y", "trim", seams=False)
+    for z in (-2.2, 2.2):
+        w.cubes += octo(0, 4.0, z, 2.0, 0.2, "z", "glow")
+    w.cubes += [box(0, 6.9, 0, 1.4, 1.0, 1.4, "trim"), box(0, 7.6, 0, 0.6, 0.6, 0.6, "glow")]
+    ring = ring_xz(0, 4.0, 0, 3.6, 0.35)
+    w.sub("ring", [0, 4.0, 0], ring)
+    w.anim = {"ring": merge(spin(1, 2), wave("position", 1, 0.4, 4))}
+    return w
+
+
+def heli_pack(jet: bool = False) -> Weapon:
+    """Heli-Pack (Clank-Rucksack): silberner Rueckenkasten mit Gurten und Kontrollleuchten; als Heli mit
+    Rotormast und drei drehenden Blaettern, als Jet mit zwei Schubduesen und pulsierenden Flammen."""
+    pal = Palette("B8C0C8", "4A5058", "E8F0F4", "1A1E24", "2A8A8A", "3AE8FF", "E0FAFF", "3AE8FF", "FF8A2A")
+    w = Weapon(pal, "small")
+    w.cubes += [box(0, 4.0, 0, 5.0, 6.0, 3.0, "plate"), box(0, 4.0, -1.7, 4.2, 5.0, 0.4, "trim"),
+                box(-1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(0, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow")]
+    for side in (-1, 1):
+        w.cubes.append(box(side * 1.6, 4.0, -2.1, 0.8, 7.0, 0.4, "suit"))
+    if jet:
+        flames = []
+        for side in (-1, 1):
+            w.cubes += octo(side * 1.6, 1.0, 0.6, 1.6, 1.6, "y", "trim")
+            flames += octo(side * 1.6, -0.6, 0.6, 1.0, 1.8, "y", "glow") + octo(side * 1.6, -1.8, 0.6, 0.5, 1.0, "y", "glow")
+        w.sub("flame", [0, 0.2, 0.6], flames)
+        w.anim = {"flame": wave("scale", 0, 0.15, 8)}
+    else:
+        w.cubes += [box(0, 7.6, 0, 0.8, 1.6, 0.8, "trim"), box(0, 8.4, 0, 1.4, 0.4, 1.4, "plate")]
+        rotor = [box(0, 8.8, 0, 0.8, 0.4, 0.8, "trim")]
+        for i in range(3):
+            a = i * 120
+            rotor.append(C((0.0, 8.7, -0.4), (5.5, 0.2, 0.8), "plate", tint="2A8A8A", rot=(0, a, 0), pivot=(0, 8.8, 0), seams=False))
+        w.sub("rotor", [0, 8.8, 0], rotor)
+        w.anim = {"rotor": spin(1, 6)}
+    return w
+
+
+GEAR = {"kingdom_key": kingdom_key, "oathkeeper": oathkeeper, "omega_key": omega_key, "omniwrench": omniwrench,
+        "combuster": combuster, "swingshot": swingshot, "fusion_grenade": fusion_grenade, "heli_pack": heli_pack,
+        "heli_jet": lambda: heli_pack(True)}
+GEAR_GEO_DIR = ASSETS / "geo" / "item" / "gear"
+GEAR_TEX_DIR = ASSETS / "textures" / "item" / "gear"
+GEAR_ANIM_DIR = ASSETS / "animations" / "item" / "gear"
+
+
 WEAPONS = {"taydenite_blade": taydenite_blade, "galvan_rifle": galvan_rifle, "star_sword": star_sword,
            "magnaplate_hammer": magnaplate_hammer, "carbonox_launcher": carbonox_launcher, "infernox_ryno": infernox_ryno}
 
@@ -427,6 +614,23 @@ DISPLAY = {
         "head": {"rotation": [0, 0, 0], "translation": [0, 8, 0], "scale": [0.6, 0.6, 0.6]},
         "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
     },
+}
+
+
+# Keyblades: Griff liegt tiefer als beim Schwert (Mitte y=5 statt 7), darum weniger weit zurueck
+DISPLAY["key"] = {k: dict(v) for k, v in DISPLAY["blade"].items()}
+for _hand in ("thirdperson_righthand", "thirdperson_lefthand"):
+    DISPLAY["key"][_hand]["translation"] = [0, -4.8, -0.4]
+
+DISPLAY["small"] = {
+    "thirdperson_righthand": {"rotation": [0, 0, 0], "translation": [0, 0.5, -1.0], "scale": [0.45, 0.45, 0.45]},
+    "thirdperson_lefthand": {"rotation": [0, 0, 0], "translation": [0, 0.5, -1.0], "scale": [0.45, 0.45, 0.45]},
+    "firstperson_righthand": {"rotation": [0, -30, 0], "translation": [1.5, 1.0, -2.0], "scale": [0.45, 0.45, 0.45]},
+    "firstperson_lefthand": {"rotation": [0, 30, 0], "translation": [1.5, 1.0, -2.0], "scale": [0.45, 0.45, 0.45]},
+    "ground": {"rotation": [0, 0, 0], "translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
+    "fixed": {"rotation": [0, 0, 0], "translation": [0, -2, 0], "scale": [0.8, 0.8, 0.8]},
+    "head": {"rotation": [0, 0, 0], "translation": [0, 8, 0], "scale": [0.8, 0.8, 0.8]},
+    "gui": {"rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1]},
 }
 
 
@@ -484,6 +688,51 @@ def animation(name: str, weapon: Weapon) -> dict:
         "loop": True, "animation_length": LOOP, "bones": dict(weapon.anim)}}}
 
 
+GEAR_ICON_DIR = ASSETS / "textures" / "item" / "gear_icon"
+ICON_VIEW = {"key": ("front", 45), "blade": ("front", 45), "hammer": ("front", 45), "gun": ("side", 0), "small": ("three_quarter", 0)}
+
+
+def gear_icon(name: str, kind: str, geo: dict, color: Image.Image) -> Image.Image:
+    """Inventarbild aus dem 3D-Modell (wie bei den Ruestungen): Ansicht je Art, Klingen diagonal, 32 x 32."""
+    import tempfile
+    view, turn = ICON_VIEW[kind]
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp)
+        (work / "m.geo.json").write_text(json.dumps(geo))
+        color.save(work / "t.png")
+        subprocess.run([sys.executable, str(ROOT / "tools" / "render_geo.py"), str(work / "o.png"), f"{work / 'm.geo.json'}:{work / 't.png'}",
+                        "--views", view, "--scale", "8", "--background", "#FF00FF"], check=True, capture_output=True)
+        img = np.asarray(Image.open(work / "o.png").convert("RGBA")).copy()
+    bg = (img[..., 0] > 240) & (img[..., 1] < 20) & (img[..., 2] > 240)
+    img[bg] = 0
+    img[:24, :] = 0
+    img[:, :16] = 0
+    ys, xs = np.nonzero(img[..., 3])
+    crop = Image.fromarray(img[ys.min():ys.max() + 1, xs.min():xs.max() + 1], "RGBA")
+    if turn:
+        crop = crop.rotate(-turn, resample=Image.BICUBIC, expand=True)
+        arr = np.asarray(crop)
+        ys, xs = np.nonzero(arr[..., 3] > 40)
+        crop = crop.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+    side = max(crop.size)
+    square = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    square.paste(crop, ((side - crop.width) // 2, (side - crop.height) // 2))
+    arr = np.asarray(square.resize((32, 32), Image.LANCZOS)).copy()
+    arr[..., 3] = np.where(arr[..., 3] > 90, 255, 0)
+    # dunkler Umriss wie bei Vanilla-Symbolen, damit duenne Teile lesbar bleiben
+    solid = arr[..., 3] > 0
+    edge = np.zeros_like(solid)
+    for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        shifted = np.zeros_like(solid)
+        ys0, ys1 = max(0, dy), 32 + min(0, dy)
+        xs0, xs1 = max(0, dx), 32 + min(0, dx)
+        shifted[ys0:ys1, xs0:xs1] = solid[ys0 - dy:ys1 - dy, xs0 - dx:xs1 - dx]
+        edge |= shifted
+    outline = edge & ~solid
+    arr[outline] = [16, 18, 24, 255]
+    return Image.fromarray(arr, "RGBA")
+
+
 def png(image: Image.Image) -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, "PNG", optimize=True)
@@ -502,6 +751,26 @@ def outputs() -> dict[Path, bytes]:
         model = {"parent": "minecraft:builtin/entity", "gui_light": "front",
                  "textures": {"particle": f"kingdomomnitrix:item/{name}"}, "display": DISPLAY[weapon.kind]}
         files[MODEL_DIR / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
+    for name, make in GEAR.items():
+        weapon = make()
+        geo, color, mask = build(name, weapon)
+        geo["minecraft:geometry"][0]["description"]["identifier"] = f"geometry.kingdomomnitrix.gear.{name}"
+        if name == "heli_pack":
+            # Ein Controller fuer beide Modi: Rotor (Heli) und Flammen (Jet) in derselben Animation
+            weapon.anim = {**weapon.anim, **heli_pack(True).anim}
+        anim = animation(name, weapon)
+        anim["animations"] = {f"animation.kingdomomnitrix.gear.{name}.idle": next(iter(anim["animations"].values()))}
+        files[GEAR_GEO_DIR / f"{name}.geo.json"] = (json.dumps(geo, indent=1) + "\n").encode()
+        files[GEAR_ANIM_DIR / f"{name}.animation.json"] = (json.dumps(anim, indent=1) + "\n").encode()
+        files[GEAR_TEX_DIR / f"{name}.png"] = png(color)
+        files[GEAR_TEX_DIR / f"{name}_glowmask.png"] = png(mask)
+        files[GEAR_ICON_DIR / f"{name}.png"] = png(gear_icon(name, weapon.kind, geo, color))
+        files[MODEL_DIR / f"{name}_icon.json"] = (json.dumps({"parent": "minecraft:item/generated",
+                                                              "textures": {"layer0": f"kingdomomnitrix:item/gear_icon/{name}"}}, indent=2) + "\n").encode()
+        if name != "heli_jet":
+            model = {"parent": "minecraft:builtin/entity", "gui_light": "front",
+                     "textures": {"particle": f"kingdomomnitrix:item/{name}"}, "display": DISPLAY[weapon.kind]}
+            files[MODEL_DIR / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
     return files
 
 

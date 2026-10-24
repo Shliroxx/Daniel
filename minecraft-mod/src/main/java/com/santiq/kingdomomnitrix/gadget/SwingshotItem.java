@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.gadget;
 
+import com.santiq.kingdomomnitrix.gear.GeoGear;
 import java.util.List;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -16,7 +17,7 @@ import net.minecraft.world.World;
  * Swingshot: Greifhaken, der sich an jedem festen Block verankert und den Spieler hinzieht.
  * Wirkt aus dem Werkzeug-Platz des Gadget-Guertels per Gadget-Taste.
  */
-public class SwingshotItem extends Item implements Gadget {
+public class SwingshotItem extends Item implements Gadget, GeoGear {
 	/** Reichweite in Bloecken. */
 	public static final double RANGE = 24.0;
 	/** Laengste Zugdauer in Ticks, danach loest der Haken. */
