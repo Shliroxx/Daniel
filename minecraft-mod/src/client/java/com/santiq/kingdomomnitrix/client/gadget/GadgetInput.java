@@ -5,19 +5,25 @@ import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.client.input.ModKeyBindings;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
+import com.santiq.kingdomomnitrix.gadget.PackMode;
 import com.santiq.kingdomomnitrix.gadget.SwingshotItem;
 import com.santiq.kingdomomnitrix.networking.GadgetActionPayload;
 import com.santiq.kingdomomnitrix.networking.SwingshotPayload;
 import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.CampfireBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
@@ -39,6 +45,21 @@ public final class GadgetInput {
 	private static final double JET_HOVER_FALL = -0.22;
 	private static final double JET_HOVER_MAX_SPEED = 0.55;
 	private static final double GLIDE_ACCELERATION = 1.05;
+	// Gleiter: sehr langsamer Sinkflug, Fahrt in Blickrichtung; Nase runter = schneller, aber steiler
+	private static final double GLIDER_FALL = -0.035;
+	private static final double GLIDER_DIVE_FALL = -0.30;
+	private static final double GLIDER_SPEED = 0.62;
+	private static final double GLIDER_DIVE_SPEED = 0.55;
+	private static final double GLIDER_STEER = 0.18;
+	/** Aufwind ueber Feuer, Lava, Magma und Lagerfeuern bis zu dieser Hoehe */
+	private static final int UPDRAFT_RANGE = 14;
+	private static final double UPDRAFT_LIFT = 0.16;
+	// Jetpack: Steigflug bei gehaltener Sprungtaste, Treibstoff fuer 4 Sekunden, laedt am Boden doppelt so schnell nach
+	public static final int JETPACK_FUEL = 80;
+	private static final double JETPACK_LIFT = 0.09;
+	private static final double JETPACK_MAX_RISE = 0.38;
+	private static final double JETPACK_PUSH = 0.045;
+	private static final double JETPACK_MAX_SPEED = 0.55;
 	// Faehigkeit Gleiten
 	private static final double ABILITY_GLIDE_FALL = -0.12;
 	private static final double ABILITY_GLIDE_MAX_SPEED = 0.42;
@@ -55,6 +76,7 @@ public final class GadgetInput {
 	private static int thrustsUsed;
 	private static int thrustCooldown;
 	private static boolean gliding;
+	private static int jetpackFuel = JETPACK_FUEL;
 
 	private static Vec3d swingAnchor;
 	private static int swingTicks;
@@ -103,6 +125,7 @@ public final class GadgetInput {
 		thrustsUsed = 0;
 		thrustCooldown = 0;
 		gliding = false;
+		jetpackFuel = JETPACK_FUEL;
 		swingAnchor = null;
 		swingTicks = 0;
 		swingCooldown = 0;
@@ -115,6 +138,11 @@ public final class GadgetInput {
 
 	public static boolean isSwinging() {
 		return swingAnchor != null;
+	}
+
+	/** Treibstoff des Jetpacks in Ticks (0 bis {@link #JETPACK_FUEL}); fuer die Anzeige im HUD. */
+	public static int jetpackFuel() {
+		return jetpackFuel;
 	}
 
 	public static boolean isHanging() {
@@ -137,6 +165,9 @@ public final class GadgetInput {
 		if (!airborne) {
 			doubleJumped = false;
 			thrustsUsed = 0;
+			if (player.isOnGround()) {
+				jetpackFuel = Math.min(JETPACK_FUEL, jetpackFuel + 2);
+			}
 		}
 		// Ein Sprung vom Boden zaehlt nicht als Luftsprung: erst wenn der Spieler schon in der Luft war.
 		boolean airJump = jumpPressed && airborne && wasAirborne;
@@ -150,7 +181,16 @@ public final class GadgetInput {
 			setGliding(false);
 			return;
 		}
-		boolean jet = HeliPackItem.isJet(pack.get());
+		PackMode mode = HeliPackItem.mode(pack.get());
+		if (mode == PackMode.GLIDER) {
+			glider(client, player, jumpDown);
+			return;
+		}
+		if (mode == PackMode.JETPACK) {
+			jetpack(player, jumpDown);
+			return;
+		}
+		boolean jet = mode == PackMode.THRUSTER;
 		Vec3d velocity = player.getVelocity();
 		if (airJump) {
 			if (!jet && !doubleJumped) {
@@ -173,6 +213,94 @@ public final class GadgetInput {
 		}
 		// Gehaltene Sprungtaste beim Fallen: Gleiten (Heli) bzw. gebremster Sinkflug (Jet).
 		glide(player, jumpDown, jet ? JET_HOVER_FALL : HELI_GLIDE_FALL, jet ? JET_HOVER_MAX_SPEED : HELI_GLIDE_MAX_SPEED);
+	}
+
+	/**
+	 * Gleiter: bei gehaltener Sprungtaste im Fall oeffnen sich die Schwingen. Die Fahrt folgt der Blickrichtung (Lenken
+	 * mit der Maus), Nase runter tauscht Hoehe gegen Tempo. Ueber Hitzequellen hebt der Aufwind den Spieler an.
+	 */
+	private static void glider(MinecraftClient client, ClientPlayerEntity player, boolean jumpDown) {
+		Vec3d velocity = player.getVelocity();
+		if (!jumpDown || (!gliding && velocity.y > 0.0)) {
+			if (!jumpDown) {
+				setGliding(false);
+			}
+			return;
+		}
+		float pitch = MathHelper.clamp(player.getPitch(), -20.0f, 60.0f);
+		double dive = Math.max(0.0, pitch) / 60.0;
+		float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
+		double speed = GLIDER_SPEED + dive * GLIDER_DIVE_SPEED;
+		Vec3d target = new Vec3d(-MathHelper.sin(yaw) * speed, 0.0, MathHelper.cos(yaw) * speed);
+		Vec3d horizontal = new Vec3d(velocity.x, 0.0, velocity.z);
+		horizontal = horizontal.add(target.subtract(horizontal).multiply(GLIDER_STEER));
+		double fall = MathHelper.lerp(dive, GLIDER_FALL, GLIDER_DIVE_FALL);
+		double vertical = fall;
+		if (updraft(client, player)) {
+			vertical = Math.min(velocity.y + UPDRAFT_LIFT, 0.5);
+		}
+		player.setVelocity(horizontal.x, vertical, horizontal.z);
+		player.fallDistance = 0.0f;
+		setGliding(true);
+	}
+
+	/** Steigt unter dem Spieler Hitze auf (Feuer, Lava, Magma, brennendes Lagerfeuer)? */
+	private static boolean updraft(MinecraftClient client, ClientPlayerEntity player) {
+		BlockPos.Mutable pos = player.getBlockPos().mutableCopy();
+		for (int i = 0; i < UPDRAFT_RANGE; i++) {
+			BlockState state = client.world.getBlockState(pos);
+			if (state.isIn(BlockTags.FIRE) || state.isOf(Blocks.LAVA) || state.isOf(Blocks.MAGMA_BLOCK)
+					|| (state.isIn(BlockTags.CAMPFIRES) && CampfireBlock.isLitCampfire(state))) {
+				return true;
+			}
+			if (!state.isAir() && state.isSolidBlock(client.world, pos)) {
+				return false;
+			}
+			pos.move(0, -1, 0);
+		}
+		return false;
+	}
+
+	/**
+	 * Jetpack: gehaltene Sprungtaste in der Luft steigt, solange Treibstoff da ist; Laufen schiebt in Blickrichtung.
+	 * Ist der Tank leer, bremsen die Duesen den Fall wie beim Heli-Pack, damit ein leerer Tank kein Absturz ist.
+	 */
+	private static void jetpack(ClientPlayerEntity player, boolean jumpDown) {
+		if (jumpDown && jetpackFuel <= 0) {
+			glide(player, true, HELI_GLIDE_FALL, HELI_GLIDE_MAX_SPEED);
+			return;
+		}
+		if (!jumpDown) {
+			setGliding(false);
+			return;
+		}
+		jetpackFuel--;
+		Vec3d velocity = player.getVelocity();
+		double rise = Math.min(JETPACK_MAX_RISE, velocity.y + JETPACK_LIFT + 0.08);
+		double x = velocity.x;
+		double z = velocity.z;
+		float forward = player.input.movementForward;
+		float sideways = player.input.movementSideways;
+		if (forward != 0.0f || sideways != 0.0f) {
+			float yaw = player.getYaw() * MathHelper.RADIANS_PER_DEGREE;
+			double sin = MathHelper.sin(yaw);
+			double cos = MathHelper.cos(yaw);
+			x += (sideways * cos - forward * sin) * JETPACK_PUSH;
+			z += (forward * cos + sideways * sin) * JETPACK_PUSH;
+			double length = Math.sqrt(x * x + z * z);
+			if (length > JETPACK_MAX_SPEED) {
+				x *= JETPACK_MAX_SPEED / length;
+				z *= JETPACK_MAX_SPEED / length;
+			}
+		}
+		player.setVelocity(x, rise, z);
+		player.fallDistance = 0.0f;
+		setGliding(true);
+		if (jetpackFuel % 5 == 0) {
+			int bars = MathHelper.ceil(jetpackFuel * 10.0f / JETPACK_FUEL);
+			player.sendMessage(Text.translatable("hud.kingdomomnitrix.jetpack_fuel", "▮".repeat(bars) + "▯".repeat(10 - bars))
+					.formatted(jetpackFuel < JETPACK_FUEL / 4 ? Formatting.RED : Formatting.GOLD), true);
+		}
 	}
 
 	private static void glide(ClientPlayerEntity player, boolean jumpDown, double fall, double maxSpeed) {

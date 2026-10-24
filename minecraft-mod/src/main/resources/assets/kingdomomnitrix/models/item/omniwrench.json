@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/omniwrench"
+    "particle": "kingdomomnitrix:item/gear_icon/omniwrench"
   },
   "display": {
     "thirdperson_righthand": {

@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/swingshot"
+    "particle": "kingdomomnitrix:item/gear_icon/swingshot"
   },
   "display": {
     "thirdperson_righthand": {

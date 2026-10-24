@@ -1,0 +1,10 @@
+{
+ "format_version": "1.8.0",
+ "animations": {
+  "animation.kingdomomnitrix.gear.blitz_gun.idle": {
+   "loop": true,
+   "animation_length": 8.0,
+   "bones": {}
+  }
+ }
+}

@@ -15,6 +15,7 @@ import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
 import com.santiq.kingdomomnitrix.weapon.BoltItem;
 import com.santiq.kingdomomnitrix.weapon.CombusterItem;
 import com.santiq.kingdomomnitrix.weapon.FusionGrenadeItem;
+import com.santiq.kingdomomnitrix.weapon.GadgetronWeaponItem;
 import com.santiq.kingdomomnitrix.weapon.OmniWrenchItem;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.FoodComponent;
@@ -67,6 +68,14 @@ public final class ModItems {
 	public static final Item OMNIWRENCH = register("omniwrench", new OmniWrenchItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item COMBUSTER = register("combuster", new CombusterItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
 	public static final Item FUSION_GRENADE = register("fusion_grenade", new FusionGrenadeItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
+	public static final Item BLITZ_GUN = register("blitz_gun",
+			new GadgetronWeaponItem(GadgetronWeaponItem.Style.BLITZ, new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
+	public static final Item PYROCITOR = register("pyrocitor",
+			new GadgetronWeaponItem(GadgetronWeaponItem.Style.PYRO, new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));
+	public static final Item DEVASTATOR = register("devastator",
+			new GadgetronWeaponItem(GadgetronWeaponItem.Style.DEVASTATOR, new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
+	public static final Item MORPH_O_RAY = register("morph_o_ray",
+			new GadgetronWeaponItem(GadgetronWeaponItem.Style.MORPH, new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));
 	public static final Item HELI_PACK = register("heli_pack", new HeliPackItem(new Item.Settings().maxCount(1).rarity(Rarity.RARE)));
 	public static final Item NPC_SPAWNER = register("npc_spawner", new NpcSpawnItem(new Item.Settings().maxCount(16)));
 	public static final Item QUEST_BOOK = register("quest_book", new QuestBookItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)));

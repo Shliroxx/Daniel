@@ -77,6 +77,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		SpellRegistry.register();
 		RiftRegistry.register();
 		WeaponRegistry.register();
+		com.santiq.kingdomomnitrix.weapon.ShopOffer.register();
 		QuestRegistry.register();
 		NpcRegistry.register();
 		SpaceRouteRegistry.register();

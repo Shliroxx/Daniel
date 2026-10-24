@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.gadget.GadgetManager;
 import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
+import com.santiq.kingdomomnitrix.gadget.PackMode;
 import java.util.Optional;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
@@ -25,15 +26,21 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
 /**
- * Heli-Pack bzw. Heli-Jet auf dem Ruecken jedes Spielers, der ihn im Gadget-Guertel traegt.
- * In der Luft dreht der Doppelrotor (Heli-Pack) bzw. brennen die Schubduesen mit flackernder Flamme (Heli-Jet);
- * am Boden steht der Rotor still. Modelle aus tools/generate_item_models.py (models/gadget/).
+ * Clanks Rucksack auf dem Ruecken jedes Spielers, der ihn im Gadget-Guertel traegt, je nach Modus ({@link PackMode}):
+ * Heli mit Doppelrotor, der in der Luft dreht; Thruster und Jetpack mit flackernden Schubflammen in der Luft (Jetpack nur
+ * im Steigflug); Gleiter mit Schwingen, die sich im Fall ausklappen und am Boden eingefaltet bleiben.
+ * Modelle aus tools/generate_item_models.py (models/gadget/).
  */
 public class HeliPackFeatureRenderer extends FeatureRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
 	public static final Identifier HELI_BODY = KingdomOmnitrix.id("gadget/heli_body");
 	public static final Identifier HELI_ROTOR = KingdomOmnitrix.id("gadget/heli_rotor");
 	public static final Identifier JET_BODY = KingdomOmnitrix.id("gadget/jet_body");
 	public static final Identifier JET_FLAME = KingdomOmnitrix.id("gadget/jet_flame");
+	public static final Identifier GLIDER_BODY = KingdomOmnitrix.id("gadget/glider_body");
+	public static final Identifier GLIDER_WINGS = KingdomOmnitrix.id("gadget/glider_wings");
+	public static final Identifier JETPACK_BODY = KingdomOmnitrix.id("gadget/jetpack_body");
+	/** Breite der eingefalteten Schwingen (Anteil der vollen Spannweite) */
+	private static final float WINGS_FOLDED = 0.22f;
 	/** Drehachse des Rotors im Item-Raum (Modell-Pixel) */
 	private static final float ROTOR_X = 8.0f;
 	private static final float ROTOR_Z = 2.75f;
@@ -49,7 +56,8 @@ public class HeliPackFeatureRenderer extends FeatureRenderer<AbstractClientPlaye
 	}
 
 	public static void register() {
-		ModelLoadingPlugin.register(context -> context.addModels(HELI_BODY, HELI_ROTOR, JET_BODY, JET_FLAME));
+		ModelLoadingPlugin.register(context -> context.addModels(HELI_BODY, HELI_ROTOR, JET_BODY, JET_FLAME, GLIDER_BODY,
+				GLIDER_WINGS, JETPACK_BODY));
 		LivingEntityFeatureRendererRegistrationCallback.EVENT.register((type, renderer, helper, context) -> {
 			if (renderer instanceof PlayerEntityRenderer playerRenderer) {
 				helper.register(new HeliPackFeatureRenderer(playerRenderer));
@@ -72,10 +80,15 @@ public class HeliPackFeatureRenderer extends FeatureRenderer<AbstractClientPlaye
 		if (pack.isEmpty()) {
 			return;
 		}
-		boolean jet = HeliPackItem.isJet(pack.get());
+		PackMode mode = HeliPackItem.mode(pack.get());
 		MinecraftClient client = MinecraftClient.getInstance();
 		BakedModel missing = client.getBakedModelManager().getMissingModel();
-		BakedModel body = client.getBakedModelManager().getModel(jet ? JET_BODY : HELI_BODY);
+		BakedModel body = client.getBakedModelManager().getModel(switch (mode) {
+			case HELI -> HELI_BODY;
+			case THRUSTER -> JET_BODY;
+			case GLIDER -> GLIDER_BODY;
+			case JETPACK -> JETPACK_BODY;
+		});
 		if (body == null || body == missing) {
 			return;
 		}
@@ -94,9 +107,23 @@ public class HeliPackFeatureRenderer extends FeatureRenderer<AbstractClientPlaye
 		matrices.translate(-0.5f, -SHOULDER_Y / 16.0f, 0.0f);
 		renderer.render(matrices.peek(), solid, null, body, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
 
-		if (jet) {
+		// Steigt bzw. faellt der Spieler gerade? (auch fuer andere Spieler, deren Geschwindigkeit der Client nicht kennt)
+		double climb = player.getY() - player.prevY;
+		if (mode == PackMode.GLIDER) {
+			BakedModel wings = client.getBakedModelManager().getModel(GLIDER_WINGS);
+			if (wings != null && wings != missing) {
+				float spread = active && climb < -0.01 ? 1.0f : WINGS_FOLDED;
+				matrices.push();
+				matrices.translate(0.5f, 0.0f, 0.0f);
+				matrices.scale(spread, 1.0f, 1.0f);
+				matrices.translate(-0.5f, 0.0f, 0.0f);
+				renderer.render(matrices.peek(), solid, null, wings, 1.0f, 1.0f, 1.0f, light, OverlayTexture.DEFAULT_UV);
+				matrices.pop();
+			}
+		} else if (mode == PackMode.THRUSTER || mode == PackMode.JETPACK) {
 			BakedModel flame = client.getBakedModelManager().getModel(JET_FLAME);
-			if (active && flame != null && flame != missing) {
+			boolean burning = mode == PackMode.THRUSTER ? active : active && climb > 0.01;
+			if (burning && flame != null && flame != missing) {
 				float time = player.age + tickDelta;
 				float flicker = 0.8f + 0.25f * MathHelper.sin(time * 2.7f) + 0.1f * MathHelper.sin(time * 7.3f);
 				matrices.push();

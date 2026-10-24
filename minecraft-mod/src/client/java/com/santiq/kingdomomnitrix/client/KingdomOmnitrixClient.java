@@ -50,12 +50,9 @@ import com.santiq.kingdomomnitrix.space.SpaceTravel;
 import net.fabricmc.fabric.api.client.rendering.v1.DimensionRenderingRegistry;
 import com.santiq.kingdomomnitrix.networking.OpenNpcDialogPayload;
 import com.santiq.kingdomomnitrix.networking.OpenQuestBookPayload;
-import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
 import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
-import com.santiq.kingdomomnitrix.registry.ModItems;
 import com.santiq.kingdomomnitrix.registry.ModScreenHandlers;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.item.ModelPredicateProviderRegistry;
 import com.santiq.kingdomomnitrix.client.weapon.WeaponTerminalScreen;
 import com.santiq.kingdomomnitrix.enemy.HeartlessEntity;
 import com.santiq.kingdomomnitrix.registry.ModEntities;
@@ -169,8 +166,6 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		BlockEntityRendererFactories.register(com.santiq.kingdomomnitrix.suit.module.SuitConfigurator.ENTITY,
 				com.santiq.kingdomomnitrix.client.suit.ConfiguratorRenderer::new);
 		com.santiq.kingdomomnitrix.suit.fusion.FusionCodexItem.open = com.santiq.kingdomomnitrix.client.suit.FusionCodexScreen::open;
-		ModelPredicateProviderRegistry.register(ModItems.HELI_PACK, KingdomOmnitrix.id("jet"),
-				(stack, world, entity, seed) -> HeliPackItem.isJet(stack) ? 1.0f : 0.0f);
 		CombatAnimations.register();
 
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);

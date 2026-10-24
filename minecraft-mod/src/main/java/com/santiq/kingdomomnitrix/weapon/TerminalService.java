@@ -24,7 +24,7 @@ import net.minecraft.util.math.BlockPos;
  * und Inventar selbst; der Client schickt nur die Absicht.
  */
 public final class TerminalService {
-	public enum Action { BUY, UPGRADE, REFILL }
+	public enum Action { BUY, UPGRADE, REFILL, BUY_OFFER }
 
 	private static final double MAX_DISTANCE_SQ = 8.0 * 8.0;
 
@@ -40,7 +40,39 @@ public final class TerminalService {
 			case BUY -> buy(player, weaponId);
 			case UPGRADE -> upgrade(player, weaponId);
 			case REFILL -> refill(player);
+			case BUY_OFFER -> buyOffer(player, weaponId);
 		}
+	}
+
+	/** Gadgetron-Katalog: Bolts und Materialien gegen die Items des Angebots (Ruestungs-Sets, Gadgets). */
+	private static void buyOffer(ServerPlayerEntity player, Identifier offerId) {
+		Optional<ShopOffer> found = ShopOffer.get(player.getWorld().getRegistryManager(), offerId);
+		if (found.isEmpty()) {
+			return;
+		}
+		ShopOffer offer = found.get();
+		boolean creative = player.getAbilities().creativeMode;
+		List<ItemStack> missing = creative ? List.of() : MaterialCost.missing(player.getInventory(), offer.materials());
+		if (!missing.isEmpty()) {
+			player.sendMessage(Text.translatable("message.kingdomomnitrix.terminal.missing_items", MaterialCost.describe(missing))
+					.formatted(Formatting.RED), true);
+			return;
+		}
+		if (!charge(player, offer.price())) {
+			return;
+		}
+		if (!creative) {
+			MaterialCost.consume(player.getInventory(), offer.materials());
+		}
+		for (ItemStack stack : offer.items()) {
+			player.getInventory().offerOrDrop(stack.copy());
+		}
+		success(player, Text.translatable("message.kingdomomnitrix.terminal.bought", offerName(offer)));
+	}
+
+	/** Anzeigename eines Angebots: eigener Schluessel oder der Name des ersten Items. */
+	public static Text offerName(ShopOffer offer) {
+		return offer.name().isEmpty() ? offer.icon().getName() : Text.translatable(offer.name());
 	}
 
 	private static void buy(ServerPlayerEntity player, Identifier weaponId) {

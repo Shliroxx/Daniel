@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/kingdom_key"
+    "particle": "kingdomomnitrix:item/gear_icon/kingdom_key"
   },
   "display": {
     "thirdperson_righthand": {

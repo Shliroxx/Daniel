@@ -23,13 +23,13 @@ import com.santiq.kingdomomnitrix.client.render.SafeGlowLayer;
 
 /**
  * 3D-Renderer der aelteren Ausruestung ({@link GeoGear}): Modell, Textur und Animation aus geo|textures|animations/
- * item/gear, die _glowmask leuchtet. Im Inventar zeichnet er das gemalte Symbol (models/item/&lt;id&gt;_icon). Das Heli-Pack
- * zeigt im Jet-Modus das Jet-Modell (heli_jet).
+ * item/gear, die _glowmask leuchtet. Im Inventar zeichnet er das gemalte Symbol (models/item/&lt;id&gt;_icon). Clanks
+ * Rucksack zeigt das Modell seines Modus (siehe PackMode).
  */
 public class GearRenderer<T extends Item & GeoGear> extends GeoItemRenderer<T> {
 	/** Ausruestung mit eigenem 3D-Modell; jede braucht models/item/&lt;id&gt;_icon fuer das Inventar */
 	private static final List<String> ICONS = List.of("kingdom_key", "oathkeeper", "omega_key", "omniwrench", "combuster", "swingshot",
-			"fusion_grenade", "heli_pack", "heli_jet");
+			"fusion_grenade", "heli_pack", "heli_jet", "glider_pack", "jet_pack", "blitz_gun", "pyrocitor", "devastator", "morph_o_ray");
 
 	public GearRenderer() {
 		super(new Model<>());
@@ -40,9 +40,9 @@ public class GearRenderer<T extends Item & GeoGear> extends GeoItemRenderer<T> {
 		return KingdomOmnitrix.id("item/" + id + "_icon");
 	}
 
-	/** Gemeinsamer Variantenname: Heli-Pack im Jet-Modus nutzt die heli_jet-Dateien. */
+	/** Gemeinsamer Variantenname: Clanks Rucksack nutzt die Dateien seines Modus (heli_pack, heli_jet, glider_pack, jet_pack). */
 	static String variant(String id, ItemStack stack) {
-		return stack.isOf(ModItems.HELI_PACK) && HeliPackItem.isJet(stack) ? "heli_jet" : id;
+		return stack.isOf(ModItems.HELI_PACK) ? HeliPackItem.mode(stack).gear() : id;
 	}
 
 	/** Haengt den Renderer an die Ausruestung und laedt die Symbol-Modelle mit (einmal beim Client-Start). */

@@ -1,0 +1,24 @@
+{
+  "category": "armor",
+  "name": "shop.kingdomomnitrix.offer.viridium_set",
+  "items": [
+    {
+      "id": "kingdomomnitrix:viridium_helmet",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:viridium_chestplate",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:viridium_leggings",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:viridium_boots",
+      "count": 1
+    }
+  ],
+  "price": 2500,
+  "sort_order": 1
+}

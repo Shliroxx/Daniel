@@ -8,7 +8,7 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
-/** Client → Server: Aktion am Waffen-Terminal (0 = kaufen, 1 = aufwerten, 2 = Munition auffuellen). */
+/** Client → Server: Aktion am Waffen-Terminal (0 = kaufen, 1 = aufwerten, 2 = Munition auffuellen, 3 = Katalog-Angebot kaufen). */
 public record TerminalActionPayload(int action, Identifier weapon, BlockPos terminal) implements CustomPayload {
 	public static final CustomPayload.Id<TerminalActionPayload> ID = new CustomPayload.Id<>(KingdomOmnitrix.id("terminal_action"));
 	public static final PacketCodec<ByteBuf, TerminalActionPayload> CODEC = PacketCodec.tuple(

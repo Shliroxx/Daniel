@@ -37,6 +37,15 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	private float damageOverride = -1.0f;
 	/** Sprengkraft beim Aufprall (0 = keine); Explosion ohne Blockschaden. Nur serverseitig. */
 	private float explosionPower;
+	/** Morph-O-Ray: Gegner bis zu dieser Maximalgesundheit werden zum Huhn (0 = aus). Nur serverseitig. */
+	private float morphMaxHealth;
+	/** Devastator: Ziel, auf das die Rakete nachlenkt (null = geradeaus). Nur serverseitig. */
+	@org.jetbrains.annotations.Nullable
+	private LivingEntity homingTarget;
+	/** Blitz Gun: jede Kugel einer Ladung zaehlt (sonst schluckt die Unverwundbarkeit nach dem ersten Treffer den Rest). */
+	private boolean pellet;
+	/** Anteil, um den die Flugrichtung je Tick zum Ziel dreht */
+	private static final double HOMING_TURN = 0.18;
 
 	public enum Kind {
 		FIRE(5.0f, true, ModParticles.FIRE_EMBER),
@@ -92,6 +101,21 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 
 	public HeroProjectileEntity withExplosion(float power) {
 		this.explosionPower = Math.max(0.0f, power);
+		return this;
+	}
+
+	public HeroProjectileEntity withMorph(float maxHealth) {
+		this.morphMaxHealth = Math.max(0.0f, maxHealth);
+		return this;
+	}
+
+	public HeroProjectileEntity asPellet() {
+		this.pellet = true;
+		return this;
+	}
+
+	public HeroProjectileEntity withHoming(@org.jetbrains.annotations.Nullable LivingEntity target) {
+		this.homingTarget = target;
 		return this;
 	}
 
@@ -151,6 +175,17 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 			}
 		} else if (age > MAX_AGE_TICKS) {
 			discard();
+		} else if (homingTarget != null) {
+			if (!homingTarget.isAlive() || homingTarget.isRemoved()) {
+				homingTarget = null;
+			} else {
+				// Nachlenken mit gleichbleibendem Tempo (Rakete des Devastators)
+				Vec3d velocity = getVelocity();
+				double speed = velocity.length();
+				Vec3d wanted = homingTarget.getPos().add(0.0, homingTarget.getHeight() * 0.5, 0.0).subtract(getPos()).normalize().multiply(speed);
+				setVelocity(velocity.add(wanted.subtract(velocity).multiply(HOMING_TURN)).normalize().multiply(speed));
+				velocityModified = true;
+			}
 		}
 	}
 
@@ -175,7 +210,13 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 		DamageSource source = kind.magic
 				? getDamageSources().indirectMagic(this, getOwner())
 				: getDamageSources().thrown(this, getOwner());
+		if (pellet) {
+			target.timeUntilRegen = 0;
+		}
 		target.damage(source, damageOverride >= 0.0f ? damageOverride : kind.damage);
+		if (morphMaxHealth > 0.0f) {
+			morph(target);
+		}
 		if (kind == Kind.FIRE) {
 			target.setOnFireFor(5.0f);
 		}
@@ -193,6 +234,28 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 			living.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 100, 2), getOwner());
 			living.setFrozenTicks(Math.max(living.getFrozenTicks(), 160));
 		}
+	}
+
+	/** Morph-O-Ray: verwandelt einen Gegner (kein Spieler, kein Boss, nicht zu stark) in ein Huhn. */
+	private void morph(Entity target) {
+		if (!(getWorld() instanceof ServerWorld world) || !(target instanceof net.minecraft.entity.mob.MobEntity mob) || !mob.isAlive()
+				|| mob instanceof net.minecraft.entity.passive.ChickenEntity || mob.getMaxHealth() > morphMaxHealth) {
+			return;
+		}
+		net.minecraft.entity.passive.ChickenEntity chicken = net.minecraft.entity.EntityType.CHICKEN.create(world);
+		if (chicken == null) {
+			return;
+		}
+		chicken.refreshPositionAndAngles(mob.getX(), mob.getY(), mob.getZ(), mob.getYaw(), mob.getPitch());
+		if (mob.hasCustomName()) {
+			chicken.setCustomName(mob.getCustomName());
+		}
+		mob.discard();
+		world.spawnEntity(chicken);
+		com.santiq.kingdomomnitrix.vfx.Fx.flash(world, chicken.getPos().add(0, 0.4, 0), 0xD85AFF, 1.6f);
+		world.spawnParticles(ParticleTypes.CLOUD, chicken.getX(), chicken.getY() + 0.4, chicken.getZ(), 14, 0.3, 0.3, 0.3, 0.05);
+		world.playSound(null, chicken.getX(), chicken.getY(), chicken.getZ(), net.minecraft.sound.SoundEvents.ENTITY_CHICKEN_HURT,
+				net.minecraft.sound.SoundCategory.NEUTRAL, 1.0f, 1.2f);
 	}
 
 	@Override

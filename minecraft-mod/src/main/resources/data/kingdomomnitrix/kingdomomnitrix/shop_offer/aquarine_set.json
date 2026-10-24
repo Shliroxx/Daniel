@@ -1,0 +1,24 @@
+{
+  "category": "armor",
+  "name": "shop.kingdomomnitrix.offer.aquarine_set",
+  "items": [
+    {
+      "id": "kingdomomnitrix:aquarine_helmet",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:aquarine_chestplate",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:aquarine_leggings",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:aquarine_boots",
+      "count": 1
+    }
+  ],
+  "price": 5000,
+  "sort_order": 2
+}

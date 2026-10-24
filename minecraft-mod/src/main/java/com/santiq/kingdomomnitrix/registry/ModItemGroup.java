@@ -3,6 +3,8 @@ package com.santiq.kingdomomnitrix.registry;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
+import com.santiq.kingdomomnitrix.gadget.HeliPackItem;
+import com.santiq.kingdomomnitrix.gadget.PackMode;
 import com.santiq.kingdomomnitrix.magic.SpellCrystalItem;
 import com.santiq.kingdomomnitrix.magic.SpellRegistry;
 import com.santiq.kingdomomnitrix.npc.NpcRegistry;
@@ -51,6 +53,10 @@ public final class ModItemGroup {
 						entries.add(ModItems.OMNIWRENCH);
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);
+						entries.add(ModItems.BLITZ_GUN);
+						entries.add(ModItems.PYROCITOR);
+						entries.add(ModItems.DEVASTATOR);
+						entries.add(ModItems.MORPH_O_RAY);
 						entries.add(ModItems.QUEST_BOOK);
 						context.lookup().getOptionalWrapper(NpcRegistry.KEY).ifPresent(npcs ->
 								npcs.streamKeys()
@@ -58,9 +64,9 @@ public final class ModItemGroup {
 										.sorted(Comparator.comparing(Identifier::toString))
 										.forEach(npcId -> entries.add(NpcSpawnItem.create(npcId))));
 						entries.add(ModItems.HELI_PACK);
-						ItemStack jet = new ItemStack(ModItems.HELI_PACK);
-						jet.set(ModComponents.JET_MODE, true);
-						entries.add(jet);
+						for (PackMode mode : new PackMode[] {PackMode.THRUSTER, PackMode.GLIDER, PackMode.JETPACK}) {
+							entries.add(HeliPackItem.withMode(new ItemStack(ModItems.HELI_PACK), mode));
+						}
 						entries.add(ModItems.SWINGSHOT);
 						entries.add(ModItems.BOLT);
 						entries.add(ModItems.BOLT_CRATE);

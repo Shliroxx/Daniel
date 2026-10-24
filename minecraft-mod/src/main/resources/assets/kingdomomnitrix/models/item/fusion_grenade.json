@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/fusion_grenade"
+    "particle": "kingdomomnitrix:item/gear_icon/fusion_grenade"
   },
   "display": {
     "thirdperson_righthand": {

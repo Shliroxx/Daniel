@@ -568,9 +568,134 @@ def heli_pack(jet: bool = False) -> Weapon:
     return w
 
 
+def blitz_gun() -> Weapon:
+    """Blitz Gun (Gadgetron-Schrotflinte): gedrungener blau-silberner Koerper, drei Laeufe in einer ausgestellten
+    Muendung, Spulenring hinter der Muendung, Pumpgriff unter den Laeufen."""
+    pal = Palette("8A98AC", "2A3240", "D0DAE8", "1A1E24", "3A5A8A", "4AB0FF", "E0F4FF", "4AB0FF", "4AB0FF")
+    w = Weapon(pal, "gun")
+    w.cubes += [box(0, 6.0, 0.8, 3.8, 3.6, 7.0, "plate"), box(0, 8.2, 0.8, 2.6, 0.8, 5.0, "trim"), box(0, 3.8, 0.0, 2.6, 0.8, 4.0, "trim")]
+    for x, y in ((-0.9, 6.6), (0.9, 6.6), (0.0, 5.2)):
+        w.cubes += octo(x, y, -5.6, 1.3, 6.0, "z", "trim")
+        w.cubes.append(box(x, y, -8.75, 0.7, 0.7, 0.2, "glow", seams=False))
+    w.cubes += [box(0, 6.1, -8.2, 4.2, 3.8, 1.0, "plate", edge=("north",)), box(0, 6.1, -7.4, 3.4, 3.0, 0.6, "trim")]
+    w.cubes += ring_xy(0, 6.1, -3.2, 2.3, 0.5, 0.8) + [box(0, 4.0, -4.6, 2.2, 1.0, 3.0, "suit")]
+    w.cubes += [box(side * 2.0, 6.4, 1.6, 0.4, 1.0, 3.6, "glow", cracks=True) for side in (-1, 1)]
+    w.cubes += [C((-0.8, 0.2, 2.6), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 3.5)), box(0, 6.0, 4.6, 3.4, 3.4, 0.8, "trim")]
+    w.anim = {}
+    return w
+
+
+def pyrocitor() -> Weapon:
+    """Pyrocitor (Flammenwerfer): roter Brennstofftank auf dem Ruecken des Laufs, Zuendkammer mit Kuehlrippen,
+    breite Duese mit gluehendem Rand und flackernder Zuendflamme, Leitung vom Tank zur Duese."""
+    pal = Palette("6A7078", "2A2E34", "B0B8C0", "1A1A1E", "C8282A", "FF8A1A", "FFF0B0", "FF8A1A", "FF6A1A")
+    w = Weapon(pal, "gun")
+    w.cubes += octo(0, 5.8, 0.6, 3.4, 8.0, "z", "plate") + [box(0, 3.6, -0.4, 2.4, 0.8, 5.0, "trim")]
+    w.cubes += octo(0, 9.0, 0.4, 2.4, 6.0, "z", "trim", tint="C8282A") + [box(0, 9.0, 3.5, 1.2, 1.2, 0.4, "trim"),
+                                                                          box(0, 9.0, -2.7, 1.0, 1.0, 0.4, "glow")]
+    for z in (-1.4, 0.2, 1.8):
+        w.cubes.append(box(0, 9.0, z, 2.7, 2.7, 0.3, "plate", seams=False))
+    for z in (-4.0, -5.0, -6.0):
+        w.cubes += octo(0, 5.8, z, 3.2, 0.4, "z", "trim", seams=False)
+    w.cubes += octo(0, 5.8, -5.0, 2.2, 3.4, "z", "plate") + octo(0, 5.8, -7.4, 3.6, 1.4, "z", "plate", edge=("north",))
+    w.cubes += octo(0, 5.8, -8.15, 2.4, 0.2, "z", "glow")
+    w.cubes += [box(1.5, 7.6, -2.0, 0.5, 0.5, 4.6, "suit"), box(1.5, 7.0, -4.2, 0.5, 1.6, 0.5, "suit")]
+    w.cubes += [C((-0.8, 0.2, 2.2), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 3.1)), box(0, 5.8, 4.8, 3.0, 3.0, 0.8, "trim")]
+    w.sub("flame", [0, 5.8, -8.3], octo(0, 5.8, -8.9, 0.9, 1.0, "z", "glow"))
+    w.anim = {"flame": wave("scale", 0, 0.25, 8)}
+    return w
+
+
+def devastator() -> Weapon:
+    """Devastator (Raketenwerfer): dickes violett-graues Startrohr fuer die Schulter mit Zielvisier, rotem
+    Gefechtskopf in der Muendung, Warnstreifen und Abgas-Trichter hinten."""
+    pal = Palette("5A4A78", "201830", "9A88C0", "1A1A1E", "3A3E44", "FF3A4A", "FFE0E0", "FF3A4A", "FF3A4A")
+    w = Weapon(pal, "gun")
+    w.cubes += octo(0, 7.2, -2.0, 4.6, 15.0, "z", "plate")
+    for z in (-8.0, 3.0):
+        w.cubes += octo(0, 7.2, z, 5.0, 1.0, "z", "trim", seams=False)
+    w.cubes += octo(0, 7.2, -9.7, 5.2, 0.6, "z", "trim", edge=("north",)) + octo(0, 7.2, -9.2, 3.0, 1.4, "z", "glow")
+    w.cubes += octo(0, 7.2, 6.2, 3.6, 1.4, "z", "trim") + octo(0, 7.2, 7.0, 2.4, 0.3, "z", "suit")
+    w.cubes += [box(0, 7.2, -4.5, 5.0, 1.0, 1.0, "trim", tint="F0C030", seams=False),
+                box(2.9, 9.0, -1.0, 0.8, 1.4, 3.0, "trim"), box(2.9, 9.0, -2.55, 0.6, 0.8, 0.1, "visor")]
+    w.cubes += [C((-0.8, 0.2, 1.2), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 2.1)), box(0, 4.6, 1.2, 2.4, 1.2, 3.0, "trim"),
+                C((-0.7, 0.8, -4.2), (1.4, 3.6, 1.4), "suit", rot=(-10, 0, 0), pivot=(0, 4.4, -3.5)), box(0, 4.6, -3.5, 2.0, 1.0, 2.0, "trim")]
+    w.anim = {}
+    return w
+
+
+def morph_o_ray() -> Weapon:
+    """Morph-O-Ray (verwandelt Gegner in Huehner): rundlicher pinkfarbener Strahler mit Glaskolben, Emitterschale
+    vorn und zwei kreisenden Ringen; im Kolben pulsiert das Morph-Feld."""
+    pal = Palette("D85AA8", "5A1A48", "FFA8DC", "1A1A1E", "C8CCD8", "B04AFF", "F4E0FF", "B04AFF", "B04AFF")
+    w = Weapon(pal, "gun")
+    w.cubes += octo(0, 6.0, 0.4, 3.8, 6.0, "z", "plate") + [box(0, 3.8, 0.0, 2.4, 0.8, 4.0, "trim")]
+    w.cubes += octo(0, 8.6, 0.6, 2.2, 3.4, "z", "glow", edge=("north", "south", "east", "west")) + [box(0, 8.6, 2.5, 2.4, 2.4, 0.4, "trim"),
+                                                                                                    box(0, 8.6, -1.3, 2.4, 2.4, 0.4, "trim")]
+    w.cubes += octo(0, 6.0, -4.0, 1.8, 3.0, "z", "trim") + octo(0, 6.0, -6.0, 4.4, 0.8, "z", "plate", edge=("north",))
+    w.cubes += octo(0, 6.0, -6.5, 2.6, 0.2, "z", "glow") + octo(0, 6.0, -7.0, 1.0, 1.2, "z", "glow")
+    w.cubes += [C((-0.8, 0.2, 2.2), (1.6, 4.0, 1.8), "suit", rot=(-15, 0, 0), pivot=(0, 4.2, 3.1)), box(0, 6.0, 3.8, 3.2, 3.2, 0.8, "trim")]
+    rings = ring_xy(0, 6.0, -3.0, 2.6, 0.4, 0.5) + [C(c.origin, c.size, c.mat, rot=(0, 0, 45), pivot=(0, 6.0, -4.6), seams=False)
+                                                    for c in ring_xy(0, 6.0, -4.6, 2.2, 0.4, 0.5)]
+    w.sub("rings", [0, 6.0, -3.8], rings)
+    w.anim = {"rings": spin(2, 2)}
+    return w
+
+
+def glider_pack() -> Weapon:
+    """Gleiter-Modus (Clank-Rucksack): derselbe Rueckenkasten, dazu zwei nach hinten gepfeilte Schwingen aus drei
+    Segmenten mit leuchtender Vorderkante und Randbogen; die Schwingen wiegen sich leicht."""
+    pal = Palette("C8CED6", "4A5058", "F0F4F8", "1A1E24", "C08A28", "FFC23A", "FFF2C8", "FFC23A", "FF8A2A")
+    w = Weapon(pal, "small")
+    w.cubes += [box(0, 4.0, 0, 5.0, 6.0, 3.0, "plate"), box(0, 4.0, -1.7, 4.2, 5.0, 0.4, "trim"),
+                box(-1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(0, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"), box(1.6, 6.0, 1.6, 0.6, 0.6, 0.2, "glow"),
+                box(0, 7.4, 0.2, 3.4, 0.8, 2.0, "trim")]
+    for side in (-1, 1):
+        w.cubes.append(box(side * 1.6, 4.0, -2.1, 0.8, 7.0, 0.4, "suit"))
+    wings = []
+    for side in (-1, 1):
+        # Schwinge: Wurzel am Kasten, drei Segmente nach aussen, jedes etwas nach hinten (+z) und unten gekippt
+        x = side * 2.5
+        for i, (length, chord) in enumerate(((3.2, 2.6), (3.0, 2.0), (2.6, 1.4))):
+            cx = x + side * length / 2
+            back = 0.35 * i
+            wings.append(C((cx - length / 2, 6.6 - 0.25 * i, 0.4 + back - chord / 2), (length, 0.5, chord), "plate",
+                           rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
+            wings.append(C((cx - length / 2, 6.62 - 0.25 * i, 0.4 + back - chord / 2 - 0.3), (length, 0.3, 0.35), "glow",
+                           rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
+            x += side * length * 0.97
+        wings.append(C((x - 0.35, 5.6, 0.9), (0.7, 1.6, 0.9), "trim", rot=(-35, side * -12, side * -14), pivot=(x, 6.8, 0.4), seams=False))
+    w.sub("wings", [0, 6.8, 0.4], wings)
+    w.anim = {"wings": wave("rotation", 0, 3.0, 2)}
+    return w
+
+
+def jet_pack() -> Weapon:
+    """Jetpack-Modus (Clank-Rucksack): zwei rote Treibstofftanks mit Ringen und Ventilkappen ueber Schubduesen,
+    dazwischen der Kasten mit Kontrollleuchten; Flammen pulsieren unter den Duesen."""
+    pal = Palette("C8282A", "4A1010", "FF6A5A", "1A1E24", "8A929E", "3AE8FF", "E0FAFF", "3AE8FF", "FF8A2A")
+    w = Weapon(pal, "small")
+    w.cubes += [box(0, 4.6, -0.2, 2.6, 5.4, 2.4, "trim"), box(0, 4.6, -1.7, 4.8, 5.2, 0.4, "trim"),
+                box(0, 6.0, 1.05, 0.5, 0.5, 0.2, "glow"), box(0, 5.0, 1.05, 0.5, 0.5, 0.2, "glow")]
+    flames = []
+    for side in (-1, 1):
+        x = side * 2.0
+        w.cubes += octo(x, 4.6, 0.3, 2.0, 6.0, "y", "plate")
+        w.cubes += [box(x, 7.9, 0.3, 1.2, 0.8, 1.2, "trim"), box(x, 8.5, 0.3, 0.6, 0.5, 0.6, "glow")]
+        for y in (2.6, 6.4):
+            w.cubes.append(box(x, y, 0.3, 2.2, 0.35, 2.2, "trim", seams=False))
+        w.cubes += octo(x, 1.1, 0.3, 1.4, 1.0, "y", "trim")
+        w.cubes.append(box(x, 0.5, 0.3, 1.0, 0.2, 1.0, "glow", seams=False))
+        flames += octo(x, -0.6, 0.3, 0.9, 1.8, "y", "glow") + octo(x, -1.9, 0.3, 0.45, 1.0, "y", "glow")
+    w.sub("flame", [0, 0.4, 0.3], flames)
+    w.anim = {"flame": wave("scale", 0, 0.18, 8)}
+    return w
+
+
 GEAR = {"kingdom_key": kingdom_key, "oathkeeper": oathkeeper, "omega_key": omega_key, "omniwrench": omniwrench,
         "combuster": combuster, "swingshot": swingshot, "fusion_grenade": fusion_grenade, "heli_pack": heli_pack,
-        "heli_jet": lambda: heli_pack(True)}
+        "heli_jet": lambda: heli_pack(True), "glider_pack": glider_pack, "jet_pack": jet_pack,
+        "blitz_gun": blitz_gun, "pyrocitor": pyrocitor, "devastator": devastator, "morph_o_ray": morph_o_ray}
 GEAR_GEO_DIR = ASSETS / "geo" / "item" / "gear"
 GEAR_TEX_DIR = ASSETS / "textures" / "item" / "gear"
 GEAR_ANIM_DIR = ASSETS / "animations" / "item" / "gear"
@@ -756,8 +881,8 @@ def outputs() -> dict[Path, bytes]:
         geo, color, mask = build(name, weapon)
         geo["minecraft:geometry"][0]["description"]["identifier"] = f"geometry.kingdomomnitrix.gear.{name}"
         if name == "heli_pack":
-            # Ein Controller fuer beide Modi: Rotor (Heli) und Flammen (Jet) in derselben Animation
-            weapon.anim = {**weapon.anim, **heli_pack(True).anim}
+            # Ein Controller fuer alle Modi: Rotor (Heli), Flammen (Thruster, Jetpack), Schwingen (Gleiter) in einer Animation
+            weapon.anim = {**weapon.anim, **heli_pack(True).anim, **glider_pack().anim}
         anim = animation(name, weapon)
         anim["animations"] = {f"animation.kingdomomnitrix.gear.{name}.idle": next(iter(anim["animations"].values()))}
         files[GEAR_GEO_DIR / f"{name}.geo.json"] = (json.dumps(geo, indent=1) + "\n").encode()
@@ -767,9 +892,10 @@ def outputs() -> dict[Path, bytes]:
         files[GEAR_ICON_DIR / f"{name}.png"] = png(gear_icon(name, weapon.kind, geo, color))
         files[MODEL_DIR / f"{name}_icon.json"] = (json.dumps({"parent": "minecraft:item/generated",
                                                               "textures": {"layer0": f"kingdomomnitrix:item/gear_icon/{name}"}}, indent=2) + "\n").encode()
-        if name != "heli_jet":
+        if name not in ("heli_jet", "glider_pack", "jet_pack"):
+            # Partikel (Bruchstuecke) aus dem Inventarsymbol: jede Ausruestung hat eines, nicht jede eine alte 2D-Textur
             model = {"parent": "minecraft:builtin/entity", "gui_light": "front",
-                     "textures": {"particle": f"kingdomomnitrix:item/{name}"}, "display": DISPLAY[weapon.kind]}
+                     "textures": {"particle": f"kingdomomnitrix:item/gear_icon/{name}"}, "display": DISPLAY[weapon.kind]}
             files[MODEL_DIR / f"{name}.json"] = (json.dumps(model, indent=2) + "\n").encode()
     return files
 

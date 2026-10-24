@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/heli_pack"
+    "particle": "kingdomomnitrix:item/gear_icon/heli_pack"
   },
   "display": {
     "thirdperson_righthand": {

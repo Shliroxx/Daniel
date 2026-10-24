@@ -371,6 +371,52 @@ def heli_flame() -> list[Box]:
     return b
 
 
+def glider_body() -> list[Box]:
+    """Gleiter-Modus: Rumpf mit gelben Paneelen und Schwingen-Gelenk statt Rotormast."""
+    b = [x for x in heli_body(False) if x.material != "teal_paint" and x.frm[1] < 12.5]
+    b.append(box((3.4, 5.0, 1.5), (4.0, 10.5, 4.5), "yellow_paint"))
+    b.append(box((12.0, 5.0, 1.5), (12.6, 10.5, 4.5), "yellow_paint"))
+    b.append(box((4.5, 11.0, 1.2), (11.5, 12.6, 4.8), "yellow_paint"))
+    b.append(box((2.6, 11.4, 2.0), (13.4, 12.4, 4.0), "steel"))                  # Schwingen-Gelenk
+    return b
+
+
+def glider_wings() -> list[Box]:
+    """Zwei gepfeilte Schwingen (je drei Segmente, leuchtende Vorderkante); der Renderer faltet sie am Boden ein."""
+    b: list[Box] = []
+    for side in (-1, 1):
+        def span(a: float, c: float) -> tuple[float, float]:
+            lo, hi = (8 + side * a, 8 + side * c)
+            return (min(lo, hi), max(lo, hi))
+        for i, (a, c, chord) in enumerate(((5.0, 11.0, 4.0), (11.0, 16.5, 3.2), (16.5, 21.0, 2.4))):
+            x0, x1 = span(a, c)
+            y = 11.6 - 0.5 * i
+            z0 = 1.6 + 0.6 * i
+            b.append(box((x0, y, z0), (x1, y + 0.6, z0 + chord), "white", "x", -22.5, ((x0 + x1) / 2, y, 2.0)))
+            b.append(box((x0, y + 0.05, z0 - 0.5), (x1, y + 0.55, z0), "yellow_paint", "x", -22.5, ((x0 + x1) / 2, y, 2.0)))
+        x0, x1 = span(20.4, 21.4)
+        b.append(box((x0, 9.6, 2.4), (x1, 11.6, 4.2), "yellow_paint"))            # Randbogen
+    return b
+
+
+def jetpack_body() -> list[Box]:
+    """Jetpack-Modus: zwei rote Tanks mit Ringen ueber Schubduesen (Flammen wie beim Thruster), Kasten dazwischen."""
+    b: list[Box] = []
+    b.append(box((3.5, 3.0, 0.0), (12.5, 12.0, 1.0), "dark"))                    # Rueckenplatte
+    b.append(box((6.4, 4.0, 1.0), (9.6, 11.0, 4.0), "silver"))                   # Kasten
+    b.append(box((7.2, 8.6, 4.0), (8.8, 9.6, 4.3), "omni_green"))                # Kontrollleuchte
+    for x in (3.6, 9.4):
+        b.append(box((x, 1.2, 1.2), (x + 3.0, 12.0, 4.4), "red_paint"))         # Tank
+        for y in (3.0, 9.4):
+            b.append(box((x - 0.2, y, 1.0), (x + 3.2, y + 0.6, 4.6), "steel"))  # Ringe
+        b.append(box((x + 0.6, 12.0, 2.0), (x + 2.4, 13.0, 3.6), "steel"))      # Ventilkappe
+        b.append(box((x + 1.0, 13.0, 2.4), (x + 2.0, 13.6, 3.2), "omni_green"))
+        b.append(box((x + 0.3, 0.6, 1.5), (x + 2.7, 1.2, 4.1), "steel"))        # Duese
+        b.append(box((x - 0.2, 0.0, 1.2), (x + 3.2, 0.8, 4.6), "dark"))
+        b.append(box((x + 0.6, -0.2, 2.0), (x + 2.4, 0.0, 3.8), "fire"))
+    return b
+
+
 def heli_pack() -> list[Box]:
     return heli_body(False) + heli_rotor()
 
@@ -427,6 +473,9 @@ BACK_PARTS = {
     "heli_rotor": (heli_rotor, "teal_paint"),
     "jet_body": (lambda: heli_body(True), "silver"),
     "jet_flame": (heli_flame, "fire"),
+    "glider_body": (glider_body, "silver"),
+    "glider_wings": (glider_wings, "white"),
+    "jetpack_body": (jetpack_body, "red_paint"),
 }
 PART_DENSITY = 8
 

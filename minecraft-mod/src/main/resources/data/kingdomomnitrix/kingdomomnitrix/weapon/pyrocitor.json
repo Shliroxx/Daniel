@@ -1,0 +1,70 @@
+{
+  "item": "kingdomomnitrix:pyrocitor",
+  "price": 800,
+  "ammo_price": 1,
+  "sort_order": 4,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 80,
+      "stats": {
+        "damage": 2.0,
+        "range": 5.5,
+        "burn": 3,
+        "fire_delay": 4
+      }
+    },
+    {
+      "price": 700,
+      "max_ammo": 100,
+      "stats": {
+        "damage": 2.4,
+        "range": 6.0,
+        "burn": 3,
+        "fire_delay": 4
+      }
+    },
+    {
+      "price": 1500,
+      "max_ammo": 120,
+      "stats": {
+        "damage": 2.8,
+        "range": 6.5,
+        "burn": 4,
+        "fire_delay": 3
+      }
+    },
+    {
+      "price": 3000,
+      "max_ammo": 150,
+      "stats": {
+        "damage": 3.3,
+        "range": 7.0,
+        "burn": 5,
+        "fire_delay": 3
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "price": 6000,
+      "max_ammo": 180,
+      "stats": {
+        "damage": 4.0,
+        "range": 8.0,
+        "burn": 6,
+        "fire_delay": 2
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.registry;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.mojang.serialization.Codec;
+import com.santiq.kingdomomnitrix.gadget.PackMode;
 import com.santiq.kingdomomnitrix.weapon.WeaponState;
 import net.minecraft.component.ComponentType;
 import net.minecraft.network.codec.PacketCodecs;
@@ -36,10 +37,15 @@ public final class ModComponents {
 			KingdomOmnitrix.id("npc"),
 			ComponentType.<Identifier>builder().codec(Identifier.CODEC).packetCodec(Identifier.PACKET_CODEC).build());
 
-	/** Heli-Pack im Heli-Jet-Modus. */
+	/** Heli-Pack im Heli-Jet-Modus (alte Welten; neue Stacks nutzen PACK_MODE). */
 	public static final ComponentType<Boolean> JET_MODE = Registry.register(Registries.DATA_COMPONENT_TYPE,
 			KingdomOmnitrix.id("jet_mode"),
 			ComponentType.<Boolean>builder().codec(Codec.BOOL).packetCodec(PacketCodecs.BOOL).build());
+
+	/** Modus von Clanks Rucksack (Heli, Thruster, Gleiter, Jetpack). */
+	public static final ComponentType<PackMode> PACK_MODE = Registry.register(Registries.DATA_COMPONENT_TYPE,
+			KingdomOmnitrix.id("pack_mode"),
+			ComponentType.<PackMode>builder().codec(PackMode.CODEC).packetCodec(PackMode.PACKET_CODEC).build());
 
 	/** Farbe des Energiekerns im Omnitrix (Farbmodul-ID, siehe OmnitrixColors); eingesetzt in der Omnitrix-Werkbank. */
 	public static final ComponentType<String> OMNITRIX_CORE = Registry.register(Registries.DATA_COMPONENT_TYPE,

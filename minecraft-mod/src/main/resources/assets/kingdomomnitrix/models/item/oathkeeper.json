@@ -2,7 +2,7 @@
   "parent": "minecraft:builtin/entity",
   "gui_light": "front",
   "textures": {
-    "particle": "kingdomomnitrix:item/oathkeeper"
+    "particle": "kingdomomnitrix:item/gear_icon/oathkeeper"
   },
   "display": {
     "thirdperson_righthand": {

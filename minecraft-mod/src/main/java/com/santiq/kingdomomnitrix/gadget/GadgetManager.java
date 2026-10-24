@@ -9,7 +9,6 @@ import com.santiq.kingdomomnitrix.progression.ProgressionManager;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.mixin.ServerPlayNetworkHandlerAccessor;
 import com.santiq.kingdomomnitrix.networking.SwingshotStatePayload;
-import com.santiq.kingdomomnitrix.registry.ModComponents;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,6 +38,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.RaycastContext;
@@ -166,18 +166,18 @@ public final class GadgetManager {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_pack").formatted(Formatting.RED), true);
 			return;
 		}
-		ItemStack changed = pack.get().copy();
-		boolean jet = !HeliPackItem.isJet(changed);
-		changed.set(ModComponents.JET_MODE, jet);
+		PackMode mode = HeliPackItem.mode(pack.get()).next();
+		ItemStack changed = HeliPackItem.withMode(pack.get(), mode);
 		set(player, get(player).with(GadgetSlot.BACK, changed));
 		GLIDING.remove(player.getUuid());
-		sound(player, SoundEvents.BLOCK_PISTON_EXTEND, 0.6f, jet ? 1.5f : 1.1f);
+		sound(player, SoundEvents.BLOCK_PISTON_EXTEND, 0.6f, 1.0f + mode.ordinal() * 0.2f);
 		player.sendMessage(Text.translatable("message.kingdomomnitrix.pack_mode", changed.getName()).formatted(Formatting.AQUA), true);
 	}
 
 	private static void packBoost(ServerPlayerEntity player, boolean jet) {
 		Optional<ItemStack> pack = pack(player);
-		if (pack.isEmpty() || HeliPackItem.isJet(pack.get()) != jet || player.isOnGround()) {
+		PackMode needed = jet ? PackMode.THRUSTER : PackMode.HELI;
+		if (pack.isEmpty() || HeliPackItem.mode(pack.get()) != needed || player.isOnGround()) {
 			return;
 		}
 		long now = player.getServerWorld().getTime();
@@ -281,15 +281,46 @@ public final class GadgetManager {
 				GLIDING.remove(id);
 			} else {
 				player.fallDistance = 0.0f;
-				// Rotor ueber dem Kopf (alle 4 Ticks, nur Heli-Pack und Faehigkeit Gleiten; der Jet hat Duesenglut)
+				// Gleiter und Jetpack halten sich lange in der Luft: Schwebe-Pruefung (Anti-Fly-Kick) zuruecksetzen
+				allowFloating(player);
+				packEffects(player, pack(player).map(HeliPackItem::mode).orElse(PackMode.HELI));
+			}
+		}
+	}
+
+	/** Effekte waehrend des Gleitens bzw. Steigflugs: Rotorwind, Duesenglut, Wirbel an den Schwingen, Jetpack-Flammen. */
+	private static void packEffects(ServerPlayerEntity player, PackMode mode) {
+		ServerWorld world = player.getServerWorld();
+		switch (mode) {
+			case HELI -> {
 				if (player.age % 4 == 0) {
-					boolean jet = pack(player).map(HeliPackItem::isJet).orElse(false);
-					if (!jet) {
-						Vfx.rotorWind(player.getServerWorld(), player);
-					} else {
-						player.getServerWorld().spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.7, player.getZ(),
-								2, 0.15, 0.1, 0.15, 0.01);
+					Vfx.rotorWind(world, player);
+				}
+			}
+			case THRUSTER -> {
+				if (player.age % 4 == 0) {
+					world.spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.7, player.getZ(), 2, 0.15, 0.1, 0.15, 0.01);
+				}
+			}
+			case GLIDER -> {
+				if (player.age % 3 == 0) {
+					// Luftwirbel an beiden Schwingenspitzen (1,6 Bloecke seitlich der Schultern)
+					float yaw = player.getBodyYaw() * MathHelper.RADIANS_PER_DEGREE;
+					double sideX = MathHelper.cos(yaw) * 1.6;
+					double sideZ = MathHelper.sin(yaw) * 1.6;
+					for (int side = -1; side <= 1; side += 2) {
+						world.spawnParticles(ParticleTypes.CLOUD, player.getX() + sideX * side, player.getY() + 1.3, player.getZ() + sideZ * side,
+								1, 0.02, 0.02, 0.02, 0.0);
 					}
+				}
+			}
+			case JETPACK -> {
+				if (player.age % 2 == 0) {
+					world.spawnParticles(ModParticles.FIRE_EMBER, player.getX(), player.getY() + 0.5, player.getZ(), 3, 0.12, 0.15, 0.12, 0.01);
+					world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getY() + 0.2, player.getZ(), 2, 0.15, 0.1, 0.15, 0.01);
+				}
+				if (player.age % 6 == 0) {
+					sound(player, SoundEvents.ENTITY_BLAZE_SHOOT, 0.25f, 1.6f);
 				}
 			}
 		}
