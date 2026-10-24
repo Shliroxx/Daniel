@@ -60,6 +60,7 @@ jobs:
           python tools/generate_player_animations.py --check
           python tools/generate_heartless_models.py --check
           python tools/generate_npc_models.py --check
+          python tools/generate_villain_models.py --check
           python tools/generate_ship_mesh.py --check
           python tools/generate_planet_content.py --check
           python tools/generate_ben10_content.py --check

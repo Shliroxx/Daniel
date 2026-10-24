@@ -67,6 +67,20 @@ public final class ModEntities {
 			EntityType.Builder.<NefariousEntity>create(NefariousEntity::new, SpawnGroup.MONSTER).dimensions(2.4f, 3.9f).makeFireImmune()
 					.maxTrackingRange(12));
 
+	// Ben-10-Schurken (GeckoLib-Modelle aus tools/generate_villain_models.py; Vilgax und Kevin rendern groesser)
+	public static final EntityType<com.santiq.kingdomomnitrix.villain.VilgaxEntity> VILGAX = register("vilgax",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.villain.VilgaxEntity>create(com.santiq.kingdomomnitrix.villain.VilgaxEntity::new,
+					SpawnGroup.MONSTER).dimensions(1.3f, 3.0f).makeFireImmune().maxTrackingRange(12));
+	public static final EntityType<com.santiq.kingdomomnitrix.villain.KevinEntity> KEVIN = register("kevin",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.villain.KevinEntity>create(com.santiq.kingdomomnitrix.villain.KevinEntity::new,
+					SpawnGroup.MONSTER).dimensions(0.7f, 2.1f).maxTrackingRange(10));
+	public static final EntityType<com.santiq.kingdomomnitrix.villain.ForeverKnightEntity> FOREVER_KNIGHT = register("forever_knight",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.villain.ForeverKnightEntity>create(
+					com.santiq.kingdomomnitrix.villain.ForeverKnightEntity::new, SpawnGroup.MONSTER).dimensions(0.7f, 2.0f).maxTrackingRange(8));
+	public static final EntityType<com.santiq.kingdomomnitrix.villain.VilgaxDroneEntity> VILGAX_DRONE = register("vilgax_drone",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.villain.VilgaxDroneEntity>create(
+					com.santiq.kingdomomnitrix.villain.VilgaxDroneEntity::new, SpawnGroup.MONSTER).dimensions(0.7f, 0.8f).maxTrackingRange(10));
+
 	private ModEntities() {
 	}
 
@@ -88,6 +102,19 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(ECHO_CLONE, EchoCloneEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(WILD_ALIEN, com.santiq.kingdomomnitrix.alien.WildAlienEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(NEFARIOUS, NefariousEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(VILGAX, com.santiq.kingdomomnitrix.villain.VilgaxEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(KEVIN, com.santiq.kingdomomnitrix.villain.KevinEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(FOREVER_KNIGHT, com.santiq.kingdomomnitrix.villain.ForeverKnightEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(VILGAX_DRONE, com.santiq.kingdomomnitrix.villain.VilgaxDroneEntity.createAttributes());
+		// Forever Knights: nachts in der Oberwelt in kleinen Trupps (Ebenen, Waelder, Taiga, Savanne)
+		SpawnRestriction.register(FOREVER_KNIGHT, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
+		net.fabricmc.fabric.api.biome.v1.BiomeModifications.addSpawn(
+				net.fabricmc.fabric.api.biome.v1.BiomeSelectors.tag(net.minecraft.registry.tag.BiomeTags.IS_OVERWORLD)
+						.and(net.fabricmc.fabric.api.biome.v1.BiomeSelectors.tag(net.minecraft.registry.tag.BiomeTags.VILLAGE_PLAINS_HAS_STRUCTURE)
+								.or(net.fabricmc.fabric.api.biome.v1.BiomeSelectors.tag(net.minecraft.registry.tag.BiomeTags.IS_FOREST))
+								.or(net.fabricmc.fabric.api.biome.v1.BiomeSelectors.tag(net.minecraft.registry.tag.BiomeTags.IS_TAIGA))
+								.or(net.fabricmc.fabric.api.biome.v1.BiomeSelectors.tag(net.minecraft.registry.tag.BiomeTags.IS_SAVANNA))),
+				SpawnGroup.MONSTER, FOREVER_KNIGHT, 4, 1, 3);
 		// Natuerliche Spawns (nur in Mod-Welten wie Traverse Town, die Biome listen sie): im Dunkeln, Bodentypen auf festem Grund.
 		SpawnRestriction.register(SHADOW, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);
 		SpawnRestriction.register(SOLDIER, SpawnLocationTypes.ON_GROUND, Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, HostileEntity::canSpawnInDark);

@@ -1,0 +1,16 @@
+{
+  "type": "boss_spawn",
+  "boss": "kingdomomnitrix:vilgax",
+  "weight": 2,
+  "min_level": 25,
+  "duration_seconds": 900,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 1000,
+    "experience": 1800,
+    "orichalcum": 2,
+    "dna": true
+  }
+}

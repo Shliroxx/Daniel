@@ -82,6 +82,17 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		});
 	}
 
+	/** Ben-10-Schurken: Modelle unter {geo,animations,textures}/entity/villain/<name>, Leuchtmaske ueber SafeGlowLayer. */
+	private static <T extends com.santiq.kingdomomnitrix.villain.VillainEntity> void registerVillain(EntityType<T> type, String name, float scale) {
+		EntityRendererRegistry.register(type, context -> {
+			GeoEntityRenderer<T> renderer = new GeoEntityRenderer<>(context,
+					new DefaultedEntityGeoModel<T>(KingdomOmnitrix.id("villain/" + name), true));
+			renderer.addRenderLayer(new com.santiq.kingdomomnitrix.client.render.SafeGlowLayer<>(renderer));
+			renderer.withScale(scale);
+			return renderer;
+		});
+	}
+
 	@Override
 	public void onInitializeClient() {
 		com.santiq.kingdomomnitrix.client.suit.SuitArmorRenderer.install();
@@ -95,6 +106,10 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		registerHeartless(ModEntities.LARGE_BODY, "large_body");
 		registerHeartless(ModEntities.AIR_SOLDIER, "air_soldier");
 		registerHeartless(ModEntities.DARKBALL, "darkball");
+		registerVillain(ModEntities.VILGAX, "vilgax", 1.4f);
+		registerVillain(ModEntities.KEVIN, "kevin", 1.05f);
+		registerVillain(ModEntities.FOREVER_KNIGHT, "forever_knight", 1.0f);
+		registerVillain(ModEntities.VILGAX_DRONE, "vilgax_drone", 1.0f);
 		// Der Riss besteht nur aus Partikeln (serverseitig) und der Bossleiste.
 		EntityRendererRegistry.register(ModEntities.DARKNESS_RIFT, EmptyEntityRenderer::new);
 		EntityRendererRegistry.register(ModEntities.HERO_PROJECTILE, com.santiq.kingdomomnitrix.client.fx.FxProjectileRenderer::new);

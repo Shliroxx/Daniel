@@ -1,8 +1,10 @@
 package com.santiq.kingdomomnitrix.worldevent;
 
+import net.minecraft.registry.Registries;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.EntityType;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.DnaSampleItem;
-import com.santiq.kingdomomnitrix.boss.NefariousEntity;
 import com.santiq.kingdomomnitrix.enemy.RiftSpawner;
 import com.santiq.kingdomomnitrix.player.HeroDataAccess;
 import com.santiq.kingdomomnitrix.registry.ModBlocks;
@@ -140,8 +142,8 @@ public final class ActiveWorldEvent {
 				tracked = rift.get().getUuid();
 			}
 			case BOSS_SPAWN -> {
-				NefariousEntity boss = ModEntities.NEFARIOUS.create(world);
-				if (boss == null) {
+				EntityType<?> type = definition.boss().flatMap(Registries.ENTITY_TYPE::getOrEmpty).orElse(ModEntities.NEFARIOUS);
+				if (!(type.create(world) instanceof MobEntity boss)) {
 					return false;
 				}
 				boss.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, world.random.nextFloat() * 360.0f, 0.0f);

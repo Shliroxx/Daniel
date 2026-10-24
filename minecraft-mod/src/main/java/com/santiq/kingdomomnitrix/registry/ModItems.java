@@ -58,6 +58,14 @@ public final class ModItems {
 			new SpawnEggItem(ModEntities.AIR_SOLDIER, 0x2A6E3A, 0xFFD800, new Item.Settings()));
 	public static final Item DARKBALL_SPAWN_EGG = register("darkball_spawn_egg",
 			new SpawnEggItem(ModEntities.DARKBALL, 0x0A0A12, 0x8E44AD, new Item.Settings()));
+	public static final Item VILGAX_SPAWN_EGG = register("vilgax_spawn_egg",
+			new SpawnEggItem(ModEntities.VILGAX, 0x4A8A38, 0xB01818, new Item.Settings()));
+	public static final Item KEVIN_SPAWN_EGG = register("kevin_spawn_egg",
+			new SpawnEggItem(ModEntities.KEVIN, 0x16161A, 0x8A929E, new Item.Settings()));
+	public static final Item FOREVER_KNIGHT_SPAWN_EGG = register("forever_knight_spawn_egg",
+			new SpawnEggItem(ModEntities.FOREVER_KNIGHT, 0xB8BEC8, 0x9A1414, new Item.Settings()));
+	public static final Item VILGAX_DRONE_SPAWN_EGG = register("vilgax_drone_spawn_egg",
+			new SpawnEggItem(ModEntities.VILGAX_DRONE, 0x2A2E36, 0xFF2A1A, new Item.Settings()));
 
 	// --- Ben 10 ---
 	public static final Item OMNITRIX = register("omnitrix", new OmnitrixItem(new Item.Settings().maxCount(1).rarity(Rarity.EPIC)));

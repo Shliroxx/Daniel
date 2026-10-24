@@ -160,6 +160,26 @@ def paint_face_features(npc: Npc, rgb: np.ndarray, w: int, h: int) -> np.ndarray
         rect(2.1, 5.8, 2.5, 6.1, "8A3A2A")
         rect(5.5, 5.8, 5.9, 6.1, "8A3A2A")
         rect(1.2, 1.6, 6.8, 1.8, "C89A78")
+    elif npc.face == "vilgax":
+        # Vilgax: rote, schraeg stehende Augen unter wulstigen Brauen, kein Mund (die Tentakel sind eigene Quader)
+        rect(1.2, 3.2, 3.2, 4.0, "2A0808")
+        rect(4.8, 3.2, 6.8, 4.0, "2A0808")
+        rect(1.5, 3.4, 3.0, 3.9, "FF2A1A")
+        rect(5.0, 3.4, 6.5, 3.9, "FF2A1A")
+        rect(1.0, 2.6, 3.4, 3.1, "2E5A22")
+        rect(4.6, 2.6, 7.0, 3.1, "2E5A22")
+        rect(3.6, 4.2, 4.4, 5.0, "3E7A30")
+    elif npc.face == "kevin":
+        # Kevin Levin: dunkle Augen unter gesenkten Brauen, schmales schiefes Grinsen
+        rect(1.7, 3.6, 3.1, 4.4, "FFFFFF")
+        rect(4.9, 3.6, 6.3, 4.4, "FFFFFF")
+        rect(2.2, 3.7, 3.0, 4.4, "1A1210")
+        rect(5.0, 3.7, 5.8, 4.4, "1A1210")
+        rect(1.5, 3.0, 3.3, 3.4, "1A1210")
+        rect(4.7, 3.0, 6.5, 3.4, "1A1210")
+        rect(3.6, 4.4, 4.4, 5.6, "C89878")
+        rect(2.8, 6.2, 5.6, 6.5, "6A3A2A")
+        rect(5.4, 6.0, 5.8, 6.3, "6A3A2A")
     return rgb
 
 

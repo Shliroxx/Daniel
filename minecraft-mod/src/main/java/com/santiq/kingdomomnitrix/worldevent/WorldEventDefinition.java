@@ -28,10 +28,11 @@ import net.minecraft.world.World;
  * @param durationSeconds Hoechstdauer; danach endet das Ereignis ohne Belohnung
  * @param dimensions    erlaubte Welten (leer = alle)
  * @param rift          Riss fuer Invasion und Dunklen Riss (Riss-Datenpaket)
+ * @param boss          Gegner fuer {@code boss_spawn} (Standard: Dr. Nefarious), z. B. {@code kingdomomnitrix:vilgax}
  * @param rewards       Belohnung fuer alle Beteiligten bei Erfolg
  */
 public record WorldEventDefinition(Type type, int weight, int minLevel, int durationSeconds, List<Identifier> dimensions,
-		Optional<Identifier> rift, Rewards rewards) {
+		Optional<Identifier> rift, Rewards rewards, Optional<Identifier> boss) {
 
 	public enum Type implements StringIdentifiable {
 		/** grosse Herzlosen-Welle (Riss mit vielen Wellen), Erfolg: Riss geschlossen */
@@ -42,7 +43,7 @@ public record WorldEventDefinition(Type type, int weight, int minLevel, int dura
 		ALIEN_CRASH,
 		/** Meteor schlaegt ein: Krater mit Raritanium-Erz (selten Orichalcum) */
 		RARITANIUM_METEOR,
-		/** ein Boss erscheint (Dr. Nefarious), Erfolg: besiegt */
+		/** ein Boss erscheint (Dr. Nefarious, Vilgax, Kevin 11 … siehe „boss“), Erfolg: besiegt */
 		BOSS_SPAWN,
 		/** Keyblade-Schrein: in der Naehe halten, waehrend Herzlose angreifen */
 		KEYBLADE_SHRINE;
@@ -84,7 +85,8 @@ public record WorldEventDefinition(Type type, int weight, int minLevel, int dura
 			Codec.intRange(30, 3600).optionalFieldOf("duration_seconds", 300).forGetter(WorldEventDefinition::durationSeconds),
 			Identifier.CODEC.listOf().optionalFieldOf("dimensions", List.of()).forGetter(WorldEventDefinition::dimensions),
 			Identifier.CODEC.optionalFieldOf("rift").forGetter(WorldEventDefinition::rift),
-			Rewards.CODEC.optionalFieldOf("rewards", Rewards.NONE).forGetter(WorldEventDefinition::rewards)
+			Rewards.CODEC.optionalFieldOf("rewards", Rewards.NONE).forGetter(WorldEventDefinition::rewards),
+			Identifier.CODEC.optionalFieldOf("boss").forGetter(WorldEventDefinition::boss)
 	).apply(instance, WorldEventDefinition::new)).validate(definition -> definition.type().usesRift() && definition.rift().isEmpty()
 			? DataResult.error(() -> definition.type().asString() + " braucht \"rift\"")
 			: DataResult.success(definition));
