@@ -296,13 +296,25 @@ def bark(name: str, dark: Color, mid: Color, light: Color) -> Image.Image:
 
 
 def log_top(name: str, bark_dark: Color, wood_dark: Color, wood_light: Color) -> Image.Image:
-    """Stammquerschnitt: Rindenrand, Jahresringe als eckige Ringe (wie Vanilla)."""
-    pal = [np.asarray(bark_dark, dtype=np.float64)] + ramp(np.asarray(wood_dark) * 0.85, wood_dark, wood_light, 4)
-    ys, xs = np.mgrid[0:N, 0:N]
-    ring = np.maximum(np.abs(xs - 7.5), np.abs(ys - 7.5))
-    out = np.where(ring > 6.6, 0, np.where(np.floor(ring) % 2 == 0, 2, 3))
-    out = np.where(ring < 1.6, 4, out)
-    out = np.where((ring > 5.6) & (ring <= 6.6), 1, out)
+    """Stammquerschnitt: Rindenrand mit Kerben, gerundete, leicht unregelmaessige Jahresringe (wie Vanilla), dunkles
+    Mark in der Mitte und eine kurze Trockenkerbe am Rand."""
+    rng = rng_for(name)
+    pal = [np.asarray(bark_dark, dtype=np.float64) * 0.8, np.asarray(bark_dark, dtype=np.float64)] + ramp(
+        np.asarray(wood_dark) * 0.85, wood_dark, wood_light, 4)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    dx, dy = np.abs(xs - 7.5), np.abs(ys - 7.5)
+    # Superellipse: zwischen Kreis und Quadrat, je nach Winkel etwas verbeult
+    wobble = 1.0 + 0.06 * np.sin(np.arctan2(ys - 7.5, xs - 7.5) * 3 + rng.uniform(0, 6.28))
+    ring = (dx ** 3.2 + dy ** 3.2) ** (1 / 3.2) * wobble
+    out = np.where(np.floor(ring * 0.95) % 2 == 0, 3, 4)
+    out = np.where(ring < 2.2, 5, out)
+    out = np.where(ring < 1.2, 2, out)
+    out = np.where(ring > 6.4, 1, out)
+    out = np.where((ring > 6.4) & (rng.random((N, N)) < 0.25), 0, out)
+    side = int(rng.integers(0, 4))
+    for i in range(1, 3):
+        x, y = [(7, i), (15 - i, 7), (8, 15 - i), (i, 8)][side]
+        out[y, x] = 2
     return render(out, pal)
 
 

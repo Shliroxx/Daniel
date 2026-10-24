@@ -105,7 +105,22 @@ def workbench_side(name: str) -> Image.Image:
 
 
 def workbench_bottom(name: str) -> Image.Image:
-    return tx.hull(name, PLUMBER_DARK, panels=2, wear=0.6)
+    """Unterseite: vier Platten mit Nieten, Kuehlgitter in der Mitte und vier Standfuesse."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 2, bevel=5.0)
+    color = np.asarray(PLUMBER_DARK) * (0.88 + 0.22 * tx.fbm(rng, 3, 4)[..., None])
+    grille = (np.abs(xs - N / 2) < 30) & (np.abs(ys - N / 2) < 30)
+    slots = grille & (((ys.astype(int) - 34) % 8) < 4)
+    color = np.where(grille[..., None], np.asarray(PLUMBER_DARK) * 0.6, color)
+    color = np.where(slots[..., None], np.asarray(PLUMBER_DARK) * 0.25, color)
+    feet = np.zeros((N, N))
+    for fx_ in (14, N - 15):
+        for fy_ in (14, N - 15):
+            feet = np.maximum(feet, np.clip(1 - np.hypot(xs - fx_, ys - fy_) / 8, 0, 1))
+    color = color * (1 - feet[..., None] * 0.3) + np.asarray(OMNITRIX_GREY[1]) * feet[..., None] * 0.6
+    height = h * 0.6 - grille * 0.2 - slots * 0.2 + feet * 0.6
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.35, shininess=26, ambient=0.62))
 
 
 # --- Items ------------------------------------------------------------------------------------------------------
@@ -398,14 +413,30 @@ def containment_pod(name: str, part: str) -> Image.Image:
 
 
 def containment_pod_top(name: str) -> Image.Image:
+    """Deckel der Kapsel bzw. Konsole: vier Panzerplatten mit Nieten, segmentierter Leuchtring, Luefterschlitze im
+    Inneren und das Klempner-Sanduhrzeichen in der Mitte."""
     rng = tx.rng_for(name)
     ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
-    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    h, _ = tx.panel_height(N, 2, bevel=5.0)
     color = np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
-    r = np.hypot(xs - N / 2 + 0.5, ys - N / 2 + 0.5)
-    ring = np.clip(1 - np.abs(r - 40) / 3, 0, 1)
+    cx = cy = N / 2 - 0.5
+    r = np.hypot(xs - cx, ys - cy)
+    ang = (np.arctan2(ys - cy, xs - cx) + math.pi) / (2 * math.pi)
+    disc = r < 44
+    color = np.where(disc[..., None], np.asarray(PLUMBER_DARK) * 0.75, color)
+    gaps = (np.floor(ang * 16) % 2 == 0) | (np.abs((ang * 16) % 1 - 0.5) < 0.38)
+    ring = np.clip(1 - np.abs(r - 40) / 3, 0, 1) * gaps
     color = color * (1 - ring[..., None]) + np.asarray(PLUMBER_GLOW) * ring[..., None]
-    return tx.finish(tx.compose(color, h * 0.7 + ring * 0.2, strength=5.0, spec=0.4, ambient=0.66))
+    vents = (r > 18) & (r < 32) & (((ang * 24) % 1) < 0.45)
+    color = np.where(vents[..., None], np.asarray(PLUMBER_DARK) * 0.35, color)
+    hub = r < 15
+    color = np.where(hub[..., None], np.asarray(OMNITRIX_GREY[1]), color)
+    glass = _hourglass_mask(cx, cy, 11) * hub
+    color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    riv = tx.rivets_layer(N, 2, inset=6.0, radius=2.4)
+    color = color + riv[..., None] * 0.25
+    height = h * 0.6 - disc * 0.15 + ring * 0.25 - vents * 0.25 + hub * 0.3 + riv * 0.5
+    return tx.finish(tx.compose(color, height, strength=5.5, spec=0.45, shininess=36, ambient=0.66))
 
 
 # --- Klempner-Ausruestung ----------------------------------------------------------------------------------------

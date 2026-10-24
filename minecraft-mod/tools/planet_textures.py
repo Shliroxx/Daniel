@@ -787,26 +787,31 @@ def magma_core(name: str) -> Image.Image:
 
 
 def metal_block(name: str, dark: Color, mid: Color, light: Color, emblem: str = "hex") -> Image.Image:
+    """Speicherblock aus vier gefasten Metallplatten (2 x 2, wie Vanilla-Eisenblock) mit gebuersteter Oberflaeche,
+    Glanzkante, Nieten und eingepraegtem Sechseck-Emblem in der Mitte."""
     rng = rng_for(name)
     ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
-    d = np.minimum(np.minimum(xs, N - 1 - xs), np.minimum(ys, N - 1 - ys))
-    frame = np.clip(d / 4, 0, 1)
-    inner = np.clip((d - 12) / 3, 0, 1)
+    plate, pid = panel_height(N, 2, bevel=6.0)
     brushed = fbm(rng, 3, 5, stretch=(6.0, 0.2))
+    p = N / 2
+    fy = ys % p
+    shine = np.clip(1 - np.abs(fy - p * 0.28) / 5, 0, 1) * plate
     cx = cy = N / 2 - 0.5
     r = np.hypot(xs - cx, ys - cy)
     ang = np.arctan2(ys - cy, xs - cx)
     sector = (ang + math.pi / 6) % (math.pi / 3) - math.pi / 6
     hexr = r * np.cos(sector) / math.cos(math.pi / 6)
-    emb = np.clip(1 - np.abs(hexr - 26) / 3, 0, 1) + np.clip(1 - hexr / 10, 0, 1)
-    height = frame * 0.6 + inner * 0.4 + emb * 0.5 + brushed * 0.08
-    t = 0.3 + brushed * 0.35 + inner * 0.2 + emb * 0.15
-    color = gradient_map(t, [(0, dark), (0.5, mid), (1, light)])
-    riv = np.zeros((N, N))
-    for px in (7, N - 8):
-        for py in (7, N - 8):
-            riv = np.maximum(riv, np.clip(1 - np.hypot(xs - px, ys - py) / 3, 0, 1))
-    return finish(compose(color, height + riv, strength=6.0, spec=0.55, shininess=34, ambient=0.55))
+    emb_ring = np.clip(1 - np.abs(hexr - 17) / 2.5, 0, 1)
+    emb_core = np.clip(1 - hexr / 9, 0, 1)
+    emb_plate = np.clip((22 - hexr) / 2, 0, 1)
+    tone = (pid % 3) * 0.04
+    t = 0.32 + brushed * 0.3 + plate * 0.18 + tone + shine * 0.35 + emb_ring * 0.25 + emb_core * 0.2
+    color = gradient_map(np.clip(t, 0, 1), [(0, dark), (0.5, mid), (1, light)])
+    seam = 1 - plate
+    color = color * (1 - seam[..., None] * 0.35)
+    riv = rivets_layer(N, 2, inset=7.0, radius=2.6)
+    height = plate * 0.7 + emb_plate * 0.35 + emb_ring * 0.4 + emb_core * 0.3 + brushed * 0.06 + riv * 0.6
+    return finish(compose(color, height, strength=6.5, spec=0.6, shininess=36, ambient=0.55))
 
 
 # --- Items (64x64, freigestellt) ----------------------------------------------------------------------------------
