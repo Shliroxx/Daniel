@@ -305,6 +305,23 @@ Kosten: Stufe 1 300 Bolts + 2 Raritanium · Stufe 2 700 Bolts + 4 Raritanium + 3
 einen farbigen Energiekern in der Omnitrix-Werkbank. Die Farbe färbt Gerät, Licht, Hologramm, Oberfläche, Effekte und
 Alien-Abzeichen; andere Spieler sehen sie mit. Warnfarben bleiben immer gleich.
 
+### Omnitrix-Upgrades
+Rechts in der Kalibrier-Werkbank: **Omnitrix-Stufe 1–5**. Jede Stufe über 1 bringt einen Kalibrierpunkt mehr
+(bis 9), −4 % Nachladezeit, +5 % Verwandlungsdauer und einen **Boost-Steckplatz** mehr (Stufe = Zahl der Plätze).
+Kosten: Stufe 2 1500 Bolts + 4 Raritanium + 2 Mythril · Stufe 3 3000 + 6 + 4 + 1 Orichalcum · Stufe 4 6000 + 8 + 6 + 2 ·
+Stufe 5 12000 + 10 + 8 + 4.
+
+**Boost-Module** (Rechtsklick setzt ein, × in der Werkbank baut aus und gibt das Modul zurück; gleiche Module stapeln):
+
+| Modul | Wirkung je Modul | Rezept (Mitte; oben/unten Mythril, links/rechts Raritanium) |
+|---|---|---|
+| Kraft | verwandelt +15 % Angriffsschaden | Lohenstaub |
+| Panzer | verwandelt +3 Rüstung | Eisenbarren |
+| Tempo | verwandelt +8 % Laufgeschwindigkeit | Zucker |
+| Ausdauer | +20 % Verwandlungsdauer | Uhr |
+| Kühlung | −15 % Hitze | Packeis |
+| Laden | −15 % Nachladezeit | Redstone-Block |
+
 ---
 
 ## 4. Ratchet & Clank

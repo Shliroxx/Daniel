@@ -104,6 +104,17 @@ public final class ModItems {
 	public static final Item RARITANIUM = register("raritanium", new Item(new Item.Settings().rarity(Rarity.UNCOMMON)));
 	public static final Item MYTHRIL_SHARD = register("mythril_shard", new Item(new Item.Settings()));
 	public static final Item ORICHALCUM = register("orichalcum", new Item(new Item.Settings().rarity(Rarity.RARE)));
+	// Boost-Module fuer die Steckplaetze des Omnitrix (Omnitrix-Upgrades)
+	public static final Item BOOST_POWER = register("boost_power", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.POWER));
+	public static final Item BOOST_GUARD = register("boost_guard", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.GUARD));
+	public static final Item BOOST_SWIFT = register("boost_swift", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.SWIFT));
+	public static final Item BOOST_DURATION = register("boost_duration", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.DURATION));
+	public static final Item BOOST_COOLING = register("boost_cooling", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.COOLING));
+	public static final Item BOOST_RECHARGE = register("boost_recharge", boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost.RECHARGE));
+
+	private static Item boost(com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost boost) {
+		return new com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoostItem(boost, new Item.Settings().maxCount(16).rarity(Rarity.RARE));
+	}
 
 	// --- Galvan-Erfindungen (Grey Matter, Galvan-Labor) ---
 	public static final Item GALVAN_CELL = register("galvan_cell",

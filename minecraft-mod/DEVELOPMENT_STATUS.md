@@ -11,35 +11,35 @@ interne Prioritäts-Scores (0–100), ehrlich nach Screenshots vergeben.
 ---
 
 ## CURRENT VERSION
-`0.11.0-alpha` (Minecraft 1.21.1, Fabric Loader 0.19.3, Fabric API 0.116.16, GeckoLib 4.9.3, playerAnimator 2.0.4).
-Kein Jar-Release, bis alles überarbeitet ist (Entscheidung SANTIQ).
+`1.0.0` (Minecraft 1.21.1, Fabric Loader 0.19.3, Fabric API 0.116.16, GeckoLib 4.9.3, playerAnimator 2.0.4).
+Erste fertige Version 1.0.0 auf Wunsch von SANTIQ gebaut (2026-10-25).
 
 ## CURRENT PHASE
 **Inhalte fertigstellen (Auftrag SANTIQ 2026-10-24: „alles fertig außer Omnitrix-Upgrades“).** Erledigt:
 Clank-Rucksack mit vier Modi, Gadgetron-Katalog mit vier neuen Waffen und Rüstungs-/Gadget-Reitern, Ben-10-Schurken
 (Vilgax, Kevin 11, Forever Knights, Drohnen), Heimatwelten Welle 2 (zehn Welten), Welten-Ausbau der Ratchet-Planeten.
-Zurückgestellt: Omnitrix-Upgrades, Sounds.
+Danach (2026-10-25): Omnitrix-Upgrades, Gewehre auf Rüstungsständern, Kevin-Test, Version 1.0.0. Zurückgestellt: Sounds.
 
 ## CURRENT PRIORITY
-1. Omnitrix-Upgrades (Boost-Module + Stufen) — von SANTIQ zurückgestellt, wartet auf Freigabe
+1. Rückmeldungen zu 1.0.0
 2. Sounds mit echtem Gehör abstimmen (SANTIQ, ausdrücklich zurückgestellt)
 
 ## AKTUELLER STAND JE BEREICH (2026-10-24, ehrlich nach Screenshots)
 | Bereich | Stand | Offen |
 |---|---|---|
 | Aliens (24 + Evo/Ultimate) | 1:1-Import aus Alien Evolution, Uniformen, Fähigkeiten, Verwandlung | — |
-| Omnitrix | Zustände, Rad mit 3D-Hologramm, OS-Meldungen, Hitze, Warnung (Ring/Zeit rot, Abzeichen blinkt, Piepen) | Upgrades |
+| Omnitrix | Zustände, Rad mit 3D-Hologramm, OS-Meldungen, Hitze, Warnung, Upgrades (Stufe 1–5, 6 Boost-Module) | — |
 | Endgame-Rüstungen (6) | GeckoLib-3D mit Leuchtschicht, Schild/Flug/Boni, Module im Anzug-Konfigurator | — |
 | Endgame-Waffen (6) | GeckoLib-3D, animiert, Leuchtschicht, Haltung geprüft (Hand, Ständer, Spieler, 2. Client) | — |
 | Ältere Ausrüstung (Keyblades, OmniWrench, Combuster, Swingshot, Granate, Heli-Pack) | GeckoLib-3D, animiert, Inventarbilder aus dem 3D-Modell | — |
-| Schusswaffen dritte Person | zweihändig im Anschlag (Armbrust-Haltung) | Rüstungsständer zeigen sie senkrecht |
+| Schusswaffen dritte Person | zweihändig im Anschlag (Armbrust-Haltung), auch auf Rüstungsständern | — |
 | NPCs (Yen Sid, Max, Clank) | neu modelliert (Robe/Bart, Hawaiihemd, Roboter mit Leuchtaugen) | — |
 | Herzlose, Boss | nach KH gebaut, Boss mit Leuchtmaske | — |
 | Welt-Blöcke | 16x16-Pixelstil (bewusst), Technik-Blöcke 128x128 | — |
 | Traverse Town | eigene Blöcke (Putz, Dachziegel, Pflaster, Fliesen, Fachwerk), Uhrturm, Arena | alte Welten behalten ihre Stadt |
 | Clank-Rucksack | Heli, Thruster, Gleiter (Aufwind über Hitze), Jetpack (Treibstoff, gebremster Fall bei leerem Tank) | — |
 | Gadgetron-Terminal | 7 Waffen (neu: Blitz Gun, Pyrocitor, Devastator mit Zielsuche, Morph-O-Ray), Reiter Rüstung/Gadgets | — |
-| Ben-10-Schurken | Vilgax (Boss, 3 Phasen, Drohnen), Kevin 11 (Mini-Boss, absorbiert), Forever Knights (natürlich), Drohnen | Kevin-Absorbieren nur im Code geprüft |
+| Ben-10-Schurken | Vilgax (Boss, 3 Phasen, Drohnen), Kevin 11 (Mini-Boss, absorbiert), Forever Knights (natürlich), Drohnen | — |
 | Alien-Heimatwelten | 17 Welten mit wilden Arten (Welle 1: 7, Welle 2: 10) | Atomix, Way Big, Alien X bleiben Sonderfälle |
 | Ratchet-Planeten | Höhlen, Schluchten, Felsbrocken, Bodenflecken, Quellen (Torren IV: Lava), Kupfer-Geoden (Veldin) | bestehende Welten behalten altes Gelände |
 | Sounds | synthetisch erzeugt | nie mit Gehör geprüft |
@@ -306,7 +306,6 @@ Segmenten mit Alien-Silhouetten um das Zifferblatt, gewähltes Segment oben hell
 - BEHOBEN: Waffen schwebten in der dritten Person vor der Faust (Modell-Nullpunkt am Knaufende) → Griff in der Faust.
 - BEHOBEN: Absturz im Alien-Renderer hinterließ Matrizen auf dem Stapel → Rückfall räumt den Stapel auf.
 - BEHOBEN: Andere Spieler sahen Aliens nur in `idle` → Gliedmaßen-Animator + Positionsänderung.
-- Bekannt: Schusswaffen auf Rüstungsständern stehen senkrecht (Ständer kennen die Anschlag-Haltung nicht).
 - Bekannt: Gruppen werden bei Server-Neustart nicht gespeichert (bewusst).
 - Bekannt: Schon erzeugte Chunks behalten ihr Gelände; neue Höhlen/Features und die Welle-2-Welten nur in neuen Chunks.
 - BEHOBEN (2026-10-24): Blitz Gun traf nur mit einer Kugel (Unverwundbarkeit nach dem ersten Treffer) → Kugeln zählen einzeln.
@@ -333,20 +332,15 @@ Ergebnis: rund 10 % des Tick-Budgets, keine Engpässe. Client-FPS lassen sich im
 ---
 
 ## NEXT TASK
-**Omnitrix-Upgrades** (Boost-Module + Stufen), sobald SANTIQ sie freigibt.
+Version 1.0.0 ist gebaut. Weitere Arbeit nur auf Wunsch von SANTIQ.
 
 ## NEXT 5 TASKS
-1. Omnitrix-Upgrades (Boost-Module + Stufen) — zurückgestellt
-2. Strukturen auf den Welle-2-Heimatwelten (Siedlungen wie auf Petropia)
-3. Waffen auf Rüstungsständern in Anschlag-Haltung
-4. Kevin-Absorbieren mit verwandeltem Spieler im Spiel testen
-5. Sounds mit echtem Gehör abstimmen (SANTIQ)
-
-## LONG TERM
-- Sounds mit echtem Gehör abstimmen (SANTIQ)
+1. Sounds mit echtem Gehör abstimmen (SANTIQ)
+2. Siedlungen auf den Welle-2-Heimatwelten
+3. Rückmeldungen aus dem Spielen von 1.0.0
 
 ## BUILD STATUS
-- `./gradlew build` ✅ (0.11.0-alpha, lokal, 2026-10-24)
+- `./gradlew build` ✅ (1.0.0, lokal, 2026-10-25); Jar auf einem echten Fabric-Server (Loader 0.19.3, Fabric API 0.116.16, GeckoLib 4.9.3) gestartet ✅
 - CI (`.github/workflows/mod-build.yml`) ✅ auf den letzten Pushes des Branches `claude/minecraft-mod-crossover-i5vcda`
 - `tools/check_assets.py` ✅
 

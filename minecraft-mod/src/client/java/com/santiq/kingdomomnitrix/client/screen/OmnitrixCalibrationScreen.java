@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.client.screen;
 
 import com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixFeedback;
 import com.santiq.kingdomomnitrix.networking.CalibrationActionPayload;
+import com.santiq.kingdomomnitrix.omnitrix.OmnitrixBoost;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCalibration;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCalibration.Module;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors;
@@ -19,7 +20,8 @@ import org.lwjgl.glfw.GLFW;
 
 /**
  * Kalibrier-Werkbank: drei Module mit Stufen-Anzeige und +/−, Punkte-Budget, Kosten der naechsten Stufe, Farbmodule und
- * die wirksamen Geraete-Werte. Alle Aenderungen prueft der Server; der Bildschirm zeigt den synchronisierten Stand.
+ * die wirksamen Geraete-Werte; rechts das Omnitrix-Upgrade (Stufe 1–5 und Boost-Steckplaetze mit Ausbau-Knopf).
+ * Alle Aenderungen prueft der Server; der Bildschirm zeigt den synchronisierten Stand.
  */
 public class OmnitrixCalibrationScreen extends Screen {
 	private static final int WIDTH = 300;
@@ -28,6 +30,10 @@ public class OmnitrixCalibrationScreen extends Screen {
 	private static final int BUTTON = 14;
 	private static final int SWATCH = 16;
 	private static final int DANGER = 0xFF8A3C;
+	/** Seitenpanel Omnitrix-Upgrade */
+	private static final int SIDE = 112;
+	private static final int GAP = 6;
+	private static final int SLOT_ROW = 18;
 
 	private final BlockPos bench;
 	private final long openedAt = System.nanoTime();
@@ -53,7 +59,7 @@ public class OmnitrixCalibrationScreen extends Screen {
 	}
 
 	private int left() {
-		return (width - WIDTH) / 2;
+		return (width - WIDTH - GAP - SIDE) / 2;
 	}
 
 	private int top() {
@@ -108,10 +114,10 @@ public class OmnitrixCalibrationScreen extends Screen {
 		context.drawTextWithShadow(textRenderer, title, x + 10, y + 8, alpha << 24 | accent);
 
 		// Punkte-Budget: gefuellte Rauten fuer belegte Punkte
-		Text points = Text.translatable("screen.kingdomomnitrix.calibration.points", calibration.used(), OmnitrixCalibration.CAPACITY);
-		int px = x + WIDTH - 10 - OmnitrixCalibration.CAPACITY * 9;
+		Text points = Text.translatable("screen.kingdomomnitrix.calibration.points", calibration.used(), calibration.capacity());
+		int px = x + WIDTH - 10 - calibration.capacity() * 9;
 		context.drawTextWithShadow(textRenderer, points, px - 6 - textRenderer.getWidth(points), y + 8, 0xFFCFFFC8);
-		for (int i = 0; i < OmnitrixCalibration.CAPACITY; i++) {
+		for (int i = 0; i < calibration.capacity(); i++) {
 			boolean used = i < calibration.used();
 			context.fill(px + i * 9, y + 8, px + i * 9 + 7, y + 15, used ? 0xFF000000 | accent : 0xFF1A2A1E);
 			context.drawBorder(px + i * 9, y + 8, 7, 7, 0x80000000 | accent);
@@ -143,6 +149,7 @@ public class OmnitrixCalibrationScreen extends Screen {
 		}
 
 		renderStats(context, player, x + 10 + 6 * (SWATCH + 6) + 6, rowY(3));
+		renderUpgrade(context, mouseX, mouseY, calibration, accent, alpha, open);
 
 		// Geraete-Meldung (Omnitrix OS) im Panel, da der Bildschirm das Hologramm im HUD verdeckt
 		com.santiq.kingdomomnitrix.client.omnitrix.OmnitrixHolo.visible().ifPresent(message -> {
@@ -187,6 +194,92 @@ public class OmnitrixCalibrationScreen extends Screen {
 
 		button(context, mouseX, mouseY, minusX(), y, "−", level > 0, 0xFF8A3C);
 		button(context, mouseX, mouseY, plusX(), y, "+", calibration.canRaise(module), accent);
+	}
+
+	private int sideX() {
+		return left() + WIDTH + GAP;
+	}
+
+	private int tierButtonY() {
+		return top() + 58;
+	}
+
+	private int slotY(int index) {
+		return top() + 92 + index * SLOT_ROW;
+	}
+
+	private int removeX() {
+		return sideX() + SIDE - 8 - 12;
+	}
+
+	/** Omnitrix-Upgrade: Stufe mit Balken, Kosten der naechsten Stufe, Knopf „Aufruesten“, Boost-Steckplaetze. */
+	private void renderUpgrade(DrawContext context, int mouseX, int mouseY, OmnitrixCalibration calibration, int accent, int alpha, float open) {
+		int x = sideX();
+		int y = top();
+		context.fill(x, y, x + SIDE, y + HEIGHT, (Math.round(0xF4 * open) << 24) | 0x06120A);
+		context.fill(x, y, x + SIDE, y + 1, alpha << 24 | accent);
+		context.fill(x, y + HEIGHT - 1, x + SIDE, y + HEIGHT, (alpha / 2) << 24 | accent);
+		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.upgrade.title"), x + 8, y + 8, alpha << 24 | accent);
+		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.upgrade.tier", calibration.tier(), OmnitrixCalibration.MAX_TIER),
+				x + 8, y + 22, 0xFFFFFFFF);
+		for (int i = 0; i < OmnitrixCalibration.MAX_TIER; i++) {
+			context.fill(x + 8 + i * 19, y + 33, x + 8 + i * 19 + 16, y + 38, i < calibration.tier() ? 0xFF000000 | accent : 0xFF1A2A1E);
+		}
+		boolean max = calibration.tier() >= OmnitrixCalibration.MAX_TIER;
+		Text next = max ? Text.translatable("screen.kingdomomnitrix.calibration.max")
+				: cost(OmnitrixCalibration.tierCost(calibration.tier() + 1));
+		boolean affordable = !max && affordable(OmnitrixCalibration.tierCost(calibration.tier() + 1));
+		context.getMatrices().push();
+		context.getMatrices().translate(x + 8, y + 43, 0.0f);
+		context.getMatrices().scale(0.6f, 0.6f, 1.0f);
+		context.drawTextWithShadow(textRenderer, next, 0, 0, max ? 0xFFFFC94A : affordable ? 0xFFB0B0B0 : 0xFF000000 | DANGER);
+		context.getMatrices().pop();
+		int bx = x + 8;
+		int by = tierButtonY();
+		int bw = SIDE - 16;
+		boolean hover = !max && inside(mouseX, mouseY, bx, by, bw, BUTTON);
+		context.fill(bx, by, bx + bw, by + BUTTON, hover ? 0xFF1E4D22 : 0xFF0C2410);
+		context.drawBorder(bx, by, bw, BUTTON, max ? 0xFF3A3A3A : 0xFF000000 | accent);
+		context.drawCenteredTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.upgrade.raise"), bx + bw / 2, by + 3,
+				max ? 0xFF4A4A4A : 0xFF000000 | accent);
+
+		context.drawTextWithShadow(textRenderer, Text.translatable("screen.kingdomomnitrix.upgrade.slots", calibration.boosts().size(),
+				calibration.slots()), x + 8, y + 79, 0xFFCFFFC8);
+		for (int i = 0; i < OmnitrixCalibration.MAX_TIER; i++) {
+			int sy = slotY(i);
+			boolean unlocked = i < calibration.slots();
+			context.fill(x + 6, sy - 2, x + SIDE - 6, sy + SLOT_ROW - 4, unlocked ? 0x50000000 : 0x20000000);
+			if (!unlocked) {
+				drawSmall(context, Text.translatable("screen.kingdomomnitrix.upgrade.locked", i + 1), x + 10, sy + 2, 0xFF4A5A4E);
+				continue;
+			}
+			if (i >= calibration.boosts().size()) {
+				drawSmall(context, Text.translatable("screen.kingdomomnitrix.upgrade.empty"), x + 10, sy + 2, 0xFF6A8A70);
+				continue;
+			}
+			var boost = OmnitrixBoost.byId(calibration.boosts().get(i));
+			int color = boost.map(OmnitrixBoost::color).orElse(0xFFFFFF);
+			context.fill(x + 10, sy + 1, x + 16, sy + 7, 0xFF000000 | color);
+			drawSmall(context, boost.map(b -> Text.translatable(b.nameKey())).orElse(Text.literal("?")), x + 20, sy + 1, 0xFF000000 | color);
+			boolean overRemove = inside(mouseX, mouseY, removeX(), sy - 1, 12, 12);
+			context.fill(removeX(), sy - 1, removeX() + 12, sy + 11, overRemove ? 0xFF4D1E1E : 0xFF240C0C);
+			context.drawBorder(removeX(), sy - 1, 12, 12, 0xFF000000 | DANGER);
+			context.drawCenteredTextWithShadow(textRenderer, "×", removeX() + 6, sy + 1, 0xFF000000 | DANGER);
+			if (overRemove || inside(mouseX, mouseY, x + 6, sy - 2, SIDE - 30, SLOT_ROW - 2)) {
+				boost.ifPresent(b -> context.drawTooltip(textRenderer, java.util.List.of(Text.translatable(b.nameKey()),
+						Text.translatable(b.descKey()).formatted(net.minecraft.util.Formatting.GRAY),
+						Text.translatable("screen.kingdomomnitrix.upgrade.remove").formatted(net.minecraft.util.Formatting.DARK_GRAY)), mouseX, mouseY));
+			}
+		}
+		drawSmall(context, Text.translatable("screen.kingdomomnitrix.upgrade.hint"), x + 8, y + HEIGHT - 26, 0xFF7A9A80);
+	}
+
+	private void drawSmall(DrawContext context, Text text, int x, int y, int color) {
+		context.getMatrices().push();
+		context.getMatrices().translate(x, y, 0.0f);
+		context.getMatrices().scale(0.75f, 0.75f, 1.0f);
+		context.drawTextWithShadow(textRenderer, text, 0, 0, color);
+		context.getMatrices().pop();
 	}
 
 	private void button(DrawContext context, int mouseX, int mouseY, int x, int y, String label, boolean enabled, int color) {
@@ -277,6 +370,20 @@ public class OmnitrixCalibrationScreen extends Screen {
 			return super.mouseClicked(mouseX, mouseY, button);
 		}
 		OmnitrixCalibration calibration = OmnitrixCore.calibration(client.player);
+		if (inside(mouseX, mouseY, sideX() + 8, tierButtonY(), SIDE - 16, BUTTON)) {
+			if (calibration.tier() < OmnitrixCalibration.MAX_TIER) {
+				send("tier", "+");
+			} else {
+				OmnitrixFeedback.play(OmnitrixCue.ERROR);
+			}
+			return true;
+		}
+		for (int i = 0; i < calibration.boosts().size(); i++) {
+			if (inside(mouseX, mouseY, removeX(), slotY(i) - 1, 12, 12)) {
+				send("boost", Integer.toString(i));
+				return true;
+			}
+		}
 		Module[] modules = Module.values();
 		for (int i = 0; i < modules.length; i++) {
 			int y = rowY(i);

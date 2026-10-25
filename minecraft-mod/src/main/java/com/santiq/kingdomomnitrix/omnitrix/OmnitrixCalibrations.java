@@ -21,7 +21,7 @@ public final class OmnitrixCalibrations {
 	private static final double MAX_DISTANCE_SQ = 8.0 * 8.0;
 
 	public enum Result {
-		RAISED, LOWERED, TOO_FAR, TRANSFORMED, MAX_LEVEL, NO_CAPACITY, ALREADY_ZERO, MISSING, UNKNOWN
+		RAISED, LOWERED, TOO_FAR, TRANSFORMED, MAX_LEVEL, NO_CAPACITY, ALREADY_ZERO, MISSING, UNKNOWN, TIER_RAISED, BOOST_REMOVED
 	}
 
 	private OmnitrixCalibrations() {
@@ -41,6 +41,16 @@ public final class OmnitrixCalibrations {
 			return Result.TRANSFORMED;
 		}
 		OmnitrixCalibration calibration = OmnitrixCore.calibration(player);
+		if ("tier".equals(module)) {
+			return raiseTier(player, calibration);
+		}
+		if ("boost".equals(module)) {
+			try {
+				return OmnitrixBoosts.remove(player, Integer.parseInt(value)) ? Result.BOOST_REMOVED : Result.UNKNOWN;
+			} catch (NumberFormatException e) {
+				return Result.UNKNOWN;
+			}
+		}
 		Optional<OmnitrixCalibration.Module> found = OmnitrixCalibration.Module.byKey(module);
 		if (found.isEmpty()) {
 			return Result.UNKNOWN;
@@ -63,20 +73,40 @@ public final class OmnitrixCalibrations {
 		if (calibration.free() <= 0) {
 			return Result.NO_CAPACITY;
 		}
-		OmnitrixCalibration.Cost cost = OmnitrixCalibration.cost(level + 1);
-		if (!player.getAbilities().creativeMode) {
-			PlayerInventory inventory = player.getInventory();
-			if (!HeroDataAccess.get(player).canAfford(cost.bolts()) || inventory.count(ModItems.RARITANIUM) < cost.raritanium()
-					|| inventory.count(ModItems.MYTHRIL_SHARD) < cost.mythril() || inventory.count(ModItems.ORICHALCUM) < cost.orichalcum()) {
-				return Result.MISSING;
-			}
-			take(inventory, ModItems.RARITANIUM, cost.raritanium());
-			take(inventory, ModItems.MYTHRIL_SHARD, cost.mythril());
-			take(inventory, ModItems.ORICHALCUM, cost.orichalcum());
-			HeroDataAccess.update(player, data -> data.addBolts(-cost.bolts()));
+		if (!pay(player, OmnitrixCalibration.cost(level + 1))) {
+			return Result.MISSING;
 		}
 		player.setAttached(OmnitrixCore.CALIBRATION, calibration.withLevel(target, level + 1));
 		return Result.RAISED;
+	}
+
+	/** Omnitrix-Upgrade: naechste Stufe (mehr Punkte, ein Boost-Steckplatz mehr). */
+	private static Result raiseTier(ServerPlayerEntity player, OmnitrixCalibration calibration) {
+		if (calibration.tier() >= OmnitrixCalibration.MAX_TIER) {
+			return Result.MAX_LEVEL;
+		}
+		if (!pay(player, OmnitrixCalibration.tierCost(calibration.tier() + 1))) {
+			return Result.MISSING;
+		}
+		player.setAttached(OmnitrixCore.CALIBRATION, calibration.withTier(calibration.tier() + 1));
+		return Result.TIER_RAISED;
+	}
+
+	/** Bolts und Materialien abziehen; im Kreativmodus kostenlos. */
+	private static boolean pay(ServerPlayerEntity player, OmnitrixCalibration.Cost cost) {
+		if (player.getAbilities().creativeMode) {
+			return true;
+		}
+		PlayerInventory inventory = player.getInventory();
+		if (!HeroDataAccess.get(player).canAfford(cost.bolts()) || inventory.count(ModItems.RARITANIUM) < cost.raritanium()
+				|| inventory.count(ModItems.MYTHRIL_SHARD) < cost.mythril() || inventory.count(ModItems.ORICHALCUM) < cost.orichalcum()) {
+			return false;
+		}
+		take(inventory, ModItems.RARITANIUM, cost.raritanium());
+		take(inventory, ModItems.MYTHRIL_SHARD, cost.mythril());
+		take(inventory, ModItems.ORICHALCUM, cost.orichalcum());
+		HeroDataAccess.update(player, data -> data.addBolts(-cost.bolts()));
+		return true;
 	}
 
 	private static void take(PlayerInventory inventory, Item item, int amount) {
@@ -93,13 +123,22 @@ public final class OmnitrixCalibrations {
 
 	private static void feedback(ServerPlayerEntity player, Result result, String module) {
 		switch (result) {
+			case BOOST_REMOVED -> {
+				// Meldung kommt aus OmnitrixBoosts.remove
+			}
+			case TIER_RAISED -> {
+				OmnitrixCalibration c = OmnitrixCore.calibration(player);
+				OmnitrixOs.send(player, OmnitrixOs.Event.RECALIBRATED, Text.translatable("holo.kingdomomnitrix.tier.raised", c.tier()),
+						Optional.of(Text.translatable("holo.kingdomomnitrix.tier.bonus", c.capacity(), c.slots())), Optional.empty());
+				OmnitrixCore.cue(player, OmnitrixCue.CONFIRM);
+			}
 			case RAISED, LOWERED -> {
 				OmnitrixCalibration c = OmnitrixCore.calibration(player);
 				OmnitrixOs.send(player, OmnitrixOs.Event.RECALIBRATED,
 						Text.translatable("holo.kingdomomnitrix.calibration." + (result == Result.RAISED ? "raised" : "lowered"),
 								Text.translatable("calibration.kingdomomnitrix.module." + module),
 								c.level(OmnitrixCalibration.Module.byKey(module).orElseThrow())),
-						Optional.of(Text.translatable("holo.kingdomomnitrix.calibration.points", c.used(), OmnitrixCalibration.CAPACITY)),
+						Optional.of(Text.translatable("holo.kingdomomnitrix.calibration.points", c.used(), c.capacity())),
 						Optional.empty());
 				OmnitrixCore.cue(player, result == Result.RAISED ? OmnitrixCue.CONFIRM : OmnitrixCue.CANCEL);
 			}

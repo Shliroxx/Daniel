@@ -57,6 +57,12 @@ public final class ModItemGroup {
 						entries.add(ModItems.OMNIWRENCH);
 						entries.add(ModItems.COMBUSTER);
 						entries.add(ModItems.FUSION_GRENADE);
+						entries.add(ModItems.BOOST_POWER);
+						entries.add(ModItems.BOOST_GUARD);
+						entries.add(ModItems.BOOST_SWIFT);
+						entries.add(ModItems.BOOST_DURATION);
+						entries.add(ModItems.BOOST_COOLING);
+						entries.add(ModItems.BOOST_RECHARGE);
 						entries.add(ModItems.BLITZ_GUN);
 						entries.add(ModItems.PYROCITOR);
 						entries.add(ModItems.DEVASTATOR);
