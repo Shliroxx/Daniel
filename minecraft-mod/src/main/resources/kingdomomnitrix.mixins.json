@@ -8,6 +8,7 @@
 		"LevelPropertiesMixin",
 		"LivingEntityAccessor",
 		"LivingEntityDamageMixin",
+		"PlayerEntityHarvestMixin",
 		"ServerPlayNetworkHandlerAccessor",
 		"ServerPlayNetworkHandlerFlightMixin"
 	],

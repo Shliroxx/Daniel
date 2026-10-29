@@ -41,6 +41,526 @@
       "animation_length": 1.0,
       "bones": {}
     },
+    "mode_axe_off": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.12,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "hand2": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "mode_axe_on": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.2,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "mode_blade_off": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.12,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "hand2": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "mode_blade_on": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.2,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
     "mode_liquid_off": {
       "loop": "hold_on_last_frame",
       "override_previous_animation": true,
@@ -201,6 +721,60 @@
           }
         },
         "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
           "scale": {
             "vector": [
               0,
@@ -660,6 +1234,60 @@
               0
             ]
           }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
         }
       }
     },
@@ -870,6 +1498,60 @@
           }
         },
         "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
           "scale": {
             "vector": [
               0,
@@ -1131,6 +1813,60 @@
               0
             ]
           }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
         }
       }
     },
@@ -1157,6 +1893,320 @@
           }
         },
         "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "mode_pickaxe_off": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.12,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        },
+        "hand2": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "mode_pickaxe_on": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.2,
+      "bones": {
+        "liquid_base": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "MACE2": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "axe_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "pickaxe_left": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "pickaxe_right": {
+          "scale": {
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
+          }
+        },
+        "blade_left": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "blade_right": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hand2": {
           "scale": {
             "vector": [
               0,

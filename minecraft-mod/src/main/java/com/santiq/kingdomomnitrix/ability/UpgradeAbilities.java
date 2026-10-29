@@ -98,11 +98,14 @@ final class UpgradeAbilities {
 	private static final Map<UUID, Flow> FLOWS = new HashMap<>();
 	/** Techno-Fusion: Ende */
 	private static final Map<UUID, Long> FUSION = new HashMap<>();
-	/** Morphwaffen: Ende */
-	private static final Map<UUID, Long> MACES = new HashMap<>();
-	/** Modi (traits.modes): ausgefahrene Keulenfaeuste, zerflossener Koerper */
+	/** Modi (traits.modes): Morphwaffen (Keulen, Axt, Spitzhacke, Klinge) und zerflossener Koerper */
 	static final String MACE_MODE = "mace_fists";
+	static final String AXE_MODE = "axe";
+	static final String PICKAXE_MODE = "pickaxe";
+	static final String BLADE_MODE = "blade";
 	static final String LIQUID_MODE = "liquid";
+	/** Reihenfolge beim Durchschalten der Morphwaffen (danach eingefahren) */
+	static final List<String> WEAPONS = List.of(MACE_MODE, AXE_MODE, PICKAXE_MODE, BLADE_MODE);
 	/** geladene Plasmakanonen */
 	private static final Map<UUID, Charge> CHARGES = new HashMap<>();
 	/** Naniten im Gegner: Anzahl und Ablauf */
@@ -129,7 +132,7 @@ final class UpgradeAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("optic_beam"), UpgradeAbilities::opticBeam);
 		AbilityRegistry.register(KingdomOmnitrix.id("liquid_form"), UpgradeAbilities::liquidForm);
 		AbilityRegistry.register(KingdomOmnitrix.id("tech_upgrade"), UpgradeAbilities::techFusion);
-		AbilityRegistry.register(KingdomOmnitrix.id("mace_fists"), UpgradeAbilities::maceFists);
+		AbilityRegistry.register(KingdomOmnitrix.id("mace_fists"), UpgradeAbilities::morphWeapon);
 		AbilityRegistry.register(KingdomOmnitrix.id("system_override"), UpgradeAbilities::systemOverride);
 		AbilityRegistry.register(KingdomOmnitrix.id("plasma_cannon"), UpgradeAbilities::plasmaCannon);
 		ServerTickEvents.END_SERVER_TICK.register(UpgradeAbilities::tick);
@@ -156,6 +159,8 @@ final class UpgradeAbilities {
 					}
 				});
 		UpgradeMoves.register();
+		UpgradeTools.register();
+		UpgradeFusion.register();
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			NANITES.remove(entity.getUuid());
 			NANITE_UNTIL.remove(entity.getUuid());
@@ -167,6 +172,10 @@ final class UpgradeAbilities {
 
 	private static boolean isUpgrade(ServerPlayerEntity player) {
 		return TransformationManager.get(player).activeAlien().filter(UPGRADE::equals).isPresent();
+	}
+
+	static boolean isUpgradePlayer(ServerPlayerEntity player) {
+		return isUpgrade(player);
 	}
 
 	static float sync(ServerPlayerEntity player) {
@@ -240,10 +249,12 @@ final class UpgradeAbilities {
 		ServerWorld world = player.getServerWorld();
 		long now = world.getTime();
 		boolean fused = FUSION.getOrDefault(player.getUuid(), 0L) > now;
-		boolean maces = MACES.getOrDefault(player.getUuid(), 0L) > now;
-		if (fused || maces) {
+		String weapon = AlienModes.id(player);
+		boolean maces = MACE_MODE.equals(weapon);
+		if (fused || WEAPONS.contains(weapon)) {
 			infect(world, target, 1);
 		}
+		UpgradeFusion.onMelee(world, player, target);
 		bonusHit = true;
 		try {
 			if (fused) {
@@ -254,6 +265,28 @@ final class UpgradeAbilities {
 			}
 			if (maces) {
 				maceShock(world, player, target, taken);
+			} else if (AXE_MODE.equals(weapon)) {
+				// Axt: spaltet Ruestung (Bonus nach Ruestungswert) und reisst Schilde weg
+				float pierce = (float) target.getArmor() * 0.35f * power(player);
+				if (pierce > 0.0f) {
+					target.timeUntilRegen = 0;
+					target.damage(world.getDamageSources().indirectMagic(player, player), pierce);
+				}
+				if (target instanceof PlayerEntity victim && victim.isBlocking()) {
+					victim.disableShield();
+				}
+				Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), 0xC8C8C8, 0.35f, 8);
+			} else if (BLADE_MODE.equals(weapon)) {
+				// Klinge: Nanoschnitt durch die Ruestung, Sehnen durchtrennt (langsamer)
+				target.timeUntilRegen = 0;
+				target.damage(world.getDamageSources().indirectMagic(player, player), taken * 0.2f);
+				target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 40, 0), player);
+				Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), NEON_BIG, 0.3f, 6);
+			} else if (PICKAXE_MODE.equals(weapon) && target.getArmor() >= 10) {
+				// Spitzhacke: knackt Panzer (Golems, gepanzerte Gegner)
+				target.timeUntilRegen = 0;
+				target.damage(world.getDamageSources().indirectMagic(player, player), taken * 0.5f);
+				Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(0.6), target.getZ()), 0xC8C8C8, 0.4f, 10);
 			}
 		} finally {
 			bonusHit = false;
@@ -397,6 +430,11 @@ final class UpgradeAbilities {
 	 * Werkzeug verschmilzt Upgrade mit seiner Ruestung (repariert sie, Schutz und Absorption).
 	 */
 	private static boolean techFusion(AbilityContext ctx) {
+		// Blick auf einen Fusions-Block (oder geladene Selbst-Fusion): Block-Fusion, sonst Werkzeug/Ruestung
+		UpgradeFusion.Outcome outcome = UpgradeFusion.use(ctx);
+		if (outcome != UpgradeFusion.Outcome.NOT_HANDLED) {
+			return outcome == UpgradeFusion.Outcome.SUCCESS;
+		}
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
 		int ticks = (int) Math.round(ctx.param("seconds", 20.0) * 20.0);
@@ -431,14 +469,28 @@ final class UpgradeAbilities {
 		return true;
 	}
 
-	/** Morphwaffen: Arme werden zu Streitkolben — Treffer erzeugen Schockwellen und entladen Naniten. */
-	private static boolean maceFists(AbilityContext ctx) {
+	/**
+	 * Morphwaffen: jeder Druck formt die Arme zur naechsten Waffe (Keulen → Axt → Spitzhacke → Klinge → eingefahren),
+	 * Schleichen faehrt sie sofort ein. Werte und Abbauen je Waffe stehen im Alien-JSON (traits.modes), die Wirkung der
+	 * Treffer in {@link #onMelee}, Baumfaellen und 3x3-Abbau in {@link UpgradeTools}.
+	 */
+	private static boolean morphWeapon(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
-		int ticks = (int) Math.round(ctx.param("seconds", 12.0) * 20.0);
-		MACES.put(player.getUuid(), ctx.world().getTime() + ticks);
-		AlienModes.set(player, MACE_MODE, ticks);
-		player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, ticks, 1, false, false));
-		Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.3f, Math.min(20, 30));
+		String current = AlienModes.id(player);
+		boolean armed = WEAPONS.contains(current);
+		Optional<String> next = player.isSneaking() ? Optional.empty() : UpgradeTools.weaponAfter(armed ? current : "", WEAPONS);
+		if (next.isEmpty()) {
+			if (!armed) {
+				return false;
+			}
+			AlienModes.toggle(player, current, 0);
+			BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_CONTRACT, 0.9f, 1.1f);
+			return true;
+		}
+		if (!AlienModes.set(player, next.get(), 0)) {
+			return false;
+		}
+		Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.3f, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_EXTEND, 1.0f, 0.7f);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ANVIL_PLACE, 0.6f, 1.4f);
 		return true;
@@ -545,7 +597,7 @@ final class UpgradeAbilities {
 			UUID id = player.getUuid();
 			if (!isUpgrade(player)) {
 				if (SYNC.containsKey(id) || OVERCLOCK.containsKey(id) || FLOWS.containsKey(id) || CHARGES.containsKey(id)
-						|| FUSION.containsKey(id) || MACES.containsKey(id)) {
+						|| FUSION.containsKey(id)) {
 					if (SYNC.containsKey(id)) {
 						AlienMeterSync.clear(player, AlienMeterPayload.SYNC);
 					}
@@ -574,13 +626,11 @@ final class UpgradeAbilities {
 					Fx.sparks(world, new Vec3d(muzzle.x, muzzle.y, muzzle.z), charge.omega() ? CYAN : NEON, 0.3f, Math.min(20, 6));
 				}
 			}
-			if (MACES.getOrDefault(id, Long.MAX_VALUE) <= now) {
-				MACES.remove(id);
-			}
 			if (FUSION.getOrDefault(id, Long.MAX_VALUE) <= now) {
 				FUSION.remove(id);
 			}
 		}
+		UpgradeFusion.tick(server);
 		if (!HIJACKS.isEmpty()) {
 			tickHijacks(server);
 		}
@@ -766,7 +816,7 @@ final class UpgradeAbilities {
 		OVERCLOCK.remove(id);
 		FLOWS.remove(id);
 		FUSION.remove(id);
-		MACES.remove(id);
 		CHARGES.remove(id);
+		UpgradeFusion.forget(id);
 	}
 }

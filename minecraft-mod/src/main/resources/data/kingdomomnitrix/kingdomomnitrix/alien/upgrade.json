@@ -55,8 +55,8 @@
     },
     {
       "type": "kingdomomnitrix:tech_upgrade",
-      "energy": 40,
-      "cooldown": 400,
+      "energy": 20,
+      "cooldown": 20,
       "params": {
         "repair": 0.25,
         "seconds": 20.0,
@@ -67,13 +67,11 @@
     },
     {
       "type": "kingdomomnitrix:mace_fists",
-      "energy": 35,
-      "cooldown": 240,
+      "energy": 20,
+      "cooldown": 15,
       "role": "special",
       "unlock_level": 3,
-      "params": {
-        "seconds": 12.0
-      }
+      "params": {}
     },
     {
       "type": "kingdomomnitrix:system_override",
@@ -266,6 +264,58 @@
           "#minecraft:is_projectile",
           "#minecraft:is_fall"
         ]
+      },
+      {
+        "id": "axe",
+        "name": "mode.kingdomomnitrix.axe",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 6.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_speed",
+            "amount": -0.15,
+            "operation": "add_multiplied_total"
+          }
+        ],
+        "harvest": "#minecraft:mineable/axe",
+        "break_speed": 8.0
+      },
+      {
+        "id": "pickaxe",
+        "name": "mode.kingdomomnitrix.pickaxe",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 3.0
+          }
+        ],
+        "harvest": "#minecraft:mineable/pickaxe",
+        "break_speed": 9.0
+      },
+      {
+        "id": "blade",
+        "name": "mode.kingdomomnitrix.blade",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 5.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_speed",
+            "amount": 0.3,
+            "operation": "add_multiplied_total"
+          },
+          {
+            "attribute": "minecraft:player.entity_interaction_range",
+            "amount": 1.0
+          }
+        ],
+        "sweep": 0.5,
+        "sweep_radius": 2.5,
+        "harvest": "#minecraft:sword_efficient",
+        "break_speed": 6.0
       }
     ]
   }

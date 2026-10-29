@@ -59,8 +59,8 @@ public final class AlienModes {
 		return id == null ? "" : id;
 	}
 
-	/** Aktiver Modus des verwandelten Spielers, sofern sein Alien ihn kennt. */
-	public static Optional<AlienMode> active(ServerPlayerEntity player) {
+	/** Aktiver Modus des verwandelten Spielers, sofern sein Alien ihn kennt (Client und Server). */
+	public static Optional<AlienMode> active(PlayerEntity player) {
 		String id = id(player);
 		if (id.isEmpty()) {
 			return Optional.empty();

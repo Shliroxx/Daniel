@@ -33,7 +33,7 @@ public record AlienTraits(boolean flight, Optional<FlightStyle> flightStyleOverr
 	/** hoechstens so viele passive Kraefte je Alien */
 	public static final int MAX_PASSIVES = 4;
 	/** hoechstens so viele Modi je Alien ({@link AlienMode}) */
-	public static final int MAX_MODES = 4;
+	public static final int MAX_MODES = 8;
 
 	/** Status-Effekt mit Stufe (0 = I). */
 	public record Effect(RegistryEntry<StatusEffect> effect, int amplifier) {

@@ -43,30 +43,55 @@
     },
     "mode_boulder_off": {
       "loop": "hold_on_last_frame",
-      "animation_length": 0.05,
+      "animation_length": 0.12,
       "bones": {
         "boulder_armorRightArm": {
           "scale": {
-            "vector": [
-              0,
-              0,
-              0
-            ]
+            "0.0": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            },
+            "0.12": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            }
           }
         }
       }
     },
     "mode_boulder_on": {
       "loop": "hold_on_last_frame",
-      "animation_length": 0.05,
+      "animation_length": 0.2,
       "bones": {
         "boulder_armorRightArm": {
           "scale": {
-            "vector": [
-              1,
-              1,
-              1
-            ]
+            "0.0": {
+              "vector": [
+                0,
+                0,
+                0
+              ]
+            },
+            "0.12": {
+              "vector": [
+                1.2,
+                1.2,
+                1.2
+              ]
+            },
+            "0.2": {
+              "vector": [
+                1,
+                1,
+                1
+              ]
+            }
           }
         }
       }
