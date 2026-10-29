@@ -108,6 +108,12 @@ public final class HeroCommand {
 		dispatcher.register(CommandManager.literal("hero")
 				.requires(source -> source.hasPermissionLevel(PERMISSION_LEVEL))
 				.then(targeted(CommandManager.literal("debug"), HeroCommand::debug))
+				// Selbsttest aller Alien-Kraefte (Entwicklung): Bericht im Serverordner
+				.then(CommandManager.literal("selftest")
+						.executes(ctx -> SelfTest.start(ctx.getSource().getPlayerOrThrow(), java.util.Optional.empty()))
+						.then(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS)
+								.executes(ctx -> SelfTest.start(ctx.getSource().getPlayerOrThrow(),
+										java.util.Optional.of(IdentifierArgumentType.getIdentifier(ctx, "alien"))))))
 				.then(targeted(CommandManager.literal("reset"), (ctx, target) ->
 						change(ctx, target, data -> HeroData.DEFAULT, "commands.kingdomomnitrix.reset")))
 				.then(CommandManager.literal("bolts")

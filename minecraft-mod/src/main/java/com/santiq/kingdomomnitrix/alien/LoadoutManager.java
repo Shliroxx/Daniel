@@ -12,10 +12,15 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
-/** Speichert die ausgeruesteten Faehigkeiten je Alien (dauerhaft, nach dem Tod erhalten, an den eigenen Client). */
+/**
+ * Speichert die ausgeruesteten Faehigkeiten je Alien (dauerhaft, nach dem Tod erhalten, an den eigenen Client). Die
+ * Belegung zeigt per Index in den Kraefte-Pool; als der Pool auf 8 Tasten-Kraefte je Alien gekuerzt wurde, verschoben
+ * sich die Indizes — deshalb {@code alien_loadouts_v2}: alte Belegungen werden nicht falsch gedeutet, sondern durch den
+ * Standard ersetzt.
+ */
 @SuppressWarnings("UnstableApiUsage")
 public final class LoadoutManager {
-	public static final AttachmentType<AlienLoadouts> LOADOUTS = AttachmentRegistry.create(KingdomOmnitrix.id("alien_loadouts"), builder -> builder
+	public static final AttachmentType<AlienLoadouts> LOADOUTS = AttachmentRegistry.create(KingdomOmnitrix.id("alien_loadouts_v2"), builder -> builder
 			.persistent(AlienLoadouts.CODEC)
 			.initializer(() -> AlienLoadouts.EMPTY)
 			.copyOnDeath()
