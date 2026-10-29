@@ -174,6 +174,19 @@ Art (Feuer, Frost, Gift, Schall, Kristall, Schock). Reise über die Galaxiekarte
 Ohne Heimatwelt (Sonderfälle): Atomix Magmawürfel/Witherskelett (Nether) · Alien X Enderdrache (Ende, 1 Probe) ·
 Way Big Verwüster (Torren IV, 2 Proben) — To'kustars leben im All, Celestialsapiens außerhalb der Wirklichkeit.
 
+### Modi mit echten Bauteilen (wie Alien Evolution)
+
+Manche Kräfte verwandeln den Körper: Das Bauteil sitzt im Modell und fährt mit der Original-Animation aus Alien
+Evolution aus und wieder ein, andere Spieler sehen es mit. Im Modus gelten andere Werte.
+
+| Alien | Kraft | Bauteil | Wirkung im Modus |
+|---|---|---|---|
+| Diamondhead | Kristallklinge (R/V/B-Taste, nochmal drücken = einziehen) | rechter Unterarm wird zum Kristallschwert | +5 Angriff, +1 Reichweite, mehr Rückstoß, jeder Schlag trifft auch Gegner daneben (60 %); beim Ausfahren ein weiter Hieb |
+| Diamondhead | Kristallpanzer (12 s) | Kristallschild am linken Unterarm | immun gegen Geschosse und Explosionen, Stacheln verletzen Nahkämpfer (4 je ½ s), Widerstand und Stachelkranz; langsamer, −30 % Schlagkraft |
+
+Diamondhead ist außerdem nach AE-Vorbild rückstoßfest und hat +10 Leben und +3 Angriff. Datenfeld:
+`traits.modes` im Alien-JSON, Modell-Animationen `mode_<id>_on/_off` (Import: `Spec.keep`/`Spec.modes`).
+
 ### Alien-Flug (wie Alien Evolution und die Superhelden-Mods)
 
 Acht Aliens fliegen richtig, nicht im Kreativflug: **Abheben** mit einem Sprung in der Luft (oder Doppelsprung),
