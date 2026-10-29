@@ -110,51 +110,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:gear_upgrade",
-      "energy": 30,
-      "cooldown": 360,
-      "params": {
-        "seconds": 10.0
-      },
-      "role": "utility",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:nano_drones",
-      "energy": 35,
-      "cooldown": 300,
-      "params": {
-        "seconds": 8.0,
-        "damage": 2.0,
-        "range": 12.0
-      },
-      "role": "special",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:laser_grid",
-      "energy": 30,
-      "cooldown": 260,
-      "params": {
-        "width": 4.0,
-        "damage": 3.0,
-        "seconds": 6.0
-      },
-      "role": "utility",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:emp_pulse",
-      "energy": 35,
-      "cooldown": 260,
-      "params": {
-        "radius": 8.0,
-        "damage": 5.0
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:omega_overdrive",
       "energy": 90,
       "cooldown": 1100,

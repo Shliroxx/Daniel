@@ -96,27 +96,6 @@
       "unlock_level": 8
     },
     {
-      "type": "kingdomomnitrix:sound_bullet",
-      "energy": 12,
-      "cooldown": 40,
-      "params": {
-        "range": 20.0,
-        "damage": 3.0
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:echo_swap",
-      "energy": 15,
-      "cooldown": 80,
-      "params": {
-        "damage": 3.0
-      },
-      "role": "movement",
-      "unlock_level": 3
-    },
-    {
       "type": "kingdomomnitrix:feedback_loop",
       "energy": 30,
       "cooldown": 220,
@@ -127,28 +106,6 @@
       },
       "role": "special",
       "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:bass_drop",
-      "energy": 25,
-      "cooldown": 140,
-      "params": {
-        "radius": 4.5,
-        "damage": 4.0
-      },
-      "role": "basic_2",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:clone_burst",
-      "energy": 25,
-      "cooldown": 200,
-      "params": {
-        "damage": 5.0,
-        "radius": 3.5
-      },
-      "role": "special",
-      "unlock_level": 6
     },
     {
       "type": "kingdomomnitrix:sonic_symphony",

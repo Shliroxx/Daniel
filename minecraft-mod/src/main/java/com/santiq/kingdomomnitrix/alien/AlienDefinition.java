@@ -60,7 +60,7 @@ public record AlienDefinition(
 	/** Tasten je Alien (R V B, Shift + R V B) */
 	public static final int LOADOUT_SIZE = 6;
 	/** Tasten-Faehigkeiten, aus denen das Loadout gewaehlt wird */
-	public static final int MAX_POOL = 12;
+	public static final int MAX_POOL = 8;
 	/** Kombos (Sprint-, Luft-, Schleich-, Sturz-Angriff, Finisher) */
 	public static final int MAX_COMBOS = 6;
 	/** alle Faehigkeiten zusammen */

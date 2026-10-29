@@ -110,29 +110,6 @@
       }
     },
     {
-      "type": "kingdomomnitrix:water_jet",
-      "energy": 15,
-      "cooldown": 50,
-      "params": {
-        "range": 14.0,
-        "damage": 6.0
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:geyser",
-      "energy": 18,
-      "cooldown": 80,
-      "params": {
-        "up": 1.5,
-        "radius": 3.5,
-        "damage": 4.0
-      },
-      "role": "movement",
-      "unlock_level": 3
-    },
-    {
       "type": "kingdomomnitrix:feeding_frenzy",
       "energy": 25,
       "cooldown": 120,
@@ -142,26 +119,6 @@
       },
       "role": "basic_2",
       "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:bubble_shield",
-      "energy": 25,
-      "cooldown": 260,
-      "params": {
-        "seconds": 6.0
-      },
-      "role": "utility",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:riptide_pull",
-      "energy": 30,
-      "cooldown": 220,
-      "params": {
-        "radius": 10.0
-      },
-      "role": "special",
-      "unlock_level": 6
     },
     {
       "type": "kingdomomnitrix:maelstrom",

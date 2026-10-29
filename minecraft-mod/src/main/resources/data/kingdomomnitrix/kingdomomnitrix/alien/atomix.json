@@ -106,54 +106,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:gamma_burst",
-      "energy": 25,
-      "cooldown": 120,
-      "params": {
-        "range": 9.0,
-        "damage": 5.0,
-        "levels": 2
-      },
-      "role": "basic_2",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:atomic_barrier",
-      "energy": 25,
-      "cooldown": 260,
-      "params": {
-        "seconds": 6.0,
-        "absorption": 2
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:meltdown_zone",
-      "energy": 30,
-      "cooldown": 200,
-      "params": {
-        "range": 16.0,
-        "radius": 4.0,
-        "damage": 2.0,
-        "seconds": 6.0
-      },
-      "role": "special",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:chain_reaction",
-      "energy": 30,
-      "cooldown": 220,
-      "params": {
-        "radius": 16.0,
-        "blast_radius": 3.0,
-        "per_level": 2.5
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:fusion_sun",
       "energy": 90,
       "cooldown": 1100,

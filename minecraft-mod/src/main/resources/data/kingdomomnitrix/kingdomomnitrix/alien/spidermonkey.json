@@ -105,54 +105,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:web_yank",
-      "energy": 15,
-      "cooldown": 70,
-      "params": {
-        "range": 20.0,
-        "damage": 3.0,
-        "hold_ticks": 30
-      },
-      "role": "basic_2",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:web_wall",
-      "energy": 20,
-      "cooldown": 200,
-      "params": {
-        "distance": 3.0,
-        "width": 5.0,
-        "height": 3.0,
-        "seconds": 8.0
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:monkey_leap",
-      "energy": 12,
-      "cooldown": 60,
-      "params": {
-        "power": 1.5,
-        "lift": 1.0,
-        "damage": 4.0
-      },
-      "role": "movement",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:web_spinner",
-      "energy": 30,
-      "cooldown": 220,
-      "params": {
-        "radius": 6.0,
-        "seconds": 3.0
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:arachnid_ambush",
       "energy": 90,
       "cooldown": 1100,

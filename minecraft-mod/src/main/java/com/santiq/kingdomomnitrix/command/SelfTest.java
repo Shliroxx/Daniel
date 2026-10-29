@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -43,7 +45,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -62,19 +63,22 @@ import org.apache.logging.log4j.core.config.Property;
  *   <li>Bewegung, Leben, Absorption und Effekte des Spielers</li>
  *   <li>neu entstandene Wesen (Klone, Drohnen …) und veraenderte Bloecke im Umkreis</li>
  * </ul>
+ * Vor jeder Kraft wird frisch verwandelt (nach jeder Messung zurueck), damit nichts aus der vorigen Kraft nachwirkt.
  * Ergebnis je Kraft: OK, WIRKUNGSLOS (nichts davon), ABGELEHNT (Kraft meldet „nicht moeglich“), FEHLER oder ABSTURZ.
- * Der Bericht landet als Markdown im Serverordner ({@value #REPORT}) und zusammengefasst im Log. Zerstoerung durch
- * Alien-Kraefte ist waehrend des Tests aus, danach wieder wie vorher.
+ * Der Bericht landet als Markdown im Serverordner ({@value #REPORT}) und zusammengefasst im Log. Zerstoerung bleibt an
+ * (manche Kraefte brauchen Bloecke); nach jeder Kraft wird das Gelaende im Umkreis wiederhergestellt.
  */
 public final class SelfTest {
 	/** Ticks zwischen Ausloesen und Messen */
 	private static final int WINDOW = 30;
 	/** Ruhe-Ticks nach dem Aufraeumen, bevor die naechste Kraft startet */
-	private static final int SETTLE = 6;
+	private static final int SETTLE = 8;
 	private static final float TARGET_HEALTH = 200.0f;
 	/** Umkreis fuer Wesen und Bloecke */
-	private static final int RADIUS = 10;
-	private static final int BLOCK_RADIUS = 6;
+	private static final int RADIUS = 18;
+	private static final int BLOCK_RADIUS = 14;
+	private static final int BLOCK_DOWN = 6;
+	private static final int BLOCK_UP = 8;
 	static final String REPORT = "kingdomomnitrix-selftest.md";
 
 	private static Run active;
@@ -96,7 +100,7 @@ public final class SelfTest {
 
 	/** Zustand vor dem Ausloesen. */
 	private record Snapshot(Vec3d playerPos, float playerHealth, float absorption, int playerEffects, List<Float> targetHealth,
-			List<Vec3d> targetPos, List<Integer> targetEffects, Set<UUID> entities, Map<BlockPos, String> blocks) {
+			List<Vec3d> targetPos, List<Integer> targetEffects, Set<UUID> entities, Map<BlockPos, BlockState> blocks) {
 	}
 
 	private static final class Run {
@@ -107,7 +111,6 @@ public final class SelfTest {
 		final Deque<Job> jobs;
 		final int total;
 		final List<Outcome> outcomes = new ArrayList<>();
-		final boolean griefing;
 		final List<HuskEntity> targets = new ArrayList<>();
 		Job current;
 		Snapshot before;
@@ -116,14 +119,13 @@ public final class SelfTest {
 		int wait;
 		boolean measuring;
 
-		Run(ServerPlayerEntity player, Deque<Job> jobs, boolean griefing) {
+		Run(ServerPlayerEntity player, Deque<Job> jobs) {
 			this.player = player;
 			this.world = player.getServerWorld();
 			this.origin = player.getPos();
 			this.yaw = player.getYaw();
 			this.jobs = jobs;
 			this.total = jobs.size();
-			this.griefing = griefing;
 		}
 	}
 
@@ -173,11 +175,8 @@ public final class SelfTest {
 		if (jobs.isEmpty()) {
 			return 0;
 		}
-		GameRules.BooleanRule rule = world.getGameRules().get(GameRules.DO_MOB_GRIEFING);
-		boolean griefing = rule.get();
-		rule.set(false, world.getServer());
 		installCapture();
-		active = new Run(player, jobs, griefing);
+		active = new Run(player, jobs);
 		player.sendMessage(Text.translatable("commands.kingdomomnitrix.selftest.start", jobs.size(),
 				Math.round(jobs.size() * (WINDOW + SETTLE) / 20.0f)).formatted(Formatting.AQUA));
 		KingdomOmnitrix.LOGGER.info("[Selbsttest] Start: {} Kraefte", jobs.size());
@@ -269,6 +268,15 @@ public final class SelfTest {
 		spawnTargets(run);
 		run.before = snapshot(run);
 		CAPTURED.clear();
+		// auf die Brust des naechsten Ziels zielen (grosse Aliens sehen sonst ueber die Ziele hinweg)
+		HuskEntity aim = run.targets.isEmpty() ? null : run.targets.get(0);
+		if (aim != null) {
+			Vec3d eye = player.getEyePos();
+			Vec3d to = aim.getPos().add(0.0, aim.getHeight() * 0.6, 0.0).subtract(eye);
+			float pitch = (float) -(MathHelper.atan2(to.y, Math.sqrt(to.x * to.x + to.z * to.z)) * MathHelper.DEGREES_PER_RADIAN);
+			player.teleport(run.world, run.origin.x, run.origin.y, run.origin.z, run.yaw, pitch);
+			player.setPitch(pitch);
+		}
 		Optional<AlienAbility> ability = AbilityRegistry.get(job.slot().type());
 		if (ability.isEmpty()) {
 			record(run, Verdict.FEHLER, "unbekannter Typ " + job.slot().type(), List.of());
@@ -345,13 +353,23 @@ public final class SelfTest {
 		return new Box(BlockPos.ofFloored(run.origin)).expand(RADIUS);
 	}
 
-	private static Map<BlockPos, String> blocks(Run run) {
-		Map<BlockPos, String> blocks = new HashMap<>();
+	private static Map<BlockPos, BlockState> blocks(Run run) {
+		Map<BlockPos, BlockState> blocks = new HashMap<>();
 		BlockPos center = BlockPos.ofFloored(run.origin);
-		for (BlockPos pos : BlockPos.iterate(center.add(-BLOCK_RADIUS, -2, -BLOCK_RADIUS), center.add(BLOCK_RADIUS, 4, BLOCK_RADIUS))) {
-			blocks.put(pos.toImmutable(), run.world.getBlockState(pos).toString());
+		for (BlockPos pos : BlockPos.iterate(center.add(-BLOCK_RADIUS, -BLOCK_DOWN, -BLOCK_RADIUS),
+				center.add(BLOCK_RADIUS, BLOCK_UP, BLOCK_RADIUS))) {
+			blocks.put(pos.toImmutable(), run.world.getBlockState(pos));
 		}
 		return blocks;
+	}
+
+	/** Testgelaende wie vor dem Test: zerstoerte und gesetzte Bloecke zurueck (ohne Drops, ohne Nachbar-Updates). */
+	private static void restore(Run run, Map<BlockPos, BlockState> blocks) {
+		for (Map.Entry<BlockPos, BlockState> entry : blocks.entrySet()) {
+			if (run.world.getBlockState(entry.getKey()) != entry.getValue()) {
+				run.world.setBlockState(entry.getKey(), entry.getValue(), Block.NOTIFY_LISTENERS | Block.FORCE_STATE | Block.SKIP_DROPS);
+			}
+		}
 	}
 
 	private static void measure(Run run) {
@@ -388,7 +406,7 @@ public final class SelfTest {
 			}
 		}
 		int changed = 0;
-		for (Map.Entry<BlockPos, String> entry : blocks(run).entrySet()) {
+		for (Map.Entry<BlockPos, BlockState> entry : blocks(run).entrySet()) {
 			if (!entry.getValue().equals(before.blocks().get(entry.getKey()))) {
 				changed++;
 			}
@@ -460,7 +478,21 @@ public final class SelfTest {
 				entity.discard();
 			}
 		}
+		if (run.before != null) {
+			restore(run, run.before.blocks());
+		}
+		// Drops und Truemmer der Zerstoerung
+		for (Entity entity : run.world.getOtherEntities(run.player, area(run))) {
+			if (!(entity instanceof PlayerEntity) && (run.before == null || !run.before.entities().contains(entity.getUuid()))) {
+				entity.discard();
+			}
+		}
 		PowerTasks.clear(run.player.getUuid());
+		// zurueckverwandeln: laufende Kraefte, Zaehler und Ladungen enden (die Kraft-Ticks pruefen die Verwandlung);
+		// die naechste Kraft verwandelt nach der Ruhezeit neu — sonst liefe z. B. ein Ultimate in die naechste Messung
+		if (TransformationManager.get(run.player).isTransformed()) {
+			TransformationManager.revert(run.player, false);
+		}
 		run.player.clearStatusEffects();
 		run.player.extinguish();
 		run.player.setVelocity(Vec3d.ZERO);
@@ -472,7 +504,6 @@ public final class SelfTest {
 		if (run.current != null && run.measuring) {
 			cleanup(run);
 		}
-		run.world.getGameRules().get(GameRules.DO_MOB_GRIEFING).set(run.griefing, run.world.getServer());
 		removeCapture();
 		if (!run.player.isDisconnected() && TransformationManager.get(run.player).isTransformed()) {
 			TransformationManager.revert(run.player, false);

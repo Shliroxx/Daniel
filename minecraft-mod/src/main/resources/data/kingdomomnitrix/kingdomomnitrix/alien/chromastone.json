@@ -109,55 +109,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:crystal_spires",
-      "energy": 25,
-      "cooldown": 120,
-      "params": {
-        "radius": 4.0,
-        "seconds": 4.0,
-        "damage": 6.0
-      },
-      "role": "basic_2",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:mirror_prism",
-      "energy": 30,
-      "cooldown": 220,
-      "params": {
-        "range": 12.0,
-        "reach": 10.0,
-        "damage": 4.0,
-        "seconds": 8.0
-      },
-      "role": "special",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:blinding_flash",
-      "energy": 20,
-      "cooldown": 200,
-      "params": {
-        "range": 12.0,
-        "seconds": 5.0,
-        "charge": 5.0
-      },
-      "role": "utility",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:energy_release",
-      "energy": 30,
-      "cooldown": 240,
-      "params": {
-        "range": 26.0,
-        "damage": 6.0,
-        "per_store": 0.25
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:spectral_cataclysm",
       "energy": 90,
       "cooldown": 1100,

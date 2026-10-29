@@ -115,58 +115,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:frost_ground",
-      "energy": 25,
-      "cooldown": 140,
-      "params": {
-        "range": 16.0,
-        "radius": 5.0,
-        "seconds": 6.0,
-        "chill": 15.0
-      },
-      "role": "basic_2",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:wing_wrap",
-      "energy": 20,
-      "cooldown": 200,
-      "params": {
-        "seconds": 4.0,
-        "resistance": 2,
-        "burst_chill": 40.0,
-        "radius": 4.5
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:ice_spikes",
-      "energy": 25,
-      "cooldown": 120,
-      "params": {
-        "length": 12,
-        "damage": 6.0,
-        "chill": 30.0
-      },
-      "role": "special",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:blizzard",
-      "energy": 35,
-      "cooldown": 260,
-      "params": {
-        "range": 18.0,
-        "radius": 6.0,
-        "seconds": 6.0,
-        "chill": 12.0,
-        "damage": 1.5
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:ice_comet",
       "energy": 90,
       "cooldown": 1100,

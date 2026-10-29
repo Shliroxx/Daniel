@@ -130,18 +130,6 @@
       }
     },
     {
-      "type": "kingdomomnitrix:bowling_strike",
-      "energy": 20,
-      "cooldown": 70,
-      "params": {
-        "damage": 7.0,
-        "ticks": 22,
-        "ball_ticks": 24.0
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
       "type": "kingdomomnitrix:wrecking_ball",
       "energy": 30,
       "cooldown": 140,
@@ -152,42 +140,6 @@
       },
       "role": "basic_2",
       "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:pinball",
-      "energy": 35,
-      "cooldown": 220,
-      "params": {
-        "damage": 5.0,
-        "seconds": 4.0,
-        "ball_ticks": 80.0
-      },
-      "role": "special",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:spike_shell",
-      "energy": 25,
-      "cooldown": 260,
-      "params": {
-        "seconds": 8.0,
-        "damage": 3.0
-      },
-      "role": "utility",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:shell_spin",
-      "energy": 30,
-      "cooldown": 200,
-      "params": {
-        "damage": 3.0,
-        "radius": 4.5,
-        "seconds": 3.0,
-        "ball_ticks": 60.0
-      },
-      "role": "special",
-      "unlock_level": 6
     },
     {
       "type": "kingdomomnitrix:bounce_barrage",

@@ -115,50 +115,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:ghost_flight",
-      "energy": 20,
-      "cooldown": 120,
-      "params": {
-        "seconds": 3.0
-      },
-      "role": "movement",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:spectral_chains",
-      "energy": 30,
-      "cooldown": 220,
-      "params": {
-        "range": 14.0,
-        "radius": 4.0,
-        "seconds": 3.0
-      },
-      "role": "special",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:vanish",
-      "energy": 25,
-      "cooldown": 280,
-      "params": {
-        "seconds": 8.0
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:haunting",
-      "energy": 30,
-      "cooldown": 240,
-      "params": {
-        "range": 16.0,
-        "damage": 2.0,
-        "seconds": 10.0
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:phantom_legion",
       "energy": 90,
       "cooldown": 1100,

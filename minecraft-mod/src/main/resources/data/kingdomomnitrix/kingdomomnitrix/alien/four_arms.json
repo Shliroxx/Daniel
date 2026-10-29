@@ -130,56 +130,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:rising_uppercut",
-      "energy": 25,
-      "cooldown": 100,
-      "params": {
-        "range": 4.0,
-        "damage": 7.0,
-        "launch": 1.5,
-        "jump": 1.1
-      },
-      "role": "movement",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:slab_heave",
-      "energy": 30,
-      "cooldown": 120,
-      "params": {
-        "chunks": 3,
-        "damage": 6.0,
-        "speed": 1.5
-      },
-      "role": "basic",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:giant_swing",
-      "energy": 40,
-      "cooldown": 200,
-      "params": {
-        "range": 4.0,
-        "ticks": 24,
-        "damage": 6.0,
-        "max_width": 2.5
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
-      "type": "kingdomomnitrix:war_cry",
-      "energy": 45,
-      "cooldown": 600,
-      "params": {
-        "radius": 10.0,
-        "seconds": 8.0,
-        "rage": 40.0
-      },
-      "role": "utility",
-      "unlock_level": 7
-    },
-    {
       "type": "kingdomomnitrix:titan_meteor",
       "energy": 90,
       "cooldown": 1000,

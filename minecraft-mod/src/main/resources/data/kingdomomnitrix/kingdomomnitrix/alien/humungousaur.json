@@ -108,30 +108,6 @@
       "unlock_level": 8
     },
     {
-      "type": "kingdomomnitrix:boulder_toss",
-      "energy": 20,
-      "cooldown": 80,
-      "params": {
-        "damage": 9.0,
-        "radius": 3.0,
-        "speed": 1.6
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:primal_roar",
-      "energy": 20,
-      "cooldown": 240,
-      "params": {
-        "radius": 10.0,
-        "seconds": 8.0,
-        "growth": 20.0
-      },
-      "role": "utility",
-      "unlock_level": 3
-    },
-    {
       "type": "kingdomomnitrix:belly_flop",
       "energy": 25,
       "cooldown": 120,
@@ -141,17 +117,6 @@
       },
       "role": "basic_2",
       "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:spike_plates",
-      "energy": 25,
-      "cooldown": 300,
-      "params": {
-        "seconds": 10.0,
-        "damage": 3.0
-      },
-      "role": "utility",
-      "unlock_level": 5
     },
     {
       "type": "kingdomomnitrix:extinction",
@@ -221,17 +186,6 @@
       "role": "special",
       "unlock_level": 6,
       "trigger": "finisher"
-    },
-    {
-      "type": "kingdomomnitrix:titan_clap",
-      "energy": 30,
-      "cooldown": 180,
-      "params": {
-        "damage": 6.0,
-        "range": 9.0
-      },
-      "role": "special",
-      "unlock_level": 6
     }
   ],
   "dna": {

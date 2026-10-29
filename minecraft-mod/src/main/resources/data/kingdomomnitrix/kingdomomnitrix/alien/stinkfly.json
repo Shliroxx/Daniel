@@ -95,38 +95,6 @@
       }
     },
     {
-      "type": "kingdomomnitrix:acid_drop",
-      "energy": 18,
-      "cooldown": 70,
-      "params": {
-        "damage": 4.0
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:stinger_strike",
-      "energy": 15,
-      "cooldown": 60,
-      "params": {
-        "range": 6.0,
-        "damage": 6.0
-      },
-      "role": "basic",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:slime_trap",
-      "energy": 20,
-      "cooldown": 140,
-      "params": {
-        "range": 16.0,
-        "seconds": 3.0
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
       "type": "kingdomomnitrix:gas_jet",
       "energy": 18,
       "cooldown": 80,
@@ -135,17 +103,6 @@
       },
       "role": "movement",
       "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:corrosive_spray",
-      "energy": 30,
-      "cooldown": 200,
-      "params": {
-        "range": 7.0,
-        "damage": 3.0
-      },
-      "role": "special",
-      "unlock_level": 6
     },
     {
       "type": "kingdomomnitrix:plague_cloud",

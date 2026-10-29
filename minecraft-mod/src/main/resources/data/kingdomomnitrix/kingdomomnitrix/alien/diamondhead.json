@@ -103,49 +103,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:crystal_hammer",
-      "energy": 30,
-      "cooldown": 120,
-      "params": {
-        "damage": 10.0,
-        "radius": 3.0
-      },
-      "role": "basic_2",
-      "unlock_level": 3
-    },
-    {
-      "type": "kingdomomnitrix:crystal_wall",
-      "energy": 25,
-      "cooldown": 240,
-      "params": {
-        "seconds": 8.0
-      },
-      "role": "utility",
-      "unlock_level": 4
-    },
-    {
-      "type": "kingdomomnitrix:crystal_cage",
-      "energy": 35,
-      "cooldown": 260,
-      "params": {
-        "range": 16.0,
-        "seconds": 4.0
-      },
-      "role": "special",
-      "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:diamond_drill",
-      "energy": 30,
-      "cooldown": 200,
-      "params": {
-        "ticks": 14,
-        "damage": 6.0
-      },
-      "role": "movement",
-      "unlock_level": 6
-    },
-    {
       "type": "kingdomomnitrix:crystal_cathedral",
       "energy": 90,
       "cooldown": 1100,

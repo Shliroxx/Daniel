@@ -97,29 +97,6 @@
       "unlock_level": 2
     },
     {
-      "type": "kingdomomnitrix:calculated_strike",
-      "energy": 15,
-      "cooldown": 60,
-      "params": {
-        "range": 6.0,
-        "damage": 6.0
-      },
-      "role": "basic",
-      "unlock_level": 2
-    },
-    {
-      "type": "kingdomomnitrix:overload_device",
-      "energy": 25,
-      "cooldown": 140,
-      "params": {
-        "range": 14.0,
-        "damage": 8.0,
-        "radius": 3.5
-      },
-      "role": "special",
-      "unlock_level": 3
-    },
-    {
       "type": "kingdomomnitrix:mini_turret",
       "energy": 35,
       "cooldown": 360,
@@ -130,29 +107,6 @@
       },
       "role": "utility",
       "unlock_level": 5
-    },
-    {
-      "type": "kingdomomnitrix:weakness_grid",
-      "energy": 35,
-      "cooldown": 300,
-      "params": {
-        "radius": 12.0,
-        "seconds": 10.0
-      },
-      "role": "special",
-      "unlock_level": 6
-    },
-    {
-      "type": "kingdomomnitrix:galvan_device",
-      "energy": 90,
-      "cooldown": 1100,
-      "params": {
-        "range": 16.0,
-        "radius": 10.0,
-        "damage": 14.0
-      },
-      "role": "ultimate",
-      "unlock_level": 10
     },
     {
       "type": "kingdomomnitrix:ankle_bite",
