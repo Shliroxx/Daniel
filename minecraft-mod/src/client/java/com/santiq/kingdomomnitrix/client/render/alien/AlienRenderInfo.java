@@ -26,15 +26,21 @@ import org.jetbrains.annotations.Nullable;
  * vanilla_pose   Hauptknochen folgen der Spielerpose (mit arm_swing, leg_swing, ability_poses, mode_poses)
  * glow_frames    Glut-Frames (_f&lt;i&gt;), warn_textures: Abzeichen-Warnung (_warn)
  * flight_pose    Flughaltung je Knochen ({@link AlienFlightPose})
+ * mode_forms     {modus: {"form": kuerzel, "scale": groesse}} — Modus zeigt ein eigenes Ganzkoerper-Modell
+ *                (&lt;geo&gt;_&lt;kuerzel&gt;.geo.json, Textur &lt;textur&gt;_&lt;kuerzel&gt;.png), z. B. Upgrades Blitzableiter
  * </pre>
  * Fehlende Datei: Standardwerte. Kaputte Datei oder Felder: Fehler im Log, Standardwerte — kein Absturz.
  *
  * @param pose Pose-Angaben, {@code null} = Modell nutzt eigene Animationen fuer alle Knochen
  */
 public record AlienRenderInfo(float scale, List<String> uniforms, boolean uniformModels, @Nullable AlienPose.Info pose,
-		int glowFrames, boolean warnTextures, Map<String, AlienFlightPose.Bone> flightPose) {
+		int glowFrames, boolean warnTextures, Map<String, AlienFlightPose.Bone> flightPose, Map<String, ModeForm> modeForms) {
 
-	public static final AlienRenderInfo DEFAULT = new AlienRenderInfo(1.0f, List.of(AlienUniforms.CLASSIC), false, null, 1, false, Map.of());
+	/** Ganzkoerper-Modell eines Modus: Datei-Kuerzel und Groesse relativ zum Alien-Koerper. */
+	public record ModeForm(String form, float scale) {
+	}
+
+	public static final AlienRenderInfo DEFAULT = new AlienRenderInfo(1.0f, List.of(AlienUniforms.CLASSIC), false, null, 1, false, Map.of(), Map.of());
 
 	public boolean hasUniform(String uniform) {
 		return uniforms.contains(uniform);
@@ -76,6 +82,20 @@ public record AlienRenderInfo(float scale, List<String> uniforms, boolean unifor
 		}
 		int frames = json.has("glow_frames") ? MathHelper.clamp(json.get("glow_frames").getAsInt(), 1, 64) : 1;
 		return new AlienRenderInfo(scale, List.copyOf(uniforms), json.has("uniform_models") && json.get("uniform_models").getAsBoolean(),
-				pose, frames, json.has("warn_textures") && json.get("warn_textures").getAsBoolean(), AlienFlightPose.parse(json));
+				pose, frames, json.has("warn_textures") && json.get("warn_textures").getAsBoolean(), AlienFlightPose.parse(json),
+				parseModeForms(json));
+	}
+
+	private static Map<String, ModeForm> parseModeForms(JsonObject json) {
+		if (!json.has("mode_forms") || !json.get("mode_forms").isJsonObject()) {
+			return Map.of();
+		}
+		Map<String, ModeForm> forms = new java.util.HashMap<>();
+		for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject("mode_forms").entrySet()) {
+			JsonObject form = entry.getValue().getAsJsonObject();
+			float scale = form.has("scale") ? MathHelper.clamp(form.get("scale").getAsFloat(), 0.1f, 4.0f) : 1.0f;
+			forms.put(entry.getKey(), new ModeForm(form.get("form").getAsString(), scale));
+		}
+		return Map.copyOf(forms);
 	}
 }

@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.render.alien;
 
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.alien.FlightStyle;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
@@ -75,6 +76,8 @@ public final class AlienBodyRenderers {
 	private static final Map<Integer, float[]> ROLL = new HashMap<>();
 	private static final Map<Integer, double[]> LAST_POS = new HashMap<>();
 	private static String currentForm;
+	/** Ganzkoerper-Form eines Modus (Upgrades Blitzableiter): eigenes Modell, eigene Textur, eigene Groesse */
+	private static AlienRenderInfo.ModeForm currentModeForm;
 	/** Ueberblendung zur Flughaltung des gerade gezeichneten Spielers (0 = Stand) */
 	private static float currentFlight;
 	private static float currentRoll;
@@ -239,6 +242,10 @@ public final class AlienBodyRenderers {
 				&& (player.age / WARN_BLINK) % 2 == 0;
 		currentBadgeColor = com.santiq.kingdomomnitrix.omnitrix.OmnitrixColors.primary(player);
 		currentForm = formOf(player, state);
+		currentModeForm = currentForm == null ? info(model).modeForms().get(AlienModes.id(player)) : null;
+		if (currentModeForm != null) {
+			currentForm = currentModeForm.form();
+		}
 		float[] roll = ROLL.get(player.getId());
 		currentFlight = AlienFlightPose.progress(player, tickDelta);
 		currentRoll = roll == null ? 0.0f : MathHelper.lerp(tickDelta, roll[1], roll[0]);
@@ -276,6 +283,10 @@ public final class AlienBodyRenderers {
 		AlienBodyRenderer renderer = new AlienBodyRenderer(context, new DefaultedEntityGeoModel<>(assetPath, true) {
 			@Override
 			public Identifier getTextureResource(AlienBodyAnimatable animatable) {
+				if (currentModeForm != null) {
+					// eigene Textur der Form (ohne Glut-Frames und Abzeichen-Warnung)
+					return formTexture(uniformTexture(model, super.getTextureResource(animatable), currentUniform), currentModeForm.form());
+				}
 				return BadgeTint.tint(animatedTexture(model, uniformTexture(model, super.getTextureResource(animatable), currentUniform)),
 						currentBadgeColor);
 			}
@@ -288,7 +299,7 @@ public final class AlienBodyRenderers {
 
 			@Override
 			public void setCustomAnimations(AlienBodyAnimatable animatable, long instanceId, AnimationState<AlienBodyAnimatable> state) {
-				if (currentForm != null) {
+				if (currentForm != null && currentModeForm == null) {
 					// Kugel: rollt um die eigene Mitte in Laufrichtung, kleiner als der Koerper, unten am Boden
 					software.bernie.geckolib.cache.object.GeoBone ball = getAnimationProcessor().getBone(BALL_BONE);
 					if (ball != null) {
@@ -304,6 +315,15 @@ public final class AlienBodyRenderers {
 					boolean flier = FlightStyle.of(player).isPresent();
 					// im Flug laufen die Beine nicht mehr (Schwung aus der Laufanimation abklingen lassen)
 					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), info, flier ? currentFlight : 0.0f);
+					if (currentModeForm != null) {
+						// Ganzkoerper-Form in ihrer eigenen Groesse (AE: Blitzableiter 0,8 statt 1,4), von den Fuessen aus
+						software.bernie.geckolib.cache.object.GeoBone root = getAnimationProcessor().getBone("root");
+						if (root != null) {
+							float k = currentModeForm.scale();
+							root.updateScale(k, k, k);
+						}
+						return;
+					}
 					Map<String, AlienFlightPose.Bone> flight = info(model).flightPose();
 					if (!flight.isEmpty()) {
 						AlienFlightPose.apply(getAnimationProcessor(), flight, currentFlight);
@@ -370,6 +390,12 @@ public final class AlienBodyRenderers {
 		}
 		String path = base.getPath();
 		return Identifier.of(base.getNamespace(), path.substring(0, path.length() - ".geo.json".length()) + "_" + uniform + ".geo.json");
+	}
+
+	/** Textur einer Modus-Form: {@code <textur>_<form>.png} (vom Importer neben jede Uniform geschrieben). */
+	static Identifier formTexture(Identifier texture, String form) {
+		String path = texture.getPath();
+		return Identifier.of(texture.getNamespace(), path.substring(0, path.length() - ".png".length()) + "_" + form + ".png");
 	}
 
 	/** Geometrie einer Zweitform: {@code <geo>_<form>.geo.json} (vom Importer neben jede Uniform geschrieben). */

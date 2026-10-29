@@ -440,5 +440,11 @@
   ],
   "glow_frames": 1,
   "warn_textures": true,
+  "mode_forms": {
+    "galvanic_rod": {
+      "form": "rod",
+      "scale": 0.571
+    }
+  },
   "source": "Alien Evolution (Habb and Stephen)"
 }

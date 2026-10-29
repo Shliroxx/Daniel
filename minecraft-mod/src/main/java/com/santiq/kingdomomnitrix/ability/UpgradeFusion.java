@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.vfx.Fx;
@@ -81,7 +82,8 @@ final class UpgradeFusion {
 
 	/** Selbst-Fusionen: Tag, Ladungen (0 = Dauerwirkung), Uebersetzung, Farbe der Funken. */
 	enum Self {
-		LIGHTNING("lightning", 5, "fusion.kingdomomnitrix.lightning", 0xB8E4FF, false),
+		// wie AE: Upgrade verschmilzt ganz mit dem Blitzableiter (eigenes Modell), der Block kommt danach zurueck
+		LIGHTNING("lightning", 8, "fusion.kingdomomnitrix.lightning", 0xB8E4FF, true),
 		TURRET("turret", 8, "fusion.kingdomomnitrix.turret", 0xC8C8C8, false),
 		EXPLOSIVE("explosive", 3, "fusion.kingdomomnitrix.explosive", 0xFF4A2A, true),
 		HEAT("heat", 6, "fusion.kingdomomnitrix.heat", 0xFF8A1E, false),
@@ -223,6 +225,7 @@ final class UpgradeFusion {
 		world.playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 0.9f, 1.7f);
 		world.playSound(null, pos, SoundEvents.BLOCK_HONEY_BLOCK_SLIDE, SoundCategory.PLAYERS, 1.0f, 0.6f);
 		switch (kind) {
+			case LIGHTNING -> AlienModes.set(player, UpgradeAbilities.ROD_MODE, SELF_TICKS);
 			case SCANNER -> {
 				for (LivingEntity near : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(48.0), e -> e != player && e.isAlive())) {
 					near.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 300, 0, false, false), player);
@@ -445,13 +448,21 @@ final class UpgradeFusion {
 				Fused fused = entry.getValue();
 				if (player == null || !UpgradeAbilities.isUpgradePlayer(player)) {
 					it.remove();
+					if (player != null && fused.kind() == Self.LIGHTNING) {
+						leaveRod(player.getServerWorld(), player);
+					}
 					continue;
 				}
 				ServerWorld world = player.getServerWorld();
 				long now = world.getTime();
 				boolean spent = fused.kind().charges > 0 && fused.charges()[0] <= 0;
-				if (now >= fused.until() || spent) {
+				// Blitzableiter-Form endet auch, wenn eine andere Kraft den Modus wechselt (Waffen, Pfuetze)
+				boolean leftRod = fused.kind() == Self.LIGHTNING && !UpgradeAbilities.ROD_MODE.equals(AlienModes.id(player));
+				if (now >= fused.until() || spent || leftRod) {
 					it.remove();
+					if (fused.kind() == Self.LIGHTNING) {
+						leaveRod(world, player);
+					}
 					player.sendMessage(Text.translatable("message.kingdomomnitrix.fusion_end", Text.translatable(fused.kind().name))
 							.formatted(Formatting.GRAY), true);
 					continue;
@@ -467,6 +478,21 @@ final class UpgradeFusion {
 		if (!UPGRADED.isEmpty()) {
 			tickUpgraded(server);
 		}
+	}
+
+	/** Blitzableiter-Form verlassen: Upgrade loest sich, der Blitzableiter steht wieder da (wie AE), sonst als Gegenstand. */
+	private static void leaveRod(ServerWorld world, ServerPlayerEntity player) {
+		if (UpgradeAbilities.ROD_MODE.equals(AlienModes.id(player))) {
+			AlienModes.clear(player);
+		}
+		BlockPos pos = player.getBlockPos();
+		if (world.getBlockState(pos).isReplaceable()) {
+			world.setBlockState(pos, Blocks.LIGHTNING_ROD.getDefaultState());
+		} else {
+			player.getInventory().offerOrDrop(new ItemStack(Items.LIGHTNING_ROD));
+		}
+		Fx.sparks(world, Vec3d.ofCenter(pos), 0xB8E4FF, 0.3f, 16);
+		world.playSound(null, pos, SoundEvents.BLOCK_COPPER_PLACE, SoundCategory.PLAYERS, 1.0f, 0.8f);
 	}
 
 	private static void magnet(ServerWorld world, ServerPlayerEntity player) {

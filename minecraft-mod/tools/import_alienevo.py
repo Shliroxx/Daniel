@@ -92,6 +92,10 @@ class Spec:
     # Modi, die eine AE-Animation auf andere Knochen uebertragen (Modus, ((AE-Knochen, unser Knochen), …), Faktor fuer
     # die Groesse der Kopf-Knochen <modus>_head_*): Upgrades Axt/Spitzhacke/Klinge bewegen sich wie AEs Keulen
     mode_clone: tuple[tuple[str, tuple[tuple[str, str], ...], float], ...] = ()
+    # Modi, in denen der ganze Koerper ein anderes AE-Modell ist (Modus, unser Kuerzel, AE-Modell, AE-Render-Ebene,
+    # Groesse relativ zum Koerper): Upgrade auf dem Blitzableiter (AE „galvanic_rod“). Geometrie und Textur je Uniform
+    # als <alien>[_uniform]_<kuerzel>; der Renderer tauscht das Modell, solange der Modus an ist
+    mode_forms: tuple[tuple[str, str, str, str, float], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -156,13 +160,18 @@ ALIENS = {
                            # Ansatz, AE-Hautkachel und -Stacheln, AEs Keulen-Animation auf die neuen Knochen uebertragen
                            ("axe", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
                            ("pickaxe", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
-                           ("blade", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off")),
+                           ("blade", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
+                           # Blitzableiter-Form (AE: Upgrade verschmilzt mit dem Blitzableiter unter sich)
+                           ("galvanic_rod", "galvanic.rod.animation.json:animation.upgrade_rod.loop", None)),
+                    mode_forms=(("galvanic_rod", "rod", "galvanic_rod", "galvanic_rod.json", round(0.8 / 1.4, 3)),),
                     props="upgrade_weapons",
                     mode_clone=tuple((w, (("MACE", f"{w}_left"), ("mace_scale", f"{w}_head_left"),
                                           ("spikes_angled", f"{w}_spikes_left"), ("spikes_straight", f"{w}_spikes_left"),
                                           ("MACE2", f"{w}_right"), ("mace_scale2", f"{w}_head_right"),
                                           ("spikes_angled2", f"{w}_spikes_right"), ("spikes_straight2", f"{w}_spikes_right")), k)
-                                     for w, k in (("axe", 1.0), ("pickaxe", 1.0), ("blade", 0.8)))),
+                                     for w, k in (("axe", 1.0), ("pickaxe", 1.0), ("blade", 0.8)))
+                    + (("galvanic_rod", tuple((f"{part}_l{i}", f"{part}_l{i}") for part in ("leftarm", "rightarm", "leftleg", "rightleg")
+                                              for i in (1, 2, 3)), 1.0),)),
     # ein Modell; Ebenen „prototype“ (classic) und „recal“ (evo/ultimate, Alien-Force-Look); Fluegel/Umhang aus flight_on
     "jetray": Spec("34", "aerophibian", "aerophibian.json", 1.0, "fast", "#E72D2D",
                    watch=(("prototype", "prototype"), ("default", "recal"), ("10k", "recal")),
@@ -268,11 +277,13 @@ def recolor(img: Image.Image, mapping: dict[str, str]) -> Image.Image:
     return out
 
 
-def layers_of(jar: Jar, spec: Spec) -> list[dict]:
+def layers_of(jar: Jar, spec: Spec, layer: str | None = None) -> list[dict]:
+    """Render-Ebenen des Aliens (oder einer weiteren Ebenen-Datei desselben Aliens, z. B. Upgrades Blitzableiter)."""
+    layer = layer or spec.layer
     if spec.pack == "afomni":
-        data = jar.json(f"assets/afomni/palladium/render_layers/{spec.layer}")
+        data = jar.json(f"assets/afomni/palladium/render_layers/{layer}")
     else:
-        data = jar.json(f"assets/alienevo/palladium/render_layers/aliens/alien_{spec.number}/{spec.layer}")
+        data = jar.json(f"assets/alienevo/palladium/render_layers/aliens/alien_{spec.number}/{layer}")
     return data["layers"] if data.get("type") == "palladium:compound" else [data]
 
 
@@ -331,12 +342,12 @@ def _alpha_mask(img: Image.Image, mask: Image.Image) -> Image.Image:
 
 
 def build_texture(jar: Jar, spec: Spec, ae_uniform: str, palettes: dict, frame: int = 0,
-                  model: str | None = None) -> tuple[Image.Image, Image.Image]:
+                  model: str | None = None, layer_file: str | None = None) -> tuple[Image.Image, Image.Image]:
     """Farbtextur (alle Ebenen inkl. Glow) und Leuchtmaske (nur Glow-Ebenen) einer Uniform und eines AE-Modells."""
     model = model or spec.species
     color = glow = None
     # Leuchtebenen zuletzt (im Spiel emissiv ueber der Haut)
-    for layer in sorted(layers_of(jar, spec), key=lambda l: l.get("render_type") == "glow"):
+    for layer in sorted(layers_of(jar, spec, layer_file), key=lambda l: l.get("render_type") == "glow"):
         tex = layer.get("texture")
         if isinstance(tex, str):  # Ebene ohne Transformer (Jetray)
             tex = {"base": tex}
@@ -803,6 +814,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, sheet_color, (tw_new, th_new))
         if spec.form:
             files[geo_dir / f"{name}{suffix}_{spec.form[2]}.geo.json"] = form_geo(jar, spec, name, suffix, (tw_new, th_new))
+        for _, tag, ae_model, layer_file, _ in spec.mode_forms:
+            files.update(mode_form_files(jar, spec, name, suffix, ae, palettes, tag, ae_model, layer_file, geo_dir, base))
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
@@ -821,6 +834,9 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         "glow_frames": glow_frames(jar, spec), "warn_textures": badge is not None,
         # Endpose der AE-Fluganimation (Knochen → Drehung/Lage/Groesse), im Renderer in der Luft/im Wasser eingeblendet
         **({"flight_pose": flight_pose(jar, spec, classic_bones)} if spec.flight_pose else {}),
+        # Modi mit eigenem Ganzkoerper-Modell: Kuerzel der Dateien und Groesse relativ zum Koerper
+        **({"mode_forms": {mode: {"form": tag, "scale": ratio} for mode, tag, _, _, ratio in spec.mode_forms}}
+           if spec.mode_forms else {}),
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
 
@@ -852,6 +868,30 @@ def projectile_files(jar: Jar, name: str, model: str, texture: str) -> dict[Path
         ASSETS / "animations" / "entity" / f"{name}.animation.json": {"format_version": "1.8.0", "animations": {
             "spin": {"loop": True, "animation_length": 1.0, "bones": {"body": {"rotation": {
                 "0.0": {"vector": [0, 0, 0]}, "1.0": {"vector": [-360, 0, 0]}}}}}}},
+    }
+
+
+def mode_form_files(jar: Jar, spec: Spec, name: str, suffix: str, ae: str, palettes: dict, tag: str, ae_model: str,
+                    layer_file: str, geo_dir: Path, base: Path) -> dict[Path, object]:
+    """Ganzkoerper-Form eines Modus (Upgrades Blitzableiter): AE-Modell der Uniform mit unseren Hauptknochen-Namen
+    (folgen der Spielerpose wie der Koerper), eigene Textur und Leuchtmaske aus AEs Ebenen-Datei, Farben wie AE."""
+    geo = deepcopy(jar.json(geo_path(spec, f"{ae_model}_{ae}"))["minecraft:geometry"][0])
+    for b in geo["bones"]:
+        b["name"] = ROOT_NAMES.get(b["name"], b["name"])
+        if "parent" in b:
+            b["parent"] = ROOT_NAMES.get(b["parent"], b["parent"])
+        else:
+            b["parent"] = "root"
+    desc = geo["description"]
+    color, glow = build_texture(jar, spec, ae, palettes, model=ae_model, layer_file=layer_file)
+    return {
+        geo_dir / f"{name}{suffix}_{tag}.geo.json": {"format_version": "1.12.0", "minecraft:geometry": [{
+            "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}_{tag}",
+                            "texture_width": desc.get("texture_width", 32), "texture_height": desc.get("texture_height", 32),
+                            "visible_bounds_width": 3, "visible_bounds_height": 3.5, "visible_bounds_offset": [0, 1.25, 0]},
+            "bones": [{"name": "root", "pivot": [0, 0, 0]}] + geo["bones"]}]},
+        base / f"{name}{suffix}_{tag}.png": color,
+        base / f"{name}{suffix}_{tag}_glowmask.png": glow if glow.getbbox() is not None else None,
     }
 
 

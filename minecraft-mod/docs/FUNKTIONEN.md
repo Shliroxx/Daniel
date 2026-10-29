@@ -184,8 +184,17 @@ Evolution aus und wieder ein, andere Spieler sehen es mit. Im Modus gelten ander
 | Diamondhead | Kristallklinge (R/V/B-Taste, nochmal drücken = einziehen) | rechter Unterarm wird zum Kristallschwert | +5 Angriff, +1 Reichweite, mehr Rückstoß, jeder Schlag trifft auch Gegner daneben (60 %); beim Ausfahren ein weiter Hieb |
 | Diamondhead | Kristallpanzer (12 s) | Kristallschild am linken Unterarm | immun gegen Geschosse und Explosionen, Stacheln verletzen Nahkämpfer (4 je ½ s), Widerstand und Stachelkranz; langsamer, −30 % Schlagkraft |
 | Vierarm | Werfen ohne Ziel (bis 10 s halten) | Felsbrocken (AE-Modell) in den Händen, Arme in der AE-Hebehaltung über dem Kopf | −30 % Tempo, halbe Sprungkraft; nochmal drücken wirft ihn als eigenes Geschoss (AE-Gesteinsmodell, überschlägt sich, 18 Schaden direkt, Druckwelle, Krater) |
-| Upgrade | Keulenfäuste (12 s) | beide Unterarme werden zu Stachelkeulen | +4 Angriff, +1,5 Rückstoß, Schläge treffen auch Gegner daneben (40 %), Schockwelle und Naniten-Entladung; −20 % Schlagtempo |
+| Upgrade | Morphwaffen (Taste schaltet weiter, Schleichen fährt ein) | beide Unterarme werden zur Waffe, gebaut und animiert wie AEs Keulen | **Keulen**: +4 Angriff, +1,5 Rückstoß, Schwung 40 %, Schockwelle · **Axt**: +6 Angriff, fällt ganze Bäume, spaltet Rüstung, bricht Schilde · **Spitzhacke**: baut Stein/Erz wie eine Diamant-Spitzhacke 3×3 ab, knackt Panzer · **Klinge**: +5 Angriff, +30 % Tempo, +1 Reichweite, Schwung 50 %, Nanoschnitt |
+| Upgrade | Techno-Fusion mit Blitzableiter | ganzer Körper wird AEs Blitzableiter-Form (eigenes Modell, flackernde Blitze), Block wird aufgenommen | 8 Blitz-Ladungen (Taste ins Leere), +16 Rüstung, +4 Angriff, immun gegen Sturz, Blitz, Feuer; danach steht der Blitzableiter wieder da |
 | Upgrade | Flüssige Form (3 s) | Körper zerfließt zur wabernden Flüssigmetall-Pfütze (AE-Schleife) | unverwundbar, sehr schnell, fließt einen Block hoch, immun gegen Geschosse und Sturz; durchflossene Gegner werden verletzt und infiziert |
+
+**Upgrade – Fusion mit Blöcken** (Techno-Fusion mit Blick auf den Block, Block-Tags `kingdomomnitrix:upgrade_fusion/*`):
+Werfer = Pfeilsalven, TNT = Sprengladungen (Block wird verbraucht), Ofen/Lagerfeuer/Magma = Feuerbälle und brennende
+Treffer, Glocke/Notenblock = Schallstoß, Beobachter/Sculk = alle Lebewesen leuchten, Redstone = Überladung, Trichter =
+Magnet für Gegenstände und EP, Eis = Omnitrix abkühlen und Frost-Treffer, Metallblöcke = Panzerung, Leuchtfeuer =
+Kraftfeld für die Gruppe (je 30 s). **Block verbessern** (Schleichen + Rechtsklick mit leerer Hand): Ofen, Brauer,
+Trichter, Lagerfeuer laufen 60 s vierfach; Werfer wird 40 s Wachgeschütz; Blitzableiter 60 s Blitzfalle; Ambosse
+werden repariert; Kupfer entrostet.
 
 Diamondhead ist außerdem nach AE-Vorbild rückstoßfest und hat +10 Leben und +3 Angriff. Vierarm hat wie in AE
 viel mehr Masse: +30 Leben, +8 Angriff, Rüstung 12 (+4 Härte), völlig rückstoßfest; ab Meisterschaft 3 klettert er

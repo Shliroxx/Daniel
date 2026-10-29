@@ -316,6 +316,25 @@
         "sweep_radius": 2.5,
         "harvest": "#minecraft:sword_efficient",
         "break_speed": 6.0
+      },
+      {
+        "id": "galvanic_rod",
+        "name": "mode.kingdomomnitrix.galvanic_rod",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 16.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 4.0
+          }
+        ],
+        "immunities": [
+          "#minecraft:is_fall",
+          "#minecraft:is_lightning",
+          "#minecraft:is_fire"
+        ]
       }
     ]
   }

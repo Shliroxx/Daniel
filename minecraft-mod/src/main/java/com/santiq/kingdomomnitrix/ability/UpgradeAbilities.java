@@ -104,6 +104,8 @@ final class UpgradeAbilities {
 	static final String PICKAXE_MODE = "pickaxe";
 	static final String BLADE_MODE = "blade";
 	static final String LIQUID_MODE = "liquid";
+	/** Blitzableiter-Form (Techno-Fusion mit einem Blitzableiter, eigenes Ganzkoerper-Modell wie AE) */
+	static final String ROD_MODE = "galvanic_rod";
 	/** Reihenfolge beim Durchschalten der Morphwaffen (danach eingefahren) */
 	static final List<String> WEAPONS = List.of(MACE_MODE, AXE_MODE, PICKAXE_MODE, BLADE_MODE);
 	/** geladene Plasmakanonen */
