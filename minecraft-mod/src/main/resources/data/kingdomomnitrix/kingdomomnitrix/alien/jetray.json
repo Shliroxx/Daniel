@@ -275,6 +275,7 @@
   "failsafe_priority": 2,
   "traits": {
     "flight": true,
+    "flight_style": "jet",
     "effects": [
       {
         "effect": "minecraft:water_breathing"

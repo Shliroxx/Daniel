@@ -235,6 +235,8 @@
   "failsafe_tags": [],
   "failsafe_priority": 5,
   "traits": {
+    "flight": true,
+    "flight_style": "cosmic",
     "effects": [
       {
         "effect": "minecraft:night_vision"

@@ -268,6 +268,7 @@
   "failsafe_priority": 2,
   "traits": {
     "flight": true,
+    "flight_style": "ice",
     "effects": [
       {
         "effect": "minecraft:night_vision"

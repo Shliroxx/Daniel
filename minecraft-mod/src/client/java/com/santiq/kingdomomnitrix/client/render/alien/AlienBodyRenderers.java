@@ -1,6 +1,7 @@
 package com.santiq.kingdomomnitrix.client.render.alien;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.FlightStyle;
 import com.santiq.kingdomomnitrix.alien.AlienDefinition;
 import com.santiq.kingdomomnitrix.alien.AlienRegistry;
 import com.santiq.kingdomomnitrix.alien.AlienUniforms;
@@ -300,11 +301,16 @@ public final class AlienBodyRenderers {
 				AlienPose.Info info = poseOf(model);
 				if (info != null && state.getData(DataTickets.ENTITY) instanceof AbstractClientPlayerEntity player) {
 					// wie AE: Koerper folgt der Spielerpose (inkl. Kopf) — die Standard-Kopfdrehung entfaellt
-					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), info);
+					boolean flier = FlightStyle.of(player).isPresent();
+					// im Flug laufen die Beine nicht mehr (Schwung aus der Laufanimation abklingen lassen)
+					AlienPose.apply(getAnimationProcessor(), player, state.getPartialTick(), info, flier ? currentFlight : 0.0f);
 					Map<String, AlienFlightPose.Bone> flight = info(model).flightPose();
 					if (!flight.isEmpty()) {
 						AlienFlightPose.apply(getAnimationProcessor(), flight, currentFlight);
-						AlienFlightPose.applyDynamics(getAnimationProcessor(), flight, player, state.getPartialTick(), currentFlight);
+					}
+					if (!flight.isEmpty() || flier) {
+						AlienFlightPose.applyDynamics(getAnimationProcessor(), flight, player, state.getPartialTick(), currentFlight,
+								renderScale(model));
 					}
 				} else {
 					super.setCustomAnimations(animatable, instanceId, state);

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import com.santiq.kingdomomnitrix.alien.FlightStyle;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.MathHelper;
@@ -45,6 +46,14 @@ final class AlienFlightPose {
 	/** groesste Kurvenlage und Vorlage (Bogenmass) */
 	private static final float MAX_BANK = 0.75f;
 	private static final float MAX_LEAN = 0.6f;
+	/** Superhelden-Haltung: ab diesem Tempo (Bloecke/Tick) beginnt sie, nach weiteren HERO_LEAN_RANGE ist sie voll */
+	private static final float HERO_LEAN_FROM = 0.3f;
+	private static final float HERO_LEAN_RANGE = 1.1f;
+	/** groesste Lage im Sturzflug (fast kopfueber) */
+	private static final float MAX_HERO_LEAN = 2.4f;
+	/** so viel der Vorlage gleicht der Kopf aus (Blick nach vorn statt zum Boden) */
+	private static final float HEAD_COUNTER = 0.85f;
+	private static final float MAX_HEAD_COUNTER = 1.4f;
 	/** Ticks ohne Boden je Spieler */
 	private static final Map<Integer, Integer> AIRBORNE = new HashMap<>();
 
@@ -106,9 +115,18 @@ final class AlienFlightPose {
 		dyn[5] = (float) player.getZ();
 		dyn[6] = player.bodyYaw;
 		float speed = MathHelper.sqrt(dx * dx + dz * dz);
+		float lean = MathHelper.clamp(speed * 0.9f, 0.0f, MAX_LEAN);
+		if (flying && FlightStyle.of(player).isPresent()) {
+			// Superhelden-Haltung: der Koerper legt sich in die Flugrichtung — langsam aufrecht, im Schub waagerecht,
+			// senkrecht hoch aufrecht, im Sturzflug kopfueber
+			float total = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
+			float share = MathHelper.clamp((total - HERO_LEAN_FROM) / HERO_LEAN_RANGE, 0.0f, 1.0f);
+			float along = (float) MathHelper.atan2(speed, dy);
+			lean = MathHelper.lerp(share, lean, MathHelper.clamp(along, 0.0f, MAX_HERO_LEAN));
+		}
 		// weich nachziehen: Kurvenlage folgt der Drehung, Vorlage dem Tempo, Steigen der Hoehenaenderung
 		dyn[0] = MathHelper.lerp(0.2f, dyn[0], MathHelper.clamp(-turn * 0.06f * Math.min(1.0f, speed * 2.5f), -MAX_BANK, MAX_BANK));
-		dyn[1] = MathHelper.lerp(0.15f, dyn[1], MathHelper.clamp(speed * 0.9f, 0.0f, MAX_LEAN));
+		dyn[1] = MathHelper.lerp(0.15f, dyn[1], lean);
 		dyn[2] = MathHelper.lerp(0.25f, dyn[2], MathHelper.clamp(dy * 4.0f, -1.0f, 1.0f));
 		float[] blend = BLEND.computeIfAbsent(player.getId(), id -> new float[2]);
 		blend[1] = blend[0];
@@ -136,14 +154,23 @@ final class AlienFlightPose {
 	 * schnell beim Steigen, langsam und flach beim Gleiten.
 	 */
 	static void applyDynamics(AnimationProcessor<?> processor, Map<String, Bone> pose, AbstractClientPlayerEntity player, float tickDelta,
-			float k) {
+			float k, float renderScale) {
 		float[] dyn = DYNAMICS.get(player.getId());
 		if (dyn == null || k <= 0.0f) {
 			return;
 		}
 		GeoBone root = processor.getBone("root");
 		if (root != null) {
-			root.updateRotation(root.getRotX() - dyn[1] * k, root.getRotY(), root.getRotZ() + dyn[0] * k);
+			float pitch = -dyn[1] * k;
+			root.updateRotation(root.getRotX() + pitch, root.getRotY(), root.getRotZ() + dyn[0] * k);
+			// um die Koerpermitte statt um die Fuesse drehen: Mitte (Modell-Pixel ueber dem Drehpunkt) bleibt stehen
+			float center = player.getHeight() * 8.0f / Math.max(0.1f, renderScale) - root.getPivotY();
+			root.updatePosition(root.getPosX(), root.getPosY() + center * (1.0f - MathHelper.cos(pitch)),
+					root.getPosZ() - center * MathHelper.sin(pitch));
+		}
+		GeoBone head = processor.getBone("head");
+		if (head != null) {
+			head.updateRotation(head.getRotX() + Math.min(MAX_HEAD_COUNTER, dyn[1] * HEAD_COUNTER) * k, head.getRotY(), head.getRotZ());
 		}
 		float age = player.age + tickDelta;
 		float climb = Math.max(0.0f, dyn[2]);

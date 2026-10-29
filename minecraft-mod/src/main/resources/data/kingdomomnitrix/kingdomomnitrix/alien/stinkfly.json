@@ -243,6 +243,7 @@
   "failsafe_priority": 3,
   "traits": {
     "flight": true,
+    "flight_style": "wings",
     "immune_effects": [
       "minecraft:poison",
       "minecraft:nausea",

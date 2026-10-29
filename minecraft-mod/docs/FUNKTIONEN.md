@@ -29,6 +29,7 @@ alle Befehle, Spielregeln und Einstellungsdateien. Technische Tiefe steht in den
 | **H** | Gadget-Gürtel |
 | **J** | Heli-Pack ↔ Heli-Jet |
 | **Y** | Gadget benutzen (Swingshot) |
+| **Leertaste in der Luft** (als Flug-Alien) | abheben; **W** fliegt in Blickrichtung, **Sprinten** = Schub, Leertaste/Schleichen steigen/sinken, Landen beendet den Flug |
 
 Alle Tasten sind unter *Optionen → Steuerung → Kingdom Omnitrix* änderbar.
 
@@ -135,7 +136,7 @@ Rot, Gelb, Lila, Weiß, Orange, Pink, Türkis). Fertiges Omnitrix + farbiger Ker
 | **Jetray** | Neuroschock · Schwanzblitz · Düsenstoß | Tiefflug · Windschatten · Neuroschock-Sturm | Delfin (Rilgar) |
 
 Eigenschaften (Auswahl): Heatblast immun gegen Feuer/Lava · XLR8 schnell, kein Fallschaden · Vierarm groß und stark ·
-Diamondhead immun gegen Geschosse · Stinkfly fliegt · Ripjaws stark im Wasser, trocknet an Land aus · Ghostfreak halbe
+Diamondhead immun gegen Geschosse · Stinkfly, Jetray, Big Chill, Ghostfreak, Heatblast, Chromastone, Atomix und Alien X fliegen (siehe Alien-Flug) · Ripjaws stark im Wasser, trocknet an Land aus · Ghostfreak halbe
 Schwerkraft · Wildmutt sieht Monster durch Wände · Upgrade schneller Abbau · Cannonbolt schwer gepanzert, rollt sich für jede Fähigkeit zur Kugel (eigenes Kugel-Modell, dreht mit der Strecke; Rollmodus steigt Stufen hoch) · Jetray fliegt, atmet unter Wasser, Neuroschock lähmt; in der Luft und im Wasser Flughaltung (Flügel auf, aus der AE-Fluganimation). Uniform „ultimate“ nutzt bei Jetray den evo-Look (AE hat nur zwei). Modelle, Texturen und Uniformen
 (classic/evo/ultimate, **U** im Rad) nach Alien Evolution (mit Erlaubnis, siehe `CREDITS.md`).
 
@@ -172,6 +173,31 @@ Art (Feuer, Frost, Gift, Schall, Kristall, Schock). Reise über die Galaxiekarte
 
 Ohne Heimatwelt (Sonderfälle): Atomix Magmawürfel/Witherskelett (Nether) · Alien X Enderdrache (Ende, 1 Probe) ·
 Way Big Verwüster (Torren IV, 2 Proben) — To'kustars leben im All, Celestialsapiens außerhalb der Wirklichkeit.
+
+### Alien-Flug (wie Alien Evolution und die Superhelden-Mods)
+
+Acht Aliens fliegen richtig, nicht im Kreativflug: **Abheben** mit einem Sprung in der Luft (oder Doppelsprung),
+**Fahrt in Blickrichtung**, auch steil hoch und im Sturzflug runter, A/D seitwärts, Leertaste/Schleichen steigen und
+sinken. **Sprinten = Schub** bis zum Höchsttempo der Flugart, mit weitem Sichtfeld. Ohne Eingabe **schwebt** das Alien,
+die Fahrt läuft aus. Landen beendet den Flug, kein Fallschaden im Flug.
+
+Die Haltung folgt der Flugrichtung: langsam aufrecht, im Schub waagerecht wie ein Superheld (Kopf schaut nach vorn),
+senkrecht hoch aufrecht, im Sturzflug kopfüber; die Beine laufen in der Luft nicht mehr. Ab Reisetempo zieht jede
+Flugart einen eigenen Schweif, schnelle Flugarten durchbrechen beim Erreichen des Schubs die Schallmauer (Druckring,
+Knall, Kamerastoß in der Nähe). Alles für andere Spieler sichtbar.
+
+| Flugart | Aliens | Reise · Schub (Blöcke/s) | Eigenheit |
+|---|---|---|---|
+| Insektenflügel (`wings`) | Stinkfly | 15 · 34 | wendig, steht in der Luft, Sporen-Schweif |
+| Düsenflug (`jet`) | Jetray | 19 · 60 | viel Schwung, Überschallknall, Funken-Schweif; Windschatten erhöht das Tempo |
+| Frostschwingen (`ice`) | Big Chill | 16 · 42 | ruhig, Schneeschleier |
+| Schweben (`ghost`) | Ghostfreak | 11 · 26 | gleitet lange aus, Seelen-Schweif |
+| Feuerstrahl (`flame`) | Heatblast | 17 · 48 | Flammenschweif, Überschallknall |
+| Energiefeld (`energy`) | Chromastone, Atomix | 16 · 44 | Leuchtspur, Überschallknall |
+| Kosmisch (`cosmic`) | Alien X | 22 · 68 | fast ohne Trägheit, am schnellsten |
+
+Datenfeld: `traits.flight_style` im Alien-JSON (setzt `flight` mit). Der Server gibt dem Schubflug dieselbe
+Bewegungs-Toleranz wie dem Elytra-Flug.
 
 ### Eigene Alien-Systeme (über Alien Evolution hinaus)
 

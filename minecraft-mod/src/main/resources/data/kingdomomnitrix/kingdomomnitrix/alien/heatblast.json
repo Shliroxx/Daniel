@@ -249,6 +249,8 @@
   ],
   "failsafe_priority": 2,
   "traits": {
+    "flight": true,
+    "flight_style": "flame",
     "transform_style": "fire",
     "passives": [
       {

@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.alien;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -12,7 +13,8 @@ import net.minecraft.registry.entry.RegistryEntry;
  *
  * <pre>
  * "traits": {
- *   "flight": true,                                   // Fliegen wie im Kreativmodus (Stinkfly)
+ *   "flight": true,                                   // Fliegen (Stinkfly)
+ *   "flight_style": "jet",                            // Flugart ({@link FlightStyle}); setzt "flight" mit, Standard wings
  *   "effects": [{"effect": "minecraft:night_vision"}],// immer aktiv
  *   "water_effects": [{"effect": "minecraft:dolphins_grace", "amplifier": 0}], // nur im Wasser
  *   "dry_out_seconds": 30,                            // so lange an Land ohne Nachteil, dann Schwaeche (Ripjaws)
@@ -24,9 +26,9 @@ import net.minecraft.registry.entry.RegistryEntry;
  * </pre>
  * Effekte laufen „ambient“ (ohne Partikel) und werden beim Zurueckverwandeln entfernt — echte Traenke bleiben.
  */
-public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> waterEffects, int dryOutSeconds, float sensesRadius,
+public record AlienTraits(boolean flight, Optional<FlightStyle> flightStyleOverride, List<Effect> effects, List<Effect> waterEffects, int dryOutSeconds, float sensesRadius,
 		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle, List<PassiveSlot> passives) {
-	public static final AlienTraits NONE = new AlienTraits(false, List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD, List.of());
+	public static final AlienTraits NONE = new AlienTraits(false, Optional.empty(), List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD, List.of());
 	/** hoechstens so viele passive Kraefte je Alien */
 	public static final int MAX_PASSIVES = 4;
 
@@ -40,6 +42,7 @@ public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> wat
 
 	public static final Codec<AlienTraits> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Codec.BOOL.optionalFieldOf("flight", false).forGetter(AlienTraits::flight),
+			FlightStyle.CODEC.optionalFieldOf("flight_style").forGetter(AlienTraits::flightStyleOverride),
 			Effect.CODEC.listOf().optionalFieldOf("effects", List.of()).forGetter(AlienTraits::effects),
 			Effect.CODEC.listOf().optionalFieldOf("water_effects", List.of()).forGetter(AlienTraits::waterEffects),
 			Codec.intRange(0, 3600).optionalFieldOf("dry_out_seconds", 0).forGetter(AlienTraits::dryOutSeconds),
@@ -50,9 +53,15 @@ public record AlienTraits(boolean flight, List<Effect> effects, List<Effect> wat
 	).apply(instance, AlienTraits::new));
 
 	public AlienTraits {
+		flight = flight || flightStyleOverride.isPresent();
 		effects = List.copyOf(effects);
 		waterEffects = List.copyOf(waterEffects);
 		immuneEffects = List.copyOf(immuneEffects);
 		passives = List.copyOf(passives);
+	}
+
+	/** Flugart; ohne Angabe Insektenfluegel. Nur sinnvoll, wenn {@link #flight()}. */
+	public FlightStyle flightStyle() {
+		return flightStyleOverride.orElse(FlightStyle.WINGS);
 	}
 }

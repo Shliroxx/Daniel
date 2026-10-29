@@ -102,6 +102,11 @@ final class AlienPose {
 
 	/** Spielerpose berechnen (wie {@code LivingEntityRenderer.render}) und auf die Hauptknochen uebertragen. */
 	static void apply(AnimationProcessor<?> bones, AbstractClientPlayerEntity player, float tickDelta, Info info) {
+		apply(bones, player, tickDelta, info, 0.0f);
+	}
+
+	/** Wie oben; {@code flight} 0…1 daempft den Lauf-Schwung von Armen und Beinen (Flughaltung). */
+	static void apply(AnimationProcessor<?> bones, AbstractClientPlayerEntity player, float tickDelta, Info info, float flight) {
 		if (model == null) {
 			return;
 		}
@@ -111,7 +116,7 @@ final class AlienPose {
 		float limbPos = 0.0f;
 		float limbSpeed = 0.0f;
 		if (!player.hasVehicle() && player.isAlive()) {
-			limbSpeed = Math.min(1.0f, player.limbAnimator.getSpeed(tickDelta));
+			limbSpeed = Math.min(1.0f, player.limbAnimator.getSpeed(tickDelta)) * (1.0f - 0.9f * flight);
 			limbPos = player.limbAnimator.getPos(tickDelta);
 		}
 		model.handSwingProgress = player.getHandSwingProgress(tickDelta);

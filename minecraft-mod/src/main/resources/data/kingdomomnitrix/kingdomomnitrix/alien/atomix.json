@@ -246,6 +246,8 @@
   ],
   "failsafe_priority": 3,
   "traits": {
+    "flight": true,
+    "flight_style": "energy",
     "effects": [
       {
         "effect": "minecraft:night_vision"

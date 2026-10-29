@@ -8,7 +8,8 @@
 		"LevelPropertiesMixin",
 		"LivingEntityAccessor",
 		"LivingEntityDamageMixin",
-		"ServerPlayNetworkHandlerAccessor"
+		"ServerPlayNetworkHandlerAccessor",
+		"ServerPlayNetworkHandlerFlightMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

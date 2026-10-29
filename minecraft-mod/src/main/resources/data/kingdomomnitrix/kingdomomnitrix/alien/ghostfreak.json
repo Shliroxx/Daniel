@@ -252,6 +252,8 @@
   ],
   "failsafe_priority": 2,
   "traits": {
+    "flight": true,
+    "flight_style": "ghost",
     "effects": [
       {
         "effect": "minecraft:night_vision"

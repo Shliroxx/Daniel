@@ -27,6 +27,7 @@ import com.santiq.kingdomomnitrix.networking.OpenTerminalPayload;
 import com.santiq.kingdomomnitrix.client.weapon.WeaponHud;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetHud;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetInput;
+import com.santiq.kingdomomnitrix.client.alien.AlienFlightControl;
 import com.santiq.kingdomomnitrix.client.gadget.GadgetScreen;
 import com.santiq.kingdomomnitrix.client.render.OmnitrixWorkbenchRenderer;
 import com.santiq.kingdomomnitrix.client.screen.OmnitrixWorkbenchScreen;
@@ -186,6 +187,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(CombatInput::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(MagicInput::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(GadgetInput::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(AlienFlightControl::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(ShipClient::tick);
 		WorldRenderEvents.AFTER_ENTITIES.register(SpaceRifts::render);
 		WorldRenderEvents.AFTER_ENTITIES.register(SwingshotRopes::render);
@@ -196,6 +198,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 			CombatInput.reset();
 			MagicInput.reset();
 			GadgetInput.reset();
+			AlienFlightControl.reset();
 			SwingshotRopes.reset();
 			ShipClient.reset();
 			CommandMenu.INSTANCE.reset();
