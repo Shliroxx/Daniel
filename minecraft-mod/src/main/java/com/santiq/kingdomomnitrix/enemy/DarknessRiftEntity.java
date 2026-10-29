@@ -55,7 +55,8 @@ public class DarknessRiftEntity extends Entity {
 	private static final int WAVE_DELAY = 60;
 	private static final int SPAWN_RADIUS = 5;
 
-	private Identifier riftId = KingdomOmnitrix.id("standard");
+	/** Standard fuer Risse ohne {@link #configure} (Spawn-Ei, Befehl): eine vorhandene Definition, sonst loest er sich sofort auf */
+	private Identifier riftId = KingdomOmnitrix.id("shadow_swarm");
 	private int wave = -1;
 	private int waveDelay = 40;
 	private int level = 1;

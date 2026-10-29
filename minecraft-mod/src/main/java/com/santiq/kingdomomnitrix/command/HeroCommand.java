@@ -111,6 +111,7 @@ public final class HeroCommand {
 				// Selbsttest aller Alien-Kraefte (Entwicklung): Bericht im Serverordner
 				.then(CommandManager.literal("selftest")
 						.executes(ctx -> SelfTest.start(ctx.getSource().getPlayerOrThrow(), java.util.Optional.empty()))
+						.then(CommandManager.literal("worlds").executes(ctx -> WorldSelfTest.start(ctx.getSource().getPlayerOrThrow())))
 						.then(CommandManager.argument("alien", IdentifierArgumentType.identifier()).suggests(ALIEN_SUGGESTIONS)
 								.executes(ctx -> SelfTest.start(ctx.getSource().getPlayerOrThrow(),
 										java.util.Optional.of(IdentifierArgumentType.getIdentifier(ctx, "alien"))))))

@@ -669,6 +669,8 @@
   "commands.kingdomomnitrix.selftest.busy": "Es läuft schon ein Selbsttest.",
   "commands.kingdomomnitrix.selftest.progress": "Selbsttest: %s / %s",
   "commands.kingdomomnitrix.selftest.done": "Selbsttest fertig: %s Kräfte — %s OK, %s wirkungslos, %s abgelehnt, %s Fehler. Bericht: %s",
+  "commands.kingdomomnitrix.selftest.worlds_start": "Selbsttest Welten und Wesen: %s Prüfungen, etwa %s s.",
+  "commands.kingdomomnitrix.selftest.worlds_done": "Selbsttest Welten und Wesen fertig: %s Prüfungen, %s Fehler. Bericht: %s",
   "ability.kingdomomnitrix.inferno_wave": "Infernowelle",
   "ability.kingdomomnitrix.flame_shield": "Flammenschild",
   "ability.kingdomomnitrix.supernova": "Supernova",

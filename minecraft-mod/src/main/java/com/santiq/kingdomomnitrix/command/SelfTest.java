@@ -87,6 +87,11 @@ public final class SelfTest {
 	private SelfTest() {
 	}
 
+	/** Laeuft gerade ein Kraefte-Test? (Welten-Test und Kraefte-Test teilen sich die Log-Erfassung) */
+	static boolean running() {
+		return active != null;
+	}
+
 	/** Ergebnis einer Kraft. */
 	enum Verdict {
 		OK, SITUATIV, WIRKUNGSLOS, ABGELEHNT, FEHLER, ABSTURZ
@@ -143,7 +148,7 @@ public final class SelfTest {
 	}
 
 	/** Fehler und Warnungen aus dem Log, waehrend eine Kraft laeuft. */
-	private static final ConcurrentLinkedQueue<String> CAPTURED = new ConcurrentLinkedQueue<>();
+	static final ConcurrentLinkedQueue<String> CAPTURED = new ConcurrentLinkedQueue<>();
 	private static LogCapture capture;
 
 	private static final class LogCapture extends AbstractAppender {
@@ -169,7 +174,7 @@ public final class SelfTest {
 	 * @return Zahl der zu testenden Kraefte, 0 wenn nichts zu tun ist oder schon ein Test laeuft
 	 */
 	public static int start(ServerPlayerEntity player, Optional<Identifier> only) {
-		if (active != null) {
+		if (active != null || WorldSelfTest.running()) {
 			player.sendMessage(Text.translatable("commands.kingdomomnitrix.selftest.busy").formatted(Formatting.RED));
 			return 0;
 		}
@@ -203,7 +208,7 @@ public final class SelfTest {
 		}
 	}
 
-	private static void installCapture() {
+	static void installCapture() {
 		if (capture != null) {
 			return;
 		}
@@ -215,7 +220,7 @@ public final class SelfTest {
 		context.updateLoggers();
 	}
 
-	private static void removeCapture() {
+	static void removeCapture() {
 		if (capture == null) {
 			return;
 		}

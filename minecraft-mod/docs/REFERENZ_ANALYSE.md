@@ -81,6 +81,12 @@ SANTIQ zu 1.0.0: „nichts funktioniert richtig, die Omnitrix, die Aliens, die G
 ## 5. Umbauplan (Vorschlag, Reihenfolge = Priorität)
 
 ### P1 — Stabilität vor allem anderen (Grundlage)
+
+> **Stand 2026-10-29: erledigt.** `/hero selftest` prüft alle 312 Kräfte (Bericht `SELBSTTEST_KRAEFTE.md`: 305 OK,
+> 6 situativ, 1 Platzfehler im Testgelände), `/hero selftest worlds` alle 25 Welten und 18 Wesen
+> (`SELBSTTEST_WELTEN.md`: 43/43 OK). Gefunden und behoben: Client-Absturz beim NPC ohne Kennung, Standard-Riss ohne
+> Definition, Echo-Resonanz quadratisch (600 Schaden), Rath-Sturmangriff traf jeden Tick, Jetray-Sturm 345 Schaden,
+> weitere Ausreißer gedrosselt. Pool auf 8 Tasten-Kräfte je Alien gekürzt (96 entfernt).
 1. **Durchspiel-Test als Skript.** Ein automatisierter Lauf auf dem Produktionsserver (Fabric-Launcher, nicht
    Dev-Umgebung) deckt diese Stationen ab:
    - Omnitrix bekommen

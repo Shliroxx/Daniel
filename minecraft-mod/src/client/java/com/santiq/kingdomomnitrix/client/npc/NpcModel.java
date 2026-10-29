@@ -4,6 +4,7 @@ import com.santiq.kingdomomnitrix.KingdomOmnitrix;
 import com.santiq.kingdomomnitrix.npc.NpcEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import software.bernie.geckolib.cache.GeckoLibCache;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.constant.DataTickets;
@@ -18,12 +19,20 @@ import software.bernie.geckolib.model.data.EntityModelData;
 public class NpcModel extends GeoModel<NpcEntity> {
 	private static final String FALLBACK = "yen_sid";
 
+	/**
+	 * Modellname des NPC; ohne Kennung (frisch beschworen, Daten noch nicht da) oder ohne passende Modelldatei der
+	 * Ersatz — sonst bricht GeckoLib das ganze Bild ab (Selbsttest: Client-Absturz beim Beschwoeren).
+	 */
 	private static String model(NpcEntity npc) {
 		Identifier id = npc.npcId();
-		if (id == null) {
+		if (id == null || id.getPath().isEmpty()) {
 			return FALLBACK;
 		}
-		return npc.definition().map(def -> def.modelPath(id)).orElse(id.getPath());
+		String name = npc.definition().map(def -> def.modelPath(id)).orElse(id.getPath());
+		if (name.isEmpty() || !GeckoLibCache.getBakedModels().containsKey(KingdomOmnitrix.id("geo/entity/npc/" + name + ".geo.json"))) {
+			return FALLBACK;
+		}
+		return name;
 	}
 
 	@Override
