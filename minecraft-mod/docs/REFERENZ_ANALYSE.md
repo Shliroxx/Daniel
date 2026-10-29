@@ -145,6 +145,39 @@ SANTIQ zu 1.0.0: „nichts funktioniert richtig, die Omnitrix, die Aliens, die G
 2. **Eine Eigenmechanik je Anzug**, z. B. ein Plumber-Panzer, der Schaden speichert und als Stoß abgibt
    (kinetische Ladung wie beim Black-Panther-Anzug).
 
+## 5b. Vertiefung: Fisk's Superheroes und Superheroes Unlimited
+
+Beide Fandom-Wikis sind von hier aus gesperrt (HTTP 402 und Bot-Prüfung). Die Angaben stammen deshalb aus
+Suchergebnissen, Wiki-Auszügen und Foren. Die Rezepte unterscheiden sich je nach Version.
+
+### Fisk's Superheroes (1.7.10, Forge, letzte Version 2.1.x / 2.2.0)
+
+| System | So funktioniert es | Übertrag auf Kingdom Omnitrix |
+|---|---|---|
+| **Materialkette** | Der Creetle ist ein feindlicher Nacht-Mob in bestimmten Biomen (Dunkelwald, Sumpf, Mega-Taiga). Er lässt Creetle-Panzer fallen. Daraus wird mit Gold **Iridescent Gold**, die Währung zum Freischalten. | Eine **eigene Freischalt-Währung aus der Welt**, z. B. ein „DNA-Kern“ von Elite-Wesen auf den Heimatwelten. Sie ersetzt den Mix aus Bolts, Raritanium und Mythril beim Omnitrix-Fortschritt. |
+| **Suit Database** | Ein Knotenbaum mit Stufen. Jede Stufe setzt die vorige voraus und kostet Iridescent Gold **plus XP-Level**. Beispiel: Traversal II (Supergeschwindigkeit, Netzschwingen) braucht Traversal I und kostet 8 Gold und 25 Level. | Ein **Omnitrix-Knotenbaum** nach Kategorien wie Mobilität, Kraft, Elemente oder Technik. Ein Knoten schaltet eine Gruppe von Aliens bzw. Uhr-Funktionen frei. Die Kosten sind Kerne plus XP-Level, so bekommen Vanilla-XP endlich einen Sinn. |
+| **Data Drive → Fabricator** | Freigeschaltete Anzüge werden auf ein Laufwerk kopiert und im Suit Fabricator gedruckt. Material zählt dabei in Punkten (normal 1, Tutridium 512). **Nur wer den Anzug freigeschaltet hat, kann ihn tragen.** | Die Klempner-Anzüge im **Fabricator** nach Punkten bauen, wobei seltene Erze viele Punkte geben. Die Freischaltung gilt pro Spieler, damit im Mehrspieler niemand Anzüge weitergibt. |
+| **Kraft-Ressourcen** | Speedster haben **Speed-Balken**. Das Tachyon Device liefert, solange es geladen ist, 4 zusätzliche Balken aus dem Inventar und wird mit eigenem Material nachgeladen. | Für das Omnitrix ein **Akku-Gegenstand** (z. B. ein Galvan-Energiekern), der mehr Verwandlungszeit gibt und nachgeladen werden muss. Er ist sichtbar und greifbar statt nur eine Boost-Zahl. |
+| **Hero Packs + Marktplatz** | Inhalte von Nutzern als Pakete. Seit 2.2.0 gibt es einen **Marktplatz im Spiel** (Taste M), dazu den Befehl `/heropacks` und `/fiskheroes reload`. | Unsere Datenpakete (Codes, Erfindungen, Shop, Ereignisse) um **Alien-Packs** erweitern: Modell, Textur, Kräfte als JSON. Ein Marktplatz ist zu viel, aber Neuladen per Befehl ist machbar. |
+| **Umfang** | 65+ Anzüge, 90+ Kräfte. Die Kräfte sind Bausteine, die viele Anzüge teilen. | Gegenbild zu uns: Fisk's baut aus wenigen Bausteinen viele Helden, wir bauen pro Alien 20 Einzelkräfte. Ein **Baukasten** (z. B. Fliegen, Strahl, Sprung, Schild mit Parametern) wäre wartbarer und gleichmäßiger in der Qualität. |
+
+### Superheroes Unlimited (seit 2012, 1.7.10, heute Content-Pack auf Legends Core)
+
+| System | So funktioniert es | Übertrag auf Kingdom Omnitrix |
+|---|---|---|
+| **Vollset-Regel** | Kräfte gibt es nur mit dem **kompletten Anzug** eines Helden, Teile verschiedener Helden lassen sich nicht mischen. | Gut für die Klempner- und Endgame-Rüstungen: Der **Set-Bonus ist die eigentliche Kraft**, statt nur Rüstungswerte. |
+| **Tasten** | Kräfte liegen auf R, G, F, C und auf eigenen Suit-Ability-Tasten. Tasten kamen erst mit Version 4.0 dazu. | Wir liegen gleichauf (R/V/B + Shift), haben aber zu viele Zusatztasten. Zusammenlegen, siehe P2. |
+| **Unterschiedliche Kosten** | Thor fliegt kostenlos, Iron Man verbraucht beim Fliegen Energie. Jeder Held hat eine andere Ökonomie. | Haben wir schon (Kernhitze, Tempo, Wut …). Das ist eine **Stärke, die bleibt**. |
+| **Iron-Man-HUD** | Der Helm hat ein eigenes HUD, das ein Community-Mitglied gestaltet hat. | Ein eigenes HUD je Alien bzw. Anzug, z. B. Grey Matters Analyse-Overlay oder ein Klempner-Helm-HUD, statt eines HUD für alle. |
+| **Neuaufbau** | Über 10 Jahre wurde die Mod mehrfach neu gebaut, zuletzt als Version 6.0 (2019) mit „Legacies“ und neu gemachten Figuren. Danach wurde sie zum Content-Pack auf einem Core-Framework. | **Lehre für uns:** Systeme (Core) und Inhalte (Aliens, Welten) trennen. Dann lässt sich Inhalt verbessern, ohne den Unterbau anzufassen. |
+| **Ruf** | In Reviews „eine der besten Superhelden-Mods“, weil man den Anzug anzieht und sofort stark ist. | **Einfachheit gewinnt.** Wer das Omnitrix hat, muss in 30 Sekunden Spaß haben. Kein System darf das blockieren. |
+
+### Konsequenzen für den Umbauplan
+
+- **P2:** Statt des Skill-Baums pro Alien zuerst ein **Omnitrix-Knotenbaum nach dem Vorbild der Fisk-Datenbank**. Er kostet Kerne plus XP-Level und schaltet Aliens und Uhr-Funktionen frei.
+- **P1/P2:** Die Kräfte auf einen **Baukasten aus parametrisierten Bausteinen** umstellen, wie bei Fisk's. Dabei wird gleich auf 8 Kräfte pro Alien gekürzt.
+- **P6:** Klempner-Anzüge kommen aus dem **Fabricator nach Punkten**. Die Kraft gibt es nur mit **Vollset**, wie in SHU, und jeder Anzug bekommt ein eigenes HUD.
+
 ## 6. Was bewusst nicht übernommen wird
 
 - **Palladium/KubeJS als Unterbau:** Forge-only (1.20.1), mit Lag-Risiko. Unser Fabric-1.21.1-Unterbau bleibt.
@@ -169,5 +202,7 @@ SANTIQ zu 1.0.0: „nichts funktioniert richtig, die Omnitrix, die Aliens, die G
 - Create / Ponder: [Create (GitHub-Spiegel)](https://github.com/Attack8/Create), [Dominion Handbook](https://dominionhandbook.notion.site/Create-9b633e718f6b46f9b696b42365dd8fb2)
 - Witchery: [FTB Wiki](https://breezewiki.discard.no/ftb/wiki/Witchery/en-gb), [CurseForge Changelog](https://www.curseforge.com/minecraft/mc-mods/witchery/files/2229781)
 - FTB: [Infinity Evolved](https://www.modpackindex.com/modpack/18701/ftb-infinity-evolved), [FTB Sky Adventures](https://www.curseforge.com/minecraft/modpacks/ftb-sky-adventures), [FTB Quests](https://www.9minecraft.net/de/ftb-quests-mod/wiki/)
-- Fisk's Superheroes, Heroes Expansion, Attack of the B-Team, Twilight Forest und Thaumcraft 4: Quellen siehe
+- Fisk's Superheroes: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fiskheroes), [Modrinth](https://modrinth.com/mod/fiskheroes), [Wiki: Creetle](https://fiskheroes.fandom.com/wiki/Creetle), [Wiki: Tachyon Device](https://fiskheroes.fandom.com/wiki/Tachyon_Device), [Wiki: Database](https://fisk-superheroes.fandom.com/wiki/Database), [Review Central Station](https://victorylearning.substack.com/p/experimenting-with-minecraft-mods), [Changelog 2.2.0](https://www.curseforge.com/minecraft/mc-mods/fiskheroes/files/4517613)
+- Superheroes Unlimited: [CurseForge](https://www.curseforge.com/minecraft/mc-mods/superheroes-unlimited), [Legends: Superheroes Unlimited](https://www.curseforge.com/minecraft/mc-mods/legends-superheroes-unlimited), [Legends-Wiki](https://legendsmod.fandom.com/wiki/Superheroes_Unlimited), [Minecraft Forum](https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-mods/1287160-1-7-10-superheroes-unlimited-mod-now-apart-of-the), [minecraftxl Review](https://www.minecraftxl.com/superheroes-unlimited-mod/), [fandomspot](https://www.fandomspot.com/minecraft-superhero-mods/)
+- Heroes Expansion, Attack of the B-Team, Twilight Forest und Thaumcraft 4: Quellen siehe
   `VERGLEICH_REFERENZMODS.md` und die Websuche dieser Sitzung.
