@@ -104,9 +104,9 @@
         "ticks": 60,
         "lift": 1.1,
         "radius": 16.0,
-        "interval": 4,
+        "interval": 10,
         "targets": 3,
-        "damage": 7.0,
+        "damage": 5.0,
         "stun_ticks": 40
       },
       "role": "ultimate",
@@ -117,7 +117,7 @@
       "energy": 18,
       "cooldown": 60,
       "params": {
-        "damage": 3.0,
+        "damage": 1.55,
         "stun_ticks": 15,
         "range": 24.0,
         "shots": 5

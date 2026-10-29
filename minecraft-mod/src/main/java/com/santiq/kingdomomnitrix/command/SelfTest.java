@@ -64,7 +64,7 @@ import org.apache.logging.log4j.core.config.Property;
  *   <li>neu entstandene Wesen (Klone, Drohnen …) und veraenderte Bloecke im Umkreis</li>
  * </ul>
  * Vor jeder Kraft wird frisch verwandelt (nach jeder Messung zurueck), damit nichts aus der vorigen Kraft nachwirkt.
- * Ergebnis je Kraft: OK, WIRKUNGSLOS (nichts davon), ABGELEHNT (Kraft meldet „nicht moeglich“), FEHLER oder ABSTURZ.
+ * Ergebnis je Kraft: OK, SITUATIV (braucht eine Lage, die der Test nicht stellt), WIRKUNGSLOS (nichts davon), ABGELEHNT (Kraft meldet „nicht moeglich“), FEHLER oder ABSTURZ.
  * Der Bericht landet als Markdown im Serverordner ({@value #REPORT}) und zusammengefasst im Log. Zerstoerung bleibt an
  * (manche Kraefte brauchen Bloecke); nach jeder Kraft wird das Gelaende im Umkreis wiederhergestellt.
  */
@@ -89,8 +89,21 @@ public final class SelfTest {
 
 	/** Ergebnis einer Kraft. */
 	enum Verdict {
-		OK, WIRKUNGSLOS, ABGELEHNT, FEHLER, ABSTURZ
+		OK, SITUATIV, WIRKUNGSLOS, ABGELEHNT, FEHLER, ABSTURZ
 	}
+
+	/**
+	 * Kraefte, die im Testaufbau (stillstehende Ziele, unverletzter Spieler ohne Ausruestung) nichts zeigen koennen —
+	 * statt WIRKUNGSLOS/ABGELEHNT gilt SITUATIV mit Grund.
+	 */
+	private static final Map<String, String> SITUATIONAL = Map.of(
+			"tech_snare", "Falle loest aus, wenn ein Gegner hineinlaeuft (Testziele stehen still)",
+			"jury_rig", "repariert Ausruestung und heilt (Testspieler unverletzt, ohne Ausruestung)",
+			"tech_upgrade", "braucht beschaedigte Ausruestung",
+			"titanic_growth", "Wachstum (Groesse und Werte) — der Test misst keine Groesse",
+			"half_life", "braucht bestrahlte Ziele",
+			"tokustar_guard", "Resistenz — der Testspieler hat sie schon",
+			"blink", "Teleport braucht freien Platz am Blickpunkt");
 
 	private record Job(Identifier alienId, int index, AbilitySlot slot) {
 	}
@@ -246,6 +259,8 @@ public final class SelfTest {
 		run.current = job;
 		run.early = null;
 		run.earlyDetails = "";
+		// jede Verwandlung heizt das Omnitrix auf; ohne Abkuehlen wuerde es mitten im Test ueberhitzen und zurueckverwandeln
+		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.setHeat(player, 0.0f);
 		Optional<Identifier> transformedAs = TransformationManager.get(player).activeAlien();
 		if (!TransformationManager.get(player).isTransformed() || transformedAs.isEmpty() || !transformedAs.get().equals(job.alienId())) {
 			TransformationManager.Result result = TransformationManager.transform(player, job.alienId(), true);
@@ -274,7 +289,9 @@ public final class SelfTest {
 			Vec3d eye = player.getEyePos();
 			Vec3d to = aim.getPos().add(0.0, aim.getHeight() * 0.6, 0.0).subtract(eye);
 			float pitch = (float) -(MathHelper.atan2(to.y, Math.sqrt(to.x * to.x + to.z * to.z)) * MathHelper.DEGREES_PER_RADIAN);
-			player.teleport(run.world, run.origin.x, run.origin.y, run.origin.z, run.yaw, pitch);
+			// Sturzangriffe brauchen Hoehe: 5 Bloecke ueber dem Boden starten
+			double lift = job.slot().trigger() == AbilitySlot.Trigger.PLUNGE ? 5.0 : 0.0;
+			player.teleport(run.world, run.origin.x, run.origin.y + lift, run.origin.z, run.yaw, pitch);
 			player.setPitch(pitch);
 		}
 		Optional<AlienAbility> ability = AbilityRegistry.get(job.slot().type());
@@ -436,6 +453,9 @@ public final class SelfTest {
 		if (changed > 0) {
 			parts.add(changed + " Bloecke veraendert");
 		}
+		if (!TransformationManager.get(player).isTransformed()) {
+			parts.add("waehrend der Messung zurueckverwandelt");
+		}
 		String details = String.join(", ", parts);
 		Verdict verdict;
 		if (run.early == Verdict.ABSTURZ) {
@@ -445,10 +465,15 @@ public final class SelfTest {
 			verdict = Verdict.FEHLER;
 		} else if (run.early == Verdict.ABGELEHNT) {
 			verdict = Verdict.ABGELEHNT;
-		} else if (parts.isEmpty()) {
+		} else if (parts.isEmpty() || parts.size() == 1 && !TransformationManager.get(player).isTransformed()) {
 			verdict = Verdict.WIRKUNGSLOS;
 		} else {
 			verdict = Verdict.OK;
+		}
+		String reason = SITUATIONAL.get(run.current.slot().type().getPath());
+		if (reason != null && (verdict == Verdict.WIRKUNGSLOS || verdict == Verdict.ABGELEHNT)) {
+			verdict = Verdict.SITUATIV;
+			details = details.isEmpty() ? reason : details + " — " + reason;
 		}
 		record(run, verdict, details, log);
 	}
@@ -457,7 +482,7 @@ public final class SelfTest {
 		Job job = run.current;
 		run.outcomes.add(new Outcome(job.alienId(), job.index(), job.slot(), verdict, details, log));
 		int done = run.outcomes.size();
-		if (verdict != Verdict.OK) {
+		if (verdict != Verdict.OK && verdict != Verdict.SITUATIV) {
 			KingdomOmnitrix.LOGGER.info("[Selbsttest] {} #{} {} → {} {}", job.alienId().getPath(), job.index(), job.slot().type().getPath(),
 					verdict, details);
 		}

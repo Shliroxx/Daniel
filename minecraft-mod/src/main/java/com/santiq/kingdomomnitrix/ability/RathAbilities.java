@@ -58,7 +58,8 @@ final class RathAbilities {
 	private record Rival(UUID target, long until) {
 	}
 
-	private record Charge(long until, Vec3d direction) {
+	/** {@code hit}: wer schon getroffen wurde — jedes Ziel einmal je Sturmangriff (sonst traf er jeden Tick) */
+	private record Charge(long until, Vec3d direction, java.util.Set<UUID> hit) {
 	}
 
 	private record Finale(UUID target, long slamAt) {
@@ -192,7 +193,8 @@ final class RathAbilities {
 	/** Sturmangriff: Kopf voran nach vorn; wer getroffen wird, fliegt und taumelt. */
 	private static boolean rathCharge(AbilityContext ctx) {
 		ServerPlayerEntity rath = ctx.player();
-		CHARGES.put(rath.getUuid(), new Charge(ctx.world().getTime() + (long) ctx.param("ticks", 14), BuiltinAbilities.horizontalLook(rath)));
+		CHARGES.put(rath.getUuid(), new Charge(ctx.world().getTime() + (long) ctx.param("ticks", 14), BuiltinAbilities.horizontalLook(rath),
+				new java.util.HashSet<>()));
 		ctx.grantInvulnerability(8);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_RAVAGER_STEP, 1.4f, 0.8f);
 		return true;
@@ -282,6 +284,9 @@ final class RathAbilities {
 						Fx.sparks(world, rath.getPos().add(charge.direction().multiply(0.8)).add(0, 1.0, 0), FURY, 0.3f, 3);
 					}
 					for (LivingEntity target : AlienKit.around(world, rath, rath.getPos().add(0, 1, 0), 1.6)) {
+						if (!charge.hit().add(target.getUuid())) {
+							continue;
+						}
 						AlienKit.melee(world, rath, target, 6.0f);
 						AlienKit.push(target, rath.getPos(), 1.3, 0.5);
 						target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0), rath);

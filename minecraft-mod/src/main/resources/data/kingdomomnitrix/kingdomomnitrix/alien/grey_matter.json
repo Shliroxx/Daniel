@@ -101,7 +101,7 @@
       "energy": 35,
       "cooldown": 360,
       "params": {
-        "damage": 3.0,
+        "damage": 1.93,
         "range": 12.0,
         "seconds": 10.0
       },

@@ -115,7 +115,7 @@
       "cooldown": 120,
       "params": {
         "range": 3.5,
-        "damage": 3.0
+        "damage": 1.5
       },
       "role": "basic_2",
       "unlock_level": 4

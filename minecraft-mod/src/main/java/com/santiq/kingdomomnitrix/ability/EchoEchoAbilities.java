@@ -52,6 +52,8 @@ final class EchoEchoAbilities {
 	static final int RESONANCE_TICKS = 10;
 	private static final Identifier ECHO_ECHO = KingdomOmnitrix.id("echo_echo");
 	private static final float RESONANCE_BONUS = 3.0f;
+	/** hoechstens so viele Resonanz-Stufen zaehlen fuer den Bonus */
+	private static final int RESONANCE_MAX_STACKS = 3;
 	static final int CLONE_LIFE = 600;
 
 	/** Schalltreffer je Ziel: Zeit des ersten Treffers im Fenster und Zahl der Quellen */
@@ -184,7 +186,8 @@ final class EchoEchoAbilities {
 			if (heard[1] >= 2) {
 				// Resonanz: schwingt mit — mehr Schaden je Quelle, kurz gelaehmt
 				target.timeUntilRegen = 0;
-				target.damage(world.getDamageSources().sonicBoom(owner), RESONANCE_BONUS * (heard[1] - 1));
+				// gedeckelt: mit Chor (bis 9 Stimmen, 3 Wellen) wuerde der Bonus sonst quadratisch wachsen (Selbsttest: 200 je Ziel)
+				target.damage(world.getDamageSources().sonicBoom(owner), RESONANCE_BONUS * Math.min(heard[1] - 1, RESONANCE_MAX_STACKS));
 				target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 6), owner);
 				target.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, 60, 0), owner);
 				com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(target.getX(), target.getBodyY(1.0) + 0.3, target.getZ()), AlienKit.color(ParticleTypes.NOTE), 0.35f, Math.max(1, Math.min(20, (int) heard[1] * 2)));

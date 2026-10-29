@@ -52,7 +52,7 @@
       "cooldown": 40,
       "params": {
         "count": 5,
-        "damage": 4.0,
+        "damage": 2.23,
         "speed": 2.2,
         "spread": 5.0
       },
