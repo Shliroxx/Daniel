@@ -41,6 +41,51 @@
       "animation_length": 1.0,
       "bones": {}
     },
+    "mode_boulder_off": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.05,
+      "bones": {
+        "boulder_armorRightArm": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
+    "mode_boulder_on": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.05,
+      "bones": {
+        "boulder_armorRightArm": {
+          "scale": {
+            "vector": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "mode_none": {
+      "loop": "hold_on_last_frame",
+      "animation_length": 0.05,
+      "bones": {
+        "boulder_armorRightArm": {
+          "scale": {
+            "vector": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    },
     "revert": {
       "loop": "hold_on_last_frame",
       "animation_length": 0.4,

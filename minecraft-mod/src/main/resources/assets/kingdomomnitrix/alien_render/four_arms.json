@@ -622,6 +622,47 @@
       }
     }
   ],
+  "mode_poses": {
+    "boulder": {
+      "ease": "in_out_circ",
+      "parts": {
+        "right_arm": [
+          [
+            "set_rot",
+            "x",
+            -160.0
+          ],
+          [
+            "set_rot",
+            "y",
+            -17.5
+          ],
+          [
+            "set_rot",
+            "z",
+            10.0
+          ]
+        ],
+        "left_arm": [
+          [
+            "set_rot",
+            "x",
+            -160.0
+          ],
+          [
+            "set_rot",
+            "y",
+            17.5
+          ],
+          [
+            "set_rot",
+            "z",
+            -10.0
+          ]
+        ]
+      }
+    }
+  },
   "glow_frames": 1,
   "warn_textures": true,
   "source": "Alien Evolution (Habb and Stephen)"

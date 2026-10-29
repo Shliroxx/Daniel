@@ -17,8 +17,10 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import logging
 import sys
+import tempfile
 from pathlib import Path
 
 try:
@@ -37,9 +39,36 @@ MARGIN = 4
 SUPERSAMPLE = 4
 
 
+def resting_geo(geo: Path, name: str) -> dict:
+    """Modell im Grundzustand: Kraft-Bauteile, die die Animation „mode_none“ auf Groesse 0 setzt (Diamondheads
+    Schwert, Upgrades Pfuetze, Vierarms Felsbrocken), samt Unterknochen entfernen."""
+    model = json.loads(geo.read_text(encoding="utf-8"))
+    animation = ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"
+    if not animation.is_file():
+        return model
+    rest = json.loads(animation.read_text(encoding="utf-8")).get("animations", {}).get("mode_none", {}).get("bones", {})
+    hidden = {bone for bone, tracks in rest.items() if tracks.get("scale", {}).get("vector") == [0, 0, 0]}
+    if not hidden:
+        return model
+    bones = model["minecraft:geometry"][0]["bones"]
+    parents = {b["name"]: b.get("parent") for b in bones}
+
+    def under(name: str | None) -> bool:
+        while name is not None:
+            if name in hidden:
+                return True
+            name = parents.get(name)
+        return False
+    model["minecraft:geometry"][0]["bones"] = [b for b in bones if not under(b["name"])]
+    return model
+
+
 def render_view(geo: Path, texture: Path, yaw: float) -> Image.Image:
-    """Modell in grosser Aufloesung rendern, auf den Inhalt zuschneiden."""
-    faces, tex = render_geo.load_model(str(geo), str(texture))
+    """Modell (Grundzustand) in grosser Aufloesung rendern, auf den Inhalt zuschneiden."""
+    with tempfile.TemporaryDirectory() as tmp:
+        rest = Path(tmp) / geo.name
+        rest.write_text(json.dumps(resting_geo(geo, geo.name.removesuffix(".geo.json"))), encoding="utf-8")
+        faces, tex = render_geo.load_model(str(rest), str(texture))
     canvas = SIZE * SUPERSAMPLE * 3
     image = render_geo.render(faces, tex, yaw, 8.0, (canvas, canvas), canvas * 0.8)
     box = image.getbbox()

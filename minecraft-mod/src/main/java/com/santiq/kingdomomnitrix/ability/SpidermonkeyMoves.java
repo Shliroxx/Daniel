@@ -65,22 +65,9 @@ final class SpidermonkeyMoves {
 				}
 			}
 		});
-		PassiveRegistry.register(KingdomOmnitrix.id("monkey_climber"), new AlienPassive() {
-			@Override
-			public void tick(PassiveContext ctx) {
-				// Wandlauf: gegen die Wand gelaufen → klettern (Schleichen = festhalten)
-				ServerPlayerEntity monkey = ctx.player();
-				boolean wall = !ctx.world().isSpaceEmpty(monkey, monkey.getBoundingBox().offset(BuiltinAbilities.horizontalLook(monkey).multiply(0.3)));
-				if (wall && !monkey.isOnGround()) {
-					monkey.setVelocity(monkey.getVelocity().x, monkey.isSneaking() ? 0.0 : ctx.param("climb_speed", 0.22), monkey.getVelocity().z);
-					monkey.velocityModified = true;
-					monkey.fallDistance = 0.0f;
-				} else if (wall && monkey.isSprinting()) {
-					monkey.setVelocity(monkey.getVelocity().x, 0.3, monkey.getVelocity().z);
-					monkey.velocityModified = true;
-				}
-			}
-		});
+		// Wandklettern: dieselbe Passive fuer Vierarm (AE „surface_climbing“), dort mit eigener Klettergeschwindigkeit
+		PassiveRegistry.register(KingdomOmnitrix.id("tetramand_climber"), climber());
+		PassiveRegistry.register(KingdomOmnitrix.id("monkey_climber"), climber());
 		PassiveRegistry.register(KingdomOmnitrix.id("spider_sense"), new AlienPassive() {
 			@Override
 			public float incoming(PassiveContext ctx, DamageSource source, float amount) {
@@ -386,5 +373,24 @@ final class SpidermonkeyMoves {
 		Fx.sparks(world, AlienKit.body(target), WEB, 0.4f, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.4f, 0.6f);
 		return true;
+	}
+
+	private static AlienPassive climber() {
+		return new AlienPassive() {
+			@Override
+			public void tick(PassiveContext ctx) {
+				// Wandlauf: gegen die Wand gelaufen → klettern (Schleichen = festhalten)
+				ServerPlayerEntity player = ctx.player();
+				boolean wall = !ctx.world().isSpaceEmpty(player, player.getBoundingBox().offset(BuiltinAbilities.horizontalLook(player).multiply(0.3)));
+				if (wall && !player.isOnGround()) {
+					player.setVelocity(player.getVelocity().x, player.isSneaking() ? 0.0 : ctx.param("climb_speed", 0.22), player.getVelocity().z);
+					player.velocityModified = true;
+					player.fallDistance = 0.0f;
+				} else if (wall && player.isSprinting()) {
+					player.setVelocity(player.getVelocity().x, 0.3, player.getVelocity().z);
+					player.velocityModified = true;
+				}
+			}
+		};
 	}
 }

@@ -80,7 +80,11 @@ class Spec:
     keep: str | None = None
     # Modi (unsere ID, AE-Animation „an“, AE-Animation „aus“ als Datei:Name): Animationen mode_<id>_on/_off fuer den
     # Modus-Controller des Renderers; Werte und Wirkung des Modus stehen im Alien-JSON (traits.modes)
-    modes: tuple[tuple[str, str, str], ...] = ()
+    modes: tuple[tuple[str, str | None, str | None], ...] = ()
+    # Haltung je Modus aus dem AE-Animationsskript (Modus-ID, registerForPower-Name), solange der Modus an ist
+    mode_poses: tuple[tuple[str, str], ...] = ()
+    # Geschoss-Modelle (unser Name, AE-Modell, AE-Textur): geo/entity/<name>.geo.json + textures/entity/<name>.png
+    projectiles: tuple[tuple[str, str, str], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -107,7 +111,12 @@ ALIENS = {
                  sprint=("xlr8.json:animation.xlr8.mask_on", "xlr8.json:animation.xlr8.mask_off")),
     # ground_slam (→ Erdschlag), throw (→ Faustschlag), mighty_leap
     "four_arms": Spec("6", "tetramand", "tetramand.json", 2.0, "heavy", "#C0392B", extra="tetramand_arms",
-                      script="tetramand", poses=("earth/smash", "tetramand/punch", None)),
+                      script="tetramand", poses=("earth/smash", "tetramand/punch", None),
+                      # Felsbrocken wie in AE: Brocken in den Haenden (Hebe-Haltung), geworfen als eigenes Modell
+                      parts=("tetramand_boulder",), keep=r"boulder",
+                      modes=(("boulder", None, None),), mode_poses=(("boulder", "alienevo/liftboulder"),),
+                      projectiles=(("boulder", "assets/alienevo/palladium/model_layers/rock_throw/boulder.json",
+                                    "assets/alienevo/textures/models/aliens/alien_6/boulder.png"),)),
     # crystal_volley (→ Kristallstacheln)
     "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6,
                         script="petrosapien", poses=("diamond/spikes",),
@@ -705,18 +714,53 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
+    for projectile, model, texture in spec.projectiles:
+        files.update(projectile_files(jar, projectile, model, texture))
     files[ASSETS / "alien_render" / f"{name}.json"] = {
         "scale": render_scale(name, spec), "uniforms": list(UNIFORMS), "uniform_models": True,
         # Hauptknochen folgen der Spielerpose (wie AE); Schwung-Faktoren aus den AE-Animationsskripten
         "vanilla_pose": True, "arm_swing": spec.arm_swing, "leg_swing": spec.leg_swing,
         # Faehigkeits-Posen je Slot (aus dem AE-Skript, siehe parse_poses); null = nur Spielerpose
         "ability_poses": [parse_poses(jar, spec.script).get(p) if spec.script and p else None for p in spec.poses],
+        # Haltung je Modus (Vierarm hebt den Felsbrocken ueber den Kopf), solange der Modus an ist
+        **({"mode_poses": {mode: parse_poses(jar, spec.script)[pose] for mode, pose in spec.mode_poses}}
+           if spec.script and spec.mode_poses else {}),
         # Glut-Frames (alle 2 Ticks, wie AE) und Warn-Texturen (Abzeichen rot) — Dateinamen siehe build()
         "glow_frames": glow_frames(jar, spec), "warn_textures": badge is not None,
         # Endpose der AE-Fluganimation (Knochen → Drehung/Lage/Groesse), im Renderer in der Luft/im Wasser eingeblendet
         **({"flight_pose": flight_pose(jar, spec, classic_bones)} if spec.flight_pose else {}),
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
+
+
+def projectile_files(jar: Jar, name: str, model: str, texture: str) -> dict[Path, object]:
+    """Geschoss-Modell aus einem AE-Modell: alle Wuerfel in einen Knochen „body“, Mitte im Ursprung (der Renderer
+    dreht das Geschoss um seine Mitte), Groesse auf 16 Pixel = 1 Block normiert; dazu Textur und Dreh-Animation."""
+    geo = jar.json(model)["minecraft:geometry"][0]
+    cubes = [deepcopy(c) for b in geo["bones"] for c in b.get("cubes", [])]
+    if not cubes:
+        raise ValueError(f"{name}: Geschoss-Modell {model} hat keine Wuerfel")
+    lo = [min(c["origin"][i] for c in cubes) for i in range(3)]
+    hi = [max(c["origin"][i] + c["size"][i] for c in cubes) for i in range(3)]
+    k = 16.0 / max(h - l for l, h in zip(lo, hi))
+    mid = [(l + h) / 2.0 for l, h in zip(lo, hi)]
+    for c in cubes:
+        c["origin"] = [round((c["origin"][i] - mid[i]) * k + (8.0 if i == 1 else 0.0), 4) for i in range(3)]
+        c["size"] = [round(v * k, 4) for v in c["size"]]
+        if "pivot" in c:
+            c["pivot"] = [round((c["pivot"][i] - mid[i]) * k + (8.0 if i == 1 else 0.0), 4) for i in range(3)]
+    desc = geo["description"]
+    return {
+        ASSETS / "geo" / "entity" / f"{name}.geo.json": {"format_version": "1.12.0", "minecraft:geometry": [{
+            "description": {"identifier": f"geometry.kingdomomnitrix.{name}", "texture_width": desc.get("texture_width", 32),
+                            "texture_height": desc.get("texture_height", 32), "visible_bounds_width": 2,
+                            "visible_bounds_height": 2, "visible_bounds_offset": [0, 0.5, 0]},
+            "bones": [{"name": "body", "pivot": [0, 8, 0], "cubes": cubes}]}]},
+        ASSETS / "textures" / "entity" / f"{name}.png": Image.open(io.BytesIO(jar.zip.read(texture))).convert("RGBA"),
+        ASSETS / "animations" / "entity" / f"{name}.animation.json": {"format_version": "1.8.0", "animations": {
+            "spin": {"loop": True, "animation_length": 1.0, "bones": {"body": {"rotation": {
+                "0.0": {"vector": [0, 0, 0]}, "1.0": {"vector": [-360, 0, 0]}}}}}}},
+    }
 
 
 def form_geo(jar: Jar, spec: Spec, name: str, suffix: str, texture: tuple[float, float]) -> dict:
@@ -998,6 +1042,12 @@ def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
     names = ae_name_map(jar, spec, bones)
     for mode, on_ref, off_ref in spec.modes:
         for key, ref in ((f"mode_{mode}_on", on_ref), (f"mode_{mode}_off", off_ref)):
+            if ref is None:
+                # AE blendet das Bauteil nur ein (Render-Ebene mit Bedingung): an = Bauteile auf Groesse 1, aus = 0
+                shown = [1, 1, 1] if key.endswith("_on") else [0, 0, 0]
+                result[key] = {"loop": "hold_on_last_frame", "animation_length": 0.05,
+                               "bones": {b: {"scale": {"vector": shown}} for b in result["mode_none"]["bones"]}}
+                continue
             file, anim = ref.split(":", 1)
             source = deepcopy(jar.json(anim_path(spec, file))["animations"][anim])
             tracks = {}
@@ -1346,6 +1396,10 @@ def expected_files() -> list[Path]:
                       ASSETS / "textures" / "entity" / "alien" / f"{name}{suffix}.png"]
         paths += [ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json",
                   ASSETS / "alien_render" / f"{name}.json"]
+    for spec in ALIENS.values():
+        for projectile, _, _ in spec.projectiles:
+            paths += [ASSETS / "geo" / "entity" / f"{projectile}.geo.json", ASSETS / "textures" / "entity" / f"{projectile}.png",
+                      ASSETS / "animations" / "entity" / f"{projectile}.animation.json"]
     return paths
 
 

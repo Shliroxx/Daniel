@@ -774,6 +774,7 @@ def icons(c) -> dict[str, list]:
         "meteor_fist": lambda: [ground(), *fist(c, 0, -20, 0.6, math.pi, glow=FIRE, glow_alpha=0.6), L(m_speedlines(10, 90, 60, 200, 3, 10), FIRE_HOT)],
         "quad_finisher": lambda: [L(m_burst(128, 150, 120, 50, 14), FIRE_HOT, glow=FIRE, glow_alpha=0.7), *fist(c, -40, -40, 0.42, math.pi), *fist(c, 40, -40, 0.42, math.pi),
                           *fist(c, -40, 20, 0.42, math.pi), *fist(c, 40, 20, 0.42, math.pi)],
+        "tetramand_climber": lambda: [L(m_box(150, 20, 236, 236, 12), STONE), *fist(c, -40, 60, 0.4), L(m_arrow(100, 200, 100, 50, 14, 28), W)],
         "tetramand_rage": lambda: [L(m_flame(0, 10, 0.95), FIRE, glow=FIRE, glow_alpha=0.8), *fist(c, 0, 30, 0.45)],
         "four_fist_combo": lambda: [L(m_ring(128, 128, 104, 12), cl), *fist(c, -44, -44, 0.36), *fist(c, 44, -44, 0.36), *fist(c, -44, 44, 0.36), *fist(c, 44, 44, 0.36, glow=c)],
         "tetramand_hide": lambda: [L(m_shield(), c, glow=c, glow_alpha=0.4), L(m_hex(128, 120, 46, 14), STONE)],

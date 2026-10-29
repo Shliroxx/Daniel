@@ -1,13 +1,13 @@
 package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.util.Targeting;
 import com.santiq.kingdomomnitrix.power.AlienStrength;
-import com.santiq.kingdomomnitrix.power.Debris;
 import com.santiq.kingdomomnitrix.power.Destruction;
 import com.santiq.kingdomomnitrix.vfx.EarthWave;
 import com.santiq.kingdomomnitrix.vfx.Fx;
@@ -83,6 +83,8 @@ final class FourArmsAbilities {
 	private static final List<Wave> WAVES = new ArrayList<>();
 	private static final Map<UUID, Quake> QUAKES = new HashMap<>();
 	private static final Map<UUID, Thrown> THROWN = new HashMap<>();
+	/** Modus (traits.modes): Felsbrocken ueber dem Kopf */
+	static final String BOULDER_MODE = "boulder";
 
 	/** Druckwelle: Ring waechst in {@code ticks} auf {@code radius}, trifft jeden einmal. */
 	private static final class Wave {
@@ -285,10 +287,14 @@ final class FourArmsAbilities {
 	/** Packen und Werfen: das Ziel wird zum Geschoss und trifft beim Aufprall alles drumherum. Zu gross: Ringer-Wurf. */
 	private static boolean grabThrow(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
+		if (BOULDER_MODE.equals(AlienModes.id(player))) {
+			// Brocken in den Haenden: werfen
+			return throwBoulder(ctx);
+		}
 		Optional<LivingEntity> found = Targeting.findLivingTarget(player, ctx.param("range", 5.0));
 		if (found.isEmpty() || !PartyRules.canHarm(player, found.get())) {
-			// kein Ziel: wie in der Serie einen Brocken aus dem Boden reissen und werfen
-			return boulder(ctx);
+			// kein Ziel: wie in AE einen Brocken aus dem Boden reissen und ueber den Kopf heben
+			return liftBoulder(ctx);
 		}
 		LivingEntity target = found.get();
 		Power power = power(player);
@@ -365,11 +371,13 @@ final class FourArmsAbilities {
 		}
 	}
 
-	/** Felsbrocken: reisst ein Stueck Boden heraus (echter Krater) und wirft es; Einschlag mit Krater und Flaechenschaden. */
-	private static boolean boulder(AbilityContext ctx) {
+	/**
+	 * Felsbrocken heben (AE „boulder“): reisst den Boden vor Vierarm auf und haelt den Brocken ueber dem Kopf (Modus
+	 * {@link #BOULDER_MODE}: Bauteil im Modell, Hebe-Haltung, langsamer). Nochmal druecken wirft ihn.
+	 */
+	private static boolean liftBoulder(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
-		Vec3d look = player.getRotationVec(1.0f);
 		Vec3d flat = BuiltinAbilities.horizontalLook(player);
 		net.minecraft.util.math.BlockPos source = net.minecraft.util.math.BlockPos.ofFloored(player.getPos().add(flat.multiply(1.6))).down();
 		BlockState state = world.getBlockState(source);
@@ -377,39 +385,66 @@ final class FourArmsAbilities {
 			player.sendMessage(Text.translatable("message.kingdomomnitrix.no_target").formatted(Formatting.GRAY), true);
 			return false;
 		}
-		Power power = power(player);
-		float strength = AlienStrength.of(player);
-		Destruction.crater(world, player, Vec3d.ofCenter(source), 1.5, strength, 0.0, 0.25);
+		if (!AlienModes.set(player, BOULDER_MODE, (int) Math.round(ctx.param("hold_seconds", 10.0) * 20.0))) {
+			return false;
+		}
+		Destruction.crater(world, player, Vec3d.ofCenter(source), 1.5, AlienStrength.of(player), 0.0, 0.25);
 		Fx.smoke(world, Vec3d.ofCenter(source).add(0, 0.6, 0), DUST, 1.2f, 6);
-		com.santiq.kingdomomnitrix.vfx.Fx.sparks(world, new Vec3d(source.getX() + 0.5, source.getY() + 1.0, source.getZ() + 0.5), AlienKit.color(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK, state)), 0.35f, Math.max(1, Math.min(20, 40)));
-		float damage = (float) ctx.param("damage", 4.0) * 2.2f * power.factor();
-		float size = power.rampage() ? 2.6f : 1.9f;
-		double speed = ctx.param("power", 2.2) * 0.75;
-		Vec3d start = player.getEyePos().add(flat.multiply(1.2)).add(0, 0.6, 0);
-		Debris.projectile(world, player, state, start, look.multiply(speed).add(0, 0.18, 0), size, (w, at) -> {
-			for (LivingEntity near : w.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(at, 6, 4, 6),
-					e -> e != player && e.isAlive() && PartyRules.canHarm(player, e))) {
-				double d = near.getPos().distanceTo(at);
-				if (d > 3.2) {
-					continue;
-				}
-				near.timeUntilRegen = 0;
-				near.damage(w.getDamageSources().playerAttack(player), (float) (damage * (1.0 - d / 6.4)));
-				Vec3d push = near.getPos().subtract(at).multiply(1, 0, 1);
-				if (push.lengthSquared() > 1.0E-4) {
-					near.takeKnockback(1.4, -push.x, -push.z);
-				}
-				near.addVelocity(0.0, 0.4, 0.0);
-				near.velocityModified = true;
-			}
-			Destruction.crater(w, player, at.add(0, -0.4, 0), size * 1.3, 0.6, strength, 0.5, 0.45);
-			slamFx(w, at, 3.5 + size, 5, 1.0f + size * 0.2f, 0.0, Vec3d.ZERO);
-			w.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.6f, 0.6f);
-			w.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.0f, 0.8f);
-		});
+		Fx.sparks(world, Vec3d.ofCenter(source).add(0, 0.5, 0),
+				AlienKit.color(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK, state)), 0.35f, 20);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_STONE_BREAK, 1.4f, 0.5f);
-		BuiltinAbilities.sound(ctx, ModSounds.WEAPON_THROW, 1.2f, 0.5f);
+		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ANCIENT_DEBRIS_BREAK, 1.0f, 0.6f);
 		return true;
+	}
+
+	/** Gehobenen Brocken werfen (AE: Geschwindigkeit 2,1, kaum Schwerkraft, 25 Schaden): eigenes Geschoss-Modell. */
+	private static boolean throwBoulder(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		ServerWorld world = ctx.world();
+		AlienModes.clear(player);
+		Power power = power(player);
+		float damage = (float) ctx.param("boulder_damage", 18.0) * power.factor();
+		float size = power.rampage() ? 2.4f : 1.6f;
+		BoulderEntity boulder = new BoulderEntity(world, player, size, damage, AlienStrength.of(player));
+		Vec3d look = player.getRotationVec(1.0f);
+		boulder.setPosition(player.getEyePos().add(0.0, 0.8, 0.0).add(look.multiply(1.2)));
+		boulder.setVelocity(look.x, look.y + 0.05, look.z, (float) ctx.param("boulder_speed", 2.1), 0.0f);
+		world.spawnEntity(boulder);
+		BuiltinAbilities.sound(ctx, ModSounds.WEAPON_THROW, 1.2f, 0.5f);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_GENERIC_BIG_FALL, 1.0f, 0.7f);
+		return true;
+	}
+
+	/**
+	 * Brocken schlaegt ein (Block, Gegner oder Flugende): das direkt getroffene Ziel nimmt vollen Schaden, ringsum
+	 * nimmt er mit der Entfernung ab; Krater, Bodenwelle und Truemmer wie AEs „boulder_hit“.
+	 */
+	static void boulderImpact(ServerWorld world, ServerPlayerEntity player, Vec3d at, @org.jetbrains.annotations.Nullable net.minecraft.entity.Entity direct,
+			float damage, float size, float strength) {
+		if (direct instanceof LivingEntity hit && hit.isAlive() && PartyRules.canHarm(player, hit)) {
+			hit.timeUntilRegen = 0;
+			hit.damage(world.getDamageSources().playerAttack(player), damage);
+		}
+		for (LivingEntity near : world.getEntitiesByClass(LivingEntity.class, net.minecraft.util.math.Box.of(at, 6, 4, 6),
+				e -> e != player && e != direct && e.isAlive() && PartyRules.canHarm(player, e))) {
+			double d = near.getPos().distanceTo(at);
+			if (d > 3.2) {
+				continue;
+			}
+			near.timeUntilRegen = 0;
+			near.damage(world.getDamageSources().playerAttack(player), (float) (damage * 0.6 * (1.0 - d / 6.4)));
+			Vec3d push = near.getPos().subtract(at).multiply(1, 0, 1);
+			if (push.lengthSquared() > 1.0E-4) {
+				near.takeKnockback(1.4, -push.x, -push.z);
+			}
+			near.addVelocity(0.0, 0.4, 0.0);
+			near.velocityModified = true;
+		}
+		Destruction.crater(world, player, at.add(0, -0.4, 0), size * 1.3, 0.6, strength, 0.5, 0.45);
+		slamFx(world, at, 3.5 + size, 5, 1.0f + size * 0.2f, 0.0, Vec3d.ZERO);
+		world.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), ModSounds.ALIEN_SLAM, SoundCategory.PLAYERS, 1.6f, 0.6f);
+		world.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), SoundEvents.BLOCK_STONE_BREAK, SoundCategory.PLAYERS, 1.4f, 0.5f);
+		world.playSound(null, net.minecraft.util.math.BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.0f, 0.8f);
 	}
 
 	/** Titanensprung: weiter Satz, die Landung schlaegt nach Fallhoehe ein. */

@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
  * scale          Darstellungsgroesse (0,05..5, Standard 1)
  * uniforms       Uniform-IDs, erste = Grundtextur (Standard [classic])
  * uniform_models je Uniform eigene Geometrie
- * vanilla_pose   Hauptknochen folgen der Spielerpose (mit arm_swing, leg_swing, ability_poses)
+ * vanilla_pose   Hauptknochen folgen der Spielerpose (mit arm_swing, leg_swing, ability_poses, mode_poses)
  * glow_frames    Glut-Frames (_f&lt;i&gt;), warn_textures: Abzeichen-Warnung (_warn)
  * flight_pose    Flughaltung je Knochen ({@link AlienFlightPose})
  * </pre>
@@ -72,7 +72,7 @@ public record AlienRenderInfo(float scale, List<String> uniforms, boolean unifor
 		if (json.has("vanilla_pose") && json.get("vanilla_pose").getAsBoolean()) {
 			float arms = json.has("arm_swing") ? json.get("arm_swing").getAsFloat() : 1.0f;
 			float legs = json.has("leg_swing") ? json.get("leg_swing").getAsFloat() : 1.0f;
-			pose = new AlienPose.Info(MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f), AlienPose.parseAbilities(json));
+			pose = new AlienPose.Info(MathHelper.clamp(arms, 0.0f, 2.0f), MathHelper.clamp(legs, 0.0f, 2.0f), AlienPose.parseAbilities(json), AlienPose.parseModes(json));
 		}
 		int frames = json.has("glow_frames") ? MathHelper.clamp(json.get("glow_frames").getAsInt(), 1, 64) : 1;
 		return new AlienRenderInfo(scale, List.copyOf(uniforms), json.has("uniform_models") && json.get("uniform_models").getAsBoolean(),

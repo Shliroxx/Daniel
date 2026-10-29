@@ -53,6 +53,11 @@ public final class ModEntities {
 			EntityType.Builder.<WrenchProjectileEntity>create(WrenchProjectileEntity::new, SpawnGroup.MISC)
 					.dimensions(0.5f, 0.5f).maxTrackingRange(6).trackingTickInterval(2));
 
+	// Vierarms geworfener Felsbrocken (AE-Modell, GeckoLib)
+	public static final EntityType<com.santiq.kingdomomnitrix.ability.BoulderEntity> BOULDER = register("boulder",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.ability.BoulderEntity>create(com.santiq.kingdomomnitrix.ability.BoulderEntity::new, SpawnGroup.MISC)
+					.dimensions(1.25f, 1.25f).maxTrackingRange(8).trackingTickInterval(1));
+
 	public static final EntityType<FusionGrenadeEntity> FUSION_GRENADE = register("fusion_grenade",
 			EntityType.Builder.<FusionGrenadeEntity>create(FusionGrenadeEntity::new, SpawnGroup.MISC)
 					.dimensions(0.25f, 0.25f).maxTrackingRange(4).trackingTickInterval(10));

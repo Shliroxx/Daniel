@@ -3,6 +3,7 @@ package com.santiq.kingdomomnitrix.client.render.alien;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import java.util.ArrayList;
@@ -40,6 +41,9 @@ final class AlienPose {
 	static final int HOLD = 11;
 	static final int END = 17;
 	private static PlayerEntityModel<AbstractClientPlayerEntity> model;
+	/** Beginn der Modus-Haltung je Spieler (Entity-ID) zum Einblenden */
+	private static final Map<Integer, Long> MODE_START = new HashMap<>();
+	private static final Map<Integer, String> MODE_ID = new HashMap<>();
 
 	/** eine Palladium-Operation: Lage setzen/verschieben oder Drehung setzen/addieren, Achse 0..2, Wert (Pixel/Grad) */
 	record Op(Kind kind, int axis, float value) {
@@ -50,8 +54,8 @@ final class AlienPose {
 	record AbilityPose(String ease, Map<String, List<Op>> parts) {
 	}
 
-	/** Pose-Angaben eines Alien-Modells aus {@code alien_render}. */
-	record Info(float armSwing, float legSwing, List<AbilityPose> abilities) {
+	/** Pose-Angaben eines Alien-Modells aus {@code alien_render}; {@code modes}: Haltung je Modus-ID. */
+	record Info(float armSwing, float legSwing, List<AbilityPose> abilities, Map<String, AbilityPose> modes) {
 	}
 
 	private AlienPose() {
@@ -68,36 +72,49 @@ final class AlienPose {
 			return result;
 		}
 		for (JsonElement entry : json.getAsJsonArray("ability_poses")) {
-			if (entry == null || !entry.isJsonObject()) {
-				result.add(null);
-				continue;
-			}
-			JsonObject pose = entry.getAsJsonObject();
-			Map<String, List<Op>> parts = new HashMap<>();
-			for (Map.Entry<String, JsonElement> part : pose.getAsJsonObject("parts").entrySet()) {
-				List<Op> ops = new ArrayList<>();
-				for (JsonElement opElement : part.getValue().getAsJsonArray()) {
-					JsonArray op = opElement.getAsJsonArray();
-					Kind kind = switch (op.get(0).getAsString()) {
-						case "set_pos" -> Kind.SET_POS;
-						case "move_pos" -> Kind.MOVE_POS;
-						case "set_rot" -> Kind.SET_ROT;
-						case "add_rot" -> Kind.ADD_ROT;
-						default -> throw new IllegalArgumentException("unbekannte Pose-Operation " + op.get(0));
-					};
-					int axis = switch (op.get(1).getAsString()) {
-						case "x" -> 0;
-						case "y" -> 1;
-						case "z" -> 2;
-						default -> throw new IllegalArgumentException("unbekannte Achse " + op.get(1));
-					};
-					ops.add(new Op(kind, axis, op.get(2).getAsFloat()));
-				}
-				parts.put(part.getKey(), List.copyOf(ops));
-			}
-			result.add(new AbilityPose(pose.has("ease") ? pose.get("ease").getAsString() : "in_out_cubic", Map.copyOf(parts)));
+			result.add(entry == null || !entry.isJsonObject() ? null : parsePose(entry.getAsJsonObject()));
 		}
 		return result;
+	}
+
+	/** {@code mode_poses}: {modus: Pose} — gehalten, solange der Modus an ist (Vierarm hebt den Felsbrocken). */
+	static Map<String, AbilityPose> parseModes(JsonObject json) {
+		if (!json.has("mode_poses") || !json.get("mode_poses").isJsonObject()) {
+			return Map.of();
+		}
+		Map<String, AbilityPose> result = new HashMap<>();
+		for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject("mode_poses").entrySet()) {
+			if (entry.getValue().isJsonObject()) {
+				result.put(entry.getKey(), parsePose(entry.getValue().getAsJsonObject()));
+			}
+		}
+		return Map.copyOf(result);
+	}
+
+	private static AbilityPose parsePose(JsonObject pose) {
+		Map<String, List<Op>> parts = new HashMap<>();
+		for (Map.Entry<String, JsonElement> part : pose.getAsJsonObject("parts").entrySet()) {
+			List<Op> ops = new ArrayList<>();
+			for (JsonElement opElement : part.getValue().getAsJsonArray()) {
+				JsonArray op = opElement.getAsJsonArray();
+				Kind kind = switch (op.get(0).getAsString()) {
+					case "set_pos" -> Kind.SET_POS;
+					case "move_pos" -> Kind.MOVE_POS;
+					case "set_rot" -> Kind.SET_ROT;
+					case "add_rot" -> Kind.ADD_ROT;
+					default -> throw new IllegalArgumentException("unbekannte Pose-Operation " + op.get(0));
+				};
+				int axis = switch (op.get(1).getAsString()) {
+					case "x" -> 0;
+					case "y" -> 1;
+					case "z" -> 2;
+					default -> throw new IllegalArgumentException("unbekannte Achse " + op.get(1));
+				};
+				ops.add(new Op(kind, axis, op.get(2).getAsFloat()));
+			}
+			parts.put(part.getKey(), List.copyOf(ops));
+		}
+		return new AbilityPose(pose.has("ease") ? pose.get("ease").getAsString() : "in_out_cubic", Map.copyOf(parts));
 	}
 
 	/** Spielerpose berechnen (wie {@code LivingEntityRenderer.render}) und auf die Hauptknochen uebertragen. */
@@ -145,6 +162,7 @@ final class AlienPose {
 		model.leftLeg.pitch *= info.legSwing();
 
 		float[] root = new float[6];
+		applyMode(player, tickDelta, info, root);
 		applyAbility(player, tickDelta, info, root);
 
 		follow(bones.getBone("head"), model.head, 0.0f, 0.0f);
@@ -179,7 +197,34 @@ final class AlienPose {
 		AbilityPose pose = info.abilities().get(slot);
 		float age = now - state.energyStamp() + tickDelta;
 		float t = age < RISE ? age / RISE : (age < HOLD ? 1.0f : 1.0f - (age - HOLD) / (END - HOLD));
-		float k = ease(pose.ease(), MathHelper.clamp(t, 0.0f, 1.0f));
+		blend(pose, ease(pose.ease(), MathHelper.clamp(t, 0.0f, 1.0f)), root);
+	}
+
+	/** Haltung des aktiven Modus: blendet in {@link #RISE} Ticks ein und bleibt, bis der Modus endet. */
+	private static void applyMode(AbstractClientPlayerEntity player, float tickDelta, Info info, float[] root) {
+		if (info.modes().isEmpty()) {
+			MODE_START.remove(player.getId());
+			return;
+		}
+		String mode = AlienModes.id(player);
+		AbilityPose pose = info.modes().get(mode);
+		if (pose == null) {
+			MODE_START.remove(player.getId());
+			return;
+		}
+		long now = player.getWorld().getTime();
+		Long start = MODE_START.get(player.getId());
+		if (start == null || !mode.equals(MODE_ID.get(player.getId()))) {
+			start = now;
+			MODE_START.put(player.getId(), start);
+			MODE_ID.put(player.getId(), mode);
+		}
+		float t = MathHelper.clamp((now - start + tickDelta) / RISE, 0.0f, 1.0f);
+		blend(pose, ease(pose.ease(), t), root);
+	}
+
+	/** Pose mit Anteil {@code k} ueber die Spielerpose legen; Ganzkoerper-Anteile landen in {@code root}. */
+	private static void blend(AbilityPose pose, float k, float[] root) {
 		if (k <= 0.0f) {
 			return;
 		}
@@ -232,6 +277,8 @@ final class AlienPose {
 			case "in_out_sine" -> -(MathHelper.cos(MathHelper.PI * t) - 1.0f) / 2.0f;
 			case "out_quad" -> 1.0f - (1.0f - t) * (1.0f - t);
 			case "in_out_quad" -> t < 0.5f ? 2.0f * t * t : 1.0f - (float) Math.pow(-2.0f * t + 2.0f, 2) / 2.0f;
+			case "in_out_circ" -> t < 0.5f ? (1.0f - MathHelper.sqrt(1.0f - 4.0f * t * t)) / 2.0f
+					: (MathHelper.sqrt(1.0f - (float) Math.pow(-2.0f * t + 2.0f, 2)) + 1.0f) / 2.0f;
 			default -> t;
 		};
 	}
