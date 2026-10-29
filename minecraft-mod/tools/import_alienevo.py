@@ -87,8 +87,11 @@ class Spec:
     projectiles: tuple[tuple[str, str, str], ...] = ()
     # eigene Kraft-Bauteile (Name in PROPS): Knochen und Textur erzeugt dieses Werkzeug, Wurzeln heissen <modus>_<seite>
     props: str | None = None
-    # Knochen (Regex), die ein Modus ohne AE-Animation ausblendet (Upgrades Haende, wenn die Arme zur Axt werden)
+    # Knochen (Regex), die ein Modus ohne AE-Animation ausblendet
     mode_hide: tuple[tuple[str, str], ...] = ()
+    # Modi, die eine AE-Animation auf andere Knochen uebertragen (Modus, ((AE-Knochen, unser Knochen), …), Faktor fuer
+    # die Groesse der Kopf-Knochen <modus>_head_*): Upgrades Axt/Spitzhacke/Klinge bewegen sich wie AEs Keulen
+    mode_clone: tuple[tuple[str, tuple[tuple[str, str], ...], float], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -149,10 +152,17 @@ ALIENS = {
                             "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
                            ("liquid", "galvanic_mechamorph.animation.json:animation.upgrade.liquid",
                             "galvanic_mechamorph.animation.json:animation.upgrade.liquid_off"),
-                           # weitere Morphwaffen (eigene Modellteile, PROPS["upgrade_weapons"]): Arme formen sich um
-                           ("axe", None, None), ("pickaxe", None, None), ("blade", None, None)),
+                           # weitere Morphwaffen nach Bauart der AE-Keulen (PROPS["upgrade_weapons"]): gleicher
+                           # Ansatz, AE-Hautkachel und -Stacheln, AEs Keulen-Animation auf die neuen Knochen uebertragen
+                           ("axe", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
+                           ("pickaxe", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
+                           ("blade", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off")),
                     props="upgrade_weapons",
-                    mode_hide=(("axe", r"^hand2?$"), ("pickaxe", r"^hand2?$"), ("blade", r"^hand2?$"))),
+                    mode_clone=tuple((w, (("MACE", f"{w}_left"), ("mace_scale", f"{w}_head_left"),
+                                          ("spikes_angled", f"{w}_spikes_left"), ("spikes_straight", f"{w}_spikes_left"),
+                                          ("MACE2", f"{w}_right"), ("mace_scale2", f"{w}_head_right"),
+                                          ("spikes_angled2", f"{w}_spikes_right"), ("spikes_straight2", f"{w}_spikes_right")), k)
+                                     for w, k in (("axe", 1.0), ("pickaxe", 1.0), ("blade", 0.8)))),
     # ein Modell; Ebenen „prototype“ (classic) und „recal“ (evo/ultimate, Alien-Force-Look); Fluegel/Umhang aus flight_on
     "jetray": Spec("34", "aerophibian", "aerophibian.json", 1.0, "fast", "#E72D2D",
                    watch=(("prototype", "prototype"), ("default", "recal"), ("10k", "recal")),
@@ -634,69 +644,72 @@ def _face_images(cube: dict, tex: Image.Image, k: tuple[float, float]) -> dict[s
     return result
 
 
-def _prop_cube(origin: list[float], size: list[float], glow: bool) -> dict:
-    """Wuerfel eines eigenen Bauteils; jede Flaeche zeigt die Metall- (links) oder Leuchtkachel (rechts)."""
-    u = 16 if glow else 0
-    return {"origin": [round(v, 4) for v in origin], "size": size,
-            "uv": {face: {"uv": [u, 0], "uv_size": [16, 16]} for face in ("north", "east", "south", "west", "up", "down")}}
+def _box(center: list[float], lo: tuple[float, float, float], hi: tuple[float, float, float], template: dict,
+         mirror: bool) -> dict:
+    """Wuerfel relativ zur Kopfmitte (Einheiten vor der Animations-Vergroesserung) mit den UVs der AE-Vorlage."""
+    x0, x1 = (-hi[0], -lo[0]) if mirror else (lo[0], hi[0])
+    cube = deepcopy(template)
+    cube.pop("pivot", None)
+    cube.pop("rotation", None)
+    cube["origin"] = [round(center[0] + x0, 5), round(center[1] + lo[1], 5), round(center[2] + lo[2], 5)]
+    cube["size"] = [round(x1 - x0, 5), round(hi[1] - lo[1], 5), round(hi[2] - lo[2], 5)]
+    return cube
 
 
-def upgrade_weapons() -> tuple[list[dict], tuple[Image.Image, Image.Image], tuple[float, float]]:
-    """Upgrades Morphwaffen (Axt, Spitzhacke, Klinge) an beiden Unterarmen: schwarzes Galvan-Metall mit gruenen
-    Leiterbahnen, Schneiden leuchten. Lage in Modell-Pixeln unter der Hand (die der Modus ausblendet); vorne = -z."""
-    sides = (("left", "left_forearm", 5.33), ("right", "right_forearm", -5.33))
-    z = 1.1
-    designs = {
-        "axe": [((-0.75, 0, z - 0.75), (1.5, 12, 1.5), False),         # Stiel
-                ((-0.5, -1, z - 6.5), (1, 6, 5.5), False),              # Blatt nach vorn
-                ((-0.6, -1.5, z - 7.3), (1.2, 7, 0.8), True),           # Schneide
-                ((-0.5, 2, z + 0.75), (1, 2, 2.5), False),              # Dorn hinten
-                ((-1, -1.5, z - 1), (2, 1.5, 2), True)],                # Kappe
-        "pickaxe": [((-0.75, 0, z - 0.75), (1.5, 12, 1.5), False),
-                    ((-0.9, -1, z - 6), (1.8, 2, 12), False),           # Kopf quer
-                    ((-0.6, -1.5, z - 7.5), (1.2, 1.5, 1.5), True),     # Spitze vorn
-                    ((-0.6, -1.5, z + 6), (1.2, 1.5, 1.5), True)],      # Spitze hinten
-        "blade": [((-2, 9.5, z - 2.5), (4, 1, 5), False),               # Parierstange
-                  ((-0.4, -2, z - 2), (0.8, 11.5, 4), False),           # Klinge
-                  ((-0.5, -2.5, z - 2.7), (1, 11, 0.7), True),          # Schneide
-                  ((-0.4, -4, z - 1.2), (0.8, 2, 2.4), True)],          # Spitze
-    }
-    # Groesse und Anhebung je Waffe (um den Ansatz am Handgelenk): kraeftig genug fuer Upgrades breite Arme, die
-    # Waffe waechst direkt aus dem Unterarm
-    shape = {"axe": (1.6, 4.0), "pickaxe": (1.6, 4.0), "blade": (1.4, 3.0)}
-    bones = []
-    for weapon, cubes in designs.items():
-        k, lift = shape[weapon]
-        for side, parent, cx in sides:
-            placed = []
-            for o, sz, g in cubes:
-                origin = [cx + o[0] * k, 12 + (o[1] - 12) * k + lift, z + (o[2] - z) * k]
-                placed.append(_prop_cube(origin, [round(v * k, 4) for v in sz], g))
-            bones.append({"name": f"{weapon}_{side}", "parent": parent, "pivot": [cx, 12 + lift, z], "cubes": placed})
-    # Kachel 32x16 (Einheiten der Alien-Textur), gezeichnet in 64x32
-    color = Image.new("RGBA", (64, 32), (0, 0, 0, 255))
-    glow = Image.new("RGBA", (64, 32), (0, 0, 0, 0))
-    px, gx = color.load(), glow.load()
-    for x in range(32):
-        for y in range(32):
-            edge = x in (0, 31) or y in (0, 31)
-            panel = (x % 16 == 0) or (y % 16 == 0)
-            px[x, y] = (34, 40, 46, 255) if edge else ((44, 52, 58, 255) if panel else (24, 29, 34, 255))
-    for x, y0, y1 in ((6, 3, 28), (22, 6, 26), (13, 10, 30)):
-        for y in range(y0, y1):
-            px[x, y] = (57, 255, 20, 255)
-            gx[x, y] = (57, 255, 20, 255)
-    for y, x0, x1 in ((8, 6, 22), (20, 13, 22), (27, 3, 13)):
-        for x in range(x0, x1 + 1):
-            px[x, y] = (57, 255, 20, 255)
-            gx[x, y] = (57, 255, 20, 255)
-    for x in range(32, 64):
-        for y in range(32):
-            k = 1.0 - abs(y - 15.5) / 40.0
-            c = (int(70 * k), int(255 * k), int(40 * k), 255)
-            px[x, y] = c
-            gx[x, y] = c
-    return bones, (color, glow), (32, 16)
+def _spike(center: list[float], template: dict, offset: tuple[float, float, float], rotation: tuple[float, float, float],
+           mirror: bool) -> dict:
+    """AE-Stachel (duenne Flaeche, zeigt von der Mitte nach vorn) verschoben und um seinen Ansatz gedreht."""
+    ox = -offset[0] if mirror else offset[0]
+    cube = deepcopy(template)
+    cube["origin"] = [round(cube["origin"][0] + ox, 5), round(cube["origin"][1] + offset[1], 5),
+                      round(cube["origin"][2] + offset[2], 5)]
+    cube["pivot"] = [round(center[0] + ox, 5), round(center[1] + offset[1], 5), round(center[2] + offset[2], 5)]
+    rx, ry, rz = rotation
+    cube["rotation"] = [rx, -ry, -rz] if mirror else [rx, ry, rz]
+    return cube
+
+
+# Upgrades Morphwaffen nach Bauart der AE-Keulen: Kopf-Knochen <waffe>_head_* (Animation vergroessert ihn wie AEs
+# mace_scale auf das Vierfache), Stacheln <waffe>_spikes_*. Masse relativ zur Kopfmitte, vor der Vergroesserung;
+# vorne = -z. Stachel: (Versatz, Drehung um den Ansatz).
+WEAPON_DESIGNS = {
+    "axe": {"boxes": [((-0.45, -0.45, -0.45), (0.45, 0.45, 0.45)),       # Fassung um die Faust
+                      ((-0.14, -1.0, -1.7), (0.14, 0.95, -0.3))],        # Blatt nach vorn
+            "spikes": [((0, -0.7, -0.45), (0, 0, 90)), ((0, 0.0, -0.45), (0, 0, 90)),
+                       ((0, 0.7, -0.45), (0, 0, 90)),                     # Schneide
+                       ((0, 0, 0.0), (0, 180, 90))]},                     # Dorn hinten
+    "pickaxe": {"boxes": [((-0.45, -0.45, -0.45), (0.45, 0.45, 0.45)),
+                          ((-0.28, -0.28, -1.6), (0.28, 0.28, 1.6))],    # Kopf quer
+                "spikes": [((0, 0, -0.7), (0, 0, 90)), ((0, 0, -0.7), (0, 0, 0)),
+                           ((0, 0, 0.7), (0, 180, 90)), ((0, 0, 0.7), (0, 180, 0))]},
+    "blade": {"boxes": [((-0.42, -0.42, -0.42), (0.42, 0.42, 0.42)),
+                        ((-0.09, -3.4, -0.5), (0.09, 0.2, 0.3))],        # Klinge nach unten
+              "spikes": [((0, -2.6, 0.35), (0, 0, 90)), ((0, -1.7, 0.35), (0, 0, 90)),
+                         ((0, -0.8, 0.35), (0, 0, 90)),                   # Schneide vorn
+                         ((0, -3.4, 0.0), (90, 0, 90)), ((0, -3.4, 0.0), (-90, 0, 90))]},  # Spitze
+}
+
+
+def upgrade_weapons(bones: list[dict]) -> list[dict]:
+    """Axt, Spitzhacke und Klinge fuer beide Unterarme, abgeleitet aus AEs Keulen (MACE/MACE2): gleicher Ansatz und
+    Winkel am Unterarm, Kopf mit AEs Hautkachel, Stacheln mit AEs Stachelflaeche."""
+    by = {b["name"]: b for b in bones}
+    result = []
+    for side, suffix in (("left", ""), ("right", "2")):
+        mace, head, spikes = by["MACE" + suffix], by["mace_scale" + suffix], by["spikes_straight" + suffix]
+        head_tex = head["cubes"][0]
+        spike_tex = next(c for c in spikes["cubes"] if not c.get("rotation"))
+        center = head["pivot"]
+        mirror = side == "right"
+        for weapon, design in WEAPON_DESIGNS.items():
+            root = {k: deepcopy(v) for k, v in mace.items() if k != "cubes"}
+            root["name"] = f"{weapon}_{side}"
+            result.append(root)
+            result.append({"name": f"{weapon}_head_{side}", "parent": root["name"], "pivot": list(center),
+                           "cubes": [_box(center, lo, hi, head_tex, mirror) for lo, hi in design["boxes"]]})
+            result.append({"name": f"{weapon}_spikes_{side}", "parent": f"{weapon}_head_{side}", "pivot": list(center),
+                           "cubes": [_spike(center, spike_tex, off, rot, mirror) for off, rot in design["spikes"]]})
+    return result
 
 
 PROPS = {"upgrade_weapons": upgrade_weapons}
@@ -743,17 +756,6 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
             part_geos.append((tag, pgeo, th_parts))
             tw = max(tw, pw)
             th_parts += ph
-        own_props: list[dict] = []
-        if spec.props:
-            # eigene Bauteile: Textur-Kachel unter die Teile-Texturen, UVs um deren Hoehe verschieben
-            prop_bones, prop_tex, prop_units = PROPS[spec.props]()
-            stacked.append((prop_tex, prop_units, th_parts))
-            for bone in prop_bones:
-                for cube in bone.get("cubes", []):
-                    _shift_uv(cube, th_parts, (1.0, 1.0))
-            own_props = prop_bones
-            tw = max(tw, prop_units[0])
-            th_parts += prop_units[1]
         for part_tex, units, _ in stacked:
             color, glow = _stack(color, glow, part_tex, units, (kx, ky))
         th = th_parts
@@ -789,7 +791,9 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
                 if not badge:
                     break
         bones = transform_bones(geo, extra, badge[0] if badge else None, badge_dv, scale_uv, part_geos, spec.drop, spec.keep)
-        bones += own_props
+        if spec.props:
+            # eigene Bauteile aus den AE-Bauteilen abgeleitet (gleiche Textur, gleiche Bauart)
+            bones += PROPS[spec.props](bones)
         new_geo = {"format_version": "1.12.0", "minecraft:geometry": [{
             "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}", "texture_width": tw_new,
                             "texture_height": th_new, "visible_bounds_width": 4, "visible_bounds_height": 4.5,
@@ -1148,9 +1152,12 @@ def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
                 continue
             file, anim = ref.split(":", 1)
             source = deepcopy(jar.json(anim_path(spec, file))["animations"][anim])
+            clone = next(((dict(m), k) for c_mode, m, k in spec.mode_clone if c_mode == mode), None)
             tracks = {}
             for bone, value in source.get("bones", {}).items():
-                target = names.get(bone)
+                target = clone[0].get(bone) if clone and bone in clone[0] else names.get(bone)
+                if clone and target and target.startswith(f"{mode}_head_") and clone[1] != 1.0:
+                    value = _scaled_track(value, clone[1])
                 if target and target not in MAIN_BONES:
                     tracks[target] = value
             # Laesst die AE-Animation den Koerper zerfliessen (Haupt-Unterknochen auf 0), verschwindet auch das Abzeichen daneben
@@ -1171,6 +1178,23 @@ def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
             source.setdefault("animation_length", _keyframe_end(source))
             result[key] = source
     return result
+
+
+def _scaled_track(track: dict, factor: float) -> dict:
+    """Groessen-Spur mit einem Faktor (Klinge waechst weniger als AEs Keulenkopf)."""
+    track = deepcopy(track)
+
+    def scale(frame: dict) -> None:
+        if isinstance(frame, dict) and isinstance(frame.get("vector"), list):
+            frame["vector"] = [round(v * factor, 4) if isinstance(v, (int, float)) else v for v in frame["vector"]]
+    for kind in ("scale",):
+        spur = track.get(kind)
+        if isinstance(spur, dict) and "vector" in spur:
+            scale(spur)
+        elif isinstance(spur, dict):
+            for frame in spur.values():
+                scale(frame)
+    return track
 
 
 def _last_vector(track: dict) -> list[float] | None:
