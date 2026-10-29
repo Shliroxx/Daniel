@@ -127,6 +127,7 @@ public class KingdomOmnitrix implements ModInitializer {
 		com.santiq.kingdomomnitrix.omnitrix.OmnitrixCore.register();
 		TransformationManager.register();
 		com.santiq.kingdomomnitrix.alien.LoadoutManager.register();
+		com.santiq.kingdomomnitrix.alien.AlienModes.register();
 		com.santiq.kingdomomnitrix.ability.ComboManager.register();
 		com.santiq.kingdomomnitrix.ability.PowerTasks.register();
 		com.santiq.kingdomomnitrix.ability.passive.PassiveHooks.register();

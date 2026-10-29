@@ -1389,10 +1389,10 @@
   "passive.kingdomomnitrix.diamond_hide": "Diamond Hide",
   "passive.kingdomomnitrix.diamond_hide.desc": "Punching diamond hurts: 20% less melee damage, and attackers often chip their fists on crystal (35% chance, 1.5 hearts).",
   "ability.kingdomomnitrix.crystal_volley.desc": "Fires a volley of crystal shards from the hand.",
-  "ability.kingdomomnitrix.crystal_blade.desc": "His arm becomes a crystal blade: a wide slash in front of him.",
+  "ability.kingdomomnitrix.crystal_blade.desc": "His right forearm grows into a crystal sword (mode): +5 attack, more reach and knockback, every hit also strikes enemies next to the target. A wide slash when it forms; press again to retract it.",
   "ability.kingdomomnitrix.crystal_vault.desc": "Crystal surfing: a crystal bridge grows under Diamondhead and follows his gaze — even uphill — and shatters behind him.",
   "ability.kingdomomnitrix.spike_eruption.desc": "A ring of crystal spikes bursts out of the ground around him and spreads outwards.",
-  "ability.kingdomomnitrix.crystal_armor.desc": "A dome of crystal spikes protects him: melee attackers hurt themselves and resonance does not fade.",
+  "ability.kingdomomnitrix.crystal_armor.desc": "Crystal shield on the left arm (12 s): immune to projectiles and explosions, melee attackers hurt themselves on the spikes, plus resistance and a spike ring — but slower and weaker hits.",
   "ability.kingdomomnitrix.crystal_storm.desc": "Ultimate: shards circle around Diamondhead, then fly outwards in every direction.",
   "ability.kingdomomnitrix.head_hop": "Head Hop",
   "ability.kingdomomnitrix.head_hop.desc": "Leaps onto the nearest enemy's head and hammers away for three seconds — the enemy staggers around confused, just like in the show.",
@@ -2579,5 +2579,9 @@
   "screen.kingdomomnitrix.upgrade.locked": "Slot %s locked",
   "screen.kingdomomnitrix.upgrade.empty": "empty",
   "screen.kingdomomnitrix.upgrade.remove": "× removes the module",
-  "screen.kingdomomnitrix.upgrade.hint": "Right-click modules to insert"
+  "screen.kingdomomnitrix.upgrade.hint": "Right-click modules to insert",
+  "mode.kingdomomnitrix.crystal_blade": "Crystal Sword",
+  "mode.kingdomomnitrix.crystal_shield": "Crystal Shield",
+  "message.kingdomomnitrix.mode_on": "%s extended",
+  "message.kingdomomnitrix.mode_off": "%s retracted"
 }

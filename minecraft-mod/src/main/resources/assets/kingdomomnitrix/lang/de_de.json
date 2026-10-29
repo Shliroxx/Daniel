@@ -1389,10 +1389,10 @@
   "passive.kingdomomnitrix.diamond_hide": "Diamanthaut",
   "passive.kingdomomnitrix.diamond_hide.desc": "Auf Diamant zu schlagen tut weh: 20 % weniger Nahkampfschaden, und Angreifer splittern sich oft die Faust (35 % Chance, 1,5 Herzen).",
   "ability.kingdomomnitrix.crystal_volley.desc": "Feuert eine Salve Kristallsplitter aus der Hand.",
-  "ability.kingdomomnitrix.crystal_blade.desc": "Sein Arm wird zur Kristallklinge: ein weiter Hieb vor ihm.",
+  "ability.kingdomomnitrix.crystal_blade.desc": "Der rechte Unterarm wächst zum Kristallschwert (Modus): +5 Angriff, mehr Reichweite und Rückstoß, jeder Schlag trifft auch Gegner daneben. Beim Ausfahren ein weiter Hieb, nochmal drücken zieht die Klinge ein.",
   "ability.kingdomomnitrix.crystal_vault.desc": "Kristallsurfen: unter Diamondhead wächst eine Kristallbrücke, die seinem Blick folgt – auch bergauf – und hinter ihm zerspringt.",
   "ability.kingdomomnitrix.spike_eruption.desc": "Ein Ring Kristallspitzen bricht rund um ihn aus dem Boden und breitet sich nach außen aus.",
-  "ability.kingdomomnitrix.crystal_armor.desc": "Eine Kuppel aus Kristallspitzen schützt ihn: Nahkämpfer verletzen sich daran, die Resonanz klingt nicht ab.",
+  "ability.kingdomomnitrix.crystal_armor.desc": "Kristallschild am linken Arm (12 s): immun gegen Geschosse und Explosionen, Nahkämpfer verletzen sich an den Stacheln, dazu Widerstand und ein Stachelkranz — dafür langsamer und schwächer im Schlag.",
   "ability.kingdomomnitrix.crystal_storm.desc": "Ultimate: Splitter kreisen um Diamondhead und fliegen dann in alle Richtungen nach außen.",
   "ability.kingdomomnitrix.head_hop": "Kopfsprung",
   "ability.kingdomomnitrix.head_hop.desc": "Springt dem nächsten Gegner auf den Kopf und hämmert drei Sekunden lang drauf – der Gegner taumelt verwirrt herum, wie in der Serie.",
@@ -2579,5 +2579,9 @@
   "screen.kingdomomnitrix.upgrade.locked": "Platz %s gesperrt",
   "screen.kingdomomnitrix.upgrade.empty": "frei",
   "screen.kingdomomnitrix.upgrade.remove": "× baut das Modul aus",
-  "screen.kingdomomnitrix.upgrade.hint": "Module per Rechtsklick einsetzen"
+  "screen.kingdomomnitrix.upgrade.hint": "Module per Rechtsklick einsetzen",
+  "mode.kingdomomnitrix.crystal_blade": "Kristallschwert",
+  "mode.kingdomomnitrix.crystal_shield": "Kristallschild",
+  "message.kingdomomnitrix.mode_on": "%s ausgefahren",
+  "message.kingdomomnitrix.mode_off": "%s eingezogen"
 }

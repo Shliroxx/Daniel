@@ -316,7 +316,7 @@ public final class AlienBodyRenderers {
 					super.setCustomAnimations(animatable, instanceId, state);
 				}
 			}
-		});
+		}, Identifier.of(model.getNamespace(), "animations/entity/alien/" + model.getPath() + ".animation.json"));
 		// Leucht-Aura nach Alien-Anzeige (XLR8-Tempo, Heatblast-Kernhitze)
 		renderer.addRenderLayer(new MeterAuraLayer(renderer));
 		float scale = renderScale(model);

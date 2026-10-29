@@ -16,6 +16,18 @@
       "attribute": "minecraft:generic.armor_toughness",
       "amount": 6.0,
       "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": 10.0
+    },
+    {
+      "attribute": "minecraft:generic.knockback_resistance",
+      "amount": 1.0
+    },
+    {
+      "attribute": "minecraft:generic.attack_damage",
+      "amount": 3.0
     }
   ],
   "immunities": [
@@ -216,6 +228,50 @@
           "thorns_chance": 0.35,
           "thorns": 3.0
         }
+      }
+    ],
+    "modes": [
+      {
+        "id": "crystal_blade",
+        "name": "mode.kingdomomnitrix.crystal_blade",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 5.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_knockback",
+            "amount": 1.0
+          },
+          {
+            "attribute": "minecraft:player.entity_interaction_range",
+            "amount": 1.0
+          }
+        ],
+        "sweep": 0.6,
+        "sweep_radius": 2.5
+      },
+      {
+        "id": "crystal_shield",
+        "name": "mode.kingdomomnitrix.crystal_shield",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.movement_speed",
+            "amount": -0.25,
+            "operation": "add_multiplied_total"
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": -0.3,
+            "operation": "add_multiplied_total"
+          }
+        ],
+        "immunities": [
+          "#minecraft:is_projectile",
+          "#minecraft:is_explosion"
+        ],
+        "aura_damage": 4.0,
+        "aura_radius": 1.75
       }
     ]
   }

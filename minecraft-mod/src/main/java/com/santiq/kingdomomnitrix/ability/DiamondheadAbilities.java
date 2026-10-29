@@ -59,6 +59,9 @@ import net.minecraft.util.math.Vec3d;
  * Anzeige ueber {@link AlienMeterPayload#RESONANCE} (gruene Aura).
  */
 final class DiamondheadAbilities {
+	/** Modi (traits.modes im Alien-JSON, Modell-Animationen mode_<id>_on/_off) */
+	private static final String BLADE_MODE = "crystal_blade";
+	private static final String SHIELD_MODE = "crystal_shield";
 	static final float MAX = 100.0f;
 	static final float FACETED = 50.0f;
 	private static final Identifier DIAMONDHEAD = KingdomOmnitrix.id("diamondhead");
@@ -228,9 +231,19 @@ final class DiamondheadAbilities {
 	}
 
 	/** Kristallklinge: Arm wird zur Klinge, Schwung im Halbkreis; Prisma: Klingenwelle fliegt 12 Bloecke weit. */
+	/**
+	 * Kristallschwert: der rechte Unterarm waechst zur Klinge (AE-Modell und -Animation) — ein Modus mit mehr
+	 * Angriff, Reichweite und Schwung, der auch Nachbarn trifft. Beim Ausfahren ein weiter Hieb; nochmal druecken zieht
+	 * die Klinge ein.
+	 */
 	private static boolean blade(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		ServerWorld world = ctx.world();
+		if (!com.santiq.kingdomomnitrix.alien.AlienModes.toggle(player, BLADE_MODE, 0)) {
+			BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_BREAK, 1.0f, 0.7f);
+			return true;
+		}
+		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_AMETHYST_CLUSTER_PLACE, 1.4f, 0.8f);
 		Power power = power(player);
 		Vec3d look = BuiltinAbilities.horizontalLook(player);
 		double range = ctx.param("range", 4.0);
@@ -310,9 +323,14 @@ final class DiamondheadAbilities {
 	}
 
 	/** Kristallpanzer: Schutz, Nahkaempfer stossen sich an Kristallspitzen, die Resonanz baut sich nicht ab. */
+	/**
+	 * Kristallpanzer: Schild am linken Unterarm (AE-Modell) fuer die Dauer — Modus, der Geschosse und Explosionen
+	 * abhaelt und Nahkaempfer an den Stacheln verletzt, dazu Widerstand, Absorption und ein Stachelkranz am Boden.
+	 */
 	private static boolean armor(AbilityContext ctx) {
 		ServerPlayerEntity player = ctx.player();
 		int ticks = (int) (ctx.param("seconds", 12.0) * 20);
+		com.santiq.kingdomomnitrix.alien.AlienModes.set(player, SHIELD_MODE, ticks);
 		ARMOR.put(player.getUuid(), ctx.world().getTime() + ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, ticks, 1, false, false));
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, ticks, 2, false, false));

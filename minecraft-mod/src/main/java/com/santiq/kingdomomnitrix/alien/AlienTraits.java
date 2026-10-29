@@ -21,16 +21,19 @@ import net.minecraft.registry.entry.RegistryEntry;
  *   "senses_radius": 16,                              // Gegner im Umkreis leuchten (Wildmutt)
  *   "immune_effects": ["minecraft:poison"],           // diese Effekte wirken nicht (Stinkfly: eigener Gestank)
  *   "transform_style": "fire",                        // eigene Verwandlungs-Signatur ({@link TransformStyle})
- *   "passives": [{"type": "kingdomomnitrix:ember_body"}] // passive Kraefte ({@link PassiveSlot})
+ *   "passives": [{"type": "kingdomomnitrix:ember_body"}], // passive Kraefte ({@link PassiveSlot})
+ *   "modes": [{"id": "crystal_blade", ...}]          // Haltungen mit Modell-Bauteil ({@link AlienMode})
  * }
  * </pre>
  * Effekte laufen „ambient“ (ohne Partikel) und werden beim Zurueckverwandeln entfernt — echte Traenke bleiben.
  */
 public record AlienTraits(boolean flight, Optional<FlightStyle> flightStyleOverride, List<Effect> effects, List<Effect> waterEffects, int dryOutSeconds, float sensesRadius,
-		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle, List<PassiveSlot> passives) {
-	public static final AlienTraits NONE = new AlienTraits(false, Optional.empty(), List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD, List.of());
+		List<RegistryEntry<StatusEffect>> immuneEffects, TransformStyle transformStyle, List<PassiveSlot> passives, List<AlienMode> modes) {
+	public static final AlienTraits NONE = new AlienTraits(false, Optional.empty(), List.of(), List.of(), 0, 0.0f, List.of(), TransformStyle.STANDARD, List.of(), List.of());
 	/** hoechstens so viele passive Kraefte je Alien */
 	public static final int MAX_PASSIVES = 4;
+	/** hoechstens so viele Modi je Alien ({@link AlienMode}) */
+	public static final int MAX_MODES = 4;
 
 	/** Status-Effekt mit Stufe (0 = I). */
 	public record Effect(RegistryEntry<StatusEffect> effect, int amplifier) {
@@ -49,7 +52,8 @@ public record AlienTraits(boolean flight, Optional<FlightStyle> flightStyleOverr
 			Codec.floatRange(0.0f, 48.0f).optionalFieldOf("senses_radius", 0.0f).forGetter(AlienTraits::sensesRadius),
 			Registries.STATUS_EFFECT.getEntryCodec().listOf().optionalFieldOf("immune_effects", List.of()).forGetter(AlienTraits::immuneEffects),
 			TransformStyle.CODEC.optionalFieldOf("transform_style", TransformStyle.STANDARD).forGetter(AlienTraits::transformStyle),
-			PassiveSlot.CODEC.listOf(0, MAX_PASSIVES).optionalFieldOf("passives", List.of()).forGetter(AlienTraits::passives)
+			PassiveSlot.CODEC.listOf(0, MAX_PASSIVES).optionalFieldOf("passives", List.of()).forGetter(AlienTraits::passives),
+			AlienMode.CODEC.listOf(0, MAX_MODES).optionalFieldOf("modes", List.of()).forGetter(AlienTraits::modes)
 	).apply(instance, AlienTraits::new));
 
 	public AlienTraits {
@@ -58,6 +62,12 @@ public record AlienTraits(boolean flight, Optional<FlightStyle> flightStyleOverr
 		waterEffects = List.copyOf(waterEffects);
 		immuneEffects = List.copyOf(immuneEffects);
 		passives = List.copyOf(passives);
+		modes = List.copyOf(modes);
+	}
+
+	/** Modus mit dieser ID, falls das Alien ihn hat. */
+	public java.util.Optional<AlienMode> mode(String id) {
+		return modes.stream().filter(m -> m.id().equals(id)).findFirst();
 	}
 
 	/** Flugart; ohne Angabe Insektenfluegel. Nur sinnvoll, wenn {@link #flight()}. */

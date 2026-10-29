@@ -24,8 +24,9 @@ public class AlienBodyRenderer extends GeoReplacedEntityRenderer<AbstractClientP
 	private static final Vector3f UP = new Vector3f(0.0f, 1.0f, 0.0f);
 	private boolean glowPass;
 
-	public AlienBodyRenderer(EntityRendererFactory.Context context, GeoModel<AlienBodyAnimatable> model) {
-		super(context, model, new AlienBodyAnimatable());
+	/** @param animations Animationsdatei des Modells (Modus-Animationen) */
+	public AlienBodyRenderer(EntityRendererFactory.Context context, GeoModel<AlienBodyAnimatable> model, net.minecraft.util.Identifier animations) {
+		super(context, model, new AlienBodyAnimatable(animations));
 	}
 
 	/** Leuchtschicht mit gleichmaessiger Helligkeit von allen Seiten. */

@@ -112,6 +112,9 @@ public final class TransformationManager {
 			if (state.isInvulnerable(player.getWorld().getTime())) {
 				return false;
 			}
+			if (AlienModes.isImmune(player, source)) {
+				return false; // Modus (Diamondheads Kristallschild: Geschosse, Explosionen)
+			}
 			return activeDefinition(player).map(alien -> !alien.isImmuneTo(source)).orElse(true);
 		});
 	}

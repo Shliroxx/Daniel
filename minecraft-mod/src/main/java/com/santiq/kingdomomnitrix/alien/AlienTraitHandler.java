@@ -44,6 +44,7 @@ public final class AlienTraitHandler {
 
 	/** Jeden Tick fuer verwandelte Spieler. */
 	public static void tick(ServerPlayerEntity player, AlienDefinition alien, long now) {
+		AlienModes.tick(player, alien, now);
 		AlienTraits traits = alien.traits();
 		UUID id = player.getUuid();
 		if (traits.flight() && !player.isCreative() && !player.isSpectator()) {
@@ -86,6 +87,7 @@ public final class AlienTraitHandler {
 
 	/** Beim Zurueckverwandeln/Wechseln: gegebene Eigenschaften entfernen. */
 	public static void clear(ServerPlayerEntity player) {
+		AlienModes.clear(player);
 		UUID id = player.getUuid();
 		if (GRANTED_FLIGHT.remove(id) && !player.isCreative() && !player.isSpectator()) {
 			player.getAbilities().allowFlying = false;
@@ -153,6 +155,7 @@ public final class AlienTraitHandler {
 	 * der naechste Tick den Flug zurueck.
 	 */
 	public static void disconnect(ServerPlayerEntity player) {
+		AlienModes.disconnect(player);
 		UUID id = player.getUuid();
 		if (GRANTED_FLIGHT.remove(id) && !player.isCreative() && !player.isSpectator()) {
 			player.getAbilities().allowFlying = false;

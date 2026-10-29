@@ -1,5 +1,6 @@
 package com.santiq.kingdomomnitrix.client.render.alien;
 
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.alien.TransformationState;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Set;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Identifier;
 import software.bernie.geckolib.animatable.GeoReplacedEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
@@ -15,6 +17,8 @@ import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.cache.GeckoLibCache;
+import software.bernie.geckolib.loading.object.BakedAnimations;
 import software.bernie.geckolib.constant.DataTickets;
 import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceCache;
 
@@ -25,6 +29,7 @@ import software.bernie.geckolib.animatable.instance.SingletonAnimatableInstanceC
  * <p>Zwei Controller, beide nur aus synchronisiertem Zustand abgeleitet (kein eigenes Paket):</p>
  * <ul>
  *   <li>{@code body}: transform → jump/fall → run → walk → idle</li>
+ *   <li>{@code mode}: Modus-Bauteile ein/aus ({@link AlienModes})</li>
  *   <li>{@code action}: hit → ability_N (Faehigkeit gerade benutzt) → attack (Schlag) — ueberlagert nur die Knochen,
  *       die die Aktion bewegt</li>
  * </ul>
@@ -58,7 +63,18 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	private static final double MOVE_SPEED = 0.02;
 	private static final float MOVE_LIMB_SPEED = 0.1f;
 
+	private static final RawAnimation MODE_NONE = RawAnimation.begin().thenPlayAndHold("mode_none");
+
 	private final PrunableCache cache = new PrunableCache(this);
+	/** Animationsdatei des Modells (fuer die Frage, welche Modus-Animationen es gibt) */
+	private final Identifier animations;
+	/** zuletzt aktiver Modus je Spieler — beim Ausschalten laeuft dessen „aus“-Animation */
+	private final Map<Integer, String> lastMode = new HashMap<>();
+	private final Map<String, RawAnimation> modeAnimations = new HashMap<>();
+
+	public AlienBodyAnimatable(Identifier animations) {
+		this.animations = animations;
+	}
 	/** zuletzt gestartete Aktion je Spieler (Entity-ID) */
 	private final Map<Integer, Long> lastTrigger = new HashMap<>();
 
@@ -72,6 +88,41 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 		controllers.add(new AnimationController<>(this, "body", TRANSITION_TICKS, this::body));
 		controllers.add(new AnimationController<>(this, "action", 1, this::action));
 		controllers.add(new AnimationController<>(this, "sprint", 0, this::sprint));
+		controllers.add(new AnimationController<>(this, "mode", 0, this::mode));
+	}
+
+	/**
+	 * Modus (Diamondheads Kristallschwert/-schild …): Bauteile fahren mit der AE-Animation aus und ein, im
+	 * Grundzustand sind sie eingefahren (mode_none). Modelle ohne Modus-Animationen bekommen keine Anfrage.
+	 */
+	private PlayState mode(AnimationState<AlienBodyAnimatable> state) {
+		PlayerEntity player = player(state);
+		if (player == null || !hasAnimation("mode_none")) {
+			return PlayState.STOP;
+		}
+		String id = AlienModes.id(player);
+		String last = lastMode.getOrDefault(player.getId(), "");
+		if (!id.isEmpty() && hasAnimation(modeName(id, true))) {
+			lastMode.put(player.getId(), id);
+			return state.setAndContinue(modeAnimation(modeName(id, true)));
+		}
+		if (!last.isEmpty() && hasAnimation(modeName(last, false))) {
+			return state.setAndContinue(modeAnimation(modeName(last, false)));
+		}
+		return state.setAndContinue(MODE_NONE);
+	}
+
+	private static String modeName(String mode, boolean on) {
+		return "mode_" + mode + (on ? "_on" : "_off");
+	}
+
+	private RawAnimation modeAnimation(String name) {
+		return modeAnimations.computeIfAbsent(name, n -> RawAnimation.begin().thenPlayAndHold(n));
+	}
+
+	private boolean hasAnimation(String name) {
+		BakedAnimations baked = GeckoLibCache.getBakedAnimations().get(animations);
+		return baked != null && baked.animations().containsKey(name);
 	}
 
 	/** Sprinten an/aus (AE: XLR8-Visier schliesst sich); Aliens ohne eigene Animation haben leere Eintraege. */
@@ -206,6 +257,7 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	 */
 	public void retain(Set<Integer> entityIds) {
 		lastTrigger.keySet().retainAll(entityIds);
+		lastMode.keySet().retainAll(entityIds);
 		cache.retain(entityIds);
 	}
 

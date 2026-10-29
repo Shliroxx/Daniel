@@ -75,6 +75,12 @@ class Spec:
     parts: tuple[str, ...] = ()  # weitere AE-Modelle, die fest dazugehoeren (Stinkfly: Beinpaar, Fluegel)
     variables: tuple[tuple[str, str], ...] = ()  # Textur-Variablen (#TIMER, #X …) → fester Wert (Grundzustand)
     drop: str | None = None  # zusaetzliche Requisiten-Knochen (Regex), die nur Faehigkeiten zeigen
+    # Kraft-Bauteile, die NICHT entfernt werden (Regex, auch fuer Unterknochen): sie bleiben im Modell, sind im
+    # Grundzustand auf Groesse 0 („mode_none“) und fahren in einem Modus mit der AE-Animation aus
+    keep: str | None = None
+    # Modi (unsere ID, AE-Animation „an“, AE-Animation „aus“ als Datei:Name): Animationen mode_<id>_on/_off fuer den
+    # Modus-Controller des Renderers; Werte und Wirkung des Modus stehen im Alien-JSON (traits.modes)
+    modes: tuple[tuple[str, str, str], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -104,7 +110,13 @@ ALIENS = {
                       script="tetramand", poses=("earth/smash", "tetramand/punch", None)),
     # crystal_volley (→ Kristallstacheln)
     "diamondhead": Spec("3", "petrosapien", "petrosapien.json", 1.35, "heavy", "#2ECC71", arm_swing=0.6, leg_swing=0.6,
-                        script="petrosapien", poses=("diamond/spikes",)),
+                        script="petrosapien", poses=("diamond/spikes",),
+                        # Kristallschwert (rechter Unterarm) und Kristallschild (linker Unterarm) wie in AE
+                        keep=r"sword|shield",
+                        modes=(("crystal_blade", "petrosapien.animation.json:animation.Diamondhead.sword_on",
+                                "petrosapien.animation.json:animation.Diamondhead.sword_off"),
+                               ("crystal_shield", "petrosapien.animation.json:animation.Diamondhead.shield_spin",
+                                "petrosapien.animation.json:animation.Diamondhead.shield_off"))),
     "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6),
     # Groessen = AE „size_change“ (sichtbare Modellgroesse); Augenhoehe/Hitbox regelt das Datenpaket (scale)
     "wildmutt": Spec("2", "vulpimancer", "vulpimancer.json", 1.0, "fast", "#E8892B", script="vulpimancer"),
@@ -400,7 +412,8 @@ def badge_parts(jar: Jar, spec: Spec, state: str = "default") -> tuple[dict, Ima
 
 
 def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: float, scale_uv: tuple[float, float],
-                    parts: list[tuple[str, dict, float | None]] | None = None, drop: str | None = None) -> list[dict]:
+                    parts: list[tuple[str, dict, float | None]] | None = None, drop: str | None = None,
+                    keep: str | None = None) -> list[dict]:
     """AE-Knochen auf unsere Namen abbilden, Requisiten entfernen, Zusatzmodelle und Abzeichen anhaengen.
 
     parts: (Kuerzel, Geometrie, V-Versatz) — V-Versatz None = teilt sich die Haupttextur, sonst liegt seine Textur
@@ -408,9 +421,15 @@ def transform_bones(geo: dict, extra: dict | None, badge: dict | None, badge_v: 
     bones = [b for b in geo["bones"]]
     by_name = {b["name"]: b for b in bones}
     extra_drop = re.compile(drop, re.I) if drop else None
+    kept = re.compile(keep, re.I) if keep else None
 
     def dropped(bone: dict, pool: dict[str, dict] | None = None) -> bool:
         pool = by_name if pool is None else pool
+        probe = bone
+        while kept and probe is not None:
+            if kept.search(probe["name"]):
+                return False  # Kraft-Bauteil bleibt (Modus)
+            probe = pool.get(probe.get("parent", ""))
         while bone is not None:
             if DROP.search(bone["name"]) or (extra_drop and extra_drop.search(bone["name"])):
                 return True
@@ -667,7 +686,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
                     sheet_color = c
                 if not badge:
                     break
-        bones = transform_bones(geo, extra, badge[0] if badge else None, badge_dv, scale_uv, part_geos, spec.drop)
+        bones = transform_bones(geo, extra, badge[0] if badge else None, badge_dv, scale_uv, part_geos, spec.drop, spec.keep)
         new_geo = {"format_version": "1.12.0", "minecraft:geometry": [{
             "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}", "texture_width": tw_new,
                             "texture_height": th_new, "visible_bounds_width": 4, "visible_bounds_height": 4.5,
@@ -928,10 +947,66 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
             source["loop"] = "hold_on_last_frame"
             anim = source
         animations[key] = anim
+    animations.update(mode_animations(jar, spec, bones))
     # Schlag, Treffer und Faehigkeiten zeigt die Spielerpose (Armschwung); die Controller brauchen die Namen trotzdem
     for key in ("attack", "hit", "ability_0", "ability_1", "ability_2"):
         animations[key] = {"loop": "hold_on_last_frame", "animation_length": generated[key]["animation_length"], "bones": {}}
     return {"format_version": "1.8.0", "animations": {k: animations[k] for k in sorted(animations)}}
+
+
+def ae_name_map(jar: Jar, spec: Spec, bones: list[dict]) -> dict[str, str]:
+    """AE-Knochenname → unser Name: direkt (ae_bone_name) oder ueber gleiche Lage und Wuerfel (umbenannte Unterarme)."""
+    present = {b["name"] for b in bones}
+    # Uniform-Modelle (classic = AE „prototype“) oder ein einziges Modell (Alien-Force-Erweiterung)
+    try:
+        ae_geo = jar.json(geo_path(spec, f"{spec.species}_{UNIFORMS['classic']}"))["minecraft:geometry"][0]
+    except KeyError:
+        ae_geo = jar.json(geo_path(spec, spec.species))["minecraft:geometry"][0]
+
+    def shape(bone: dict) -> tuple:
+        return (tuple(bone.get("pivot", ())), tuple((tuple(c.get("origin", ())), tuple(c.get("size", ())))
+                                                    for c in bone.get("cubes", [])))
+    ours: dict[tuple, str] = {}
+    for b in bones:
+        ours.setdefault(shape(b), b["name"])
+    mapping = {}
+    for b in ae_geo["bones"]:
+        direct = ae_bone_name(b["name"])
+        mapping[b["name"]] = direct if direct in present else ours.get(shape(b))
+    return {k: v for k, v in mapping.items() if v}
+
+
+def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
+    """Modus-Animationen: mode_none (alle Bauteile auf 0), je Modus mode_<id>_on/_off aus AE (Hauptknochen frei —
+    die folgen der Spielerpose). Ohne Modi nur mode_none (leer), der Controller braucht den Namen."""
+    result = {"mode_none": {"loop": "hold_on_last_frame", "animation_length": 0.05, "bones": {}}}
+    if not spec.keep:
+        return result
+    kept = re.compile(spec.keep, re.I)
+    by_name = {b["name"]: b for b in bones}
+    # Wurzeln der Bauteile (Elternknochen ist kein Bauteil) im Grundzustand unsichtbar
+    for b in bones:
+        parent = by_name.get(b.get("parent", ""))
+        if kept.search(b["name"]) and not (parent and kept.search(parent["name"])):
+            result["mode_none"]["bones"][b["name"]] = {"scale": {"vector": [0, 0, 0]}}
+    names = ae_name_map(jar, spec, bones)
+    for mode, on_ref, off_ref in spec.modes:
+        for key, ref in ((f"mode_{mode}_on", on_ref), (f"mode_{mode}_off", off_ref)):
+            file, anim = ref.split(":", 1)
+            source = deepcopy(jar.json(anim_path(spec, file))["animations"][anim])
+            tracks = {}
+            for bone, value in source.get("bones", {}).items():
+                target = names.get(bone)
+                if target and target not in MAIN_BONES:
+                    tracks[target] = value
+            # Bauteile, die die AE-Animation nicht anfasst, bleiben eingefahren
+            for root_bone, hidden in result["mode_none"]["bones"].items():
+                tracks.setdefault(root_bone, deepcopy(hidden))
+            source["bones"] = tracks
+            source["loop"] = "hold_on_last_frame"
+            source.setdefault("animation_length", _keyframe_end(source))
+            result[key] = source
+    return result
 
 
 def _last_vector(track: dict) -> list[float] | None:
