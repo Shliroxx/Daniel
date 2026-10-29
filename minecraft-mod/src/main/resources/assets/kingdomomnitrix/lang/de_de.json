@@ -1559,9 +1559,9 @@
   "passive.kingdomomnitrix.liquid_body": "Flüssiger Körper",
   "passive.kingdomomnitrix.liquid_body.desc": "Schläge gehen zum Teil durch den flüssigen Körper hindurch: 25 % weniger Nahkampfschaden.",
   "ability.kingdomomnitrix.optic_beam.desc": "Ein Strahl aus dem Auge; vernetzt durchschlägt er alles in der Linie und springt auf zwei weitere Ziele.",
-  "ability.kingdomomnitrix.liquid_form.desc": "Wird flüssig und fließt durch Gegner hindurch – jeder bringt Integration.",
+  "ability.kingdomomnitrix.liquid_form.desc": "Zerfließt zur Flüssigmetall-Pfütze: unverwundbar, schnell, fließt Blöcke hoch und durch Gegner hindurch – jeder bringt Integration.",
   "ability.kingdomomnitrix.tech_upgrade.desc": "Techno-Fusion: verschmilzt mit Technik in der Nähe und lädt Integration auf.",
-  "ability.kingdomomnitrix.mace_fists.desc": "Formt die Fäuste zu Morgensternen – Nahkampftreffer entladen die Naniten im Ziel.",
+  "ability.kingdomomnitrix.mace_fists.desc": "Formt beide Unterarme zu Stachelkeulen: mehr Wucht und Rückstoß, Schwünge treffen Nachbarn, Treffer entladen die Naniten im Ziel.",
   "ability.kingdomomnitrix.system_override.desc": "Übernimmt einen Mob für einige Sekunden: er kämpft für Upgrade. Bosse und Spieler bekommen stattdessen eine Systemstörung.",
   "ability.kingdomomnitrix.plasma_cannon.desc": "Ultimate: aus seinem Körper formt sich eine Plasmakanone; mit Overclock wird sie zur Omega-Kanone.",
   "ability.kingdomomnitrix.soul_drain": "Seelenraub",
@@ -2582,6 +2582,8 @@
   "screen.kingdomomnitrix.upgrade.hint": "Module per Rechtsklick einsetzen",
   "mode.kingdomomnitrix.crystal_blade": "Kristallschwert",
   "mode.kingdomomnitrix.crystal_shield": "Kristallschild",
+  "mode.kingdomomnitrix.mace_fists": "Keulenfäuste",
+  "mode.kingdomomnitrix.liquid": "Flüssigmetall-Pfütze",
   "message.kingdomomnitrix.mode_on": "%s ausgefahren",
   "message.kingdomomnitrix.mode_off": "%s eingezogen"
 }

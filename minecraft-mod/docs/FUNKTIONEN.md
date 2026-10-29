@@ -183,6 +183,8 @@ Evolution aus und wieder ein, andere Spieler sehen es mit. Im Modus gelten ander
 |---|---|---|---|
 | Diamondhead | Kristallklinge (R/V/B-Taste, nochmal drücken = einziehen) | rechter Unterarm wird zum Kristallschwert | +5 Angriff, +1 Reichweite, mehr Rückstoß, jeder Schlag trifft auch Gegner daneben (60 %); beim Ausfahren ein weiter Hieb |
 | Diamondhead | Kristallpanzer (12 s) | Kristallschild am linken Unterarm | immun gegen Geschosse und Explosionen, Stacheln verletzen Nahkämpfer (4 je ½ s), Widerstand und Stachelkranz; langsamer, −30 % Schlagkraft |
+| Upgrade | Keulenfäuste (12 s) | beide Unterarme werden zu Stachelkeulen | +4 Angriff, +1,5 Rückstoß, Schläge treffen auch Gegner daneben (40 %), Schockwelle und Naniten-Entladung; −20 % Schlagtempo |
+| Upgrade | Flüssige Form (3 s) | Körper zerfließt zur wabernden Flüssigmetall-Pfütze (AE-Schleife) | unverwundbar, sehr schnell, fließt einen Block hoch, immun gegen Geschosse und Sturz; durchflossene Gegner werden verletzt und infiziert |
 
 Diamondhead ist außerdem nach AE-Vorbild rückstoßfest und hat +10 Leben und +3 Angriff. Datenfeld:
 `traits.modes` im Alien-JSON, Modell-Animationen `mode_<id>_on/_off` (Import: `Spec.keep`/`Spec.modes`).

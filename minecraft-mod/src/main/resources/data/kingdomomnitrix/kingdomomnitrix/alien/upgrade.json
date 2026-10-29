@@ -46,9 +46,9 @@
     {
       "type": "kingdomomnitrix:liquid_form",
       "energy": 25,
-      "cooldown": 80,
+      "cooldown": 160,
       "params": {
-        "ticks": 40
+        "ticks": 60
       },
       "role": "movement",
       "unlock_level": 1
@@ -225,6 +225,47 @@
         "params": {
           "melee": 0.75
         }
+      }
+    ],
+    "modes": [
+      {
+        "id": "mace_fists",
+        "name": "mode.kingdomomnitrix.mace_fists",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 4.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_knockback",
+            "amount": 1.5
+          },
+          {
+            "attribute": "minecraft:generic.attack_speed",
+            "amount": -0.2,
+            "operation": "add_multiplied_total"
+          }
+        ],
+        "sweep": 0.4,
+        "sweep_radius": 2.0
+      },
+      {
+        "id": "liquid",
+        "name": "mode.kingdomomnitrix.liquid",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.step_height",
+            "amount": 1.0
+          },
+          {
+            "attribute": "minecraft:generic.safe_fall_distance",
+            "amount": 20.0
+          }
+        ],
+        "immunities": [
+          "#minecraft:is_projectile",
+          "#minecraft:is_fall"
+        ]
       }
     ]
   }

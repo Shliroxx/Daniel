@@ -129,7 +129,13 @@ ALIENS = {
                     variables=(("TIMER", "0"),), loops=("ripjaws.animation.json:animation.ripjaws.swim_slow",)),
     # Fluessig-Pfuetze und Kampf-Keulen zeigt AE nur bei Faehigkeiten
     "upgrade": Spec("9", "galvanic_mechamorph", "galvanic_mechamorph.json", 1.4, "heavy", "#39FF14",
-                    script="galvanic_mechamorph", drop=r"liquid|mace|spikes_"),
+                    script="galvanic_mechamorph",
+                    # Keulenfaeuste (beide Unterarme) und Pfuetzenform (Koerper zerfliesst zu liquid_base) wie in AE
+                    keep=r"liquid|mace|spikes_",
+                    modes=(("mace_fists", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on",
+                            "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
+                           ("liquid", "galvanic_mechamorph.animation.json:animation.upgrade.liquid",
+                            "galvanic_mechamorph.animation.json:animation.upgrade.liquid_off"))),
     # ein Modell; Ebenen „prototype“ (classic) und „recal“ (evo/ultimate, Alien-Force-Look); Fluegel/Umhang aus flight_on
     "jetray": Spec("34", "aerophibian", "aerophibian.json", 1.0, "fast", "#E72D2D",
                    watch=(("prototype", "prototype"), ("default", "recal"), ("10k", "recal")),
@@ -999,11 +1005,21 @@ def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
                 target = names.get(bone)
                 if target and target not in MAIN_BONES:
                     tracks[target] = value
+            # Laesst die AE-Animation den Koerper zerfliessen (Haupt-Unterknochen auf 0), verschwindet auch das Abzeichen daneben
+            if key.endswith("_on"):
+                for target, value in list(tracks.items()):
+                    parent = by_name.get(target, {}).get("parent")
+                    if parent in MAIN_BONES and _last_vector(value.get("scale", {})) == [0.0, 0.0, 0.0]:
+                        for b in bones:
+                            if b.get("parent") == parent and b["name"].startswith("badge_"):
+                                tracks.setdefault(b["name"], {"scale": {"vector": [0, 0, 0]}})
             # Bauteile, die die AE-Animation nicht anfasst, bleiben eingefahren
             for root_bone, hidden in result["mode_none"]["bones"].items():
                 tracks.setdefault(root_bone, deepcopy(hidden))
             source["bones"] = tracks
-            source["loop"] = "hold_on_last_frame"
+            # Schleifen (Upgrades Pfuetze wabert) bleiben Schleifen, sonst die Endpose halten
+            if source.get("loop") is not True:
+                source["loop"] = "hold_on_last_frame"
             source.setdefault("animation_length", _keyframe_end(source))
             result[key] = source
     return result

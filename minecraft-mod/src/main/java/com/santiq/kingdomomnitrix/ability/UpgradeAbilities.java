@@ -2,6 +2,7 @@ package com.santiq.kingdomomnitrix.ability;
 
 import com.santiq.kingdomomnitrix.vfx.Fx;
 import com.santiq.kingdomomnitrix.KingdomOmnitrix;
+import com.santiq.kingdomomnitrix.alien.AlienModes;
 import com.santiq.kingdomomnitrix.alien.TransformationManager;
 import com.santiq.kingdomomnitrix.networking.AlienMeterPayload;
 import com.santiq.kingdomomnitrix.party.PartyRules;
@@ -99,6 +100,9 @@ final class UpgradeAbilities {
 	private static final Map<UUID, Long> FUSION = new HashMap<>();
 	/** Morphwaffen: Ende */
 	private static final Map<UUID, Long> MACES = new HashMap<>();
+	/** Modi (traits.modes): ausgefahrene Keulenfaeuste, zerflossener Koerper */
+	static final String MACE_MODE = "mace_fists";
+	static final String LIQUID_MODE = "liquid";
 	/** geladene Plasmakanonen */
 	private static final Map<UUID, Charge> CHARGES = new HashMap<>();
 	/** Naniten im Gegner: Anzahl und Ablauf */
@@ -375,13 +379,15 @@ final class UpgradeAbilities {
 		ServerPlayerEntity player = ctx.player();
 		int ticks = (int) ctx.param("ticks", 40);
 		ctx.grantInvulnerability(ticks);
-		player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, ticks, 0, false, false));
+		// sichtbar als Pfuetze (Modell zerfliesst wie in AE) statt unsichtbar; Gegner verlieren trotzdem die Spur
+		AlienModes.set(player, LIQUID_MODE, ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, ticks, 3, false, false));
 		FLOWS.put(player.getUuid(), new Flow(ctx.world().getTime() + ticks, new HashSet<>()));
 		for (MobEntity mob : ctx.world().getEntitiesByClass(MobEntity.class, player.getBoundingBox().expand(16.0), m -> m.getTarget() == player)) {
 			mob.setTarget(null);
 		}
-		Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.1, player.getZ()), LIQUID, 0.8f, Math.max(1, (40) / 8));
+		// nur ein flacher Spritzer: die Pfuetze selbst ist das Modell
+		Fx.smoke(ctx.world(), new Vec3d(player.getX(), player.getY() + 0.05, player.getZ()), LIQUID, 0.3f, 2);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_HONEY_BLOCK_SLIDE, 1.0f, 0.6f);
 		return true;
 	}
@@ -430,6 +436,7 @@ final class UpgradeAbilities {
 		ServerPlayerEntity player = ctx.player();
 		int ticks = (int) Math.round(ctx.param("seconds", 12.0) * 20.0);
 		MACES.put(player.getUuid(), ctx.world().getTime() + ticks);
+		AlienModes.set(player, MACE_MODE, ticks);
 		player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, ticks, 1, false, false));
 		Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), NEON_BIG, 0.3f, Math.min(20, 30));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_PISTON_EXTEND, 1.0f, 0.7f);
@@ -616,10 +623,13 @@ final class UpgradeAbilities {
 		}
 		if (now >= flow.until()) {
 			FLOWS.remove(player.getUuid());
-			Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.5, player.getZ()), LIQUID, 0.8f, Math.max(1, (30) / 8));
+			Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.3, player.getZ()), LIQUID, 0.4f, 2);
 			return;
 		}
-		Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.05, player.getZ()), LIQUID, 0.8f, Math.max(1, (4) / 8));
+		if (now % 4 == 0) {
+			// feiner Schlieren-Rest hinter der fliessenden Pfuetze
+			Fx.smoke(world, new Vec3d(player.getX(), player.getY() + 0.02, player.getZ()), LIQUID, 0.2f, 1);
+		}
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(0.6),
 				e -> e != player && e.isAlive() && !flow.touched().contains(e.getUuid()) && PartyRules.canHarm(player, e) && !isAlly(player, e))) {
 			flow.touched().add(target.getUuid());

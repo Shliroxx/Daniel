@@ -13,6 +13,7 @@ import net.minecraft.util.Identifier;
 import software.bernie.geckolib.animatable.GeoReplacedEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.Animation;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.AnimationState;
 import software.bernie.geckolib.animation.PlayState;
@@ -117,7 +118,8 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 	}
 
 	private RawAnimation modeAnimation(String name) {
-		return modeAnimations.computeIfAbsent(name, n -> RawAnimation.begin().thenPlayAndHold(n));
+		// Schleifenart aus der Datei: Bauteile halten die Endpose, Upgrades Pfuetze wabert in Schleife
+		return modeAnimations.computeIfAbsent(name, n -> RawAnimation.begin().then(n, Animation.LoopType.DEFAULT));
 	}
 
 	private boolean hasAnimation(String name) {
