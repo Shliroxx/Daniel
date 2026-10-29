@@ -343,6 +343,8 @@ public final class SelfTest {
 				health.setBaseValue(TARGET_HEALTH);
 			}
 			husk.setHealth(TARGET_HEALTH);
+			// ohne KI wird „am Boden“ nie aktualisiert — Stampf-Kraefte treffen nur Ziele am Boden
+			husk.setOnGround(true);
 			run.world.spawnEntity(husk);
 			run.targets.add(husk);
 		}

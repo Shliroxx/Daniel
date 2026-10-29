@@ -528,6 +528,7 @@ Krater und Feuer nur mit `mobGriefing`. Auf „Friedlich“ nur der Meteor.
 | `/hero bolts add\|set <anzahl> [spieler]` | Bolt-Konto |
 | `/hero level set <stufe>` · `/hero xp add <menge>` | Heldenstufe, Erfahrung |
 | `/hero ability toggle <id>` · `/hero ability clear` | Heldenfähigkeiten |
+| `/hero selftest [alien]` | Selbsttest: löst jede Tasten-Kraft und Kombo jedes Aliens an drei Testzielen aus, misst Schaden, Treffer, Effekte, Bewegung, Wesen und Blöcke; Bericht `kingdomomnitrix-selftest.md` im Serverordner (Ergebnis je Kraft: OK, SITUATIV, WIRKUNGSLOS, ABGELEHNT, FEHLER, ABSTURZ) |
 | `/hero mastery <alien> <stufe>` | Alien-Meisterschaft 1–10 |
 | `/hero alien unlock\|lock <id>` | Alien freischalten/sperren |
 | `/hero dna <alien>` | DNA-Probe |
