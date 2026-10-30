@@ -1,0 +1,65 @@
+{
+  "title": {
+    "translate": "quest.kingdomomnitrix.keyblade_forge.title"
+  },
+  "category": "story",
+  "sort_order": 1,
+  "giver": {
+    "name": {
+      "translate": "quest.kingdomomnitrix.giver.yen_sid"
+    },
+    "icon": "kingdomomnitrix:keyblade_forge",
+    "npc": "kingdomomnitrix:yen_sid"
+  },
+  "dialog": {
+    "offer": [
+      {
+        "translate": "quest.kingdomomnitrix.keyblade_forge.offer.1"
+      },
+      {
+        "translate": "quest.kingdomomnitrix.keyblade_forge.offer.2"
+      }
+    ],
+    "progress": [
+      {
+        "translate": "quest.kingdomomnitrix.keyblade_forge.progress"
+      }
+    ],
+    "complete": [
+      {
+        "translate": "quest.kingdomomnitrix.keyblade_forge.complete.1"
+      }
+    ]
+  },
+  "requires": [
+    "kingdomomnitrix:awakening"
+  ],
+  "objectives": [
+    {
+      "type": "craft",
+      "target": "kingdomomnitrix:keyblade_forge",
+      "count": 1
+    },
+    {
+      "type": "collect",
+      "target": "minecraft:gold_ingot",
+      "count": 8
+    }
+  ],
+  "rewards": {
+    "experience": 120,
+    "items": [
+      {
+        "id": "kingdomomnitrix:heart",
+        "count": 3
+      },
+      {
+        "id": "kingdomomnitrix:spell_crystal",
+        "count": 1,
+        "components": {
+          "kingdomomnitrix:spell": "kingdomomnitrix:fire"
+        }
+      }
+    ]
+  }
+}

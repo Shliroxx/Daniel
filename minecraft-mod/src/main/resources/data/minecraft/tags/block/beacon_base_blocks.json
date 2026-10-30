@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "kingdomomnitrix:corrodium_block",
+    "kingdomomnitrix:solar_copper_block",
+    "kingdomomnitrix:azurite_block",
+    "kingdomomnitrix:viridium_block",
+    "kingdomomnitrix:aquarine_block",
+    "kingdomomnitrix:pyronite_block"
+  ]
+}

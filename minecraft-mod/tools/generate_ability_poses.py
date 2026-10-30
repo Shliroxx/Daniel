@@ -1,0 +1,455 @@
+#!/usr/bin/env python3
+"""Faehigkeits-Posen fuer alle Alien-Slots ergaenzen (alien_render/<alien>.json, Feld ability_poses).
+
+Vorhandene Posen (aus den Alien-Evolution-Skripten uebernommen) bleiben unveraendert; leere Slots (null oder fehlend)
+bekommen eine Pose nach Art der Faehigkeit (Schuss, Schlag, Sprung, Schutz, Bruellen, Grossangriff …). Die Zuordnung
+Faehigkeit → Pose steht in ABILITY_POSE; jede Faehigkeit der Datenpakete muss dort vorkommen.
+Operationen wie im Pose-System des Clients (AlienPose): [op, achse, wert], Drehungen in Grad (Vanilla-Spielerteile).
+
+    python3 tools/generate_ability_poses.py           # ergaenzen
+    python3 tools/generate_ability_poses.py --check   # nur pruefen (CI)
+"""
+import argparse
+import json
+import logging
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+ALIENS = ROOT / "src/main/resources/data/kingdomomnitrix/kingdomomnitrix/alien"
+RENDER = ROOT / "src/main/resources/assets/kingdomomnitrix/alien_render"
+LOG = logging.getLogger("ability_poses")
+
+
+def rot(axis: str, degrees: float) -> list:
+    return ["set_rot", axis, degrees]
+
+
+POSES = {
+    # rechter Arm gerade nach vorn (Schuss, Strahl aus der Hand)
+    "shoot": {"ease": "out_cubic", "parts": {"right_arm": [rot("x", -90.0), rot("y", -5.0)], "head": [rot("x", 0.0)]}},
+    # beide Arme nach vorn (Strahl, Kanone, Bann)
+    "beam": {"ease": "out_cubic", "parts": {"right_arm": [rot("x", -90.0), rot("y", -12.0)],
+                                            "left_arm": [rot("x", -90.0), rot("y", 12.0)]}},
+    # Wurf ueber Kopf
+    "throw": {"ease": "out_quad", "parts": {"right_arm": [rot("x", -160.0), rot("z", 10.0)], "chest": [rot("x", -8.0)]}},
+    # Schlag/Hieb: Arm schwingt quer, Oberkoerper dreht mit
+    "swipe": {"ease": "out_cubic", "parts": {"right_arm": [rot("x", -100.0), rot("y", 35.0)], "chest": [rot("y", -20.0)],
+                                             "left_arm": [rot("x", 20.0)]}},
+    # Bodenschlag: vorgebeugt, beide Arme nach unten vorn
+    "slam": {"ease": "in_out_cubic", "parts": {"chest": [rot("x", 22.0)], "right_arm": [rot("x", -40.0), rot("z", 10.0)],
+                                               "left_arm": [rot("x", -40.0), rot("z", -10.0)], "head": [rot("x", 15.0)]}},
+    # Klatschen: Arme vorn zusammen
+    "clap": {"ease": "in_cubic", "parts": {"right_arm": [rot("x", -90.0), rot("y", 28.0)],
+                                           "left_arm": [rot("x", -90.0), rot("y", -28.0)]}},
+    # Sprung/Sprint: Arme nach hinten, Beine im Schritt, Oberkoerper vor
+    "leap": {"ease": "out_quad", "parts": {"chest": [rot("x", 18.0)], "right_arm": [rot("x", 50.0)], "left_arm": [rot("x", 50.0)],
+                                           "right_leg": [rot("x", -30.0)], "left_leg": [rot("x", 30.0)]}},
+    # Ausweichen/Gestaltwechsel: geduckt, Arme vor dem Koerper
+    "dodge": {"ease": "out_sine", "parts": {"chest": [rot("x", 12.0), rot("y", 15.0)], "right_arm": [rot("x", -40.0), rot("y", -30.0)],
+                                            "left_arm": [rot("x", -40.0), rot("y", 30.0)]}},
+    # Schutz/Staerkung: Arme vor der Brust gekreuzt
+    "guard": {"ease": "in_out_sine", "parts": {"right_arm": [rot("x", -65.0), rot("y", -45.0)],
+                                               "left_arm": [rot("x", -65.0), rot("y", 45.0)], "head": [rot("x", 8.0)]}},
+    # Konzentration/Analyse: Hand an den Kopf
+    "focus": {"ease": "in_out_sine", "parts": {"right_arm": [rot("x", -130.0), rot("y", -20.0)], "head": [rot("x", -10.0)]}},
+    # Bruellen/Erschrecken: Kopf hoch, Arme gespreizt
+    "roar": {"ease": "out_cubic", "parts": {"head": [rot("x", -28.0)], "chest": [rot("x", -10.0)],
+                                            "right_arm": [rot("z", 60.0), rot("x", -20.0)], "left_arm": [rot("z", -60.0), rot("x", -20.0)]}},
+    # Grossangriff: Arme hoch gerissen
+    "ultimate": {"ease": "in_out_cubic", "parts": {"head": [rot("x", -20.0)], "chest": [rot("x", -6.0)],
+                                                   "right_arm": [rot("z", 150.0)], "left_arm": [rot("z", -150.0)]}},
+    # Wirbel/Flaeche: Arme waagerecht ausgebreitet
+    "spread": {"ease": "in_out_cubic", "parts": {"right_arm": [rot("z", 85.0)], "left_arm": [rot("z", -85.0)], "chest": [rot("y", 25.0)]}},
+    # Atem: vorgebeugt, Kopf vorgestreckt, Arme zurueckgezogen
+    "breath": {"ease": "out_cubic", "parts": {"chest": [rot("x", 16.0)], "head": [rot("x", -6.0)],
+                                              "right_arm": [rot("x", 35.0), rot("z", 20.0)], "left_arm": [rot("x", 35.0), rot("z", -20.0)]}},
+    # Ansaugen: Arme schraeg nach vorn geoeffnet, Handflaechen nach aussen, Kopf leicht zurueck
+    "siphon": {"ease": "in_out_sine", "parts": {"head": [rot("x", -12.0)], "chest": [rot("x", -5.0)],
+                                                "right_arm": [rot("x", -55.0), rot("z", 50.0)], "left_arm": [rot("x", -55.0), rot("z", -50.0)]}},
+}
+
+ABILITY_POSE = {
+    # Heatblast
+    "fire_blast": "shoot", "flame_boost": "leap", "solar_lance": "beam", "comet_dash": "leap", "supernova": "ultimate",
+    # XLR8
+    "dash_strike": "swipe", "blur_dodge": "dodge", "rapid_strikes": "swipe", "cyclone_run": "spread", "time_slip": "focus",
+    "lightspeed_barrage": "ultimate",
+    # Vierarm
+    "ground_slam": "slam", "throw": "throw", "thunder_clap": "clap", "iron_skin": "guard",
+    "earthquake": "slam",
+    "four_fist_barrage": "swipe", "rising_uppercut": "throw", "slab_heave": "slam", "giant_swing": "spread", "war_cry": "roar",
+    "titan_meteor": "ultimate", "shoulder_ram": "dodge", "hammer_fist": "slam", "grapple_toss": "throw", "meteor_fist": "slam",
+    "quad_finisher": "ultimate",
+    # Diamondhead
+    "crystal_volley": "shoot", "crystal_blade": "swipe", "spike_eruption": "slam", "crystal_armor": "guard",
+    "crystal_storm": "ultimate",
+    # Grey Matter
+    "scan": "focus", "weak_spot": "shoot", "scurry": "dodge", "tech_snare": "beam", "jury_rig": "focus", "galvan_tech": "focus", "mastermind": "ultimate",
+    # Wildmutt
+    "pounce": "leap", "quill_burst": "spread", "feral_roar": "roar", "savage_maul": "swipe", "scent_track": "focus",
+    "primal_rampage": "roar",
+    # Stinkfly
+    "slime_spit": "shoot", "stink_cloud": "spread", "wing_dash": "leap", "slime_bomb": "throw", "updraft": "dodge",
+    "toxic_storm": "ultimate",
+    # Ripjaws
+    "jaw_bite": "swipe", "tidal_dash": "leap", "whirlpool": "spread", "tail_swipe": "swipe", "hydro_heal": "guard",
+    "tidal_wave": "ultimate",
+    # Upgrade
+    "optic_beam": "beam", "liquid_form": "dodge", "tech_upgrade": "focus", "mace_fists": "swipe", "system_override": "guard",
+    "plasma_cannon": "beam",
+    # Ghostfreak
+    "tentacle_lash": "swipe", "phase_shift": "dodge", "haunting_scare": "roar", "possession": "beam", "shadow_step": "dodge",
+    "nightmare": "ultimate",
+    # Cannonbolt: in der Kugelform zeichnet der Client die Kugel statt des Koerpers — Posen gelten fuer den Anlauf
+    "cannonball": "dodge", "shell_guard": "guard", "ball_bounce": "leap", "ricochet": "dodge", "rolling_mode": "dodge",
+    "cannonade": "ultimate",
+    # Vierarm: Titanensprung
+    "titan_leap": "leap",
+    # Diamondhead: Kristallsprung
+    "crystal_vault": "leap",
+    # Jetray: Strahlen aus Augen und Schwanz, Flug-Manoever
+    "neuroshock": "beam", "tail_shock": "spread", "jet_burst": "leap", "strafing_run": "dodge", "slipstream": "focus",
+    "neuroshock_storm": "ultimate",
+    # Big Chill: Atem und Splitter nach vorn, Phasenflug, Gefaengnis auf ein Ziel, Umhang, Nullpunkt
+    "ice_breath": "beam", "ice_shards": "spread", "phase_flight": "dodge", "ice_prison": "beam", "cryo_cloak": "guard",
+    "absolute_zero": "ultimate",
+    # Humungosaur: Schlag, Rundumschwanz, Sturmlauf, Bodenstampfer, Deckung, Wachsen
+    "mega_punch": "shoot", "tail_sweep": "swipe", "stampede": "dodge", "tectonic_quake": "slam", "bone_guard": "guard",
+    "titanic_growth": "ultimate",
+    # Swampfire: Flamme aus der Hand, Wolke ausstossen, Duese, Ranken rufen, Nachwachsen, Inferno
+    "methane_flame": "beam", "methane_cloud": "roar", "methane_jet": "leap", "root_snare": "slam", "regrowth": "focus",
+    "swamp_inferno": "ultimate",
+    # Chromastone: Strahl aus der Hand, Blitz nach aussen, Lichtsprung, Gitter-Deckung, Licht sammeln, Vollspektrum
+    "prism_beam": "beam", "spectral_burst": "spread", "photon_dash": "dodge", "crystal_lattice": "guard", "solar_charge": "focus",
+    "full_spectrum": "ultimate",
+    # Echo Echo: Schrei (Kopf vor), Teilung, Schallstoss, Mauer, Schild, Chor
+    "sonic_scream": "roar", "echo_split": "spread", "sonic_boost": "leap", "wall_of_sound": "clap", "sound_shield": "guard",
+    "echo_chorus": "ultimate",
+    # Atomix: Strahl, Puls, Sprung, Feld auf ein Ziel, Zerfall ausloesen, Hero Time
+    "atomic_bolt": "beam", "nuclear_pulse": "spread", "fusion_leap": "leap", "containment_field": "focus", "half_life": "clap",
+    "hero_time": "ultimate",
+    # eigene Aliens: Rath, Spidermonkey, Way Big, Alien X, Brainstorm, Goop
+    "wrist_claw": "swipe", "challenge": "roar", "rath_charge": "dodge", "suplex": "throw", "appoplexian_roar": "roar", "rath_finale": "ultimate",
+    "web_shot": "shoot", "web_net": "spread", "web_swing": "leap", "monkey_frenzy": "swipe", "web_trap": "clap", "web_cocoon": "ultimate",
+    "cosmic_ray": "beam", "titan_stomp": "slam", "giant_leap": "leap", "shockwave_clap": "clap", "tokustar_guard": "guard", "starfall": "ultimate",
+    "reality_bolt": "beam", "gravity_warp": "spread", "blink": "dodge", "time_stop": "focus", "creation": "focus", "big_bang": "ultimate",
+    "lightning_arc": "beam", "static_grid": "throw", "electro_levitation": "leap", "force_field": "guard", "brain_analysis": "focus", "mind_storm": "ultimate",
+    "acid_spit": "shoot", "slime_whip": "swipe", "puddle_form": "dodge", "engulf": "clap", "acid_pool": "throw", "acid_flood": "ultimate",
+    "flamethrower": "breath",
+    "heat_absorb": "siphon",
+    "fire_tornado": "spread",
+    "blazing_rush": "swipe",
+    "comet_kick": "slam",
+    "ember_grip": "shoot",
+    "phoenix_dive": "leap",
+    "incinerate": "ultimate",
+    "tail_whip": "spread",
+    "rapid_disarm": "dodge",
+    "vacuum_trail": "leap",
+    "friction_fire": "spread",
+    "phantom_strikes": "swipe",
+    "mach_sprint": "ultimate",
+    "supersonic_shove": "shoot",
+    "blitz_kick": "leap",
+    "leg_sweep": "dodge",
+    "speed_dive": "leap",
+    "hundred_blows": "swipe",
+    "crystal_lance": "slam",
+    "crystal_hammer": "slam",
+    "crystal_wall": "guard",
+    "crystal_cage": "beam",
+    "diamond_drill": "beam",
+    "crystal_cathedral": "ultimate",
+    "crystal_ram": "dodge",
+    "shard_fall": "slam",
+    "crystal_shackle": "slam",
+    "diamond_drop": "slam",
+    "crystallize": "ultimate",
+    "head_hop": "leap",
+    "calculated_strike": "swipe",
+    "overload_device": "throw",
+    "mini_turret": "focus",
+    "weakness_grid": "focus",
+    "galvan_device": "ultimate",
+    "ankle_bite": "swipe",
+    "skull_hop": "leap",
+    "wire_trip": "clap",
+    "precision_drop": "leap",
+    "logical_conclusion": "focus",
+    "crunch_bite": "swipe",
+    "wall_leap": "leap",
+    "quill_carpet": "spread",
+    "hunting_howl": "roar",
+    "drag_down": "leap",
+    "wild_hunt": "ultimate",
+    "tackle_pounce": "leap",
+    "quill_dive": "spread",
+    "throat_bite": "swipe",
+    "predator_drop": "leap",
+    "rip_apart": "roar",
+    "acid_drop": "throw",
+    "stinger_strike": "leap",
+    "slime_trap": "shoot",
+    "gas_jet": "leap",
+    "corrosive_spray": "beam",
+    "plague_cloud": "ultimate",
+    "wing_slash": "swipe",
+    "dive_sting": "leap",
+    "slime_grab": "shoot",
+    "toxic_plunge": "slam",
+    "dissolve": "ultimate",
+    "water_jet": "beam",
+    "geyser": "leap",
+    "feeding_frenzy": "swipe",
+    "bubble_shield": "guard",
+    "riptide_pull": "clap",
+    "maelstrom": "ultimate",
+    "shark_ram": "dodge",
+    "jaw_dive": "slam",
+    "drag_under": "slam",
+    "splash_down": "slam",
+    "death_bite": "swipe",
+    "stretch_grab": "shoot",
+    "gear_upgrade": "focus",
+    "nano_drones": "spread",
+    "laser_grid": "beam",
+    "emp_pulse": "spread",
+    "omega_overdrive": "ultimate",
+    "liquid_ram": "dodge",
+    "hammer_morph": "slam",
+    "nanite_inject": "shoot",
+    "liquid_drop": "slam",
+    "system_crash": "beam",
+    "soul_drain": "beam",
+    "ghost_flight": "dodge",
+    "spectral_chains": "beam",
+    "vanish": "dodge",
+    "haunting": "focus",
+    "phantom_legion": "ultimate",
+    "spectral_rush": "dodge",
+    "shadow_drop": "slam",
+    "chilling_touch": "shoot",
+    "haunt_crash": "slam",
+    "soul_rend": "beam",
+    "bowling_strike": "dodge",
+    "wrecking_ball": "leap",
+    "pinball": "dodge",
+    "spike_shell": "guard",
+    "shell_spin": "spread",
+    "bounce_barrage": "ultimate",
+    "curl_charge": "dodge",
+    "ball_stomp": "slam",
+    "shell_counter": "guard",
+    "cannon_drop": "slam",
+    "bullseye": "dodge",
+    "neuro_volley": "beam",
+    "dive_bomb": "leap",
+    "sonic_barrier": "spread",
+    "barrel_roll": "dodge",
+    "static_field": "focus",
+    "mach_ten": "ultimate",
+    "wing_cut": "swipe",
+    "sky_snatch": "leap",
+    "tail_sting": "swipe",
+    "power_dive": "slam",
+    "total_discharge": "beam",
+    "frost_lance": "beam",
+    "frost_ground": "slam",
+    "wing_wrap": "guard",
+    "ice_spikes": "slam",
+    "blizzard": "spread",
+    "ice_comet": "ultimate",
+    "cold_rush": "dodge",
+    "icicle_drop": "slam",
+    "frost_grip": "swipe",
+    "glacier_fall": "slam",
+    "shatter_strike": "swipe",
+    "boulder_toss": "throw",
+    "primal_roar": "roar",
+    "belly_flop": "leap",
+    "spike_plates": "guard",
+    "extinction": "ultimate",
+    "dino_charge": "dodge",
+    "hammer_drop": "slam",
+    "bear_hug": "guard",
+    "quake_landing": "slam",
+    "giant_toss": "throw",
+    "titan_clap": "clap",
+    "seed_bombs": "throw",
+    "vine_whip": "swipe",
+    "fire_wall": "spread",
+    "thorn_bark": "guard",
+    "swamp_geyser": "slam",
+    "jungle_wrath": "ultimate",
+    "flame_dash": "dodge",
+    "mud_slam": "slam",
+    "root_grab": "swipe",
+    "swamp_crash": "slam",
+    "combustion": "beam",
+    "light_lance": "beam",
+    "crystal_spires": "slam",
+    "mirror_prism": "focus",
+    "blinding_flash": "spread",
+    "energy_release": "beam",
+    "spectral_cataclysm": "ultimate",
+    "prism_rush": "dodge",
+    "starfall_strike": "slam",
+    "absorb_touch": "guard",
+    "meteor_prism": "slam",
+    "spectrum_break": "beam",
+    "sound_bullet": "shoot",
+    "echo_swap": "dodge",
+    "feedback_loop": "focus",
+    "bass_drop": "slam",
+    "clone_burst": "spread",
+    "sonic_symphony": "ultimate",
+    "echo_tackle": "dodge",
+    "drop_note": "slam",
+    "point_blank": "roar",
+    "boom_landing": "slam",
+    "shatter_frequency": "roar",
+    "proton_volley": "shoot",
+    "gamma_burst": "spread",
+    "atomic_barrier": "guard",
+    "meltdown_zone": "slam",
+    "chain_reaction": "focus",
+    "fusion_sun": "ultimate",
+    "atom_smash": "dodge",
+    "fallout_strike": "slam",
+    "isotope_grip": "guard",
+    "nuclear_dive": "slam",
+    "critical_mass": "beam",
+    "claw_flurry": "swipe",
+    "clothesline": "dodge",
+    "piledriver": "slam",
+    "elbow_drop": "leap",
+    "trash_talk": "roar",
+    "royal_rumble": "ultimate",
+    "spear_tackle": "dodge",
+    "flying_elbow": "slam",
+    "headlock": "guard",
+    "diving_splash": "slam",
+    "rath_bomb": "slam",
+    "web_bola": "throw",
+    "web_yank": "beam",
+    "web_wall": "spread",
+    "monkey_leap": "leap",
+    "web_spinner": "spread",
+    "arachnid_ambush": "ultimate",
+    "swing_kick": "dodge",
+    "spider_drop": "slam",
+    "four_arm_flurry": "swipe",
+    "web_crash": "slam",
+    "cocoon_slam": "slam",
+    "cosmic_bolts": "shoot",
+    "ground_swipe": "swipe",
+    "skyward_uppercut": "slam",
+    "giant_grab": "guard",
+    "cosmic_dome": "guard",
+    "cosmic_cannon": "ultimate",
+    "titan_kick": "dodge",
+    "sky_hammer": "slam",
+    "giant_flick": "swipe",
+    "colossus_drop": "slam",
+    "cosmic_finisher": "beam",
+    "star_lance": "beam",
+    "reality_anchor": "focus",
+    "void_rift": "spread",
+    "rewind": "focus",
+    "constellation": "beam",
+    "genesis": "ultimate",
+    "comet_strike": "dodge",
+    "gravity_slam": "slam",
+    "stasis_touch": "guard",
+    "starfall_dive": "slam",
+    "erase": "beam",
+    "electro_whip": "swipe",
+    "chain_lightning": "beam",
+    "telekinetic_lift": "focus",
+    "ball_lightning": "shoot",
+    "tactical_genius": "focus",
+    "thunderdome": "ultimate",
+    "shell_ram": "dodge",
+    "skull_crack": "slam",
+    "pincer_grip": "guard",
+    "thunder_drop": "slam",
+    "neural_overload": "beam",
+    "acid_volley": "throw",
+    "goo_trap": "throw",
+    "slime_spikes": "spread",
+    "bounce_blob": "leap",
+    "regenerate_mass": "focus",
+    "acid_tsunami": "ultimate",
+    "slime_slide": "dodge",
+    "goo_drop": "slam",
+    "acid_grip": "guard",
+    "splat": "slam",
+    "total_corrosion": "beam",
+}
+
+
+def ability_ids(alien_file: Path) -> list:
+    data = json.loads(alien_file.read_text(encoding="utf-8"))
+    return [slot["type"].split(":", 1)[-1] for slot in data.get("abilities", [])]
+
+
+def build(check: bool) -> int:
+    problems = 0
+    for alien_file in sorted(ALIENS.glob("*.json")):
+        name = alien_file.stem
+        render_file = RENDER / f"{name}.json"
+        if not render_file.is_file():
+            LOG.error("%s: alien_render fehlt", name)
+            problems += 1
+            continue
+        render = json.loads(render_file.read_text(encoding="utf-8"))
+        if not render.get("vanilla_pose"):
+            LOG.debug("%s: eigene Animationen, keine Posen", name)
+            continue
+        poses = list(render.get("ability_poses", []))
+        abilities = ability_ids(alien_file)
+        poses += [None] * (len(abilities) - len(poses))
+        filled = 0
+        for index, ability in enumerate(abilities):
+            if poses[index] is not None:
+                continue
+            kind = ABILITY_POSE.get(ability)
+            if kind is None:
+                LOG.error("%s: keine Pose fuer Faehigkeit %s (ABILITY_POSE ergaenzen)", name, ability)
+                problems += 1
+                continue
+            poses[index] = POSES[kind]
+            filled += 1
+        render["ability_poses"] = poses
+        content = json.dumps(render, indent=2, ensure_ascii=False) + "\n"
+        if check:
+            if render_file.read_text(encoding="utf-8") != content:
+                LOG.error("%s: Posen unvollstaendig — python3 tools/generate_ability_poses.py ausfuehren", render_file.relative_to(ROOT))
+                problems += 1
+        elif filled:
+            render_file.write_text(content, encoding="utf-8")
+            LOG.info("%s: %d Posen ergaenzt", name, filled)
+    return problems
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--check", action="store_true", help="nur pruefen, nichts schreiben")
+    parser.add_argument("-v", "--verbose", action="store_true", help="ausfuehrliche Ausgabe")
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(message)s")
+    try:
+        problems = build(args.check)
+    except (OSError, ValueError, KeyError) as error:
+        LOG.error("Fehler: %s", error)
+        return 1
+    if problems:
+        LOG.error("%d Probleme", problems)
+        return 1
+    LOG.info("%s", "Posen vollstaendig" if args.check else "fertig")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

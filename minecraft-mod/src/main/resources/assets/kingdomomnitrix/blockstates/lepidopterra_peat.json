@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_peat"
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_peat",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_peat",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_peat",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:appoplexia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.88,
+    0.16
+  ],
+  "color": 14708778,
+  "size": 1.0,
+  "order": 110,
+  "landing": [
+    0,
+    0
+  ]
+}

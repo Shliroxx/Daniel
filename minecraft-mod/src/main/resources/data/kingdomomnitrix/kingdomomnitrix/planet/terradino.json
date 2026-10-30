@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:terradino",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.42,
+    0.52
+  ],
+  "color": 8034874,
+  "size": 1.3,
+  "order": 112,
+  "landing": [
+    0,
+    0
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "greeting": [
+    {
+      "translate": "npc.kingdomomnitrix.yen_sid.greeting.1"
+    },
+    {
+      "translate": "npc.kingdomomnitrix.yen_sid.greeting.2"
+    }
+  ],
+  "farewell": [
+    {
+      "translate": "npc.kingdomomnitrix.yen_sid.farewell"
+    }
+  ],
+  "height": 2.9
+}

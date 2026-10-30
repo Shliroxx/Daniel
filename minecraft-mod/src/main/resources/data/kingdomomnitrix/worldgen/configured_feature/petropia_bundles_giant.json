@@ -1,0 +1,29 @@
+{
+  "type": "kingdomomnitrix:crystal_bundle",
+  "config": {
+    "crystal": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "kingdomomnitrix:petropia_giant_crystal"
+      }
+    },
+    "tip": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "kingdomomnitrix:petropia_cluster"
+      }
+    },
+    "count": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 4,
+      "max_inclusive": 6
+    },
+    "height": {
+      "type": "minecraft:uniform",
+      "min_inclusive": 9,
+      "max_inclusive": 14
+    },
+    "width": 1.8,
+    "lean": 0.4
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:galvan_b",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.74,
+    0.3
+  ],
+  "color": 2771498,
+  "size": 0.7,
+  "order": 103,
+  "landing": [
+    0,
+    0
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "color": "#95A5A6",
+  "sort_order": 4,
+  "duration": 1200,
+  "recharge": 300,
+  "max_energy": 100,
+  "energy_regen": 10,
+  "scale": 0.3,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.25,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:scan",
+      "energy": 5,
+      "cooldown": 20,
+      "params": {
+        "range": 24.0
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:weak_spot",
+      "energy": 15,
+      "cooldown": 60,
+      "role": "basic_2",
+      "unlock_level": 1,
+      "params": {
+        "range": 16.0,
+        "seconds": 10.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:scurry",
+      "energy": 15,
+      "cooldown": 80,
+      "role": "movement",
+      "unlock_level": 1,
+      "params": {
+        "seconds": 6.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:tech_snare",
+      "energy": 35,
+      "cooldown": 160,
+      "role": "special",
+      "unlock_level": 3,
+      "params": {
+        "radius": 5.0,
+        "seconds": 5.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:galvan_tech",
+      "energy": 25,
+      "cooldown": 20,
+      "role": "utility",
+      "unlock_level": 5,
+      "params": {
+        "repair": 0.1,
+        "heal": 4.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:mastermind",
+      "energy": 80,
+      "cooldown": 900,
+      "role": "ultimate",
+      "unlock_level": 8,
+      "params": {
+        "radius": 12.0,
+        "damage": 6.0,
+        "seconds": 8.0
+      }
+    },
+    {
+      "type": "kingdomomnitrix:head_hop",
+      "energy": 20,
+      "cooldown": 140,
+      "params": {
+        "range": 10.0,
+        "damage": 2.0,
+        "seconds": 3.0
+      },
+      "role": "movement",
+      "unlock_level": 2
+    },
+    {
+      "type": "kingdomomnitrix:mini_turret",
+      "energy": 35,
+      "cooldown": 360,
+      "params": {
+        "damage": 1.93,
+        "range": 12.0,
+        "seconds": 10.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:ankle_bite",
+      "energy": 6,
+      "cooldown": 50,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:skull_hop",
+      "energy": 8,
+      "cooldown": 60,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:wire_trip",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 2.0,
+        "seconds": 2.5
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:precision_drop",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "radius": 6.0,
+        "damage": 8.0
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:logical_conclusion",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 4.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna": {
+    "samples": 3,
+    "species": {
+      "home": "kingdomomnitrix:galvan_prime",
+      "name": "species.kingdomomnitrix.galvan",
+      "behavior": "shy",
+      "health": 6,
+      "damage": 1,
+      "speed": 0.34,
+      "effect": "none",
+      "group": [
+        3,
+        5
+      ],
+      "max": 10
+    }
+  },
+  "model": "kingdomomnitrix:grey_matter",
+  "prototype": true,
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 0,
+  "traits": {
+    "transform_style": "shrink",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:keen_observer",
+        "params": {
+          "mark_ticks": 120.0,
+          "learn_chance": 0.35
+        }
+      },
+      {
+        "type": "kingdomomnitrix:tiny_target",
+        "params": {
+          "projectile": 0.35,
+          "explosion": 0.2
+        }
+      },
+      {
+        "type": "kingdomomnitrix:wall_crawler",
+        "unlock_level": 3
+      }
+    ],
+    "modes": [
+      {
+        "id": "armor",
+        "name": "mode.kingdomomnitrix.galvan_armor",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 20.0
+          }
+        ],
+        "flight": "jet"
+      },
+      {
+        "id": "limbs",
+        "name": "mode.kingdomomnitrix.galvan_limbs",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.scale",
+            "amount": 3.17,
+            "operation": "add_multiplied_base"
+          },
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 10.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 2.0
+          },
+          {
+            "attribute": "minecraft:player.entity_interaction_range",
+            "amount": 1.5
+          },
+          {
+            "attribute": "minecraft:player.block_interaction_range",
+            "amount": 1.5
+          }
+        ]
+      },
+      {
+        "id": "suit",
+        "name": "mode.kingdomomnitrix.galvan_suit",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.scale",
+            "amount": 4.5,
+            "operation": "add_multiplied_base"
+          },
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 24.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 5.0
+          },
+          {
+            "attribute": "minecraft:generic.knockback_resistance",
+            "amount": 1.0
+          },
+          {
+            "attribute": "minecraft:generic.movement_speed",
+            "amount": -0.2,
+            "operation": "add_multiplied_total"
+          }
+        ],
+        "immunities": [
+          "#minecraft:is_fire",
+          "#minecraft:is_freezing",
+          "#minecraft:is_drowning"
+        ]
+      }
+    ]
+  }
+}

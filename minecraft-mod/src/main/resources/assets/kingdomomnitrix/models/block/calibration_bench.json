@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "kingdomomnitrix:block/calibration_bench_top",
+    "bottom": "kingdomomnitrix:block/keyblade_forge_bottom",
+    "side": "kingdomomnitrix:block/calibration_bench"
+  }
+}

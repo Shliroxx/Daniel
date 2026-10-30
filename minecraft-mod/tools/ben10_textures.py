@@ -1,0 +1,532 @@
+"""Prozedurale Texturen der Ben-10-Inhalte (Corrodium, Omnitrix-Werkbank, Omnitrix-Teile, Energiekerne, Klempner).
+
+Baut auf planet_textures auf: Bloecke 128x128 nahtlos, Items 64x64 freigestellt mit Umriss. Deterministisch (der
+Zufall haengt nur vom Texturnamen ab).
+"""
+from __future__ import annotations
+
+import math
+from typing import Sequence
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+import planet_textures as tx
+
+H = tx.hexc
+N = tx.N
+SS = tx.SS
+Color = Sequence[float]
+
+# Corrodium: giftgruen, leuchtend
+CORRODIUM = (H("06300E"), H("2EE83A"), H("D2FFB8"))
+# Klempner-Technik: helles Grau, schwarze Fugen, gruene Leuchtlinien
+PLUMBER_LIGHT = H("C8CCD2")
+PLUMBER_DARK = H("2A2E34")
+PLUMBER_GLOW = H("39FF14")
+OMNITRIX_BLACK = (H("0E1012"), H("2A2E34"), H("5A6068"))
+OMNITRIX_GREY = (H("4A4E56"), H("9AA0A8"), H("E2E6EA"))
+
+# Farben der Energiekerne (id -> dunkel, mitte, hell); muessen zu OmnitrixColors passen
+CORE_COLORS = {
+    "green": (H("0A5A10"), H("39FF14"), H("D8FFC8")),
+    "blue": (H("0A3A7A"), H("2FA8FF"), H("D8F0FF")),
+    "red": (H("6A0A06"), H("FF3A2A"), H("FFD8D0")),
+    "yellow": (H("6A5000"), H("FFD21A"), H("FFF6C8")),
+    "purple": (H("3A0A6A"), H("B04AFF"), H("F0DCFF")),
+    "white": (H("6A7A88"), H("E8F4FF"), H("FFFFFF")),
+    "orange": (H("6A2A00"), H("FF8A1E"), H("FFE0C0")),
+    "pink": (H("6A0A44"), H("FF5AC8"), H("FFD8F0")),
+    "cyan": (H("005A5A"), H("2FFFE8"), H("D8FFFA")),
+}
+
+
+# --- Bloecke ----------------------------------------------------------------------------------------------------
+
+def end_stone(name: str) -> Image.Image:
+    """Endstein-artiges Gestein (blass gelb, poroes) als Grund fuer das Corrodium-Erz."""
+    return tx.porous(name, H("8A8656"), H("D8D49A"), H("F2F0C8"), holes=30, hole_size=3.5)
+
+
+def corrodium_ore(name: str) -> Image.Image:
+    return tx.ore(name, end_stone(name + "_stone"), *CORRODIUM, clusters=6, style="crystal", glow=0.45)
+
+
+def corrodium_block(name: str) -> Image.Image:
+    img = tx.crystal(name, *CORRODIUM)
+    arr = np.asarray(img).astype(np.float64)
+    arr[..., 3] = 255   # fester Block, nicht durchscheinend
+    return Image.fromarray(arr.astype(np.uint8), "RGBA")
+
+
+def _hourglass_mask(cx: float, cy: float, r: float) -> np.ndarray:
+    """Omnitrix-Sanduhr (zwei Dreiecke mit Spitzen in der Mitte) als 0..1-Maske."""
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    dx = np.abs(xs - cx)
+    dy = ys - cy
+    upper = (dy < 0) & (dy > -r) & (dx < -dy * 0.75)
+    lower = (dy >= 0) & (dy < r) & (dx < dy * 0.75)
+    return (upper | lower).astype(np.float64)
+
+
+def workbench_top(name: str) -> Image.Image:
+    """Oberseite: dunkle Platte mit rundem Montagefeld und leuchtender Sanduhr."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    brushed = tx.fbm(rng, 3, 4, stretch=(5.0, 0.25))
+    color = np.asarray(PLUMBER_DARK) * (0.85 + 0.25 * brushed[..., None])
+    r = np.hypot(xs - N / 2 + 0.5, ys - N / 2 + 0.5)
+    ring = np.clip(1 - np.abs(r - 44) / 3, 0, 1)
+    pad = (r < 41).astype(np.float64)
+    glass = _hourglass_mask(N / 2 - 0.5, N / 2 - 0.5, 30)
+    color = np.where(pad[..., None] > 0, np.asarray(OMNITRIX_BLACK[1]) * (0.9 + 0.2 * brushed[..., None]), color)
+    color = color * (1 - ring[..., None] * 0.5) + np.asarray(PLUMBER_GLOW) * ring[..., None] * 0.9
+    color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW) * 0.9 + 0.1, color)
+    height = h * 0.6 + pad * 0.2 + ring * 0.3 + brushed * 0.05
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.4, shininess=30, ambient=0.65))
+
+
+def workbench_side(name: str) -> Image.Image:
+    """Seite: Klempner-Paneel (hell) mit schwarzem Band und gruener Leuchtlinie."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=4.0)
+    brushed = tx.fbm(rng, 3, 4, stretch=(0.25, 5.0))
+    color = np.asarray(PLUMBER_LIGHT) * (0.85 + 0.2 * brushed[..., None])
+    band = ((ys > N * 0.62) & (ys < N * 0.86)).astype(np.float64)
+    color = np.where(band[..., None] > 0, np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * brushed[..., None]), color)
+    line = np.exp(-((ys - N * 0.74) / 1.6) ** 2) * ((xs > 14) & (xs < N - 15))
+    color = color + np.asarray(PLUMBER_GLOW) * line[..., None]
+    vent = (((xs.astype(int) // 6) % 2 == 0) & (ys > N * 0.2) & (ys < N * 0.42) & (xs > N * 0.3) & (xs < N * 0.7)).astype(np.float64)
+    color = color * (1 - vent[..., None] * 0.55)
+    height = h * 0.7 + band * 0.15 - vent * 0.3 + brushed * 0.05
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.35, shininess=26, ambient=0.62))
+
+
+def workbench_bottom(name: str) -> Image.Image:
+    """Unterseite: vier Platten mit Nieten, Kuehlgitter in der Mitte und vier Standfuesse."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 2, bevel=5.0)
+    color = np.asarray(PLUMBER_DARK) * (0.88 + 0.22 * tx.fbm(rng, 3, 4)[..., None])
+    grille = (np.abs(xs - N / 2) < 30) & (np.abs(ys - N / 2) < 30)
+    slots = grille & (((ys.astype(int) - 34) % 8) < 4)
+    color = np.where(grille[..., None], np.asarray(PLUMBER_DARK) * 0.6, color)
+    color = np.where(slots[..., None], np.asarray(PLUMBER_DARK) * 0.25, color)
+    feet = np.zeros((N, N))
+    for fx_ in (14, N - 15):
+        for fy_ in (14, N - 15):
+            feet = np.maximum(feet, np.clip(1 - np.hypot(xs - fx_, ys - fy_) / 8, 0, 1))
+    color = color * (1 - feet[..., None] * 0.3) + np.asarray(OMNITRIX_GREY[1]) * feet[..., None] * 0.6
+    height = h * 0.6 - grille * 0.2 - slots * 0.2 + feet * 0.6
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.35, shininess=26, ambient=0.62))
+
+
+# --- Items ------------------------------------------------------------------------------------------------------
+
+def _rgba(c: Color, a: int = 255):
+    return tx._rgba(c, 1.0, a)
+
+
+def raw_corrodium(name: str) -> Image.Image:
+    return tx.item_raw(name, *CORRODIUM)
+
+
+def corrodium_crystal(name: str) -> Image.Image:
+    """Drei geschliffene Kristallspitzen mit Leuchtkern."""
+    img, _ = tx._canvas()
+    s = SS
+    dark, mid, light = CORRODIUM
+    shards = [((32, 58), 9, 46, 0.0), ((20, 58), 6, 30, -0.45), ((44, 58), 6, 34, 0.4)]
+    for (bx, by), w, length, tilt in shards:
+        tip = (bx + math.sin(tilt) * length, by - math.cos(tilt) * length)
+        nx, ny = math.cos(tilt) * w, math.sin(tilt) * w
+        left = [(bx * s - nx * s, by * s - ny * s), (bx * s, by * s), (tip[0] * s, tip[1] * s)]
+        right = [(bx * s, by * s), (bx * s + nx * s, by * s + ny * s), (tip[0] * s, tip[1] * s)]
+        tx._shaded_polygon(img, left, mid, light, (1, 1, 1))
+        tx._shaded_polygon(img, right, dark, mid, light)
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([27 * s, 40 * s, 37 * s, 50 * s], fill=_rgba(light, 140))
+    return tx._finish_item(img)
+
+
+def _face_ring(draw: ImageDraw.ImageDraw, cx: float, cy: float, r: float, grey: tuple, black: tuple) -> None:
+    s = SS
+    draw.ellipse([(cx - r) * s, (cy - r) * s, (cx + r) * s, (cy + r) * s], fill=_rgba(grey[1]))
+    draw.ellipse([(cx - r + 2) * s, (cy - r + 2) * s, (cx + r - 2) * s, (cy + r - 2) * s], fill=_rgba(grey[2]))
+    draw.ellipse([(cx - r + 4) * s, (cy - r + 4) * s, (cx + r - 4) * s, (cy + r - 4) * s], fill=_rgba(black[1]))
+
+
+def omnitrix_shell(name: str) -> Image.Image:
+    """Huelle: Armband mit leerem Zifferblatt-Ring (ohne Kern)."""
+    img, draw = tx._canvas()
+    s = SS
+    black, grey = OMNITRIX_BLACK, OMNITRIX_GREY
+    # Armband (oben und unten), mit Gliedern
+    for y0, y1 in ((4, 20), (44, 60)):
+        band = [(22 * s, y0 * s), (42 * s, y0 * s), (42 * s, y1 * s), (22 * s, y1 * s)]
+        tx._shaded_polygon(img, band, black[0], black[1], black[2])
+        for y in range(y0 + 3, y1, 4):
+            draw.line([(23 * s, y * s), (41 * s, y * s)], fill=_rgba(black[0]), width=s)
+    # Gehaeuse mit vier Klauen
+    for a in (45, 135, 225, 315):
+        rad = math.radians(a)
+        cx, cy = 32 + math.cos(rad) * 15, 32 + math.sin(rad) * 15
+        draw.ellipse([(cx - 5) * s, (cy - 5) * s, (cx + 5) * s, (cy + 5) * s], fill=_rgba(grey[1]))
+    _face_ring(draw, 32, 32, 17, grey, black)
+    # leere Fassung: dunkle Mulde mit Kontaktpunkten
+    draw.ellipse([22 * s, 22 * s, 42 * s, 42 * s], fill=_rgba((0.04, 0.05, 0.06)))
+    for a in range(0, 360, 60):
+        rad = math.radians(a)
+        cx, cy = 32 + math.cos(rad) * 7, 32 + math.sin(rad) * 7
+        draw.ellipse([(cx - 1.4) * s, (cy - 1.4) * s, (cx + 1.4) * s, (cy + 1.4) * s], fill=_rgba(grey[2]))
+    # Absturzschaden: Risse ueber Ring und Armband, Funken-gruener Rest
+    crack = _rgba((0.02, 0.02, 0.03))
+    draw.line([(19 * s, 21 * s), (24 * s, 27 * s), (22 * s, 33 * s)], fill=crack, width=s)
+    draw.line([(45 * s, 37 * s), (40 * s, 41 * s), (42 * s, 47 * s), (39 * s, 53 * s)], fill=crack, width=s)
+    draw.line([(27 * s, 9 * s), (31 * s, 14 * s)], fill=crack, width=s)
+    draw.ellipse([35 * s, 24 * s, 38 * s, 27 * s], fill=_rgba(PLUMBER_GLOW, 220))
+    return tx._finish_item(img)
+
+
+def omnitrix_console(name: str) -> Image.Image:
+    """Konsole: das Zifferblatt mit Sanduhr und Steuerring, ohne Armband."""
+    img, draw = tx._canvas()
+    s = SS
+    black, grey = OMNITRIX_BLACK, OMNITRIX_GREY
+    glow = CORE_COLORS["green"]
+    _face_ring(draw, 32, 32, 26, grey, black)
+    # Steuerring mit Rillen
+    for a in range(0, 360, 20):
+        rad = math.radians(a)
+        x0, y0 = 32 + math.cos(rad) * 21, 32 + math.sin(rad) * 21
+        x1, y1 = 32 + math.cos(rad) * 24, 32 + math.sin(rad) * 24
+        draw.line([(x0 * s, y0 * s), (x1 * s, y1 * s)], fill=_rgba(grey[0]), width=s)
+    # Sanduhr
+    draw.ellipse([14 * s, 14 * s, 50 * s, 50 * s], fill=_rgba(glow[1]))
+    draw.polygon([(18 * s, 16 * s), (46 * s, 16 * s), (32 * s, 32 * s)], fill=_rgba(black[0]))
+    draw.polygon([(18 * s, 48 * s), (46 * s, 48 * s), (32 * s, 32 * s)], fill=_rgba(black[0]))
+    draw.ellipse([20 * s, 22 * s, 26 * s, 28 * s], fill=_rgba(glow[2], 200))
+    return tx._finish_item(img)
+
+
+def energy_core(name: str, color_id: str | None) -> Image.Image:
+    """Energiekern: sechseckige Fassung mit leuchtender Kugel; Basis-Kern farblos-grau."""
+    img, draw = tx._canvas()
+    s = SS
+    frame = OMNITRIX_GREY
+    orb = CORE_COLORS[color_id] if color_id else (H("2A2E34"), H("7A8088"), H("D0D4DA"))
+    hexagon = [(32 * s + math.cos(math.radians(a)) * 26 * s, 32 * s + math.sin(math.radians(a)) * 26 * s)
+               for a in range(30, 390, 60)]
+    tx._shaded_polygon(img, hexagon, frame[0], frame[1], frame[2])
+    inner = [(32 * s + math.cos(math.radians(a)) * 21 * s, 32 * s + math.sin(math.radians(a)) * 21 * s) for a in range(30, 390, 60)]
+    draw.polygon(inner, fill=_rgba(OMNITRIX_BLACK[0]))
+    # Kugel mit Verlauf und Glanz
+    for i, rr in enumerate(range(17, 0, -1)):
+        t = i / 16
+        c = tx.gradient_map(np.array([[t]]), [(0, orb[0]), (0.6, orb[1]), (1, orb[2])])[0, 0]
+        draw.ellipse([(32 - rr) * s, (33 - rr) * s, (32 + rr) * s, (33 + rr) * s], fill=_rgba(c))
+    draw.ellipse([24 * s, 23 * s, 31 * s, 30 * s], fill=_rgba((1, 1, 1), 170))
+    if color_id is None:
+        # Basis-Kern: Sanduhr-Praegung statt Leuchten
+        draw.polygon([(26 * s, 25 * s), (38 * s, 25 * s), (32 * s, 33 * s)], fill=_rgba(OMNITRIX_BLACK[1]))
+        draw.polygon([(26 * s, 41 * s), (38 * s, 41 * s), (32 * s, 33 * s)], fill=_rgba(OMNITRIX_BLACK[1]))
+    return tx._finish_item(img)
+
+
+# --- Reaktor der Omnitrix-Werkbank -------------------------------------------------------------------------------
+
+def stabilizer_side(name: str) -> Image.Image:
+    """Stabilisator: dunkle Klempner-Platte mit Emitter (Ringe, gruene Linse); alle vier Seiten zeigen den Emitter."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    brushed = tx.fbm(rng, 3, 4, stretch=(5.0, 0.25))
+    color = np.asarray(PLUMBER_DARK) * (0.85 + 0.25 * brushed[..., None])
+    r = np.hypot(xs - N / 2 + 0.5, ys - N / 2 + 0.5)
+    collar = ((r > 34) & (r < 48)).astype(np.float64)
+    color = np.where(collar[..., None] > 0, np.asarray(PLUMBER_LIGHT) * (0.8 + 0.2 * brushed[..., None]), color)
+    # Kuehlrippen im Kragen
+    angle = np.arctan2(ys - N / 2, xs - N / 2)
+    ribs = collar * (np.cos(angle * 16) > 0.6)
+    color = color * (1 - ribs[..., None] * 0.45)
+    glow_ring = np.clip(1 - np.abs(r - 31) / 2.5, 0, 1)
+    lens = np.clip(1 - r / 28, 0, 1)
+    color = color * (1 - glow_ring[..., None]) + np.asarray(PLUMBER_GLOW) * glow_ring[..., None]
+    lens_col = tx.gradient_map(lens, [(0, H("0A3A0A")), (0.5, PLUMBER_GLOW), (1, H("E8FFE0"))])
+    color = np.where((r < 28)[..., None], lens_col, color)
+    height = h * 0.6 + collar * 0.35 - ribs * 0.2 + lens * 0.3 + brushed * 0.05
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.45, shininess=34, ambient=0.66))
+
+
+def stabilizer_top(name: str) -> Image.Image:
+    return tx.hull(name, PLUMBER_DARK, panels=2, accent=PLUMBER_GLOW, wear=0.4)
+
+
+def reactor_field(name: str) -> Image.Image:
+    """Feld der Reaktorkugel (Kugelkoordinaten, 256x128): weisse Sechseck-Waben mit hellen Knoten, schwarz/transparent
+    dazwischen (vormultipliziert fuer additive Schichten). Weiss, damit die Kernfarbe als Vertex-Farbe darueberliegt."""
+    w, h = 256, 128
+    ss = 4
+    img = Image.new("L", (w * ss, h * ss), 0)
+    draw = ImageDraw.Draw(img)
+    size = 13.0 * ss                     # Wabenradius (Pixel, ueberabgetastet)
+    dx = math.sqrt(3) * size
+    dy = 1.5 * size
+    rows = int(h * ss / dy) + 2
+    cols = int(w * ss / dx) + 2
+    for row in range(-1, rows):
+        for col in range(-1, cols):
+            cx = col * dx + (dx / 2 if row % 2 else 0)
+            cy = row * dy
+            pts = [(cx + math.cos(math.radians(60 * k + 30)) * size, cy + math.sin(math.radians(60 * k + 30)) * size) for k in range(7)]
+            draw.line(pts, fill=230, width=int(1.6 * ss))
+            for px, py in pts[:6]:
+                draw.ellipse([px - 2.2 * ss, py - 2.2 * ss, px + 2.2 * ss, py + 2.2 * ss], fill=255)
+    alpha = np.asarray(img.resize((w, h), Image.LANCZOS), dtype=np.float64) / 255
+    # Pole ausduennen (dort draengen sich die Waben)
+    lat = np.abs(np.linspace(-1, 1, h))[:, None]
+    alpha = alpha * np.clip(1.15 - lat ** 4, 0, 1)
+    # vormultipliziert: die additive Schicht addiert RGB unabhaengig von Alpha, transparent muss also schwarz sein
+    return tx.finish(np.repeat(alpha[..., None], 3, axis=2), alpha)
+
+
+def reactor_ring(name: str) -> Image.Image:
+    """Leuchtring der Stabilisatoren und der Schockwelle: segmentierter Doppelring, weiss auf schwarz/transparent."""
+    n = 128
+    ys, xs = np.mgrid[0:n, 0:n].astype(np.float64)
+    r = np.hypot(xs - n / 2 + 0.5, ys - n / 2 + 0.5) / (n / 2)
+    angle = np.arctan2(ys - n / 2, xs - n / 2)
+    outer = np.clip(1 - np.abs(r - 0.88) / 0.06, 0, 1)
+    inner = np.clip(1 - np.abs(r - 0.66) / 0.04, 0, 1) * (np.cos(angle * 12) > -0.2)
+    ticks = np.clip(1 - np.abs(r - 0.77) / 0.05, 0, 1) * (np.cos(angle * 36) > 0.75)
+    alpha = np.clip(outer + inner * 0.8 + ticks * 0.9, 0, 1)
+    return tx.finish(np.repeat(alpha[..., None], 3, axis=2), alpha)
+
+
+def reactor_plasma(name: str) -> Image.Image:
+    """Plasma im Inneren der Kugel: kachelbares Rauschen, Graustufen (fuer die Energie-Wirbel-Schicht)."""
+    rng = tx.rng_for(name)
+    noise = tx.fbm(rng, 4, 5)
+    noise = (noise - noise.min()) / (np.ptp(noise) + 1e-9)
+    veins = np.clip(1 - np.abs(noise - 0.5) * 7, 0, 1)
+    v = np.clip(noise * 0.45 + veins * 0.8, 0, 1)
+    return tx.finish(np.repeat(v[..., None], 3, axis=2))
+
+
+# --- Klempner-Kreuzer (Wrack) ------------------------------------------------------------------------------------
+
+def plumber_hull(name: str) -> Image.Image:
+    """Aussenhaut: helle Klempner-Panzerplatten mit Nieten."""
+    return tx.hull(name, PLUMBER_LIGHT, panels=2, wear=0.5)
+
+
+def plumber_hull_dark(name: str) -> Image.Image:
+    """Dunkles Rumpfband mit gruener Leuchtfuge (Klempner-Farben)."""
+    return tx.hull(name, PLUMBER_DARK, panels=2, accent=PLUMBER_GLOW, wear=0.6)
+
+
+def plumber_hull_scorched(name: str) -> Image.Image:
+    """Ausgebrannte Platte: Russ, Hitzeverfaerbung, glimmende Risse."""
+    rng = tx.rng_for(name)
+    base = np.asarray(tx.hull(name + "_base", PLUMBER_LIGHT, panels=2, wear=1.4).convert("RGB"), dtype=np.float64) / 255
+    soot = tx.fbm(rng, 4, 5)
+    soot = np.clip((soot - 0.3) * 1.8, 0, 1)
+    heat = tx.fbm(tx.rng_for(name + "h"), 3, 4)
+    tint = tx.gradient_map(heat, [(0, H("1A1410")), (0.5, H("4A3A5A")), (1, H("6A5A3A"))])
+    out = base * (1 - soot[..., None] * 0.85) + tint * soot[..., None] * 0.6
+    cracks = tx.ridged(tx.rng_for(name + "c"), 6, 4)
+    glow = np.clip((cracks - 0.88) * 9, 0, 1) * soot
+    out = out * (1 - glow[..., None]) + H("FF7A1A") * glow[..., None]
+    return tx.finish(out)
+
+
+def plumber_floor(name: str) -> Image.Image:
+    """Deckplatte: dunkles Riffelblech mit vier Feldern."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 2, bevel=3.0)
+    # Riffel: kurze diagonale Stege im Wechsel
+    cell = 12
+    fx = xs % cell - cell / 2
+    fy = ys % cell - cell / 2
+    flip = ((xs // cell + ys // cell) % 2) * 2 - 1
+    rib = np.clip(1 - np.abs(fx * flip - fy) / 1.6, 0, 1) * (np.hypot(fx, fy) < cell * 0.38)
+    color = np.asarray(H("4A4E56")) * (0.85 + 0.25 * tx.fbm(rng, 4, 4)[..., None])
+    height = h * 0.8 + rib * 0.5
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.4, shininess=30, ambient=0.6))
+
+
+def plumber_light(name: str) -> Image.Image:
+    return tx.light_panel(name, PLUMBER_DARK, H("C8FFB8"))
+
+
+def plumber_console(name: str) -> Image.Image:
+    """Bordkonsole: Bildschirm mit gruenen Anzeigebalken und Sanduhr-Logo, darunter Tastenreihe."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=4.0)
+    color = np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    screen = (xs > 14) & (xs < N - 15) & (ys > 14) & (ys < 78)
+    scr = np.asarray(H("051A08")) + np.asarray(H("0C3A12")) * ((ys.astype(int) // 3) % 2)[..., None] * 0.6
+    color = np.where(screen[..., None], scr, color)
+    for i, level in enumerate((0.7, 0.45, 0.9, 0.3, 0.6)):
+        x0 = 22 + i * 10
+        bar = (xs >= x0) & (xs < x0 + 6) & (ys < 70) & (ys > 70 - level * 48)
+        color = np.where(bar[..., None], np.asarray(PLUMBER_GLOW) * 0.9, color)
+    glass = _hourglass_mask(96, 46, 18) * screen
+    color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    keys = (ys > 88) & (ys < 104) & (xs > 14) & (xs < N - 15) & (((xs - 14) % 14) < 10)
+    key_col = np.where(((xs.astype(int) - 14) // 14 % 3 == 0)[..., None], H("FF5A3A"), PLUMBER_LIGHT)
+    color = np.where(keys[..., None], key_col, color)
+    height = h * 0.6 + keys * 0.4 - screen * 0.2
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.5, shininess=40, ambient=0.7))
+
+
+def containment_pod(name: str, part: str) -> Image.Image:
+    """Containment-Kapsel: Panzerrahmen oben/unten, in der Mitte Glasfenster mit Schwebefeld und dem Teil darin
+    (part = "shell": Armband, "console": Sanduhr-Zifferblatt)."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 1, bevel=5.0)
+    color = np.asarray(PLUMBER_LIGHT) * (0.85 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    window = (xs > 18) & (xs < N - 19) & (ys > 24) & (ys < N - 25)
+    field = tx.gradient_map(np.clip(1 - np.abs(xs - N / 2) / 46, 0, 1), [(0, H("06200A")), (1, H("2AA83A"))])
+    scan = ((ys.astype(int) // 4) % 2) * 0.12
+    color = np.where(window[..., None], field * (0.9 + scan[..., None]), color)
+    frame = window ^ ((xs > 15) & (xs < N - 16) & (ys > 21) & (ys < N - 22))
+    color = np.where(frame[..., None], np.asarray(PLUMBER_GLOW), color)
+    if part == "shell":
+        band = window & (np.abs(xs - N / 2) < 12) & ((ys < 52) | (ys > 76))
+        ring = window & (np.abs(np.hypot(xs - N / 2, ys - N / 2) - 16) < 4)
+        color = np.where((band | ring)[..., None], np.asarray(OMNITRIX_BLACK[2]), color)
+    else:
+        ring = window & (np.hypot(xs - N / 2, ys - N / 2) < 22)
+        color = np.where(ring[..., None], np.asarray(OMNITRIX_GREY[1]), color)
+        glass = _hourglass_mask(N / 2 - 0.5, N / 2 - 0.5, 15) * ring
+        color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    band = (ys < 12) | (ys > N - 13)
+    color = np.where(band[..., None], np.asarray(PLUMBER_DARK), color)
+    height = h * 0.7 - window * 0.3 + frame * 0.2
+    return tx.finish(tx.compose(color, height, strength=5.0, spec=0.55, shininess=42, ambient=0.72))
+
+
+def containment_pod_top(name: str) -> Image.Image:
+    """Deckel der Kapsel bzw. Konsole: vier Panzerplatten mit Nieten, segmentierter Leuchtring, Luefterschlitze im
+    Inneren und das Klempner-Sanduhrzeichen in der Mitte."""
+    rng = tx.rng_for(name)
+    ys, xs = np.mgrid[0:N, 0:N].astype(np.float64)
+    h, _ = tx.panel_height(N, 2, bevel=5.0)
+    color = np.asarray(PLUMBER_DARK) * (0.9 + 0.2 * tx.fbm(rng, 3, 4)[..., None])
+    cx = cy = N / 2 - 0.5
+    r = np.hypot(xs - cx, ys - cy)
+    ang = (np.arctan2(ys - cy, xs - cx) + math.pi) / (2 * math.pi)
+    disc = r < 44
+    color = np.where(disc[..., None], np.asarray(PLUMBER_DARK) * 0.75, color)
+    gaps = (np.floor(ang * 16) % 2 == 0) | (np.abs((ang * 16) % 1 - 0.5) < 0.38)
+    ring = np.clip(1 - np.abs(r - 40) / 3, 0, 1) * gaps
+    color = color * (1 - ring[..., None]) + np.asarray(PLUMBER_GLOW) * ring[..., None]
+    vents = (r > 18) & (r < 32) & (((ang * 24) % 1) < 0.45)
+    color = np.where(vents[..., None], np.asarray(PLUMBER_DARK) * 0.35, color)
+    hub = r < 15
+    color = np.where(hub[..., None], np.asarray(OMNITRIX_GREY[1]), color)
+    glass = _hourglass_mask(cx, cy, 11) * hub
+    color = np.where(glass[..., None] > 0, np.asarray(PLUMBER_GLOW), color)
+    riv = tx.rivets_layer(N, 2, inset=6.0, radius=2.4)
+    color = color + riv[..., None] * 0.25
+    height = h * 0.6 - disc * 0.15 + ring * 0.25 - vents * 0.25 + hub * 0.3 + riv * 0.5
+    return tx.finish(tx.compose(color, height, strength=5.5, spec=0.45, shininess=36, ambient=0.66))
+
+
+# --- Klempner-Ausruestung ----------------------------------------------------------------------------------------
+
+def plumber_blaster(name: str) -> Image.Image:
+    """Klempner-Blaster: weisser Lauf mit gruener Energiezelle, schwarzer Griff (diagonal wie Vanilla-Waffen)."""
+    img, draw = tx._canvas()
+    s = SS
+    light, dark, glow = PLUMBER_LIGHT, PLUMBER_DARK, PLUMBER_GLOW
+    # Lauf (von unten links nach oben rechts)
+    barrel = [(14 * s, 36 * s), (46 * s, 10 * s), (54 * s, 18 * s), (22 * s, 44 * s)]
+    tx._shaded_polygon(img, barrel, np.asarray(light) * 0.55, light, (1, 1, 1))
+    muzzle = [(46 * s, 10 * s), (52 * s, 5 * s), (59 * s, 12 * s), (54 * s, 18 * s)]
+    tx._shaded_polygon(img, muzzle, np.asarray(dark) * 0.8, dark, OMNITRIX_GREY[1])
+    # Energiezelle und Leuchtstreifen
+    cell = [(28 * s, 26 * s), (38 * s, 18 * s), (42 * s, 22 * s), (32 * s, 30 * s)]
+    tx._shaded_polygon(img, cell, H("0A6A10"), glow, H("E0FFD0"))
+    draw = ImageDraw.Draw(img)
+    draw.line([(19 * s, 37 * s), (45 * s, 15 * s)], fill=tx._rgba(glow), width=s)
+    # Griff und Abzugsbuegel
+    grip = [(18 * s, 40 * s), (26 * s, 44 * s), (16 * s, 58 * s), (8 * s, 54 * s)]
+    tx._shaded_polygon(img, grip, np.asarray(dark) * 0.7, dark, OMNITRIX_GREY[0])
+    draw.line([(24 * s, 46 * s), (28 * s, 52 * s), (22 * s, 54 * s)], fill=tx._rgba(dark), width=2 * s)
+    return tx._finish_item(img)
+
+
+def plumber_badge(name: str) -> Image.Image:
+    """Klempner-Abzeichen: runde Plakette, Ring mit drei Strahlen um die gruene Sanduhr."""
+    img, draw = tx._canvas()
+    s = SS
+    c = 32
+    draw.ellipse([(c - 26) * s, (c - 26) * s, (c + 26) * s, (c + 26) * s], fill=tx._rgba(OMNITRIX_GREY[1]))
+    draw.ellipse([(c - 22) * s, (c - 22) * s, (c + 22) * s, (c + 22) * s], fill=tx._rgba(OMNITRIX_BLACK[1]))
+    for a in (90, 210, 330):
+        rad = math.radians(a)
+        x0, y0 = c + math.cos(rad) * 10, c - math.sin(rad) * 10
+        x1, y1 = c + math.cos(rad) * 21, c - math.sin(rad) * 21
+        draw.line([(x0 * s, y0 * s), (x1 * s, y1 * s)], fill=tx._rgba(OMNITRIX_GREY[2]), width=3 * s)
+    draw.ellipse([(c - 11) * s, (c - 11) * s, (c + 11) * s, (c + 11) * s], fill=tx._rgba(PLUMBER_GLOW))
+    draw.polygon([((c - 8) * s, (c - 8) * s), ((c + 8) * s, (c - 8) * s), (c * s, c * s)], fill=tx._rgba(OMNITRIX_BLACK[0]))
+    draw.polygon([((c - 8) * s, (c + 8) * s), ((c + 8) * s, (c + 8) * s), (c * s, c * s)], fill=tx._rgba(OMNITRIX_BLACK[0]))
+    draw.ellipse([(c - 20) * s, (c - 20) * s, (c - 13) * s, (c - 13) * s], fill=tx._rgba((1, 1, 1), 1.0, 120))
+    return tx._finish_item(img)
+
+
+def plumber_plating(name: str) -> Image.Image:
+    """Klempner-Panzerplatte: helle Platte mit gruener Fuge (Bauteil der Ruestung)."""
+    return tx.item_ingot(np.asarray(PLUMBER_LIGHT) * 0.55, PLUMBER_LIGHT, (1, 1, 1))
+
+
+PLUMBER_ARMOR_COLORS = (H("3A3E46"), H("C8CCD2"), H("F2F4F6"))
+
+
+def plumber_armor_item(kind: str) -> Image.Image:
+    return tx.item_armor(kind, *PLUMBER_ARMOR_COLORS, accent=PLUMBER_GLOW)
+
+
+def plumber_armor_layer(name: str, legs: bool) -> Image.Image:
+    return tx.armor_layer(name, *PLUMBER_ARMOR_COLORS, PLUMBER_GLOW, legs=legs)
+
+
+# --- Containment-Kapsel (3D, vom Block-Entity-Renderer gezeichnet) ------------------------------------------------
+
+POD_METAL = H("5C6478")
+POD_LINE = H("0C0E14")
+
+
+def _pod_canvas(base: Color, size: int = 64):
+    ys, xs = np.mgrid[0:size, 0:size].astype(np.float64)
+    shade = 1.08 - ys / size * 0.22
+    img = Image.fromarray((np.clip(np.asarray(base) * shade[..., None], 0, 1) * 255).astype(np.uint8), "RGB")
+    return img, ImageDraw.Draw(img)
+
+
+def pod_side(name: str) -> Image.Image:
+    """Seitenwand der Kapsel (64x64, flacher Cartoon-Stil): blaugraues Metall, dickes schwarzes Band, Risslinien."""
+    img, draw = _pod_canvas(POD_METAL)
+    line = tuple(int(c * 255) for c in POD_LINE)
+    draw.rectangle([0, 14, 63, 19], fill=line)
+    for pts in ([(6, 19), (12, 38), (4, 58)], [(12, 38), (30, 44), (40, 63)], [(30, 44), (46, 30), (58, 34)],
+                [(46, 30), (52, 19)], [(58, 34), (63, 50)]):
+        draw.line(pts, fill=line, width=4)
+    draw.rectangle([0, 0, 63, 1], fill=tuple(int(c * 255) for c in np.clip(np.asarray(POD_METAL) * 1.35, 0, 1)))
+    return img.convert("RGBA")
+
+
+def pod_top(name: str) -> Image.Image:
+    """Deckel der Kapsel: hellere Platte, schwarzer Rand, ein Riss quer ueber die Flaeche."""
+    img, draw = _pod_canvas(np.clip(np.asarray(POD_METAL) * 1.15, 0, 1))
+    line = tuple(int(c * 255) for c in POD_LINE)
+    draw.rectangle([0, 0, 63, 63], outline=line, width=4)
+    draw.line([(10, 54), (26, 36), (34, 40), (54, 12)], fill=line, width=3)
+    return img.convert("RGBA")

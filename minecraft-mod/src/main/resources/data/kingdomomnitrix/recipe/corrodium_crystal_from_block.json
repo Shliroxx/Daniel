@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:corrodium_block"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:corrodium_crystal",
+    "count": 9
+  }
+}

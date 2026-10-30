@@ -1,0 +1,30 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "DND",
+  "AFA",
+  "DOD"
+ ],
+ "key": {
+  "D": {
+   "item": "minecraft:diamond_block"
+  },
+  "N": {
+   "item": "minecraft:nether_star"
+  },
+  "A": {
+   "item": "kingdomomnitrix:alloy_forge"
+  },
+  "F": {
+   "item": "minecraft:beacon"
+  },
+  "O": {
+   "item": "minecraft:crying_obsidian"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_core",
+  "count": 1
+ }
+}

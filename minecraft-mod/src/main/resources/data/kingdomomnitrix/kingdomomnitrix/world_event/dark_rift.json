@@ -1,0 +1,14 @@
+{
+  "type": "dark_rift",
+  "weight": 14,
+  "min_level": 1,
+  "duration_seconds": 300,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rift": "kingdomomnitrix:shadow_swarm",
+  "rewards": {
+    "bolts": 80,
+    "experience": 100
+  }
+}

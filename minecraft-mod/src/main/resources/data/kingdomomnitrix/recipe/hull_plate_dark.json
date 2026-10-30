@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "HHH",
+    "HBH",
+    "HHH"
+  ],
+  "key": {
+    "H": {
+      "item": "kingdomomnitrix:hull_plate"
+    },
+    "B": {
+      "item": "kingdomomnitrix:torren_basalt"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:hull_plate_dark",
+    "count": 8
+  }
+}

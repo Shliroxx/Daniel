@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "kingdomomnitrix:rilgar_log"
+    }
+  ],
+  "result": {
+    "id": "kingdomomnitrix:rilgar_planks",
+    "count": 4
+  }
+}

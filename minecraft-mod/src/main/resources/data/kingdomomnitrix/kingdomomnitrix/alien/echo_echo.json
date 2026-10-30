@@ -1,0 +1,231 @@
+{
+  "color": "#E8E8E8",
+  "sort_order": 16,
+  "duration": 1200,
+  "recharge": 500,
+  "max_energy": 110,
+  "energy_regen": 8,
+  "scale": 0.6,
+  "attributes": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "amount": 0.1,
+      "operation": "add_multiplied_total"
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "amount": -4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "amount": 4.0,
+      "operation": "add_value"
+    },
+    {
+      "attribute": "minecraft:generic.safe_fall_distance",
+      "amount": 6.0,
+      "operation": "add_value"
+    }
+  ],
+  "immunities": [
+    "#kingdomomnitrix:is_sound"
+  ],
+  "abilities": [
+    {
+      "type": "kingdomomnitrix:sonic_scream",
+      "energy": 12,
+      "cooldown": 20,
+      "params": {
+        "range": 10.0,
+        "damage": 4.0,
+        "knockback": 0.6
+      },
+      "role": "basic",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:echo_split",
+      "energy": 25,
+      "cooldown": 120,
+      "params": {
+        "count": 2,
+        "seconds": 30.0
+      },
+      "role": "basic_2",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:sonic_boost",
+      "energy": 15,
+      "cooldown": 40,
+      "params": {
+        "power": 1.5,
+        "damage": 3.0
+      },
+      "role": "movement",
+      "unlock_level": 1
+    },
+    {
+      "type": "kingdomomnitrix:wall_of_sound",
+      "energy": 35,
+      "cooldown": 240,
+      "params": {
+        "radius": 4.0,
+        "seconds": 4.0
+      },
+      "role": "special",
+      "unlock_level": 3
+    },
+    {
+      "type": "kingdomomnitrix:sound_shield",
+      "energy": 25,
+      "cooldown": 300,
+      "params": {
+        "seconds": 5.0
+      },
+      "role": "utility",
+      "unlock_level": 5
+    },
+    {
+      "type": "kingdomomnitrix:echo_chorus",
+      "energy": 80,
+      "cooldown": 900,
+      "params": {},
+      "role": "ultimate",
+      "unlock_level": 8
+    },
+    {
+      "type": "kingdomomnitrix:feedback_loop",
+      "energy": 30,
+      "cooldown": 220,
+      "params": {
+        "range": 14.0,
+        "damage": 2.0,
+        "seconds": 3.0
+      },
+      "role": "special",
+      "unlock_level": 4
+    },
+    {
+      "type": "kingdomomnitrix:sonic_symphony",
+      "energy": 90,
+      "cooldown": 1100,
+      "params": {
+        "range": 20.0,
+        "ring": 6.0,
+        "radius": 5.0,
+        "damage": 2.0,
+        "seconds": 5.0
+      },
+      "role": "ultimate",
+      "unlock_level": 10
+    },
+    {
+      "type": "kingdomomnitrix:echo_tackle",
+      "energy": 8,
+      "cooldown": 50,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 1,
+      "trigger": "sprint_attack"
+    },
+    {
+      "type": "kingdomomnitrix:drop_note",
+      "energy": 10,
+      "cooldown": 70,
+      "params": {
+        "damage": 5.0
+      },
+      "role": "basic",
+      "unlock_level": 2,
+      "trigger": "air_attack"
+    },
+    {
+      "type": "kingdomomnitrix:point_blank",
+      "energy": 8,
+      "cooldown": 80,
+      "params": {
+        "damage": 3.0
+      },
+      "role": "basic",
+      "unlock_level": 3,
+      "trigger": "sneak_attack"
+    },
+    {
+      "type": "kingdomomnitrix:boom_landing",
+      "energy": 12,
+      "cooldown": 90,
+      "params": {
+        "dive": 2.0,
+        "damage": 5.0,
+        "radius": 3.5
+      },
+      "role": "movement",
+      "unlock_level": 4,
+      "trigger": "plunge"
+    },
+    {
+      "type": "kingdomomnitrix:shatter_frequency",
+      "energy": 20,
+      "cooldown": 160,
+      "params": {
+        "damage": 8.0,
+        "per_clone": 2.0
+      },
+      "role": "special",
+      "unlock_level": 6,
+      "trigger": "finisher"
+    }
+  ],
+  "dna": {
+    "samples": 3,
+    "species": {
+      "home": "kingdomomnitrix:sonorosia",
+      "name": "species.kingdomomnitrix.sonorosian",
+      "behavior": "shy",
+      "health": 12,
+      "damage": 3,
+      "speed": 0.3,
+      "effect": "sonic",
+      "group": [
+        2,
+        4
+      ],
+      "max": 8
+    }
+  },
+  "model": "kingdomomnitrix:echo_echo",
+  "failsafe_tags": [
+    "#minecraft:is_fall"
+  ],
+  "failsafe_priority": 1,
+  "traits": {
+    "effects": [],
+    "transform_style": "echo",
+    "passives": [
+      {
+        "type": "kingdomomnitrix:sonorosian_resonance",
+        "params": {
+          "damage": 1.5
+        }
+      },
+      {
+        "type": "kingdomomnitrix:echolocation",
+        "params": {
+          "radius": 16.0
+        }
+      },
+      {
+        "type": "kingdomomnitrix:sound_dampening",
+        "unlock_level": 4,
+        "params": {
+          "reduction": 0.5,
+          "retaliate": 1.5
+        }
+      }
+    ]
+  }
+}

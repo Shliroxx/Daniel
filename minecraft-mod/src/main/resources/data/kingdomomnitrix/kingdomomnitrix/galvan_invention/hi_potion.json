@@ -1,0 +1,17 @@
+{
+  "result": "kingdomomnitrix:hi_potion",
+  "count": 2,
+  "ingredients": [
+    {
+      "item": "minecraft:glistering_melon_slice",
+      "count": 1
+    },
+    {
+      "item": "minecraft:glass_bottle",
+      "count": 2
+    }
+  ],
+  "bolts": 40,
+  "knowledge": 0,
+  "sort_order": 20
+}

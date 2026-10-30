@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/appoplexia_rock"
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_rock",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_rock",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/appoplexia_rock",
+        "y": 270
+      }
+    ]
+  }
+}

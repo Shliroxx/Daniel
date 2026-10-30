@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:viscosia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.4,
+    0.88
+  ],
+  "color": 8052794,
+  "size": 0.9,
+  "order": 115,
+  "landing": [
+    0,
+    0
+  ]
+}

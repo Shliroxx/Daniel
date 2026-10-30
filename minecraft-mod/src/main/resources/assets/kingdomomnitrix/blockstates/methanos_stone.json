@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/methanos_stone"
+      },
+      {
+        "model": "kingdomomnitrix:block/methanos_stone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/methanos_stone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/methanos_stone",
+        "y": 270
+      }
+    ]
+  }
+}

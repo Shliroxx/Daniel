@@ -1,0 +1,25 @@
+{
+  "result": "kingdomomnitrix:galvan_scanner",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 3
+    },
+    {
+      "item": "minecraft:redstone",
+      "count": 2
+    },
+    {
+      "item": "minecraft:glass_pane",
+      "count": 1
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 2
+    }
+  ],
+  "bolts": 250,
+  "knowledge": 3,
+  "sort_order": 30
+}

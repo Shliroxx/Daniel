@@ -1,0 +1,62 @@
+{
+  "min_level": 4,
+  "sort_order": 2,
+  "time_limit": 300,
+  "elite_chance": 0.1,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 4
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 2
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 3
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 1
+      },
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 6
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:large_body",
+        "count": 2
+      },
+      {
+        "entity": "kingdomomnitrix:air_soldier",
+        "count": 3
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts": 450,
+    "experience": 180,
+    "items": [
+      {
+        "id": "kingdomomnitrix:raritanium",
+        "count": 3
+      },
+      {
+        "id": "kingdomomnitrix:mythril_shard",
+        "count": 4
+      }
+    ]
+  }
+}

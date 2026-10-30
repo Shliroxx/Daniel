@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "kingdomomnitrix:block/sonorosia_reed"
+  }
+}

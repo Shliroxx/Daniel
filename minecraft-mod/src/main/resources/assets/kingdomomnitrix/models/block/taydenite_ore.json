@@ -1,0 +1,7 @@
+{
+  "parent": "kingdomomnitrix:block/taydenite_ore_3d",
+  "textures": {
+    "all": "kingdomomnitrix:block/taydenite_ore",
+    "particle": "kingdomomnitrix:block/taydenite_ore"
+  }
+}

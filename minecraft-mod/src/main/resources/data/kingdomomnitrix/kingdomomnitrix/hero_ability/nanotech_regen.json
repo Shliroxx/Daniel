@@ -1,0 +1,8 @@
+{
+  "category": "tech",
+  "unlock_level": 28,
+  "ap_cost": 4,
+  "sort_order": 130,
+  "effect": "nanotech_regen",
+  "value": 1.0
+}

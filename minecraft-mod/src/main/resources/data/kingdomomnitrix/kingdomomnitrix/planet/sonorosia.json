@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:sonorosia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.18,
+    0.3
+  ],
+  "color": 9071328,
+  "size": 1.0,
+  "order": 100,
+  "landing": [
+    0,
+    0
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_stone"
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_stone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_stone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/lepidopterra_stone",
+        "y": 270
+      }
+    ]
+  }
+}

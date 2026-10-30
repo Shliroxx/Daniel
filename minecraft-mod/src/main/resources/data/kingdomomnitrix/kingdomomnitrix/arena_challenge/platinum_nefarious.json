@@ -1,0 +1,17 @@
+{
+  "min_level": 8,
+  "sort_order": 4,
+  "time_limit": 600,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:nefarious",
+        "count": 1
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts": 400,
+    "experience": 150
+  }
+}

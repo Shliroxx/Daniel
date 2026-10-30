@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " M ",
+    "RXR",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "item": "kingdomomnitrix:mythril_shard"
+    },
+    "R": {
+      "item": "kingdomomnitrix:raritanium"
+    },
+    "X": {
+      "item": "minecraft:clock"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:boost_duration",
+    "count": 1
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "min_level": 1,
+  "weight": 10,
+  "elite_chance": 0.03,
+  "waves": [
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 3
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 4
+      },
+      {
+        "entity": "kingdomomnitrix:darkball",
+        "count": 1
+      }
+    ],
+    [
+      {
+        "entity": "kingdomomnitrix:shadow",
+        "count": 3
+      },
+      {
+        "entity": "kingdomomnitrix:soldier",
+        "count": 2
+      }
+    ]
+  ],
+  "rewards": {
+    "bolts_min": 20,
+    "bolts_max": 40,
+    "hearts": 2,
+    "experience": 80,
+    "crystal_chance": 0.3,
+    "dna_chance": 0.15
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "category": "armor",
+  "name": "shop.kingdomomnitrix.offer.pyronite_set",
+  "items": [
+    {
+      "id": "kingdomomnitrix:pyronite_helmet",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:pyronite_chestplate",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:pyronite_leggings",
+      "count": 1
+    },
+    {
+      "id": "kingdomomnitrix:pyronite_boots",
+      "count": 1
+    }
+  ],
+  "price": 9000,
+  "sort_order": 3
+}

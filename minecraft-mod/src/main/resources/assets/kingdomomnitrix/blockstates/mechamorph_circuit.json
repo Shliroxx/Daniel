@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/mechamorph_circuit"
+      },
+      {
+        "model": "kingdomomnitrix:block/mechamorph_circuit",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/mechamorph_circuit",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/mechamorph_circuit",
+        "y": 270
+      }
+    ]
+  }
+}

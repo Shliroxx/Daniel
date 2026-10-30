@@ -1,0 +1,94 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "bonus_rolls": 0,
+      "conditions": [
+        {
+          "condition": "minecraft:killed_by_player"
+        },
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 1.0
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:heart",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 2,
+              "add": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "bonus_rolls": 0,
+      "conditions": [
+        {
+          "condition": "minecraft:killed_by_player"
+        },
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.12
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:spell_crystal",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "kingdomomnitrix:spell": "kingdomomnitrix:fire"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:spell_crystal",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "kingdomomnitrix:spell": "kingdomomnitrix:blizzard"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:spell_crystal",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "kingdomomnitrix:spell": "kingdomomnitrix:thunder"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "kingdomomnitrix:spell_crystal",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "kingdomomnitrix:spell": "kingdomomnitrix:cure"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " S ",
+  "WIW",
+  "GBG"
+ ],
+ "key": {
+  "S": {
+   "item": "kingdomomnitrix:resonance_shard"
+  },
+  "W": {
+   "item": "kingdomomnitrix:biotech_weave"
+  },
+  "I": {
+   "item": "kingdomomnitrix:fusion_injector"
+  },
+  "G": {
+   "item": "kingdomomnitrix:biotech_gel"
+  },
+  "B": {
+   "item": "minecraft:gold_block"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_injector_galvan",
+  "count": 1
+ }
+}

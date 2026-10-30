@@ -1,0 +1,18 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.santiq.kingdomomnitrix.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"ItemStackCraftMixin",
+		"LevelPropertiesMixin",
+		"LivingEntityAccessor",
+		"LivingEntityDamageMixin",
+		"PlayerEntityHarvestMixin",
+		"ServerPlayNetworkHandlerAccessor",
+		"ServerPlayNetworkHandlerFlightMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

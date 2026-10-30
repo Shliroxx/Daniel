@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:redstone_block",
+    "minecraft:daylight_detector",
+    "minecraft:redstone_lamp"
+  ]
+}

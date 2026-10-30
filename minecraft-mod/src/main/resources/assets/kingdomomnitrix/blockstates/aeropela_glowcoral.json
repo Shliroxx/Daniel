@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/aeropela_glowcoral"
+      },
+      {
+        "model": "kingdomomnitrix:block/aeropela_glowcoral",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/aeropela_glowcoral",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/aeropela_glowcoral",
+        "y": 270
+      }
+    ]
+  }
+}

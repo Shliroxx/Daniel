@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/encephalonus_shellstone"
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_shellstone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_shellstone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/encephalonus_shellstone",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "item": "kingdomomnitrix:devastator",
+  "price": 2000,
+  "ammo_price": 25,
+  "sort_order": 5,
+  "levels": [
+    {
+      "price": 0,
+      "max_ammo": 6,
+      "stats": {
+        "damage": 12,
+        "explosion": 1.8,
+        "cooldown": 30
+      }
+    },
+    {
+      "price": 1500,
+      "max_ammo": 7,
+      "stats": {
+        "damage": 14,
+        "explosion": 2.0,
+        "cooldown": 28
+      }
+    },
+    {
+      "price": 3000,
+      "max_ammo": 8,
+      "stats": {
+        "damage": 16,
+        "explosion": 2.2,
+        "cooldown": 26
+      }
+    },
+    {
+      "price": 6000,
+      "max_ammo": 10,
+      "stats": {
+        "damage": 19,
+        "explosion": 2.5,
+        "cooldown": 24
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "price": 10000,
+      "max_ammo": 12,
+      "stats": {
+        "damage": 23,
+        "explosion": 3.0,
+        "cooldown": 20
+      },
+      "items": [
+        {
+          "id": "kingdomomnitrix:raritanium",
+          "count": 6
+        }
+      ]
+    }
+  ]
+}

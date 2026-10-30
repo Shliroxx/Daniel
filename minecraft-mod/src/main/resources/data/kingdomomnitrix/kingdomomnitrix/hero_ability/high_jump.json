@@ -1,0 +1,8 @@
+{
+  "category": "exploration",
+  "unlock_level": 5,
+  "ap_cost": 2,
+  "sort_order": 30,
+  "effect": "high_jump",
+  "value": 0.1
+}

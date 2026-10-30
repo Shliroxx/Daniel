@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/phaetos_soulstone"
+      },
+      {
+        "model": "kingdomomnitrix:block/phaetos_soulstone",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/phaetos_soulstone",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/phaetos_soulstone",
+        "y": 270
+      }
+    ]
+  }
+}

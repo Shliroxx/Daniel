@@ -1,0 +1,14 @@
+{
+  "type": "boss_spawn",
+  "weight": 3,
+  "min_level": 20,
+  "duration_seconds": 900,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rewards": {
+    "bolts": 800,
+    "experience": 1500,
+    "orichalcum": 2
+  }
+}

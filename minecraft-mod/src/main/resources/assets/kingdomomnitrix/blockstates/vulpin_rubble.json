@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/vulpin_rubble"
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_rubble",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_rubble",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_rubble",
+        "y": 270
+      }
+    ]
+  }
+}

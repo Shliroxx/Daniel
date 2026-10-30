@@ -1,0 +1,16 @@
+{
+  "dimension": "kingdomomnitrix:petropia",
+  "system": "homeworlds",
+  "chart": "aliens",
+  "map": [
+    0.4,
+    0.18
+  ],
+  "color": 3858600,
+  "size": 1.1,
+  "order": 101,
+  "landing": [
+    0,
+    0
+  ]
+}

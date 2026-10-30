@@ -1,0 +1,24 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  "PIP",
+  "PRP",
+  "PIP"
+ ],
+ "key": {
+  "P": {
+   "item": "minecraft:deepslate_tiles"
+  },
+  "I": {
+   "item": "minecraft:iron_ingot"
+  },
+  "R": {
+   "item": "minecraft:redstone_block"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_pylon",
+  "count": 3
+ }
+}

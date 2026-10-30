@@ -1,0 +1,11 @@
+{
+  "dimension": "minecraft:overworld",
+  "system": "home",
+  "map": [
+    0.14,
+    0.66
+  ],
+  "color": 5219327,
+  "size": 1.3,
+  "order": 0
+}

@@ -1,0 +1,8 @@
+{
+  "type": "kingdomomnitrix:petrosapien_settlement",
+  "biomes": "#kingdomomnitrix:has_structure/petrosapien_village",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "beard_thin",
+  "ruin": false
+}

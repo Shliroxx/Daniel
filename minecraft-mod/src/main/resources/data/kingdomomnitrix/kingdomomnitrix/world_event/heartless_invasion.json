@@ -1,0 +1,14 @@
+{
+  "type": "heartless_invasion",
+  "weight": 8,
+  "min_level": 8,
+  "duration_seconds": 600,
+  "dimensions": [
+    "minecraft:overworld"
+  ],
+  "rift": "kingdomomnitrix:invasion",
+  "rewards": {
+    "bolts": 300,
+    "experience": 400
+  }
+}

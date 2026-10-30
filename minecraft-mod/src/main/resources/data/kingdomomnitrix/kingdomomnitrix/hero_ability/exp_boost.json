@@ -1,0 +1,8 @@
+{
+  "category": "keyblade",
+  "unlock_level": 12,
+  "ap_cost": 2,
+  "sort_order": 70,
+  "effect": "exp_boost",
+  "value": 1.0
+}

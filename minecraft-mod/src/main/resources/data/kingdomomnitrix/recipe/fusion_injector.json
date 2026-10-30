@@ -1,0 +1,27 @@
+{
+ "type": "minecraft:crafting_shaped",
+ "category": "misc",
+ "pattern": [
+  " E ",
+  "RBR",
+  "OOO"
+ ],
+ "key": {
+  "E": {
+   "item": "minecraft:end_rod"
+  },
+  "R": {
+   "item": "kingdomomnitrix:raritanium_ingot"
+  },
+  "B": {
+   "item": "minecraft:diamond_block"
+  },
+  "O": {
+   "item": "minecraft:obsidian"
+  }
+ },
+ "result": {
+  "id": "kingdomomnitrix:fusion_injector",
+  "count": 1
+ }
+}

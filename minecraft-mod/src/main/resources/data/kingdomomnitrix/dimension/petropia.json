@@ -1,0 +1,174 @@
+{
+  "type": "minecraft:overworld",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "kingdomomnitrix:petropia",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "kingdomomnitrix:petropia/crystal_plains",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              -0.2
+            ],
+            "humidity": [
+              -1.0,
+              0.1
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -0.6,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "kingdomomnitrix:petropia/crystal_forest",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              -0.2
+            ],
+            "humidity": [
+              0.1,
+              1.0
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -0.6,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "kingdomomnitrix:petropia/shard_wastes",
+          "parameters": {
+            "temperature": [
+              -0.2,
+              0.5
+            ],
+            "humidity": [
+              -1.0,
+              -0.1
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -0.6,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "kingdomomnitrix:petropia/geode_fields",
+          "parameters": {
+            "temperature": [
+              -0.2,
+              0.5
+            ],
+            "humidity": [
+              -0.1,
+              1.0
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -0.6,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "kingdomomnitrix:petropia/shattered_basin",
+          "parameters": {
+            "temperature": [
+              0.5,
+              1.0
+            ],
+            "humidity": [
+              -1.0,
+              1.0
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -0.6,
+              1.0
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        },
+        {
+          "biome": "kingdomomnitrix:petropia/prism_peaks",
+          "parameters": {
+            "temperature": [
+              -1.0,
+              1.0
+            ],
+            "humidity": [
+              -1.0,
+              1.0
+            ],
+            "continentalness": [
+              -1.2,
+              1.0
+            ],
+            "erosion": [
+              -1.0,
+              -0.6
+            ],
+            "weirdness": [
+              -1.0,
+              1.0
+            ],
+            "depth": 0.0,
+            "offset": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "parent": "kingdomomnitrix:block/infernite_ore_3d",
+  "textures": {
+    "all": "kingdomomnitrix:block/infernite_ore",
+    "particle": "kingdomomnitrix:block/infernite_ore"
+  }
+}

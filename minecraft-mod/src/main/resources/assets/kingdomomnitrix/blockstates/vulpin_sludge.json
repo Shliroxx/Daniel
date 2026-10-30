@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "kingdomomnitrix:block/vulpin_sludge"
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_sludge",
+        "y": 90
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_sludge",
+        "y": 180
+      },
+      {
+        "model": "kingdomomnitrix:block/vulpin_sludge",
+        "y": 270
+      }
+    ]
+  }
+}

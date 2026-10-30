@@ -1,0 +1,18 @@
+{
+  "type": "kingdomomnitrix:space",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "kingdomomnitrix:space",
+      "layers": [
+        {
+          "block": "minecraft:structure_void",
+          "height": 1
+        }
+      ],
+      "features": true,
+      "lakes": false,
+      "structure_overrides": []
+    }
+  }
+}

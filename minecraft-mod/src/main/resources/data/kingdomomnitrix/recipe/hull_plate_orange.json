@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "HHH",
+    "HRH",
+    "HHH"
+  ],
+  "key": {
+    "H": {
+      "item": "kingdomomnitrix:hull_plate"
+    },
+    "R": {
+      "item": "kingdomomnitrix:raw_solar_copper"
+    }
+  },
+  "result": {
+    "id": "kingdomomnitrix:hull_plate_orange",
+    "count": 8
+  }
+}

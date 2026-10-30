@@ -1,0 +1,21 @@
+{
+  "result": "kingdomomnitrix:fusion_grenade",
+  "count": 1,
+  "ingredients": [
+    {
+      "item": "minecraft:gunpowder",
+      "count": 4
+    },
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 2
+    },
+    {
+      "item": "kingdomomnitrix:raritanium",
+      "count": 1
+    }
+  ],
+  "bolts": 200,
+  "knowledge": 6,
+  "sort_order": 50
+}
