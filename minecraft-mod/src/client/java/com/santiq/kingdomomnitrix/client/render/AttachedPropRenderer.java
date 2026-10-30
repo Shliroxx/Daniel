@@ -47,6 +47,15 @@ public class AttachedPropRenderer extends GeoEntityRenderer<AttachedPropEntity> 
 			return;
 		}
 		poseStack.push();
+		var target = entity.target();
+		if (target != null) {
+			// am gezeichneten (interpolierten) Ziel kleben, nicht einen Tick hinterher — wichtig bei schnellen Zielen (Flammenbrett)
+			var at = target.getLerpedPos(partialTick).subtract(entity.getLerpedPos(partialTick));
+			poseStack.translate(at.x, at.y, at.z);
+		}
+		if (entity.kind().startsWith("flame_")) {
+			packedLight = net.minecraft.client.render.LightmapTextureManager.MAX_LIGHT_COORDINATE;   // Feuer leuchtet selbst
+		}
 		float scale = entity.targetScale();
 		poseStack.scale(scale, scale, scale);
 		super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);

@@ -7,6 +7,11 @@ package com.santiq.kingdomomnitrix.ability;
 public interface ChargeableAbility extends AlienAbility {
 	int HOLD_LIMIT = 40;
 
+	/** Dauerkraft (Strahl, Atem): wirkt waehrend des Haltens, ohne Lade-Toene und Voll-Blitz. */
+	default boolean channel() {
+		return false;
+	}
+
 	/** Ticks bis zur vollen Ladung */
 	int chargeTicks(AbilityContext context);
 

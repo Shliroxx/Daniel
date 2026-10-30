@@ -1,6 +1,6 @@
 # Kingdom Omnitrix — Minecraft-Mod
 
-made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 1.0.0
+**ALIEN EVOLUTION 2.0** — made by SANTIQ · Mod-ID `kingdomomnitrix` · Version 1.0.0
 
 Fan-Mod für **Minecraft 1.21.1 (Fabric)**, die drei Welten zusammenbringt:
 **Kingdom Hearts**, **Ben 10** und **Ratchet & Clank**.

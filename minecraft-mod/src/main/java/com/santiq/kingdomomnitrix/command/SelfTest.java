@@ -108,7 +108,8 @@ public final class SelfTest {
 			"titanic_growth", "Wachstum (Groesse und Werte) — der Test misst keine Groesse",
 			"half_life", "braucht bestrahlte Ziele",
 			"tokustar_guard", "Resistenz — der Testspieler hat sie schon",
-			"blink", "Teleport braucht freien Platz am Blickpunkt");
+			"blink", "Teleport braucht freien Platz am Blickpunkt",
+			"supernova", "braucht mindestens halbe Kernhitze (Testspieler startet kalt)");
 
 	private record Job(Identifier alienId, int index, AbilitySlot slot) {
 	}

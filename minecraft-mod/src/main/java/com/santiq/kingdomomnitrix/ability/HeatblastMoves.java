@@ -8,46 +8,29 @@ import com.santiq.kingdomomnitrix.power.AlienStrength;
 import com.santiq.kingdomomnitrix.power.Destruction;
 import com.santiq.kingdomomnitrix.registry.ModSounds;
 import com.santiq.kingdomomnitrix.vfx.Fx;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 /**
- * Heatblast, Kraefte 2.0: Flammenwerfer, Feuerrolle, Hitze aufnehmen, Feuertornado, Lavafontaene, Meteorhagel; Kombos
- * Glutansturm, Feuerkomet, Glutgriff, Phoenix-Sturz, Einaeschern; Passive Glutkoerper und Hitzeschleier (der
+ * Heatblast-Kombos: Glutansturm, Feuerkomet, Glutgriff, Phoenix-Sturz, Einaeschern; Passive Glutkoerper und Hitzeschleier (der
  * Pyronit-Kern selbst sitzt in {@link HeatblastAbilities}). Alles nutzt die Kernhitze: Gluehend staerker, ueberhitzt
  * entlaedt die naechste Kraft als Blaufeuer.
  */
 final class HeatblastMoves {
 	private static final int FIRE = HeatblastAbilities.FIRE;
 	private static final int EMBER = 0xFFB040;
-	private static final int MAGMA = 0xFF4A10;
 
 	private HeatblastMoves() {
 	}
 
 	static void register() {
-		AbilityRegistry.register(KingdomOmnitrix.id("flamethrower"), HeatblastMoves::flamethrower);
-		AbilityRegistry.register(KingdomOmnitrix.id("blaze_roll"), HeatblastMoves::blazeRoll);
-		AbilityRegistry.register(KingdomOmnitrix.id("heat_absorb"), HeatblastMoves::heatAbsorb);
-		AbilityRegistry.register(KingdomOmnitrix.id("fire_tornado"), HeatblastMoves::fireTornado);
-		AbilityRegistry.register(KingdomOmnitrix.id("magma_eruption"), HeatblastMoves::magmaEruption);
-		AbilityRegistry.register(KingdomOmnitrix.id("meteor_rain"), HeatblastMoves::meteorRain);
 		AbilityRegistry.register(KingdomOmnitrix.id("blazing_rush"), HeatblastMoves::blazingRush);
 		AbilityRegistry.register(KingdomOmnitrix.id("comet_kick"), HeatblastMoves::cometKick);
 		AbilityRegistry.register(KingdomOmnitrix.id("ember_grip"), HeatblastMoves::emberGrip);
@@ -83,233 +66,6 @@ final class HeatblastMoves {
 				return amount;
 			}
 		});
-	}
-
-	// --- Tasten-Faehigkeiten ---------------------------------------------------------------------
-
-	/** Flammenwerfer: 1,5 s Feuerstrom im Kegel, trifft mehrmals, zuendet Boden und Gegner. */
-	private static boolean flamethrower(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		HeatblastAbilities.Power power = HeatblastAbilities.power(player);
-		int ticks = (int) ctx.param("ticks", 30.0);
-		double range = ctx.param("range", 7.0) * (power.blue() ? 1.4 : 1.0);
-		float damage = (float) ctx.param("damage", 1.6) * power.factor();
-		int color = power.color();
-		player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 1, false, false));
-		PowerTasks.start(player, ticks, 1, (world, p, age) -> {
-			Vec3d look = p.getRotationVec(1.0f);
-			Vec3d hand = p.getEyePos().add(look.multiply(0.7)).add(0, -0.3, 0);
-			Fx.flames(world, hand, look.multiply(0.6), color, 0.22f, 4);
-			if (age % 4 == 0) {
-				for (LivingEntity target : AlienKit.cone(world, p, range, 0.82)) {
-					HeatblastAbilities.hit(p, target, damage, 3.0f);
-				}
-				Destruction.ignite(world, p, p.getEyePos().add(look.multiply(range * 0.7)), 1.5, 0.15);
-			}
-			if (age % 6 == 0) {
-				world.playSound(null, p.getBlockPos(), SoundEvents.ENTITY_BLAZE_BURN, SoundCategory.PLAYERS, 0.8f, 0.8f);
-			}
-			return true;
-		});
-		HeatblastAbilities.addHeat(player, (float) ctx.param("heat", 12.0));
-		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_FIRE, 1.0f, 0.8f);
-		return true;
-	}
-
-	/** Feuerrolle: kurzer Sprung als brennendes Rad, unverwundbar waehrenddessen, hinterlaesst eine Flammenspur. */
-	private static boolean blazeRoll(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		Vec3d look = BuiltinAbilities.horizontalLook(player);
-		double power = ctx.param("power", 1.6);
-		BuiltinAbilities.launch(player, look.x * power, 0.25, look.z * power);
-		ctx.grantInvulnerability((int) ctx.param("invulnerable_ticks", 10));
-		float damage = (float) ctx.param("damage", 4.0);
-		Set<UUID> hit = new HashSet<>();
-		PowerTasks.start(player, 12, 1, (world, p, age) -> {
-			Fx.flames(world, p.getPos().add(0, 0.6, 0), Vec3d.ZERO, FIRE, 0.45f, 5);
-			for (LivingEntity target : AlienKit.around(world, p, p.getPos().add(0, 0.8, 0), 1.6)) {
-				if (hit.add(target.getUuid())) {
-					HeatblastAbilities.hit(p, target, damage, 4.0f);
-				}
-			}
-			if (age % 3 == 0) {
-				Destruction.ignite(world, p, p.getPos(), 0.8, 0.5);
-			}
-			return true;
-		});
-		Fx.flash(ctx.world(), player.getPos().add(0, 0.8, 0), EMBER, 1.4f);
-		HeatblastAbilities.addHeat(player, (float) ctx.param("heat", 6.0));
-		BuiltinAbilities.sound(ctx, SoundEvents.ITEM_FIRECHARGE_USE, 1.0f, 1.3f);
-		return true;
-	}
-
-	/**
-	 * Hitze aufnehmen: zieht Feuer und Glut aus der Umgebung in den Koerper — loescht Brand, kuehlt Lava zu Obsidian
-	 * bzw. Bruchstein, heilt und fuellt die Kernhitze je aufgenommener Quelle.
-	 */
-	private static boolean heatAbsorb(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		ServerWorld world = ctx.world();
-		int radius = (int) ctx.param("radius", 6.0);
-		int sources = 0;
-		BlockPos center = player.getBlockPos();
-		for (BlockPos pos : BlockPos.iterate(center.add(-radius, -2, -radius), center.add(radius, 3, radius))) {
-			if (pos.getSquaredDistance(center) > radius * radius || sources >= 40) {
-				continue;
-			}
-			BlockState state = world.getBlockState(pos);
-			BlockState cooled = null;
-			if (state.isIn(BlockTags.FIRE)) {
-				cooled = Blocks.AIR.getDefaultState();
-			} else if (state.isOf(Blocks.LAVA)) {
-				cooled = state.getFluidState().isStill() ? Blocks.OBSIDIAN.getDefaultState() : Blocks.COBBLESTONE.getDefaultState();
-			} else if (state.isOf(Blocks.MAGMA_BLOCK)) {
-				cooled = Blocks.NETHERRACK.getDefaultState();
-			}
-			if (cooled != null && player.canModifyAt(world, pos)) {
-				world.setBlockState(pos, cooled);
-				Vec3d from = Vec3d.ofCenter(pos);
-				Fx.flames(world, from, player.getPos().add(0, 1.0, 0).subtract(from).multiply(0.12), EMBER, 0.1f, 2);
-				sources++;
-			}
-		}
-		for (LivingEntity burning : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(radius), e -> e.isOnFire() && e != player)) {
-			burning.extinguish();
-			Fx.flames(world, AlienKit.body(burning), player.getPos().add(0, 1.0, 0).subtract(AlienKit.body(burning)).multiply(0.12), EMBER, 0.1f, 3);
-			sources++;
-		}
-		// auch ohne Quellen: Restwaerme der Luft (wenig)
-		float gain = 6.0f + sources * (float) ctx.param("heat_per_source", 4.0);
-		HeatblastAbilities.addHeat(player, gain);
-		player.heal(2.0f + sources * 0.5f);
-		Fx.charge(world, player, EMBER, 2.4f, 16);
-		Fx.aura(world, player, FIRE, 1.2f, 30);
-		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 1.2f);
-		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_FIRE_EXTINGUISH, 0.8f, 0.6f);
-		return true;
-	}
-
-	/** Feuertornado: Flammenwirbel am Zielpunkt, wandert langsam mit dem Blick, zieht Gegner hinein und verbrennt sie. */
-	private static boolean fireTornado(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		HeatblastAbilities.Power power = HeatblastAbilities.power(player);
-		Vec3d start = AlienKit.ground(ctx.world(), AlienKit.aim(ctx.world(), player, ctx.param("range", 14.0)), 8.0);
-		int ticks = (int) (ctx.param("seconds", 5.0) * 20);
-		float damage = (float) ctx.param("damage", 2.5) * power.factor();
-		double radius = ctx.param("radius", 3.0) * (power.blue() ? 1.4 : 1.0);
-		int color = power.color();
-		Vec3d[] at = {start};
-		PowerTasks.start(player, ticks, 1, (world, p, age) -> {
-			// folgt dem Blick, hoechstens 0,12 Bloecke je Tick
-			Vec3d want = AlienKit.ground(world, AlienKit.aim(world, p, 16.0), 8.0);
-			Vec3d step = want.subtract(at[0]);
-			if (step.lengthSquared() > 0.0144) {
-				step = step.normalize().multiply(0.12);
-			}
-			at[0] = at[0].add(step.x, 0, step.z);
-			at[0] = AlienKit.ground(world, at[0].add(0, 2, 0), 6.0);
-			if (age % 2 == 0) {
-				double spin = age * 0.5;
-				for (int i = 0; i < 4; i++) {
-					double h = i * 1.1;
-					double r = 0.6 + h * 0.35;
-					double a = spin + i * 1.7;
-					Vec3d tangent = new Vec3d(-Math.sin(a), 0.25, Math.cos(a)).multiply(0.25);
-					Fx.flames(world, at[0].add(Math.cos(a) * r, h + 0.2, Math.sin(a) * r), tangent, color, 0.2f, 2);
-				}
-			}
-			if (age % 10 == 0) {
-				for (LivingEntity target : AlienKit.around(world, p, at[0].add(0, 1.5, 0), radius + 2.0)) {
-					Vec3d pull = at[0].subtract(target.getPos()).multiply(1, 0, 1);
-					if (pull.lengthSquared() > 0.25) {
-						target.addVelocity(pull.normalize().x * 0.35, 0.15, pull.normalize().z * 0.35);
-						target.velocityModified = true;
-					}
-					if (target.getPos().distanceTo(at[0]) <= radius) {
-						HeatblastAbilities.hit(p, target, damage, 4.0f);
-					}
-				}
-				Destruction.ignite(world, p, at[0], 1.5, 0.3);
-				world.playSound(null, BlockPos.ofFloored(at[0]), SoundEvents.ENTITY_BLAZE_SHOOT, SoundCategory.PLAYERS, 0.7f, 0.5f);
-			}
-			return true;
-		});
-		Fx.shockwave(ctx.world(), start.add(0, 0.1, 0), color, (float) radius * 1.5f, 10);
-		HeatblastAbilities.addHeat(player, (float) ctx.param("heat", 18.0));
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_BLAZE_AMBIENT, 1.2f, 0.5f);
-		return true;
-	}
-
-	/**
-	 * Lavafontaene: der Boden unter dem Zielpunkt bricht auf — drei Glutsaeulen schiessen nacheinander hoch, schleudern
-	 * Gegner in die Luft und hinterlassen einen brennenden Krater.
-	 */
-	private static boolean magmaEruption(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		HeatblastAbilities.Power power = HeatblastAbilities.power(player);
-		Vec3d center = AlienKit.ground(ctx.world(), AlienKit.aim(ctx.world(), player, ctx.param("range", 16.0)), 10.0);
-		float damage = (float) ctx.param("damage", 9.0) * power.factor();
-		int color = power.color();
-		Fx.scorch(ctx.world(), center, 3.0f, 200);
-		Fx.shake(ctx.world(), center, 0.25f, 10, 16);
-		PowerTasks.start(player, 30, 10, (world, p, age) -> {
-			int n = age / 10;
-			double a = n * MathHelper.TAU / 3 + 0.4;
-			Vec3d at = n == 0 ? center : center.add(Math.cos(a) * 2.2, 0, Math.sin(a) * 2.2);
-			for (int h = 0; h < 6; h++) {
-				Fx.flames(world, at.add(0, h * 0.7, 0), new Vec3d(0, 0.35, 0), h < 2 ? MAGMA : color, 0.35f, 4);
-			}
-			Fx.explosion(world, at.add(0, 0.4, 0), color, 1.4f);
-			for (LivingEntity target : AlienKit.blast(world, p, at.add(0, 1.0, 0), 2.6, damage, 0.2, 1.0)) {
-				target.setOnFireFor(6.0f);
-			}
-			Destruction.crater(world, p, at.add(0, -0.4, 0), 1.6, 0.6, AlienStrength.of(p), 0.3, 0.7);
-			Destruction.ignite(world, p, at, 1.8, 0.4);
-			world.playSound(null, BlockPos.ofFloored(at), SoundEvents.BLOCK_LAVA_POP, SoundCategory.PLAYERS, 1.5f, 0.6f);
-			world.playSound(null, BlockPos.ofFloored(at), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 1.1f);
-			return true;
-		});
-		HeatblastAbilities.addHeat(player, (float) ctx.param("heat", 18.0));
-		BuiltinAbilities.sound(ctx, ModSounds.ALIEN_FIRE, 1.2f, 0.6f);
-		return true;
-	}
-
-	/** Meteorhagel (Ultimate): vier Sekunden lang schlagen gluehende Brocken im Zielgebiet ein. */
-	private static boolean meteorRain(AbilityContext ctx) {
-		ServerPlayerEntity player = ctx.player();
-		HeatblastAbilities.Power power = HeatblastAbilities.power(player);
-		Vec3d center = AlienKit.ground(ctx.world(), AlienKit.aim(ctx.world(), player, ctx.param("range", 24.0)), 16.0);
-		double area = ctx.param("area", 7.0) * (power.blue() ? 1.4 : 1.0);
-		float damage = (float) ctx.param("damage", 8.0) * power.factor();
-		int color = power.color();
-		int ticks = (int) (ctx.param("seconds", 4.0) * 20);
-		Fx.flash(ctx.world(), player.getPos().add(0, 2.5, 0), color, 3.0f);
-		Fx.flames(ctx.world(), player.getPos().add(0, 2.0, 0), new Vec3d(0, 0.8, 0), color, 0.3f, 20);
-		PowerTasks.start(player, ticks, 4, (world, p, age) -> {
-			var random = world.getRandom();
-			double a = random.nextDouble() * MathHelper.TAU;
-			double r = Math.sqrt(random.nextDouble()) * area;
-			Vec3d impact = AlienKit.ground(world, center.add(Math.cos(a) * r, 6.0, Math.sin(a) * r), 14.0);
-			Vec3d sky = impact.add(-3.0, 18.0, -2.0);
-			// Brocken faellt sichtbar (Glutschweif), schlaegt kurz danach ein
-			Fx.flames(world, sky, impact.subtract(sky).multiply(0.07), color, 0.15f, 10);
-			Fx.beam(world, sky, impact, color, 0.6f, 4);
-			Fx.explosion(world, impact.add(0, 0.5, 0), color, 1.6f);
-			Fx.scorch(world, impact, 1.6f, 160);
-			for (LivingEntity target : AlienKit.blast(world, p, impact.add(0, 0.8, 0), 2.4, damage, 0.6, 0.4)) {
-				target.setOnFireFor(5.0f);
-			}
-			Destruction.crater(world, p, impact.add(0, -0.3, 0), 1.5, 0.6, AlienStrength.of(p) * 1.2f, 0.2, 0.6);
-			Destruction.ignite(world, p, impact, 1.6, 0.3);
-			Fx.shake(world, impact, 0.2f, 6, 20);
-			world.playSound(null, BlockPos.ofFloored(impact), SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1.2f,
-					0.8f + random.nextFloat() * 0.3f);
-			return true;
-		});
-		ctx.grantInvulnerability(20);
-		HeatblastAbilities.addHeat(player, (float) ctx.param("heat", 30.0));
-		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_WITHER_SHOOT, 1.0f, 0.6f);
-		return true;
 	}
 
 	// --- Kombos ----------------------------------------------------------------------------------

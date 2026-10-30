@@ -39,6 +39,9 @@ public final class AbilityCharge {
 	/** Beginnt das Aufladen (Pruefungen hat {@link TransformationManager#useAbility} schon gemacht). */
 	public static void begin(ServerPlayerEntity player, int slot, ChargeableAbility ability, AbilityContext context) {
 		CHARGES.put(player.getUuid(), new Charge(slot, ability, context, player.getServerWorld().getTime()));
+		if (ability.channel()) {
+			return;
+		}
 		player.getServerWorld().playSound(null, player.getBlockPos(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 0.5f, 0.6f);
 	}
 
@@ -79,11 +82,11 @@ public final class AbilityCharge {
 			int held = (int) (player.getServerWorld().getTime() - charge.start());
 			float amount = Math.min(1.0f, held / (float) charge.max());
 			charge.ability().charging(charge.context(), held, amount);
-			if (held % 5 == 0) {
+			if (!charge.ability().channel() && held % 5 == 0) {
 				player.getServerWorld().playSound(null, player.getBlockPos(), SoundEvents.BLOCK_NOTE_BLOCK_BIT.value(), SoundCategory.PLAYERS,
 						0.25f, 0.5f + amount * 1.3f);
 			}
-			if (held == charge.max()) {
+			if (!charge.ability().channel() && held == charge.max()) {
 				Fx.flash(player.getServerWorld(), player.getPos().add(0, player.getHeight() * 0.6, 0), 0xFFFFFF, 1.5f + player.getWidth());
 				player.getServerWorld().playSound(null, player.getBlockPos(), SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1.0f, 1.6f);
 			}

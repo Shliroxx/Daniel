@@ -152,6 +152,22 @@ public final class Destruction {
 		return count;
 	}
 
+	/**
+	 * Block umwandeln statt zerstoeren (Hitze schmilzt Sand zu Glas, Stein gluet zu Magma). Gleiche Regeln wie das
+	 * Zerstoeren: Zerstoerung erlaubt, Schutz-Mods und Haerte.
+	 */
+	public static boolean transmute(ServerWorld world, @Nullable ServerPlayerEntity owner, BlockPos pos, BlockState into, float strength) {
+		if (!PowerConfig.griefingAllowed(world)) {
+			return false;
+		}
+		BlockState state = world.getBlockState(pos);
+		if (state.equals(into) || !breakable(world, pos, state, owner, strength)) {
+			return false;
+		}
+		world.setBlockState(pos.toImmutable(), into, Block.NOTIFY_ALL);
+		return true;
+	}
+
 	/** Darf {@code owner} mit {@code strength} diesen Block zerstoeren? */
 	public static boolean breakable(ServerWorld world, BlockPos pos, BlockState state, @Nullable ServerPlayerEntity owner, float strength) {
 		if (state.isAir() || !state.getFluidState().isEmpty() && state.getBlock() instanceof net.minecraft.block.FluidBlock) {

@@ -1,4 +1,8 @@
-# Kräfte-Neufassung – Start-Aliens (Entwurf zur Abstimmung)
+# ALIEN EVOLUTION 2.0 – Kräfte-Neufassung der Start-Aliens
+
+made by SANTIQ
+
+Stand: **Heatblast umgesetzt und im Spiel getestet** · Vierarm und XLR8 folgen im selben Ablauf.
 
 Ziel: AEs Kräfte als Qualitätslatte (echte Bauteile, Animationen, klare Wirkung), aber **eigene** Kräfte mit mehr
 Tiefe: Aufladen, Kombos untereinander, Reaktion auf die Umgebung, Stufen. Keine 1:1-Kopie.
@@ -24,6 +28,27 @@ Legende: **AE** = was AE macht · **Neu** = unsere Fassung · **Anders/besser** 
 | 8 | Supernova (Ultimate, nach Anzeige) | **Supernova in Stufen** – halbe Anzeige: Nova; volle Anzeige: Nova + zurückbleibender Sonnenkern | Stufen statt An/Aus |
 
 Passiv: Kernhitze (wächst mit Treffern), Glutberührung, Hitzeflimmern (bleiben).
+
+### Heatblast – Umsetzung (Code: `ability/HeatblastPowers.java`)
+
+| Slot | Kraft | Bedienung | Wechselwirkung |
+|---|---|---|---|
+| 1 | Plasmakern | Tippen = Feuerball (glühend 3, blau 5) · Halten 1 s = großer Kern mit Rückstoß, Explosion, 5 Splitter (blau 8) | Kern fliegt in den Feuerwirbel → Wirbel wächst |
+| 3 | Flammenbrett | 4 s Surfen, Blick lenkt auch hoch/runter · eigenes Brett-Modell (`tools/generate_flame_board.py`) · Schleichen = Meteortritt | Spur zündet den Boden, Berührung schleudert weg |
+| 2 | Drachenatem | Halten bis 3 s, Kegel aus dem Mund | Wasser → Dampfwolke (Blindheit, Verlangsamung, Verbrühen) · Atem in den Wirbel → Stufe +1 |
+| 4 | Sonnenlanze | Halten bis 4 s · Stufe gelb (erstes Ziel) → weiß (durchbohrt, Sand → Glas) → blau (Stein → Magma) | Schnee/Eis schmilzt immer; Gelände nur bei erlaubter Zerstörung |
+| 5 | Wärmesog | Halten bis 3 s, Radius 8 | zieht Feuer, Lava (→ Obsidian/Bruchstein), Magma, Lagerfeuer, Feuergeschosse, Glut brennender Gegner · Lava = Glutpanzer (bis 4 Herzen) |
+| 7 | Feuerwirbel | 6 s, folgt dem Blick, hebt an, Feuerspur | wächst bis Stufe 3 (Plasmakern, Drachenatem): größer, länger, mehr Schaden |
+| 8 | Kometensatz | Feuerkugel bis 26 Blöcke, unverwundbar | streift Gegner unterwegs, Einschlag mit Krater |
+| 6 | Supernova | ab halbem Kern · 1 s Aufsteigen und Sammeln | voller Kern: blaue Nova + Sonnenkern (6 s Sog, dann Implosion) |
+
+Kernhitze: „Überhitzt“ (100) bleibt jetzt bestehen, bis eine Kraft ihn entlädt (vorher kühlte er sofort ab und war
+nach 5 Ticks verloren); nur Wasser und Regen kühlen ihn. Die Supernova verbraucht den ganzen Kern — Blaufeuer
+für eine Kraft oder volle Supernova ist eine echte Entscheidung.
+
+Getestet im Spiel (Client, Testarena): alle 8 Kräfte mit Bildern; Selbsttest 13/13 (Supernova situativ: kalter
+Kern). Nicht getestet: echtes Halten über die Tasten (der Test hält per Befehl bis zur Auto-Auslösung),
+Mehrspieler-Sichtbarkeit des Bretts bei anderen Spielern.
 
 ## Vierarm
 

@@ -58,6 +58,14 @@ public class AttachedPropEntity extends Entity implements GeoEntity {
 		world.spawnEntity(prop);
 	}
 
+	/** Modell dieser Art vom Ziel nehmen (Kraft endet vorzeitig). */
+	public static void detach(ServerWorld world, String kind, LivingEntity target) {
+		for (AttachedPropEntity existing : world.getEntitiesByClass(AttachedPropEntity.class, target.getBoundingBox().expand(2.0),
+				e -> e.targetId() == target.getId() && kind.equals(e.kind()))) {
+			existing.discard();
+		}
+	}
+
 	public String kind() {
 		return getDataTracker().get(KIND);
 	}

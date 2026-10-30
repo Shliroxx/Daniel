@@ -44,6 +44,9 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	private LivingEntity homingTarget;
 	/** Blitz Gun: jede Kugel einer Ladung zaehlt (sonst schluckt die Unverwundbarkeit nach dem ersten Treffer den Rest). */
 	private boolean pellet;
+	/** Zusatzwirkung beim Aufprall (z. B. Splitter von Heatblasts Plasmakern); nur serverseitig, nicht gespeichert. */
+	@org.jetbrains.annotations.Nullable
+	private java.util.function.Consumer<HeroProjectileEntity> onImpact;
 	/** Anteil, um den die Flugrichtung je Tick zum Ziel dreht */
 	private static final double HOMING_TURN = 0.18;
 
@@ -117,6 +120,16 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 	public HeroProjectileEntity withHoming(@org.jetbrains.annotations.Nullable LivingEntity target) {
 		this.homingTarget = target;
 		return this;
+	}
+
+	public HeroProjectileEntity withImpact(java.util.function.Consumer<HeroProjectileEntity> impact) {
+		this.onImpact = impact;
+		return this;
+	}
+
+	/** Schaden dieses Geschosses (Wert der Art, wenn nicht gesetzt). */
+	public float damage() {
+		return damageOverride >= 0.0f ? damageOverride : getKind().damage;
 	}
 
 	public HeroProjectileEntity withDamage(float damage) {
@@ -266,6 +279,11 @@ public class HeroProjectileEntity extends ThrownItemEntity {
 				serverWorld.createExplosion(this, getX(), getY(), getZ(), explosionPower, World.ExplosionSourceType.NONE);
 			}
 			impact(serverWorld, getKind(), getPos(), explosionPower);
+			if (onImpact != null) {
+				java.util.function.Consumer<HeroProjectileEntity> impact = onImpact;
+				onImpact = null;
+				impact.accept(this);
+			}
 			// Geschosse starker Aliens (Feuerbaelle, Raketenfinger) schlagen Krater
 			if (getOwner() instanceof net.minecraft.server.network.ServerPlayerEntity owner) {
 				float strength = com.santiq.kingdomomnitrix.power.AlienStrength.of(owner);

@@ -118,9 +118,10 @@ class Spec:
 
 
 ALIENS = {
-    # Faehigkeiten: fire_blast, fire_burst (→ AE Feuer-Nova), flame_boost (→ AE Feuer-Surfen)
+    # Slots (AE 2.0): Plasmakern, Drachenatem, Flammenbrett (→ AE Feuer-Surfen), Sonnenlanze, Waermesog,
+    # Supernova (→ AE Feuer-Nova), Feuerwirbel (→ AE Feuertornado), Kometensatz
     "heatblast": Spec("1", "pyronite", "pyronite.json", 1.1, "heat", "#FF6A00", arm_swing=0.8, leg_swing=0.6,
-                      script="pyronite", poses=(None, "alienevo/nova", "alienevo/surf")),
+                      script="pyronite", poses=(None, None, "alienevo/surf", None, None, "alienevo/nova", "alienevo/tornado", None)),
     # dash_strike (→ Sprungtritt), blur_dodge (→ Gleiten), rapid_strikes (Spielerschlag)
     "xlr8": Spec("4", "kineceleran", "kineceleran.json", 1.1, "fast", "#1E90FF",
                  loops=("xlr8.json:animation.xlr8.tail",), script="kineceleran",

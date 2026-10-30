@@ -61,12 +61,17 @@ POSES = {
                                                    "right_arm": [rot("z", 150.0)], "left_arm": [rot("z", -150.0)]}},
     # Wirbel/Flaeche: Arme waagerecht ausgebreitet
     "spread": {"ease": "in_out_cubic", "parts": {"right_arm": [rot("z", 85.0)], "left_arm": [rot("z", -85.0)], "chest": [rot("y", 25.0)]}},
+    # Atem: vorgebeugt, Kopf vorgestreckt, Arme zurueckgezogen
+    "breath": {"ease": "out_cubic", "parts": {"chest": [rot("x", 16.0)], "head": [rot("x", -6.0)],
+                                              "right_arm": [rot("x", 35.0), rot("z", 20.0)], "left_arm": [rot("x", 35.0), rot("z", -20.0)]}},
+    # Ansaugen: Arme schraeg nach vorn geoeffnet, Handflaechen nach aussen, Kopf leicht zurueck
+    "siphon": {"ease": "in_out_sine", "parts": {"head": [rot("x", -12.0)], "chest": [rot("x", -5.0)],
+                                                "right_arm": [rot("x", -55.0), rot("z", 50.0)], "left_arm": [rot("x", -55.0), rot("z", -50.0)]}},
 }
 
 ABILITY_POSE = {
     # Heatblast
-    "fire_blast": "shoot", "fire_burst": "beam", "flame_boost": "leap", "inferno_wave": "spread", "flame_shield": "guard",
-    "supernova": "ultimate",
+    "fire_blast": "shoot", "flame_boost": "leap", "solar_lance": "beam", "comet_dash": "leap", "supernova": "ultimate",
     # XLR8
     "dash_strike": "swipe", "blur_dodge": "dodge", "rapid_strikes": "swipe", "cyclone_run": "spread", "time_slip": "focus",
     "lightspeed_barrage": "ultimate",
@@ -131,12 +136,9 @@ ABILITY_POSE = {
     "reality_bolt": "beam", "gravity_warp": "spread", "blink": "dodge", "time_stop": "focus", "creation": "focus", "big_bang": "ultimate",
     "lightning_arc": "beam", "static_grid": "throw", "electro_levitation": "leap", "force_field": "guard", "brain_analysis": "focus", "mind_storm": "ultimate",
     "acid_spit": "shoot", "slime_whip": "swipe", "puddle_form": "dodge", "engulf": "clap", "acid_pool": "throw", "acid_flood": "ultimate",
-    "flamethrower": "beam",
-    "blaze_roll": "dodge",
-    "heat_absorb": "focus",
+    "flamethrower": "breath",
+    "heat_absorb": "siphon",
     "fire_tornado": "spread",
-    "magma_eruption": "slam",
-    "meteor_rain": "ultimate",
     "blazing_rush": "swipe",
     "comet_kick": "slam",
     "ember_grip": "shoot",
