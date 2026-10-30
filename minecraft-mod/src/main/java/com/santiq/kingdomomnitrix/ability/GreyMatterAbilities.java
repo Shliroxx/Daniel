@@ -79,6 +79,7 @@ final class GreyMatterAbilities {
 		AbilityRegistry.register(KingdomOmnitrix.id("scurry"), GreyMatterAbilities::scurry);
 		AbilityRegistry.register(KingdomOmnitrix.id("tech_snare"), GreyMatterAbilities::techSnare);
 		AbilityRegistry.register(KingdomOmnitrix.id("jury_rig"), GreyMatterAbilities::juryRig);
+		AbilityRegistry.register(KingdomOmnitrix.id("galvan_tech"), GreyMatterAbilities::galvanTech);
 		AbilityRegistry.register(KingdomOmnitrix.id("mastermind"), GreyMatterAbilities::mastermind);
 		ServerTickEvents.END_SERVER_TICK.register(GreyMatterAbilities::tick);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(GreyMatterAbilities::afterDamage);
@@ -257,6 +258,39 @@ final class GreyMatterAbilities {
 		}
 		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.6), player.getZ()), AlienKit.color(ParticleTypes.ELECTRIC_SPARK), 0.35f, Math.max(1, Math.min(20, 20)));
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.4f);
+		return true;
+	}
+
+	/** Galvan-Erfindungen wie AE (Modi in traits.modes), Reihenfolge beim Durchschalten, danach abgelegt */
+	static final List<String> GALVAN_TECH = List.of("armor", "limbs", "suit");
+
+	/**
+	 * Galvan-Technik: jeder Druck baut die naechste Erfindung (Ruestung mit Visier und Jetpack → Roboterglieder →
+	 * Mech-Anzug → ablegen). Werte, Groesse, Flug und Immunitaeten stehen im Alien-JSON; beim Anlegen flickt Grey
+	 * Matter nebenbei Ausruestung und sich selbst (wie das Notbehelf-Basteln).
+	 */
+	private static boolean galvanTech(AbilityContext ctx) {
+		ServerPlayerEntity player = ctx.player();
+		String current = com.santiq.kingdomomnitrix.alien.AlienModes.id(player);
+		int index = GALVAN_TECH.indexOf(current);
+		if (index == GALVAN_TECH.size() - 1) {
+			com.santiq.kingdomomnitrix.alien.AlienModes.toggle(player, current, 0);
+			BuiltinAbilities.sound(ctx, SoundEvents.ITEM_SHIELD_BREAK, 0.8f, 1.2f);
+			return true;
+		}
+		if (!com.santiq.kingdomomnitrix.alien.AlienModes.set(player, GALVAN_TECH.get(index + 1), 0)) {
+			return false;
+		}
+		double repair = ctx.param("repair", 0.1);
+		repair(player.getStackInHand(Hand.MAIN_HAND), repair);
+		for (EquipmentSlot slot : new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET}) {
+			repair(player.getEquippedStack(slot), repair);
+		}
+		player.heal((float) ctx.param("heal", 4.0));
+		com.santiq.kingdomomnitrix.vfx.Fx.sparks(ctx.world(), new Vec3d(player.getX(), player.getBodyY(0.5), player.getZ()),
+				AlienKit.color(ParticleTypes.CRIT), 0.4f, 30);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_VILLAGER_WORK_TOOLSMITH, 1.0f, 1.0f);
+		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_VILLAGER_WORK_SHEPHERD, 1.0f, 1.2f);
 		return true;
 	}
 

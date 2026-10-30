@@ -97,6 +97,11 @@ public enum FlightStyle implements StringIdentifiable {
 
 	/** Flugart des Aliens, in das der Spieler gerade verwandelt ist (Client und Server; Registry ist synchron). */
 	public static Optional<FlightStyle> of(PlayerEntity player) {
+		// ein Modus kann fliegen lassen (Grey Matters Jetpack), auch wenn das Alien sonst nicht fliegt
+		Optional<FlightStyle> mode = AlienModes.id(player).isEmpty() ? Optional.empty() : AlienModes.active(player).flatMap(AlienMode::flight);
+		if (mode.isPresent()) {
+			return mode;
+		}
 		return TransformationManager.get(player).activeAlien()
 				.flatMap(id -> AlienRegistry.get(player.getWorld().getRegistryManager(), id))
 				.map(AlienDefinition::traits)

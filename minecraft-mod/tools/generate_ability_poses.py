@@ -80,7 +80,7 @@ ABILITY_POSE = {
     "crystal_volley": "shoot", "crystal_blade": "swipe", "spike_eruption": "slam", "crystal_armor": "guard",
     "crystal_storm": "ultimate",
     # Grey Matter
-    "scan": "focus", "weak_spot": "shoot", "scurry": "dodge", "tech_snare": "beam", "jury_rig": "focus", "mastermind": "ultimate",
+    "scan": "focus", "weak_spot": "shoot", "scurry": "dodge", "tech_snare": "beam", "jury_rig": "focus", "galvan_tech": "focus", "mastermind": "ultimate",
     # Wildmutt
     "pounce": "leap", "quill_burst": "spread", "feral_roar": "roar", "savage_maul": "swipe", "scent_track": "focus",
     "primal_rampage": "roar",

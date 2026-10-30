@@ -26,12 +26,14 @@ import net.minecraft.registry.tag.TagKey;
  *   "aura_damage": 4, "aura_radius": 1.75,         // Schaden je halbe Sekunde an Gegnern ringsum (Stacheln)
  *   "sweep": 0.6, "sweep_radius": 2.5,             // Nahkampf trifft Gegner vor dem Ziel mit diesem Anteil
  *   "harvest": "#minecraft:mineable/pickaxe",       // Bloecke, die der Modus wie ein Werkzeug abbaut (mit Drops)
- *   "break_speed": 8                               // Abbautempo fuer diese Bloecke (Diamant-Spitzhacke = 8)
+ *   "break_speed": 8,                              // Abbautempo fuer diese Bloecke (Diamant-Spitzhacke = 8)
+ *   "flight": "jet"                                // Flug im Modus (Grey Matters Galvan-Ruestung mit Jetpack)
  * }]
  * </pre>
  */
 public record AlienMode(String id, String name, List<AlienDefinition.AttributeBonus> attributes, List<TagKey<DamageType>> immunities,
-		float auraDamage, float auraRadius, float sweep, float sweepRadius, Optional<TagKey<Block>> harvest, float breakSpeed) {
+		float auraDamage, float auraRadius, float sweep, float sweepRadius, Optional<TagKey<Block>> harvest, float breakSpeed,
+		Optional<FlightStyle> flight) {
 	/** hoechstens so viele Werte je Modus (feste Modifier-IDs) */
 	public static final int MAX_ATTRIBUTES = 8;
 
@@ -45,7 +47,8 @@ public record AlienMode(String id, String name, List<AlienDefinition.AttributeBo
 			Codec.floatRange(0.0f, 1.0f).optionalFieldOf("sweep", 0.0f).forGetter(AlienMode::sweep),
 			Codec.floatRange(0.0f, 8.0f).optionalFieldOf("sweep_radius", 0.0f).forGetter(AlienMode::sweepRadius),
 			TagKey.codec(RegistryKeys.BLOCK).optionalFieldOf("harvest").forGetter(AlienMode::harvest),
-			Codec.floatRange(1.0f, 64.0f).optionalFieldOf("break_speed", 1.0f).forGetter(AlienMode::breakSpeed)
+			Codec.floatRange(1.0f, 64.0f).optionalFieldOf("break_speed", 1.0f).forGetter(AlienMode::breakSpeed),
+			FlightStyle.CODEC.optionalFieldOf("flight").forGetter(AlienMode::flight)
 	).apply(instance, AlienMode::new));
 
 	public AlienMode {

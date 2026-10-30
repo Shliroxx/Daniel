@@ -840,6 +840,7 @@ def icons(c) -> dict[str, list]:
         "scurry": lambda: [L(m_footprint(), c), L(m_speedlines(40, 216, 170, 250, 3, 10), cl)],
         "tech_snare": lambda: [L(m_web(), ELEC, glow=ELEC), L(m_chip(), DARK)],
         "jury_rig": lambda: [L(m_gear(110, 140, 70), c, glow=c), L(m_bolt(60, -60, 0.4), ELEC)],
+        "galvan_tech": lambda: [L(m_gear(128, 150, 80), c, glow=c), L(m_figure(0, -40, 0.35), ELEC)],
         "mastermind": lambda: [L(m_brain(), rgb("E88AB0"), glow=ELEC), L(brain_folds(), mix(rgb("E88AB0"), DARK, 0.5), outline=None)],
         # Humungousaur
         "mega_punch": lambda: [*fist(c, -10, 0, 0.8, glow=FIRE_HOT, glow_alpha=0.5), L(m_burst(206, 128, 44, 18, 7), W)],

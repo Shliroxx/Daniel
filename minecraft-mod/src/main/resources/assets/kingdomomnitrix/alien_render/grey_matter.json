@@ -416,5 +416,15 @@
   ],
   "glow_frames": 1,
   "warn_textures": true,
+  "mode_forms": {
+    "limbs": {
+      "form": "limbs",
+      "scale": 1.2
+    },
+    "suit": {
+      "form": "suit",
+      "scale": 1.2
+    }
+  },
   "source": "Alien Evolution (Habb and Stephen)"
 }

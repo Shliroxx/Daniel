@@ -62,14 +62,14 @@
       }
     },
     {
-      "type": "kingdomomnitrix:jury_rig",
-      "energy": 40,
-      "cooldown": 300,
+      "type": "kingdomomnitrix:galvan_tech",
+      "energy": 25,
+      "cooldown": 20,
       "role": "utility",
       "unlock_level": 5,
       "params": {
-        "repair": 0.15,
-        "heal": 6.0
+        "repair": 0.1,
+        "heal": 4.0
       }
     },
     {
@@ -209,6 +209,79 @@
       {
         "type": "kingdomomnitrix:wall_crawler",
         "unlock_level": 3
+      }
+    ],
+    "modes": [
+      {
+        "id": "armor",
+        "name": "mode.kingdomomnitrix.galvan_armor",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 20.0
+          }
+        ],
+        "flight": "jet"
+      },
+      {
+        "id": "limbs",
+        "name": "mode.kingdomomnitrix.galvan_limbs",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.scale",
+            "amount": 3.17,
+            "operation": "add_multiplied_base"
+          },
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 10.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 2.0
+          },
+          {
+            "attribute": "minecraft:player.entity_interaction_range",
+            "amount": 1.5
+          },
+          {
+            "attribute": "minecraft:player.block_interaction_range",
+            "amount": 1.5
+          }
+        ]
+      },
+      {
+        "id": "suit",
+        "name": "mode.kingdomomnitrix.galvan_suit",
+        "attributes": [
+          {
+            "attribute": "minecraft:generic.scale",
+            "amount": 4.5,
+            "operation": "add_multiplied_base"
+          },
+          {
+            "attribute": "minecraft:generic.armor",
+            "amount": 24.0
+          },
+          {
+            "attribute": "minecraft:generic.attack_damage",
+            "amount": 5.0
+          },
+          {
+            "attribute": "minecraft:generic.knockback_resistance",
+            "amount": 1.0
+          },
+          {
+            "attribute": "minecraft:generic.movement_speed",
+            "amount": -0.2,
+            "operation": "add_multiplied_total"
+          }
+        ],
+        "immunities": [
+          "#minecraft:is_fire",
+          "#minecraft:is_freezing",
+          "#minecraft:is_drowning"
+        ]
       }
     ]
   }

@@ -95,7 +95,7 @@ class Spec:
     # Modi, in denen der ganze Koerper ein anderes AE-Modell ist (Modus, unser Kuerzel, AE-Modell, AE-Render-Ebene,
     # Groesse relativ zum Koerper): Upgrade auf dem Blitzableiter (AE „galvanic_rod“). Geometrie und Textur je Uniform
     # als <alien>[_uniform]_<kuerzel>; der Renderer tauscht das Modell, solange der Modus an ist
-    mode_forms: tuple[tuple[str, str, str, str, float], ...] = ()
+    mode_forms: tuple[tuple[str, str, tuple[tuple[str, str], ...], float], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -137,7 +137,16 @@ ALIENS = {
                                 "petrosapien.animation.json:animation.Diamondhead.sword_off"),
                                ("crystal_shield", "petrosapien.animation.json:animation.Diamondhead.shield_spin",
                                 "petrosapien.animation.json:animation.Diamondhead.shield_off"))),
-    "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6),
+    "grey_matter": Spec("5", "galvan", "galvan.json", 0.25, "small", "#95A5A6", arm_swing=0.6, leg_swing=0.6,
+                        # Galvan-Erfindungen wie AE: Ruestung (Teile auf dem Koerper, Visier faehrt zu, Jetpack),
+                        # Roboterglieder (Grey Matter sitzt im Gestell) und Mech-Anzug als Ganzkoerper-Formen; die
+                        # Formen zeichnen in AEs Groesse (Spielergroesse regelt der Modus, Faktor = Daten/AE-Groesse)
+                        parts=("galvan_armor",), keep=r"^armor_",
+                        modes=(("armor", "galvan_armor.animation.json:animation.greymatter_armor.visor_on", "galvan_armor.animation.json:animation.greymatter_armor.visor_off"),
+                               ("limbs", None, None), ("suit", None, None)),
+                        mode_clone=(("armor", (("visor", "armor_visor"),), 1.0),),
+                        mode_forms=(("limbs", "limbs", (("galvan_limbs", "galvan.json"), ("galvan_limbs_body", "galvan.json")), 1.2),
+                                    ("suit", "suit", (("galvan_suit", "galvan.json"),), 1.2))),
     # Groessen = AE „size_change“ (sichtbare Modellgroesse); Augenhoehe/Hitbox regelt das Datenpaket (scale)
     "wildmutt": Spec("2", "vulpimancer", "vulpimancer.json", 1.0, "fast", "#E8892B", script="vulpimancer"),
     # Augen/Schwanz-Leerlauf und Fluegelschlag laufen dauernd (Stinkfly schwebt)
@@ -163,7 +172,7 @@ ALIENS = {
                            ("blade", "galvanic_mechamorph.animation.json:animation.upgrade.fists_on", "galvanic_mechamorph.animation.json:animation.upgrade.fists_off"),
                            # Blitzableiter-Form (AE: Upgrade verschmilzt mit dem Blitzableiter unter sich)
                            ("galvanic_rod", "galvanic.rod.animation.json:animation.upgrade_rod.loop", None)),
-                    mode_forms=(("galvanic_rod", "rod", "galvanic_rod", "galvanic_rod.json", round(0.8 / 1.4, 3)),),
+                    mode_forms=(("galvanic_rod", "rod", (("galvanic_rod", "galvanic_rod.json"),), round(0.8 / 1.4, 3)),),
                     props="upgrade_weapons",
                     mode_clone=tuple((w, (("MACE", f"{w}_left"), ("mace_scale", f"{w}_head_left"),
                                           ("spikes_angled", f"{w}_spikes_left"), ("spikes_straight", f"{w}_spikes_left"),
@@ -814,8 +823,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         files[base / f"{name}{suffix}_arms.png"] = arm_skin(bones, sheet_color, (tw_new, th_new))
         if spec.form:
             files[geo_dir / f"{name}{suffix}_{spec.form[2]}.geo.json"] = form_geo(jar, spec, name, suffix, (tw_new, th_new))
-        for _, tag, ae_model, layer_file, _ in spec.mode_forms:
-            files.update(mode_form_files(jar, spec, name, suffix, ae, palettes, tag, ae_model, layer_file, geo_dir, base))
+        for _, tag, models, _ in spec.mode_forms:
+            files.update(mode_form_files(jar, spec, name, suffix, ae, palettes, tag, models, geo_dir, base))
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
@@ -835,7 +844,7 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         # Endpose der AE-Fluganimation (Knochen → Drehung/Lage/Groesse), im Renderer in der Luft/im Wasser eingeblendet
         **({"flight_pose": flight_pose(jar, spec, classic_bones)} if spec.flight_pose else {}),
         # Modi mit eigenem Ganzkoerper-Modell: Kuerzel der Dateien und Groesse relativ zum Koerper
-        **({"mode_forms": {mode: {"form": tag, "scale": ratio} for mode, tag, _, _, ratio in spec.mode_forms}}
+        **({"mode_forms": {mode: {"form": tag, "scale": ratio} for mode, tag, _, ratio in spec.mode_forms}}
            if spec.mode_forms else {}),
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
@@ -871,25 +880,57 @@ def projectile_files(jar: Jar, name: str, model: str, texture: str) -> dict[Path
     }
 
 
-def mode_form_files(jar: Jar, spec: Spec, name: str, suffix: str, ae: str, palettes: dict, tag: str, ae_model: str,
-                    layer_file: str, geo_dir: Path, base: Path) -> dict[Path, object]:
-    """Ganzkoerper-Form eines Modus (Upgrades Blitzableiter): AE-Modell der Uniform mit unseren Hauptknochen-Namen
-    (folgen der Spielerpose wie der Koerper), eigene Textur und Leuchtmaske aus AEs Ebenen-Datei, Farben wie AE."""
-    geo = deepcopy(jar.json(geo_path(spec, f"{ae_model}_{ae}"))["minecraft:geometry"][0])
-    for b in geo["bones"]:
-        b["name"] = ROOT_NAMES.get(b["name"], b["name"])
-        if "parent" in b:
-            b["parent"] = ROOT_NAMES.get(b["parent"], b["parent"])
-        else:
-            b["parent"] = "root"
-    desc = geo["description"]
-    color, glow = build_texture(jar, spec, ae, palettes, model=ae_model, layer_file=layer_file)
+def mode_form_files(jar: Jar, spec: Spec, name: str, suffix: str, ae: str, palettes: dict, tag: str,
+                    models: tuple[tuple[str, str], ...], geo_dir: Path, base: Path) -> dict[Path, object]:
+    """Ganzkoerper-Form eines Modus (Upgrades Blitzableiter, Grey Matters Roboterglieder): AE-Modelle der Uniform mit
+    unseren Hauptknochen-Namen (folgen der Spielerpose wie der Koerper). Mehrere Modelle (Gestell + Grey Matter darin)
+    werden zusammengelegt: Texturen untereinander, die Knochen des zweiten haengen mit Vorsatz an denselben
+    Hauptknochen. Farben wie AE aus den Ebenen-Dateien."""
+    bones: list[dict] = [{"name": "root", "pivot": [0, 0, 0]}]
+    sheets: list[tuple[Image.Image, Image.Image, tuple[float, float]]] = []
+    dv = 0
+    width = 0
+    for index, (ae_model, layer_file) in enumerate(models):
+        path = next(p for p in (geo_path(spec, f"{ae_model}_{ae}"), geo_path(spec, ae_model)) if jar.has(p))
+        geo = deepcopy(jar.json(path)["minecraft:geometry"][0])
+        desc = geo["description"]
+        units = (desc.get("texture_width", 32), desc.get("texture_height", 32))
+        prefix = "" if index == 0 else f"m{index}_"
+        for b in geo["bones"]:
+            main = ROOT_NAMES.get(b["name"])
+            if index == 0:
+                b["name"] = main or b["name"]
+                b["parent"] = ROOT_NAMES.get(b.get("parent", ""), b.get("parent")) if b.get("parent") else "root"
+            else:
+                # weiteres Modell: eigene Knochen mit Vorsatz, Wurzeln haengen an unserem Hauptknochen
+                b["name"] = prefix + (main or b["name"])
+                b["parent"] = (main if main else prefix + (ROOT_NAMES.get(b["parent"]) or b["parent"])) if b.get("parent") \
+                    else ROOT_NAMES.get(b["name"][len(prefix):], "root")
+                if main:
+                    b["parent"] = main
+            if dv:
+                for cube in b.get("cubes", []):
+                    _shift_uv(cube, dv, (1.0, 1.0))
+            bones.append(b)
+        sheets.append((*build_texture(jar, spec, ae, palettes, model=ae_model, layer_file=layer_file), units))
+        dv += units[1]
+        width = max(width, units[0])
+    # Pixeldichte der dichtesten Textur, alles untereinander
+    k = max(c.width / u[0] for c, _, u in sheets)
+    color = Image.new("RGBA", (round(width * k), round(dv * k)), (0, 0, 0, 0))
+    glow = Image.new("RGBA", color.size, (0, 0, 0, 0))
+    y = 0
+    for c, g, u in sheets:
+        size = (round(u[0] * k), round(u[1] * k))
+        color.alpha_composite(c.resize(size, Image.NEAREST), (0, y))
+        glow.alpha_composite(g.resize(size, Image.NEAREST), (0, y))
+        y += size[1]
     return {
         geo_dir / f"{name}{suffix}_{tag}.geo.json": {"format_version": "1.12.0", "minecraft:geometry": [{
             "description": {"identifier": f"geometry.kingdomomnitrix.{name}{suffix}_{tag}",
-                            "texture_width": desc.get("texture_width", 32), "texture_height": desc.get("texture_height", 32),
+                            "texture_width": width, "texture_height": dv,
                             "visible_bounds_width": 3, "visible_bounds_height": 3.5, "visible_bounds_offset": [0, 1.25, 0]},
-            "bones": [{"name": "root", "pivot": [0, 0, 0]}] + geo["bones"]}]},
+            "bones": bones}]},
         base / f"{name}{suffix}_{tag}.png": color,
         base / f"{name}{suffix}_{tag}_glowmask.png": glow if glow.getbbox() is not None else None,
     }
@@ -1208,9 +1249,11 @@ def mode_animations(jar: Jar, spec: Spec, bones: list[dict]) -> dict:
                         for b in bones:
                             if b.get("parent") == parent and b["name"].startswith("badge_"):
                                 tracks.setdefault(b["name"], {"scale": {"vector": [0, 0, 0]}})
-            # Bauteile, die die AE-Animation nicht anfasst, bleiben eingefahren
+            # Bauteile, die die AE-Animation nicht anfasst, bleiben eingefahren — ausser die eigenen dieses Modus
+            # (Wurzel <modus>_…, z. B. Grey Matters Ruestung, deren AE-Animation nur das Visier bewegt)
             for root_bone, hidden in result["mode_none"]["bones"].items():
-                tracks.setdefault(root_bone, deepcopy(hidden))
+                own = root_bone.startswith(f"{mode}_") and key.endswith("_on")
+                tracks.setdefault(root_bone, {"scale": {"vector": [1, 1, 1]}} if own else deepcopy(hidden))
             source["bones"] = tracks
             # Schleifen (Upgrades Pfuetze wabert) bleiben Schleifen, sonst die Endpose halten
             if source.get("loop") is not True:

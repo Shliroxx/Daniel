@@ -510,6 +510,7 @@ ICONS: dict[str, tuple[str, str, bool]] = {
     "alien_ability/scurry": ("omnitrix", "speed", False),
     "alien_ability/tech_snare": ("omnitrix", "gear", True),
     "alien_ability/jury_rig": ("omnitrix", "plus", False),
+    "alien_ability/galvan_tech": ("omnitrix", "plus", False),
     "alien_ability/mastermind": ("omnitrix", "book", True),
     "alien_ability/savage_maul": ("omnitrix", "fist", True),
     "alien_ability/scent_track": ("omnitrix", "eye", False),

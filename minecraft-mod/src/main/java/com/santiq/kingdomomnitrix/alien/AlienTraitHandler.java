@@ -47,14 +47,20 @@ public final class AlienTraitHandler {
 		AlienModes.tick(player, alien, now);
 		AlienTraits traits = alien.traits();
 		UUID id = player.getUuid();
-		if (traits.flight() && !player.isCreative() && !player.isSpectator()) {
+		java.util.Optional<FlightStyle> flight = FlightStyle.of(player);
+		if (flight.isPresent() && !player.isCreative() && !player.isSpectator()) {
 			// auch nach Neustart/Neubetreten als „von uns“ merken, sonst bliebe der Flug nach der Rueckverwandlung
 			GRANTED_FLIGHT.add(id);
 			if (!player.getAbilities().allowFlying) {
 				player.getAbilities().allowFlying = true;
 				player.sendAbilitiesUpdate();
 			}
-			tickFlight(player, traits.flightStyle());
+			tickFlight(player, flight.get());
+		} else if (flight.isEmpty() && GRANTED_FLIGHT.remove(id) && !player.isCreative() && !player.isSpectator()) {
+			// Flug kam aus einem Modus, der jetzt aus ist (Jetpack eingefahren)
+			player.getAbilities().allowFlying = false;
+			player.getAbilities().flying = false;
+			player.sendAbilitiesUpdate();
 		}
 		if (traits.dryOutSeconds() > 0) {
 			tickDryOut(player, traits, now);
