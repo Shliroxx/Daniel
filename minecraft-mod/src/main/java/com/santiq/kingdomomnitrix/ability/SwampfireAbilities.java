@@ -125,6 +125,8 @@ final class SwampfireAbilities {
 	/** Wurzelfessel: Ziel kann sich {@code ticks} lang nicht bewegen. */
 	static void root(ServerWorld world, ServerPlayerEntity player, LivingEntity target, int ticks) {
 		ROOTS.put(target.getUuid(), new Root(world.getRegistryKey(), player.getUuid(), world.getTime() + ticks));
+		// AE-Wurzeln wachsen aus dem Boden um das Ziel
+		AttachedPropEntity.attach(world, "roots", target, ticks);
 	}
 
 	private static boolean isSwampfire(ServerPlayerEntity player) {
@@ -269,7 +271,7 @@ final class SwampfireAbilities {
 		int ticks = (int) Math.round(ctx.param("seconds", 3.0) * 20.0);
 		for (LivingEntity target : world.getEntitiesByClass(LivingEntity.class, new Box(at, at).expand(radius, 3.0, radius),
 				e -> e != player && e.isAlive() && PartyRules.canHarm(player, e) && e.getPos().distanceTo(at) <= radius + 0.5)) {
-			ROOTS.put(target.getUuid(), new Root(world.getRegistryKey(), player.getUuid(), world.getTime() + ticks));
+			root(world, player, target, ticks);
 			target.timeUntilRegen = 0;
 			target.damage(world.getDamageSources().thorns(player), (float) ctx.param("damage", 4.0));
 		}

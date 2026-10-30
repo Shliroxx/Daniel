@@ -17,6 +17,8 @@
   "item.kingdomomnitrix.crystal_shard": "Kristallsplitter",
   "block.kingdomomnitrix.bolt_crate": "Bolt-Kiste",
   "entity.kingdomomnitrix.shadow": "Schatten",
+  "entity.kingdomomnitrix.attached_prop": "Kraftmodell",
+  "entity.kingdomomnitrix.boulder": "Felsbrocken",
   "entity.kingdomomnitrix.hero_projectile": "Geschoss",
   "entity.kingdomomnitrix.fusion_grenade": "Fusionsgranate",
   "alien.kingdomomnitrix.heatblast": "Heatblast",

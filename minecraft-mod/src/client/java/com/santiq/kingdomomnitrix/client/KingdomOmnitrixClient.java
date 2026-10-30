@@ -129,6 +129,7 @@ public class KingdomOmnitrixClient implements ClientModInitializer {
 		});
 		EntityRendererRegistry.register(ModEntities.WRENCH_PROJECTILE, context -> new FlyingItemEntityRenderer<>(context, 1.5f, false));
 		EntityRendererRegistry.register(ModEntities.BOULDER, com.santiq.kingdomomnitrix.client.render.BoulderRenderer::new);
+		EntityRendererRegistry.register(ModEntities.ATTACHED_PROP, com.santiq.kingdomomnitrix.client.render.AttachedPropRenderer::new);
 
 		ModKeyBindings.register();
 		// HUD: alle Anzeigen ueber den HudManager (verschieb- und skalierbar, Reihenfolge = Zeichenreihenfolge)

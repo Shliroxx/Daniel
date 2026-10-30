@@ -177,7 +177,9 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 			wanted = HIT;
 			key = player.age - (player.maxHurtTime - player.hurtTime);
 		} else if (slot >= 0) {
-			wanted = ABILITIES[Math.min(slot, ABILITIES.length - 1)];
+			// eigene Animation des Slots, falls das Modell eine hat (Ghostfreaks AE-Tentakel), sonst die gemeinsame
+			wanted = slot < ABILITIES.length || !hasAnimation("ability_" + slot) ? ABILITIES[Math.min(slot, ABILITIES.length - 1)]
+					: abilityAnimation(slot);
 			key = transformation.energyStamp() * 8 + slot;
 		} else if (player.handSwinging) {
 			wanted = ATTACK;
@@ -196,6 +198,10 @@ public class AlienBodyAnimatable implements GeoReplacedEntity {
 		}
 		state.resetCurrentAnimation();
 		return PlayState.STOP;
+	}
+
+	private RawAnimation abilityAnimation(int slot) {
+		return modeAnimations.computeIfAbsent("ability_" + slot, n -> RawAnimation.begin().thenPlayAndHold(n));
 	}
 
 	/**

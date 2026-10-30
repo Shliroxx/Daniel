@@ -328,6 +328,7 @@ final class BigChillMoves {
 		AlienKit.melee(ctx.world(), player, target, (float) ctx.param("damage", 3.0));
 		BigChillAbilities.cool(player, target, (float) ctx.param("chill", 50.0));
 		AlienKit.hold(ctx.world(), target, (int) ctx.param("hold_ticks", 40.0), ParticleTypes.SNOWFLAKE, false);
+		AttachedPropEntity.attach(ctx.world(), "icespike", target, (int) ctx.param("hold_ticks", 40.0));
 		BuiltinAbilities.sound(ctx, SoundEvents.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 0.7f);
 		return true;
 	}

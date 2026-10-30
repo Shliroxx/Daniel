@@ -316,6 +316,8 @@ final class SwampfireMoves {
 		ServerPlayerEntity player = ctx.player();
 		AlienKit.hit(target, ctx.world().getDamageSources().thorns(player), (float) ctx.param("damage", 4.0));
 		SwampfireAbilities.root(ctx.world(), player, target, (int) ctx.param("root_ticks", 50.0));
+		// Wurzelgriff: Ranken umschlingen das Ziel (AE „vines“)
+		AttachedPropEntity.attach(ctx.world(), "vines", target, (int) ctx.param("root_ticks", 50.0));
 		Fx.sparks(ctx.world(), target.getPos().add(0, 0.3, 0), PLANT, 0.3f, 12);
 		BuiltinAbilities.sound(ctx, SoundEvents.BLOCK_ROOTS_PLACE, 1.4f, 0.7f);
 		return true;

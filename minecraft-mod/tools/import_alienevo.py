@@ -96,6 +96,12 @@ class Spec:
     # Groesse relativ zum Koerper): Upgrade auf dem Blitzableiter (AE „galvanic_rod“). Geometrie und Textur je Uniform
     # als <alien>[_uniform]_<kuerzel>; der Renderer tauscht das Modell, solange der Modus an ist
     mode_forms: tuple[tuple[str, str, tuple[tuple[str, str], ...], float], ...] = ()
+    # Modelle, die AE an Gegner haengt (Art, AE-Modell, AE-Ebenen-Datei, AE-Animation „Datei:Name“ oder None): Kristall-
+    # kuppel, Wurzeln, Eisstachel … → geo/entity/prop/<art>, textures/entity/prop/<art>, Animation „play“
+    attached: tuple[tuple[str, str, str, str | None], ...] = ()
+    # AE-Modell-Animationen fuer Faehigkeits-Slots 0–2 (Slot, „Datei:Name“): spielen beim Benutzen (Ghostfreaks
+    # Tentakel schlagen aus, die Brust oeffnet sich beim Erschrecken); Hauptknochen bleiben der Spielerpose
+    ability_anims: tuple[tuple[int, str], ...] = ()
     form: tuple[str, str, str] | None = None  # Zweitform: (AE-Modell, Wurzelknochen, unser Kuerzel), z. B. Cannonbolts Kugel
     # AE-Aliens ohne Uniform-Modelle (ein Modell, Texturebenen je „watch_type“-Bedingung): unsere AE-Uniform → watch_type
     watch: tuple[tuple[str, str], ...] = ()
@@ -133,6 +139,10 @@ ALIENS = {
                         script="petrosapien", poses=("diamond/spikes",),
                         # Kristallschwert (rechter Unterarm) und Kristallschild (linker Unterarm) wie in AE
                         keep=r"sword|shield",
+                        # Kristallkuppel (zerspringt mit AEs Animation) und Kristallstachel an Gegnern
+                        attached=(("crystal_dome", "crystal_dome", "crystal_burst.json",
+                                   "crystal_dome.animation.json:animation.crystal_dome.explode"),
+                                  ("crystal_spike", "crystal_spike", "crystal.json", None)),
                         modes=(("crystal_blade", "petrosapien.animation.json:animation.Diamondhead.sword_on",
                                 "petrosapien.animation.json:animation.Diamondhead.sword_off"),
                                ("crystal_shield", "petrosapien.animation.json:animation.Diamondhead.shield_spin",
@@ -197,6 +207,8 @@ ALIENS = {
     # Big Chill: am Boden Umhang zu (AE cloak_on: Fluegel/Fuehler eingezogen), in der Luft Fluegel auf (cloak_off);
     # nur die Fluegelknochen schlagen dauernd (im Umhang unsichtbar). Omnitrix-Symbol als Leuchtebene.
     "big_chill": Spec("afomni", "necrofriggian", "necrofriggian_cloak.json", 1.0, "fast", "#4A7BD0", pack="afomni",
+                      # Eisstacheln am gefrorenen Ziel (AE „icespike“)
+                      attached=(("icespike", "icespike", "icespike.json", None),),
                       variables=(("X", "0"),), rest=("bigchill.animation.json:animation.BigChill.cloak_on",),
                       loops=("bigchill.animation.json:animation.BigChill.Flight@^w",),
                       flight_pose="bigchill.animation.json:animation.BigChill.cloak_off",
@@ -206,7 +218,10 @@ ALIENS = {
                          rest=("model.humongousaur.anim.json:animation.humungousaur.armor_off",),
                          loops=("model.humongousaur.anim.json:animation.humungousaur.tail",)),
     # Swampfire: ein Modell, keine Daueranimation; AE-Groesse 1,7
-    "swampfire": Spec("afomni", "methanosian", "methanosian.json", 1.7, "heavy", "#4E8B3A", pack="afomni"),
+    "swampfire": Spec("afomni", "methanosian", "methanosian.json", 1.7, "heavy", "#4E8B3A", pack="afomni",
+                      # Wurzeln wachsen aus dem Boden um das Ziel, Ranken umschlingen es (AE-Animationen)
+                      attached=(("roots", "roots", "roots.json", "roots.animation.json:animation.root.play"),
+                                ("vines", "vines", "vines.json", "vines.animation.json:animation.swampfire.vines"))),
     # Chromastone: Grundtextur, Leuchten aus der AE-Spektralebene (chromastone_glow); AE-Groesse 1
     "chromastone": Spec("afomni", "crystalsapien", "crystalsapien.json", 1.0, "heavy", "#C36BE8", pack="afomni",
                         glow="assets/afomni/textures/models/crystalsapien/chromastone_glow.png"),
@@ -215,7 +230,9 @@ ALIENS = {
                       variables=(("TIMER", "0"),)),
     "ghostfreak": Spec("10", "ectonurite", "ectonurite.json", 1.3, "small", "#C9C3D6", script="ectonurite",
                        variables=(("X", "0"),),
-                       loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye")),
+                       loops=("ectonurite.animation.json:animation.ghostfreak.idle", "ectonurite.animation.json:animation.ghostfreak.eye"),
+                       ability_anims=((0, "ectonurite.animation.json:animation.ghostfreak.strike"),
+                                      (2, "ectonurite.animation.json:animation.ghostfreak.scare"))),
 }
 
 
@@ -828,6 +845,8 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
         if index == 0:
             classic_bones = bones
     files[ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json"] = build_animations(jar, name, spec, classic_bones)
+    for kind, ae_model, layer_file, anim in spec.attached:
+        files.update(attached_files(jar, spec, palettes, kind, ae_model, layer_file, anim))
     for projectile, model, texture in spec.projectiles:
         files.update(projectile_files(jar, projectile, model, texture))
     files[ASSETS / "alien_render" / f"{name}.json"] = {
@@ -848,6 +867,28 @@ def build(jar: Jar, name: str, spec: Spec, palettes: dict) -> dict[Path, object]
            if spec.mode_forms else {}),
         "source": "Alien Evolution (Habb and Stephen)"}
     return files
+
+
+def attached_files(jar: Jar, spec: Spec, palettes: dict, kind: str, ae_model: str, layer_file: str,
+                   anim: str | None) -> dict[Path, object]:
+    """Modell, das AE an Gegner haengt: Geometrie wie in AE (Spielergroesse, der Renderer passt sie dem Ziel an),
+    Textur in AEs Farben (klassische Uniform), Animation als „play“ (leer, wenn AE keine hat)."""
+    geo = deepcopy(jar.json(geo_path(spec, ae_model))["minecraft:geometry"][0])
+    geo["description"]["identifier"] = f"geometry.kingdomomnitrix.prop.{kind}"
+    color, _ = build_texture(jar, spec, UNIFORMS["classic"], palettes, model=ae_model, layer_file=layer_file)
+    animations = {"play": {"loop": "hold_on_last_frame", "animation_length": 0.05, "bones": {}}}
+    if anim:
+        file, name = anim.split(":", 1)
+        source = deepcopy(jar.json(anim_path(spec, file))["animations"][name])
+        source.pop("override_previous_animation", None)
+        if source.get("loop") is not True:
+            source["loop"] = "hold_on_last_frame"
+        animations["play"] = source
+    return {
+        ASSETS / "geo" / "entity" / "prop" / f"{kind}.geo.json": {"format_version": "1.12.0", "minecraft:geometry": [geo]},
+        ASSETS / "textures" / "entity" / "prop" / f"{kind}.png": color,
+        ASSETS / "animations" / "entity" / "prop" / f"{kind}.animation.json": {"format_version": "1.8.0", "animations": animations},
+    }
 
 
 def projectile_files(jar: Jar, name: str, model: str, texture: str) -> dict[Path, object]:
@@ -1174,6 +1215,19 @@ def build_animations(jar: Jar, name: str, spec: Spec, bones: list[dict]) -> dict
     # Schlag, Treffer und Faehigkeiten zeigt die Spielerpose (Armschwung); die Controller brauchen die Namen trotzdem
     for key in ("attack", "hit", "ability_0", "ability_1", "ability_2"):
         animations[key] = {"loop": "hold_on_last_frame", "animation_length": generated[key]["animation_length"], "bones": {}}
+    names = ae_name_map(jar, spec, bones) if spec.ability_anims else {}
+    for slot, ref in spec.ability_anims:
+        file, anim = ref.split(":", 1)
+        source = deepcopy(jar.json(anim_path(spec, file))["animations"][anim])
+        source.pop("override_previous_animation", None)
+        source["bones"] = {names[b]: t for b, t in source.get("bones", {}).items() if names.get(b) and names[b] not in MAIN_BONES}
+        source["loop"] = "hold_on_last_frame"
+        source.setdefault("animation_length", _keyframe_end(source))
+        animations[f"ability_{slot}"] = source
+    if spec.ability_anims:
+        # hoehere Slots ohne eigene Animation: leer statt der Animation von Slot 2 (der Renderer faellt sonst darauf zurueck)
+        for slot in range(3, 13):
+            animations.setdefault(f"ability_{slot}", {"loop": "hold_on_last_frame", "animation_length": 0.05, "bones": {}})
     return {"format_version": "1.8.0", "animations": {k: animations[k] for k in sorted(animations)}}
 
 
@@ -1553,7 +1607,8 @@ def build_ultimate(jar: Jar, name: str, ult: Ultimate, palettes: dict) -> dict[P
     out: dict[Path, object] = {}
     geo_units: dict[str, tuple[float, float]] = {}
     for path, content in files.items():
-        if path.suffix == ".json" and "geo" in path.parts and isinstance(content, dict):
+        # nur die Alien-Koerper (nicht Geschosse und Modelle an Gegnern unter geo/entity/prop)
+        if path.suffix == ".json" and "geo" in path.parts and "alien" in path.parts and isinstance(content, dict):
             geo = content["minecraft:geometry"][0]
             desc = geo["description"]
             tw, th = desc["texture_width"], desc["texture_height"]
@@ -1602,6 +1657,9 @@ def expected_files() -> list[Path]:
         paths += [ASSETS / "animations" / "entity" / "alien" / f"{name}.animation.json",
                   ASSETS / "alien_render" / f"{name}.json"]
     for spec in ALIENS.values():
+        for kind, _, _, _ in spec.attached:
+            paths += [ASSETS / "geo" / "entity" / "prop" / f"{kind}.geo.json", ASSETS / "textures" / "entity" / "prop" / f"{kind}.png",
+                      ASSETS / "animations" / "entity" / "prop" / f"{kind}.animation.json"]
         for projectile, _, _ in spec.projectiles:
             paths += [ASSETS / "geo" / "entity" / f"{projectile}.geo.json", ASSETS / "textures" / "entity" / f"{projectile}.png",
                       ASSETS / "animations" / "entity" / f"{projectile}.animation.json"]

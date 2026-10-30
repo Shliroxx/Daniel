@@ -17,6 +17,8 @@
   "item.kingdomomnitrix.crystal_shard": "Crystal Shard",
   "block.kingdomomnitrix.bolt_crate": "Bolt Crate",
   "entity.kingdomomnitrix.shadow": "Shadow",
+  "entity.kingdomomnitrix.attached_prop": "Power Model",
+  "entity.kingdomomnitrix.boulder": "Boulder",
   "entity.kingdomomnitrix.hero_projectile": "Projectile",
   "entity.kingdomomnitrix.fusion_grenade": "Fusion Grenade",
   "alien.kingdomomnitrix.heatblast": "Heatblast",

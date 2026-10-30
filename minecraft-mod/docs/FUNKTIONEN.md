@@ -190,6 +190,11 @@ Evolution aus und wieder ein, andere Spieler sehen es mit. Im Modus gelten ander
 | Grey Matter | Galvan-Technik (Taste schaltet weiter) | AEs Galvan-Rüstung (Helm, Visier fährt zu, Jetpack-Flügel) → Roboterglieder (Grey Matter sitzt im Gestell) → Mech-Anzug | **Rüstung**: fliegt (Jetpack), +20 Rüstung · **Roboterglieder**: 5× so groß wie Grey Matter, +10 Rüstung, +2 Angriff, +1,5 Reichweite · **Mech-Anzug**: 6,6× so groß, +24 Rüstung, +5 Angriff, rückstoßfest, immun gegen Feuer, Frost, Ertrinken; langsamer |
 
 
+**Modelle an Gegnern (wie AE):** Diamondheads Kristallfessel schließt das Ziel in AEs Kristallkuppel ein (zerspringt mit
+AEs Animation), sein Stachelausbruch lässt AEs Kristallstacheln im Getroffenen stecken; Swampfires Wurzelfalle lässt AEs
+Wurzeln um das Ziel wachsen, der Wurzelgriff AEs Ranken; Big Chills gefrorene Ziele tragen AEs Eisstacheln. Ghostfreak
+spielt beim Tentakelpeitschen und beim Erschrecken AEs Modell-Animationen (Tentakel, Brustklappen).
+
 **Upgrade – Fusion mit Blöcken** (Techno-Fusion mit Blick auf den Block, Block-Tags `kingdomomnitrix:upgrade_fusion/*`):
 Werfer = Pfeilsalven, TNT = Sprengladungen (Block wird verbraucht), Ofen/Lagerfeuer/Magma = Feuerbälle und brennende
 Treffer, Glocke/Notenblock = Schallstoß, Beobachter/Sculk = alle Lebewesen leuchten, Redstone = Überladung, Trichter =

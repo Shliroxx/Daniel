@@ -325,6 +325,8 @@ final class DiamondheadMoves {
 		int ticks = (int) (ctx.param("seconds", 2.0) * 20);
 		AlienKit.melee(world, player, target, (float) ctx.param("damage", 3.0));
 		AlienKit.hold(world, target, ticks, AlienKit.dust("#3AE89A", 1.2f), false);
+		// AE-Kristallkuppel schliesst das Ziel ein und zerspringt (AE-Animation)
+		AttachedPropEntity.attach(world, "crystal_dome", target, Math.max(ticks, 80));
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 6), player);
 		Vec3d feet = target.getPos();
 		for (int i = 0; i < 4; i++) {

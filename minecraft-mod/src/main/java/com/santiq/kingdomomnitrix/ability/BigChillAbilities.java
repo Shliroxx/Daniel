@@ -190,6 +190,8 @@ final class BigChillAbilities {
 			mob.setTarget(null);
 		}
 		FROZEN.put(target.getUuid(), new Frozen(world.getRegistryKey(), world.getTime() + ticks, aiWasDisabled, player.getUuid()));
+		// AE-Eisstacheln am gefrorenen Ziel
+		AttachedPropEntity.attach(world, "icespike", target, ticks);
 		target.setVelocity(0.0, Math.min(0.0, target.getVelocity().y), 0.0);
 		target.velocityModified = true;
 		target.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 9, false, false));
@@ -394,6 +396,7 @@ final class BigChillAbilities {
 		Frozen frozen = FROZEN.get(target.getUuid());
 		if (frozen != null) {
 			FROZEN.put(target.getUuid(), new Frozen(frozen.world(), Math.max(frozen.until(), world.getTime() + ticks), frozen.aiWasDisabled(), frozen.source()));
+			AttachedPropEntity.attach(world, "icespike", target, ticks);
 		}
 		iceRing(world, player, feet, r + 1, ticks, false);
 		Vec3d body = new Vec3d(target.getX(), target.getBodyY(0.5), target.getZ());

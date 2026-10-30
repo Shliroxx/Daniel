@@ -53,6 +53,11 @@ public final class ModEntities {
 			EntityType.Builder.<WrenchProjectileEntity>create(WrenchProjectileEntity::new, SpawnGroup.MISC)
 					.dimensions(0.5f, 0.5f).maxTrackingRange(6).trackingTickInterval(2));
 
+	// Modelle an Gegnern (Kristallkuppel, Wurzeln, Eisstachel … aus AE), folgen dem Ziel
+	public static final EntityType<com.santiq.kingdomomnitrix.ability.AttachedPropEntity> ATTACHED_PROP = register("attached_prop",
+			EntityType.Builder.<com.santiq.kingdomomnitrix.ability.AttachedPropEntity>create(com.santiq.kingdomomnitrix.ability.AttachedPropEntity::new, SpawnGroup.MISC)
+					.dimensions(0.5f, 0.5f).maxTrackingRange(8).trackingTickInterval(2).disableSaving());
+
 	// Vierarms geworfener Felsbrocken (AE-Modell, GeckoLib)
 	public static final EntityType<com.santiq.kingdomomnitrix.ability.BoulderEntity> BOULDER = register("boulder",
 			EntityType.Builder.<com.santiq.kingdomomnitrix.ability.BoulderEntity>create(com.santiq.kingdomomnitrix.ability.BoulderEntity::new, SpawnGroup.MISC)

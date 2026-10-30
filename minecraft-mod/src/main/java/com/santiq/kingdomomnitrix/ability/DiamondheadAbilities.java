@@ -571,6 +571,8 @@ final class DiamondheadAbilities {
 				target.damage(world.getDamageSources().playerAttack(player), eruption.damage);
 				target.addVelocity(0.0, eruption.launch, 0.0);
 				target.velocityModified = true;
+				// AE-Kristallstachel bleibt im Getroffenen stecken
+				AttachedPropEntity.attach(world, "crystal_spike", target, 60);
 				Fx.flash(world, target.getPos().add(0, target.getHeight() * 0.5, 0), CRYSTAL, 1.3f);
 			}
 			if (age >= eruption.ticks) {
