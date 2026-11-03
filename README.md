@@ -658,13 +658,33 @@ ins Leere lief.
 
 ## Kombo-Makro für Zenkai / Nanos World
 
-Spielt Tasten- und Mausfolgen per Hotkey ab — Nahkampf-Ketten, Dash-Angriffe,
-Aufladen-und-Strahl. Eingaben gehen als **Scancodes über `SendInput`** raus; so
+Spielt Tasten- und Mausfolgen per Hotkey ab — Schlagketten, Parade, Konter,
+Jutsu-Ketten. Eingaben gehen als **Scancodes über `SendInput`** raus; so
 kommen sie auch in Unreal-Spielen wie Nanos World an, die Raw Input lesen.
 
 > **Vorher die Serverregeln lesen.** Viele Roleplay- und PvP-Server verbieten
 > Makros. Das Werkzeug versteckt nichts — wer es auf einem Server mit Verbot
 > nutzt, riskiert den Bann.
+
+### Zenkai-Vorlage
+
+Erst mit **Tab** in den Kampfmodus. **R** (Chakra laden) und **Q** (Tausch-Jutsu,
+Cooldown) bleiben bei dir — die Kombos fassen sie nie an.
+
+| Hotkey | Kombo | Ablauf |
+|---|---|---|
+| **X** | Parade | F + Linksklick gleichzeitig |
+| **Maus 4** | Schlagkette | 4× Linksklick |
+| **Maus 5** | Kette-in-Jutsu | 3× Linksklick → Jutsu 1 → Rechtsklick |
+| **Z** | Doppel-Jutsu | Jutsu 2 → Rechtsklick → Jutsu 3 → Rechtsklick |
+| **C** | Konter | Parade → 2× Linksklick → Jutsu 4 → Rechtsklick |
+| **V** | Finisher | 4× Linksklick → Jutsu 5 → Jutsu 6 |
+
+Die Wartezeiten (180 ms zwischen Schlägen, 700 ms zwischen Jutsus) sind
+Startwerte. Verschluckt das Spiel Schläge, die `warte`-Zahl erhöhen; passt alles,
+langsam senken. Ausdauer und Chakra sieht das Makro nicht — ist eins leer, läuft
+die Kombo ins Leere. Die Hotkey-Tasten kommen zusätzlich auch im Spiel an:
+Sind X, Z, C oder V dort belegt, in `kombo.json` andere wählen.
 
 ### Starten
 
@@ -692,10 +712,10 @@ auch nicht bei Abbruch oder Fehler.
 
 ```json
 {
-  "name": "Nahkampf-Kette",
-  "hotkey": "maus4",
-  "schritte": ["klick links", "warte 140", "klick links", "warte 160",
-               "klick rechts", "warte 220", "taste q"]
+  "name": "Kette-in-Jutsu",
+  "hotkey": "maus5",
+  "schritte": ["klick links", "warte 180", "klick links", "warte 180",
+               "klick links", "warte 220", "taste 1", "warte 100", "klick rechts"]
 }
 ```
 
@@ -710,7 +730,8 @@ auch nicht bei Abbruch oder Fehler.
 | `mrunter T` / `mhoch T` | Maustaste drücken / loslassen |
 
 **Hotkeys:** jede Taste (`1`, `f5`, `x`), mit Modifikatoren (`alt+1`, `strg+umschalt+f`)
-oder die Seitentasten der Maus (`maus4`, `maus5`, `maus_mitte`). Deutsche Namen gehen
+oder die Seitentasten der Maus (`maus4`, `maus5`, `maus_mitte`). Bei `alt+1` wartet
+die Kombo, bis Alt losgelassen ist — sonst käme im Spiel Alt+Taste an. Deutsche Namen gehen
 auch: `strg`, `umschalt`, `leertaste`, `entf`, `pos1`, `ende`.
 
 **Modi** pro Kombo:
@@ -733,8 +754,8 @@ auch Kombos, die ihren eigenen Hotkey drücken würden, doppelte Hotkeys und
 ```
 python -m kombo --pruefen                    Datei prüfen
 python -m kombo --liste                      alle Kombos mit Hotkey und Dauer
-python -m kombo --zeige "Nahkampf-Kette"     Schritte mit Zeitachse
-python -m kombo --test "Dash-Angriff"        nach 3 s Countdown einmal abspielen
+python -m kombo --zeige "Konter"             Schritte mit Zeitachse
+python -m kombo --test "Parade"             nach 3 s Countdown einmal abspielen
 python -m kombo --trocken -v                 nichts senden, alles protokollieren
 python -m kombo --fenster-zeigen             Fenstertitel fürs Filtern ermitteln
 python -m kombo --ueberall                   Fensterfilter abschalten
@@ -790,7 +811,7 @@ kombo/                 Kombo-Makro für Zenkai / Nanos World (python -m kombo)
   ausgabe.py           SendInput mit Scancodes, pynput-Ersatz, Trockenlauf
   ablauf.py            Kombo abspielen, abbrechbar, nichts bleibt gedrückt
   steuerung.py         Hotkeys, Modi, Pause, Fensterfilter
-  beispiel.json        Vorlage mit fünf Kombos
+  beispiel.json        Zenkai-Vorlage mit sechs Kombos
 scripts/               Startskripte und Desktop-Verknüpfungen
 tests/                 Tests für Engine, Rückweg und Kombo-Makro
 templates/             Vorlagen für Nacht-Aufträge

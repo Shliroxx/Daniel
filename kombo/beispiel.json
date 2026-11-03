@@ -1,55 +1,75 @@
 {
-  "_hinweis": "Tasten an deine Belegung in Zenkai anpassen. Pruefen: python -m kombo --pruefen. Ansehen: python -m kombo --zeige \"Nahkampf-Kette\"",
+  "_hinweis": "Zenkai-Vorlage. Vorher mit Tab in den Kampfmodus. Chakra (R) und Tausch-Jutsu (Q) bleiben bei dir. Wartezeiten sind Startwerte - mit python -m kombo --test NAME im Spiel feinstellen. Jutsu-Nummern 1-6 an deine Leiste anpassen.",
   "fenster_titel": ["nanos"],
   "pause_taste": "f8",
   "stopp_taste": "f9",
   "beenden_taste": "f10",
-  "tastendauer_ms": 35,
+  "tastendauer_ms": 40,
   "kombos": [
     {
-      "name": "Nahkampf-Kette",
-      "hotkey": "maus4",
-      "schritte": [
-        "klick links", "warte 140",
-        "klick links", "warte 140",
-        "klick links", "warte 160",
-        "klick rechts", "warte 220",
-        "taste q"
-      ]
+      "name": "Parade",
+      "hotkey": "x",
+      "_info": "F und Linksklick gleichzeitig",
+      "tastendauer_ms": 60,
+      "schritte": ["runter f", "klick links", "hoch f"]
     },
     {
-      "name": "Dash-Angriff",
-      "hotkey": "maus5",
+      "name": "Schlagkette",
+      "hotkey": "maus4",
       "schritte": [
-        "halte w 120",
-        "taste space", "warte 60",
-        "taste shift", "warte 90",
-        "klick links", "warte 120",
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 180",
         "klick links"
       ]
     },
     {
-      "name": "Ki-Aufladen-und-Strahl",
-      "hotkey": "alt+1",
+      "name": "Kette-in-Jutsu",
+      "hotkey": "maus5",
       "schritte": [
-        "halte c 1500",
-        "warte 80",
-        "halteklick rechts 900"
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 1", "warte 100",
+        "klick rechts"
       ]
     },
     {
-      "name": "Ki-Salve",
-      "hotkey": "alt+2",
-      "modus": "halten",
-      "abstand_ms": 90,
-      "schritte": ["taste e"]
+      "name": "Doppel-Jutsu",
+      "hotkey": "z",
+      "schritte": [
+        "taste 2", "warte 100",
+        "klick rechts", "warte 700",
+        "taste 3", "warte 100",
+        "klick rechts"
+      ]
     },
     {
-      "name": "Auto-Schlag",
-      "hotkey": "alt+3",
-      "modus": "umschalten",
-      "abstand_ms": 150,
-      "schritte": ["klick links"]
+      "name": "Konter",
+      "hotkey": "c",
+      "_info": "Parade, sofort zurueckschlagen, mit Jutsu abschliessen",
+      "schritte": [
+        "runter f", "klick links", "hoch f", "warte 250",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 4", "warte 100",
+        "klick rechts"
+      ]
+    },
+    {
+      "name": "Finisher",
+      "hotkey": "v",
+      "_info": "lange Kette - braucht volle Ausdauer und Chakra fuer zwei Jutsus",
+      "schritte": [
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 5", "warte 100",
+        "klick rechts", "warte 700",
+        "taste 6", "warte 100",
+        "klick rechts"
+      ]
     }
   ]
 }

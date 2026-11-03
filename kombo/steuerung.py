@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from typing import Callable
 
 from . import fenster
@@ -28,6 +29,8 @@ log = logging.getLogger("kombo.steuerung")
 
 
 class Steuerung:
+    MOD_WARTEZEIT = 0.6   # Sekunden, die auf das Loslassen von Alt/Strg/Shift gewartet wird
+
     def __init__(self, konfig: Konfig, abspieler: Abspieler,
                  titel_quelle: Callable[[], str | None] = fenster.aktiver_titel,
                  bei_ergebnis: Callable[[Ergebnis], None] | None = None) -> None:
@@ -120,8 +123,24 @@ class Steuerung:
         log.info("> %s", k.name)
         return True
 
+    def _mods_frei(self, k: Kombo) -> bool:
+        """Wartet, bis die Modifikatoren des Hotkeys losgelassen sind.
+
+        Sonst saehe das Spiel bei Hotkey alt+1 und Schritt "taste 2" ein Alt+2.
+        """
+        ende = time.monotonic() + self.MOD_WARTEZEIT
+        while k.hotkey.mods & self._mods:
+            if time.monotonic() >= ende or self._abbruch.wait(0.01):
+                return False
+        return True
+
     def _lauf(self, k: Kombo) -> None:
         try:
+            if not self._mods_frei(k):
+                gehalten = "+".join(sorted(k.hotkey.mods & self._mods))
+                log.warning("'%s' nicht gestartet - %s noch gedrueckt. Hotkey loslassen, "
+                            "dann laeuft die Kombo.", k.name, gehalten)
+                return
             erg = self.abspieler.abspielen(k, self._abbruch, self._weiter)
             self.ergebnisse.append(erg)
             if erg.fehler:

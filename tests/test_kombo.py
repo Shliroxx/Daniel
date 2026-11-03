@@ -92,7 +92,10 @@ fehler({**basis(), "pause_taste": "f9"}, "verschieden")
 
 # Beispiel aus dem Paket ist gueltig
 bsp = laden(Path(__file__).resolve().parent.parent / "kombo" / "beispiel.json")
-assert len(bsp.kombos) == 5 and bsp.kombo("ki-salve").modus == "halten"
+assert len(bsp.kombos) == 6 and [str(x) for x in bsp.kombo("parade").schritte] == \
+    ["runter f", "klick links", "hoch f"]
+assert all(not k.hotkey.mods for k in bsp.kombos)    # Zenkai-Vorlage ohne alt/strg/shift
+fehler(basis(hotkey="alt+1", modus="halten", abstand_ms=50), "modus halten geht nicht")
 
 # kaputtes JSON nennt die Zeile
 with tempfile.TemporaryDirectory() as tmp:
@@ -172,8 +175,15 @@ daten = {"kombos": [
 st, aus, _ = steuerung(daten)
 st.runter("1"); st.warten(2)
 assert st.ergebnisse[-1].kombo == "Kette"
-st.runter("alt"); st.runter("1"); st.warten(2); st.hoch("1"); st.hoch("alt")
+# Alt noch gedrueckt: Kombo wartet, bis Alt los ist - erst dann geht "q" raus
+st.runter("alt"); st.runter("1"); time.sleep(0.1)
+assert not any(n == "q" for _, _, n, _ in aus.protokoll)
+st.hoch("1"); st.hoch("alt"); st.warten(2)
 assert st.ergebnisse[-1].kombo == "AltKette"
+# Alt dauerhaft gehalten: Kombo startet gar nicht
+n = len(st.ergebnisse)
+st.runter("alt"); st.runter("1"); st.warten(2); st.hoch("1"); st.hoch("alt")
+assert len(st.ergebnisse) == n and st.aktiv is None
 
 # halten: laeuft, solange gedrueckt
 st.runter("2"); time.sleep(0.25); st.hoch("2"); st.warten(2)
@@ -227,10 +237,10 @@ with tempfile.TemporaryDirectory() as tmp:
     assert main(["--beispiel", str(ziel)]) == 0 and ziel.is_file()
     assert main(["--beispiel", str(ziel)]) == 1              # nicht still ueberschreiben
     assert main(["-k", str(ziel), "--pruefen"]) == 0
-    assert main(["-k", str(ziel), "--zeige", "Nahkampf-Kette"]) == 0
+    assert main(["-k", str(ziel), "--zeige", "Konter"]) == 0
     assert main(["-k", str(ziel), "--zeige", "gibtsnicht"]) == 1
-    assert main(["-k", str(ziel), "--test", "Dash-Angriff", "--trocken", "--countdown", "0"]) == 0
-    assert main(["-k", str(ziel), "--test", "Ki-Salve", "--trocken", "--countdown", "0"]) == 0
+    assert main(["-k", str(ziel), "--test", "Parade", "--trocken", "--countdown", "0"]) == 0
+    assert main(["-k", str(ziel), "--test", "Finisher", "--trocken", "--countdown", "0"]) == 0
     json.loads(ziel.read_text(encoding="utf-8"))
     assert main(["-k", str(Path(tmp) / "fehlt.json"), "--pruefen"]) == 1
 

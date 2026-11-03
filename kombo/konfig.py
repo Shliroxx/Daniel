@@ -182,6 +182,9 @@ def kombo_aus_dict(d: dict, standard_dauer: int) -> Kombo:
         abstand_ms=_ms(d.get("abstand_ms", 0), f"{wo}: abstand_ms"),
         tastendauer_ms=_ms(d.get("tastendauer_ms", standard_dauer), f"{wo}: tastendauer_ms"),
     )
+    if modus == "halten" and hk.mods:
+        raise KonfigFehler(f"{wo}: modus halten geht nicht mit {hk} - der Modifikator wuerde "
+                           "jede Eingabe veraendern. Hotkey ohne alt/strg/shift waehlen.")
     if modus != "einmal" and k.dauer_ms() + k.abstand_ms < 20:
         raise KonfigFehler(f"{wo}: Schleife ohne Wartezeit - mindestens 20 ms pro Durchgang "
                            "(warte oder abstand_ms), sonst flutet sie das Spiel")
