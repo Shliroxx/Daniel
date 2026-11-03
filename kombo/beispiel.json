@@ -1,0 +1,75 @@
+{
+  "_hinweis": "Zenkai-Vorlage. Vorher mit Tab in den Kampfmodus. Chakra (R) und Tausch-Jutsu (Q) bleiben bei dir. Wartezeiten sind Startwerte - mit python -m kombo --test NAME im Spiel feinstellen. Jutsu-Nummern 1-6 an deine Leiste anpassen.",
+  "fenster_titel": ["nanos"],
+  "pause_taste": "f8",
+  "stopp_taste": "f9",
+  "beenden_taste": "f10",
+  "tastendauer_ms": 40,
+  "kombos": [
+    {
+      "name": "Parade",
+      "hotkey": "x",
+      "_info": "F und Linksklick gleichzeitig",
+      "tastendauer_ms": 60,
+      "schritte": ["runter f", "klick links", "hoch f"]
+    },
+    {
+      "name": "Schlagkette",
+      "hotkey": "maus4",
+      "schritte": [
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links"
+      ]
+    },
+    {
+      "name": "Kette-in-Jutsu",
+      "hotkey": "maus5",
+      "schritte": [
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 1", "warte 100",
+        "klick rechts"
+      ]
+    },
+    {
+      "name": "Doppel-Jutsu",
+      "hotkey": "z",
+      "schritte": [
+        "taste 2", "warte 100",
+        "klick rechts", "warte 700",
+        "taste 3", "warte 100",
+        "klick rechts"
+      ]
+    },
+    {
+      "name": "Konter",
+      "hotkey": "c",
+      "_info": "Parade, sofort zurueckschlagen, mit Jutsu abschliessen",
+      "schritte": [
+        "runter f", "klick links", "hoch f", "warte 250",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 4", "warte 100",
+        "klick rechts"
+      ]
+    },
+    {
+      "name": "Finisher",
+      "hotkey": "v",
+      "_info": "lange Kette - braucht volle Ausdauer und Chakra fuer zwei Jutsus",
+      "schritte": [
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 180",
+        "klick links", "warte 220",
+        "taste 5", "warte 100",
+        "klick rechts", "warte 700",
+        "taste 6", "warte 100",
+        "klick rechts"
+      ]
+    }
+  ]
+}

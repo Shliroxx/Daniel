@@ -47,7 +47,10 @@ jobs:
         run: pip install fastapi "uvicorn[standard]" python-dotenv python-multipart pillow httpx cryptography
 
       - name: Python-Code uebersetzen
-        run: python -m compileall -q jarvis shisha tests
+        run: python -m compileall -q jarvis shisha kombo tests
 
       - name: Rueckweg testen
         run: python tests/test_shisha.py
+
+      - name: Kombo-Makro testen
+        run: python tests/test_kombo.py

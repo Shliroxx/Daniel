@@ -656,6 +656,125 @@ ins Leere lief.
 
 ---
 
+## Kombo-Makro für Zenkai / Nanos World
+
+Spielt Tasten- und Mausfolgen per Hotkey ab — Schlagketten, Parade, Konter,
+Jutsu-Ketten. Eingaben gehen als **Scancodes über `SendInput`** raus; so
+kommen sie auch in Unreal-Spielen wie Nanos World an, die Raw Input lesen.
+
+> **Vorher die Serverregeln lesen.** Viele Roleplay- und PvP-Server verbieten
+> Makros. Das Werkzeug versteckt nichts — wer es auf einem Server mit Verbot
+> nutzt, riskiert den Bann.
+
+### Zenkai-Vorlage
+
+Erst mit **Tab** in den Kampfmodus. **R** (Chakra laden) und **Q** (Tausch-Jutsu,
+Cooldown) bleiben bei dir — die Kombos fassen sie nie an.
+
+| Hotkey | Kombo | Ablauf |
+|---|---|---|
+| **X** | Parade | F + Linksklick gleichzeitig |
+| **Maus 4** | Schlagkette | 4× Linksklick |
+| **Maus 5** | Kette-in-Jutsu | 3× Linksklick → Jutsu 1 → Rechtsklick |
+| **Z** | Doppel-Jutsu | Jutsu 2 → Rechtsklick → Jutsu 3 → Rechtsklick |
+| **C** | Konter | Parade → 2× Linksklick → Jutsu 4 → Rechtsklick |
+| **V** | Finisher | 4× Linksklick → Jutsu 5 → Jutsu 6 |
+
+Die Wartezeiten (180 ms zwischen Schlägen, 700 ms zwischen Jutsus) sind
+Startwerte. Verschluckt das Spiel Schläge, die `warte`-Zahl erhöhen; passt alles,
+langsam senken. Ausdauer und Chakra sieht das Makro nicht — ist eins leer, läuft
+die Kombo ins Leere. Die Hotkey-Tasten kommen zusätzlich auch im Spiel an:
+Sind X, Z, C oder V dort belegt, in `kombo.json` andere wählen.
+
+### Starten
+
+`start-kombo.bat` doppelklicken. Beim ersten Mal wird `pynput` installiert und
+eine `kombo.json` angelegt, die sich im Editor öffnet. Tasten anpassen, speichern,
+neu starten. Ohne Batch:
+
+```
+pip install -r kombo/requirements.txt
+python -m kombo --beispiel      # legt kombo.json an
+python -m kombo                 # Makro läuft
+```
+
+| Taste | Wirkung |
+|---|---|
+| **F8** | Pause an/aus |
+| **F9** | Stopp — laufende Kombo sofort abbrechen |
+| **F10** / Strg+C | Beenden |
+
+Kombos feuern nur, wenn das aktive Fenster `nanos` im Titel trägt; wechselst du
+mitten in einer Kombo raus (Alt+Tab), bricht sie ab. Nichts bleibt gedrückt —
+auch nicht bei Abbruch oder Fehler.
+
+### Kombos schreiben
+
+```json
+{
+  "name": "Kette-in-Jutsu",
+  "hotkey": "maus5",
+  "schritte": ["klick links", "warte 180", "klick links", "warte 180",
+               "klick links", "warte 220", "taste 1", "warte 100", "klick rechts"]
+}
+```
+
+| Schritt | Bedeutung |
+|---|---|
+| `taste X` | X kurz drücken (Dauer: `tastendauer_ms`, Standard 35) |
+| `halte X 200` | X 200 ms halten |
+| `runter X` / `hoch X` | X drücken / loslassen — z. B. Shift über mehrere Schritte |
+| `warte 120` | 120 ms warten |
+| `klick links` | Maustaste klicken: `links`, `rechts`, `mitte`, `maus4`, `maus5` |
+| `halteklick rechts 900` | Maustaste 900 ms halten (Aufladen) |
+| `mrunter T` / `mhoch T` | Maustaste drücken / loslassen |
+
+**Hotkeys:** jede Taste (`1`, `f5`, `x`), mit Modifikatoren (`alt+1`, `strg+umschalt+f`)
+oder die Seitentasten der Maus (`maus4`, `maus5`, `maus_mitte`). Bei `alt+1` wartet
+die Kombo, bis Alt losgelassen ist — sonst käme im Spiel Alt+Taste an. Deutsche Namen gehen
+auch: `strg`, `umschalt`, `leertaste`, `entf`, `pos1`, `ende`.
+
+**Modi** pro Kombo:
+
+| `modus` | Verhalten |
+|---|---|
+| `einmal` (Standard) | einmal abspielen, mit `wiederholen: N` N-mal |
+| `halten` | wiederholt, solange der Hotkey gedrückt ist |
+| `umschalten` | erster Druck startet die Schleife, zweiter beendet sie |
+
+`abstand_ms` setzt die Pause zwischen zwei Durchgängen. Schleifen brauchen
+mindestens 20 ms pro Durchgang, sonst lehnt die Prüfung sie ab.
+
+Die Prüfung beim Start fängt Tippfehler mit Kombo-Name und Schrittnummer ab —
+auch Kombos, die ihren eigenen Hotkey drücken würden, doppelte Hotkeys und
+`hoch` ohne vorheriges `runter`.
+
+### Werkzeuge
+
+```
+python -m kombo --pruefen                    Datei prüfen
+python -m kombo --liste                      alle Kombos mit Hotkey und Dauer
+python -m kombo --zeige "Konter"             Schritte mit Zeitachse
+python -m kombo --test "Parade"             nach 3 s Countdown einmal abspielen
+python -m kombo --trocken -v                 nichts senden, alles protokollieren
+python -m kombo --fenster-zeigen             Fenstertitel fürs Filtern ermitteln
+python -m kombo --ueberall                   Fensterfilter abschalten
+python -m kombo --log-datei kombo.log        zusätzlich in eine Datei loggen
+```
+
+### Wenn nichts passiert
+
+- **Spiel als Administrator gestartet?** Dann `start-kombo.bat` per Rechtsklick
+  ebenfalls als Administrator starten — Windows lässt sonst keine Eingaben durch.
+- **Fenstertitel passt nicht:** `python -m kombo --fenster-zeigen`, ins Spiel
+  wechseln, einen Teil des Titels in `fenster_titel` eintragen.
+- **Seitentasten über G Hub/Synapse umgelegt:** Die Software speist Tasten ein,
+  die das Makro sonst als eigene ignoriert — mit `--fremde-eingaben` starten.
+- **Kombo zu schnell fürs Spiel:** `warte`-Zeiten erhöhen. Animationen in Zenkai
+  brauchen ihre Zeit; zu kurze Abstände verschlucken Schläge.
+
+---
+
 ## Struktur
 
 ```
@@ -686,8 +805,15 @@ web/shisha/            Die Kamera-App fürs iPhone
   steuerung.js         Entscheidungen ohne Kamera und Oberfläche (testbar)
   ar.js                Kamera, AR-Overlay, Bedienung
   sw.js                hält die App offline startbereit
+kombo/                 Kombo-Makro für Zenkai / Nanos World (python -m kombo)
+  tasten.py            Tastennamen, Hotkeys, Windows-Codes
+  konfig.py            kombo.json laden und streng prüfen
+  ausgabe.py           SendInput mit Scancodes, pynput-Ersatz, Trockenlauf
+  ablauf.py            Kombo abspielen, abbrechbar, nichts bleibt gedrückt
+  steuerung.py         Hotkeys, Modi, Pause, Fensterfilter
+  beispiel.json        Zenkai-Vorlage mit sechs Kombos
 scripts/               Startskripte und Desktop-Verknüpfungen
-tests/                 Tests für Engine und Rückweg
+tests/                 Tests für Engine, Rückweg und Kombo-Makro
 templates/             Vorlagen für Nacht-Aufträge
 ```
 
